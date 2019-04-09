@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\PathFinder",
+    "\\PathFinder\\Source",
+    "\\PathFinder\\Source\\HardwareAbstractionLayer",
+    "\\PathFinder\\Source\\ThirdParty",
+    "\\PathFinder\\Source\\ThirdParty\\imgui"
+  ],
+  "SelectedNode": "\\PathFinder\\Source\\HardwareAbstractionLayer\\CommandAllocator.hpp",
+  "PreviewInSolutionExplorer": false
+}
