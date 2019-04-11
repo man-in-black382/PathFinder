@@ -1,12 +1,15 @@
 #include "PipelineState.hpp"
 
-
-
-PipelineState::PipelineState()
+namespace HAL
 {
-}
 
+	PipelineState::PipelineState()
+	{
+	}
+	
+	
+	PipelineState::~PipelineState()
+	{
+	}
 
-PipelineState::~PipelineState()
-{
 }

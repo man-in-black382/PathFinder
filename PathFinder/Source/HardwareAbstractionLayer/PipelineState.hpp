@@ -1,9 +1,12 @@
 #pragma once
 
-class PipelineState
+namespace HAL
 {
-public:
-    PipelineState();
-    ~PipelineState();
-};
+	class PipelineState
+	{
+	public:
+	    PipelineState();
+	    ~PipelineState();
+	};
+}
 

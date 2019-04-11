@@ -60,7 +60,7 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterEnumerator.cpp">
+    <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -122,7 +122,7 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapter.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterEnumerator.hpp">
+    <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

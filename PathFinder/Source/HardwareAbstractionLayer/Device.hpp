@@ -7,13 +7,14 @@
 #include "CommandList.hpp"
 #include "CommandQueue.hpp"
 #include "Fence.hpp"
+#include "DisplayAdapter.hpp"
 
 namespace HAL
 {
     class Device
     {
     public:
-        Device();
+        Device(const DisplayAdapter& adapter);
         ~Device();
 
         CommandAllocator CreateCommandAllocator() const;

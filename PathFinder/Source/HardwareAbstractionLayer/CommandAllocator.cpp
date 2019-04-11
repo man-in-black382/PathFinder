@@ -1,12 +1,16 @@
 #include "CommandAllocator.hpp"
 
-
-
-CommandAllocator::CommandAllocator()
+namespace HAL
 {
-}
 
+    CommandAllocator::CommandAllocator()
+    {
 
-CommandAllocator::~CommandAllocator()
-{
+    }
+
+    CommandAllocator::~CommandAllocator()
+    {
+
+    }
+
 }

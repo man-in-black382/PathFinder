@@ -3,13 +3,19 @@
 #include <dxgi.h>
 #include <wrl.h>
 
-class DisplayAdapter
+namespace HAL
 {
-public:
-    DisplayAdapter(const DXGI_ADAPTER_DESC& desc);
-    ~DisplayAdapter();
+	class DisplayAdapter
+	{
+	private:
+        friend class DisplayAdapterFetcher;
 
-private:
-    DXGI_ADAPTER_DESC mDescription;
-};
+        DisplayAdapter(Microsoft::WRL::ComPtr<IDXGIAdapter> adapter);
+	
+        Microsoft::WRL::ComPtr<IDXGIAdapter> mAdapter;
+
+    public:
+        const auto COMPtr() const { return mAdapter; }
+	};
+}
 

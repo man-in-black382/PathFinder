@@ -124,7 +124,7 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandQueue.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Device.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapter.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterEnumerator.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Fence.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PipelineState.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -142,7 +142,7 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandQueue.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Device.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapter.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterEnumerator.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Fence.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PipelineState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
