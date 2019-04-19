@@ -8,6 +8,9 @@
 #include "CommandQueue.hpp"
 #include "Fence.hpp"
 #include "DisplayAdapter.hpp"
+#include "DescriptorHeap.hpp"
+#include "Descriptor.hpp"
+#include "Resource.hpp"
 
 namespace HAL
 {
@@ -17,12 +20,10 @@ namespace HAL
         Device(const DisplayAdapter& adapter);
         ~Device();
 
-        CommandAllocator CreateCommandAllocator() const;
-        CommandQueue CreateCommandQueue() const;
-        Fence CreateFence() const;
-
-        // Check for features, enumerate displays, display modes etc.
     private:
         Microsoft::WRL::ComPtr<ID3D12Device> mDevice;
+
+    public:
+        inline const auto Device() const { return mDevice.Get(); }
     };
 }

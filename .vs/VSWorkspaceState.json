@@ -7,6 +7,6 @@
     "\\PathFinder\\Source\\ThirdParty",
     "\\PathFinder\\Source\\ThirdParty\\imgui"
   ],
-  "SelectedNode": "\\PathFinder\\Source\\HardwareAbstractionLayer\\CommandAllocator.hpp",
+  "SelectedNode": "\\PathFinder\\Source\\HardwareAbstractionLayer\\CommandList.cpp",
   "PreviewInSolutionExplorer": false
 }

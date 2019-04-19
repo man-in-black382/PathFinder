@@ -7,15 +7,14 @@ namespace HAL
 {
 	class DisplayAdapter
 	{
-	private:
-        friend class DisplayAdapterFetcher;
-
-        DisplayAdapter(Microsoft::WRL::ComPtr<IDXGIAdapter> adapter);
+	public:
+        DisplayAdapter(const Microsoft::WRL::ComPtr<IDXGIAdapter>& adapter);
 	
+    private:
         Microsoft::WRL::ComPtr<IDXGIAdapter> mAdapter;
 
     public:
-        const auto COMPtr() const { return mAdapter; }
+        inline const auto COMPtr() const { return mAdapter; }
 	};
 }
 

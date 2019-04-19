@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -122,11 +122,15 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandAllocator.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandList.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandQueue.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\Descriptor.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\DescriptorHeap.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Device.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapter.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Fence.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PipelineState.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\Resource.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\SwapChain.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui_demo.cpp" />
@@ -140,11 +144,17 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandAllocator.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandList.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandQueue.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\CommandListTypeResolver.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\Descriptor.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeap.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeapTypeResolver.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Device.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapter.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Fence.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PipelineState.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\Resource.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\SwapChain.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\ThirdParty\imgui\imconfig.h" />
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h" />

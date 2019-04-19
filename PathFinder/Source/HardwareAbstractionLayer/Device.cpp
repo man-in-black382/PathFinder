@@ -13,8 +13,8 @@ namespace HAL
 	        debugController->EnableDebugLayer();
 	    }
 	#endif
-	
-	    D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
+
+        D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
 	    ThrowIfFailed(D3D12CreateDevice(adapter.COMPtr().Get(), featureLevel, IID_PPV_ARGS(&mDevice)));
 	}
 	
@@ -23,18 +23,23 @@ namespace HAL
 	
 	}
 	
-	CommandAllocator Device::CreateCommandAllocator() const
-	{
-	    return CommandAllocator();
-	}
-	
-	CommandQueue Device::CreateCommandQueue() const
-	{
-        return CommandQueue();
-	}
-	
-	Fence Device::CreateFence() const
-	{
-        return Fence();
-	}
+    RTDescriptor Device::EmplaceDescriptorInHeap(const Resource& resource, const RTDescriptorHeap& heap)
+    {
+        return RTDescriptor(mDevice, resource.Resource(), heap.Heap());
+    }
+
+    //CommandAllocator Device::CreateCommandAllocator() const
+	//{
+	//    return CommandAllocator();
+	//}
+	//
+	//CommandQueue Device::CreateCommandQueue() const
+	//{
+ //       return CommandQueue();
+	//}
+	//
+	//Fence Device::CreateFence() const
+	//{
+ //       return Fence(mDevice);
+	//}
 }

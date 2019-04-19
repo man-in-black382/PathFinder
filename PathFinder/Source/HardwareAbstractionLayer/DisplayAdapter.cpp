@@ -3,9 +3,6 @@
 namespace HAL
 {
 	
-    DisplayAdapter::DisplayAdapter(Microsoft::WRL::ComPtr<IDXGIAdapter> adapter) : mAdapter(adapter)
-    {
-
-    }
+    DisplayAdapter::DisplayAdapter(const Microsoft::WRL::ComPtr<IDXGIAdapter>& adapter) : mAdapter(adapter) { }
 
 }

@@ -3,14 +3,6 @@
 namespace HAL
 {
 
-    CommandQueue::CommandQueue()
-    {
-
-    }
-
-    CommandQueue::~CommandQueue()
-    {
-
-    }
+ 
 
 }

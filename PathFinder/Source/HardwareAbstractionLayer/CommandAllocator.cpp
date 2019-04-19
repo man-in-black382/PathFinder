@@ -3,14 +3,6 @@
 namespace HAL
 {
 
-    CommandAllocator::CommandAllocator()
-    {
-
-    }
-
-    CommandAllocator::~CommandAllocator()
-    {
-
-    }
+  
 
 }
