@@ -18,21 +18,16 @@ namespace HAL
         chain.SampleDesc.Count = 1;
         chain.SampleDesc.Quality = 0;
         chain.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        chain.BufferCount = std::underlying_type<BackBufferingStrategy>(strategy);
+        chain.BufferCount = std::underlying_type<BackBufferingStrategy>::type(strategy);
         chain.OutputWindow = windowHandle;
         chain.Windowed = true;
         chain.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
         chain.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
         ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&mDXGIFactory)));
-        ThrowIfFailed(mDXGIFactory->CreateSwapChain(commandQueue.ComPtr().Get(), &chain, mSwapChain.GetAddressOf()));
+        ThrowIfFailed(mDXGIFactory->CreateSwapChain(commandQueue.D3DPtr(), &chain, mSwapChain.GetAddressOf()));
 
 
-    }
-
-    SwapChain::~SwapChain()
-    {
-        
     }
 
 }

@@ -22,24 +22,5 @@ namespace HAL
 	{
 	
 	}
-	
-    RTDescriptor Device::EmplaceDescriptorInHeap(const Resource& resource, const RTDescriptorHeap& heap)
-    {
-        return RTDescriptor(mDevice, resource.Resource(), heap.Heap());
-    }
 
-    //CommandAllocator Device::CreateCommandAllocator() const
-	//{
-	//    return CommandAllocator();
-	//}
-	//
-	//CommandQueue Device::CreateCommandQueue() const
-	//{
- //       return CommandQueue();
-	//}
-	//
-	//Fence Device::CreateFence() const
-	//{
- //       return Fence(mDevice);
-	//}
 }

@@ -12,7 +12,7 @@ namespace HAL
     class CommandList
     {
     protected:
-        CommandList(const ID3D12Device* device, const ID3D12CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type);
+        CommandList(ID3D12Device* device, ID3D12CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type);
 
     private:
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mList;
@@ -20,32 +20,32 @@ namespace HAL
 
     class DirectCommandList : public CommandList {
     public:
-        DirectCommandList(const Device& device, const CommandAllocator<DirectCommandList>& allocator);
+        DirectCommandList(Device& device, CommandAllocator<DirectCommandList>& allocator);
     };
 
     class BundleCommandList : public CommandList {
     public:
-        BundleCommandList(const Device& device, const CommandAllocator<BundleCommandList>& allocator);
+        BundleCommandList(Device& device, CommandAllocator<BundleCommandList>& allocator);
     };
 
     class CopyCommandList : public CommandList {
     public:
-        CopyCommandList(const Device& device, const CommandAllocator<CopyCommandList>& allocator);
+        CopyCommandList(Device& device, CommandAllocator<CopyCommandList>& allocator);
     };
 
     class ComputeCommandList : public CommandList {
     public:
-        ComputeCommandList(const Device& device, const CommandAllocator<ComputeCommandList>& allocator);
+        ComputeCommandList(Device& device, CommandAllocator<ComputeCommandList>& allocator);
     };
 
     class VideoProcessingCommandList : public CommandList {
     public:
-        VideoProcessingCommandList(const Device& device, const CommandAllocator<VideoProcessingCommandList>& allocator);
+        VideoProcessingCommandList(Device& device, CommandAllocator<VideoProcessingCommandList>& allocator);
     };
 
     class VideoDecodingCommandList : public CommandList {
     public:
-        VideoDecodingCommandList(const Device& device, const CommandAllocator<VideoDecodingCommandList>& allocator);
+        VideoDecodingCommandList(Device& device, CommandAllocator<VideoDecodingCommandList>& allocator);
     };
 
 }

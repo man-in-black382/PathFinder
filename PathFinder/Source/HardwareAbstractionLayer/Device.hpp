@@ -3,14 +3,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 
-#include "CommandAllocator.hpp"
-#include "CommandList.hpp"
-#include "CommandQueue.hpp"
-#include "Fence.hpp"
 #include "DisplayAdapter.hpp"
-#include "DescriptorHeap.hpp"
-#include "Descriptor.hpp"
-#include "Resource.hpp"
 
 namespace HAL
 {
@@ -24,6 +17,6 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12Device> mDevice;
 
     public:
-        inline const auto Device() const { return mDevice.Get(); }
+        inline const auto D3DPtr() const { return mDevice.Get(); }
     };
 }

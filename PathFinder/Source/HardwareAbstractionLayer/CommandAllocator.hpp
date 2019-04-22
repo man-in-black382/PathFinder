@@ -18,13 +18,13 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mAllocator;
 
     public:
-        inline const auto Allocator() const { return mAllocator.Get(); }
+        inline const auto D3DPtr() const { return mAllocator.Get(); }
 	};
 
     template <class CommandListT>
     CommandAllocator<CommandListT>::CommandAllocator(const Device& device)
     {
-        ThrowIfFailed(device.Device()->CreateCommandAllocator(CommandListTypeResolver<CommandListT>::ListType()), IID_PPV_ARGS(&mAllocator));
+        ThrowIfFailed(device.D3DPtr()->CreateCommandAllocator(CommandListTypeResolver<CommandListT>::ListType()), IID_PPV_ARGS(&mAllocator));
     }
 
 }

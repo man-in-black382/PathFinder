@@ -2,6 +2,9 @@
 
 #include <wrl.h>
 #include <dxgi.h>
+#include <cstdint>
+
+#include "Device.hpp"
 
 namespace HAL
 {
@@ -14,7 +17,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
 
     public:
-        inline const auto Resource() const { return mResource.Get(); }
+        inline const auto D3DPtr() const { return mResource.Get(); }
     };
 }
 

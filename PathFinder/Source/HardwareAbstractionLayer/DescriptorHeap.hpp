@@ -2,11 +2,13 @@
 
 #include <d3d12.h>
 #include <wrl.h>
+#include <cstdint>
 
 #include "DescriptorHeapTypeResolver.hpp"
 #include "Resource.hpp"
 #include "Descriptor.hpp"
 #include "Device.hpp"
+#include "Utils.h"
 
 namespace HAL
 {
@@ -14,7 +16,7 @@ namespace HAL
 	class DescriptorHeap
 	{
     public:
-        DescriptorHeap(const Device& device, uint32_t capacity, uint32_t incrementSize);
+        DescriptorHeap(const Device& device, uint32_t capacity);
 
         void EmplaceDescriptorForResource(const Device& device, const Resource& resource);
 
@@ -29,7 +31,7 @@ namespace HAL
 
     template <class DescriptorT>
     DescriptorHeap<DescriptorT>::DescriptorHeap(const Device& device, uint32_t capacity)
-        : mIncrementSize(device.Device()->GetDescriptorHandleIncrementSize(DescriptorHeapTypeResolver<DescriptorT>::HeapType()))
+        : mIncrementSize(device.D3DPtr()->GetDescriptorHandleIncrementSize(DescriptorHeapTypeResolver<DescriptorT>::HeapType()))
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc;
         desc.NumDescriptors = capacity;
@@ -37,7 +39,7 @@ namespace HAL
         desc.NodeMask = 0;
         desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-        ThrowIfFailed(device.Device()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mHeap)));
+        ThrowIfFailed(device.D3DPtr()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mHeap)));
     }
 
     template <> void DescriptorHeap<RTDescriptor>::EmplaceDescriptorForResource(const Device& device, const Resource& resource)

@@ -4,44 +4,44 @@
 namespace HAL
 {
 
-    CommandList::CommandList(const ID3D12Device* device, const ID3D12CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type)
+    CommandList::CommandList(ID3D12Device* device, ID3D12CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type)
     {
         ThrowIfFailed(device->CreateCommandList(0, type, allocator, nullptr, IID_PPV_ARGS(&mList)));
         mList->Close();
     }
 
-    DirectCommandList::DirectCommandList(const Device& device, const CommandAllocator<DirectCommandList>& allocator)
-        : CommandList(device.Device(), allocator.Allocator(), CommandListTypeResolver<DirectCommandList>::ListType())
+    DirectCommandList::DirectCommandList(Device& device, CommandAllocator<DirectCommandList>& allocator)
+        : CommandList(device.D3DPtr(), allocator.D3DPtr(), CommandListTypeResolver<DirectCommandList>::ListType())
     {
 
     }
 
-    BundleCommandList::BundleCommandList(const Device& device, const CommandAllocator<BundleCommandList>& allocator)
-        : CommandList(device.Device(), allocator.Allocator(), CommandListTypeResolver<BundleCommandList>::ListType())
+    BundleCommandList::BundleCommandList(Device& device, CommandAllocator<BundleCommandList>& allocator)
+        : CommandList(device.D3DPtr(), allocator.D3DPtr(), CommandListTypeResolver<BundleCommandList>::ListType())
     {
 
     }
 
-    CopyCommandList::CopyCommandList(const Device& device, const CommandAllocator<CopyCommandList>& allocator)
-        : CommandList(device.Device(), allocator.Allocator(), CommandListTypeResolver<CopyCommandList>::ListType())
+    CopyCommandList::CopyCommandList(Device& device, CommandAllocator<CopyCommandList>& allocator)
+        : CommandList(device.D3DPtr(), allocator.D3DPtr(), CommandListTypeResolver<CopyCommandList>::ListType())
     {
 
     }
 
-    ComputeCommandList::ComputeCommandList(const Device& device, const CommandAllocator<ComputeCommandList>& allocator)
-        : CommandList(device.Device(), allocator.Allocator(), CommandListTypeResolver<ComputeCommandList>::ListType())
+    ComputeCommandList::ComputeCommandList(Device& device, CommandAllocator<ComputeCommandList>& allocator)
+        : CommandList(device.D3DPtr(), allocator.D3DPtr(), CommandListTypeResolver<ComputeCommandList>::ListType())
     {
 
     }
 
-    VideoProcessingCommandList::VideoProcessingCommandList(const Device& device, const CommandAllocator<VideoProcessingCommandList>& allocator)
-        : CommandList(device.Device(), allocator.Allocator(), CommandListTypeResolver<VideoProcessingCommandList>::ListType())
+    VideoProcessingCommandList::VideoProcessingCommandList(Device& device, CommandAllocator<VideoProcessingCommandList>& allocator)
+        : CommandList(device.D3DPtr(), allocator.D3DPtr(), CommandListTypeResolver<VideoProcessingCommandList>::ListType())
     {
 
     }
 
-    VideoDecodingCommandList::VideoDecodingCommandList(const Device& device, const CommandAllocator<VideoDecodingCommandList>& allocator)
-        : CommandList(device.Device(), allocator.Allocator(), CommandListTypeResolver<VideoDecodingCommandList>::ListType())
+    VideoDecodingCommandList::VideoDecodingCommandList(Device& device, CommandAllocator<VideoDecodingCommandList>& allocator)
+        : CommandList(device.D3DPtr(), allocator.D3DPtr(), CommandListTypeResolver<VideoDecodingCommandList>::ListType())
     {
 
     }

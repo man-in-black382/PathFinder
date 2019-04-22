@@ -18,7 +18,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> mQueue;
 
     public:
-        inline const auto Queue() const { return mQueue.Get(); }
+        inline const auto D3DPtr() const { return mQueue.Get(); }
     };
 
     template <class CommmandListT>
@@ -28,7 +28,7 @@ namespace HAL
         desc.Type = CommandListTypeResolver<CommmandListT>::ListType();
         desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
-        ThrowIfFailed(device.Device()->CreateCommandQueue(desc, IID_PPV_ARGS(&mQueue)));
+        ThrowIfFailed(device.D3DPtr()->CreateCommandQueue(desc, IID_PPV_ARGS(&mQueue)));
     }
 
 }
