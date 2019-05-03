@@ -12,65 +12,36 @@
 
 namespace HAL
 {
-    template <class DescriptorT>
-	class DescriptorHeap
-	{
+    class DescriptorHeap
+    {
     public:
-        DescriptorHeap(const Device& device, uint32_t capacity);
+        DescriptorHeap(const Device& device, uint32_t capacity, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 
-        void EmplaceDescriptorForResource(const Device& device, const Resource& resource);
-
-    private:
+    protected:
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mHeap;
         uint32_t mIncrementSize;
-        uint32_t mCurrentHeapOffset;
+        D3D12_CPU_DESCRIPTOR_HANDLE mCurrentHeapHandle;
 
     public:
-        inline const auto Heap() const { return mHeap.Get(); }
-	};
+        inline const auto D3DPtr() const { return mHeap.Get(); }
+    };
 
-    template <class DescriptorT>
-    DescriptorHeap<DescriptorT>::DescriptorHeap(const Device& device, uint32_t capacity)
-        : mIncrementSize(device.D3DPtr()->GetDescriptorHandleIncrementSize(DescriptorHeapTypeResolver<DescriptorT>::HeapType()))
-    {
-        D3D12_DESCRIPTOR_HEAP_DESC desc;
-        desc.NumDescriptors = capacity;
-        desc.Type = DescriptorHeapTypeResolver<DescriptorT>::HeapType();
-        desc.NodeMask = 0;
-        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    class RTDescriptorHeap : public DescriptorHeap {
+    public:
+        RTDescriptor EmplaceDescriptorForResource(const Device& device, const ColorTextureResource& resource);
+    };
 
-        ThrowIfFailed(device.D3DPtr()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mHeap)));
-    }
+    class DSDescriptorHeap : public DescriptorHeap {
+    public:
+        DSDescriptor EmplaceDescriptorForResource(const Device& device, const DepthStencilTextureResource& resource);
+    };
 
-    template <> void DescriptorHeap<RTDescriptor>::EmplaceDescriptorForResource(const Device& device, const Resource& resource)
-    {
-        
-    }
-
-    template <> void DescriptorHeap<DSDescriptor>::EmplaceDescriptorForResource(const Device& device, const Resource& resource)
-    {
-
-    }
-
-    template <> void DescriptorHeap<CBDescriptor>::EmplaceDescriptorForResource(const Device& device, const Resource& resource)
-    {
-
-    }
-
-    template <> void DescriptorHeap<SRDescriptor>::EmplaceDescriptorForResource(const Device& device, const Resource& resource)
-    {
-
-    }
-
-    template <> void DescriptorHeap<UADescriptor>::EmplaceDescriptorForResource(const Device& device, const Resource& resource)
-    {
-
-    }
-
-    template <> void DescriptorHeap<SamplerDescriptor>::EmplaceDescriptorForResource(const Device& device, const Resource& resource)
-    {
-
-    }
+    class CBSRUADescriptorHeap : public DescriptorHeap {
+    public:
+        /*CBDescriptor EmplaceDescriptorForConstantBufferResource(const Device& device, const Resource& resource);
+        SRDescriptor EmplaceDescriptorForShaderResource(const Device& device, const Resource& resource);
+        UADescriptor EmplaceDescriptorForUnorderedAccessResource(const Device& device, const Resource& resource);*/
+    };
 
 }
 

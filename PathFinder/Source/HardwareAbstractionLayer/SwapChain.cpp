@@ -4,12 +4,12 @@
 namespace HAL
 {
 
-    SwapChain::SwapChain(const CommandQueue<DirectCommandList>& commandQueue, HWND windowHandle, BackBufferingStrategy strategy)
+    SwapChain::SwapChain(const CommandQueue<DirectCommandList>& commandQueue, HWND windowHandle, BackBufferingStrategy strategy, const Geometry::Dimensions& dimensions)
     {
         DXGI_SWAP_CHAIN_DESC chain;
 
-        chain.BufferDesc.Width = 1920;
-        chain.BufferDesc.Height = 1080;
+        chain.BufferDesc.Width = dimensions.Width;
+        chain.BufferDesc.Height = dimensions.Height;
         chain.BufferDesc.RefreshRate.Numerator = 60;
         chain.BufferDesc.RefreshRate.Denominator = 1;
         chain.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -27,7 +27,9 @@ namespace HAL
         ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&mDXGIFactory)));
         ThrowIfFailed(mDXGIFactory->CreateSwapChain(commandQueue.D3DPtr(), &chain, mSwapChain.GetAddressOf()));
 
-
+        Microsoft::WRL::ComPtr<ID3D12Resource> backBufferResourcePtr;
+        ThrowIfFailed(mSwapChain->GetBuffer(0, IID_PPV_ARGS(&backBufferResourcePtr)));
+        mBackBuffer = std::make_unique<ColorTextureResource>(backBufferResourcePtr);
     }
 
 }

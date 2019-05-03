@@ -3,9 +3,12 @@
 #include <dxgi.h>
 #include <vector>
 #include <cstdint>
+#include <memory>
 
 #include "CommandQueue.hpp"
 #include "Resource.hpp"
+
+#include "../Geometry/Dimensions.hpp"
 
 namespace HAL
 {
@@ -14,16 +17,16 @@ namespace HAL
     class SwapChain
     {
     public:
-        SwapChain(const CommandQueue<DirectCommandList>& commandQueue, HWND windowHandle, BackBufferingStrategy strategy);
+        SwapChain(const CommandQueue<DirectCommandList>& commandQueue, HWND windowHandle, BackBufferingStrategy strategy, const Geometry::Dimensions& dimensions);
 
     private:
         Microsoft::WRL::ComPtr<IDXGIFactory> mDXGIFactory;
         Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
 
-        std::vector<Resource> mBackBufferResources;
+        std::unique_ptr<ColorTextureResource> mBackBuffer;
 
     public:
-
+        //inline const Resource& BackBuffer() const { return mBackBuffer; }
     };
 }
 
