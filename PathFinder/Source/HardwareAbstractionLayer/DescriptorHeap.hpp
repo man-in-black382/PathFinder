@@ -4,7 +4,6 @@
 #include <wrl.h>
 #include <cstdint>
 
-#include "DescriptorHeapTypeResolver.hpp"
 #include "Resource.hpp"
 #include "Descriptor.hpp"
 #include "Device.hpp"
@@ -15,9 +14,11 @@ namespace HAL
     class DescriptorHeap
     {
     public:
-        DescriptorHeap(const Device& device, uint32_t capacity, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
+        DescriptorHeap(const Device* device, uint32_t capacity, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
+        virtual ~DescriptorHeap() = 0;
 
     protected:
+        const Device* mDevice = nullptr;
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mHeap;
         uint32_t mIncrementSize;
         D3D12_CPU_DESCRIPTOR_HANDLE mCurrentHeapHandle;
@@ -26,14 +27,22 @@ namespace HAL
         inline const auto D3DPtr() const { return mHeap.Get(); }
     };
 
+
     class RTDescriptorHeap : public DescriptorHeap {
     public:
-        RTDescriptor EmplaceDescriptorForResource(const Device& device, const ColorTextureResource& resource);
+        RTDescriptorHeap(const Device* device, uint32_t capacity);
+        ~RTDescriptorHeap() = default;
+
+        RTDescriptor EmplaceDescriptorForResource(const ColorTextureResource& resource);
     };
+
 
     class DSDescriptorHeap : public DescriptorHeap {
     public:
-        DSDescriptor EmplaceDescriptorForResource(const Device& device, const DepthStencilTextureResource& resource);
+        DSDescriptorHeap(const Device* device, uint32_t capacity);
+        ~DSDescriptorHeap() = default;
+
+        DSDescriptor EmplaceDescriptorForResource(const DepthStencilTextureResource& resource);
     };
 
     class CBSRUADescriptorHeap : public DescriptorHeap {

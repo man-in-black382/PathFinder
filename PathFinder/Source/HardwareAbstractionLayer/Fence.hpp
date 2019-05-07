@@ -5,16 +5,16 @@
 
 namespace HAL
 {
-	class Fence
-	{
+    class Fence
+    {
     public:
-	    Fence(const Microsoft::WRL::ComPtr<ID3D12Device>& device);
-	
-	private:
-	    Microsoft::WRL::ComPtr<ID3D12Fence> mFence;
-	
-	public:
-	   // inline const auto COMPtr() const { return mAdapter; }
-	};
+        Fence(const Microsoft::WRL::ComPtr<ID3D12Device>& device);
+    
+    private:
+        Microsoft::WRL::ComPtr<ID3D12Fence> mFence;
+    
+    public:
+       // inline const auto COMPtr() const { return mAdapter; }
+    };
 }
 

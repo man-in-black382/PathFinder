@@ -1,26 +1,10 @@
-//
-//  Sphere.cpp
-//  Geometry
-//
-//  Created by Pavel Muratov on 1/19/18.
-//  Copyright © 2018 MPO. All rights reserved.
-//
-
 #include "Sphere.hpp"
 
 #include <glm/gtx/norm.hpp>
 
 namespace Geometry {
 
-#pragma mark - Lifecycle
-
-    Sphere::Sphere(const glm::vec3 &c, float r)
-            :
-            center(c),
-            radius(r) {
-    }
-
-#pragma mark - Geometry
+    Sphere::Sphere(const glm::vec3 &c, float r) : center(c), radius(r) {}
 
     bool Sphere::contains(const glm::vec3 &point) const {
         float radius2 = radius * radius;

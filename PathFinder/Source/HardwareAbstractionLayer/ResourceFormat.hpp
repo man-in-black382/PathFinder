@@ -2,13 +2,12 @@
 
 #include <d3d12.h>
 
-#include "DataFormat.hpp"
 #include "../Geometry/Dimensions.hpp"
 
 namespace HAL
 {
-	class ResourceFormat
-	{
+    class ResourceFormat
+    {
     public:
         enum class TypelessColor {
             R8, RG8, RGBA8,
@@ -37,8 +36,6 @@ namespace HAL
 
         enum class TextureKind { Texture1D, Texture2D, Texture3D };
 
-        const D3D12_RESOURCE_DESC& D3DResourceDescription() const;
-
         ResourceFormat(TypelessColor dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
         ResourceFormat(Color dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
         ResourceFormat(DepthStencil dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
@@ -55,7 +52,10 @@ namespace HAL
         DXGI_FORMAT D3DFormat(DepthStencil type) const;
 
         D3D12_RESOURCE_DESC mDesc;
-	};
+
+    public:
+        inline const auto& D3DResourceDescription() const { return mDesc; }
+    };
 
 }
 

@@ -17,16 +17,16 @@ namespace HAL
     class SwapChain
     {
     public:
-        SwapChain(const CommandQueue<DirectCommandList>& commandQueue, HWND windowHandle, BackBufferingStrategy strategy, const Geometry::Dimensions& dimensions);
+        SwapChain(const DirectCommandQueue& commandQueue, HWND windowHandle, BackBufferingStrategy strategy, const Geometry::Dimensions& dimensions);
 
     private:
         Microsoft::WRL::ComPtr<IDXGIFactory> mDXGIFactory;
         Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
 
-        std::unique_ptr<ColorTextureResource> mBackBuffer;
+        std::vector<std::unique_ptr<ColorTextureResource>> mBackBuffers;
 
     public:
-        //inline const Resource& BackBuffer() const { return mBackBuffer; }
+        inline const auto& BackBuffers() const { return mBackBuffers; }
     };
 }
 
