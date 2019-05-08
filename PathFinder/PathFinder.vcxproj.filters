@@ -144,6 +144,12 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\RootSignature.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\RootParameters.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1008,6 +1014,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\RootSignature.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\RootParameters.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

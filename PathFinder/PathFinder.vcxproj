@@ -155,6 +155,8 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceBarrier.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceFormat.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceState.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RootParameters.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RootSignature.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\SwapChain.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -201,6 +203,8 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceBarrier.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceFormat.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceState.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RootParameters.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RootSignature.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\SwapChain.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
