@@ -23,7 +23,6 @@ namespace HAL
     class GPUDescriptor : public CPUDescriptor {
     public:
         GPUDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle, uint32_t indexInHeap);
-        virtual ~GPUDescriptor() = 0;
 
     private:
         D3D12_GPU_DESCRIPTOR_HANDLE mGPUHandle;
@@ -50,19 +49,23 @@ namespace HAL
     };
 
     class CBDescriptor : public GPUDescriptor {
-        
+	public:
+		~CBDescriptor() = default;
     };
 
     class SRDescriptor : public GPUDescriptor {
-
+	public:
+		~SRDescriptor() = default;
     };
 
     class UADescriptor : public GPUDescriptor {
-
+	public:
+		~UADescriptor() = default;
     };
 
     class SamplerDescriptor : public GPUDescriptor {
-
+	public:
+		~SamplerDescriptor() = default;
     };
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include <variant>
 
 #include "../Geometry/Dimensions.hpp"
 
@@ -43,13 +44,13 @@ namespace HAL
         ResourceFormat(Color dataType, TextureKind kind, const Geometry::Dimensions& dimensions);
         ResourceFormat(DepthStencil dataType, TextureKind kind, const Geometry::Dimensions& dimensions);
 
+        static constexpr DXGI_FORMAT D3DFormat(TypelessColor type);
+        static constexpr DXGI_FORMAT D3DFormat(Color type);
+        static constexpr DXGI_FORMAT D3DFormat(DepthStencil type);
+
     private:
         void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);
         void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions);
-
-        DXGI_FORMAT D3DFormat(TypelessColor type) const;
-        DXGI_FORMAT D3DFormat(Color type) const;
-        DXGI_FORMAT D3DFormat(DepthStencil type) const;
 
         D3D12_RESOURCE_DESC mDesc;
 

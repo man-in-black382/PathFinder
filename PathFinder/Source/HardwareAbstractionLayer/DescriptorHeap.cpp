@@ -25,7 +25,7 @@ namespace HAL
 
     RTDescriptor RTDescriptorHeap::EmplaceDescriptorForResource(const ColorTextureResource& resource)
     {
-        RTDescriptor descriptor{ mCurrentHeapHandle, mCurrentHeapHandle.ptr / mIncrementSize };
+        RTDescriptor descriptor{ mCurrentHeapHandle, uint32_t(mCurrentHeapHandle.ptr / mIncrementSize) };
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = descriptor.ResourceToRTVDescription(resource.D3DDescription());
         mDevice->D3DPtr()->CreateRenderTargetView(resource.D3DPtr(), &rtvDesc, mCurrentHeapHandle);
         mCurrentHeapHandle.ptr += mIncrementSize;
@@ -39,7 +39,7 @@ namespace HAL
 
     DSDescriptor DSDescriptorHeap::EmplaceDescriptorForResource(const DepthStencilTextureResource& resource)
     {
-        DSDescriptor descriptor{ mCurrentHeapHandle, mCurrentHeapHandle.ptr / mIncrementSize };
+        DSDescriptor descriptor{ mCurrentHeapHandle, uint32_t(mCurrentHeapHandle.ptr / mIncrementSize) };
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = descriptor.ResourceToDSVDescription(resource.D3DDescription());
         mDevice->D3DPtr()->CreateDepthStencilView(resource.D3DPtr(), &dsvDesc, mCurrentHeapHandle);
         mCurrentHeapHandle.ptr += mIncrementSize;

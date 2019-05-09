@@ -21,7 +21,7 @@ namespace HAL
         inline const auto& D3DParameter() const { return mParameter; }
     };
 
-
+	
     class RootDescriptorTableParameter : public RootParameter {
     public:
         RootDescriptorTableParameter();
@@ -35,9 +35,9 @@ namespace HAL
     };
 
 
-    class RootConstantsParameter {
+    class RootConstantsParameter : public RootParameter {
     public:
-        RootConstantsParameter();
+        //RootConstantsParameter();
         ~RootConstantsParameter() = default;
 
     private:
@@ -45,9 +45,9 @@ namespace HAL
     };
 
 
-    class RootDescriptorParameter {
+    class RootDescriptorParameter : public RootParameter {
     public:
-        RootDescriptorParameter();
+        //RootDescriptorParameter();
         ~RootDescriptorParameter() = default;
 
     private:

@@ -77,6 +77,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -86,6 +87,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>D3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -100,6 +102,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -115,6 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -141,22 +145,29 @@
     <ClCompile Include="Source\Geometry\Vertices\Vertex1P1N2UV1T1BT.cpp" />
     <ClCompile Include="Source\Geometry\Vertices\Vertex1P3.cpp" />
     <ClCompile Include="Source\Geometry\Vertices\Vertex1P4.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\BlendState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandAllocator.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandList.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandQueue.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\DepthStencilState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Descriptor.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DescriptorHeap.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\DescriptorTableRange.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Device.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapter.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Fence.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PipelineState.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\PrimitiveTopology.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RasterizerState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Resource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceBarrier.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceFormat.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RootParameters.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RootSignature.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\Shader.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\SwapChain.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
     <ClCompile Include="Source\main.cpp" />
@@ -189,22 +200,29 @@
     <ClInclude Include="Source\Geometry\Vertices\Vertex1P1N2UV1T1BT.hpp" />
     <ClInclude Include="Source\Geometry\Vertices\Vertex1P3.hpp" />
     <ClInclude Include="Source\Geometry\Vertices\Vertex1P4.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\BlendState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandAllocator.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandList.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandQueue.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\DepthStencilState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Descriptor.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeap.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorTableRange.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Device.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapter.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Fence.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PipelineState.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\PrimitiveTopology.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RasterizerState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Resource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceBarrier.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceFormat.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RootParameters.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RootSignature.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\Shader.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\SwapChain.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />

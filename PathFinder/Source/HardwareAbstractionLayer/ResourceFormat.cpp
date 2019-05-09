@@ -59,7 +59,7 @@ namespace HAL
         mDesc.DepthOrArraySize = dimensions.Depth;
     }
 
-    DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColor type) const
+    constexpr DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColor type)
     {
         switch (type)
         {
@@ -76,7 +76,7 @@ namespace HAL
         }
     }
 
-    DXGI_FORMAT ResourceFormat::D3DFormat(Color type) const
+    constexpr DXGI_FORMAT ResourceFormat::D3DFormat(Color type)
     {
         switch (type)
         {
@@ -117,7 +117,7 @@ namespace HAL
         }
     }
 
-    DXGI_FORMAT ResourceFormat::D3DFormat(DepthStencil type) const
+    constexpr DXGI_FORMAT ResourceFormat::D3DFormat(DepthStencil type)
     {
         switch (type)
         {

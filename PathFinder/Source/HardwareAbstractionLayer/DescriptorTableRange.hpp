@@ -9,7 +9,7 @@ namespace HAL
 
     class RootDescriprorTableRange {
     protected:
-        RootDescriprorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, uint32_t descriptorHeapIndex, uint32_t rangeSize, uint32_t registerSlot, uint32_t registerSpace);
+        RootDescriprorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, uint32_t descriptorHeapIndex, uint32_t rangeSize, uint32_t baseRegister, uint32_t registerSpace);
         virtual ~RootDescriprorTableRange() = 0;
 
     private:
@@ -21,9 +21,9 @@ namespace HAL
 
     class CBSRUADescriptorTableRange : public RootDescriprorTableRange {
     public:
-        CBSRUADescriptorTableRange(const CBDescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t registerSlot, uint32_t registerSpace = 0);
-        CBSRUADescriptorTableRange(const SRDescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t registerSlot, uint32_t registerSpace = 0);
-        CBSRUADescriptorTableRange(const UADescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t registerSlot, uint32_t registerSpace = 0);
+        CBSRUADescriptorTableRange(const CBDescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t baseRegister, uint32_t registerSpace = 0);
+        CBSRUADescriptorTableRange(const SRDescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t baseRegister, uint32_t registerSpace = 0);
+        CBSRUADescriptorTableRange(const UADescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t baseRegister, uint32_t registerSpace = 0);
 
         ~CBSRUADescriptorTableRange() = default;
     };
