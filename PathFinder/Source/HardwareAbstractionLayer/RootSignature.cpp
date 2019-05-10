@@ -6,7 +6,7 @@ namespace HAL
 
     RootSignature::RootSignature()
     {
-		mDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+        mDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
     }
 
     void RootSignature::AddDescriptorTableParameter(const RootDescriptorTableParameter& table)
@@ -33,9 +33,12 @@ namespace HAL
         mDesc.pParameters = &mD3DParameters[0];
     }
 
-    void RootSignature::Compile()
+    void RootSignature::Compile(const Device& device)
     {
-
+        Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
+        Microsoft::WRL::ComPtr<ID3DBlob> errors;
+        ThrowIfFailed(D3D12SerializeRootSignature(&mDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errors));
+        ThrowIfFailed(device.D3DPtr()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
     }
 
 }

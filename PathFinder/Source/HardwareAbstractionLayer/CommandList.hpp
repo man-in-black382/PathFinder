@@ -6,6 +6,8 @@
 #include "Device.hpp"
 #include "CommandAllocator.hpp"
 #include "Viewport.hpp"
+#include "PipelineState.hpp"
+#include "Descriptor.hpp"
 
 namespace HAL
 {
@@ -16,6 +18,10 @@ namespace HAL
         virtual ~CommandList() = 0;
 
         void SetViewport(const Viewport& viewport);
+        void SetPipelineState(const GraphicsPipelineState& state);
+        void SetRootDescriptor(const CBDescriptor& descriptor);
+        void SetRootDescriptor(const SRDescriptor& descriptor);
+        void SetRootDescriptor(const SamplerDescriptor& descriptor);
 
     private:
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mList;

@@ -17,7 +17,7 @@ namespace HAL
 		D3D12_DEPTH_STENCIL_DESC mDesc;
 
 	public:
-		inline const auto& D3DState() { return mDesc; }
+		inline const auto& D3DState() const { return mDesc; }
 	};
 
 }

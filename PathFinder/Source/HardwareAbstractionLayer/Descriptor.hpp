@@ -49,23 +49,23 @@ namespace HAL
     };
 
     class CBDescriptor : public GPUDescriptor {
-	public:
-		~CBDescriptor() = default;
+    public:
+        ~CBDescriptor() = default;
     };
 
     class SRDescriptor : public GPUDescriptor {
-	public:
-		~SRDescriptor() = default;
+    public:
+        ~SRDescriptor() = default;
     };
 
     class UADescriptor : public GPUDescriptor {
-	public:
-		~UADescriptor() = default;
+    public:
+        ~UADescriptor() = default;
     };
 
     class SamplerDescriptor : public GPUDescriptor {
-	public:
-		~SamplerDescriptor() = default;
+    public:
+        ~SamplerDescriptor() = default;
     };
 
 }

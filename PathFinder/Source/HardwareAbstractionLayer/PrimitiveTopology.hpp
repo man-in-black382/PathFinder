@@ -10,5 +10,7 @@ namespace HAL
 		Line, Point, Triangle, Patch
 	};
 
+    D3D12_PRIMITIVE_TOPOLOGY_TYPE D3DPrimitiveTopology(PrimitiveTopology topology);
+
 }
 

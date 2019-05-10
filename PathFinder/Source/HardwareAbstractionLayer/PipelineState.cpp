@@ -1,56 +1,80 @@
 #include "PipelineState.hpp"
+#include "../Foundation/Visitor.hpp"
 
 #include <d3d12.h>
 
 namespace HAL
 {
 
-	PipelineState::~PipelineState() {}
+    PipelineState::PipelineState(const RootSignature& assisiatedRootSignature)
+        : mAssosiatedRootSignature(assisiatedRootSignature) {}
 
-	GraphicsPipelineState::GraphicsPipelineState(
-		const Device& device,
-		const RootSignature& rootSignature,
-		const Shader& vertexShader,
-		const Shader& pixelShader,
-		const Shader* domainShader,
-		const Shader* hullShader,
-		const Shader* geometryShader,
-		const BlendState& blendState,
-		const RasterizerState& rasterizerState,
-		const DepthStencilState& depthStencilState,
-		PrimitiveTopology primitiveTopology, 
-		const std::array<RenderTargetFormat, 8>& renderTargetFormats,
-		ResourceFormat::DepthStencil depthStencilFormat,
-		const InputAssemblerLayout& inputLayout)
-	{
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc;
+    PipelineState::~PipelineState() {}
 
-		desc.pRootSignature;
-		desc.VS;
-		desc.PS;
-		desc.DS;
-		desc.HS;
-		desc.GS;
-		desc.StreamOutput;
-		desc.BlendState;
-		//desc.SampleMask;
-		desc.RasterizerState;
-		desc.DepthStencilState;
-		desc.InputLayout;
-		desc.IBStripCutValue;
-		desc.PrimitiveTopologyType;
-		desc.NumRenderTargets;
-		desc.RTVFormats[8];
-		desc.DSVFormat;
-		desc.SampleDesc;
-		/*desc.NodeMask;
-		desc.CachedPSO;*/
+    GraphicsPipelineState::GraphicsPipelineState(
+        const Device& device,
+        const RootSignature& rootSignature,
+        const Shader& vertexShader,
+        const Shader& pixelShader,
+        const Shader* domainShader,
+        const Shader* hullShader,
+        const Shader* geometryShader,
+        const BlendState& blendState,
+        const RasterizerState& rasterizerState,
+        const DepthStencilState& depthStencilState, 
+        const InputAssemblerLayout& inputLayout,
+        const RenderTargetFormatMap& renderTargetFormats,
+        ResourceFormat::DepthStencil depthStencilFormat,
+        PrimitiveTopology primitiveTopology)
+        :
+        PipelineState(rootSignature)
+    {
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC desc;
+
+        desc.pRootSignature = rootSignature.D3DSignature();
+        desc.VS = vertexShader.D3DBytecode();
+        desc.PS = pixelShader.D3DBytecode();
+
+        if (domainShader) desc.DS = domainShader->D3DBytecode();
+        if (hullShader) desc.HS = hullShader->D3DBytecode();
+        if (geometryShader) desc.GS = geometryShader->D3DBytecode();
+
+        desc.BlendState = blendState.D3DState();
+        desc.RasterizerState = rasterizerState.D3DState();
+        desc.DepthStencilState = depthStencilState.D3DState();
+        desc.InputLayout = inputLayout.D3DLayout();
+        desc.PrimitiveTopologyType = D3DPrimitiveTopology(primitiveTopology);
+        desc.NumRenderTargets = renderTargetFormats.size();
+        desc.RTVFormats[8];
+        desc.DSVFormat = ResourceFormat::D3DFormat(depthStencilFormat);
+
+        for (auto& keyValue : renderTargetFormats)
+        {
+            auto rtIdx = std::underlying_type<RenderTarget>::type(keyValue.first);
+            std::visit(Foundation::MakeVisitor(
+                [rtIdx, &desc](ResourceFormat::Color format)
+            {
+                desc.RTVFormats[rtIdx] = ResourceFormat::D3DFormat(format);
+            },
+                [rtIdx, &desc](ResourceFormat::TypelessColor format)
+            {
+                desc.RTVFormats[rtIdx] = ResourceFormat::D3DFormat(format);
+            }
+            ), keyValue.second);
+        }
+
+        //desc.SampleDesc
+        //desc.IBStripCutValue;
+        //desc.SampleMask;
+        //desc.StreamOutput;
+        /*desc.NodeMask;
+        desc.CachedPSO;*/
 
 #if defined(DEBUG) || defined(_DEBUG) 
-		desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
+        desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
-		
-		device.D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState));
-	}
+        
+        device.D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState));
+    }
 
 }

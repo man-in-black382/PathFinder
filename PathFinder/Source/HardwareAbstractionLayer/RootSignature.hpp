@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "Device.hpp"
 #include "RootParameters.hpp"
 
 namespace HAL
@@ -18,7 +19,7 @@ namespace HAL
         void AddDescriptorParameter(const RootDescriptorParameter& descriptor);
         void AddConstantsParameter(const RootConstantsParameter& constants);
 
-        void Compile();
+        void Compile(const Device& device);
 
     private:
         std::vector<RootDescriptorTableParameter> mDescriptorTableParameters;
@@ -27,6 +28,10 @@ namespace HAL
         std::vector<D3D12_ROOT_PARAMETER> mD3DParameters;
 
         D3D12_ROOT_SIGNATURE_DESC mDesc;
+        Microsoft::WRL::ComPtr<ID3D12RootSignature> mSignature;
+
+    public:
+        inline const auto D3DSignature() const { return mSignature.Get(); }
     };
 
 }

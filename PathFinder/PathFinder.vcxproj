@@ -161,6 +161,7 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\PipelineState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PrimitiveTopology.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RasterizerState.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RenderTarget.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Resource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceBarrier.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceFormat.cpp" />
@@ -181,6 +182,7 @@
     <ClCompile Include="Source\ThirdParty\imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Foundation\Visitor.hpp" />
     <ClInclude Include="Source\Geometry\AxisAlignedBox3D.hpp" />
     <ClInclude Include="Source\Geometry\Collision.hpp" />
     <ClInclude Include="Source\Geometry\Dimensions.hpp" />
@@ -216,6 +218,7 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\PipelineState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PrimitiveTopology.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RasterizerState.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RenderTarget.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Resource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceBarrier.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceFormat.hpp" />

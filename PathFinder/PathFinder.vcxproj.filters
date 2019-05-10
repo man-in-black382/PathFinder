@@ -168,10 +168,10 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\PrimitiveTopology.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\VertexInputLayout.cpp">
+    <ClCompile Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.cpp">
+    <ClCompile Include="Source\HardwareAbstractionLayer\RenderTarget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1064,10 +1064,13 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\PrimitiveTopology.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\VertexInputLayout.hpp">
+    <ClInclude Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.hpp">
+    <ClInclude Include="Source\HardwareAbstractionLayer\RenderTarget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Foundation\Visitor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

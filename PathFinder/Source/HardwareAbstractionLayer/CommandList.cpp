@@ -18,6 +18,12 @@ namespace HAL
         mList->RSSetViewports(1, &d3dViewport);
     }
 
+    void CommandList::SetPipelineState(const GraphicsPipelineState& state)
+    {
+        mList->SetPipelineState(state.D3DState());
+        mList->SetGraphicsRootSignature(state.AssosiatedRootSignature().D3DSignature());
+    }
+
     DirectCommandList::DirectCommandList(const Device& device, const DirectCommandAllocator& allocator)
         : CommandList(device, allocator, D3D12_COMMAND_LIST_TYPE_DIRECT)
     {

@@ -9,51 +9,58 @@
 #include "PrimitiveTopology.hpp"
 #include "ResourceFormat.hpp"
 #include "InputAssemblerLayout.hpp"
+#include "RenderTarget.hpp"
 
 #include <variant>
+#include <unordered_map>
 
 namespace HAL
 {
-	class PipelineState {
-	public:
-		virtual ~PipelineState() = 0;
+    class PipelineState {
+    public:
+        virtual ~PipelineState() = 0;
 
-	protected:
-		Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
+    protected:
+        PipelineState(const RootSignature& assisiatedRootSignature);
 
-	private:
-		inline const auto D3DState() const { return mState.Get(); }
-	};
+        Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
+        RootSignature mAssosiatedRootSignature;
 
-	class GraphicsPipelineState : public PipelineState
-	{
-	public:
-		using RenderTargetFormat = std::variant<ResourceFormat::Color, ResourceFormat::TypelessColor>;
+    public:
+        inline const auto D3DState() const { return mState.Get(); }
+        inline const auto& AssosiatedRootSignature() const { return mAssosiatedRootSignature; }
+    };
 
-		GraphicsPipelineState(
-			const Device& device,
-			const RootSignature& rootSignature,
-			const Shader& vertexShader,
-			const Shader& pixelShader,
-			const Shader* domainShader,
-			const Shader* hullShader,
-			const Shader* geometryShader,
-			const BlendState& blendState,
-			const RasterizerState& rasterizerState,
-			const DepthStencilState& depthStencilState,
-			PrimitiveTopology primitiveTopology,
-			const std::array<RenderTargetFormat, 8>& renderTargetFormats,
-			ResourceFormat::DepthStencil depthStencilFormat,
-			const InputAssemblerLayout& inputLayout
-		);
+    class GraphicsPipelineState : public PipelineState
+    {
+    public:
+        using RenderTargetFormat = std::variant<ResourceFormat::Color, ResourceFormat::TypelessColor>;
+        using RenderTargetFormatMap = std::unordered_map<RenderTarget, RenderTargetFormat>;
 
-		~GraphicsPipelineState() = default;
-	};
+        GraphicsPipelineState(
+            const Device& device,
+            const RootSignature& rootSignature,
+            const Shader& vertexShader,
+            const Shader& pixelShader,
+            const Shader* domainShader,
+            const Shader* hullShader,
+            const Shader* geometryShader,
+            const BlendState& blendState,
+            const RasterizerState& rasterizerState,
+            const DepthStencilState& depthStencilState,
+            const InputAssemblerLayout& inputLayout,
+            const RenderTargetFormatMap& renderTargetFormats,
+            ResourceFormat::DepthStencil depthStencilFormat,
+            PrimitiveTopology primitiveTopology
+        );
 
-	class ComputePipelineState {
-	private:
-		D3D12_COMPUTE_PIPELINE_STATE_DESC mDesc;
-	};
+        ~GraphicsPipelineState() = default;
+    };
+
+    class ComputePipelineState {
+    private:
+        D3D12_COMPUTE_PIPELINE_STATE_DESC mDesc;
+    };
 
 }
 
