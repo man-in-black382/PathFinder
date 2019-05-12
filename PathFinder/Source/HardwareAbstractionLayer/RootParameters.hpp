@@ -21,7 +21,7 @@ namespace HAL
         inline const auto& D3DParameter() const { return mParameter; }
     };
 
-	
+    
     class RootDescriptorTableParameter : public RootParameter {
     public:
         RootDescriptorTableParameter();

@@ -27,30 +27,23 @@ namespace HAL
         ~DirectCommandAllocator() = default;
     };
 
-    //class BundleCommandAllocator : public CommandAllocator {
-    //public:
-    //    BundleCommandAllocator(const Device& device);
-    //};
+    class BundleCommandAllocator : public CommandAllocator {
+    public:
+        BundleCommandAllocator(const Device& device);
+        ~BundleCommandAllocator() = default;
+    };
 
-    //class CopyCommandAllocator : public CommandAllocator {
-    //public:
-    //    CopyCommandAllocator(const Device& device);
-    //};
+    class CopyCommandAllocator : public CommandAllocator {
+    public:
+        CopyCommandAllocator(const Device& device);
+        ~CopyCommandAllocator() = default;
+    };
 
-    //class ComputeCommandAllocator : public CommandAllocator {
-    //public:
-    //    ComputeCommandAllocator(const Device& device);
-    //};
-
-    //class VideoProcessingCommandAllocator : public CommandAllocator {
-    //public:
-    //    VideoProcessingCommandAllocator(const Device& device);
-    //};
-
-    //class VideoDecodingCommandAllocator : public CommandAllocator {
-    //public:
-    //    VideoDecodingCommandAllocator(const Device& device);
-    //};
+    class ComputeCommandAllocator : public CommandAllocator {
+    public:
+        ComputeCommandAllocator(const Device& device);
+        ~ComputeCommandAllocator() = default;
+    };
 
 }
 

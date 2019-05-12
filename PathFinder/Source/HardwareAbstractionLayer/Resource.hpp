@@ -69,10 +69,10 @@ namespace HAL
         );
     };
 
-    class BufferResource : public Resource {
+    class ColorBufferResource : public Resource {
     public:
         using Resource::Resource;
-        BufferResource(
+        ColorBufferResource(
             const Device& device, 
             ResourceFormat::Color dataType,
             uint64_t width,

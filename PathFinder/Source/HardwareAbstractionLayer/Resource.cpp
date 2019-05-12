@@ -62,7 +62,7 @@ namespace HAL
         HeapType heapType)
         : Resource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), heapType, D3D12_RESOURCE_STATE_DEPTH_WRITE) {}
 
-    BufferResource::BufferResource(const Device& device, ResourceFormat::Color dataType, uint64_t width, HeapType heapType)
+    ColorBufferResource::ColorBufferResource(const Device& device, ResourceFormat::Color dataType, uint64_t width, HeapType heapType)
         : Resource(device, ResourceFormat(dataType, ResourceFormat::BufferKind::Buffer, { width, 1, 1 }), heapType, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER) {}
 
     TypelessBufferResource::TypelessBufferResource(const Device& device, ResourceFormat::TypelessColor dataType, uint64_t width, HeapType heapType)
