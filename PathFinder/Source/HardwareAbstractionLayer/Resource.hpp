@@ -8,6 +8,7 @@
 #include "Device.hpp"
 #include "ResourceFormat.hpp"
 #include "ResourceState.hpp"
+#include "ResourceBarrier.hpp"
 
 #include "../Geometry/Dimensions.hpp"
 
@@ -44,6 +45,10 @@ namespace HAL
             const Geometry::Dimensions& dimensions, 
             HeapType heapType = HeapType::Default
         );
+
+        //ResourceTransitionBarrier BarrierToState(std::initializer_list<ReadTextureResourceState> states);
+        //ResourceTransitionBarrier BarrierToState(WriteTextureResourceState state);
+        //ResourceTransitionBarrier BarrierToState(ReadWriteTextureResourceState state);
     };
 
     class TypelessTextureResource : public Resource {
@@ -56,6 +61,10 @@ namespace HAL
             const Geometry::Dimensions& dimensions,
             HeapType heapType = HeapType::Default
         );
+
+    /*    ResourceTransitionBarrier BarrierToState(std::initializer_list<ReadTextureResourceState> states);
+        ResourceTransitionBarrier BarrierToState(WriteTextureResourceState state);
+        ResourceTransitionBarrier BarrierToState(ReadWriteTextureResourceState state);*/
     };
 
     class DepthStencilTextureResource : public Resource {
@@ -67,6 +76,10 @@ namespace HAL
             const Geometry::Dimensions& dimensions,
             HeapType heapType = HeapType::Default
         );
+
+      /*  ResourceTransitionBarrier BarrierToState(std::initializer_list<ReadDepthStencilTextureResourceState> states);
+        ResourceTransitionBarrier BarrierToState(WriteDepthStencilTextureResourceState state);
+        ResourceTransitionBarrier BarrierToState(ReadWriteDepthStencilTextureResourceState state);*/
     };
 
     class ColorBufferResource : public Resource {

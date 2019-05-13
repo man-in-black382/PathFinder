@@ -1,5 +1,8 @@
-#include "SwapChain.hpp"
+#include "Resource.hpp"
 #include "Utils.h"
+#include "ResourceHelpers.hpp"
+
+#include "../Foundation/Visitor.hpp"
 
 namespace HAL
 {
@@ -32,12 +35,15 @@ namespace HAL
             nullptr,
             IID_PPV_ARGS(&mResource)
         ));
+
     }
 
     Resource::Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr)
         : mResource(existingResourcePtr) {}
 
     Resource::~Resource() {}
+
+
 
     ColorTextureResource::ColorTextureResource(
         const Device& device,
@@ -47,6 +53,24 @@ namespace HAL
         HeapType heapType)
         : Resource(device, ResourceFormat(dataType, kind, dimensions), heapType, D3D12_RESOURCE_STATE_RENDER_TARGET) {}
 
+    ResourceTransitionBarrier BarrierToState(std::initializer_list<ReadTextureResourceState> states)
+    {
+        D3DResourceStatesFromList(states);
+        //return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromList(states), this);
+    }
+
+    //ResourceTransitionBarrier ColorTextureResource::BarrierToState(WriteTextureResourceState state)
+    //{
+    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
+    //}
+
+    //ResourceTransitionBarrier ColorTextureResource::BarrierToState(ReadWriteTextureResourceState state)
+    //{
+    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
+    //}
+
+
+
     TypelessTextureResource::TypelessTextureResource(
         const Device& device,
         ResourceFormat::TypelessColor dataType,
@@ -55,6 +79,23 @@ namespace HAL
         HeapType heapType)
         : Resource(device, ResourceFormat(dataType, kind, dimensions), heapType, D3D12_RESOURCE_STATE_RENDER_TARGET) {}
 
+  /*  ResourceTransitionBarrier TypelessTextureResource::BarrierToState(std::initializer_list<ReadTextureResourceState> states)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromList(states), this);
+    }
+
+    ResourceTransitionBarrier TypelessTextureResource::BarrierToState(WriteTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
+    }
+
+    ResourceTransitionBarrier TypelessTextureResource::BarrierToState(ReadWriteTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
+    }*/
+
+
+
     DepthStencilTextureResource::DepthStencilTextureResource(
         const Device& device,
         ResourceFormat::DepthStencil dataType,
@@ -62,8 +103,27 @@ namespace HAL
         HeapType heapType)
         : Resource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), heapType, D3D12_RESOURCE_STATE_DEPTH_WRITE) {}
 
+    //ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(std::initializer_list<ReadDepthStencilTextureResourceState> states)
+    //{
+    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromList(states), this);
+    //}
+
+    //ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(WriteDepthStencilTextureResourceState state)
+    //{
+    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
+    //}
+
+    //ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(ReadWriteDepthStencilTextureResourceState state)
+    //{
+    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
+    //}
+
+
+
     ColorBufferResource::ColorBufferResource(const Device& device, ResourceFormat::Color dataType, uint64_t width, HeapType heapType)
         : Resource(device, ResourceFormat(dataType, ResourceFormat::BufferKind::Buffer, { width, 1, 1 }), heapType, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER) {}
+
+
 
     TypelessBufferResource::TypelessBufferResource(const Device& device, ResourceFormat::TypelessColor dataType, uint64_t width, HeapType heapType)
         : Resource(device, ResourceFormat(dataType, ResourceFormat::BufferKind::Buffer, { width, 1, 1 }), heapType, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER) {}

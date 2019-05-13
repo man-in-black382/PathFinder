@@ -3,25 +3,36 @@
 #include <wrl.h>
 #include <d3d12.h>
 
+#include "ResourceState.hpp"
+
 namespace HAL
 {
-	//class 
 
-	class ResourceBarrier {
-	protected:
-		D3D12_RESOURCE_BARRIER mDesc;
-	};
+    class Resource;
 
-	class ResourceTransitionBarrier : public ResourceBarrier
-	{
+    class ResourceBarrier {
     public:
-		ResourceTransitionBarrier();
+        virtual ~ResourceBarrier() = 0;
 
-	private:
-		
+    protected:
+        D3D12_RESOURCE_BARRIER mDesc;
 
-	public:
-	   // inline const auto COMPtr() const { return mAdapter; }
-	};
+    public:
+        inline const auto& D3DBarrier() const { return mDesc; }
+    };
+
+    class ResourceTransitionBarrier : public ResourceBarrier
+    {
+    public:
+        ResourceTransitionBarrier(D3D12_RESOURCE_STATES beforeStates, D3D12_RESOURCE_STATES afterStates, const Resource* resource);
+        ~ResourceTransitionBarrier() = default;
+
+    private:
+        const Resource* mResource;
+
+    public:
+
+    };
+
 }
 
