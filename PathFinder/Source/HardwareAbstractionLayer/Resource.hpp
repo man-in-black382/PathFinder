@@ -46,9 +46,10 @@ namespace HAL
             HeapType heapType = HeapType::Default
         );
 
-        //ResourceTransitionBarrier BarrierToState(std::initializer_list<ReadTextureResourceState> states);
-        //ResourceTransitionBarrier BarrierToState(WriteTextureResourceState state);
-        //ResourceTransitionBarrier BarrierToState(ReadWriteTextureResourceState state);
+        ResourceTransitionBarrier BarrierToStates(std::initializer_list<ReadTextureResourceState> states);
+        ResourceTransitionBarrier BarrierToState(ReadTextureResourceState state);
+        ResourceTransitionBarrier BarrierToState(WriteTextureResourceState state);
+        ResourceTransitionBarrier BarrierToState(ReadWriteTextureResourceState state);
     };
 
     class TypelessTextureResource : public Resource {
@@ -62,9 +63,10 @@ namespace HAL
             HeapType heapType = HeapType::Default
         );
 
-    /*    ResourceTransitionBarrier BarrierToState(std::initializer_list<ReadTextureResourceState> states);
+        ResourceTransitionBarrier BarrierToStates(std::initializer_list<ReadTextureResourceState> states);
+        ResourceTransitionBarrier BarrierToState(ReadTextureResourceState state);
         ResourceTransitionBarrier BarrierToState(WriteTextureResourceState state);
-        ResourceTransitionBarrier BarrierToState(ReadWriteTextureResourceState state);*/
+        ResourceTransitionBarrier BarrierToState(ReadWriteTextureResourceState state);
     };
 
     class DepthStencilTextureResource : public Resource {
@@ -77,9 +79,10 @@ namespace HAL
             HeapType heapType = HeapType::Default
         );
 
-      /*  ResourceTransitionBarrier BarrierToState(std::initializer_list<ReadDepthStencilTextureResourceState> states);
+        ResourceTransitionBarrier BarrierToStates(std::initializer_list<ReadDepthStencilTextureResourceState> states);
+        ResourceTransitionBarrier BarrierToState(ReadDepthStencilTextureResourceState state);
         ResourceTransitionBarrier BarrierToState(WriteDepthStencilTextureResourceState state);
-        ResourceTransitionBarrier BarrierToState(ReadWriteDepthStencilTextureResourceState state);*/
+        ResourceTransitionBarrier BarrierToState(ReadWriteDepthStencilTextureResourceState state);
     };
 
     class ColorBufferResource : public Resource {

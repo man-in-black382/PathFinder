@@ -35,7 +35,6 @@ namespace HAL
             nullptr,
             IID_PPV_ARGS(&mResource)
         ));
-
     }
 
     Resource::Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr)
@@ -53,21 +52,25 @@ namespace HAL
         HeapType heapType)
         : Resource(device, ResourceFormat(dataType, kind, dimensions), heapType, D3D12_RESOURCE_STATE_RENDER_TARGET) {}
 
-    ResourceTransitionBarrier BarrierToState(std::initializer_list<ReadTextureResourceState> states)
+    ResourceTransitionBarrier ColorTextureResource::BarrierToStates(std::initializer_list<ReadTextureResourceState> states)
     {
-        D3DResourceStatesFromList(states);
-        //return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromList(states), this);
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariantList(states), this);
     }
 
-    //ResourceTransitionBarrier ColorTextureResource::BarrierToState(WriteTextureResourceState state)
-    //{
-    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
-    //}
+    ResourceTransitionBarrier ColorTextureResource::BarrierToState(ReadTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
+    }
 
-    //ResourceTransitionBarrier ColorTextureResource::BarrierToState(ReadWriteTextureResourceState state)
-    //{
-    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
-    //}
+    ResourceTransitionBarrier ColorTextureResource::BarrierToState(WriteTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
+    }
+
+    ResourceTransitionBarrier ColorTextureResource::BarrierToState(ReadWriteTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
+    }
 
 
 
@@ -79,22 +82,29 @@ namespace HAL
         HeapType heapType)
         : Resource(device, ResourceFormat(dataType, kind, dimensions), heapType, D3D12_RESOURCE_STATE_RENDER_TARGET) {}
 
-  /*  ResourceTransitionBarrier TypelessTextureResource::BarrierToState(std::initializer_list<ReadTextureResourceState> states)
+    ResourceTransitionBarrier TypelessTextureResource::BarrierToStates(std::initializer_list<ReadTextureResourceState> states)
     {
-        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromList(states), this);
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariantList(states), this);
+    }
+
+    ResourceTransitionBarrier TypelessTextureResource::BarrierToState(ReadTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
     }
 
     ResourceTransitionBarrier TypelessTextureResource::BarrierToState(WriteTextureResourceState state)
     {
-        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
     }
 
     ResourceTransitionBarrier TypelessTextureResource::BarrierToState(ReadWriteTextureResourceState state)
     {
-        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
-    }*/
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
+    }
 
 
+
+    
 
     DepthStencilTextureResource::DepthStencilTextureResource(
         const Device& device,
@@ -103,22 +113,29 @@ namespace HAL
         HeapType heapType)
         : Resource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), heapType, D3D12_RESOURCE_STATE_DEPTH_WRITE) {}
 
-    //ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(std::initializer_list<ReadDepthStencilTextureResourceState> states)
-    //{
-    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromList(states), this);
-    //}
+    ResourceTransitionBarrier DepthStencilTextureResource::BarrierToStates(std::initializer_list<ReadDepthStencilTextureResourceState> states)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariantList(states), this);
+    }
+    
+    ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(ReadDepthStencilTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
+    }
 
-    //ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(WriteDepthStencilTextureResourceState state)
-    //{
-    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
-    //}
+    ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(WriteDepthStencilTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
+    }
 
-    //ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(ReadWriteDepthStencilTextureResourceState state)
-    //{
-    //    return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, state.D3DState(), this);
-    //}
+    ResourceTransitionBarrier DepthStencilTextureResource::BarrierToState(ReadWriteDepthStencilTextureResourceState state)
+    {
+        return ResourceTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3DResourceStatesFromVariant(state), this);
+    }
 
 
+
+    
 
     ColorBufferResource::ColorBufferResource(const Device& device, ResourceFormat::Color dataType, uint64_t width, HeapType heapType)
         : Resource(device, ResourceFormat(dataType, ResourceFormat::BufferKind::Buffer, { width, 1, 1 }), heapType, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER) {}
