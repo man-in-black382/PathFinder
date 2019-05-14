@@ -68,8 +68,8 @@ namespace HAL
         using ResourceStateBaseT::ResourceStateBaseT;
     };
 
-    struct PresentResourceStateT      : ResourceStateT<ResourceUsage::Read>  { PresentResourceStateT()      : ResourceStateT(D3D12_RESOURCE_STATE_PRESENT) {} };
-    struct RenderTargetResourceStateT : ResourceStateT<ResourceUsage::Write> { RenderTargetResourceStateT() : ResourceStateT(D3D12_RESOURCE_STATE_RENDER_TARGET) {} };
+    struct PresentTextureResourceStateT      : ResourceStateT<ResourceUsage::Read>  { PresentTextureResourceStateT()      : ResourceStateT(D3D12_RESOURCE_STATE_PRESENT) {} };
+    struct RenderTargetTextureResourceStateT : ResourceStateT<ResourceUsage::Write> { RenderTargetTextureResourceStateT() : ResourceStateT(D3D12_RESOURCE_STATE_RENDER_TARGET) {} };
 
 
 
@@ -84,21 +84,21 @@ namespace HAL
 
 
     // Convenience
-    using ReadResourceState = ResourceStateT<ResourceUsage::Read>;
-    using WriteResourceState = ResourceStateT<ResourceUsage::Write>;
-    using ReadWriteResourceState = ResourceStateT<ResourceUsage::ReadWrite>;
+    using ReadResourceStateT = ResourceStateT<ResourceUsage::Read>;
+    using WriteResourceStateT = ResourceStateT<ResourceUsage::Write>;
+    using ReadWriteResourceStateT = ResourceStateT<ResourceUsage::ReadWrite>;
 
-    using ReadTextureResourceState = std::variant<ResourceStateT<ResourceUsage::Read>, TextureResourceStateT<ResourceUsage::Read>>;
-    using WriteTextureResourceState = std::variant<ResourceStateT<ResourceUsage::Write>, TextureResourceStateT<ResourceUsage::Write>>;
-    using ReadWriteTextureResourceState = std::variant<ResourceStateT<ResourceUsage::ReadWrite>, TextureResourceStateT<ResourceUsage::ReadWrite>>;
+    using ReadTextureResourceStateT = std::variant<ResourceStateT<ResourceUsage::Read>, TextureResourceStateT<ResourceUsage::Read>>;
+    using WriteTextureResourceStateT = std::variant<ResourceStateT<ResourceUsage::Write>, TextureResourceStateT<ResourceUsage::Write>>;
+    using ReadWriteTextureResourceStateT = std::variant<ResourceStateT<ResourceUsage::ReadWrite>, TextureResourceStateT<ResourceUsage::ReadWrite>>;
 
-    using ReadDepthStencilTextureResourceState = std::variant<ResourceStateT<ResourceUsage::Read>, DepthStencilTextureResourceStateT<ResourceUsage::Read>>;
-    using WriteDepthStencilTextureResourceState = std::variant<ResourceStateT<ResourceUsage::Write>, DepthStencilTextureResourceStateT<ResourceUsage::Write>>;
-    using ReadWriteDepthStencilTextureResourceState = std::variant<ResourceStateT<ResourceUsage::ReadWrite>, DepthStencilTextureResourceStateT<ResourceUsage::ReadWrite>>;
+    using ReadDepthStencilTextureResourceStateT = std::variant<ResourceStateT<ResourceUsage::Read>, DepthStencilTextureResourceStateT<ResourceUsage::Read>>;
+    using WriteDepthStencilTextureResourceStateT = std::variant<ResourceStateT<ResourceUsage::Write>, DepthStencilTextureResourceStateT<ResourceUsage::Write>>;
+    using ReadWriteDepthStencilTextureResourceStateT = std::variant<ResourceStateT<ResourceUsage::ReadWrite>, DepthStencilTextureResourceStateT<ResourceUsage::ReadWrite>>;
 
-    using ReadBufferResourceState = std::variant<ResourceStateT<ResourceUsage::Read>, BufferResourceStateT<ResourceUsage::Read>>;
-    using WriteBufferResourceState = std::variant<ResourceStateT<ResourceUsage::Write>, BufferResourceStateT<ResourceUsage::Write>>;
-    using ReadWriteBufferResourceState = std::variant<ResourceStateT<ResourceUsage::ReadWrite>, BufferResourceStateT<ResourceUsage::ReadWrite>>;
+    using ReadBufferResourceStateT = std::variant<ResourceStateT<ResourceUsage::Read>, BufferResourceStateT<ResourceUsage::Read>>;
+    using WriteBufferResourceStateT = std::variant<ResourceStateT<ResourceUsage::Write>, BufferResourceStateT<ResourceUsage::Write>>;
+    using ReadWriteBufferResourceStateT = std::variant<ResourceStateT<ResourceUsage::ReadWrite>, BufferResourceStateT<ResourceUsage::ReadWrite>>;
 
 
 
@@ -111,8 +111,8 @@ namespace HAL
     extern CopyDesctinationResourceStateT CopyDesctinationResourceState;
     extern VertexAndConstantResourceStateT VertexAndConstantResourceState;
     extern IndexResourceStateT IndexResourceState;
-    extern PresentResourceStateT PresentResourceState;
-    extern RenderTargetResourceStateT RenderTargetResourceState;
+    extern PresentTextureResourceStateT PresentResourceState;
+    extern RenderTargetTextureResourceStateT RenderTargetResourceState;
     extern DepthReadResourceStateT DepthReadResourceState;
     extern DepthWriteResourceStateT DepthWriteResourceState;
 }

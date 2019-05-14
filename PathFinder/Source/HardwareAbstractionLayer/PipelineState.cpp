@@ -29,7 +29,7 @@ namespace HAL
         :
         PipelineState(rootSignature)
     {
-        D3D12_GRAPHICS_PIPELINE_STATE_DESC desc;
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
         desc.pRootSignature = rootSignature.D3DSignature();
         desc.VS = vertexShader.D3DBytecode();

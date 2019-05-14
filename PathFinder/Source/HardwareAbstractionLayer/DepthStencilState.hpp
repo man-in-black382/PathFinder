@@ -14,7 +14,7 @@ namespace HAL
 		DepthStencilState(bool depthTestEnabled, bool depthWriteEnabled, ComparisonFunction depthComparisonFunction);
 
 	private:
-		D3D12_DEPTH_STENCIL_DESC mDesc;
+        D3D12_DEPTH_STENCIL_DESC mDesc{};
 
 	public:
 		inline const auto& D3DState() const { return mDesc; }

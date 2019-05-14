@@ -4,9 +4,9 @@
 namespace HAL
 {
     DescriptorHeap::DescriptorHeap(const Device* device, uint32_t capacity, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
-        : mDevice(device), mIncrementSize(device->D3DPtr()->GetDescriptorHandleIncrementSize(heapType))
+        : mDevice(device), mCapacity(capacity), mIncrementSize(device->D3DPtr()->GetDescriptorHandleIncrementSize(heapType))
     {
-        D3D12_DESCRIPTOR_HEAP_DESC desc;
+        D3D12_DESCRIPTOR_HEAP_DESC desc{};
         desc.NumDescriptors = capacity;
         desc.Type = heapType;
         desc.NodeMask = 0;
@@ -25,10 +25,13 @@ namespace HAL
 
     RTDescriptor RTDescriptorHeap::EmplaceDescriptorForResource(const ColorTextureResource& resource)
     {
+        if (mInsertedDescriptorCount >= mCapacity) throw std::runtime_error("Exceeded descriptor heap's capacity");
+
         RTDescriptor descriptor{ mCurrentHeapHandle, uint32_t(mCurrentHeapHandle.ptr / mIncrementSize) };
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = descriptor.ResourceToRTVDescription(resource.D3DDescription());
         mDevice->D3DPtr()->CreateRenderTargetView(resource.D3DPtr(), &rtvDesc, mCurrentHeapHandle);
         mCurrentHeapHandle.ptr += mIncrementSize;
+        mInsertedDescriptorCount++;
         return descriptor;
     }
 
@@ -39,10 +42,13 @@ namespace HAL
 
     DSDescriptor DSDescriptorHeap::EmplaceDescriptorForResource(const DepthStencilTextureResource& resource)
     {
+        if (mInsertedDescriptorCount >= mCapacity) throw std::runtime_error("Exceeded descriptor heap's capacity");
+
         DSDescriptor descriptor{ mCurrentHeapHandle, uint32_t(mCurrentHeapHandle.ptr / mIncrementSize) };
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = descriptor.ResourceToDSVDescription(resource.D3DDescription());
         mDevice->D3DPtr()->CreateDepthStencilView(resource.D3DPtr(), &dsvDesc, mCurrentHeapHandle);
         mCurrentHeapHandle.ptr += mIncrementSize;
+        mInsertedDescriptorCount++;
         return descriptor;
     }
 

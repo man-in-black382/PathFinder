@@ -20,7 +20,7 @@ namespace HAL
 		void SetBlendingEnabled(bool enabled, RenderTarget renderTarget = RenderTarget::RT0);
 
 	private:
-		D3D12_BLEND_DESC mDesc;
+        D3D12_BLEND_DESC mDesc{};
 
 	public:
 		inline const auto& D3DState() const { return mDesc; }

@@ -20,7 +20,9 @@ namespace HAL
     protected:
         const Device* mDevice = nullptr;
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mHeap;
-        uint32_t mIncrementSize;
+        uint32_t mIncrementSize = 0;
+        uint32_t mCapacity = 0;
+        uint32_t mInsertedDescriptorCount = 0;
         D3D12_CPU_DESCRIPTOR_HANDLE mCurrentHeapHandle;
 
     public:

@@ -3,12 +3,8 @@
 #include <wrl.h>
 #include <d3d12.h>
 
-#include "ResourceState.hpp"
-
 namespace HAL
 {
-
-    class Resource;
 
     class ResourceBarrier {
     public:
@@ -24,14 +20,8 @@ namespace HAL
     class ResourceTransitionBarrier : public ResourceBarrier
     {
     public:
-        ResourceTransitionBarrier(D3D12_RESOURCE_STATES beforeStates, D3D12_RESOURCE_STATES afterStates, const Resource* resource);
+        ResourceTransitionBarrier(D3D12_RESOURCE_STATES beforeStates, D3D12_RESOURCE_STATES afterStates, ID3D12Resource* resource);
         ~ResourceTransitionBarrier() = default;
-
-    private:
-        const Resource* mResource;
-
-    public:
-
     };
 
 }

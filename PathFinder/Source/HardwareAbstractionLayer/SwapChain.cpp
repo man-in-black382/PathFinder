@@ -6,7 +6,7 @@ namespace HAL
 
     SwapChain::SwapChain(const DirectCommandQueue& commandQueue, HWND windowHandle, BackBufferingStrategy strategy, const Geometry::Dimensions& dimensions)
     {
-        DXGI_SWAP_CHAIN_DESC chain;
+        DXGI_SWAP_CHAIN_DESC chain{};
 
         uint8_t bufferCount = std::underlying_type<BackBufferingStrategy>::type(strategy);
 
@@ -27,7 +27,7 @@ namespace HAL
         chain.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
         ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&mDXGIFactory)));
-        ThrowIfFailed(mDXGIFactory->CreateSwapChain(commandQueue.D3DPtr(), &chain, mSwapChain.GetAddressOf()));
+        ThrowIfFailed(mDXGIFactory->CreateSwapChain(commandQueue.D3DPtr(), &chain, &mSwapChain));
 
         Microsoft::WRL::ComPtr<ID3D12Resource> backBufferResourcePtr;
 

@@ -452,8 +452,9 @@
 //    return ::DefWindowProc(hWnd, msg, wParam, lParam);
 //}
 
-LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    return 0;
+LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
 int main(int, char**)
@@ -475,9 +476,11 @@ int main(int, char**)
     HAL::DirectCommandList commandList{ device, allocator };
     HAL::SwapChain swapChain{ device, hwnd, HAL::BackBufferingStrategy::Double, Geometry::Dimensions{ 1280, 720 } };
 
-    HAL::RTDescriptorHeap rtDescriptorHeap{ &device, 1 };
+    HAL::RTDescriptorHeap rtDescriptorHeap{ &device, (uint32_t)swapChain.BackBuffers().size() };
     HAL::RTDescriptor backBuffer1Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*swapChain.BackBuffers()[0]);
     HAL::RTDescriptor backBuffer2Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*swapChain.BackBuffers()[1]);
+
+    HAL::DepthStencilTextureResource dsTexture(device, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
 
     // Main loop
     MSG msg;

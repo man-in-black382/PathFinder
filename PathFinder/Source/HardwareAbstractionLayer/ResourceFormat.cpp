@@ -57,6 +57,8 @@ namespace HAL
         mDesc.Height = dimensions.Height;
         mDesc.Width = dimensions.Width;
         mDesc.DepthOrArraySize = dimensions.Depth;
+        mDesc.SampleDesc.Count = 1;
+        mDesc.SampleDesc.Quality = 0;
     }
 
     constexpr DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColor type)

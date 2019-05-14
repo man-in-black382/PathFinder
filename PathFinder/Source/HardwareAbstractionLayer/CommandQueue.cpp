@@ -6,9 +6,11 @@ namespace HAL
 
     CommandQueue::CommandQueue(const Device& device, D3D12_COMMAND_LIST_TYPE commandListType)
     {
-        D3D12_COMMAND_QUEUE_DESC desc;
+        D3D12_COMMAND_QUEUE_DESC desc{};
         desc.Type = commandListType;
+        desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
         desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        desc.NodeMask = 1;
         ThrowIfFailed(device.D3DPtr()->CreateCommandQueue(&desc, IID_PPV_ARGS(&mQueue)));
     }
 

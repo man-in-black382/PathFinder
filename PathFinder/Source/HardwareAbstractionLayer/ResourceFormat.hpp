@@ -52,7 +52,7 @@ namespace HAL
         void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);
         void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions);
 
-        D3D12_RESOURCE_DESC mDesc;
+        D3D12_RESOURCE_DESC mDesc{};
 
     public:
         inline const auto& D3DResourceDescription() const { return mDesc; }

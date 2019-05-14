@@ -13,8 +13,8 @@ namespace HAL
     CopyDesctinationResourceStateT CopyDesctinationResourceState;
     VertexAndConstantResourceStateT VertexAndConstantResourceState;
     IndexResourceStateT IndexResourceState;
-    PresentResourceStateT PresentResourceState;
-    RenderTargetResourceStateT RenderTargetResourceState;
+    PresentTextureResourceStateT PresentResourceState;
+    RenderTargetTextureResourceStateT RenderTargetResourceState;
     DepthReadResourceStateT DepthReadResourceState;
     DepthWriteResourceStateT DepthWriteResourceState;
 
