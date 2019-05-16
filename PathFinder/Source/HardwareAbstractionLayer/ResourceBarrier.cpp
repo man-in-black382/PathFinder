@@ -9,13 +9,15 @@ namespace HAL
 
     }
 
-    ResourceTransitionBarrier::ResourceTransitionBarrier(D3D12_RESOURCE_STATES beforeStates, D3D12_RESOURCE_STATES afterStates, ID3D12Resource* resource)
+    ResourceTransitionBarrier::ResourceTransitionBarrier(ResourceState beforeStateMask, ResourceState afterStateMask, const Resource* resource)
+        : mResource(resource), mBeforeStates(beforeStateMask), mAfterStates(afterStateMask)
     {
         mDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         mDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        mDesc.Transition.StateBefore = beforeStates;
-        mDesc.Transition.StateAfter = afterStates;
-        mDesc.Transition.pResource = resource;
+        mDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        mDesc.Transition.StateBefore = D3DResourceState(beforeStateMask);
+        mDesc.Transition.StateAfter = D3DResourceState(afterStateMask);
+        mDesc.Transition.pResource = resource->D3DPtr();
     }
 
 }

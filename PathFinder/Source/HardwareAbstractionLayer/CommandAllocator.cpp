@@ -11,6 +11,11 @@ namespace HAL
 
     CommandAllocator::~CommandAllocator() {}
 
+    void CommandAllocator::Reset()
+    {
+        ThrowIfFailed(mAllocator->Reset());
+    }
+
     DirectCommandAllocator::DirectCommandAllocator(const Device& device)
         : CommandAllocator(device, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
 

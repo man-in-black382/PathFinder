@@ -4,6 +4,7 @@
 #include <wrl.h>
 
 #include "Device.hpp"
+#include "CommandList.hpp"
 
 namespace HAL
 {
@@ -14,7 +15,7 @@ namespace HAL
         CommandQueue(const Device& device, D3D12_COMMAND_LIST_TYPE commandListType);
         virtual ~CommandQueue() = 0;
 
-    private:
+    protected:
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> mQueue;
 
     public:
@@ -26,6 +27,8 @@ namespace HAL
     public:
         DirectCommandQueue(const Device& device);
         ~DirectCommandQueue() = default;
+
+        void ExecuteCommandList(const DirectCommandList& list);
     };
 
 }

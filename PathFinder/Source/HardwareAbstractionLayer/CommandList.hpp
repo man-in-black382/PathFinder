@@ -9,6 +9,9 @@
 #include "PipelineState.hpp"
 #include "Descriptor.hpp"
 #include "Resource.hpp"
+#include "ResourceBarrier.hpp"
+
+#include "../Foundation/Color.hpp"
 
 namespace HAL
 {
@@ -18,8 +21,14 @@ namespace HAL
         CommandList(const Device& device, const CommandAllocator& allocator, D3D12_COMMAND_LIST_TYPE type);
         virtual ~CommandList() = 0; 
 
+        void Reset(const CommandAllocator& allocator);
+        void Close();
+
     protected:
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mList;
+
+    public:
+        inline const auto D3DList() const { return mList.Get(); }
     };
 
 
@@ -48,6 +57,8 @@ namespace HAL
         using ComputeCommandListBase::ComputeCommandListBase;
 
         void SetViewport(const Viewport& viewport);
+        void TransitionResourceState(const ResourceTransitionBarrier& barrier);
+        void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
     };
 
 

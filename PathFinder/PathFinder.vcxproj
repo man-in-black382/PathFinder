@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Foundation\Color.cpp" />
     <ClCompile Include="Source\Geometry\AxisAlignedBox3D.cpp" />
     <ClCompile Include="Source\Geometry\Collision.cpp" />
     <ClCompile Include="Source\Geometry\Dimensions.cpp" />
@@ -165,7 +166,6 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\Resource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceBarrier.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceFormat.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\ResourceHelpers.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RootParameters.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RootSignature.cpp" />
@@ -183,6 +183,8 @@
     <ClCompile Include="Source\ThirdParty\imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Foundation\BitwiseEnum.hpp" />
+    <ClInclude Include="Source\Foundation\Color.hpp" />
     <ClInclude Include="Source\Foundation\Visitor.hpp" />
     <ClInclude Include="Source\Geometry\AxisAlignedBox3D.hpp" />
     <ClInclude Include="Source\Geometry\Collision.hpp" />
@@ -223,7 +225,6 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\Resource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceBarrier.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceFormat.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\ResourceHelpers.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RootParameters.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RootSignature.hpp" />

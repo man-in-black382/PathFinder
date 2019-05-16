@@ -16,7 +16,7 @@ namespace HAL
         uint32_t mIndexInHeap;
 
     public:
-        inline const auto CPUHeapPtr() const { return mCPUHandle.ptr; }
+        inline const auto CPUHandle() const { return mCPUHandle; }
         inline const auto IndexInHeap() const { return mIndexInHeap; }
     };
 
@@ -28,7 +28,7 @@ namespace HAL
         D3D12_GPU_DESCRIPTOR_HANDLE mGPUHandle;
 
     public:
-        inline const auto GPUHeapPtr() const { return mGPUHandle.ptr; }
+        inline const auto GPUHandle() const { return mGPUHandle; }
     };
 
 

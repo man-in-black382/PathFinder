@@ -7,14 +7,21 @@ namespace HAL
     CommandList::CommandList(const Device& device, const CommandAllocator& allocator, D3D12_COMMAND_LIST_TYPE type)
     {
         ThrowIfFailed(device.D3DPtr()->CreateCommandList(0, type, allocator.D3DPtr(), nullptr, IID_PPV_ARGS(&mList)));
-        mList->Close();
     }
 
     CommandList::~CommandList() {}
 
+    void CommandList::Reset(const CommandAllocator& allocator)
+    {
+       ThrowIfFailed(mList->Reset(allocator.D3DPtr(), nullptr));
+    }
 
+    void CommandList::Close()
+    {
+       ThrowIfFailed(mList->Close());
+    }
 
-   /* void ComputeCommandListBase::SetComputeRootConstantBuffer(const TypelessBufferResource& cbResource, uint32_t rootParameterIndex)
+    /* void ComputeCommandListBase::SetComputeRootConstantBuffer(const TypelessBufferResource& cbResource, uint32_t rootParameterIndex)
     { 
         mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.D3DPtr()->GetGPUVirtualAddress());
     }
@@ -60,6 +67,16 @@ namespace HAL
     {
         auto d3dViewport = viewport.D3DViewport();
         mList->RSSetViewports(1, &d3dViewport);
+    }
+
+    void DirectCommandListBase::TransitionResourceState(const ResourceTransitionBarrier& barrier)
+    {
+        mList->ResourceBarrier(1, &barrier.D3DBarrier());
+    }
+
+    void DirectCommandListBase::ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color)
+    {
+        mList->ClearRenderTargetView(rtDescriptor.CPUHandle(), color.Ptr(), 0, nullptr);
     }
 
 

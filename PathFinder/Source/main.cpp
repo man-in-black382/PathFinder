@@ -14,6 +14,7 @@
 #include "HardwareAbstractionLayer/CommandQueue.hpp"
 #include "HardwareAbstractionLayer/Resource.hpp"
 #include "HardwareAbstractionLayer/SwapChain.hpp"
+#include "HardwareAbstractionLayer/ResourceBarrier.hpp"
 
 #define DX12_ENABLE_DEBUG_LAYER     0
 
@@ -480,7 +481,13 @@ int main(int, char**)
     HAL::RTDescriptor backBuffer1Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*swapChain.BackBuffers()[0]);
     HAL::RTDescriptor backBuffer2Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*swapChain.BackBuffers()[1]);
 
-    HAL::DepthStencilTextureResource dsTexture(device, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
+    HAL::RTDescriptor* currentRTDescriptor = &backBuffer1Descriptor;
+    const HAL::ColorTextureResource* currentBackBuffer = swapChain.BackBuffers()[0].get();
+
+    uint8_t frameIndex = 0;
+    //HAL::DepthStencilTextureResource dsTexture(device, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
+
+
 
     // Main loop
     MSG msg;
@@ -499,9 +506,21 @@ int main(int, char**)
             continue;
         }
 
+        commandList.TransitionResourceState(HAL::ResourceTransitionBarrier(HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer));
+        commandList.ClearRenderTarget(*currentRTDescriptor, Foundation::Color::Blue());
+        commandList.TransitionResourceState(HAL::ResourceTransitionBarrier(HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer));
+        commandList.Close();
+        commandQueue.ExecuteCommandList(commandList);
 
-  
+        //allocator.Reset();
+        commandList.Reset(allocator);
 
+        swapChain.Present();
+
+        currentRTDescriptor = frameIndex == 1 ? &backBuffer1Descriptor : &backBuffer2Descriptor;
+        currentBackBuffer = frameIndex == 1 ? swapChain.BackBuffers()[0].get() : swapChain.BackBuffers()[1].get();
+
+        frameIndex = (frameIndex + 1) % 2;
      
         //FrameContext* frameCtxt = WaitForNextFrameResources();
         //UINT backBufferIdx = g_pSwapChain->GetCurrentBackBufferIndex();

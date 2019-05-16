@@ -13,6 +13,8 @@ namespace HAL
         CommandAllocator(const Device& device, D3D12_COMMAND_LIST_TYPE commandListType);
         virtual ~CommandAllocator() = 0;
 
+        void Reset();
+
     private:
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mAllocator;
 
