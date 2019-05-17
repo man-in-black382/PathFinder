@@ -61,6 +61,12 @@ namespace HAL
         mList->SetComputeRootUnorderedAccessView(rootParameterIndex, resource.D3DPtr()->GetGPUVirtualAddress());
     }
 
+    void ComputeCommandListBase::SetDescriptorHeap(const DescriptorHeap& heap)
+    {
+        auto ptr = heap.D3DPtr();
+        mList->SetDescriptorHeaps(1, (ID3D12DescriptorHeap* const*)&ptr);
+    }
+
 
 
     void DirectCommandListBase::SetViewport(const Viewport& viewport)
@@ -74,12 +80,21 @@ namespace HAL
         mList->ResourceBarrier(1, &barrier.D3DBarrier());
     }
 
+    void DirectCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor)
+    {
+        const D3D12_CPU_DESCRIPTOR_HANDLE* dsHandle = depthStencilDescriptor ? &depthStencilDescriptor->CPUHandle() : nullptr;
+        mList->OMSetRenderTargets(1, &rtDescriptor.CPUHandle(), false, dsHandle);
+    }
+
     void DirectCommandListBase::ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color)
     {
         mList->ClearRenderTargetView(rtDescriptor.CPUHandle(), color.Ptr(), 0, nullptr);
     }
 
-
+    void DirectCommandListBase::SetFence(const Fence& fence)
+    {
+        //mList->
+    }
 
     CopyCommandList::CopyCommandList(Device& device, CopyCommandAllocator& allocator)
         : CopyCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_COPY) {}

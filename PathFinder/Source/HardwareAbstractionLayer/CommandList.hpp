@@ -10,6 +10,8 @@
 #include "Descriptor.hpp"
 #include "Resource.hpp"
 #include "ResourceBarrier.hpp"
+#include "DescriptorHeap.hpp"
+#include "Fence.hpp"
 
 #include "../Foundation/Color.hpp"
 
@@ -50,6 +52,8 @@ namespace HAL
         void SetComputeRootUnorderedAccessResource(const TypelessTextureResource& resource, uint32_t rootParameterIndex);
         void SetComputeRootUnorderedAccessResource(const ColorTextureResource& resource, uint32_t rootParameterIndex);
         void SetComputeRootUnorderedAccessResource(const DepthStencilTextureResource& resource, uint32_t rootParameterIndex);
+
+        void SetDescriptorHeap(const DescriptorHeap& heap);
     };
 
     class DirectCommandListBase : public ComputeCommandListBase {
@@ -58,7 +62,9 @@ namespace HAL
 
         void SetViewport(const Viewport& viewport);
         void TransitionResourceState(const ResourceTransitionBarrier& barrier);
+        void SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor = nullptr);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
+        void SetFence(const Fence& fence);
     };
 
 

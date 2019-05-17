@@ -36,7 +36,6 @@ namespace HAL
     private:
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
         D3D12_RESOURCE_DESC mDescription;
-        D3D12_RESOURCE_STATES mInitialState;
         Geometry::Dimensions mDimensions;
 
         void SetExpectedUsageFlags(ResourceState stateMask);

@@ -40,7 +40,7 @@ namespace HAL
 
     void SwapChain::Present()
     {
-        mSwapChain->Present(0, 0);
+        ThrowIfFailed(mSwapChain->Present(0, 0));
     }
 
 }

@@ -10,9 +10,10 @@ namespace HAL
         : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) {}
 
     Resource::Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask, HeapType heapType)
-        : mInitialState(D3DResourceState(initialStateMask)), mDescription(format.D3DResourceDescription())
+        : mDescription(format.D3DResourceDescription())
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
+        D3D12_RESOURCE_STATES initialStates = D3D12_RESOURCE_STATES(initialStateMask);
 
         switch (heapType) {
         case HeapType::Default:
@@ -20,7 +21,7 @@ namespace HAL
             break;
         case HeapType::Upload:
             heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-            mInitialState |= D3D12_RESOURCE_STATE_GENERIC_READ;
+            initialStates |= D3D12_RESOURCE_STATE_GENERIC_READ;
             break;
         case HeapType::Readback:
             heapProperties.Type = D3D12_HEAP_TYPE_READBACK;
@@ -35,7 +36,7 @@ namespace HAL
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &mDescription,
-            mInitialState,
+            initialStates,
             nullptr,
             IID_PPV_ARGS(&mResource)
         ));

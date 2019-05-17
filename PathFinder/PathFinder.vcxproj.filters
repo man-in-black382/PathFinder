@@ -1480,6 +1480,7 @@
     <None Include="Source\ThirdParty\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Source\RenderPipeline\Shaders\Playground.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />

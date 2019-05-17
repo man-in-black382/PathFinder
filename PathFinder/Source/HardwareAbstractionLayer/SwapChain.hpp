@@ -28,7 +28,7 @@ namespace HAL
         std::vector<std::unique_ptr<ColorTextureResource>> mBackBuffers;
 
     public:
-        inline const auto& BackBuffers() const { return mBackBuffers; }
+        inline auto& BackBuffers() { return mBackBuffers; }
     };
 }
 
