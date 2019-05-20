@@ -5,20 +5,22 @@
 namespace HAL
 {
 
-	class DepthStencilState {
-	public:
-		enum class ComparisonFunction {
-			Never, Less, Equal, LessOrEqual, Greater, NotEqual, GreaterOrEqual, Always
-		};
+    class DepthStencilState {
+    public:
+        enum class ComparisonFunction {
+            Never, Less, Equal, LessOrEqual, Greater, NotEqual, GreaterOrEqual, Always
+        };
 
-		DepthStencilState(bool depthTestEnabled, bool depthWriteEnabled, ComparisonFunction depthComparisonFunction);
+        void SetDepthTestEnabled(bool enabled);
+        void SetDepthWriteEnabled(bool enabled);
+        void SetComparisonFunction(ComparisonFunction function);
 
-	private:
+    private:
         D3D12_DEPTH_STENCIL_DESC mDesc{};
 
-	public:
-		inline const auto& D3DState() const { return mDesc; }
-	};
+    public:
+        inline const auto& D3DState() const { return mDesc; }
+    };
 
 }
 

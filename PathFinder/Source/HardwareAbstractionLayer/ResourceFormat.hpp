@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include <optional>
 #include <variant>
 
 #include "../Geometry/Dimensions.hpp"
@@ -17,6 +18,8 @@ namespace HAL
         };
 
         enum class Color {
+            R8_Usigned_Norm, R8G8_Usigned_Norm, R8G8B8A8_Usigned_Norm,
+
             R8_Signed, RG8_Signed, RGBA8_Signed,
             R8_Unsigned, RG8_Unsigned, RGBA8_Unsigned,
 
@@ -37,12 +40,10 @@ namespace HAL
 
         enum class TextureKind { Texture1D, Texture2D, Texture3D };
 
-        ResourceFormat(TypelessColor dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
-        ResourceFormat(Color dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
-        ResourceFormat(DepthStencil dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
-        ResourceFormat(TypelessColor dataType, TextureKind kind, const Geometry::Dimensions& dimensions);
-        ResourceFormat(Color dataType, TextureKind kind, const Geometry::Dimensions& dimensions);
-        ResourceFormat(DepthStencil dataType, TextureKind kind, const Geometry::Dimensions& dimensions);
+        using FormatVariant = std::variant<TypelessColor, Color, DepthStencil>;
+
+        ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions);
+        ResourceFormat(std::optional<FormatVariant> dataType, BufferKind , const Geometry::Dimensions& dimensions);
 
         static constexpr DXGI_FORMAT D3DFormat(TypelessColor type);
         static constexpr DXGI_FORMAT D3DFormat(Color type);

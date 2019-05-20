@@ -17,7 +17,13 @@ namespace HAL
     class SwapChain
     {
     public:
-        SwapChain(const DirectCommandQueue& commandQueue, HWND windowHandle, BackBufferingStrategy strategy, const Geometry::Dimensions& dimensions);
+        SwapChain(
+            const DirectCommandQueue& 
+            commandQueue, HWND windowHandle, 
+            BackBufferingStrategy strategy,
+            ResourceFormat::Color backBufferFormat,
+            const Geometry::Dimensions& dimensions
+        );
 
         void Present();
 

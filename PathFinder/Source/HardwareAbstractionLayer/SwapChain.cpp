@@ -4,7 +4,12 @@
 namespace HAL
 {
 
-    SwapChain::SwapChain(const DirectCommandQueue& commandQueue, HWND windowHandle, BackBufferingStrategy strategy, const Geometry::Dimensions& dimensions)
+    SwapChain::SwapChain(
+        const DirectCommandQueue& commandQueue,
+        HWND windowHandle,
+        BackBufferingStrategy strategy,
+        ResourceFormat::Color backBufferFormat,
+        const Geometry::Dimensions& dimensions)
     {
         DXGI_SWAP_CHAIN_DESC chain{};
 
@@ -14,7 +19,7 @@ namespace HAL
         chain.BufferDesc.Height = dimensions.Height;
         chain.BufferDesc.RefreshRate.Numerator = 60;
         chain.BufferDesc.RefreshRate.Denominator = 1;
-        chain.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        chain.BufferDesc.Format = ResourceFormat::D3DFormat(backBufferFormat);
         chain.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
         chain.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
         chain.SampleDesc.Count = 1;

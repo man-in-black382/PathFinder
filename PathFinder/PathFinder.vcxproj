@@ -159,6 +159,7 @@
     <ClCompile Include="Source\Geometry\Vertices\Vertex1P3.cpp" />
     <ClCompile Include="Source\Geometry\Vertices\Vertex1P4.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\BlendState.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\BufferResource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandAllocator.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandList.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandQueue.cpp" />
@@ -183,6 +184,7 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\RootSignature.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Shader.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\SwapChain.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\TextureResource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\ThirdParty\glm\detail\glm.cpp" />
@@ -218,6 +220,7 @@
     <ClInclude Include="Source\Geometry\Vertices\Vertex1P3.hpp" />
     <ClInclude Include="Source\Geometry\Vertices\Vertex1P4.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\BlendState.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\BufferResource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandAllocator.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandList.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandQueue.hpp" />
@@ -242,6 +245,7 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\RootSignature.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Shader.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\SwapChain.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\TextureResource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\common.hpp" />

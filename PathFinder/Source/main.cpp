@@ -460,6 +460,8 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int main(int, char**)
 {
+    using namespace HAL;
+
     // Create application window
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui Example"), NULL };
     ::RegisterClassEx(&wc);
@@ -469,32 +471,49 @@ int main(int, char**)
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
-    HAL::DisplayAdapterFetcher adapterFetcher;
-    HAL::DisplayAdapter adapter = adapterFetcher.Fetch().back();
-    HAL::Device device{ adapter };
-    HAL::DirectCommandQueue commandQueue{ device };
-    HAL::DirectCommandAllocator allocator{ device };
-    HAL::DirectCommandList commandList{ device, allocator };
-    HAL::SwapChain swapChain{ commandQueue, hwnd, HAL::BackBufferingStrategy::Double, { 1280, 720 } };
+    ResourceFormat::Color backBufferFormat = ResourceFormat::Color::R8G8B8A8_Usigned_Norm;
 
-    HAL::RTDescriptorHeap rtDescriptorHeap{ &device, (uint32_t)swapChain.BackBuffers().size() };
+    DisplayAdapterFetcher adapterFetcher;
+    DisplayAdapter adapter = adapterFetcher.Fetch().back();
+    Device device{ adapter };
+    DirectCommandQueue commandQueue{ device };
+    DirectCommandAllocator allocator{ device };
+    DirectCommandList commandList{ device, allocator };
+    SwapChain swapChain{ commandQueue, hwnd, BackBufferingStrategy::Double, backBufferFormat, { 1280, 720 } };
 
-    HAL::ColorTextureResource* backBuffer1 = swapChain.BackBuffers()[0].get();
-    HAL::ColorTextureResource* backBuffer2 = swapChain.BackBuffers()[1].get();
+    RTDescriptorHeap rtDescriptorHeap{ &device, (uint32_t)swapChain.BackBuffers().size() };
 
-    HAL::RTDescriptor backBuffer1Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*backBuffer1);
-    HAL::RTDescriptor backBuffer2Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*backBuffer2);
+    ColorTextureResource* backBuffer1 = swapChain.BackBuffers()[0].get();
+    ColorTextureResource* backBuffer2 = swapChain.BackBuffers()[1].get();
 
-    HAL::RTDescriptor* currentRTDescriptor = &backBuffer1Descriptor;
-    HAL::ColorTextureResource* currentBackBuffer = backBuffer1;
+    RTDescriptor backBuffer1Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*backBuffer1);
+    RTDescriptor backBuffer2Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*backBuffer2);
 
-
+    RTDescriptor* currentRTDescriptor = &backBuffer1Descriptor;
+    ColorTextureResource* currentBackBuffer = backBuffer1;
 
     uint8_t frameIndex = 0;
-    //HAL::DepthStencilTextureResource dsTexture(device, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
+    //DepthStencilTextureResource dsTexture(device, ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
 
-    HAL::Shader playgroundVS{ L"Shaders/Playground.hlsl", HAL::Shader::PipelineStage::Vertex };
-    HAL::Shader playgroundPS{ L"Shaders/Playground.hlsl", HAL::Shader::PipelineStage::Pixel };
+    Shader playgroundVS{ L"Shaders/Playground.hlsl", Shader::PipelineStage::Vertex };
+    Shader playgroundPS{ L"Shaders/Playground.hlsl", Shader::PipelineStage::Pixel };
+
+    RootSignature rootSignature;
+    rootSignature.Compile(device);
+
+    BlendState blendState;
+    RasterizerState rasterizerState;
+    DepthStencilState depthStencilState;
+    InputAssemblerLayout inputLayout;
+
+    GraphicsPipelineState pipelineState{
+        device, rootSignature, playgroundVS, playgroundPS,
+        nullptr, nullptr, nullptr, blendState, rasterizerState,
+        depthStencilState, inputLayout,
+        {{ RenderTarget::RT0, backBufferFormat }},
+        ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned,
+        PrimitiveTopology::Triangle
+    };
 
     // Main loop
     MSG msg;
@@ -515,9 +534,9 @@ int main(int, char**)
 
         commandList.SetRenderTarget(*currentRTDescriptor);
         //commandList.SetDescriptorHeap(rtDescriptorHeap);
-        commandList.TransitionResourceState(HAL::ResourceTransitionBarrier(HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer));
+        commandList.TransitionResourceState(ResourceTransitionBarrier(ResourceState::Present, ResourceState::RenderTarget, currentBackBuffer));
         commandList.ClearRenderTarget(*currentRTDescriptor, Foundation::Color::Blue());
-        commandList.TransitionResourceState(HAL::ResourceTransitionBarrier(HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer));
+        commandList.TransitionResourceState(ResourceTransitionBarrier(ResourceState::RenderTarget, ResourceState::Present, currentBackBuffer));
         commandList.Close();
         commandQueue.ExecuteCommandList(commandList);
         commandList.Reset(allocator);

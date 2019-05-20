@@ -7,7 +7,10 @@ namespace HAL
 {
     
     Resource::Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr)
-        : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) {}
+        : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) 
+    {
+
+    }
 
     Resource::Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask, HeapType heapType)
         : mDescription(format.D3DResourceDescription())
@@ -68,46 +71,5 @@ namespace HAL
             mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
         }
     }
-
-    ColorTextureResource::ColorTextureResource(
-        const Device& device,
-        ResourceFormat::Color dataType,
-        ResourceFormat::TextureKind kind,
-        const Geometry::Dimensions& dimensions,
-        ResourceState initialStateMask,
-        ResourceState expectedStateMask,
-        HeapType heapType)
-        :
-        Resource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType) {}
-
-
-
-    TypelessTextureResource::TypelessTextureResource(
-        const Device& device,
-        ResourceFormat::TypelessColor dataType,
-        ResourceFormat::TextureKind kind,
-        const Geometry::Dimensions& dimensions,
-        ResourceState initialStateMask,
-        ResourceState expectedStateMask,
-        HeapType heapType)
-        :
-        Resource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType) {}
-
-
-
-    DepthStencilTextureResource::DepthStencilTextureResource(
-        const Device& device,
-        ResourceFormat::DepthStencil dataType,
-        const Geometry::Dimensions& dimensions,
-        ResourceState initialStateMask,
-        ResourceState expectedStateMask,
-        HeapType heapType)
-        :
-        Resource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), initialStateMask, expectedStateMask, heapType) {}
-
-
-
-    ColorBufferResource::ColorBufferResource(const Device& device, ResourceFormat::Color dataType, uint64_t width, HeapType heapType)
-        : Resource(device, ResourceFormat(dataType, ResourceFormat::BufferKind::Buffer, { width, 1, 1 }), ResourceState::VertexAndConstantBuffer, ResourceState::VertexAndConstantBuffer, heapType) {}
 
 }

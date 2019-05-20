@@ -4,7 +4,7 @@
 #include <wrl.h>
 #include <cstdint>
 
-#include "Resource.hpp"
+#include "TextureResource.hpp"
 #include "Descriptor.hpp"
 #include "Device.hpp"
 #include "Utils.h"

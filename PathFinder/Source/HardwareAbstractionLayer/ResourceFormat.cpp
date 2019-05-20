@@ -3,39 +3,23 @@
 namespace HAL
 {
 
-    ResourceFormat::ResourceFormat(TypelessColor dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
+    ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions)
     {
-        mDesc.Format = D3DFormat(dataType);
+        if (dataType) 
+        {
+            std::visit([this](auto&& t) { mDesc.Format = D3DFormat(t); }, dataType.value());
+        }
+        
         ResolveDemensionData(kind, dimensions);
     }
 
-    ResourceFormat::ResourceFormat(Color dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
+    ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
     {
-        mDesc.Format = D3DFormat(dataType);
-        ResolveDemensionData(kind, dimensions);
-    }
+        if (dataType)
+        {
+            std::visit([this](auto&& t) { mDesc.Format = D3DFormat(t); }, dataType.value());
+        }
 
-    ResourceFormat::ResourceFormat(DepthStencil dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
-    {
-        mDesc.Format = D3DFormat(dataType);
-        ResolveDemensionData(kind, dimensions);
-    }
-
-    ResourceFormat::ResourceFormat(TypelessColor dataType, TextureKind kind, const Geometry::Dimensions& dimensions)
-    {
-        mDesc.Format = D3DFormat(dataType);
-        ResolveDemensionData(kind, dimensions);
-    }
-
-    ResourceFormat::ResourceFormat(Color dataType, TextureKind kind, const Geometry::Dimensions& dimensions)
-    {
-        mDesc.Format = D3DFormat(dataType);
-        ResolveDemensionData(kind, dimensions);
-    }
-
-    ResourceFormat::ResourceFormat(DepthStencil dataType, TextureKind kind, const Geometry::Dimensions& dimensions)
-    {
-        mDesc.Format = D3DFormat(dataType);
         ResolveDemensionData(kind, dimensions);
     }
 
@@ -82,6 +66,10 @@ namespace HAL
     {
         switch (type)
         {
+        case Color::R8_Usigned_Norm:        return DXGI_FORMAT_R8_UNORM;
+        case Color::R8G8_Usigned_Norm:      return DXGI_FORMAT_R8G8_UNORM;
+        case Color::R8G8B8A8_Usigned_Norm:  return DXGI_FORMAT_R8G8B8A8_UNORM;
+
         case Color::R8_Signed:         return DXGI_FORMAT_R8_SINT;
         case Color::RG8_Signed:        return DXGI_FORMAT_R8G8_SINT;
         case Color::RGBA8_Signed:      return DXGI_FORMAT_R8G8B8A8_SINT;
