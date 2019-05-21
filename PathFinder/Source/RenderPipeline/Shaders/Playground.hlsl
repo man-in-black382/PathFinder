@@ -1,8 +1,8 @@
-//struct VertexIn
-//{
-//    float3 PosL : POSITION;
-//    float4 Color : COLOR;
-//};
+struct VertexIn
+{
+    float4 PosL : POSITION;
+    float4 Color : COLOR;
+};
 
 struct VertexOut
 {
@@ -10,21 +10,21 @@ struct VertexOut
     float4 Color : COLOR;  
 };
 
-//#ifdef VSEntryPoint
-VertexOut VSMain( /*VertexIn vin*/int vertexId : SV_VertexID)
+VertexOut VSMain(VertexIn vin, uint vertexId : SV_VertexID)
 {
-    const float4 Verts[3] = { float4(0.0, 0.0, 0.0, 1.0), float4(0.0, 0.0, 0.0, 1.0), float4(0.0, 0.0, 0.0, 1.0) };
+  /*  const float4 Verts[3] = {
+        float4(0.0, 0.0, 0.0, 1.0),
+        float4(0.0, 0.0, 0.0, 1.0), 
+        float4(0.0, 0.0, 0.0, 1.0)
+    };*/
 
     VertexOut vout;
-    vout.Color = float4(1.0, 0.4, 0.7, 1.0);
-    vout.PosH = Verts[vertexId];
+    vout.Color = vin.Color;
+    vout.PosH = vin.PosL;
     return vout;
 }
-//#endif
-//
-//#ifdef PSEntryPoint
-//float4 PSMain(VertexOut pin) : SV_Target
-//{
-//    return pin.Color;
-//}
-//#endif
+
+float4 PSMain(VertexOut pin) : SV_Target
+{
+    return pin.Color;
+}

@@ -96,6 +96,13 @@ namespace HAL
         //mList->
     }
 
+    void DirectCommandListBase::SetVertexBuffer(const VertexBufferDescriptor& descriptor)
+    {
+        mList->IASetVertexBuffers(0, 1, &descriptor.D3DDescriptor());
+    }
+
+
+
     CopyCommandList::CopyCommandList(Device& device, CopyCommandAllocator& allocator)
         : CopyCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_COPY) {}
 
@@ -128,6 +135,7 @@ namespace HAL
     {
         mList->SetPipelineState(state.D3DState());
         mList->SetGraphicsRootSignature(state.AssosiatedRootSignature().D3DSignature());
+        mList->IASetPrimitiveTopology(D3DPrimitiveTopology(state.AssosiatedPrimitiveTopology()));
     }
 
     void DirectCommandList::Draw(uint32_t vertexCount, uint32_t vertexStart)

@@ -32,7 +32,8 @@ namespace HAL
     };
 
 
-    class RTDescriptor : public CPUDescriptor {
+    class RTDescriptor : public CPUDescriptor 
+    {
     public:
         using CPUDescriptor::CPUDescriptor;
         ~RTDescriptor() = default;
@@ -40,7 +41,8 @@ namespace HAL
         D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc);
     };
 
-    class DSDescriptor : public CPUDescriptor {
+    class DSDescriptor : public CPUDescriptor
+    {
     public:
         using CPUDescriptor::CPUDescriptor;
         ~DSDescriptor() = default;
@@ -48,24 +50,56 @@ namespace HAL
         D3D12_DEPTH_STENCIL_VIEW_DESC ResourceToDSVDescription(const D3D12_RESOURCE_DESC& resourceDesc);
     };
 
-    class CBDescriptor : public GPUDescriptor {
+    class CBDescriptor : public GPUDescriptor
+    {
     public:
         ~CBDescriptor() = default;
     };
 
-    class SRDescriptor : public GPUDescriptor {
+    class SRDescriptor : public GPUDescriptor
+    {
     public:
         ~SRDescriptor() = default;
     };
 
-    class UADescriptor : public GPUDescriptor {
+    class UADescriptor : public GPUDescriptor
+    {
     public:
         ~UADescriptor() = default;
     };
 
-    class SamplerDescriptor : public GPUDescriptor {
+    class SamplerDescriptor : public GPUDescriptor
+    {
     public:
         ~SamplerDescriptor() = default;
+    };
+
+
+
+    class VertexBufferDescriptor
+    {
+    public:
+        VertexBufferDescriptor(D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress, uint32_t size, uint32_t stride);
+
+    private:
+        D3D12_VERTEX_BUFFER_VIEW mDescriptor{};
+
+    public:
+        inline const auto& D3DDescriptor() const { return mDescriptor; }
+    };
+
+
+
+    class IndexBufferDescriptor
+    {
+    public:
+        IndexBufferDescriptor(D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress, uint32_t size, DXGI_FORMAT format);
+
+    private:
+        D3D12_INDEX_BUFFER_VIEW mDescriptor{};
+
+    public:
+        inline const auto& D3DDescriptor() const { return mDescriptor; }
     };
 
 }

@@ -12,6 +12,7 @@
 #include "ResourceBarrier.hpp"
 #include "DescriptorHeap.hpp"
 #include "Fence.hpp"
+#include "BufferResource.hpp"
 
 #include "../Foundation/Color.hpp"
 
@@ -65,6 +66,7 @@ namespace HAL
         void SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor = nullptr);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
         void SetFence(const Fence& fence);
+        void SetVertexBuffer(const VertexBufferDescriptor& descriptor);
     };
 
 

@@ -2,32 +2,38 @@
 
 namespace Foundation {
 
-    const Color &Color::White() {
+    const Color &Color::White()
+    {
         static Color white(1.0f, 1.0f);
         return white;
     }
 
-    const Color &Color::Black() {
+    const Color &Color::Black() 
+    {
         static Color black(0.0f, 1.0f);
         return black;
     }
 
-    const Color &Color::Gray() {
+    const Color &Color::Gray() 
+    {
         static Color gray(0.3f, 1.0f);
         return gray;
     }
 
-    const Color &Color::Red() {
+    const Color &Color::Red() 
+    {
         static Color red(1.0f, 0.0f, 0.0f, 1.0f);
         return red;
     }
 
-    const Color &Color::Blue() {
+    const Color &Color::Blue() 
+    {
         static Color blue(0.0f, 0.0f, 1.0f, 1.0f);
         return blue;
     }
 
-    const Color &Color::Green() {
+    const Color &Color::Green()
+    {
         static Color green(0.0f, 1.0f, 0.0f, 1.0f);
         return green;
     }
@@ -42,10 +48,11 @@ namespace Foundation {
 
     Color::Color(float white, Color::Space space) : Color(white, white, white, 1.0, space) {}
 
-    Color Color::ToLinear() const {
+    Color Color::ToLinear() const 
+    {
         switch (mSpace) {
             case Color::Space::sRGB: {
-                float power = 2.2;
+                float power = 2.2f;
                 return {std::pow(mR, power), std::pow(mG, power), std::pow(mB, power), mA};
             }
 
@@ -63,7 +70,8 @@ namespace Foundation {
         }
     }
 
-    Color Color::ConvertedTo(Color::Space space) const {
+    Color Color::ConvertedTo(Color::Space space) const 
+    {
         Color linear = ToLinear();
 
         switch (space) {

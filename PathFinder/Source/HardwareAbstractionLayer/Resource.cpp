@@ -49,24 +49,24 @@ namespace HAL
 
     void Resource::SetExpectedUsageFlags(ResourceState stateMask)
     {
-        if (BitwiseEnumMaskContainsComponent(stateMask, ResourceState::RenderTarget))
+        if (EnumMaskBitSet(stateMask, ResourceState::RenderTarget))
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
         }
 
-        if (BitwiseEnumMaskContainsComponent(stateMask, ResourceState::DepthRead) ||
-            BitwiseEnumMaskContainsComponent(stateMask, ResourceState::DepthWrite))
+        if (EnumMaskBitSet(stateMask, ResourceState::DepthRead) ||
+            EnumMaskBitSet(stateMask, ResourceState::DepthWrite))
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
         }
 
-        if (BitwiseEnumMaskContainsComponent(stateMask, ResourceState::UnorderedAccess))
+        if (EnumMaskBitSet(stateMask, ResourceState::UnorderedAccess))
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         }
 
-        if (!BitwiseEnumMaskContainsComponent(stateMask, ResourceState::PixelShaderAccess) &&
-            !BitwiseEnumMaskContainsComponent(stateMask, ResourceState::NonPixelShaderAccess))
+        if (!EnumMaskBitSet(stateMask, ResourceState::PixelShaderAccess) &&
+            !EnumMaskBitSet(stateMask, ResourceState::NonPixelShaderAccess))
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
         }

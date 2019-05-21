@@ -18,7 +18,7 @@ namespace HAL
         };
 
         enum class Color {
-            R8_Usigned_Norm, R8G8_Usigned_Norm, R8G8B8A8_Usigned_Norm,
+            R8_Usigned_Norm, RG8_Usigned_Norm, RGBA8_Usigned_Norm,
 
             R8_Signed, RG8_Signed, RGBA8_Signed,
             R8_Unsigned, RG8_Unsigned, RGBA8_Unsigned,

@@ -8,23 +8,23 @@
 namespace HAL
 {
    
-	class BlendState {
-	public:
-		enum class Value { Original, Inverse, Zero, One };
+    class BlendState {
+    public:
+        enum class Value { Original, Inverse, Zero, One };
 
-		enum class Function { Addition, Substraction, ReverseSubstraction, Min, Max };
+        enum class Function { Addition, Substraction, ReverseSubstraction, Min, Max };
 
-		void SetSourceValues(Value color, Value alpha, RenderTarget renderTarget = RenderTarget::RT0);
-		void SetDestinationValues(Value color, Value alpha, RenderTarget renderTarget = RenderTarget::RT0);
-		void SetFunctions(Function colorFunction, Function alphaFunction, RenderTarget renderTarget = RenderTarget::RT0);
-		void SetBlendingEnabled(bool enabled, RenderTarget renderTarget = RenderTarget::RT0);
+        void SetSourceValues(Value color, Value alpha, RenderTarget renderTarget = RenderTarget::RT0);
+        void SetDestinationValues(Value color, Value alpha, RenderTarget renderTarget = RenderTarget::RT0);
+        void SetFunctions(Function colorFunction, Function alphaFunction, RenderTarget renderTarget = RenderTarget::RT0);
+        void SetBlendingEnabled(bool enabled, RenderTarget renderTarget = RenderTarget::RT0);
 
-	private:
+    private:
         D3D12_BLEND_DESC mDesc{};
 
-	public:
-		inline const auto& D3DState() const { return mDesc; }
-	};
+    public:
+        inline const auto& D3DState() const { return mDesc; }
+    };
 
 }
 

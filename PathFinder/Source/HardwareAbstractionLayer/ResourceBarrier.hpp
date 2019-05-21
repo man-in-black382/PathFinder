@@ -13,7 +13,7 @@ namespace HAL
         virtual ~ResourceBarrier() = 0;
 
     protected:
-        D3D12_RESOURCE_BARRIER mDesc;
+        D3D12_RESOURCE_BARRIER mDesc{};
 
     public:
         inline const auto& D3DBarrier() const { return mDesc; }

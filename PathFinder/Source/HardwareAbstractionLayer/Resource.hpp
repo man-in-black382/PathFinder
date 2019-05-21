@@ -16,11 +16,11 @@
 namespace HAL
 {
 
+    enum class HeapType { Default, Upload, Readback };
+    
     class Resource
     {
     public:
-        enum class HeapType { Default, Upload, Readback };
-
         Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);
         virtual ~Resource() = 0;
 
@@ -33,8 +33,10 @@ namespace HAL
             HeapType heapType
         );
 
-    private:
+    protected:
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
+
+    private:
         D3D12_RESOURCE_DESC mDescription{};
 
         void SetExpectedUsageFlags(ResourceState stateMask);

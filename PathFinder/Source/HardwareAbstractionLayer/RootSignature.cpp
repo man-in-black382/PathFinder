@@ -6,7 +6,7 @@ namespace HAL
 
     RootSignature::RootSignature()
     {
-        mDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+        mDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     }
 
     void RootSignature::AddDescriptorTableParameter(const RootDescriptorTableParameter& table)

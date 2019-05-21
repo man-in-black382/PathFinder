@@ -27,7 +27,7 @@ namespace HAL
         std::vector<RootConstantsParameter> mConstantParameters;
         std::vector<D3D12_ROOT_PARAMETER> mD3DParameters;
 
-        D3D12_ROOT_SIGNATURE_DESC mDesc;
+        D3D12_ROOT_SIGNATURE_DESC mDesc{};
         Microsoft::WRL::ComPtr<ID3D12RootSignature> mSignature;
 
     public:

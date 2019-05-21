@@ -1,6 +1,7 @@
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <tchar.h>
+#include <filesystem>
 
 #include "ThirdParty/imgui/imgui.h"
 #include "ThirdParty/imgui/imgui_impl_win32.h"
@@ -15,6 +16,8 @@
 #include "HardwareAbstractionLayer/Resource.hpp"
 #include "HardwareAbstractionLayer/SwapChain.hpp"
 #include "HardwareAbstractionLayer/ResourceBarrier.hpp"
+#include "HardwareAbstractionLayer/TextureResource.hpp"
+#include "HardwareAbstractionLayer/BufferResource.hpp"
 
 #define DX12_ENABLE_DEBUG_LAYER     0
 
@@ -458,7 +461,13 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-int main(int, char**)
+struct Vertex
+{
+    glm::vec4 position;
+    glm::vec4 color;
+};
+
+int main(int argc, char** argv)
 {
     using namespace HAL;
 
@@ -471,7 +480,10 @@ int main(int, char**)
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
-    ResourceFormat::Color backBufferFormat = ResourceFormat::Color::R8G8B8A8_Usigned_Norm;
+    std::filesystem::path executablePath{ argv[0] };
+    std::filesystem::path executableFolder = executablePath.parent_path();
+
+    ResourceFormat::Color backBufferFormat = ResourceFormat::Color::RGBA8_Usigned_Norm;
 
     DisplayAdapterFetcher adapterFetcher;
     DisplayAdapter adapter = adapterFetcher.Fetch().back();
@@ -495,16 +507,30 @@ int main(int, char**)
     uint8_t frameIndex = 0;
     //DepthStencilTextureResource dsTexture(device, ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
 
-    Shader playgroundVS{ L"Shaders/Playground.hlsl", Shader::PipelineStage::Vertex };
-    Shader playgroundPS{ L"Shaders/Playground.hlsl", Shader::PipelineStage::Pixel };
+    Vertex vertices[3] = { 
+        Vertex{ { 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.5f, 0.5f, 1.0f } },
+        Vertex{ { 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.5f, 1.0f } },
+        Vertex{ { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.5f, 1.0f } }
+    };
+
+     VertexBuffer<Vertex> vertexBuffer{ device, 3, HeapType::Upload };
+     vertexBuffer.Write(0, vertices, 3);
+
+    Shader playgroundVS{ executableFolder.wstring() + L"\\Shaders\\Playground.hlsl", Shader::PipelineStage::Vertex };
+    Shader playgroundPS{ executableFolder.wstring() + L"\\Shaders\\Playground.hlsl", Shader::PipelineStage::Pixel };
 
     RootSignature rootSignature;
     rootSignature.Compile(device);
 
     BlendState blendState;
     RasterizerState rasterizerState;
+
     DepthStencilState depthStencilState;
+    depthStencilState.SetDepthTestEnabled(false);
+
     InputAssemblerLayout inputLayout;
+    inputLayout.AddPerVertexLayoutElement("POSITION", 0, ResourceFormat::Color::RGBA32_Float, 0, 0);
+    inputLayout.AddPerVertexLayoutElement("COLOR", 0, ResourceFormat::Color::RGBA32_Float, 0, 16);
 
     GraphicsPipelineState pipelineState{
         device, rootSignature, playgroundVS, playgroundPS,
@@ -532,13 +558,17 @@ int main(int, char**)
             continue;
         }
 
+        commandList.SetPipelineState(pipelineState);
+        //commandList.SetVertexBuffer(vertexBuffer.Descriptor());
         commandList.SetRenderTarget(*currentRTDescriptor);
         //commandList.SetDescriptorHeap(rtDescriptorHeap);
-        commandList.TransitionResourceState(ResourceTransitionBarrier(ResourceState::Present, ResourceState::RenderTarget, currentBackBuffer));
+        commandList.TransitionResourceState({ ResourceState::Present, ResourceState::RenderTarget, currentBackBuffer });
         commandList.ClearRenderTarget(*currentRTDescriptor, Foundation::Color::Blue());
-        commandList.TransitionResourceState(ResourceTransitionBarrier(ResourceState::RenderTarget, ResourceState::Present, currentBackBuffer));
+        //commandList.Draw(3, 0);
+        commandList.TransitionResourceState({ ResourceState::RenderTarget, ResourceState::Present, currentBackBuffer });
         commandList.Close();
         commandQueue.ExecuteCommandList(commandList);
+
         commandList.Reset(allocator);
 
         swapChain.Present();

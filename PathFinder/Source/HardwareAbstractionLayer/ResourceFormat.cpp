@@ -27,6 +27,12 @@ namespace HAL
     {
         mDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
         mDesc.Width = dimensions.Width;
+        mDesc.Height = 1;
+        mDesc.DepthOrArraySize = 1;
+        mDesc.MipLevels = 1;
+        mDesc.SampleDesc.Count = 1;
+        mDesc.SampleDesc.Quality = 0;
+        mDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     }
 
     void ResourceFormat::ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions)
@@ -67,8 +73,8 @@ namespace HAL
         switch (type)
         {
         case Color::R8_Usigned_Norm:        return DXGI_FORMAT_R8_UNORM;
-        case Color::R8G8_Usigned_Norm:      return DXGI_FORMAT_R8G8_UNORM;
-        case Color::R8G8B8A8_Usigned_Norm:  return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case Color::RG8_Usigned_Norm:      return DXGI_FORMAT_R8G8_UNORM;
+        case Color::RGBA8_Usigned_Norm:  return DXGI_FORMAT_R8G8B8A8_UNORM;
 
         case Color::R8_Signed:         return DXGI_FORMAT_R8_SINT;
         case Color::RG8_Signed:        return DXGI_FORMAT_R8G8_SINT;

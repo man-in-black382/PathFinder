@@ -21,14 +21,16 @@ namespace HAL
         virtual ~PipelineState() = 0;
 
     protected:
-        PipelineState(const RootSignature& assisiatedRootSignature);
+        PipelineState(const RootSignature& assisiatedRootSignature, PrimitiveTopology assosiatedTopology);
 
         Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
         RootSignature mAssosiatedRootSignature;
+        PrimitiveTopology mAssosiatedTopology;
 
     public:
         inline const auto D3DState() const { return mState.Get(); }
         inline const auto& AssosiatedRootSignature() const { return mAssosiatedRootSignature; }
+        inline const auto& AssosiatedPrimitiveTopology() const { return mAssosiatedTopology; }
     };
 
     class GraphicsPipelineState : public PipelineState
@@ -59,7 +61,7 @@ namespace HAL
 
     class ComputePipelineState {
     private:
-        D3D12_COMPUTE_PIPELINE_STATE_DESC mDesc;
+        D3D12_COMPUTE_PIPELINE_STATE_DESC mDesc{};
     };
 
 }

@@ -6,8 +6,8 @@
 namespace HAL
 {
 
-    PipelineState::PipelineState(const RootSignature& assisiatedRootSignature)
-        : mAssosiatedRootSignature(assisiatedRootSignature) {}
+    PipelineState::PipelineState(const RootSignature& assisiatedRootSignature, PrimitiveTopology assosiatedTopology)
+        : mAssosiatedRootSignature(assisiatedRootSignature), mAssosiatedTopology(assosiatedTopology) {}
 
     PipelineState::~PipelineState() {}
 
@@ -27,7 +27,7 @@ namespace HAL
         ResourceFormat::DepthStencil depthStencilFormat,
         PrimitiveTopology primitiveTopology)
         :
-        PipelineState(rootSignature)
+        PipelineState(rootSignature, primitiveTopology)
     {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
@@ -43,24 +43,18 @@ namespace HAL
         desc.RasterizerState = rasterizerState.D3DState();
         desc.DepthStencilState = depthStencilState.D3DState();
         desc.InputLayout = inputLayout.D3DLayout();
-        desc.PrimitiveTopologyType = D3DPrimitiveTopology(primitiveTopology);
+        desc.PrimitiveTopologyType = D3DPrimitiveTopologyType(primitiveTopology);
         desc.NumRenderTargets = renderTargetFormats.size();
-        desc.RTVFormats[8];
         desc.DSVFormat = ResourceFormat::D3DFormat(depthStencilFormat);
+        desc.SampleDesc.Count = 1;
+        desc.SampleDesc.Quality = 0;
 
         for (auto& keyValue : renderTargetFormats)
         {
             auto rtIdx = std::underlying_type<RenderTarget>::type(keyValue.first);
-            std::visit(Foundation::MakeVisitor(
-                [rtIdx, &desc](ResourceFormat::Color format)
-            {
+            std::visit([&desc, rtIdx](auto&& format) { 
                 desc.RTVFormats[rtIdx] = ResourceFormat::D3DFormat(format);
-            },
-                [rtIdx, &desc](ResourceFormat::TypelessColor format)
-            {
-                desc.RTVFormats[rtIdx] = ResourceFormat::D3DFormat(format);
-            }
-            ), keyValue.second);
+            }, keyValue.second);
         }
 
         //desc.SampleDesc
