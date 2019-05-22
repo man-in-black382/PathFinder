@@ -9,29 +9,31 @@
 namespace HAL
 {
 
-    enum class ResourceState : std::underlying_type_t<D3D12_RESOURCE_STATES>
+    enum class ResourceState : uint32_t
     {
-        Common = D3D12_RESOURCE_STATE_COMMON,
-        UnorderedAccess = D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        PixelShaderAccess = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        NonPixelShaderAccess = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-        StreamOut = D3D12_RESOURCE_STATE_STREAM_OUT,
-        IndirectArgument = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,
-        CopyDestination = D3D12_RESOURCE_STATE_COPY_DEST,
-        CopySource = D3D12_RESOURCE_STATE_COPY_SOURCE,
-        GenericRead = D3D12_RESOURCE_STATE_GENERIC_READ,
-        RaytracingAccelerationStructure = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-        Predication = D3D12_RESOURCE_STATE_PREDICATION,
-        RenderTarget = D3D12_RESOURCE_STATE_RENDER_TARGET,
-        ResolveDestination = D3D12_RESOURCE_STATE_RESOLVE_DEST,
-        ResolveSource = D3D12_RESOURCE_STATE_RESOLVE_SOURCE,
-        Present = D3D12_RESOURCE_STATE_PRESENT,
-        DepthRead = D3D12_RESOURCE_STATE_DEPTH_READ,
-        DepthWrite = D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        VertexBuffer = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-        ConstantBuffer = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-        IndexBuffer = D3D12_RESOURCE_STATE_INDEX_BUFFER
+        Common                          = 0,
+        UnorderedAccess                 = 1 << 1,
+        PixelShaderAccess               = 1 << 2,
+        NonPixelShaderAccess            = 1 << 3,
+        StreamOut                       = 1 << 4,
+        IndirectArgument                = 1 << 5,
+        CopyDestination                 = 1 << 6,
+        CopySource                      = 1 << 7,
+        GenericRead                     = 1 << 8,
+        RaytracingAccelerationStructure = 1 << 9,
+        Predication                     = 1 << 10,
+        RenderTarget                    = 1 << 11,
+        ResolveDestination              = 1 << 12,
+        ResolveSource                   = 1 << 13,
+        Present                         = 1 << 14,
+        DepthRead                       = 1 << 15,
+        DepthWrite                      = 1 << 16,
+        VertexBuffer                    = 1 << 17,
+        ConstantBuffer                  = 1 << 18,
+        IndexBuffer                     = 1 << 19
     };
+
+    D3D12_RESOURCE_STATES D3DResourceState(ResourceState state);
 
 }
 

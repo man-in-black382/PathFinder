@@ -16,7 +16,7 @@ namespace HAL
         : mDescription(format.D3DResourceDescription())
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
-        D3D12_RESOURCE_STATES initialStates = D3D12_RESOURCE_STATES(initialStateMask);
+        D3D12_RESOURCE_STATES initialStates = D3DResourceState(initialStateMask);
 
         switch (heapType) {
         case HeapType::Default:
