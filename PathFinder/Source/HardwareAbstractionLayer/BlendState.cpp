@@ -9,7 +9,7 @@ namespace HAL
     {
         for (auto rt = 0; rt < 8; rt++)
         {
-            mDesc.RenderTarget[rt].RenderTargetWriteMask = 0x0F;
+            mDesc.RenderTarget[rt].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
         }
     }
 
