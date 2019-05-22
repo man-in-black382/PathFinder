@@ -9,10 +9,13 @@ namespace HAL
     {
         switch (topology) 
         {
-        case PrimitiveTopology::Line: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-        case PrimitiveTopology::Point: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
-        case PrimitiveTopology::Triangle: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-        case PrimitiveTopology::Patch: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+        case PrimitiveTopology::LineList: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+        
+        case PrimitiveTopology::PointList: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+        
+        case PrimitiveTopology::TriangleStrip:
+        case PrimitiveTopology::TriangleList: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        //case PrimitiveTopology::Patch: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
         }
     }
 
@@ -20,10 +23,10 @@ namespace HAL
     {
         switch (topology)
         {
-        case PrimitiveTopology::Line: return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-        case PrimitiveTopology::Point: return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
-        case PrimitiveTopology::Triangle: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        case PrimitiveTopology::Patch: return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED; // Deal with patches later
+        case PrimitiveTopology::LineList: return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+        case PrimitiveTopology::PointList: return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+        case PrimitiveTopology::TriangleList: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        case PrimitiveTopology::TriangleStrip: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
         }
     }
 

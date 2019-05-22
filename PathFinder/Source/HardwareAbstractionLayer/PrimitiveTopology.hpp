@@ -7,7 +7,7 @@ namespace HAL
 {
    
     enum class PrimitiveTopology {
-        Line, Point, Triangle, Patch
+        LineList, PointList, TriangleList, TriangleStrip
     };
 
     D3D12_PRIMITIVE_TOPOLOGY_TYPE D3DPrimitiveTopologyType(PrimitiveTopology topology);

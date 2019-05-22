@@ -67,6 +67,7 @@ namespace HAL
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
         void SetFence(const Fence& fence);
         void SetVertexBuffer(const VertexBufferDescriptor& descriptor);
+        void SetPrimitiveTopology(PrimitiveTopology topology);
     };
 
 

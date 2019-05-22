@@ -18,6 +18,7 @@
 #include "HardwareAbstractionLayer/ResourceBarrier.hpp"
 #include "HardwareAbstractionLayer/TextureResource.hpp"
 #include "HardwareAbstractionLayer/BufferResource.hpp"
+#include "HardwareAbstractionLayer/Fence.hpp"
 
 #define DX12_ENABLE_DEBUG_LAYER     0
 
@@ -458,6 +459,26 @@
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    switch (msg)
+    {
+    //case WM_SIZE:
+       /* if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
+        {
+            ImGui_ImplDX12_InvalidateDeviceObjects();
+            CleanupRenderTarget();
+            ResizeSwapChain(hWnd, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam));
+            CreateRenderTarget();
+            ImGui_ImplDX12_CreateDeviceObjects();
+        }
+        return 0;*/
+    //case WM_SYSCOMMAND:
+    //    if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+    //        return 0;
+    //    break;
+    case WM_DESTROY:
+        ::PostQuitMessage(0);
+        return 0;
+    }
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
@@ -508,13 +529,13 @@ int main(int argc, char** argv)
     //DepthStencilTextureResource dsTexture(device, ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
 
     Vertex vertices[3] = { 
-        Vertex{ { 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.5f, 0.5f, 1.0f } },
-        Vertex{ { 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.5f, 1.0f } },
-        Vertex{ { 1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.5f, 1.0f } }
+        Vertex{ { 0.0f, 0.0f, 0.5f, 1.0f }, { 1.0f, 0.5f, 0.5f, 1.0f } },
+        Vertex{ { 1.0f, 0.0f, 0.5f, 1.0f }, { 1.0f, 0.0f, 0.5f, 1.0f } },
+        Vertex{ { 1.0f, 1.0f, 0.5f, 1.0f }, { 0.0f, 0.5f, 0.5f, 1.0f } }
     };
 
-     VertexBuffer<Vertex> vertexBuffer{ device, 3, HeapType::Upload };
-     vertexBuffer.Write(0, vertices, 3);
+    VertexBuffer<Vertex> vertexBuffer{ device, 3, HeapType::Upload };
+    vertexBuffer.Write(0, vertices, 3);
 
     Shader playgroundVS{ executableFolder.wstring() + L"\\Shaders\\Playground.hlsl", Shader::PipelineStage::Vertex };
     Shader playgroundPS{ executableFolder.wstring() + L"\\Shaders\\Playground.hlsl", Shader::PipelineStage::Pixel };
@@ -523,7 +544,9 @@ int main(int argc, char** argv)
     rootSignature.Compile(device);
 
     BlendState blendState;
+
     RasterizerState rasterizerState;
+    rasterizerState.SetCullMode(RasterizerState::CullMode::None);
 
     DepthStencilState depthStencilState;
     depthStencilState.SetDepthTestEnabled(false);
@@ -538,19 +561,16 @@ int main(int argc, char** argv)
         depthStencilState, inputLayout,
         {{ RenderTarget::RT0, backBufferFormat }},
         ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned,
-        PrimitiveTopology::Triangle
+        PrimitiveTopology::TriangleList
     };
+
+    Fence fence{ device };
 
     // Main loop
     MSG msg;
     ZeroMemory(&msg, sizeof(msg));
     while (msg.message != WM_QUIT)
     {
-        // Poll and handle messages (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
         {
             ::TranslateMessage(&msg);
@@ -559,28 +579,29 @@ int main(int argc, char** argv)
         }
 
         commandList.SetPipelineState(pipelineState);
-        //commandList.SetVertexBuffer(vertexBuffer.Descriptor());
+        commandList.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
+        commandList.SetVertexBuffer(vertexBuffer.Descriptor());
+        commandList.SetViewport({ 1280, 720 });
         commandList.SetRenderTarget(*currentRTDescriptor);
-        //commandList.SetDescriptorHeap(rtDescriptorHeap);
         commandList.TransitionResourceState({ ResourceState::Present, ResourceState::RenderTarget, currentBackBuffer });
         commandList.ClearRenderTarget(*currentRTDescriptor, Foundation::Color::Blue());
-        //commandList.Draw(3, 0);
+        commandList.Draw(3, 0);
         commandList.TransitionResourceState({ ResourceState::RenderTarget, ResourceState::Present, currentBackBuffer });
         commandList.Close();
         commandQueue.ExecuteCommandList(commandList);
+        commandQueue.StallCPUUntilDone(fence);
 
+        //allocator.Reset();
         commandList.Reset(allocator);
 
         swapChain.Present();
-
-        //allocator.Reset();
-        //
 
         currentRTDescriptor = frameIndex == 1 ? &backBuffer1Descriptor : &backBuffer2Descriptor;
         currentBackBuffer = frameIndex == 1 ? backBuffer1 : backBuffer2;
 
         frameIndex = (frameIndex + 1) % 2;
-     
+
+
         //FrameContext* frameCtxt = WaitForNextFrameResources();
         //UINT backBufferIdx = g_pSwapChain->GetCurrentBackBufferIndex();
         //frameCtxt->CommandAllocator->Reset();

@@ -1,4 +1,6 @@
 #include "PipelineState.hpp"
+#include "Utils.h"
+
 #include "../Foundation/Visitor.hpp"
 
 #include <d3d12.h>
@@ -6,8 +8,8 @@
 namespace HAL
 {
 
-    PipelineState::PipelineState(const RootSignature& assisiatedRootSignature, PrimitiveTopology assosiatedTopology)
-        : mAssosiatedRootSignature(assisiatedRootSignature), mAssosiatedTopology(assosiatedTopology) {}
+    PipelineState::PipelineState(const RootSignature& assisiatedRootSignature)
+        : mAssosiatedRootSignature(assisiatedRootSignature){}
 
     PipelineState::~PipelineState() {}
 
@@ -27,7 +29,7 @@ namespace HAL
         ResourceFormat::DepthStencil depthStencilFormat,
         PrimitiveTopology primitiveTopology)
         :
-        PipelineState(rootSignature, primitiveTopology)
+        PipelineState(rootSignature)
     {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
@@ -68,7 +70,7 @@ namespace HAL
         desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
         
-        device.D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState));
+        ThrowIfFailed(device.D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
     }
 
 }

@@ -73,6 +73,8 @@ namespace HAL
     {
         auto d3dViewport = viewport.D3DViewport();
         mList->RSSetViewports(1, &d3dViewport);
+        D3D12_RECT scissorRect{ viewport.X, viewport.Y, viewport.Width, viewport.Height };
+        mList->RSSetScissorRects(1, &scissorRect);
     }
 
     void DirectCommandListBase::TransitionResourceState(const ResourceTransitionBarrier& barrier)
@@ -93,13 +95,19 @@ namespace HAL
 
     void DirectCommandListBase::SetFence(const Fence& fence)
     {
-        //mList->
+        
     }
 
     void DirectCommandListBase::SetVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
         mList->IASetVertexBuffers(0, 1, &descriptor.D3DDescriptor());
     }
+   
+    void DirectCommandListBase::SetPrimitiveTopology(PrimitiveTopology topology)
+    {
+        mList->IASetPrimitiveTopology(D3DPrimitiveTopology(topology));
+    }
+
 
 
 
@@ -135,7 +143,6 @@ namespace HAL
     {
         mList->SetPipelineState(state.D3DState());
         mList->SetGraphicsRootSignature(state.AssosiatedRootSignature().D3DSignature());
-        mList->IASetPrimitiveTopology(D3DPrimitiveTopology(state.AssosiatedPrimitiveTopology()));
     }
 
     void DirectCommandList::Draw(uint32_t vertexCount, uint32_t vertexStart)

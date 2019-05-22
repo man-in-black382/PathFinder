@@ -5,6 +5,7 @@
 
 #include "Device.hpp"
 #include "CommandList.hpp"
+#include "Fence.hpp"
 
 namespace HAL
 {
@@ -14,6 +15,9 @@ namespace HAL
     public:
         CommandQueue(const Device& device, D3D12_COMMAND_LIST_TYPE commandListType);
         virtual ~CommandQueue() = 0;
+
+        void SignalFence(const Fence& fence);
+        void StallCPUUntilDone(Fence& fence);
 
     protected:
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> mQueue;

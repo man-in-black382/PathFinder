@@ -14,6 +14,8 @@ namespace HAL
 
         enum class Function { Addition, Substraction, ReverseSubstraction, Min, Max };
 
+        BlendState();
+
         void SetSourceValues(Value color, Value alpha, RenderTarget renderTarget = RenderTarget::RT0);
         void SetDestinationValues(Value color, Value alpha, RenderTarget renderTarget = RenderTarget::RT0);
         void SetFunctions(Function colorFunction, Function alphaFunction, RenderTarget renderTarget = RenderTarget::RT0);
