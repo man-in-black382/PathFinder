@@ -7,7 +7,10 @@ namespace HAL
 
     BlendState::BlendState()
     {
-        mDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+        for (auto rt = 0; rt < 8; rt++)
+        {
+            mDesc.RenderTarget[rt].RenderTargetWriteMask = 0x0F;
+        }
     }
 
     void BlendState::SetSourceValues(Value color, Value alpha, RenderTarget renderTarget)

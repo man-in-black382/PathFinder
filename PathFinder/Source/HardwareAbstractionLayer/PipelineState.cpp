@@ -50,6 +50,7 @@ namespace HAL
         desc.DSVFormat = ResourceFormat::D3DFormat(depthStencilFormat);
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
+        desc.SampleMask = 0xFFFFFFFF;
 
         for (auto& keyValue : renderTargetFormats)
         {
