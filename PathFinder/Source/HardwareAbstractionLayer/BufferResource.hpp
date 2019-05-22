@@ -62,7 +62,17 @@ namespace HAL
     template <class T>
     void BufferResource<T>::Write(uint64_t startIndex, const T* data, uint64_t dataLength)
     {
-        if (startIndex >= mCapacity) throw std::invalid_argument("Index is out of bounds");
+        if (mPaddedElementSize > sizeof(T) && dataLength > 1) {
+            throw std::invalid_argument(
+                "Writing several objects into buffer that requires per object memory padding."
+                "Instead of writing a continuous chunk of memory, write objects one by one in a loop."
+            );
+        }
+
+        if (startIndex >= mCapacity) {
+            throw std::invalid_argument("Index is out of bounds");
+        }
+
         memcpy(mMappedMemory + startIndex * mPaddedElementSize, data, sizeof(T) * dataLength);
     }
 

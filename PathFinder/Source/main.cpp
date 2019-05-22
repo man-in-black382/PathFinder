@@ -591,7 +591,7 @@ int main(int argc, char** argv)
         commandQueue.ExecuteCommandList(commandList);
         commandQueue.StallCPUUntilDone(fence);
 
-        //allocator.Reset();
+        allocator.Reset();
         commandList.Reset(allocator);
 
         swapChain.Present();
