@@ -39,6 +39,8 @@ namespace HAL
     class CopyCommandListBase : public CommandList {
     public:
         using CommandList::CommandList;
+
+        void CopyResource(const Resource& source, const Resource& destination);
     };
 
     class ComputeCommandListBase : public CopyCommandListBase {

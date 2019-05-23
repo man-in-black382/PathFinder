@@ -21,6 +21,15 @@ namespace HAL
        ThrowIfFailed(mList->Close());
     }
 
+
+
+    void CopyCommandListBase::CopyResource(const Resource& source, const Resource& destination)
+    {
+        mList->CopyResource(destination.D3DPtr(), source.D3DPtr());
+    }
+
+
+
     /* void ComputeCommandListBase::SetComputeRootConstantBuffer(const TypelessBufferResource& cbResource, uint32_t rootParameterIndex)
     { 
         mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.D3DPtr()->GetGPUVirtualAddress());

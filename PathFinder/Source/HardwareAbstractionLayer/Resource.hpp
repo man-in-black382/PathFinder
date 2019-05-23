@@ -33,7 +33,6 @@ namespace HAL
             HeapType heapType
         );
 
-    protected:
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
 
     private:

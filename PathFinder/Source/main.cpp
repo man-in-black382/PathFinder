@@ -509,6 +509,7 @@ int main(int argc, char** argv)
     DisplayAdapterFetcher adapterFetcher;
     DisplayAdapter adapter = adapterFetcher.Fetch().back();
     Device device{ adapter };
+    Fence fence{ device };
     DirectCommandQueue commandQueue{ device };
     DirectCommandAllocator allocator{ device };
     DirectCommandList commandList{ device, allocator };
@@ -534,8 +535,19 @@ int main(int argc, char** argv)
         Vertex{ { 1.0f, 1.0f, 0.5f, 1.0f }, { 0.0f, 0.5f, 0.5f, 1.0f } }
     };
 
-    VertexBuffer<Vertex> vertexBuffer{ device, 3, HeapType::Upload };
-    vertexBuffer.Write(0, vertices, 3);
+    VertexBuffer<Vertex> uploadVertexBuffer{ device, 3, HeapType::Upload };
+    VertexBuffer<Vertex> vertexBuffer{ device, 3 };
+
+    CopyCommandAllocator copyAllocator{ device };
+    CopyCommandList copyCommandList{ device, copyAllocator };
+    CopyCommandQueue copyQueue{ device };
+
+    uploadVertexBuffer.Write(0, vertices, 3);
+    copyCommandList.CopyResource(uploadVertexBuffer, vertexBuffer);
+    copyCommandList.Close();
+    copyQueue.ExecuteCommandList(copyCommandList);
+    copyQueue.StallCPUUntilDone(fence);
+    copyAllocator.Reset();
 
     Shader playgroundVS{ executableFolder.wstring() + L"\\Shaders\\Playground.hlsl", Shader::PipelineStage::Vertex };
     Shader playgroundPS{ executableFolder.wstring() + L"\\Shaders\\Playground.hlsl", Shader::PipelineStage::Pixel };
@@ -556,15 +568,19 @@ int main(int argc, char** argv)
     inputLayout.AddPerVertexLayoutElement("COLOR", 0, ResourceFormat::Color::RGBA32_Float, 0, 16);
 
     GraphicsPipelineState pipelineState{
-        device, rootSignature, playgroundVS, playgroundPS,
-        nullptr, nullptr, nullptr, blendState, rasterizerState,
-        depthStencilState, inputLayout,
+        device, 
+        rootSignature, 
+        playgroundVS, 
+        playgroundPS,
+        nullptr, nullptr, nullptr,
+        blendState, 
+        rasterizerState,
+        depthStencilState, 
+        inputLayout,
         {{ RenderTarget::RT0, backBufferFormat }},
         ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned,
         PrimitiveTopology::TriangleList
     };
-
-    Fence fence{ device };
 
     // Main loop
     MSG msg;

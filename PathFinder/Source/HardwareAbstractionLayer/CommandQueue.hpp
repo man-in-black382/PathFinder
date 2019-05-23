@@ -26,13 +26,20 @@ namespace HAL
         inline const auto D3DPtr() const { return mQueue.Get(); }
     };
 
-
     class DirectCommandQueue : public CommandQueue {
     public:
         DirectCommandQueue(const Device& device);
         ~DirectCommandQueue() = default;
 
         void ExecuteCommandList(const DirectCommandList& list);
+    };
+
+    class CopyCommandQueue : public CommandQueue {
+    public:
+        CopyCommandQueue(const Device& device);
+        ~CopyCommandQueue() = default;
+
+        void ExecuteCommandList(const CopyCommandList& list);
     };
 
 }
