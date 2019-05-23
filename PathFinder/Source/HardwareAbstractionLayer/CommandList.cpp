@@ -23,6 +23,11 @@ namespace HAL
 
 
 
+    void CopyCommandListBase::TransitionResourceState(const ResourceTransitionBarrier& barrier)
+    {
+        mList->ResourceBarrier(1, &barrier.D3DBarrier());
+    }
+
     void CopyCommandListBase::CopyResource(const Resource& source, const Resource& destination)
     {
         mList->CopyResource(destination.D3DPtr(), source.D3DPtr());
@@ -84,11 +89,6 @@ namespace HAL
         mList->RSSetViewports(1, &d3dViewport);
         D3D12_RECT scissorRect{ viewport.X, viewport.Y, viewport.Width, viewport.Height };
         mList->RSSetScissorRects(1, &scissorRect);
-    }
-
-    void DirectCommandListBase::TransitionResourceState(const ResourceTransitionBarrier& barrier)
-    {
-        mList->ResourceBarrier(1, &barrier.D3DBarrier());
     }
 
     void DirectCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor)

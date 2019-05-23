@@ -40,6 +40,7 @@ namespace HAL
     public:
         using CommandList::CommandList;
 
+        void TransitionResourceState(const ResourceTransitionBarrier& barrier);
         void CopyResource(const Resource& source, const Resource& destination);
     };
 
@@ -64,7 +65,6 @@ namespace HAL
         using ComputeCommandListBase::ComputeCommandListBase;
 
         void SetViewport(const Viewport& viewport);
-        void TransitionResourceState(const ResourceTransitionBarrier& barrier);
         void SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor = nullptr);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
         void SetFence(const Fence& fence);
