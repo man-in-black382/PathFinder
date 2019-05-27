@@ -140,6 +140,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Foundation\Color.cpp" />
+    <ClCompile Include="Source\Foundation\Name.cpp" />
+    <ClCompile Include="Source\Foundation\NameHolder.cpp" />
+    <ClCompile Include="Source\Foundation\NameRegistry.cpp" />
     <ClCompile Include="Source\Geometry\AxisAlignedBox3D.cpp" />
     <ClCompile Include="Source\Geometry\Collision.cpp" />
     <ClCompile Include="Source\Geometry\Dimensions.cpp" />
@@ -190,8 +193,7 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderGraph.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPassInputProvider.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPassOutputProvider.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPassScheduler.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\Cameraman.cpp" />
     <ClCompile Include="Source\ThirdParty\glm\detail\glm.cpp" />
@@ -207,6 +209,9 @@
     <ClInclude Include="Source\Foundation\BitwiseEnum.hpp" />
     <ClInclude Include="Source\Foundation\Color.hpp" />
     <ClInclude Include="Source\Foundation\Event.hpp" />
+    <ClInclude Include="Source\Foundation\Name.hpp" />
+    <ClInclude Include="Source\Foundation\NameHolder.hpp" />
+    <ClInclude Include="Source\Foundation\NameRegistry.hpp" />
     <ClInclude Include="Source\Foundation\Pi.hpp" />
     <ClInclude Include="Source\Foundation\Visitor.hpp" />
     <ClInclude Include="Source\Geometry\AxisAlignedBox3D.hpp" />
@@ -260,8 +265,7 @@
     <ClInclude Include="Source\IO\Input.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPassInputProvider.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPassOutputProvider.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPassScheduler.hpp" />
     <ClInclude Include="Source\Scene\Camera.hpp" />
     <ClInclude Include="Source\Scene\Cameraman.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\common.hpp" />

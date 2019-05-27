@@ -1,15 +1,24 @@
 #pragma once
 
-#include "TextureResource.hpp"
-#include "BufferResource.hpp"
+#include <vector>
+
+#include "../HardwareAbstractionLayer/TextureResource.hpp"
+#include "../HardwareAbstractionLayer/BufferResource.hpp"
+
+#include "RenderPassScheduler.hpp"
+#include "RenderPass.hpp"
 
 namespace PathFinder
 {
 
-    class RenderGraph
+    class RenderGraph : public IRenderPassScheduler
     {
     public:
-        using ResourceID = uint32_t;
+        virtual void WillRenderToRenderTarget(HAL::ResourceFormat::Color dataFormat, HAL::ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions) override;
+        virtual void WillRenderToRenderTarget(HAL::ResourceFormat::TypelessColor dataFormat, HAL::ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions) override;
+        virtual void WillRenderToDepthStencil(HAL::ResourceFormat::DepthStencil dataFormat, const Geometry::Dimensions& dimensions) override;
+
+        /*     using ResourceID = uint32_t;
 
         template <class ResourceT>
         ResourceT* GetExistingResource(ResourceState state);
@@ -19,11 +28,19 @@ namespace PathFinder
 
         ColorTextureResource* GetNewColorTextureResource(
             ResourceFormat::Color dataType, ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions, ResourceState state);
+            const Geometry::Dimensions& dimensions, ResourceState state
+        );
 
         TypelessTextureResource* GetNewTypelessTextureResource(
-            ResourceFormat::Color dataType, ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions, ResourceState state);
+            ResourceFormat::TypelessColor dataType, ResourceFormat::TextureKind kind,
+            const Geometry::Dimensions& dimensions, ResourceState state
+        );
+
+        DepthStencilTextureResource* GetNewDepthStencilTextureResource(
+            ResourceFormat::DepthStencil dataType,
+            const Geometry::Dimensions& dimensions,
+            ResourceState state
+        );*/
 
     private:
 

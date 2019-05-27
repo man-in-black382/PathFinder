@@ -103,18 +103,4 @@ namespace HAL
         return desc;
     }
 
-    VertexBufferDescriptor::VertexBufferDescriptor(D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress, uint32_t size, uint32_t stride)
-    {
-        mDescriptor.BufferLocation = gpuVirtualAddress;
-        mDescriptor.SizeInBytes = size;
-        mDescriptor.StrideInBytes = stride;
-    }
-
-    IndexBufferDescriptor::IndexBufferDescriptor(D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress, uint32_t size, DXGI_FORMAT format)
-    {
-        mDescriptor.BufferLocation = gpuVirtualAddress;
-        mDescriptor.SizeInBytes = size;
-        mDescriptor.Format = format;
-    }
-
 }

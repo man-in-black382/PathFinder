@@ -3,6 +3,8 @@
 #include <d3d12.h>
 #include <cstdint>
 
+#include "BufferResource.hpp"
+
 namespace HAL
 {
 
@@ -79,7 +81,8 @@ namespace HAL
     class VertexBufferDescriptor
     {
     public:
-        VertexBufferDescriptor(D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress, uint32_t size, uint32_t stride);
+        template <class Vertex>
+        VertexBufferDescriptor(const BufferResource<Vertex>& vertexBuffer);
 
     private:
         D3D12_VERTEX_BUFFER_VIEW mDescriptor{};
@@ -88,12 +91,21 @@ namespace HAL
         inline const auto& D3DDescriptor() const { return mDescriptor; }
     };
 
+    template <class Vertex>
+    VertexBufferDescriptor::VertexBufferDescriptor(const BufferResource<Vertex>& vertexBuffer)
+    {
+        mDescriptor.BufferLocation = vertexBuffer.D3DPtr().GetGPUVirtualAddress();
+        mDescriptor.SizeInBytes = vertexBuffer.D3DDescription().Width;
+        mDescriptor.StrideInBytes = vertexBuffer.PaddedElementSize();
+    }
+
 
 
     class IndexBufferDescriptor
     {
     public:
-        IndexBufferDescriptor(D3D12_GPU_VIRTUAL_ADDRESS gpuVirtualAddress, uint32_t size, DXGI_FORMAT format);
+        template <class Index>
+        IndexBufferDescriptor(const BufferResource<Index>& indexBuffer, ResourceFormat::Color format);
 
     private:
         D3D12_INDEX_BUFFER_VIEW mDescriptor{};
@@ -101,6 +113,14 @@ namespace HAL
     public:
         inline const auto& D3DDescriptor() const { return mDescriptor; }
     };
+
+    template <class Index>
+    IndexBufferDescriptor::IndexBufferDescriptor(const BufferResource<Index>& indexBuffer, ResourceFormat::Color format)
+    {
+        mDescriptor.BufferLocation = indexBuffer.D3DPtr().GetGPUVirtualAddress();
+        mDescriptor.SizeInBytes = indexBuffer.D3DDescription().Width;
+        mDescriptor.Format = ResourceFormat::D3DFormat(format);
+    }
 
 }
 

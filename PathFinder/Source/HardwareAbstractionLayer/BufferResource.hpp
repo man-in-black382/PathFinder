@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Resource.hpp"
-#include "Descriptor.hpp"
 
 namespace HAL
 {
@@ -13,8 +12,9 @@ namespace HAL
         using Resource::Resource;
 
         BufferResource(
-            const Device& device, uint64_t capacity, ResourceState initialState,
-            ResourceState expectedStates, HeapType heapType = HeapType::Default
+            const Device& device, uint64_t capacity, uint64_t perElementAlignment, 
+            ResourceState initialState, ResourceState expectedStates,
+            HeapType heapType = HeapType::Default
         );
 
         ~BufferResource();
@@ -22,7 +22,7 @@ namespace HAL
         void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
 
     protected:
-        uint64_t PaddedElementSize(ResourceState initialState);
+        uint64_t PaddedElementSize(uint64_t alignment);
 
         uint8_t* mMappedMemory = nullptr;
         uint64_t mPaddedElementSize = 0;
@@ -30,18 +30,32 @@ namespace HAL
 
     public:
         inline const auto Capacity() const { return mCapacity; }
+        inline const auto PaddedElementSize() const { return mPaddedElementSize; }
     };
 
     template <class T>
-    uint64_t BufferResource<T>::PaddedElementSize(ResourceState initialState)
+    uint64_t BufferResource<T>::PaddedElementSize(uint64_t alignment)
     {
-        return EnumMaskBitSet(initialState, ResourceState::ConstantBuffer) ? (sizeof(T) + 255) & ~255 : sizeof(T);
+        return (sizeof(T) + alignment - 1) & ~(alignment - 1);
     }
 
     template <class T>
-    BufferResource<T>::BufferResource(const Device& device, uint64_t capacity, ResourceState initialState, ResourceState expectedStates, HeapType heapType)
-        : Resource(device, ResourceFormat(std::nullopt, ResourceFormat::BufferKind::Buffer, Geometry::Dimensions{ PaddedElementSize(initialState) * capacity }), initialState, expectedStates, heapType),
-        mPaddedElementSize(PaddedElementSize(initialState)), mCapacity(capacity)
+    BufferResource<T>::BufferResource(
+        const Device& device, uint64_t capacity, uint64_t perElementAlignment,
+        ResourceState initialState, ResourceState expectedStates, HeapType heapType)
+        :
+        Resource(
+            device, 
+            ResourceFormat(
+                std::nullopt,
+                ResourceFormat::BufferKind::Buffer,
+                Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
+            ),
+            initialState,
+            expectedStates,
+            heapType
+        ),
+        mPaddedElementSize(PaddedElementSize(perElementAlignment)), mCapacity(capacity)
     {
         if (heapType == HeapType::Upload || heapType == HeapType::Readback)
         {
@@ -75,46 +89,6 @@ namespace HAL
 
         memcpy(mMappedMemory + startIndex * mPaddedElementSize, data, sizeof(T) * dataLength);
     }
-
-
-
-    template <typename Vertex>
-    class VertexBuffer : public BufferResource<Vertex>
-    {
-    public:
-        VertexBuffer(const Device& device, uint64_t capacity, HeapType heapType = HeapType::Default);
-
-    private:
-        VertexBufferDescriptor mDescriptor;
-
-    public:
-        inline const auto& Descriptor() const { return mDescriptor; }
-    };
-
-    template <typename Vertex>
-    VertexBuffer<Vertex>::VertexBuffer(const Device& device, uint64_t capacity, HeapType heapType)
-        : BufferResource<Vertex>(device, capacity, ResourceState::VertexBuffer, ResourceState::VertexBuffer, heapType),
-        mDescriptor(Resource::mResource->GetGPUVirtualAddress(), capacity * BufferResource<Vertex>::mPaddedElementSize, sizeof(Vertex)) {}
-
-
-
-    template <typename Index>
-    class IndexBuffer : public BufferResource<Index>
-    {
-    public:
-        IndexBuffer(const Device& device, uint64_t capacity, ResourceFormat::Color format, HeapType heapType = HeapType::Default);
-
-    private:
-        IndexBufferDescriptor mDescriptor;
-
-    public:
-        inline const auto& Descriptor() const { return mDescriptor; }
-    };
-
-    template <typename Index>
-    IndexBuffer<Index>::IndexBuffer(const Device& device, uint64_t capacity, ResourceFormat::Color format, HeapType heapType)
-        : BufferResource(device, capacity, ResourceState::IndexBuffer, ResourceState::IndexBuffer, heapType),
-        mDescriptor(Resource::mResource->GetGPUVirtualAddress(), capacity * BufferResource<Index>::mPaddedElementSize, ResourceFormat::D3DFormat(format)) {}
 
 }
 

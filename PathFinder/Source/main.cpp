@@ -536,7 +536,7 @@ int main(int argc, char** argv)
         Vertex{ { 1.0f, 1.0f, 0.5f, 1.0f }, { 0.0f, 0.5f, 0.5f, 1.0f } }
     };
 
-    VertexBuffer<Vertex> uploadVertexBuffer{ device, 3, HeapType::Upload };
+   /* VertexBuffer<Vertex> uploadVertexBuffer{ device, 3, HeapType::Upload };
     VertexBuffer<Vertex> vertexBuffer{ device, 3 };
 
     CopyCommandAllocator copyAllocator{ device };
@@ -551,7 +551,7 @@ int main(int argc, char** argv)
     copyCommandList.Close();
     copyQueue.ExecuteCommandList(copyCommandList);
     copyQueue.StallCPUUntilDone(fence);
-    copyAllocator.Reset();
+    copyAllocator.Reset();*/
 
     // Deal with constant buffers -------------------------------------------------------- //
     //BufferResource<glm::mat4> viewProjectionsBuffer{ device, 1, ResourceState::ConstantBuffer, ResourceState::ConstantBuffer, HeapType::Upload };
@@ -603,7 +603,7 @@ int main(int argc, char** argv)
             continue;
         }
 
-        commandList.SetPipelineState(pipelineState);
+   /*     commandList.SetPipelineState(pipelineState);
         commandList.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
         commandList.SetVertexBuffer(vertexBuffer.Descriptor());
         commandList.SetViewport({ 1280, 720 });
@@ -624,7 +624,7 @@ int main(int argc, char** argv)
         currentRTDescriptor = frameIndex == 1 ? &backBuffer1Descriptor : &backBuffer2Descriptor;
         currentBackBuffer = frameIndex == 1 ? backBuffer1 : backBuffer2;
 
-        frameIndex = (frameIndex + 1) % 2;
+        frameIndex = (frameIndex + 1) % 2;*/
 
 
         //FrameContext* frameCtxt = WaitForNextFrameResources();

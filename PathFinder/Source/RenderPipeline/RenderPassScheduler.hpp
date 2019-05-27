@@ -1,32 +1,19 @@
 #pragma once
 
-#include "BufferResource.hpp"
-#include "TextureResource.hpp"
+#include "../HardwareAbstractionLayer/BufferResource.hpp"
+#include "../HardwareAbstractionLayer/TextureResource.hpp"
+
+#include "../Geometry/Dimensions.hpp"
 
 namespace PathFinder
 {
 
-    class RenderPassScheduler
+    class IRenderPassScheduler
     {
     public:
-        template <class BufferContentT>
-        PrepareNewBufferResource(uint64_t capacity, ResourceState state);
-
-        ColorTextureResource* GetNewColorTextureResource(
-            ResourceFormat::Color dataType, ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions, ResourceState state
-        );
-
-        TypelessTextureResource* GetNewTypelessTextureResource(
-            ResourceFormat::TypelessColor dataType, ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions, ResourceState state
-        );
-
-        DepthStencilTextureResource* GetNewDepthStencilTextureResource(
-            ResourceFormat::DepthStencil dataType,
-            const Geometry::Dimensions& dimensions,
-            ResourceState state
-        );
+        virtual void WillRenderToRenderTarget(HAL::ResourceFormat::Color dataFormat, HAL::ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions) = 0;
+        virtual void WillRenderToRenderTarget(HAL::ResourceFormat::TypelessColor dataFormat, HAL::ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions) = 0;
+        virtual void WillRenderToDepthStencil(HAL::ResourceFormat::DepthStencil dataFormat, const Geometry::Dimensions& dimensions) = 0;
     };
    
 }
