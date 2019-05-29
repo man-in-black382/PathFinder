@@ -14,7 +14,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<IDXGIAdapter> mAdapter;
 
     public:
-        inline const auto COMPtr() const { return mAdapter; }
+        inline const auto D3DPtr() const { return mAdapter.Get(); }
     };
 }
 

@@ -2,7 +2,7 @@
 
 #include "../HardwareAbstractionLayer/BufferResource.hpp"
 #include "../HardwareAbstractionLayer/TextureResource.hpp"
-
+#include "../Foundation/Name.hpp"
 #include "../Geometry/Dimensions.hpp"
 
 namespace PathFinder
@@ -11,9 +11,22 @@ namespace PathFinder
     class IRenderPassScheduler
     {
     public:
-        virtual void WillRenderToRenderTarget(HAL::ResourceFormat::Color dataFormat, HAL::ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions) = 0;
-        virtual void WillRenderToRenderTarget(HAL::ResourceFormat::TypelessColor dataFormat, HAL::ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions) = 0;
-        virtual void WillRenderToDepthStencil(HAL::ResourceFormat::DepthStencil dataFormat, const Geometry::Dimensions& dimensions) = 0;
+        virtual void WillRenderToRenderTarget(
+            Foundation::Name resourceName,
+            HAL::ResourceFormat::Color dataFormat,
+            HAL::ResourceFormat::TextureKind kind,
+            const Geometry::Dimensions& dimensions) = 0;
+
+        virtual void WillRenderToRenderTarget(
+            Foundation::Name resourceName,
+            HAL::ResourceFormat::TypelessColor dataFormat,
+            HAL::ResourceFormat::TextureKind kind,
+            const Geometry::Dimensions& dimensions) = 0;
+
+        virtual void WillRenderToDepthStencil(
+            Foundation::Name resourceName,
+            HAL::ResourceFormat::DepthStencil dataFormat,
+            const Geometry::Dimensions& dimensions) = 0;
     };
    
 }

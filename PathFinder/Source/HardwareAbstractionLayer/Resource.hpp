@@ -22,6 +22,13 @@ namespace HAL
     {
     public:
         Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);
+
+        Resource(const Resource& other) = delete;
+        Resource(Resource&& other) = default;
+
+  /*      Resource operator=(const Resource& other) = delete;
+        Resource operator=(Resource&& other) = default;*/
+
         virtual ~Resource() = 0;
 
     protected:

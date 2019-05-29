@@ -193,6 +193,7 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderGraph.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPassScheduler.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\Cameraman.cpp" />
@@ -265,6 +266,7 @@
     <ClInclude Include="Source\IO\Input.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassScheduler.hpp" />
     <ClInclude Include="Source\Scene\Camera.hpp" />
     <ClInclude Include="Source\Scene\Cameraman.hpp" />
