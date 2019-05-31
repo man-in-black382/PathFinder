@@ -69,7 +69,18 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LibraryPath>D:\Dev\PathFinder\PathFinder\Source\ThirdParty\assimp\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LibraryPath>D:\Dev\PathFinder\PathFinder\Source\ThirdParty\assimp\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LibraryPath>D:\Dev\PathFinder\PathFinder\Source\ThirdParty\assimp\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LibraryPath>D:\Dev\PathFinder\PathFinder\Source\ThirdParty\assimp\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -270,6 +281,155 @@
     <ClInclude Include="Source\RenderPipeline\RenderPassScheduler.hpp" />
     <ClInclude Include="Source\Scene\Camera.hpp" />
     <ClInclude Include="Source\Scene\Cameraman.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\ai_assert.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\anim.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\BaseImporter.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Bitmap.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\BlobIOSystem.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\ByteSwapper.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\camera.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\cexport.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\cfileio.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\cimport.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\color4.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Compiler\poppack1.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Compiler\pstdint.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Compiler\pushpack1.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\config.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\CreateAnimMesh.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\DefaultIOStream.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\DefaultIOSystem.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\DefaultLogger.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\Defines.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\defs.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Exceptional.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Exporter.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\fast_atof.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\GenericProperty.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Hash.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Importer.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\importerdesc.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\ai_assert.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\anim.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\BaseImporter.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Bitmap.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\BlobIOSystem.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\ByteSwapper.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\camera.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\cexport.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\cfileio.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\cimport.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\color4.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Compiler\poppack1.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Compiler\pstdint.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Compiler\pushpack1.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\CreateAnimMesh.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\DefaultIOStream.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\DefaultIOSystem.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\DefaultLogger.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Defines.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\defs.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Exceptional.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Exporter.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\fast_atof.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\GenericProperty.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Hash.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Importer.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\importerdesc.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\IOStream.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\IOStreamBuffer.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\IOSystem.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\irrXMLWrapper.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\light.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\LineSplitter.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\LogAux.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Logger.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\LogStream.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Macros.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\material.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\MathFunctions.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\matrix3x3.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\matrix4x4.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\MemoryIOWrapper.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\mesh.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\metadata.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\NullLogger.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\ParsingUtils.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\pbrmaterial.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\port\AndroidJNI\AndroidJNIIOSystem.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\postprocess.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Profiler.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\ProgressHandler.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\qnan.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\quaternion.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\RemoveComments.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\scene.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\SceneCombiner.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\SGSpatialSort.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\SkeletonMeshBuilder.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\SmoothingGroups.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\SpatialSort.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\StandardShapes.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\StreamReader.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\StreamWriter.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\StringComparison.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\StringUtils.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Subdivision.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\texture.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\TinyFormatter.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\types.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\vector2.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\vector3.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\version.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\Vertex.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\include\XMLTools.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\IOStream.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\IOStreamBuffer.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\IOSystem.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\irrXMLWrapper.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\light.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\LineSplitter.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\LogAux.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Logger.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\LogStream.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\Macros.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\material.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\MathFunctions.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\matrix3x3.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\matrix4x4.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\MemoryIOWrapper.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\mesh.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\metadata.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\NullLogger.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\ParsingUtils.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\pbrmaterial.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\port\AndroidJNI\AndroidJNIIOSystem.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\postprocess.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Profiler.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\ProgressHandler.hpp" />
+    <ClInclude Include="Source\ThirdParty\assimp\qnan.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\quaternion.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\RemoveComments.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\scene.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\SceneCombiner.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\SGSpatialSort.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\SkeletonMeshBuilder.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\SmoothingGroups.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\SpatialSort.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\StandardShapes.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\StreamReader.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\StreamWriter.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\StringComparison.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\StringUtils.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Subdivision.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\texture.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\TinyFormatter.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\types.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\vector2.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\vector3.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\version.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\Vertex.h" />
+    <ClInclude Include="Source\ThirdParty\assimp\XMLTools.h" />
     <ClInclude Include="Source\ThirdParty\glm\common.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\detail\compute_common.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\detail\compute_vector_relational.hpp" />
@@ -527,6 +687,22 @@
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Source\ThirdParty\assimp\color4.inl" />
+    <None Include="Source\ThirdParty\assimp\include\color4.inl" />
+    <None Include="Source\ThirdParty\assimp\include\material.inl" />
+    <None Include="Source\ThirdParty\assimp\include\matrix3x3.inl" />
+    <None Include="Source\ThirdParty\assimp\include\matrix4x4.inl" />
+    <None Include="Source\ThirdParty\assimp\include\quaternion.inl" />
+    <None Include="Source\ThirdParty\assimp\include\SmoothingGroups.inl" />
+    <None Include="Source\ThirdParty\assimp\include\vector2.inl" />
+    <None Include="Source\ThirdParty\assimp\include\vector3.inl" />
+    <None Include="Source\ThirdParty\assimp\material.inl" />
+    <None Include="Source\ThirdParty\assimp\matrix3x3.inl" />
+    <None Include="Source\ThirdParty\assimp\matrix4x4.inl" />
+    <None Include="Source\ThirdParty\assimp\quaternion.inl" />
+    <None Include="Source\ThirdParty\assimp\SmoothingGroups.inl" />
+    <None Include="Source\ThirdParty\assimp\vector2.inl" />
+    <None Include="Source\ThirdParty\assimp\vector3.inl" />
     <None Include="Source\ThirdParty\glm\detail\func_common.inl" />
     <None Include="Source\ThirdParty\glm\detail\func_common_simd.inl" />
     <None Include="Source\ThirdParty\glm\detail\func_exponential.inl" />
