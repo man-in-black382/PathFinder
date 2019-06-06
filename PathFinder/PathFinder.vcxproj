@@ -43,6 +43,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -70,16 +71,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LibraryPath>D:\Dev\PathFinder\PathFinder\Source\ThirdParty\assimp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>D:\Dev\PathFinder\PathFinder\Source\ThirdParty\assimp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>D:\Dev\PathFinder\PathFinder\Source\ThirdParty\assimp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)Source/ThirdParty/assimp/lib/x86_64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>D:\Dev\PathFinder\PathFinder\Source\ThirdParty\assimp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)Source/ThirdParty/assimp/lib/x86_64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -91,8 +92,12 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <PostBuildEvent>
-      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r</Command>
+      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Command>
     </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -104,10 +109,11 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>D3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r</Command>
+      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -124,9 +130,11 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r</Command>
+      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -143,10 +151,11 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>D3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r</Command>
+      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -168,10 +177,6 @@
     <ClCompile Include="Source\Geometry\Transformation.cpp" />
     <ClCompile Include="Source\Geometry\Triangle2D.cpp" />
     <ClCompile Include="Source\Geometry\Triangle3D.cpp" />
-    <ClCompile Include="Source\Geometry\Vertices\Vertex1P1N2UV.cpp" />
-    <ClCompile Include="Source\Geometry\Vertices\Vertex1P1N2UV1T1BT.cpp" />
-    <ClCompile Include="Source\Geometry\Vertices\Vertex1P3.cpp" />
-    <ClCompile Include="Source\Geometry\Vertices\Vertex1P4.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\BlendState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\BufferResource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandAllocator.cpp" />
@@ -208,6 +213,14 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassScheduler.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\Cameraman.cpp" />
+    <ClCompile Include="Source\Scene\Mesh.cpp" />
+    <ClCompile Include="Source\Scene\MeshInstance.cpp" />
+    <ClCompile Include="Source\Scene\MeshLoader.cpp" />
+    <ClCompile Include="Source\Scene\SubMesh.cpp" />
+    <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV.cpp" />
+    <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.cpp" />
+    <ClCompile Include="Source\Scene\Vertices\Vertex1P3.cpp" />
+    <ClCompile Include="Source\Scene\Vertices\Vertex1P4.cpp" />
     <ClCompile Include="Source\ThirdParty\glm\detail\glm.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui_demo.cpp" />
@@ -241,10 +254,6 @@
     <ClInclude Include="Source\Geometry\Triangle.hpp" />
     <ClInclude Include="Source\Geometry\Triangle2D.hpp" />
     <ClInclude Include="Source\Geometry\Triangle3D.hpp" />
-    <ClInclude Include="Source\Geometry\Vertices\Vertex1P1N2UV.hpp" />
-    <ClInclude Include="Source\Geometry\Vertices\Vertex1P1N2UV1T1BT.hpp" />
-    <ClInclude Include="Source\Geometry\Vertices\Vertex1P3.hpp" />
-    <ClInclude Include="Source\Geometry\Vertices\Vertex1P4.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\BlendState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\BufferResource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandAllocator.hpp" />
@@ -281,6 +290,14 @@
     <ClInclude Include="Source\RenderPipeline\RenderPassScheduler.hpp" />
     <ClInclude Include="Source\Scene\Camera.hpp" />
     <ClInclude Include="Source\Scene\Cameraman.hpp" />
+    <ClInclude Include="Source\Scene\Mesh.hpp" />
+    <ClInclude Include="Source\Scene\MeshInstance.hpp" />
+    <ClInclude Include="Source\Scene\MeshLoader.hpp" />
+    <ClInclude Include="Source\Scene\SubMesh.hpp" />
+    <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV.hpp" />
+    <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.hpp" />
+    <ClInclude Include="Source\Scene\Vertices\Vertex1P3.hpp" />
+    <ClInclude Include="Source\Scene\Vertices\Vertex1P4.hpp" />
     <ClInclude Include="Source\ThirdParty\assimp\ai_assert.h" />
     <ClInclude Include="Source\ThirdParty\assimp\anim.h" />
     <ClInclude Include="Source\ThirdParty\assimp\BaseImporter.h" />
@@ -696,6 +713,10 @@
     <None Include="Source\ThirdParty\assimp\include\SmoothingGroups.inl" />
     <None Include="Source\ThirdParty\assimp\include\vector2.inl" />
     <None Include="Source\ThirdParty\assimp\include\vector3.inl" />
+    <CopyFileToFolders Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <None Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.exp" />
     <None Include="Source\ThirdParty\assimp\material.inl" />
     <None Include="Source\ThirdParty\assimp\matrix3x3.inl" />
     <None Include="Source\ThirdParty\assimp\matrix4x4.inl" />
@@ -848,6 +869,9 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
       <FileType>Document</FileType>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

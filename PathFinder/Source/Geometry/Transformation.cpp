@@ -1,5 +1,3 @@
-//
-//  Transform.cpp
 #include "Transformation.hpp"
 
 #include <glm/gtc/constants.hpp>
@@ -8,52 +6,61 @@
 
 namespace Geometry {
 
-    Transformation::Transformation()
-            : scale(glm::one<glm::vec3>()), translation(glm::zero<glm::vec3>()), rotation(glm::quat()) {}
+    Transformation::Transformation() : Scale(glm::one<glm::vec3>()), Translation(glm::zero<glm::vec3>()), Rotation(glm::quat()) {}
 
-    Transformation::Transformation(const glm::mat4 &matrix) {
+    Transformation::Transformation(const glm::mat4 &matrix) 
+    {
         glm::vec3 skew;
         glm::vec4 perspective;
-        glm::decompose(matrix, scale, rotation, translation, skew, perspective);
+        glm::decompose(matrix, Scale, Rotation, Translation, skew, perspective);
     }
 
     Transformation::Transformation(glm::vec3 scale, glm::vec3 translation, glm::quat rotation)
-            : scale(scale), translation(translation), rotation(rotation) {}
+            : Scale(scale), Translation(translation), Rotation(rotation) {}
 
-    Transformation Transformation::combinedWith(const Transformation &other) const {
-        return Transformation(other.modelMatrix() * modelMatrix());
+    Transformation Transformation::CombinedWith(const Transformation &other) const 
+    {
+        return Transformation(other.ModelMatrix() * ModelMatrix());
     }
 
-    glm::mat4 Transformation::modelMatrix() const {
-        return glm::translate(translation) * glm::mat4_cast(rotation) * glm::scale(scale);
+    glm::mat4 Transformation::ModelMatrix() const
+    {
+        return glm::translate(Translation) * glm::mat4_cast(Rotation) * glm::scale(Scale);
     }
 
-    glm::mat4 Transformation::scaleMatrix() const {
-        return glm::scale(scale);
+    glm::mat4 Transformation::ScaleMatrix() const
+    {
+        return glm::scale(Scale);
     }
 
-    glm::mat4 Transformation::rotationMatrix() const {
-        return glm::mat4_cast(rotation);
+    glm::mat4 Transformation::RotationMatrix() const 
+    {
+        return glm::mat4_cast(Rotation);
     }
 
-    glm::mat4 Transformation::translationMatrix() const {
-        return glm::translate(translation);
+    glm::mat4 Transformation::TranslationMatrix() const 
+    {
+        return glm::translate(Translation);
     }
 
-    glm::mat4 Transformation::normalMatrix() const {
-        return glm::transpose(glm::inverse(modelMatrix()));
+    glm::mat4 Transformation::NormalMatrix() const
+    {
+        return glm::transpose(glm::inverse(ModelMatrix()));
     }
 
-    glm::mat4 Transformation::inverseScaleMatrix() const {
-        return glm::inverse(glm::scale(scale));
+    glm::mat4 Transformation::InverseScaleMatrix() const 
+    {
+        return glm::inverse(glm::scale(Scale));
     }
 
-    glm::mat4 Transformation::inverseRotationMatrix() const {
-        return glm::inverse(glm::mat4_cast(rotation));
+    glm::mat4 Transformation::InverseRotationMatrix() const
+    {
+        return glm::inverse(glm::mat4_cast(Rotation));
     }
 
-    glm::mat4 Transformation::inverseTranslationMatrix() const {
-        return glm::inverse(glm::translate(translation));
+    glm::mat4 Transformation::InverseTranslationMatrix() const
+    {
+        return glm::inverse(glm::translate(Translation));
     }
 
 }

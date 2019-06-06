@@ -11,7 +11,6 @@ namespace HAL
     {
     public:
         Device(const DisplayAdapter& adapter);
-        ~Device();
 
     private:
         Microsoft::WRL::ComPtr<ID3D12Device> mDevice;

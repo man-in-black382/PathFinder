@@ -20,6 +20,8 @@
 #include "HardwareAbstractionLayer/BufferResource.hpp"
 #include "HardwareAbstractionLayer/Fence.hpp"
 
+#include "Scene/MeshLoader.hpp"
+
 #define DX12_ENABLE_DEBUG_LAYER     0
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
@@ -589,7 +591,8 @@ int main(int argc, char** argv)
         PrimitiveTopology::TriangleList
     };
 
-
+    PathFinder::MeshLoader meshLoader{ executableFolder.append("/MediaResources/Models") };
+    PathFinder::Mesh deer = meshLoader.Load("deer.obj");
 
     // Main loop
     MSG msg;

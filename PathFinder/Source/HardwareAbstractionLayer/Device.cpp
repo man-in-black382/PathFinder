@@ -17,10 +17,5 @@ namespace HAL
         D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
         ThrowIfFailed(D3D12CreateDevice(adapter.D3DPtr(), featureLevel, IID_PPV_ARGS(&mDevice)));
     }
-    
-    Device::~Device()
-    {
-    
-    }
 
 }

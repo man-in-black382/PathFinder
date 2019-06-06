@@ -6,10 +6,11 @@
 
 namespace Geometry {
 
-    struct Transformation {
-        glm::vec3 scale;
-        glm::vec3 translation;
-        glm::quat rotation;
+    struct Transformation
+    {
+        glm::vec3 Scale;
+        glm::vec3 Translation;
+        glm::quat Rotation;
 
         Transformation();
 
@@ -17,23 +18,23 @@ namespace Geometry {
 
         Transformation(glm::vec3 scale, glm::vec3 translation, glm::quat rotation);
 
-        Transformation combinedWith(const Transformation &other) const;
+        Transformation CombinedWith(const Transformation &other) const;
 
-        glm::mat4 modelMatrix() const;
+        glm::mat4 ModelMatrix() const;
 
-        glm::mat4 scaleMatrix() const;
+        glm::mat4 ScaleMatrix() const;
 
-        glm::mat4 rotationMatrix() const;
+        glm::mat4 RotationMatrix() const;
 
-        glm::mat4 translationMatrix() const;
+        glm::mat4 TranslationMatrix() const;
 
-        glm::mat4 normalMatrix() const;
+        glm::mat4 NormalMatrix() const;
 
-        glm::mat4 inverseScaleMatrix() const;
+        glm::mat4 InverseScaleMatrix() const;
 
-        glm::mat4 inverseRotationMatrix() const;
+        glm::mat4 InverseRotationMatrix() const;
 
-        glm::mat4 inverseTranslationMatrix() const;
+        glm::mat4 InverseTranslationMatrix() const;
     };
 
 }

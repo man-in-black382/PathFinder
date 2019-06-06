@@ -81,18 +81,6 @@
     <ClCompile Include="Source\ThirdParty\glm\detail\glm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Geometry\Vertices\Vertex1P1N2UV.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Geometry\Vertices\Vertex1P1N2UV1T1BT.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Geometry\Vertices\Vertex1P3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Geometry\Vertices\Vertex1P4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Geometry\AxisAlignedBox3D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -211,6 +199,30 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\MeshLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\MeshInstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\SubMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Vertices\Vertex1P3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Vertices\Vertex1P4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1013,18 +1025,6 @@
     <ClInclude Include="Source\ThirdParty\glm\vector_relational.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Geometry\Vertices\Vertex1P1N2UV.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Geometry\Vertices\Vertex1P1N2UV1T1BT.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Geometry\Vertices\Vertex1P3.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Geometry\Vertices\Vertex1P4.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Geometry\AxisAlignedBox3D.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1610,6 +1610,30 @@
     <ClInclude Include="Source\ThirdParty\assimp\XMLTools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Scene\MeshLoader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Mesh.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\MeshInstance.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\SubMesh.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Vertices\Vertex1P3.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Vertices\Vertex1P4.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2056,9 +2080,16 @@
     <None Include="Source\ThirdParty\assimp\vector3.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.exp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
     <Text Include="Source\RenderPipeline\Shaders\Playground.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.dll" />
   </ItemGroup>
 </Project>

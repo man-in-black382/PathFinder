@@ -6,9 +6,11 @@
 #include "Camera.hpp"
 #include "../IO/Input.hpp"
 
-namespace PathFinder {
+namespace PathFinder
+{
 
-    class Cameraman {
+    class Cameraman
+    {
     private:
         Camera *mCamera = nullptr;
         Input *mUserInput = nullptr;

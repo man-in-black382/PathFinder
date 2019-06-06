@@ -1,5 +1,3 @@
-//
-//  Camera.hpp
 #pragma once
 
 #include "../Geometry/Ray3D.hpp"

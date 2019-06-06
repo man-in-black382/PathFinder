@@ -11,6 +11,8 @@ namespace HAL
             Never, Less, Equal, LessOrEqual, Greater, NotEqual, GreaterOrEqual, Always
         };
 
+        DepthStencilState();
+
         void SetDepthTestEnabled(bool enabled);
         void SetDepthWriteEnabled(bool enabled);
         void SetComparisonFunction(ComparisonFunction function);

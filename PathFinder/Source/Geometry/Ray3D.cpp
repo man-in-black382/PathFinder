@@ -16,7 +16,7 @@ namespace Geometry {
     }
 
     Ray3D Ray3D::transformedBy(const Transformation &t) const {
-        return transformedBy(t.modelMatrix());
+        return transformedBy(t.ModelMatrix());
     }
 
     Ray3D Ray3D::transformedBy(const glm::mat4 &m) const {

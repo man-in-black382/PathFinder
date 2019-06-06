@@ -5,6 +5,13 @@
 namespace HAL
 {
 
+    DepthStencilState::DepthStencilState()
+    {
+        SetDepthTestEnabled(false);
+        SetDepthWriteEnabled(true);
+        SetComparisonFunction(ComparisonFunction::LessOrEqual);
+    }
+
     void DepthStencilState::SetDepthTestEnabled(bool enabled)
     {
         mDesc.DepthEnable = enabled;

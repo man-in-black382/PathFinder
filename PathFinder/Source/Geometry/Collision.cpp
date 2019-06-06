@@ -28,8 +28,8 @@ namespace Geometry {
     }
 
     Interval Collision::GetInterval(const AxisAlignedBox3D &aabb, const glm::vec3 &axis) {
-        glm::vec3 i = aabb.min;
-        glm::vec3 a = aabb.max;
+        glm::vec3 i = aabb.Min;
+        glm::vec3 a = aabb.Max;
 
         glm::vec3 vertex[8] = {
                 glm::vec3(i.x, a.y, a.z),
@@ -131,12 +131,12 @@ namespace Geometry {
     bool Collision::RayAABB(const Ray3D &ray, const AxisAlignedBox3D &aabb, float &distance) {
         glm::vec3 inverseDirection = glm::vec3(1.0) / ray.direction;
 
-        float t1 = (aabb.min.x - ray.origin.x) * inverseDirection.x;
-        float t2 = (aabb.max.x - ray.origin.x) * inverseDirection.x;
-        float t3 = (aabb.min.y - ray.origin.y) * inverseDirection.y;
-        float t4 = (aabb.max.y - ray.origin.y) * inverseDirection.y;
-        float t5 = (aabb.min.z - ray.origin.z) * inverseDirection.z;
-        float t6 = (aabb.max.z - ray.origin.z) * inverseDirection.z;
+        float t1 = (aabb.Min.x - ray.origin.x) * inverseDirection.x;
+        float t2 = (aabb.Max.x - ray.origin.x) * inverseDirection.x;
+        float t3 = (aabb.Min.y - ray.origin.y) * inverseDirection.y;
+        float t4 = (aabb.Max.y - ray.origin.y) * inverseDirection.y;
+        float t5 = (aabb.Min.z - ray.origin.z) * inverseDirection.z;
+        float t6 = (aabb.Max.z - ray.origin.z) * inverseDirection.z;
 
         float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
         float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
