@@ -18,8 +18,8 @@ namespace HAL
     {
     public:
         SwapChain(
-            const DirectCommandQueue& 
-            commandQueue, HWND windowHandle, 
+            const DirectCommandQueue& commandQueue,
+            HWND windowHandle, 
             BackBufferingStrategy strategy,
             ResourceFormat::Color backBufferFormat,
             const Geometry::Dimensions& dimensions

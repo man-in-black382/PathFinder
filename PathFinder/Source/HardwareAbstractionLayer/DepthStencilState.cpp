@@ -10,6 +10,16 @@ namespace HAL
         SetDepthTestEnabled(false);
         SetDepthWriteEnabled(true);
         SetComparisonFunction(ComparisonFunction::LessOrEqual);
+
+        mDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+        mDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+        mDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        mDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+
+        mDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+        mDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+        mDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        mDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
     }
 
     void DepthStencilState::SetDepthTestEnabled(bool enabled)
