@@ -7,14 +7,13 @@ namespace HAL
     RootSignature::RootSignature()
     {
         mDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-        
     }
 
     void RootSignature::AddDescriptorTableParameter(const RootDescriptorTableParameter& table)
     {
         mDescriptorTableParameters.push_back(table);
         mD3DParameters.push_back(table.D3DParameter());
-        mDesc.NumParameters = mD3DParameters.size();
+        mDesc.NumParameters = (UINT)mD3DParameters.size();
         mDesc.pParameters = &mD3DParameters[0];
     }
 
@@ -22,7 +21,7 @@ namespace HAL
     {
         mDescriptorParameters.push_back(descriptor);
         mD3DParameters.push_back(descriptor.D3DParameter());
-        mDesc.NumParameters = mD3DParameters.size();
+        mDesc.NumParameters = (UINT)mD3DParameters.size();
         mDesc.pParameters = &mD3DParameters[0];
     }
 
@@ -30,7 +29,7 @@ namespace HAL
     {
         mConstantParameters.push_back(constants);
         mD3DParameters.push_back(constants.D3DParameter());
-        mDesc.NumParameters = mD3DParameters.size();
+        mDesc.NumParameters = (UINT)mD3DParameters.size();
         mDesc.pParameters = &mD3DParameters[0];
     }
 

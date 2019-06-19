@@ -7,7 +7,7 @@ namespace HAL
 
     DepthStencilState::DepthStencilState()
     {
-        SetDepthTestEnabled(false);
+        SetDepthTestEnabled(true);
         SetDepthWriteEnabled(true);
         SetComparisonFunction(ComparisonFunction::LessOrEqual);
 

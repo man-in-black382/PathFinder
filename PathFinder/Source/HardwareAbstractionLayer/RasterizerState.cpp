@@ -7,6 +7,8 @@ namespace HAL
     {
         SetCullMode(CullMode::Back);
         SetFillMode(FillMode::Solid);
+
+        mDesc.DepthClipEnable = true;
     }
 
     void RasterizerState::SetFillMode(FillMode mode)
@@ -14,7 +16,7 @@ namespace HAL
         switch (mode) 
         {
         case FillMode::Wireframe: mDesc.FillMode = D3D12_FILL_MODE_WIREFRAME; break;
-        case FillMode::Solid:  mDesc.FillMode = D3D12_FILL_MODE_SOLID; break;
+        case FillMode::Solid: mDesc.FillMode = D3D12_FILL_MODE_SOLID; break;
         }
     }
 

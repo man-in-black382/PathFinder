@@ -71,6 +71,8 @@ namespace PathFinder
             }
         }
 
+        subMesh.SetName(mesh->mName.data);
+
         return subMesh;
     }
 

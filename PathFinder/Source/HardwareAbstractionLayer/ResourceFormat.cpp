@@ -51,7 +51,7 @@ namespace HAL
         mDesc.SampleDesc.Quality = 0;
     }
 
-    constexpr DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColor type)
+    DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColor type)
     {
         switch (type)
         {
@@ -68,7 +68,7 @@ namespace HAL
         }
     }
 
-    constexpr DXGI_FORMAT ResourceFormat::D3DFormat(Color type)
+    DXGI_FORMAT ResourceFormat::D3DFormat(Color type)
     {
         switch (type)
         {
@@ -113,7 +113,7 @@ namespace HAL
         }
     }
 
-    constexpr DXGI_FORMAT ResourceFormat::D3DFormat(DepthStencil type)
+    DXGI_FORMAT ResourceFormat::D3DFormat(DepthStencil type)
     {
         switch (type)
         {

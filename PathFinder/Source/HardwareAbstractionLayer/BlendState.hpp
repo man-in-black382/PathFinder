@@ -10,7 +10,10 @@ namespace HAL
    
     class BlendState {
     public:
-        enum class Value { Original, Inverse, Zero, One };
+        enum class Value {
+            Zero, One, SourceColor, InverveSourceColor, SourceAlpha, InverseSourceAlpha,
+            DestinationAlpha, InverseDestinationAlpha, DestinationColor, InverseDestinationColor 
+        };
 
         enum class Function { Addition, Substraction, ReverseSubstraction, Min, Max };
 
@@ -23,6 +26,8 @@ namespace HAL
 
     private:
         D3D12_BLEND_DESC mDesc{};
+
+        D3D12_BLEND D3DValue(Value value);
 
     public:
         inline const auto& D3DState() const { return mDesc; }

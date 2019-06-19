@@ -10,55 +10,29 @@ namespace HAL
         for (auto rt = 0; rt < 8; rt++)
         {
             mDesc.RenderTarget[rt].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+            mDesc.RenderTarget[rt].LogicOp = D3D12_LOGIC_OP_NOOP;
+            mDesc.RenderTarget[rt].LogicOpEnable = false;
+            mDesc.IndependentBlendEnable = true;
+
+            SetSourceValues(Value::One, Value::One, RenderTarget(rt));
+            SetDestinationValues(Value::Zero, Value::Zero, RenderTarget(rt));
+            SetFunctions(Function::Addition, Function::Addition, RenderTarget(rt));
+            SetBlendingEnabled(false, RenderTarget(rt));
         }
     }
 
     void BlendState::SetSourceValues(Value color, Value alpha, RenderTarget renderTarget)
     {
-        D3D12_BLEND colorValue;
-        D3D12_BLEND alphaValue;
-
-        switch (color) {
-        case Value::Original: colorValue = D3D12_BLEND_SRC_COLOR; break;
-        case Value::Inverse: colorValue = D3D12_BLEND_INV_SRC_COLOR; break;
-        case Value::Zero: colorValue = D3D12_BLEND_ZERO; break;
-        case Value::One: colorValue = D3D12_BLEND_ONE; break;
-        }
-
-        switch (alpha) {
-        case Value::Original: alphaValue = D3D12_BLEND_SRC_ALPHA; break;
-        case Value::Inverse: alphaValue = D3D12_BLEND_INV_SRC_ALPHA; break;
-        case Value::Zero: alphaValue = D3D12_BLEND_ZERO; break;
-        case Value::One: alphaValue = D3D12_BLEND_ONE; break;
-        }
-
         auto rtIdx = std::underlying_type<RenderTarget>::type(renderTarget);
-        mDesc.RenderTarget[rtIdx].SrcBlend = colorValue;
-        mDesc.RenderTarget[rtIdx].SrcBlendAlpha = alphaValue;
+        mDesc.RenderTarget[rtIdx].SrcBlend = D3DValue(color);
+        mDesc.RenderTarget[rtIdx].SrcBlendAlpha = D3DValue(alpha);
     }
 
     void BlendState::SetDestinationValues(Value color, Value alpha, RenderTarget renderTarget)
     {
-        D3D12_BLEND colorValue;
-        D3D12_BLEND alphaValue;
-
-        switch (color) {
-        case Value::Original: colorValue = D3D12_BLEND_DEST_COLOR; break;
-        case Value::Inverse: colorValue = D3D12_BLEND_INV_DEST_COLOR; break;
-        case Value::Zero: colorValue = D3D12_BLEND_ZERO; break;
-        case Value::One: colorValue = D3D12_BLEND_ONE; break;
-        }
-
-        switch (alpha) {
-        case Value::Original: alphaValue = D3D12_BLEND_DEST_ALPHA; break;
-        case Value::Inverse: alphaValue = D3D12_BLEND_INV_DEST_ALPHA; break;
-        case Value::Zero: alphaValue = D3D12_BLEND_ZERO; break;
-        case Value::One: alphaValue = D3D12_BLEND_ONE; break;
-        }
-
         auto rtIdx = std::underlying_type<RenderTarget>::type(renderTarget);
-        mDesc.RenderTarget[rtIdx].DestBlend = colorValue;
-        mDesc.RenderTarget[rtIdx].DestBlendAlpha = alphaValue;
+        mDesc.RenderTarget[rtIdx].DestBlend = D3DValue(color);
+        mDesc.RenderTarget[rtIdx].DestBlendAlpha = D3DValue(alpha);
     }
 
     void BlendState::SetFunctions(Function colorFunction, Function alphaFunction, RenderTarget renderTarget)
@@ -93,6 +67,23 @@ namespace HAL
     {
         auto rtIdx = std::underlying_type<RenderTarget>::type(renderTarget);
         mDesc.RenderTarget[rtIdx].BlendEnable = enabled;
+    }
+
+    D3D12_BLEND BlendState::D3DValue(Value value)
+    {
+        switch (value)
+        {
+        case Value::Zero: return D3D12_BLEND_ZERO;
+        case Value::One: return D3D12_BLEND_ONE;
+        case Value::SourceColor: return D3D12_BLEND_SRC_COLOR;
+        case Value::InverveSourceColor: return D3D12_BLEND_INV_SRC_COLOR;
+        case Value::SourceAlpha: return D3D12_BLEND_SRC_ALPHA;
+        case Value::InverseSourceAlpha: return D3D12_BLEND_INV_SRC_ALPHA;
+        case Value::DestinationAlpha: return D3D12_BLEND_DEST_ALPHA;
+        case Value::InverseDestinationAlpha: return D3D12_BLEND_INV_DEST_ALPHA;
+        case Value::DestinationColor: return D3D12_BLEND_DEST_COLOR;
+        case Value::InverseDestinationColor: return D3D12_BLEND_INV_DEST_COLOR;
+        }
     }
 
 }

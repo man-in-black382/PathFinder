@@ -45,9 +45,9 @@ namespace HAL
         ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions);
         ResourceFormat(std::optional<FormatVariant> dataType, BufferKind , const Geometry::Dimensions& dimensions);
 
-        static constexpr DXGI_FORMAT D3DFormat(TypelessColor type);
-        static constexpr DXGI_FORMAT D3DFormat(Color type);
-        static constexpr DXGI_FORMAT D3DFormat(DepthStencil type);
+        static DXGI_FORMAT D3DFormat(TypelessColor type);
+        static DXGI_FORMAT D3DFormat(Color type);
+        static DXGI_FORMAT D3DFormat(DepthStencil type);
 
     private:
         void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);

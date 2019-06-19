@@ -1,5 +1,5 @@
 #include <d3d12.h>
-#include <dxgi1_4.h>
+#include <dxgi.h>
 #include <tchar.h>
 #include <filesystem>
 
@@ -21,8 +21,6 @@
 #include "HardwareAbstractionLayer/Fence.hpp"
 
 #include "Scene/MeshLoader.hpp"
-
-#define DX12_ENABLE_DEBUG_LAYER     0
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
@@ -509,9 +507,9 @@ int main(int argc, char** argv)
     ResourceFormat::Color backBufferFormat = ResourceFormat::Color::RGBA8_Usigned_Norm;
 
     DisplayAdapterFetcher adapterFetcher;
-    DisplayAdapter adapter = adapterFetcher.Fetch().back();
+    DisplayAdapter adapter = adapterFetcher.Fetch()[1];
     Device device{ adapter };
-    Fence fence{ device };
+    /*Fence fence{ device };
     DirectCommandQueue commandQueue{ device };
     DirectCommandAllocator allocator{ device };
     DirectCommandList commandList{ device, allocator };
@@ -528,7 +526,7 @@ int main(int argc, char** argv)
     RTDescriptor* currentRTDescriptor = &backBuffer1Descriptor;
     ColorTextureResource* currentBackBuffer = backBuffer1;
 
-    uint8_t frameIndex = 0;
+    uint8_t frameIndex = 0;*/
     //DepthStencilTextureResource dsTexture(device, ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
 
     // Deal with vertices ---------------------------------------------------------------- //
@@ -558,40 +556,36 @@ int main(int argc, char** argv)
     // Deal with constant buffers -------------------------------------------------------- //
     //BufferResource<glm::mat4> viewProjectionsBuffer{ device, 1, ResourceState::ConstantBuffer, ResourceState::ConstantBuffer, HeapType::Upload };
 
-    Shader playgroundVS{ executableFolder.wstring() + L"\\Shaders\\Playground.hlsl", Shader::PipelineStage::Vertex };
-    Shader playgroundPS{ executableFolder.wstring() + L"\\Shaders\\Playground.hlsl", Shader::PipelineStage::Pixel };
+    Shader playgroundVS{ executableFolder.wstring() + L"/Shaders/Playground.hlsl", Shader::PipelineStage::Vertex };
+    Shader playgroundPS{ executableFolder.wstring() + L"/Shaders/Playground.hlsl", Shader::PipelineStage::Pixel };
 
     RootSignature rootSignature;
     rootSignature.Compile(device);
 
     BlendState blendState;
-
     RasterizerState rasterizerState;
-    rasterizerState.SetCullMode(RasterizerState::CullMode::None);
-
     DepthStencilState depthStencilState;
-    depthStencilState.SetDepthTestEnabled(false);
 
     InputAssemblerLayout inputLayout;
-    inputLayout.AddPerVertexLayoutElement("POSITION", 0, ResourceFormat::Color::RGBA32_Float, 0, 0);
-    inputLayout.AddPerVertexLayoutElement("COLOR", 0, ResourceFormat::Color::RGBA32_Float, 0, 16);
+    /*inputLayout.AddPerVertexLayoutElement("POSITION", 0, ResourceFormat::Color::RGBA32_Float, 0, 0);
+    inputLayout.AddPerVertexLayoutElement("COLOR", 0, ResourceFormat::Color::RGBA32_Float, 0, 16);*/
 
     GraphicsPipelineState pipelineState{
-        device, 
-        rootSignature, 
-        playgroundVS, 
+        device,
+        rootSignature,
+        playgroundVS,
         playgroundPS,
         nullptr, nullptr, nullptr,
-        blendState, 
+        blendState,
         rasterizerState,
-        depthStencilState, 
+        depthStencilState,
         inputLayout,
         {{ RenderTarget::RT0, backBufferFormat }},
         ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned,
         PrimitiveTopology::TriangleList
     };
 
-    PathFinder::MeshLoader meshLoader{ executableFolder.append("/MediaResources/Models") };
+    PathFinder::MeshLoader meshLoader{ executableFolder.append("MediaResources/Models") };
     PathFinder::Mesh deer = meshLoader.Load("deer.obj");
 
     // Main loop
