@@ -6,7 +6,8 @@ namespace PathFinder
 {
 
     RenderGraph::RenderGraph()
-        : mDevice{ FetchDefaultDisplayAdapter() }
+        : mDevice{ FetchDefaultDisplayAdapter() },
+        mMeshGPUStorage{ &mDevice }
     {
         
     }

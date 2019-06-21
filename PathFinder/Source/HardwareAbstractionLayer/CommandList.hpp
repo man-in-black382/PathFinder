@@ -15,6 +15,8 @@
 #include "BufferResource.hpp"
 
 #include "../Foundation/Color.hpp"
+#include "../Geometry/Rect2D.hpp"
+#include <glm/vec3.hpp>
 
 namespace HAL
 {
@@ -41,7 +43,30 @@ namespace HAL
         using CommandList::CommandList;
 
         void TransitionResourceState(const ResourceTransitionBarrier& barrier);
-        void CopyResource(const Resource& source, const Resource& destination);
+        void CopyResource(const Resource& source, Resource& destination);
+
+        void CopyTextureRegion(
+            const TextureResource& source, TextureResource& destination,
+            uint16_t sourceSubresource, uint16_t destinationSubresource,
+            const glm::ivec3& sourceOrigin, const glm::ivec3& destinationOrigin,
+            const Geometry::Dimensions& regionDimensions
+        );
+
+        template <class T> 
+        void CopyBufferRegion(
+            const BufferResource<T>& source, BufferResource<T>& destination,
+            uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset)
+        {
+            if (source.PaddedElementSize() != destination.PaddedElementSize()) {
+                throw std::runtime_error("Buffers are misaligned. Copy will lay out data incorrectly.");
+            }
+
+            auto sourceOffsetInBytes = source.PaddedElementSize() * sourceOffset;
+            auto destinationOffsetInBytes = destination.PaddedElementSize() * destinationOffset;
+            auto regionSizeInBytes = source.PaddedElementSize() * objectCount;
+
+            mList->CopyBufferRegion(destination.D3DPtr(), destinationOffsetInBytes, source.D3DPtr(), sourceOffsetInBytes, regionSizeInBytes);
+        }
     };
 
     class ComputeCommandListBase : public CopyCommandListBase {
@@ -107,8 +132,5 @@ namespace HAL
         void DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart);
         void DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount);
     };
-
-    
-
 }
 

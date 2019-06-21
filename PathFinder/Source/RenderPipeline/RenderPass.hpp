@@ -19,7 +19,7 @@ namespace PathFinder
         Foundation::Name mName;
 
     public:
-        inline const auto& Name() const { return mName; }
+        inline auto& Name() const { return mName; }
     };
 
 }

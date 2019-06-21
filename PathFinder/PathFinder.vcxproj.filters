@@ -225,6 +225,9 @@
     <ClCompile Include="Source\Scene\Vertices\Vertex1P4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1632,6 +1635,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scene\Vertices\Vertex1P4.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\MeshGPUStorage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

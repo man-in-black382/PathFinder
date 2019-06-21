@@ -3,11 +3,13 @@
 namespace PathFinder
 {
 
- /*   MeshInstance::MeshInstance(ID meshID, const Mesh& mesh) : mMeshID(meshID)
+    MeshInstance::MeshInstance(const Mesh* mesh, const std::vector<GPUBufferLocation>& subMeshGPUBufferLocations)
+        : mSubMeshGPUDataLocations(subMeshGPUBufferLocations)
     {
-        mTransformation = mesh.baseTransform();
-        mModelMatrix = mTransformation.ModelMatrix();
-    }*/
+
+    }
+
+ 
 
     bool MeshInstance::IsSelected() const
     {

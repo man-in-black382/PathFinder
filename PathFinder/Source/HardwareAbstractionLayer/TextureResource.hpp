@@ -5,10 +5,25 @@
 namespace HAL
 {
 
-    class ColorTextureResource : public Resource
+    class TextureResource : public Resource
     {
     public:
         using Resource::Resource;
+
+    protected:
+        Geometry::Dimensions mDimensions;
+
+    public:
+        inline Geometry::Dimensions& Dimensions() { return mDimensions; }
+    };
+
+
+
+    class ColorTextureResource : public TextureResource
+    {
+    public:
+        using TextureResource::TextureResource;
+
         ColorTextureResource(
             const Device& device,
             ResourceFormat::Color dataType,
@@ -18,12 +33,15 @@ namespace HAL
             ResourceState expectedStateMask,
             HeapType heapType = HeapType::Default
         );
+
+        ~ColorTextureResource() = default;
     };
 
-    class TypelessTextureResource : public Resource
+    class TypelessTextureResource : public TextureResource
     {
     public:
-        using Resource::Resource;
+        using TextureResource::TextureResource;
+
         TypelessTextureResource(
             const Device& device,
             ResourceFormat::TypelessColor dataType,
@@ -33,20 +51,25 @@ namespace HAL
             ResourceState expectedStateMask,
             HeapType heapType = HeapType::Default
         );
+
+        ~TypelessTextureResource() = default;
     };
 
-    class DepthStencilTextureResource : public Resource
+    class DepthStencilTextureResource : public TextureResource
     {
     public:
-          using Resource::Resource;
-          DepthStencilTextureResource(
-              const Device& device,
-              ResourceFormat::DepthStencil dataType,
-              const Geometry::Dimensions& dimensions,
-              ResourceState initialStateMask,
-              ResourceState expectedStateMask,
-              HeapType heapType = HeapType::Default
-          );
+        using TextureResource::TextureResource;
+
+        DepthStencilTextureResource(
+            const Device& device,
+            ResourceFormat::DepthStencil dataType,
+            const Geometry::Dimensions& dimensions,
+            ResourceState initialStateMask,
+            ResourceState expectedStateMask,
+            HeapType heapType = HeapType::Default
+        );
+
+        ~DepthStencilTextureResource() = default;
     };
 
 }

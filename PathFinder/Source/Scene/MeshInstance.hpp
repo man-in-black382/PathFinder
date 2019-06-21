@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <glm/mat4x4.hpp>
 #include <optional>
+#include <cstdint>
 
 namespace PathFinder
 {
@@ -14,12 +15,18 @@ namespace PathFinder
     class MeshInstance
     {
     public:
+        struct GPUBufferLocation
+        {
+            uint64_t vertexBufferOffset;
+            uint64_t vertexCount;
+            uint64_t indexBufferOffset;
+            uint64_t indexCount;
+        };
+
         /// Material reference that overrides individual sub mesh materials if set
         //std::optional<MaterialReference> materialReference;
 
-      /*  MeshInstance(ID meshID, const Mesh& mesh);
-
-        ID meshID() const;*/
+        MeshInstance(const Mesh* mesh, const std::vector<GPUBufferLocation>& subMeshGPUBufferLocations);
 
         bool IsSelected() const;
 
@@ -48,6 +55,7 @@ namespace PathFinder
         bool mIsHighlighted = false;
         Geometry::Transformation mTransformation;
         glm::mat4 mModelMatrix;
+        std::vector<GPUBufferLocation> mSubMeshGPUDataLocations;
         //std::unordered_map<ID, MaterialReference> mSubMeshMaterialMap;
     };
 

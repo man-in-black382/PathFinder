@@ -28,9 +28,32 @@ namespace HAL
         mList->ResourceBarrier(1, &barrier.D3DBarrier());
     }
 
-    void CopyCommandListBase::CopyResource(const Resource& source, const Resource& destination)
+    void CopyCommandListBase::CopyResource(const Resource& source, Resource& destination)
     {
         mList->CopyResource(destination.D3DPtr(), source.D3DPtr());
+    }
+
+    void CopyCommandListBase::CopyTextureRegion(
+        const TextureResource& source, TextureResource& destination,
+        uint16_t sourceSubresource, uint16_t destinationSubresource, 
+        const glm::ivec3& sourceOrigin, const glm::ivec3& destinationOrigin,
+        const Geometry::Dimensions& regionDimensions)
+    {
+        D3D12_TEXTURE_COPY_LOCATION srcLocation{};
+        D3D12_TEXTURE_COPY_LOCATION dstLocation{};
+
+        srcLocation.pResource = source.D3DPtr();
+        srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        srcLocation.SubresourceIndex = sourceSubresource;
+
+        dstLocation.pResource = destination.D3DPtr();
+        dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        dstLocation.SubresourceIndex = destinationSubresource;
+
+        D3D12_BOX srcBox{};
+        //srcBox.
+
+        //mList->CopyTextureRegion(&dstLocation, destinationRectOrigin.x, destinationRectOrigin.y, destinationRectOrigin.z, &srcLocation, )
     }
 
 

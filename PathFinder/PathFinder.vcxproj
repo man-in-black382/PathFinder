@@ -206,6 +206,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
     <ClCompile Include="Source\IO\Input.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderGraph.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.cpp" />
@@ -283,6 +284,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
     <ClInclude Include="Source\IO\Input.hpp" />
+    <ClInclude Include="Source\RenderPipeline\MeshGPUStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.hpp" />

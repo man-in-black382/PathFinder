@@ -2,7 +2,7 @@
 
 namespace HAL
 {
-    
+
     ColorTextureResource::ColorTextureResource(
         const Device& device,
         ResourceFormat::Color dataType,
@@ -12,9 +12,10 @@ namespace HAL
         ResourceState expectedStateMask,
         HeapType heapType)
         :
-        Resource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType) {}
-
-
+        TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType)
+    {
+        mDimensions = dimensions;
+    }
 
     TypelessTextureResource::TypelessTextureResource(
         const Device& device,
@@ -25,9 +26,10 @@ namespace HAL
         ResourceState expectedStateMask,
         HeapType heapType)
         :
-        Resource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType) {}
-
-
+        TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType)
+    {
+        mDimensions = dimensions;
+    }
 
     DepthStencilTextureResource::DepthStencilTextureResource(
         const Device& device,
@@ -37,7 +39,10 @@ namespace HAL
         ResourceState expectedStateMask,
         HeapType heapType)
         :
-        Resource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), initialStateMask, expectedStateMask, heapType) {}
+        TextureResource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), initialStateMask, expectedStateMask, heapType)
+    {
+        mDimensions = dimensions;
+    }
 
 
 }

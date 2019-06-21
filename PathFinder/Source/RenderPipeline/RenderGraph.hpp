@@ -10,6 +10,7 @@
 
 #include "RenderPassScheduler.hpp"
 #include "RenderPass.hpp"
+#include "MeshGPUStorage.hpp"
 
 namespace PathFinder
 {
@@ -56,8 +57,8 @@ namespace PathFinder
 
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const;
 
-
         HAL::Device mDevice;
+        MeshGPUStorage mMeshGPUStorage;
         PassName mCurrentlySchedulingPassName;
 
         std::vector<std::unique_ptr<RenderPass>> mRenderPasses;
@@ -67,6 +68,9 @@ namespace PathFinder
         ResourceStateChainMap mResourceStateChainMap;
         ResourceExpectedStateMap mResourceExpectedStateMap;
         ResourceAllocationMap mResourceDelayedAllocations;
+
+    public:
+        inline auto& MeshStorage() { return mMeshGPUStorage; }
     };
 
 }
