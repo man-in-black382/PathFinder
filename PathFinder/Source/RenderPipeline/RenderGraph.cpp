@@ -5,36 +5,18 @@
 namespace PathFinder
 {
 
-    RenderGraph::RenderGraph()
-        : mDevice{ FetchDefaultDisplayAdapter() },
-        mMeshGPUStorage{ &mDevice }
-    {
-        
-    }
+    RenderGraph::RenderGraph(HWND windowHandle)
+        : mDefaultRenderSurface{ 
+            { 1280, 720 }, 
+            HAL::ResourceFormat::Color::RGBA8_Usigned_Norm,
+            HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
 
-    void RenderGraph::WillRenderToRenderTarget(
-        Foundation::Name resourceName, HAL::ResourceFormat::Color dataFormat,
-        HAL::ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions)
+            mDevice{ FetchDefaultDisplayAdapter() },
+            mGraphicsDevice{ &mDevice, windowHandle, mDefaultRenderSurface },
+            mMeshGPUStorage{ &mDevice },
+            mResourceManager{ &mDevice, mDefaultRenderSurface }
     {
-        RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
-        QueueResourceAllocationIfNeeded<HAL::ColorTextureResource>(resourceName, mDevice, dataFormat, kind, dimensions);
-    }
-
-    void RenderGraph::WillRenderToRenderTarget(
-        Foundation::Name resourceName, HAL::ResourceFormat::TypelessColor dataFormat, 
-        HAL::ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions)
-    {
-        RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
-        QueueResourceAllocationIfNeeded<HAL::TypelessTextureResource>(resourceName, mDevice, dataFormat, kind, dimensions);
-    }
-
-    void RenderGraph::WillRenderToDepthStencil(
-        Foundation::Name resourceName, 
-        HAL::ResourceFormat::DepthStencil dataFormat, 
-        const Geometry::Dimensions& dimensions)
-    {
-        RegisterStateForResource(resourceName, HAL::ResourceState::DepthWrite);
-        QueueResourceAllocationIfNeeded<HAL::DepthStencilTextureResource>(resourceName, mDevice, dataFormat, dimensions);
+        mResourceManager.UseSwapChain(mGraphicsDevice.SwapChain());
     }
 
     void RenderGraph::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
@@ -46,54 +28,54 @@ namespace PathFinder
     {
         for (auto& passPtr : mRenderPasses)
         {
-            mCurrentlySchedulingPassName = passPtr->Name();
-            passPtr->ScheduleResources(this);
+            mResourceManager.SetCurrentPassName(passPtr->Name());
+            passPtr->ScheduleResources(&mResourceManager);
         }
 
-        for (auto& keyValue : mResourceDelayedAllocations)
-        {
-            auto& allocationAction = keyValue.second;
-            allocationAction();
-        }
+        mResourceManager.AllocateScheduledResources();
     }
 
     void RenderGraph::Render()
     {
+        if (mRenderPasses.empty()) return;
+
+        MoveToNextBackBuffer();
+
+        HAL::ColorTextureResource* currentBackBuffer = mGraphicsDevice.SwapChain().BackBuffers()[mCurrentBackBufferIndex].get();
+        mGraphicsDevice.TransitionResource({ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer });
+
         for (auto& passPtr : mRenderPasses)
         {
-            
+            mResourceManager.SetCurrentPassName(passPtr->Name());
+
+            std::vector<ResourceManager::ResourceName> names = mResourceManager.GetScheduledResourceNamesForPass(passPtr->Name());
+
+            for (ResourceManager::ResourceName name : names)
+            {
+                HAL::ResourceState state = *mResourceManager.GetResourceStateForPass(passPtr->Name(), name);
+                HAL::Resource* resource = mResourceManager.GetResource(name);
+
+                mGraphicsDevice.TransitionResource({ state, state, resource });
+            }
+
+            passPtr->Render(&mResourceManager, &mGraphicsDevice);
         }
-    }
 
-    void RenderGraph::RegisterStateForResource(Foundation::Name resourceName, HAL::ResourceState state)
-    {
-        mResourceStateChainMap[mCurrentlySchedulingPassName][resourceName] = state;
-        mResourceExpectedStateMap[resourceName] |= state;
-    }
-
-    template <class ResourceT, class ...Args>
-    void RenderGraph::QueueResourceAllocationIfNeeded(Foundation::Name resourceName, Args&&... args)
-    {
-        bool isAlreadyAllocated = mResources.find(resourceName) != mResources.end();
-        bool isWaitingForAllocation = mResourceDelayedAllocations.find(resourceName) != mResourceDelayedAllocations.end();
-
-        if (isAlreadyAllocated || isWaitingForAllocation) return;
-
-        Foundation::Name passName = mCurrentlySchedulingPassName;
-
-        mResourceDelayedAllocations[resourceName] = [&, passName, resourceName]()
-        {
-            HAL::ResourceState initialState = mResourceStateChainMap[passName][resourceName];
-            HAL::ResourceState expectedStates = mResourceExpectedStateMap[resourceName];
-
-            mResources.emplace(resourceName, std::make_unique<ResourceT>(std::forward<Args>(args)..., initialState, expectedStates, HAL::HeapType::Default ));
-        };
+        mGraphicsDevice.TransitionResource({ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
+        mGraphicsDevice.SwapChain().Present();
+        mGraphicsDevice.FlushCommandBuffer();
     }
 
     HAL::DisplayAdapter RenderGraph::FetchDefaultDisplayAdapter() const
     {
         HAL::DisplayAdapterFetcher adapterFetcher;
         return adapterFetcher.Fetch().back();
+    }
+
+    void RenderGraph::MoveToNextBackBuffer()
+    {
+        mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % mGraphicsDevice.SwapChain().BackBuffers().size();
+        mResourceManager.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
     }
 
 }

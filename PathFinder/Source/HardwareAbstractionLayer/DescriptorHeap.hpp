@@ -18,6 +18,9 @@ namespace HAL
         virtual ~DescriptorHeap() = 0;
 
     protected:
+        void ValidateCapacity() const;
+        void IncrementCounters();
+
         const Device* mDevice = nullptr;
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mHeap;
         uint32_t mIncrementSize = 0;
@@ -36,6 +39,7 @@ namespace HAL
         ~RTDescriptorHeap() = default;
 
         RTDescriptor EmplaceDescriptorForResource(const ColorTextureResource& resource);
+        RTDescriptor EmplaceDescriptorForResource(const TypelessTextureResource& resource, ResourceFormat::Color concreteFormat);
     };
 
 
@@ -49,6 +53,8 @@ namespace HAL
 
     class CBSRUADescriptorHeap : public DescriptorHeap {
     public:
+        CBSRUADescriptorHeap(const Device* device, uint32_t capacity);
+        ~CBSRUADescriptorHeap() = default;
         /*CBDescriptor EmplaceDescriptorForConstantBufferResource(const Device& device, const Resource& resource);
         SRDescriptor EmplaceDescriptorForShaderResource(const Device& device, const Resource& resource);
         UADescriptor EmplaceDescriptorForUnorderedAccessResource(const Device& device, const Resource& resource);*/

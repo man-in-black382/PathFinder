@@ -15,6 +15,8 @@ namespace HAL
         TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType)
     {
         mDimensions = dimensions;
+        mKind = kind;
+        mDataFormat = dataType;
     }
 
     TypelessTextureResource::TypelessTextureResource(
@@ -29,6 +31,7 @@ namespace HAL
         TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType)
     {
         mDimensions = dimensions;
+        mKind = kind;
     }
 
     DepthStencilTextureResource::DepthStencilTextureResource(
@@ -42,6 +45,7 @@ namespace HAL
         TextureResource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), initialStateMask, expectedStateMask, heapType)
     {
         mDimensions = dimensions;
+        mKind = ResourceFormat::TextureKind::Texture2D;
     }
 
 

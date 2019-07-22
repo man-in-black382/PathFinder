@@ -114,15 +114,20 @@ namespace HAL
         mList->RSSetScissorRects(1, &scissorRect);
     }
 
-    void DirectCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor)
+    void DirectCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor)
     {
-        const D3D12_CPU_DESCRIPTOR_HANDLE* dsHandle = depthStencilDescriptor ? &depthStencilDescriptor->CPUHandle() : nullptr;
+        const D3D12_CPU_DESCRIPTOR_HANDLE* dsHandle = depthStencilDescriptor.has_value() ? &depthStencilDescriptor->CPUHandle() : nullptr;
         mList->OMSetRenderTargets(1, &rtDescriptor.CPUHandle(), false, dsHandle);
     }
 
     void DirectCommandListBase::ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color)
     {
         mList->ClearRenderTargetView(rtDescriptor.CPUHandle(), color.Ptr(), 0, nullptr);
+    }
+
+    void DirectCommandListBase::CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue)
+    {
+        mList->ClearDepthStencilView(dsDescriptor.CPUHandle(), D3D12_CLEAR_FLAG_DEPTH, depthValue, 0, 0, nullptr);
     }
 
     void DirectCommandListBase::SetFence(const Fence& fence)

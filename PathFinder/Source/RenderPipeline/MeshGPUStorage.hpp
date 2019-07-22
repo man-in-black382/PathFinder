@@ -32,12 +32,21 @@ namespace PathFinder
         HAL::DirectCommandList mCommandList;
         HAL::DirectCommandQueue mCommandQueue;
         HAL::Fence mFence;
-        
-        HAL::BufferResource<Vertex1P1N1UV1T1BT> mUploadVertexBuffer;
-        HAL::BufferResource<uint32_t> mUploadIndexBuffer;
+
+        std::unique_ptr<HAL::BufferResource<Vertex1P1N1UV1T1BT>> mUploadVertexBuffer;
+        std::unique_ptr<HAL::BufferResource<uint32_t>> mUploadIndexBuffer;
         
         std::unique_ptr<HAL::BufferResource<Vertex1P1N1UV1T1BT>> mFinalVertexBuffer;
         std::unique_ptr<HAL::BufferResource<uint32_t>> mFinalIndexBuffer;
+
+        std::unique_ptr<HAL::VertexBufferDescriptor> mVertexBufferDescriptor;
+        std::unique_ptr<HAL::IndexBufferDescriptor> mIndexBufferDescriptor;
+
+    public:
+        const HAL::BufferResource<Vertex1P1N1UV1T1BT>* UnifiedVertexBuffer() const { return mFinalVertexBuffer.get(); }
+        const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer() const { return mFinalIndexBuffer.get(); }
+        const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptor() const { return mVertexBufferDescriptor.get(); }
+        const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptor() const { return mIndexBufferDescriptor.get(); }
     };
 
 }

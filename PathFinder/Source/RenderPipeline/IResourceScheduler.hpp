@@ -8,9 +8,13 @@
 namespace PathFinder
 {
 
-    class IRenderPassScheduler
+    class IResourceScheduler
     {
     public:
+        virtual void WillRenderToRenderTarget(Foundation::Name resourceName) = 0;
+
+        virtual void WillRenderToDepthStencil(Foundation::Name resourceName) = 0;
+
         virtual void WillRenderToRenderTarget(
             Foundation::Name resourceName,
             HAL::ResourceFormat::Color dataFormat,
@@ -20,6 +24,7 @@ namespace PathFinder
         virtual void WillRenderToRenderTarget(
             Foundation::Name resourceName,
             HAL::ResourceFormat::TypelessColor dataFormat,
+            HAL::ResourceFormat::Color shaderVisisbleFormat,
             HAL::ResourceFormat::TextureKind kind,
             const Geometry::Dimensions& dimensions) = 0;
 

@@ -4,38 +4,21 @@
 #include <unordered_map>
 #include <functional>
 
-#include "../HardwareAbstractionLayer/TextureResource.hpp"
-#include "../HardwareAbstractionLayer/BufferResource.hpp"
 #include "../HardwareAbstractionLayer/Device.hpp"
+#include "../HardwareAbstractionLayer/SwapChain.hpp"
 
-#include "RenderPassScheduler.hpp"
 #include "RenderPass.hpp"
 #include "MeshGPUStorage.hpp"
+#include "ResourceManager.hpp"
+#include "GraphicsDevice.hpp"
 
 namespace PathFinder
 {
 
-    class RenderGraph : public IRenderPassScheduler
+    class RenderGraph
     {
     public:
-        RenderGraph();
-
-        virtual void WillRenderToRenderTarget(
-            Foundation::Name resourceName,
-            HAL::ResourceFormat::Color dataFormat, 
-            HAL::ResourceFormat::TextureKind kind, 
-            const Geometry::Dimensions& dimensions) override;
-
-        virtual void WillRenderToRenderTarget(
-            Foundation::Name resourceName,
-            HAL::ResourceFormat::TypelessColor dataFormat,
-            HAL::ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions) override;
-
-        virtual void WillRenderToDepthStencil(
-            Foundation::Name resourceName,
-            HAL::ResourceFormat::DepthStencil dataFormat,
-            const Geometry::Dimensions& dimensions) override;
+        RenderGraph(HWND windowHandle);
 
         void AddRenderPass(std::unique_ptr<RenderPass>&& pass);
 
@@ -43,31 +26,19 @@ namespace PathFinder
         void Render();
 
     private:
-        using ResourceName = Foundation::Name;
-        using PassName = Foundation::Name;
-        using ResourceMap = std::unordered_map<ResourceName, std::unique_ptr<HAL::Resource>>;
-        using ResourceStateChainMap = std::unordered_map<PassName, std::unordered_map<ResourceName, HAL::ResourceState>>;
-        using ResourceAllocationMap = std::unordered_map<ResourceName, std::function<void()>>;
-        using ResourceExpectedStateMap = std::unordered_map<ResourceName, HAL::ResourceState>;
-
-        void RegisterStateForResource(Foundation::Name resourceName, HAL::ResourceState state);
-
-        template <class ResourceT, class ...Args>
-        void QueueResourceAllocationIfNeeded(Foundation::Name resourceName, Args&&... args);
-
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const;
+        void MoveToNextBackBuffer();
+
+        RenderSurface mDefaultRenderSurface;
 
         HAL::Device mDevice;
+        GraphicsDevice mGraphicsDevice;
         MeshGPUStorage mMeshGPUStorage;
-        PassName mCurrentlySchedulingPassName;
+        ResourceManager mResourceManager;
 
         std::vector<std::unique_ptr<RenderPass>> mRenderPasses;
-        std::vector<ResourceName> mRequestedResource;
 
-        ResourceMap mResources;
-        ResourceStateChainMap mResourceStateChainMap;
-        ResourceExpectedStateMap mResourceExpectedStateMap;
-        ResourceAllocationMap mResourceDelayedAllocations;
+        uint8_t mCurrentBackBufferIndex = 0;
 
     public:
         inline auto& MeshStorage() { return mMeshGPUStorage; }

@@ -10,6 +10,7 @@ namespace Foundation
     public:
         Name();
         Name(const class std::string& string);
+        Name(const char* cString);
         explicit Name(uint64_t id);
         ~Name();
 

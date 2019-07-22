@@ -10,7 +10,9 @@ namespace PathFinder
     public:
         PlaygroundRenderPass();
 
-        virtual void ScheduleResources(const IRenderPassScheduler* scheduler) override;
+
+        virtual void ScheduleResources(IResourceScheduler* scheduler) override;
+        virtual void Render(IResourceProvider* resourceProvider, GraphicsDevice* device) override;
 
     };
 

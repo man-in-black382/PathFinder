@@ -16,7 +16,10 @@
 
 #include "../Foundation/Color.hpp"
 #include "../Geometry/Rect2D.hpp"
+
 #include <glm/vec3.hpp>
+
+#include <optional>
 
 namespace HAL
 {
@@ -90,8 +93,9 @@ namespace HAL
         using ComputeCommandListBase::ComputeCommandListBase;
 
         void SetViewport(const Viewport& viewport);
-        void SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor = nullptr);
+        void SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor = std::nullopt);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
+        void CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue);
         void SetFence(const Fence& fence);
         void SetVertexBuffer(const VertexBufferDescriptor& descriptor);
         void SetPrimitiveTopology(PrimitiveTopology topology);

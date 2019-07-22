@@ -4,11 +4,19 @@ namespace PathFinder
 {
 
     PlaygroundRenderPass::PlaygroundRenderPass()
-        : RenderPass(Foundation::Name{ "Playground" }) {}
+        : RenderPass(FrameResourceNames::PlaygroundRenderTarget, "Playground.hlsl", "Playground.hlsl") {}
 
-    void PlaygroundRenderPass::ScheduleResources(const IRenderPassScheduler* scheduler)
+
+    void PlaygroundRenderPass::ScheduleResources(IResourceScheduler* scheduler)
     {
-        
+        //scheduler->WillRenderToRenderTarget(FrameResourceNames::PlaygroundRenderTarget);
+    }
+
+    void PlaygroundRenderPass::Render(IResourceProvider* resourceProvider, GraphicsDevice* device)
+    {
+        auto rtView = resourceProvider->GetBackBuffer();
+        device->SetRenderTarget(rtView);
+        device->ClearRenderTarget(Foundation::Color::Green(), rtView);
     }
 
 }

@@ -23,6 +23,12 @@ namespace Foundation
         m_Id = NameRegistry::SharedInstance().ToId(string);
     }
 
+    Name::Name(const char* cString)
+        : m_Id{ NameRegistry::INVALID_ID }
+    {
+        m_Id = NameRegistry::SharedInstance().ToId(cString);
+    }
+
     Name::~Name()
     {
 

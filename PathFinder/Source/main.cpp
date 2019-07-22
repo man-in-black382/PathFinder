@@ -22,6 +22,7 @@
 
 #include "Scene/MeshLoader.hpp"
 #include "RenderPipeline/RenderGraph.hpp"
+#include "RenderPipeline/RenderPasses/PlaygroundRenderPass.hpp"
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
@@ -510,25 +511,7 @@ int main(int argc, char** argv)
     DisplayAdapterFetcher adapterFetcher;
     DisplayAdapter adapter = adapterFetcher.Fetch()[1];
     Device device{ adapter };
-    /*Fence fence{ device };
-    DirectCommandQueue commandQueue{ device };
-    DirectCommandAllocator allocator{ device };
-    DirectCommandList commandList{ device, allocator };
-    SwapChain swapChain{ commandQueue, hwnd, BackBufferingStrategy::Double, backBufferFormat, { 1280, 720 } };
 
-    RTDescriptorHeap rtDescriptorHeap{ &device, (uint32_t)swapChain.BackBuffers().size() };
-
-    ColorTextureResource* backBuffer1 = swapChain.BackBuffers()[0].get();
-    ColorTextureResource* backBuffer2 = swapChain.BackBuffers()[1].get();
-
-    RTDescriptor backBuffer1Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*backBuffer1);
-    RTDescriptor backBuffer2Descriptor = rtDescriptorHeap.EmplaceDescriptorForResource(*backBuffer2);
-
-    RTDescriptor* currentRTDescriptor = &backBuffer1Descriptor;
-    ColorTextureResource* currentBackBuffer = backBuffer1;
-
-    uint8_t frameIndex = 0;*/
-    //DepthStencilTextureResource dsTexture(device, ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned, { 1280, 720 });
 
     // Deal with vertices ---------------------------------------------------------------- //
     Vertex vertices[3] = { 
@@ -589,9 +572,12 @@ int main(int argc, char** argv)
     PathFinder::MeshLoader meshLoader{ executableFolder.append("MediaResources/Models") };
     PathFinder::Mesh deer = meshLoader.Load("deer.obj");
 
-    PathFinder::RenderGraph renderGraph;
+    PathFinder::RenderGraph renderGraph{ hwnd };
     PathFinder::MeshInstance deerInstance = renderGraph.MeshStorage().EmplaceInstanceForMesh(&deer);
     renderGraph.MeshStorage().TransferDataToGPU();
+    renderGraph.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());
+    
+    renderGraph.Schedule();
 
     // Main loop
     MSG msg;
@@ -604,6 +590,8 @@ int main(int argc, char** argv)
             ::DispatchMessage(&msg);
             continue;
         }
+
+        renderGraph.Render();
 
    /*     commandList.SetPipelineState(pipelineState);
         commandList.SetPrimitiveTopology(PrimitiveTopology::TriangleList);

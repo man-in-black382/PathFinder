@@ -12,9 +12,11 @@ namespace HAL
 
     protected:
         Geometry::Dimensions mDimensions;
+        ResourceFormat::TextureKind mKind;
 
     public:
-        inline Geometry::Dimensions& Dimensions() { return mDimensions; }
+        inline const Geometry::Dimensions& Dimensions() const { return mDimensions; }
+        inline ResourceFormat::TextureKind Kind() const { return mKind; }
     };
 
 
@@ -35,6 +37,12 @@ namespace HAL
         );
 
         ~ColorTextureResource() = default;
+
+    private:
+        ResourceFormat::Color mDataFormat;
+
+    public:
+        inline ResourceFormat::Color DataFormat() const { return mDataFormat; };
     };
 
     class TypelessTextureResource : public TextureResource
