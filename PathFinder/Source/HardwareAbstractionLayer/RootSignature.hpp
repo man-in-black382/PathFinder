@@ -31,7 +31,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12RootSignature> mSignature;
 
     public:
-        inline const auto D3DSignature() const { return mSignature.Get(); }
+        inline ID3D12RootSignature* D3DSignature() const { return mSignature.Get(); }
     };
 
 }

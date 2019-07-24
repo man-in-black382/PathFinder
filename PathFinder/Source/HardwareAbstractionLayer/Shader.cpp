@@ -36,22 +36,8 @@ namespace HAL
         mBytecodeSize = mBlob->GetBufferSize();
     }
 
-
-
-    ShaderBundle::ShaderBundle(const std::filesystem::path& shaderRootPath, const std::string& vsFileName, const std::string& psFileName)
-    {
-
-    }
-
-    ShaderBundle::ShaderBundle(const std::filesystem::path& shaderRootPath, const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName)
-    {
-
-    }
-
-    ShaderBundle::ShaderBundle(const std::filesystem::path& shaderRootPath, const std::string& csFileName)
-    {
-
-    }
+    ShaderBundle::ShaderBundle(Shader* vs, Shader* ps, Shader* ds, Shader* hs, Shader* gs, Shader* cs)
+        : mVertexShader{ vs }, mPixelShader{ ps }, mDomainShader{ ds }, mHullShader{ hs }, mGeometryShader{ gs }, mComputeShader{ cs } {}
 
 }
 

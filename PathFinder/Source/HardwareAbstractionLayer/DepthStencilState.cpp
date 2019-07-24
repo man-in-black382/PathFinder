@@ -20,6 +20,8 @@ namespace HAL
         mDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
         mDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
         mDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+
+        mDesc.StencilEnable = false;
     }
 
     void DepthStencilState::SetDepthTestEnabled(bool enabled)

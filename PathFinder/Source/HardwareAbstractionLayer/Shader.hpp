@@ -30,14 +30,23 @@ namespace HAL
     class ShaderBundle
     {
     public:
-        ShaderBundle(const std::filesystem::path& shaderRootPath, const std::string& vsFileName, const std::string& psFileName);
-        ShaderBundle(const std::filesystem::path& shaderRootPath, const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName);
-        ShaderBundle(const std::filesystem::path& shaderRootPath, const std::string& csFileName);
+        ShaderBundle(Shader* vs, Shader* ps, Shader* ds, Shader* hs, Shader* gs, Shader* cs);
 
     private:
-        std::vector<Shader> mShaders;
+        Shader* mVertexShader;
+        Shader* mPixelShader;
+        Shader* mDomainShader;
+        Shader* mHullShader;
+        Shader* mGeometryShader;
+        Shader* mComputeShader;
 
-
+    public:
+        inline Shader* VertexShader() const { return mVertexShader; }
+        inline Shader* PixelShader() const { return mPixelShader; }
+        inline Shader* DomainShader() const { return mDomainShader; }
+        inline Shader* HullShader() const { return mHullShader; }
+        inline Shader* GeometryShader() const { return mGeometryShader; }
+        inline Shader* ComputeShader() const { return mComputeShader; }
     };
 
 }

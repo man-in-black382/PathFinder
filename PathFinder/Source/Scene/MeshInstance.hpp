@@ -2,6 +2,9 @@
 
 #include "../Geometry/Transformation.hpp"
 #include "../Geometry/AxisAlignedBox3D.hpp"
+
+#include "../HardwareAbstractionLayer/PipelineState.hpp"
+
 #include "Mesh.hpp"
 
 #include <unordered_map>
@@ -17,36 +20,16 @@ namespace PathFinder
     public:
         struct GPUBufferLocation
         {
-            uint64_t vertexBufferOffset;
-            uint64_t vertexCount;
-            uint64_t indexBufferOffset;
-            uint64_t indexCount;
+            uint64_t VertexBufferOffset;
+            uint64_t VertexCount;
+            uint64_t IndexBufferOffset;
+            uint64_t IndexCount;
         };
 
         /// Material reference that overrides individual sub mesh materials if set
         //std::optional<MaterialReference> materialReference;
 
         MeshInstance(const Mesh* mesh, const std::vector<GPUBufferLocation>& subMeshGPUBufferLocations);
-
-        bool IsSelected() const;
-
-        bool IsHighlighted() const;
-
-        const glm::mat4 &ModelMatrix() const;
-
-        const Geometry::Transformation& Transformation() const;
-
-        Geometry::Transformation& Transformation();
-
-        Geometry::AxisAlignedBox3D BoundingBox(const Mesh& mesh) const;
-
-        //std::optional<MaterialReference> materialReferenceForSubMeshID(ID subMeshID) const;
-
-        void SetIsSelected(bool selected);
-
-        void SetIsHighlighted(bool highlighted);
-
-        void SetTransformation(const Geometry::Transformation &transform);
 
         //void setMaterialReferenceForSubMeshID(const MaterialReference &ref, ID subMeshID);
 
@@ -56,7 +39,25 @@ namespace PathFinder
         Geometry::Transformation mTransformation;
         glm::mat4 mModelMatrix;
         std::vector<GPUBufferLocation> mSubMeshGPUDataLocations;
+        HAL::GraphicsPipelineState* mDepthOnlyPassPSO;
+        HAL::GraphicsPipelineState* mGBufferPassPSO;
         //std::unordered_map<ID, MaterialReference> mSubMeshMaterialMap;
+
+    public:
+        inline bool IsSelected() const { return mIsSelected; }
+        inline bool IsHighlighted() const { return mIsHighlighted; }
+        inline const glm::mat4 &ModelMatrix() const { return mModelMatrix; }
+        inline const Geometry::Transformation& Transformation() const { return mTransformation; }
+        inline Geometry::Transformation& Transformation() { return mTransformation; }
+        inline Geometry::AxisAlignedBox3D BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
+        inline HAL::GraphicsPipelineState* DepthOnlyPassPSO() const { return mDepthOnlyPassPSO; }
+        inline HAL::GraphicsPipelineState* GBufferPassPSO() const { return mGBufferPassPSO; }
+
+        inline void SetIsSelected(bool selected) { mIsSelected = selected; }
+        inline void SetIsHighlighted(bool highlighted) { mIsHighlighted = highlighted; }
+        inline void SetTransformation(const Geometry::Transformation &transform) { mTransformation = transform; }
+        inline void SetDepthOnlyPassPSO(HAL::GraphicsPipelineState* pso) { mDepthOnlyPassPSO = pso; }
+        inline void SetGBufferPassPSO(HAL::GraphicsPipelineState* pso) { mGBufferPassPSO = pso; }
     };
 
 }

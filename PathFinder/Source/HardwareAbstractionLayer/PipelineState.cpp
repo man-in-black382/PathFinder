@@ -8,54 +8,35 @@
 namespace HAL
 {
 
-    PipelineState::PipelineState(const RootSignature& assisiatedRootSignature)
-        : mAssosiatedRootSignature(assisiatedRootSignature){}
-
     PipelineState::~PipelineState() {}
 
-    GraphicsPipelineState::GraphicsPipelineState(
-        const Device& device,
-        const RootSignature& rootSignature,
-        const Shader& vertexShader,
-        const Shader& pixelShader,
-        const Shader* domainShader,
-        const Shader* hullShader,
-        const Shader* geometryShader,
-        const BlendState& blendState,
-        const RasterizerState& rasterizerState,
-        const DepthStencilState& depthStencilState, 
-        const InputAssemblerLayout& inputLayout,
-        const RenderTargetFormatMap& renderTargetFormats,
-        ResourceFormat::DepthStencil depthStencilFormat,
-        PrimitiveTopology primitiveTopology)
-        :
-        PipelineState(rootSignature)
+    void GraphicsPipelineState::Compile(const Device& device)
     {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
-        desc.pRootSignature = rootSignature.D3DSignature();
-        desc.VS = vertexShader.D3DBytecode();
-        desc.PS = pixelShader.D3DBytecode();
+        desc.pRootSignature = mRootSignature->D3DSignature();
+        desc.VS = mVertexShader->D3DBytecode();
+        desc.PS = mPixelShader->D3DBytecode();
 
-        if (domainShader) desc.DS = domainShader->D3DBytecode();
-        if (hullShader) desc.HS = hullShader->D3DBytecode();
-        if (geometryShader) desc.GS = geometryShader->D3DBytecode();
+        if (mDomainShader) desc.DS = mDomainShader->D3DBytecode();
+        if (mHullShader) desc.HS = mHullShader->D3DBytecode();
+        if (mGeometryShader) desc.GS = mGeometryShader->D3DBytecode();
 
-        desc.BlendState = blendState.D3DState();
-        desc.RasterizerState = rasterizerState.D3DState();
-        desc.DepthStencilState = depthStencilState.D3DState();
-        desc.InputLayout = inputLayout.D3DLayout();
-        desc.PrimitiveTopologyType = D3DPrimitiveTopologyType(primitiveTopology);
-        desc.NumRenderTargets = renderTargetFormats.size();
-        desc.DSVFormat = ResourceFormat::D3DFormat(depthStencilFormat);
+        desc.BlendState = mBlendState.D3DState();
+        desc.RasterizerState = mRasterizerState.D3DState();
+        desc.DepthStencilState = mDepthStencilState.D3DState();
+        desc.InputLayout = mInputLayout.D3DLayout();
+        desc.PrimitiveTopologyType = D3DPrimitiveTopologyType(mPrimitiveTopology);
+        desc.NumRenderTargets = mRenderTargetFormats.size();
+        desc.DSVFormat = ResourceFormat::D3DFormat(mDepthStencilFormat);
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
         desc.SampleMask = 0xFFFFFFFF;
 
-        for (auto& keyValue : renderTargetFormats)
+        for (auto& keyValue : mRenderTargetFormats)
         {
             auto rtIdx = std::underlying_type<RenderTarget>::type(keyValue.first);
-            std::visit([&desc, rtIdx](auto&& format) { 
+            std::visit([&desc, rtIdx](auto&& format) {
                 desc.RTVFormats[rtIdx] = ResourceFormat::D3DFormat(format);
             }, keyValue.second);
         }
@@ -70,8 +51,15 @@ namespace HAL
 #if defined(DEBUG) || defined(_DEBUG) 
         desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
-        
+
         ThrowIfFailed(device.D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
+    }
+
+    GraphicsPipelineState GraphicsPipelineState::Clone() const
+    {
+        GraphicsPipelineState newState = *this;
+        newState.mState = nullptr;
+        return newState;
     }
 
 }

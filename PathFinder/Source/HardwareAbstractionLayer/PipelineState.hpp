@@ -16,19 +16,22 @@
 
 namespace HAL
 {
+
     class PipelineState {
     public:
         virtual ~PipelineState() = 0;
 
-    protected:
-        PipelineState(const RootSignature& assisiatedRootSignature);
+        virtual void Compile(const Device& device) = 0;
 
+    protected:
         Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
-        RootSignature mAssosiatedRootSignature;
+        RootSignature* mRootSignature;
 
     public:
-        inline const auto D3DState() const { return mState.Get(); }
-        inline const auto& AssosiatedRootSignature() const { return mAssosiatedRootSignature; }
+        inline ID3D12PipelineState* D3DCompiledState() const { return mState.Get(); }
+        inline RootSignature* GetRootSignature() const { return mRootSignature; }
+
+        inline void SetRootSignature(RootSignature* signature) { mRootSignature = signature; }
     };
 
     class GraphicsPipelineState : public PipelineState
@@ -37,24 +40,43 @@ namespace HAL
         using RenderTargetFormat = std::variant<ResourceFormat::Color, ResourceFormat::TypelessColor>;
         using RenderTargetFormatMap = std::unordered_map<RenderTarget, RenderTargetFormat>;
 
-        GraphicsPipelineState(
-            const Device& device,
-            const RootSignature& rootSignature,
-            const Shader& vertexShader,
-            const Shader& pixelShader,
-            const Shader* domainShader,
-            const Shader* hullShader,
-            const Shader* geometryShader,
-            const BlendState& blendState,
-            const RasterizerState& rasterizerState,
-            const DepthStencilState& depthStencilState,
-            const InputAssemblerLayout& inputLayout,
-            const RenderTargetFormatMap& renderTargetFormats,
-            ResourceFormat::DepthStencil depthStencilFormat,
-            PrimitiveTopology primitiveTopology
-        );
-
         ~GraphicsPipelineState() = default;
+
+        virtual void Compile(const Device& device) override;
+
+        GraphicsPipelineState Clone() const;
+
+    private:
+        Shader* mVertexShader;
+        Shader* mPixelShader;
+        Shader* mDomainShader;
+        Shader* mHullShader;
+        Shader* mGeometryShader;
+        BlendState mBlendState;
+        RasterizerState mRasterizerState;
+        DepthStencilState mDepthStencilState;
+        InputAssemblerLayout mInputLayout;
+        RenderTargetFormatMap mRenderTargetFormats;
+        ResourceFormat::DepthStencil mDepthStencilFormat;
+        PrimitiveTopology mPrimitiveTopology;
+
+    public:
+        inline void SetRootSignature(RootSignature* rootSignature) { mRootSignature = rootSignature; }
+        inline void SetVertexShader(Shader* vertexShader) { mVertexShader = vertexShader; }
+        inline void SetPixelShader(Shader* pixelShader) { mPixelShader = pixelShader; }
+        inline void SetDomainShader(Shader* domainShader) { mDomainShader = domainShader; }
+        inline void SetHullShader(Shader* hullShader) { mHullShader = hullShader; }
+        inline void SetGeometryShader(Shader* geometryShader) { mGeometryShader = geometryShader; }
+        inline void SetPrimitiveTopology(PrimitiveTopology topology) { mPrimitiveTopology = topology; }
+        inline void SetDepthStencilFormat(ResourceFormat::DepthStencil format) { mDepthStencilFormat = format; }
+
+        inline BlendState& GetBlendState() { return mBlendState; }
+        inline RasterizerState& GetRasterizerState() { return mRasterizerState; }
+        inline DepthStencilState& GetDepthStencilState() { return mDepthStencilState; }
+        inline InputAssemblerLayout& GetInputLayout() { return mInputLayout; }
+        inline RenderTargetFormatMap& GetRenderTargetFormats() { return mRenderTargetFormats; }
+        inline ResourceFormat::DepthStencil& GetDepthStencilFormat() { return mDepthStencilFormat; }
+        inline PrimitiveTopology& GetPrimitiveTopology() { return mPrimitiveTopology; }
     };
 
     class ComputePipelineState {

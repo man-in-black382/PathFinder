@@ -554,20 +554,20 @@ int main(int argc, char** argv)
     /*inputLayout.AddPerVertexLayoutElement("POSITION", 0, ResourceFormat::Color::RGBA32_Float, 0, 0);
     inputLayout.AddPerVertexLayoutElement("COLOR", 0, ResourceFormat::Color::RGBA32_Float, 0, 16);*/
 
-    GraphicsPipelineState pipelineState{
-        device,
-        rootSignature,
-        playgroundVS,
-        playgroundPS,
-        nullptr, nullptr, nullptr,
-        blendState,
-        rasterizerState,
-        depthStencilState,
-        inputLayout,
-        {{ RenderTarget::RT0, backBufferFormat }},
-        ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned,
-        PrimitiveTopology::TriangleList
-    };
+    //GraphicsPipelineState pipelineState{
+    //    device,
+    //    rootSignature,
+    //    playgroundVS,
+    //    playgroundPS,
+    //    nullptr, nullptr, nullptr,
+    //    blendState,
+    //    rasterizerState,
+    //    depthStencilState,
+    //    inputLayout,
+    //    {{ RenderTarget::RT0, backBufferFormat }},
+    //    ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned,
+    //    PrimitiveTopology::TriangleList
+    //};
 
     PathFinder::MeshLoader meshLoader{ executableFolder.append("MediaResources/Models") };
     PathFinder::Mesh deer = meshLoader.Load("deer.obj");

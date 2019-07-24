@@ -37,10 +37,10 @@ namespace PathFinder
         for (const SubMesh& subMesh : mesh->SubMeshes())
         {
             MeshInstance::GPUBufferLocation gpuLocation{ mCurrentVertexOffset, subMesh.Vertices().size(), mCurrentIndexOffset, subMesh.Indices().size() };
-            mUploadVertexBuffer->Write(gpuLocation.vertexBufferOffset, subMesh.Vertices().data(), gpuLocation.vertexCount);
-            mUploadIndexBuffer->Write(gpuLocation.indexBufferOffset, subMesh.Indices().data(), gpuLocation.indexCount);
-            mCurrentVertexOffset += gpuLocation.vertexCount;
-            mCurrentIndexOffset += gpuLocation.indexCount;
+            mUploadVertexBuffer->Write(gpuLocation.VertexBufferOffset, subMesh.Vertices().data(), gpuLocation.VertexCount);
+            mUploadIndexBuffer->Write(gpuLocation.IndexBufferOffset, subMesh.Indices().data(), gpuLocation.IndexCount);
+            mCurrentVertexOffset += gpuLocation.VertexCount;
+            mCurrentIndexOffset += gpuLocation.IndexCount;
             gpuBufferLocations.push_back(gpuLocation);
         }
 

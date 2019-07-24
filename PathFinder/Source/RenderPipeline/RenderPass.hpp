@@ -18,6 +18,7 @@ namespace PathFinder
         RenderPass(Foundation::Name name, const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName);
         RenderPass(Foundation::Name name, const std::string& csFileName);
 
+        virtual void SetupPipelineStates() = 0;
         virtual void ScheduleResources(IResourceScheduler* scheduler) = 0;
         virtual void Render(IResourceProvider* resourceProvider, GraphicsDevice* device) = 0;
 

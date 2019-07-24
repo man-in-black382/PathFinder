@@ -178,8 +178,7 @@ namespace HAL
 
     void DirectCommandList::SetPipelineState(const GraphicsPipelineState& state)
     {
-        mList->SetPipelineState(state.D3DState());
-        mList->SetGraphicsRootSignature(state.AssosiatedRootSignature().D3DSignature());
+        mList->SetPipelineState(state.D3DCompiledState());
     }
 
     void DirectCommandList::Draw(uint32_t vertexCount, uint32_t vertexStart)
