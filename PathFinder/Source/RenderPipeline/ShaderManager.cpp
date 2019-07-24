@@ -9,8 +9,9 @@ namespace PathFinder
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& vsFileName, const std::string& psFileName)
     {
         return {
-            GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
-            GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
+            &GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
+            &GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
+            nullptr, nullptr, nullptr
         };
     }
 
@@ -19,12 +20,15 @@ namespace PathFinder
         return {
             GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
             GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
+            nullptr, nullptr,
+            GetShader(HAL::Shader::PipelineStage::Geometry, gsFileName),
+            nullptr
         };
     }
 
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& csFileName)
     {
-        throw std::logic_error("The method or operation is not implemented.");
+        return { nullptr, nullptr, nullptr, nullptr, nullptr, GetShader(HAL::Shader::PipelineStage::Compute, csFileName) };
     }
 
     std::string ShaderManager::ConstructFullShaderPath(const std::string& relativePath)

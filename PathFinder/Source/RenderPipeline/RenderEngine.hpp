@@ -15,10 +15,10 @@
 namespace PathFinder
 {
 
-    class RenderGraph
+    class RenderEngine
     {
     public:
-        RenderGraph(HWND windowHandle);
+        RenderEngine(HWND windowHandle);
 
         void AddRenderPass(std::unique_ptr<RenderPass>&& pass);
 

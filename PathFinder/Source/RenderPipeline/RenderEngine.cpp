@@ -5,7 +5,7 @@
 namespace PathFinder
 {
 
-    RenderGraph::RenderGraph(HWND windowHandle)
+    RenderEngine::RenderEngine(HWND windowHandle)
         : mDefaultRenderSurface{ 
             { 1280, 720 }, 
             HAL::ResourceFormat::Color::RGBA8_Usigned_Norm,
@@ -19,12 +19,12 @@ namespace PathFinder
         mResourceManager.UseSwapChain(mGraphicsDevice.SwapChain());
     }
 
-    void RenderGraph::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
+    void RenderEngine::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
     {
         mRenderPasses.emplace_back(std::move(pass));
     }
 
-    void RenderGraph::Schedule()
+    void RenderEngine::Schedule()
     {
         for (auto& passPtr : mRenderPasses)
         {
@@ -35,7 +35,7 @@ namespace PathFinder
         mResourceManager.AllocateScheduledResources();
     }
 
-    void RenderGraph::Render()
+    void RenderEngine::Render()
     {
         if (mRenderPasses.empty()) return;
 
@@ -48,7 +48,7 @@ namespace PathFinder
         {
             mResourceManager.SetCurrentPassName(passPtr->Name());
 
-            std::vector<ResourceManager::ResourceName> names = mResourceManager.GetScheduledResourceNamesForPass(passPtr->Name());
+            std::vector<ResourceManager::ResourceName>& names = mResourceManager.GetScheduledResourceNamesForPass(passPtr->Name());
 
             for (ResourceManager::ResourceName name : names)
             {
@@ -66,13 +66,13 @@ namespace PathFinder
         mGraphicsDevice.FlushCommandBuffer();
     }
 
-    HAL::DisplayAdapter RenderGraph::FetchDefaultDisplayAdapter() const
+    HAL::DisplayAdapter RenderEngine::FetchDefaultDisplayAdapter() const
     {
         HAL::DisplayAdapterFetcher adapterFetcher;
         return adapterFetcher.Fetch().back();
     }
 
-    void RenderGraph::MoveToNextBackBuffer()
+    void RenderEngine::MoveToNextBackBuffer()
     {
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % mGraphicsDevice.SwapChain().BackBuffers().size();
         mResourceManager.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);

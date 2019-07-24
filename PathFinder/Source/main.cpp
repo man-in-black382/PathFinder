@@ -572,7 +572,7 @@ int main(int argc, char** argv)
     PathFinder::MeshLoader meshLoader{ executableFolder.append("MediaResources/Models") };
     PathFinder::Mesh deer = meshLoader.Load("deer.obj");
 
-    PathFinder::RenderGraph renderGraph{ hwnd };
+    PathFinder::RenderEngine renderGraph{ hwnd };
     PathFinder::MeshInstance deerInstance = renderGraph.MeshStorage().EmplaceInstanceForMesh(&deer);
     renderGraph.MeshStorage().TransferDataToGPU();
     renderGraph.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());

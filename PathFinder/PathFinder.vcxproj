@@ -210,7 +210,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateManager.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderContext.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderGraph.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderEngine.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderSurface.cpp" />
@@ -299,10 +299,10 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\RenderPipeline\MeshGPUStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderContext.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderGraph.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderEngine.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\ResourceNameList.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\PipelineNames.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderSurface.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceDescriptorStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceManager.hpp" />

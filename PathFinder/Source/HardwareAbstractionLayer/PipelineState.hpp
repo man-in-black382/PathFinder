@@ -70,6 +70,15 @@ namespace HAL
         inline void SetPrimitiveTopology(PrimitiveTopology topology) { mPrimitiveTopology = topology; }
         inline void SetDepthStencilFormat(ResourceFormat::DepthStencil format) { mDepthStencilFormat = format; }
 
+        inline void SetShaders(const ShaderBundle& bundle)
+        {
+            mVertexShader = bundle.VertexShader();
+            mPixelShader = bundle.PixelShader();
+            mDomainShader = bundle.DomainShader();
+            mHullShader = bundle.HullShader();
+            mGeometryShader = bundle.GeometryShader();
+        }
+
         inline BlendState& GetBlendState() { return mBlendState; }
         inline RasterizerState& GetRasterizerState() { return mRasterizerState; }
         inline DepthStencilState& GetDepthStencilState() { return mDepthStencilState; }

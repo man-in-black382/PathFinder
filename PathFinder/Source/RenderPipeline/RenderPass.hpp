@@ -6,7 +6,7 @@
 #include "IResourceProvider.hpp"
 #include "GraphicsDevice.hpp"
 
-#include "RenderPasses/ResourceNameList.hpp"
+#include "RenderPasses/PipelineNames.hpp"
 
 namespace PathFinder
 {
