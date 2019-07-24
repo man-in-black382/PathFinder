@@ -22,7 +22,7 @@ namespace HAL
         uint64_t mBytecodeSize;
 
     public:
-        inline auto D3DBytecode() const { return D3D12_SHADER_BYTECODE{ mBytecode, mBytecodeSize }; }
+        inline D3D12_SHADER_BYTECODE D3DBytecode() const { return { mBytecode, mBytecodeSize }; }
     };
 
 

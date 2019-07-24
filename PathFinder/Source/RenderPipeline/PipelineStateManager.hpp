@@ -4,27 +4,33 @@
 #include "../HardwareAbstractionLayer/PipelineState.hpp"
 
 #include "RenderSurface.hpp"
+#include "IPipelineStateManager.hpp"
 
 #include <unordered_map>
 
 namespace PathFinder
 {
 
-    class PipelineStateManager
+    class PipelineStateManager : public IPipelineStateManager
     {
     public:
-        using PSOName = Foundation::Name;
-
         PipelineStateManager(HAL::Device* device, const RenderSurface& defaultRenderSurface);
 
+        virtual GraphicsPipelineState CloneDefaultGraphicsState() override;
+        virtual GraphicsPipelineState CloneExistingGraphicsState(PSOName name) override;
+        virtual void StoreGraphicsState(PSOName name, const GraphicsPipelineState& pso) override;
+
+        void CompileStates();
+
     private:
-        void ConfigureCommonStates();
-        void BuildCommonRootSignature();
+        void ConfigureDefaultStates();
+        void BuildUniversalRootSignature();
 
         RenderSurface mDefaultRenderSurface;
-
+        
         HAL::Device* mDevice;
-        HAL::RootSignature mCommonRootSignature;
+        HAL::RootSignature mUniversalRootSignature;
+        HAL::GraphicsPipelineState mDefaultGraphicsState;
 
         std::unordered_map<PSOName, HAL::GraphicsPipelineState> mGraphicPSOs;
     };

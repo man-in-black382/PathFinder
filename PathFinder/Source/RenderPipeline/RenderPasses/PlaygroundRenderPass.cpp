@@ -6,6 +6,10 @@ namespace PathFinder
     PlaygroundRenderPass::PlaygroundRenderPass()
         : RenderPass(FrameResourceNames::PlaygroundRenderTarget, "Playground.hlsl", "Playground.hlsl") {}
 
+    void PlaygroundRenderPass::SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager)
+    {
+        
+    }
 
     void PlaygroundRenderPass::ScheduleResources(IResourceScheduler* scheduler)
     {
@@ -18,5 +22,7 @@ namespace PathFinder
         device->SetRenderTarget(rtView);
         device->ClearRenderTarget(Foundation::Color::Green(), rtView);
     }
+
+    
 
 }

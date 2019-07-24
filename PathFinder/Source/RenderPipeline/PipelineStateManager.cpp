@@ -6,20 +6,48 @@ namespace PathFinder
     PipelineStateManager::PipelineStateManager(HAL::Device* device, const RenderSurface& defaultRenderSurface)
         : mDevice{ device }, mDefaultRenderSurface{ defaultRenderSurface } {}
 
-    void PipelineStateManager::ConfigureCommonStates()
+    HAL::GraphicsPipelineState PipelineStateManager::CloneExistingGraphicsState(PSOName name)
     {
-        mGBufferState.GetBlendState().SetBlendingEnabled(false);
-        mGBufferState.GetDepthStencilState().SetDepthTestEnabled(true);
-        mGBufferState.GetDepthStencilState().SetDepthWriteEnabled(true);
-        mGBufferState.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
-        mGBufferState.GetRasterizerState().SetCullMode(HAL::RasterizerState::CullMode::Back);
-        mGBufferState.GetRasterizerState().SetFillMode(HAL::RasterizerState::FillMode::Solid);
-        mGBufferState.SetDepthStencilFormat(mDefaultRenderSurface.DepthStencilFormat());
+        return mGraphicPSOs[name].Clone();
     }
 
-    void PipelineStateManager::BuildCommonRootSignature()
+    void PipelineStateManager::StoreGraphicsState(PSOName name, const GraphicsPipelineState& pso)
     {
-        mCommonRootSignature.Compile(*mDevice);
+        mGraphicPSOs[name] = pso;
+        mGraphicPSOs[name].SetRootSignature(&mUniversalRootSignature);
+    }
+
+    void PipelineStateManager::CompileStates()
+    {
+        mUniversalRootSignature.Compile(*mDevice);
+
+        for (auto& nameStatePair : mGraphicPSOs)
+        {
+            GraphicsPipelineState& pso = nameStatePair.second;
+            pso.Compile(*mDevice);
+        }
+    }
+
+    HAL::GraphicsPipelineState PipelineStateManager::CloneDefaultGraphicsState()
+    {
+        return mDefaultGraphicsState.Clone();
+    }
+
+    void PipelineStateManager::ConfigureDefaultStates()
+    {
+        mDefaultGraphicsState.GetBlendState().SetBlendingEnabled(false);
+        mDefaultGraphicsState.GetDepthStencilState().SetDepthTestEnabled(true);
+        mDefaultGraphicsState.GetDepthStencilState().SetDepthWriteEnabled(true);
+        mDefaultGraphicsState.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
+        mDefaultGraphicsState.GetRasterizerState().SetCullMode(HAL::RasterizerState::CullMode::Back);
+        mDefaultGraphicsState.GetRasterizerState().SetFillMode(HAL::RasterizerState::FillMode::Solid);
+        mDefaultGraphicsState.SetDepthStencilFormat(mDefaultRenderSurface.DepthStencilFormat());
+        mDefaultGraphicsState.SetRootSignature(&mUniversalRootSignature);
+    }
+
+    void PipelineStateManager::BuildUniversalRootSignature()
+    {
+        
     }
 
 }

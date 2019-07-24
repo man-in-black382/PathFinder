@@ -4,6 +4,8 @@
 
 #include "IResourceScheduler.hpp"
 #include "IResourceProvider.hpp"
+#include "IShaderManager.hpp"
+#include "IPipelineStateManager.hpp"
 #include "GraphicsDevice.hpp"
 
 #include "RenderPasses/PipelineNames.hpp"
@@ -18,7 +20,7 @@ namespace PathFinder
         RenderPass(Foundation::Name name, const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName);
         RenderPass(Foundation::Name name, const std::string& csFileName);
 
-        virtual void SetupPipelineStates() = 0;
+        virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) = 0;
         virtual void ScheduleResources(IResourceScheduler* scheduler) = 0;
         virtual void Render(IResourceProvider* resourceProvider, GraphicsDevice* device) = 0;
 

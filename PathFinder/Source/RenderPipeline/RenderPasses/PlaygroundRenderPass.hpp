@@ -10,10 +10,9 @@ namespace PathFinder
     public:
         PlaygroundRenderPass();
 
-
+        virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) override;
         virtual void ScheduleResources(IResourceScheduler* scheduler) override;
         virtual void Render(IResourceProvider* resourceProvider, GraphicsDevice* device) override;
-
     };
 
 }

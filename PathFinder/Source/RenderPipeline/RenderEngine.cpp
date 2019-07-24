@@ -5,16 +5,18 @@
 namespace PathFinder
 {
 
-    RenderEngine::RenderEngine(HWND windowHandle)
-        : mDefaultRenderSurface{ 
-            { 1280, 720 }, 
+    RenderEngine::RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath)
+        : mExecutablePath{ executablePath },
+        mDefaultRenderSurface{
+            { 1280, 720 },
             HAL::ResourceFormat::Color::RGBA8_Usigned_Norm,
             HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
 
             mDevice{ FetchDefaultDisplayAdapter() },
             mGraphicsDevice{ &mDevice, windowHandle, mDefaultRenderSurface },
             mMeshGPUStorage{ &mDevice },
-            mResourceManager{ &mDevice, mDefaultRenderSurface }
+            mResourceManager{ &mDevice, mDefaultRenderSurface },
+            mShaderManager{ executablePath /= "Shaders" }
     {
         mResourceManager.UseSwapChain(mGraphicsDevice.SwapChain());
     }
@@ -29,6 +31,7 @@ namespace PathFinder
         for (auto& passPtr : mRenderPasses)
         {
             mResourceManager.SetCurrentPassName(passPtr->Name());
+            //passPtr->SetupPipelineStates()
             passPtr->ScheduleResources(&mResourceManager);
         }
 
