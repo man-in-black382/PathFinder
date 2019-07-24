@@ -20,6 +20,7 @@ namespace PathFinder
 
     private:
         std::string ConstructFullShaderPath(const std::string& relativePath);
+        HAL::Shader& GetShader(HAL::Shader::PipelineStage pipelineStage, const std::string& relativePath);
         HAL::Shader* FindCachedShader(HAL::Shader::PipelineStage pipelineStage, const std::string& fullFilePath);
         HAL::Shader& LoadAndCacheShader(HAL::Shader::PipelineStage pipelineStage, const std::string& fullFilePath);
 

@@ -8,14 +8,18 @@ namespace PathFinder
 
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& vsFileName, const std::string& psFileName)
     {
-        std::string fullVSPath = ConstructFullShaderPath(vsFileName);
-        HAL::Shader* vs = FindCachedShader(HAL::Shader::PipelineStage::Vertex, fullVSPath);
-        return vs ? vs : LoadAndCacheShader(HAL::Shader::PipelineStage::Vertex, fullVSPath);
+        return {
+            GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
+            GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
+        };
     }
 
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName)
     {
-        throw std::logic_error("The method or operation is not implemented.");
+        return {
+            GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
+            GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
+        };
     }
 
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& csFileName)
@@ -25,7 +29,14 @@ namespace PathFinder
 
     std::string ShaderManager::ConstructFullShaderPath(const std::string& relativePath)
     {
-        
+        return mShaderRootPath.string() + relativePath;
+    }
+
+    HAL::Shader& ShaderManager::GetShader(HAL::Shader::PipelineStage pipelineStage, const std::string& relativePath)
+    {
+        std::string fullPath = ConstructFullShaderPath(relativePath);
+        HAL::Shader* shader = FindCachedShader(pipelineStage, fullVSPath);
+        return shader ? *shader : LoadAndCacheShader(pipelineStage, fullPath);
     }
 
     HAL::Shader* ShaderManager::FindCachedShader(HAL::Shader::PipelineStage pipelineStage, const std::string& fullFilePath)
