@@ -10,9 +10,9 @@ namespace PathFinder
     public:
         using PSOName = Foundation::Name;
 
-        virtual GraphicsPipelineState CloneDefaultGraphicsState() = 0;
-        virtual GraphicsPipelineState CloneExistingGraphicsState(PSOName name) = 0;
-        virtual void StoreGraphicsState(PSOName name, const GraphicsPipelineState& pso) = 0;
+        virtual HAL::GraphicsPipelineState CloneDefaultGraphicsState() = 0;
+        virtual HAL::GraphicsPipelineState CloneExistingGraphicsState(PSOName name) = 0;
+        virtual void StoreGraphicsState(PSOName name, const HAL::GraphicsPipelineState& pso) = 0;
     };
 
 }

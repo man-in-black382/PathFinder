@@ -88,7 +88,7 @@ namespace HAL
         inline PrimitiveTopology& GetPrimitiveTopology() { return mPrimitiveTopology; }
     };
 
-    class ComputePipelineState {
+    class ComputePipelineState : public PipelineState {
     private:
         D3D12_COMPUTE_PIPELINE_STATE_DESC mDesc{};
     };

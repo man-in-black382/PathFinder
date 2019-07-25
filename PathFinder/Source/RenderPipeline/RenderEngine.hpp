@@ -33,14 +33,14 @@ namespace PathFinder
         void MoveToNextBackBuffer();
 
         RenderSurface mDefaultRenderSurface;
-        std::filesystem::path& mExecutablePath;
+        std::filesystem::path mExecutablePath;
 
         HAL::Device mDevice;
-        GraphicsDevice mGraphicsDevice;
         MeshGPUStorage mMeshGPUStorage;
         ResourceManager mResourceManager;
         ShaderManager mShaderManager;
         PipelineStateManager mPipelineStateManager;
+        GraphicsDevice mGraphicsDevice;
 
         std::vector<std::unique_ptr<RenderPass>> mRenderPasses;
 

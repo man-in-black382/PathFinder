@@ -86,6 +86,7 @@ namespace HAL
         void SetComputeRootUnorderedAccessResource(const DepthStencilTextureResource& resource, uint32_t rootParameterIndex);
 
         void SetDescriptorHeap(const DescriptorHeap& heap);
+        void SetPipelineState(const ComputePipelineState& state);
     };
 
     class DirectCommandListBase : public ComputeCommandListBase {
@@ -99,6 +100,7 @@ namespace HAL
         void SetFence(const Fence& fence);
         void SetVertexBuffer(const VertexBufferDescriptor& descriptor);
         void SetPrimitiveTopology(PrimitiveTopology topology);
+        void SetPipelineState(const PipelineState& state);
     };
 
 
@@ -113,8 +115,6 @@ namespace HAL
     public:
         ComputeCommandList(Device& device, ComputeCommandAllocator& allocator);
         ~ComputeCommandList() = default;
-
-        void SetPipelineState(const ComputePipelineState& state);
     };
     
     class BundleCommandList : public DirectCommandListBase {
@@ -129,7 +129,6 @@ namespace HAL
         ~DirectCommandList() = default;
 
         void ExecuteBundle(const BundleCommandList& bundle);
-        void SetPipelineState(const GraphicsPipelineState& state);
 
         void Draw(uint32_t vertexCount, uint32_t vertexStart);
         void DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount);

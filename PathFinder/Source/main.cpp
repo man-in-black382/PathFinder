@@ -21,7 +21,7 @@
 #include "HardwareAbstractionLayer/Fence.hpp"
 
 #include "Scene/MeshLoader.hpp"
-#include "RenderPipeline/RenderGraph.hpp"
+#include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderPasses/PlaygroundRenderPass.hpp"
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
@@ -569,10 +569,10 @@ int main(int argc, char** argv)
     //    PrimitiveTopology::TriangleList
     //};
 
-    PathFinder::MeshLoader meshLoader{ executableFolder.append("MediaResources/Models") };
+    PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models" };
     PathFinder::Mesh deer = meshLoader.Load("deer.obj");
 
-    PathFinder::RenderEngine renderGraph{ hwnd };
+    PathFinder::RenderEngine renderGraph{ hwnd, executableFolder };
     PathFinder::MeshInstance deerInstance = renderGraph.MeshStorage().EmplaceInstanceForMesh(&deer);
     renderGraph.MeshStorage().TransferDataToGPU();
     renderGraph.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());

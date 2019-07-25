@@ -104,6 +104,10 @@ namespace HAL
         mList->SetDescriptorHeaps(1, (ID3D12DescriptorHeap* const*)&ptr);
     }
 
+    void ComputeCommandListBase::SetPipelineState(const ComputePipelineState& state)
+    {
+        mList->SetPipelineState(state.D3DCompiledState());
+    }
 
 
     void DirectCommandListBase::SetViewport(const Viewport& viewport)
@@ -145,6 +149,10 @@ namespace HAL
         mList->IASetPrimitiveTopology(D3DPrimitiveTopology(topology));
     }
 
+    void DirectCommandListBase::SetPipelineState(const PipelineState& state)
+    {
+        mList->SetPipelineState(state.D3DCompiledState());
+    }
 
 
 
@@ -155,11 +163,6 @@ namespace HAL
 
     ComputeCommandList::ComputeCommandList(Device& device, ComputeCommandAllocator& allocator)
         : ComputeCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_COMPUTE) {}
-
-    void ComputeCommandList::SetPipelineState(const ComputePipelineState& state)
-    {
-
-    }
 
 
 
@@ -174,11 +177,6 @@ namespace HAL
     void DirectCommandList::ExecuteBundle(const BundleCommandList& bundle)
     {
 
-    }
-
-    void DirectCommandList::SetPipelineState(const GraphicsPipelineState& state)
-    {
-        mList->SetPipelineState(state.D3DCompiledState());
     }
 
     void DirectCommandList::Draw(uint32_t vertexCount, uint32_t vertexStart)

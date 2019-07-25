@@ -15,6 +15,7 @@ namespace HAL
         enum class PipelineStage { Vertex, Hull, Domain, Geometry, Pixel, Compute };
 
         Shader(const std::wstring& filePath, PipelineStage pipelineStage);
+        Shader(const std::string& filePath, PipelineStage pipelineStage);
 
     private:
         Microsoft::WRL::ComPtr<ID3DBlob> mBlob;

@@ -1,4 +1,4 @@
-#include "RenderGraph.hpp"
+#include "RenderEngine.hpp"
 
 #include "../HardwareAbstractionLayer/DisplayAdapterFetcher.hpp"
 
@@ -13,10 +13,11 @@ namespace PathFinder
             HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
 
             mDevice{ FetchDefaultDisplayAdapter() },
-            mGraphicsDevice{ &mDevice, windowHandle, mDefaultRenderSurface },
             mMeshGPUStorage{ &mDevice },
             mResourceManager{ &mDevice, mDefaultRenderSurface },
-            mShaderManager{ executablePath /= "Shaders" }
+            mShaderManager{ mExecutablePath / "Shaders/" },
+            mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
+            mGraphicsDevice{ &mDevice, windowHandle, mDefaultRenderSurface, &mResourceManager, &mPipelineStateManager }
     {
         mResourceManager.UseSwapChain(mGraphicsDevice.SwapChain());
     }
@@ -31,11 +32,12 @@ namespace PathFinder
         for (auto& passPtr : mRenderPasses)
         {
             mResourceManager.SetCurrentPassName(passPtr->Name());
-            //passPtr->SetupPipelineStates()
+            passPtr->SetupPipelineStates(&mShaderManager, &mPipelineStateManager);
             passPtr->ScheduleResources(&mResourceManager);
         }
 
         mResourceManager.AllocateScheduledResources();
+        mPipelineStateManager.CompileStates();
     }
 
     void RenderEngine::Render()
@@ -51,7 +53,7 @@ namespace PathFinder
         {
             mResourceManager.SetCurrentPassName(passPtr->Name());
 
-            std::vector<ResourceManager::ResourceName>& names = mResourceManager.GetScheduledResourceNamesForPass(passPtr->Name());
+            const std::vector<ResourceManager::ResourceName>& names = mResourceManager.GetScheduledResourceNamesForPass(passPtr->Name());
 
             for (ResourceManager::ResourceName name : names)
             {
@@ -66,7 +68,7 @@ namespace PathFinder
 
         mGraphicsDevice.TransitionResource({ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
         mGraphicsDevice.SwapChain().Present();
-        mGraphicsDevice.FlushCommandBuffer();
+        mGraphicsDevice.ExecuteCommandBuffer();
     }
 
     HAL::DisplayAdapter RenderEngine::FetchDefaultDisplayAdapter() const

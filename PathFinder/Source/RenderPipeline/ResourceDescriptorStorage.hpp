@@ -21,9 +21,9 @@ namespace PathFinder
         HAL::RTDescriptor* TryGetRTDescriptor(ResourceName resourceName, HAL::ResourceFormat::Color format);
         HAL::DSDescriptor* TryGetDSDescriptor(ResourceName resourceName);
 
-        void EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTextureResource& texture);
-        void EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTextureResource& texture, HAL::ResourceFormat::Color format);
-        void EmplaceDSDescriptorIfNeeded(ResourceName resourceName, const HAL::DepthStencilTextureResource& texture);
+        HAL::RTDescriptor EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTextureResource& texture);
+        HAL::RTDescriptor EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTextureResource& texture, HAL::ResourceFormat::Color format);
+        HAL::DSDescriptor EmplaceDSDescriptorIfNeeded(ResourceName resourceName, const HAL::DepthStencilTextureResource& texture);
 
     private:
         using RTDescriptorMap = std::unordered_map<ResourceName, std::unordered_map<HAL::ResourceFormat::Color, HAL::RTDescriptor>>;

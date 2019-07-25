@@ -28,28 +28,31 @@ namespace PathFinder
         return &mapIt->second;
     }
 
-    void ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTextureResource& texture)
+    HAL::RTDescriptor ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTextureResource& texture)
     {
-        if (TryGetRTDescriptor(resourceName, texture.DataFormat())) return;
+        if (HAL::RTDescriptor* descriptor = TryGetRTDescriptor(resourceName, texture.DataFormat())) return *descriptor;
 
         HAL::RTDescriptor descriptor = mRTDescriptorHeap.EmplaceDescriptorForResource(texture);
         mRTDescriptorMap[resourceName].emplace(texture.DataFormat(), descriptor);
+        return descriptor;
     }
 
-    void ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTextureResource& texture, HAL::ResourceFormat::Color format)
+    HAL::RTDescriptor ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTextureResource& texture, HAL::ResourceFormat::Color format)
     {
-        if (TryGetRTDescriptor(resourceName, format)) return;
+        if (HAL::RTDescriptor* descriptor = TryGetRTDescriptor(resourceName, format)) return *descriptor;
 
         HAL::RTDescriptor descriptor = mRTDescriptorHeap.EmplaceDescriptorForResource(texture, format);
         mRTDescriptorMap[resourceName].emplace(format, descriptor);
+        return descriptor;
     }
 
-    void ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded(ResourceName resourceName, const HAL::DepthStencilTextureResource& texture)
+    HAL::DSDescriptor ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded(ResourceName resourceName, const HAL::DepthStencilTextureResource& texture)
     {
-        if (TryGetDSDescriptor(resourceName)) return;
+        if (HAL::DSDescriptor* descriptor = TryGetDSDescriptor(resourceName)) return *descriptor;
 
         HAL::DSDescriptor descriptor = mDSDescriptorHeap.EmplaceDescriptorForResource(texture);
         mDSDescriptorMap.emplace(resourceName, descriptor);
+        return descriptor;
     }
 
 }

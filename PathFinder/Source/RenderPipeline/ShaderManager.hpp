@@ -14,9 +14,9 @@ namespace PathFinder
     public:
         ShaderManager(const std::filesystem::path& shaderRootPath);
 
-        virtual ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& psFileName) override;
-        virtual ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName) override;
-        virtual ShaderBundle LoadShaders(const std::string& csFileName) override;
+        virtual HAL::ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& psFileName) override;
+        virtual HAL::ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName) override;
+        virtual HAL::ShaderBundle LoadShaders(const std::string& csFileName) override;
 
     private:
         std::string ConstructFullShaderPath(const std::string& relativePath);

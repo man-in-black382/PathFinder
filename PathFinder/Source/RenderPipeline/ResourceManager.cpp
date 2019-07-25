@@ -156,7 +156,7 @@ namespace PathFinder
     {
         for (auto i = 0; i < swapChain.BackBuffers().size(); i++)
         {
-            mDescriptorStorage.EmplaceRTDescriptorIfNeeded(BackBufferNames[i], *swapChain.BackBuffers()[i]);
+            mBackBufferDescriptors.push_back(mDescriptorStorage.EmplaceRTDescriptorIfNeeded(BackBufferNames[i], *swapChain.BackBuffers()[i]));
         }
     }
 

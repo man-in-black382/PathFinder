@@ -11,24 +11,24 @@ namespace PathFinder
         return {
             &GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
             &GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
-            nullptr, nullptr, nullptr
+            nullptr, nullptr, nullptr, nullptr
         };
     }
 
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName)
     {
         return {
-            GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
-            GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
+            &GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
+            &GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
             nullptr, nullptr,
-            GetShader(HAL::Shader::PipelineStage::Geometry, gsFileName),
+            &GetShader(HAL::Shader::PipelineStage::Geometry, gsFileName),
             nullptr
         };
     }
 
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& csFileName)
     {
-        return { nullptr, nullptr, nullptr, nullptr, nullptr, GetShader(HAL::Shader::PipelineStage::Compute, csFileName) };
+        return { nullptr, nullptr, nullptr, nullptr, nullptr, &GetShader(HAL::Shader::PipelineStage::Compute, csFileName) };
     }
 
     std::string ShaderManager::ConstructFullShaderPath(const std::string& relativePath)
@@ -39,7 +39,7 @@ namespace PathFinder
     HAL::Shader& ShaderManager::GetShader(HAL::Shader::PipelineStage pipelineStage, const std::string& relativePath)
     {
         std::string fullPath = ConstructFullShaderPath(relativePath);
-        HAL::Shader* shader = FindCachedShader(pipelineStage, fullVSPath);
+        HAL::Shader* shader = FindCachedShader(pipelineStage, fullPath);
         return shader ? *shader : LoadAndCacheShader(pipelineStage, fullPath);
     }
 
@@ -53,6 +53,7 @@ namespace PathFinder
     HAL::Shader& ShaderManager::LoadAndCacheShader(HAL::Shader::PipelineStage pipelineStage, const std::string& fullFilePath)
     {
         mShaderCache[pipelineStage].emplace(fullFilePath, HAL::Shader{ fullFilePath, pipelineStage });
+        return mShaderCache[pipelineStage].at(fullFilePath);
     }
 
 }

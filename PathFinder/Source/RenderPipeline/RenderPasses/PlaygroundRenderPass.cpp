@@ -4,11 +4,13 @@ namespace PathFinder
 {
 
     PlaygroundRenderPass::PlaygroundRenderPass()
-        : RenderPass(FrameResourceNames::PlaygroundRenderTarget, "Playground.hlsl", "Playground.hlsl") {}
+        : RenderPass("Playground") {}
 
     void PlaygroundRenderPass::SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager)
     {
-        
+        auto pso = psoManager->CloneDefaultGraphicsState();
+        pso.SetShaders(shaderManager->LoadShaders("Playground.hlsl", "Playground.hlsl"));
+        psoManager->StoreGraphicsState(PSONames::GBuffer, pso);
     }
 
     void PlaygroundRenderPass::ScheduleResources(IResourceScheduler* scheduler)
@@ -16,13 +18,12 @@ namespace PathFinder
         //scheduler->WillRenderToRenderTarget(FrameResourceNames::PlaygroundRenderTarget);
     }
 
-    void PlaygroundRenderPass::Render(IResourceProvider* resourceProvider, GraphicsDevice* device)
+    void PlaygroundRenderPass::Render(IResourceProvider* resourceProvider, IGraphicsDevice* device)
     {
-        auto rtView = resourceProvider->GetBackBuffer();
-        device->SetRenderTarget(rtView);
-        device->ClearRenderTarget(Foundation::Color::Green(), rtView);
+        device->ApplyPipelineState(PSONames::GBuffer);
+        //auto rtView = resourceProvider->GetBackBuffer();
+        device->SetBackBufferAsRenderTarget();
+        device->ClearBackBuffer(Foundation::Color::Green());
     }
-
-    
 
 }

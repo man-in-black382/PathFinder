@@ -16,13 +16,11 @@ namespace PathFinder
     class RenderPass
     {
     public:
-        RenderPass(Foundation::Name name, const std::string& vsFileName, const std::string& psFileName);
-        RenderPass(Foundation::Name name, const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName);
-        RenderPass(Foundation::Name name, const std::string& csFileName);
+        RenderPass(Foundation::Name name);
 
         virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) = 0;
         virtual void ScheduleResources(IResourceScheduler* scheduler) = 0;
-        virtual void Render(IResourceProvider* resourceProvider, GraphicsDevice* device) = 0;
+        virtual void Render(IResourceProvider* resourceProvider, IGraphicsDevice* device) = 0;
 
     private:
         Foundation::Name mName;

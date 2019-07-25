@@ -8,9 +8,9 @@ namespace PathFinder
     class IShaderManager
     {
     public:
-        virtual ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& psFileName) = 0;
-        virtual ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName) = 0;
-        virtual ShaderBundle LoadShaders(const std::string& csFileName) = 0;
+        virtual HAL::ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& psFileName) = 0;
+        virtual HAL::ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName) = 0;
+        virtual HAL::ShaderBundle LoadShaders(const std::string& csFileName) = 0;
     };
 
 }

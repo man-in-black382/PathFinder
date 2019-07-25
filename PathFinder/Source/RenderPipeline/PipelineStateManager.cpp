@@ -11,10 +11,15 @@ namespace PathFinder
         return mGraphicPSOs[name].Clone();
     }
 
-    void PipelineStateManager::StoreGraphicsState(PSOName name, const GraphicsPipelineState& pso)
+    void PipelineStateManager::StoreGraphicsState(PSOName name, const HAL::GraphicsPipelineState& pso)
     {
         mGraphicPSOs[name] = pso;
         mGraphicPSOs[name].SetRootSignature(&mUniversalRootSignature);
+    }
+
+    HAL::PipelineState& PipelineStateManager::GetPipelineState(PSOName name)
+    {
+        return mGraphicPSOs[name];
     }
 
     void PipelineStateManager::CompileStates()
@@ -23,7 +28,7 @@ namespace PathFinder
 
         for (auto& nameStatePair : mGraphicPSOs)
         {
-            GraphicsPipelineState& pso = nameStatePair.second;
+            HAL::GraphicsPipelineState& pso = nameStatePair.second;
             pso.Compile(*mDevice);
         }
     }

@@ -27,13 +27,22 @@ namespace PathFinder
     class IGraphicsDevice
     {
     public:
-        virtual void SetRenderTarget(const ResourceView<HAL::RTDescriptor>& view) = 0;
-        virtual void SetRenderTargetAndDepthStencil(const ResourceView<HAL::RTDescriptor>& rtView, const ResourceView<HAL::DSDescriptor>& dsView) = 0;
-        virtual void ClearRenderTarget(const Foundation::Color& color, const ResourceView<HAL::RTDescriptor>& rtView) = 0;
-        virtual void ClearDepthStencil(float depthValue, const ResourceView<HAL::DSDescriptor>& dsView) = 0;
+        /*     virtual void SetRenderTarget(const ResourceView<HAL::RTDescriptor>& view) = 0;
+             virtual void SetRenderTargetAndDepthStencil(const ResourceView<HAL::RTDescriptor>& rtView, const ResourceView<HAL::DSDescriptor>& dsView) = 0;
+             virtual void ClearRenderTarget(const Foundation::Color& color, const ResourceView<HAL::RTDescriptor>& rtView) = 0;
+             virtual void ClearDepthStencil(float depthValue, const ResourceView<HAL::DSDescriptor>& dsView) = 0;*/
+
+        virtual void SetRenderTarget(Foundation::Name resourceName) = 0;
+        virtual void SetBackBufferAsRenderTarget() = 0;
+        virtual void SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName) = 0;
+        virtual void ClearBackBuffer(const Foundation::Color& color) = 0;
+        virtual void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color) = 0;
+        virtual void ClearDepthStencil(Foundation::Name resourceName, float depthValue) = 0;
 
         //template <class Vertex> virtual void SetVertexBuffer(const HAL::BufferResource<Vertex>& vertexBuffer) = 0;
         //template <class Index> virtual void SetIndexBuffer(const HAL::BufferResource<Index>& indexBuffer) = 0;
+
+        virtual void ApplyPipelineState(Foundation::Name psoName) = 0;
 
         virtual void Draw(uint32_t vertexCount, uint32_t vertexStart) = 0;
         virtual void DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount) = 0;

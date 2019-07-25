@@ -16,9 +16,11 @@ namespace PathFinder
     public:
         PipelineStateManager(HAL::Device* device, const RenderSurface& defaultRenderSurface);
 
-        virtual GraphicsPipelineState CloneDefaultGraphicsState() override;
-        virtual GraphicsPipelineState CloneExistingGraphicsState(PSOName name) override;
-        virtual void StoreGraphicsState(PSOName name, const GraphicsPipelineState& pso) override;
+        virtual HAL::GraphicsPipelineState CloneDefaultGraphicsState() override;
+        virtual HAL::GraphicsPipelineState CloneExistingGraphicsState(PSOName name) override;
+        virtual void StoreGraphicsState(PSOName name, const HAL::GraphicsPipelineState& pso) override;
+
+        HAL::PipelineState& GetPipelineState(PSOName name);
 
         void CompileStates();
 
