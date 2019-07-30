@@ -20,7 +20,7 @@ namespace PathFinder
 
         virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) = 0;
         virtual void ScheduleResources(IResourceScheduler* scheduler) = 0;
-        virtual void Render(IResourceProvider* resourceProvider, IGraphicsDevice* device) = 0;
+        virtual void Render(IGraphicsDevice* device) = 0;
 
     private:
         Foundation::Name mName;

@@ -89,10 +89,10 @@ namespace HAL
     CBSRUADescriptorHeap::CBSRUADescriptorHeap(const Device* device, uint32_t capacity)
         : DescriptorHeap(device, capacity, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {}
 
-    CBDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForConstantBufferResource(const Device& device, const Resource& resource)
+  /*  CBDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForConstantBufferResource(const Device& device, const Resource& resource)
     {
         
-    }
+    }*/
 
     //SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForShaderResource(const Device& device, const Resource& resource)
     //{

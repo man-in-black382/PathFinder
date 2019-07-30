@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../HardwareAbstractionLayer/PipelineState.hpp"
+#include "CommonInputAssemblerLayouts.hpp"
 
 namespace PathFinder
 {

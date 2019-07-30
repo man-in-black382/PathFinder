@@ -33,7 +33,7 @@ namespace PathFinder
              virtual void ClearDepthStencil(float depthValue, const ResourceView<HAL::DSDescriptor>& dsView) = 0;*/
 
         virtual void SetRenderTarget(Foundation::Name resourceName) = 0;
-        virtual void SetBackBufferAsRenderTarget() = 0;
+        virtual void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName) = 0;
         virtual void SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName) = 0;
         virtual void ClearBackBuffer(const Foundation::Color& color) = 0;
         virtual void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color) = 0;

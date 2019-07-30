@@ -22,7 +22,7 @@ namespace HAL
         void SetSemanticNames();
 
     public:
-        inline const auto& D3DLayout() const { return mDesc; }
+        inline const D3D12_INPUT_LAYOUT_DESC& D3DLayout() const { return mDesc; }
     };
 
 }

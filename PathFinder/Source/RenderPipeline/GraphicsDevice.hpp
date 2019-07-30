@@ -27,7 +27,7 @@ namespace PathFinder
         //virtual void ApplyPipelineState(const HAL::GraphicsPipelineState& state) override;
 
         virtual void SetRenderTarget(Foundation::Name resourceName) override;
-        virtual void SetBackBufferAsRenderTarget() override;
+        virtual void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName = std::nullopt) override;
         virtual void SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName) override;
         virtual void ClearBackBuffer(const Foundation::Color& color) override;
         virtual void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color) override;

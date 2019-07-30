@@ -17,63 +17,48 @@ namespace PathFinder
         mResourceManager{ resourceManager },
         mPipelineStateManager{ pipelineStateManager } {}
 
-    //void GraphicsDevice::SetRenderTarget(const ResourceView<HAL::RTDescriptor>& view)
-    //{
-    //    /*mCommandList.SetRenderTarget(view.ResourceDescriptor());*/
-    //}
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
-        mCommandList.SetRenderTarget(mResourceManager->GetRenderTarget(resourceName).ResourceDescriptor());
+        mCommandList.SetRenderTarget(mResourceManager->GetRenderTarget(resourceName));
     }
 
-    void GraphicsDevice::SetBackBufferAsRenderTarget()
+    void GraphicsDevice::SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName)
     {
-        mCommandList.SetRenderTarget(mResourceManager->GetBackBuffer().ResourceDescriptor());
+        if (depthStencilResourceName)
+        {
+            mCommandList.SetRenderTarget(
+                mResourceManager->GetBackBuffer(),
+                mResourceManager->GetDepthStencil(*depthStencilResourceName)
+            );
+        }
+        else {
+            mCommandList.SetRenderTarget(mResourceManager->GetBackBuffer());
+        }
     }
-
-    /*void GraphicsDevice::SetRenderTargetAndDepthStencil(const ResourceView<HAL::RTDescriptor>& rtView, const ResourceView<HAL::DSDescriptor>& dsView)
-    {
-        mCommandList.SetRenderTarget(rtView.ResourceDescriptor(), dsView.ResourceDescriptor());
-    }*/
 
     void GraphicsDevice::SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName)
     {
         mCommandList.SetRenderTarget(
-            mResourceManager->GetRenderTarget(rtResourceName).ResourceDescriptor(),
-            mResourceManager->GetDepthStencil(dsResourceName).ResourceDescriptor()
+            mResourceManager->GetRenderTarget(rtResourceName),
+            mResourceManager->GetDepthStencil(dsResourceName)
         );
     }
 
-    //void GraphicsDevice::ClearRenderTarget(const Foundation::Color& color, const ResourceView<HAL::RTDescriptor>& rtView)
-    //{
-    //    mCommandList.ClearRenderTarget(rtView.ResourceDescriptor(), color);
-    //}
-
     void GraphicsDevice::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)
     {
-        mCommandList.ClearRenderTarget(mResourceManager->GetRenderTarget(resourceName).ResourceDescriptor(), color);
+        mCommandList.ClearRenderTarget(mResourceManager->GetRenderTarget(resourceName), color);
     }
 
     void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
     {
-        mCommandList.ClearRenderTarget(mResourceManager->GetBackBuffer().ResourceDescriptor(), color);
+        mCommandList.ClearRenderTarget(mResourceManager->GetBackBuffer(), color);
     }
-
-    /* void GraphicsDevice::ClearDepthStencil(float depthValue, const ResourceView<HAL::DSDescriptor>& dsView)
-     {
-         mCommandList.CleadDepthStencil(dsView.ResourceDescriptor(), depthValue);
-     }*/
 
     void GraphicsDevice::ClearDepthStencil(Foundation::Name resourceName, float depthValue)
     {
-        mCommandList.CleadDepthStencil(mResourceManager->GetDepthStencil(resourceName).ResourceDescriptor(), depthValue);
+        mCommandList.CleadDepthStencil(mResourceManager->GetDepthStencil(resourceName), depthValue);
     }
-
-    /* void GraphicsDevice::ApplyPipelineState(const HAL::GraphicsPipelineState& state)
-     {
-         mCommandList.SetPipelineState(state);
-     }*/
 
     void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)
     {

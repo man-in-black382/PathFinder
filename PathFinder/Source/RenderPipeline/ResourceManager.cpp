@@ -105,27 +105,27 @@ namespace PathFinder
 
     //-------------------------------- Providing --------------------------------//
 
-    ResourceView<HAL::RTDescriptor> ResourceManager::GetRenderTarget(Foundation::Name resourceName)
+    HAL::RTDescriptor ResourceManager::GetRenderTarget(Foundation::Name resourceName)
     {
-        if (auto format = GetResourceFormatForPass(mCurrentPassName, resourceName); 
+        if (auto format = GetResourceShaderVisibleFormatForCurrentPass(resourceName); 
             auto descriptor = mDescriptorStorage.TryGetRTDescriptor(resourceName, format.value()))
         {
-            return { resourceName, *descriptor };
+            return *descriptor;
         }
 
         throw std::invalid_argument("Resource was not scheduled to be used as render target");
     }
 
-    PathFinder::ResourceView<HAL::RTDescriptor> ResourceManager::GetBackBuffer()
+    HAL::RTDescriptor ResourceManager::GetBackBuffer()
     {
-        return { BackBufferNames[mCurrentBackBufferIndex], mBackBufferDescriptors[mCurrentBackBufferIndex] };
+        return mBackBufferDescriptors[mCurrentBackBufferIndex];
     }
 
-    ResourceView<HAL::DSDescriptor> ResourceManager::GetDepthStencil(ResourceName resourceName)
+    HAL::DSDescriptor ResourceManager::GetDepthStencil(ResourceName resourceName)
     {
         if (auto descriptor = mDescriptorStorage.TryGetDSDescriptor(resourceName))
         {
-            return { resourceName, *descriptor };
+            return *descriptor;
         }
 
         throw std::invalid_argument("Resource was not scheduled to be used as depth-stencil");
@@ -139,6 +139,11 @@ namespace PathFinder
     void ResourceManager::SetCurrentPassName(Foundation::Name passName)
     {
         mCurrentPassName = passName;
+    }
+
+    void ResourceManager::SetCurrentStateForResource(ResourceName name, HAL::ResourceState state)
+    {
+        mResourceCurrentStates[name] = state;
     }
 
     void ResourceManager::AllocateScheduledResources()
@@ -164,8 +169,8 @@ namespace PathFinder
 
     void ResourceManager::RegisterStateForResource(ResourceName resourceName, HAL::ResourceState state)
     {
-        mResourceStateChainMap[mCurrentPassName][resourceName] = state;
-        mResourceExpectedStateMap[resourceName] |= state;
+        mResourcePerPassStates[mCurrentPassName][resourceName] = state;
+        mResourceExpectedStates[resourceName] |= state;
     }
 
     void ResourceManager::MarkResourceNameAsScheduled(ResourceName name)
@@ -191,8 +196,8 @@ namespace PathFinder
 
         mResourceDelayedAllocations[resourceName] = [this, passName, resourceName, args...]()
         {
-            HAL::ResourceState initialState = mResourceStateChainMap[passName][resourceName];
-            HAL::ResourceState expectedStates = mResourceExpectedStateMap[resourceName];
+            HAL::ResourceState initialState = mResourcePerPassStates[passName][resourceName];
+            HAL::ResourceState expectedStates = mResourceExpectedStates[resourceName];
 
             auto resource = std::make_unique<TextureT>(args..., initialState, expectedStates, HAL::HeapType::Default);
 
@@ -207,6 +212,7 @@ namespace PathFinder
 
             // Store the actual resource
             mResources.emplace(resourceName, std::move(resource));
+            mResourceCurrentStates[resourceName] = initialState;
         };
     }
 
@@ -216,18 +222,30 @@ namespace PathFinder
     {
         auto it = mResources.find(resourceName);
         if (it == mResources.end()) return nullptr;
-
         return it->second.get();
     }
 
-    const std::vector<ResourceManager::ResourceName>& ResourceManager::GetScheduledResourceNamesForPass(PassName passName)
-    {
-        return mScheduledResourceNames[passName];
+    const std::vector<PathFinder::ResourceManager::ResourceName>& ResourceManager::GetScheduledResourceNamesForCurrentPass() const
+{
+        auto it = mScheduledResourceNames.find(mCurrentPassName);
+        if (it == mScheduledResourceNames.end()) return {};
+        return it->second;
     }
 
-    std::optional<HAL::ResourceState> ResourceManager::GetResourceStateForPass(PassName passName, ResourceName resourceName)
+    std::optional<HAL::ResourceState> ResourceManager::GetResourceCurrentState(ResourceName resourceName) const
     {
-        auto& map = mResourceStateChainMap[passName];
+        auto stateIt = mResourceCurrentStates.find(resourceName);
+        if (stateIt == mResourceCurrentStates.end()) return std::nullopt;
+        return stateIt->second;
+    }
+
+    std::optional<HAL::ResourceState> ResourceManager::GetResourceStateForCurrentPass(ResourceName resourceName) const
+    {
+        auto mapIt = mResourcePerPassStates.find(mCurrentPassName);
+
+        if (mapIt == mResourcePerPassStates.end()) return std::nullopt;
+
+        auto& map = mapIt->second;
         auto stateIt = map.find(resourceName);
 
         if (stateIt == map.end()) return std::nullopt;
@@ -235,9 +253,13 @@ namespace PathFinder
         return stateIt->second;
     }
 
-    std::optional<HAL::ResourceFormat::Color> ResourceManager::GetResourceFormatForPass(PassName passName, ResourceName resourceName)
+    std::optional<HAL::ResourceFormat::Color> ResourceManager::GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const
     {
-        auto& map = mResourceFormatMap[passName];
+        auto mapIt = mResourceShaderVisibleFormatMap.find(mCurrentPassName);
+
+        if (mapIt == mResourceShaderVisibleFormatMap.end()) return std::nullopt;
+
+        auto& map = mapIt->second;
         auto formatIt = map.find(resourceName);
 
         if (formatIt == map.end()) return std::nullopt;

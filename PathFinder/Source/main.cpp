@@ -569,15 +569,13 @@ int main(int argc, char** argv)
     //    PrimitiveTopology::TriangleList
     //};
 
-    PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models" };
+    PathFinder::RenderEngine engine{ hwnd, executableFolder };
+    PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models", &engine.VertexGPUStorage() };
     PathFinder::Mesh deer = meshLoader.Load("deer.obj");
 
-    PathFinder::RenderEngine renderGraph{ hwnd, executableFolder };
-    PathFinder::MeshInstance deerInstance = renderGraph.MeshStorage().EmplaceInstanceForMesh(&deer);
-    renderGraph.MeshStorage().TransferDataToGPU();
-    renderGraph.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());
-    
-    renderGraph.Schedule();
+    engine.VertexGPUStorage().TransferDataToGPU();
+    engine.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());
+    engine.Schedule();
 
     // Main loop
     MSG msg;
@@ -591,7 +589,7 @@ int main(int argc, char** argv)
             continue;
         }
 
-        renderGraph.Render();
+        engine.Render();
 
    /*     commandList.SetPipelineState(pipelineState);
         commandList.SetPrimitiveTopology(PrimitiveTopology::TriangleList);

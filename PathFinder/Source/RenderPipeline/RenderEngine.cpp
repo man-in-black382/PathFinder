@@ -13,7 +13,7 @@ namespace PathFinder
             HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
 
             mDevice{ FetchDefaultDisplayAdapter() },
-            mMeshGPUStorage{ &mDevice },
+            mVertexStorage{ &mDevice },
             mResourceManager{ &mDevice, mDefaultRenderSurface },
             mShaderManager{ mExecutablePath / "Shaders/" },
             mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
@@ -52,18 +52,8 @@ namespace PathFinder
         for (auto& passPtr : mRenderPasses)
         {
             mResourceManager.SetCurrentPassName(passPtr->Name());
-
-            const std::vector<ResourceManager::ResourceName>& names = mResourceManager.GetScheduledResourceNamesForPass(passPtr->Name());
-
-            for (ResourceManager::ResourceName name : names)
-            {
-                HAL::ResourceState state = *mResourceManager.GetResourceStateForPass(passPtr->Name(), name);
-                HAL::Resource* resource = mResourceManager.GetResource(name);
-
-                mGraphicsDevice.TransitionResource({ state, state, resource });
-            }
-
-            passPtr->Render(&mResourceManager, &mGraphicsDevice);
+            TransitionResourceStates();
+            passPtr->Render(&mGraphicsDevice);
         }
 
         mGraphicsDevice.TransitionResource({ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
@@ -81,6 +71,24 @@ namespace PathFinder
     {
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % mGraphicsDevice.SwapChain().BackBuffers().size();
         mResourceManager.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
+    }
+
+    void RenderEngine::TransitionResourceStates()
+    {
+        const std::vector<ResourceManager::ResourceName>& resourceNames = mResourceManager.GetScheduledResourceNamesForCurrentPass();
+
+        for (ResourceManager::ResourceName resourceName : resourceNames)
+        {
+            HAL::ResourceState currentState = *mResourceManager.GetResourceCurrentState(resourceName);
+            HAL::ResourceState nextState = *mResourceManager.GetResourceStateForCurrentPass(resourceName);
+            HAL::Resource* resource = mResourceManager.GetResource(resourceName);
+
+            if (currentState != nextState)
+            {
+                mGraphicsDevice.TransitionResource({ nextState, nextState, resource });
+                mResourceManager.SetCurrentStateForResource(resourceName, nextState);
+            }
+        }
     }
 
 }

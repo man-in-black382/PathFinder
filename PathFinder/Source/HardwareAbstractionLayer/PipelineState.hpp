@@ -69,6 +69,27 @@ namespace HAL
         inline void SetGeometryShader(Shader* geometryShader) { mGeometryShader = geometryShader; }
         inline void SetPrimitiveTopology(PrimitiveTopology topology) { mPrimitiveTopology = topology; }
         inline void SetDepthStencilFormat(ResourceFormat::DepthStencil format) { mDepthStencilFormat = format; }
+        inline void SetInputAssemblerLayout(const InputAssemblerLayout& layout) { mInputLayout = layout; }
+
+        inline void SetRenderTargetFormats(
+            std::optional<RenderTargetFormat> rt0 = std::nullopt,
+            std::optional<RenderTargetFormat> rt1 = std::nullopt,
+            std::optional<RenderTargetFormat> rt2 = std::nullopt,
+            std::optional<RenderTargetFormat> rt3 = std::nullopt,
+            std::optional<RenderTargetFormat> rt4 = std::nullopt,
+            std::optional<RenderTargetFormat> rt5 = std::nullopt,
+            std::optional<RenderTargetFormat> rt6 = std::nullopt,
+            std::optional<RenderTargetFormat> rt7 = std::nullopt)
+        {
+            if (rt0) mRenderTargetFormats[RenderTarget::RT0] = *rt0;
+            if (rt1) mRenderTargetFormats[RenderTarget::RT0] = *rt1;
+            if (rt2) mRenderTargetFormats[RenderTarget::RT0] = *rt2;
+            if (rt3) mRenderTargetFormats[RenderTarget::RT0] = *rt3;
+            if (rt4) mRenderTargetFormats[RenderTarget::RT0] = *rt4;
+            if (rt5) mRenderTargetFormats[RenderTarget::RT0] = *rt5;
+            if (rt6) mRenderTargetFormats[RenderTarget::RT0] = *rt6;
+            if (rt7) mRenderTargetFormats[RenderTarget::RT0] = *rt7;
+        }
 
         inline void SetShaders(const ShaderBundle& bundle)
         {
@@ -82,10 +103,6 @@ namespace HAL
         inline BlendState& GetBlendState() { return mBlendState; }
         inline RasterizerState& GetRasterizerState() { return mRasterizerState; }
         inline DepthStencilState& GetDepthStencilState() { return mDepthStencilState; }
-        inline InputAssemblerLayout& GetInputLayout() { return mInputLayout; }
-        inline RenderTargetFormatMap& GetRenderTargetFormats() { return mRenderTargetFormats; }
-        inline ResourceFormat::DepthStencil& GetDepthStencilFormat() { return mDepthStencilFormat; }
-        inline PrimitiveTopology& GetPrimitiveTopology() { return mPrimitiveTopology; }
     };
 
     class ComputePipelineState : public PipelineState {

@@ -3,11 +3,8 @@
 namespace PathFinder
 {
 
-    MeshInstance::MeshInstance(const Mesh* mesh, const std::vector<GPUBufferLocation>& subMeshGPUBufferLocations)
-        : mSubMeshGPUDataLocations(subMeshGPUBufferLocations)
-    {
-
-    }
+    MeshInstance::MeshInstance(const Mesh* mesh)
+        : mMesh{ mesh } {}
 
 
     /*std::optional<MaterialReference> MeshInstance::materialReferenceForSubMeshID(ID subMeshID) const

@@ -2,9 +2,9 @@
 
 namespace PathFinder
 {
-    
-    MeshLoader::MeshLoader(const std::filesystem::path& fileRoot)
-        : mRootPath(fileRoot) {}
+
+    MeshLoader::MeshLoader(const std::filesystem::path& fileRoot, VertexStorage* gpuVertexStorage)
+        : mRootPath{ fileRoot }, mVertexStorage{ gpuVertexStorage } {}
 
     Mesh MeshLoader::Load(const std::string& fileName)
     {
@@ -26,7 +26,7 @@ namespace PathFinder
         SubMesh subMesh;
 
         // Walk through each of the mesh's vertices
-        for (auto i = 0; i < mesh->mNumVertices; i++)
+        for (auto i = 0u; i < mesh->mNumVertices; i++)
         {
             Vertex1P1N1UV1T1BT vertex;
 
@@ -61,11 +61,11 @@ namespace PathFinder
             subMesh.AddVertex(vertex);
         }
 
-        for (auto i = 0; i < mesh->mNumFaces; i++)
+        for (auto i = 0u; i < mesh->mNumFaces; i++)
         {
             aiFace face = mesh->mFaces[i];
 
-            for (auto j = 0; j < face.mNumIndices; j++) 
+            for (auto j = 0u; j < face.mNumIndices; j++) 
             {
                 subMesh.AddIndex(face.mIndices[j]);
             }
@@ -73,18 +73,24 @@ namespace PathFinder
 
         subMesh.SetName(mesh->mName.data);
 
+        VertexStorageLocation vsLocation = mVertexStorage->AddVertices(
+            subMesh.Vertices().data(), subMesh.Vertices().size(), subMesh.Indices().data(), subMesh.Indices().size()
+        );
+
+        subMesh.SetVertexStorageLocation(vsLocation);
+
         return subMesh;
     }
 
     void MeshLoader::ProcessNode(aiNode* node, const aiScene* scene, Mesh& mesh)
     {
-        for (auto i = 0; i < node->mNumMeshes; i++)
+        for (auto i = 0u; i < node->mNumMeshes; i++)
         {
             aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
             mesh.AddSubMesh(ProcessMesh(assimpMesh, scene));
         }
 
-        for (auto i = 0; i < node->mNumChildren; i++)
+        for (auto i = 0u; i < node->mNumChildren; i++)
         {
             ProcessNode(node->mChildren[i], scene, mesh);
         }

@@ -12,7 +12,7 @@ namespace PathFinder
 
         virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) override;
         virtual void ScheduleResources(IResourceScheduler* scheduler) override;
-        virtual void Render(IResourceProvider* resourceProvider, IGraphicsDevice* device) override;
+        virtual void Render(IGraphicsDevice* device) override;
     };
 
 }

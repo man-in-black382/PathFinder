@@ -30,6 +30,11 @@ namespace PathFinder
         return mBoundingBox;
     }
 
+    const VertexStorageLocation& SubMesh::LocationInVertexStorage() const
+    {
+        return mVertexStorageLocation;
+    }
+
     float SubMesh::SurfaceArea() const
     {
         return mArea;
@@ -43,6 +48,11 @@ namespace PathFinder
     void SubMesh::SetMaterialName(const std::string &name)
     {
         mMaterialName = name;
+    }
+
+    void SubMesh::SetVertexStorageLocation(const VertexStorageLocation& location)
+    {
+        mVertexStorageLocation = location;
     }
 
     void SubMesh::AddVertex(const Vertex1P1N1UV1T1BT &vertex)

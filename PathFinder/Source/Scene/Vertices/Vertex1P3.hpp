@@ -2,14 +2,15 @@
 
 #include <glm/vec3.hpp>
 
-namespace Geometry {
+namespace PathFinder 
+{
 
-    struct Vertex1P3 {
-        glm::vec3 position;
-
-        Vertex1P3();
-
+    struct Vertex1P3 
+    {
+        Vertex1P3() = default;
         Vertex1P3(glm::vec3 p);
+
+        glm::vec3 Position;
     };
 
 }

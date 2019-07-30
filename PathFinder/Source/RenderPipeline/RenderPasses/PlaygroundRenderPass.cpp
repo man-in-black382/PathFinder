@@ -10,19 +10,22 @@ namespace PathFinder
     {
         auto pso = psoManager->CloneDefaultGraphicsState();
         pso.SetShaders(shaderManager->LoadShaders("Playground.hlsl", "Playground.hlsl"));
+        pso.SetInputAssemblerLayout(CommonInputAssemblerLayouts::Layout1P3());
+        pso.SetDepthStencilFormat(HAL::ResourceFormat::Depth24_Float_Stencil8_Unsigned);
+        pso.SetRenderTargetFormats(HAL::ResourceFormat::Color::RGBA8_Usigned_Norm);
+        pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
         psoManager->StoreGraphicsState(PSONames::GBuffer, pso);
     }
 
     void PlaygroundRenderPass::ScheduleResources(IResourceScheduler* scheduler)
     {
-        //scheduler->WillRenderToRenderTarget(FrameResourceNames::PlaygroundRenderTarget);
+        scheduler->WillRenderToDepthStencil(ResourceNames::MainDepthStencil);
     }
 
-    void PlaygroundRenderPass::Render(IResourceProvider* resourceProvider, IGraphicsDevice* device)
+    void PlaygroundRenderPass::Render(IGraphicsDevice* device)
     {
         device->ApplyPipelineState(PSONames::GBuffer);
-        //auto rtView = resourceProvider->GetBackBuffer();
-        device->SetBackBufferAsRenderTarget();
+        device->SetBackBufferAsRenderTarget(ResourceNames::MainDepthStencil);
         device->ClearBackBuffer(Foundation::Color::Green());
     }
 

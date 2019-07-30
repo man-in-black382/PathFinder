@@ -10,7 +10,8 @@
 
 #include <glm/vec3.hpp>
 
-namespace Geometry {
+namespace Geometry 
+{
 
     class Collision {
     private:

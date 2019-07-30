@@ -9,7 +9,7 @@
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
 
 #include "RenderPass.hpp"
-#include "MeshGPUStorage.hpp"
+#include "VertexStorage.hpp"
 #include "ResourceManager.hpp"
 #include "GraphicsDevice.hpp"
 #include "ShaderManager.hpp"
@@ -31,12 +31,13 @@ namespace PathFinder
     private:
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const;
         void MoveToNextBackBuffer();
+        void TransitionResourceStates();
 
         RenderSurface mDefaultRenderSurface;
         std::filesystem::path mExecutablePath;
 
         HAL::Device mDevice;
-        MeshGPUStorage mMeshGPUStorage;
+        VertexStorage mVertexStorage;
         ResourceManager mResourceManager;
         ShaderManager mShaderManager;
         PipelineStateManager mPipelineStateManager;
@@ -47,7 +48,7 @@ namespace PathFinder
         uint8_t mCurrentBackBufferIndex = 0;
 
     public:
-        inline auto& MeshStorage() { return mMeshGPUStorage; }
+        inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }
     };
 
 }
