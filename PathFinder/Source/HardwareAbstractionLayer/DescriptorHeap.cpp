@@ -78,7 +78,7 @@ namespace HAL
         DSDescriptor descriptor{ mCurrentHeapHandle, mInsertedDescriptorCount };
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = descriptor.ResourceToDSVDescription(resource.D3DDescription());
         mDevice->D3DPtr()->CreateDepthStencilView(resource.D3DPtr(), &dsvDesc, mCurrentHeapHandle);
-        
+
         IncrementCounters();
 
         return descriptor;

@@ -109,6 +109,12 @@ namespace HAL
         mList->SetPipelineState(state.D3DCompiledState());
     }
 
+    void ComputeCommandListBase::SetComputeRootSignature(const RootSignature& signature)
+    {
+        mList->SetComputeRootSignature(signature.D3DSignature());
+    }
+
+
 
     void DirectCommandListBase::SetViewport(const Viewport& viewport)
     {
@@ -144,6 +150,11 @@ namespace HAL
         mList->IASetVertexBuffers(0, 1, &descriptor.D3DDescriptor());
     }
    
+    void DirectCommandListBase::SetIndexBuffer(const IndexBufferDescriptor& descriptor)
+    {
+        mList->IASetIndexBuffer(&descriptor.D3DDescriptor());
+    }
+
     void DirectCommandListBase::SetPrimitiveTopology(PrimitiveTopology topology)
     {
         mList->IASetPrimitiveTopology(D3DPrimitiveTopology(topology));
@@ -154,19 +165,24 @@ namespace HAL
         mList->SetPipelineState(state.D3DCompiledState());
     }
 
+    void DirectCommandListBase::SetGraphicsRootSignature(const RootSignature& signature)
+    {
+        mList->SetGraphicsRootSignature(signature.D3DSignature());
+    }
+    
 
 
-    CopyCommandList::CopyCommandList(Device& device, CopyCommandAllocator& allocator)
+    CopyCommandList::CopyCommandList(const Device& device, const CopyCommandAllocator& allocator)
         : CopyCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_COPY) {}
 
 
 
-    ComputeCommandList::ComputeCommandList(Device& device, ComputeCommandAllocator& allocator)
+    ComputeCommandList::ComputeCommandList(const Device& device, const ComputeCommandAllocator& allocator)
         : ComputeCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_COMPUTE) {}
 
 
 
-    BundleCommandList::BundleCommandList(Device& device, BundleCommandAllocator& allocator)
+    BundleCommandList::BundleCommandList(const Device& device, const BundleCommandAllocator& allocator)
         : DirectCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_BUNDLE) {}
 
 

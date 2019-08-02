@@ -8,16 +8,16 @@ namespace HAL
     class Viewport
     {
     public:
-        Viewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height, float minDepth, float maxDepth);
-        Viewport(uint32_t width, uint32_t height, float minDepth, float maxDepth);
-        Viewport(uint32_t width, uint32_t height);
+        Viewport(uint16_t x, uint16_t y, uint16_t width, uint16_t height, float minDepth, float maxDepth);
+        Viewport(uint16_t width, uint16_t height, float minDepth, float maxDepth);
+        Viewport(uint16_t width, uint16_t height);
 
         D3D12_VIEWPORT D3DViewport() const;
 
-        uint32_t X;
-        uint32_t Y;
-        uint32_t Width;
-        uint32_t Height;
+        uint16_t X;
+        uint16_t Y;
+        uint16_t Width;
+        uint16_t Height;
 
         float MinDepth;
         float MaxDepth;

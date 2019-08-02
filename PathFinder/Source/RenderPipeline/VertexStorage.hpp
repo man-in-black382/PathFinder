@@ -10,6 +10,7 @@
 #include "../Scene/Vertices/Vertex1P3.hpp"
 
 #include "VertexStorageLocation.hpp"
+#include "VertexLayouts.hpp"
 
 #include <unordered_map>
 #include <memory>
@@ -26,6 +27,9 @@ namespace PathFinder
         VertexStorageLocation AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint64_t vertexCount, const uint32_t* indices = nullptr, uint64_t indexCount = 0);
         VertexStorageLocation AddVertices(const Vertex1P1N1UV* vertices, uint64_t vertexCount, const uint32_t* indices = nullptr, uint64_t indexCount = 0);
         VertexStorageLocation AddVertices(const Vertex1P3* vertices, uint64_t vertexCount, const uint32_t* indices = nullptr, uint64_t indexCount = 0);
+
+        const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const;
+        const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const;
 
         void TransferDataToGPU();
 
@@ -71,12 +75,6 @@ namespace PathFinder
         HAL::DirectCommandList mCommandList;
         HAL::DirectCommandQueue mCommandQueue;
         HAL::Fence mFence;
-
-    public:
-        //const HAL::BufferResource<Vertex1P1N1UV1T1BT>* UnifiedVertexBuffer() const { return mFinalVertexBuffer.get(); }
-        //const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer() const { return mFinalIndexBuffer.get(); }
-        //const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptor() const { return mVertexBufferDescriptor.get(); }
-        //const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptor() const { return mIndexBufferDescriptor.get(); }
     };
 
 }

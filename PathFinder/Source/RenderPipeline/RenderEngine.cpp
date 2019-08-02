@@ -1,23 +1,27 @@
 #include "RenderEngine.hpp"
 
 #include "../HardwareAbstractionLayer/DisplayAdapterFetcher.hpp"
+#include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 
 namespace PathFinder
 {
 
-    RenderEngine::RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath)
+    RenderEngine::RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath, const Scene* scene)
         : mExecutablePath{ executablePath },
-        mDefaultRenderSurface{
-            { 1280, 720 },
-            HAL::ResourceFormat::Color::RGBA8_Usigned_Norm,
-            HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
+            mDefaultRenderSurface{
+                { 1280, 720 },
+                HAL::ResourceFormat::Color::RGBA8_Usigned_Norm,
+                HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
 
             mDevice{ FetchDefaultDisplayAdapter() },
             mVertexStorage{ &mDevice },
             mResourceManager{ &mDevice, mDefaultRenderSurface },
             mShaderManager{ mExecutablePath / "Shaders/" },
             mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
-            mGraphicsDevice{ &mDevice, windowHandle, mDefaultRenderSurface, &mResourceManager, &mPipelineStateManager }
+            mGraphicsDevice{ &mDevice, windowHandle, mDefaultRenderSurface, &mResourceManager, &mPipelineStateManager, &mVertexStorage },
+            mContext{ scene, &mGraphicsDevice },
+            mFrameFence { mDevice },
+            mRingBuffer{ mDevice, 100, 3, 256, HAL::ResourceState::GenericRead, HAL::ResourceState::GenericRead, HAL::CPUAccessibleHeapType::Upload }
     {
         mResourceManager.UseSwapChain(mGraphicsDevice.SwapChain());
     }
@@ -44,6 +48,13 @@ namespace PathFinder
     {
         if (mRenderPasses.empty()) return;
 
+        OutputDebugString("Queueing commands\n");
+
+        mFrameFence.IncreaseExpectedValue();
+
+        mRingBuffer.NewFrameStarted(mFrameFence.ExpectedValue());
+        mGraphicsDevice.mRingCommandList.NewFrameStarted(mFrameFence.ExpectedValue());
+
         MoveToNextBackBuffer();
 
         HAL::ColorTextureResource* currentBackBuffer = mGraphicsDevice.SwapChain().BackBuffers()[mCurrentBackBufferIndex].get();
@@ -53,12 +64,24 @@ namespace PathFinder
         {
             mResourceManager.SetCurrentPassName(passPtr->Name());
             TransitionResourceStates();
-            passPtr->Render(&mGraphicsDevice);
+            passPtr->Render(&mContext);
         }
 
         mGraphicsDevice.TransitionResource({ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
+        
         mGraphicsDevice.SwapChain().Present();
-        mGraphicsDevice.ExecuteCommandBuffer();
+
+        mGraphicsDevice.mRingCommandList.CurrentCommandList().Close();
+        mGraphicsDevice.mCommandQueue.ExecuteCommandList(mGraphicsDevice.mRingCommandList.CurrentCommandList());
+
+        mGraphicsDevice.mCommandQueue.SignalFence(mFrameFence);
+        mFrameFence.StallCurrentThreadUntilCompletion(3);
+
+        mGraphicsDevice.mRingCommandList.CurrentCommandAllocator().Reset();
+        mGraphicsDevice.mRingCommandList.CurrentCommandList().Reset(mGraphicsDevice.mRingCommandList.CurrentCommandAllocator());
+
+        mRingBuffer.FrameCompleted(mFrameFence.CompletedValue());
+        mGraphicsDevice.mRingCommandList.FrameCompleted(mFrameFence.CompletedValue());
     }
 
     HAL::DisplayAdapter RenderEngine::FetchDefaultDisplayAdapter() const
@@ -75,9 +98,7 @@ namespace PathFinder
 
     void RenderEngine::TransitionResourceStates()
     {
-        const std::vector<ResourceManager::ResourceName>& resourceNames = mResourceManager.GetScheduledResourceNamesForCurrentPass();
-
-        for (ResourceManager::ResourceName resourceName : resourceNames)
+        for (ResourceManager::ResourceName resourceName : mResourceManager.GetScheduledResourceNamesForCurrentPass())
         {
             HAL::ResourceState currentState = *mResourceManager.GetResourceCurrentState(resourceName);
             HAL::ResourceState nextState = *mResourceManager.GetResourceStateForCurrentPass(resourceName);
@@ -85,7 +106,7 @@ namespace PathFinder
 
             if (currentState != nextState)
             {
-                mGraphicsDevice.TransitionResource({ nextState, nextState, resource });
+                mGraphicsDevice.TransitionResource({ currentState, nextState, resource });
                 mResourceManager.SetCurrentStateForResource(resourceName, nextState);
             }
         }

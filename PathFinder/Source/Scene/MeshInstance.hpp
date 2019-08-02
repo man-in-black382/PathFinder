@@ -40,6 +40,7 @@ namespace PathFinder
         inline const Geometry::Transformation& Transformation() const { return mTransformation; }
         inline Geometry::Transformation& Transformation() { return mTransformation; }
         inline Geometry::AxisAlignedBox3D BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
+        inline const Mesh* AssosiatedMesh() const { return mMesh; }
 
         inline void SetIsSelected(bool selected) { mIsSelected = selected; }
         inline void SetIsHighlighted(bool highlighted) { mIsHighlighted = highlighted; }

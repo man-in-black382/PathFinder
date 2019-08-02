@@ -12,14 +12,17 @@ namespace HAL
         using Resource::Resource;
 
         BufferResource(
-            const Device& device, uint64_t capacity, uint64_t perElementAlignment, 
-            ResourceState initialState, ResourceState expectedStates,
-            HeapType heapType = HeapType::Default
+            const Device& device,
+            uint64_t capacity,
+            uint64_t perElementAlignment, 
+            ResourceState initialState,
+            ResourceState expectedStates,
+            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
         );
 
         ~BufferResource();
 
-        void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
+        virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
 
     protected:
         uint64_t PaddedElementSize(uint64_t alignment);
@@ -41,8 +44,12 @@ namespace HAL
 
     template <class T>
     BufferResource<T>::BufferResource(
-        const Device& device, uint64_t capacity, uint64_t perElementAlignment,
-        ResourceState initialState, ResourceState expectedStates, HeapType heapType)
+        const Device& device,
+        uint64_t capacity, 
+        uint64_t perElementAlignment,
+        ResourceState initialState,
+        ResourceState expectedStates,
+        std::optional<CPUAccessibleHeapType> heapType)
         :
         Resource(
             device, 
@@ -57,7 +64,7 @@ namespace HAL
         ),
         mPaddedElementSize(PaddedElementSize(perElementAlignment)), mCapacity(capacity)
     {
-        if (heapType == HeapType::Upload || heapType == HeapType::Readback)
+        if (heapType)
         {
             ThrowIfFailed(mResource->Map(0, nullptr, (void**)&mMappedMemory));
         }

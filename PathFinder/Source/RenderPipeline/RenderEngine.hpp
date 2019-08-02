@@ -7,6 +7,9 @@
 
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
+#include "../HardwareAbstractionLayer/RingBufferResource.hpp"
+
+#include "../Scene/Scene.hpp"
 
 #include "RenderPass.hpp"
 #include "VertexStorage.hpp"
@@ -14,6 +17,7 @@
 #include "GraphicsDevice.hpp"
 #include "ShaderManager.hpp"
 #include "PipelineStateManager.hpp"
+#include "RenderContext.hpp"
 
 namespace PathFinder
 {
@@ -21,7 +25,7 @@ namespace PathFinder
     class RenderEngine
     {
     public:
-        RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath);
+        RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath, const Scene* scene);
 
         void AddRenderPass(std::unique_ptr<RenderPass>&& pass);
 
@@ -42,6 +46,10 @@ namespace PathFinder
         ShaderManager mShaderManager;
         PipelineStateManager mPipelineStateManager;
         GraphicsDevice mGraphicsDevice;
+        RenderContext mContext;
+
+        HAL::Fence mFrameFence;
+        HAL::RingBufferResource<int> mRingBuffer;
 
         std::vector<std::unique_ptr<RenderPass>> mRenderPasses;
 

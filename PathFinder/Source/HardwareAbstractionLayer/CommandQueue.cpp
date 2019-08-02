@@ -16,20 +16,9 @@ namespace HAL
 
     CommandQueue::~CommandQueue() {}
 
-    void CommandQueue::StallCPUUntilDone(Fence& fence)
+    void CommandQueue::SignalFence(const Fence& fence)
     {
-        fence.IncreaseExpectedValue();
-        mQueue->Signal(fence.D3DPtr(), fence.ExpectedValue());
-
-        if (!fence.IsCompleted())
-        {
-            HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
-            // Fire event when GPU hits current fence.  
-            fence.SetCompletionEventHandle(eventHandle);
-            // Wait until the GPU hits current fence event is fired.
-            WaitForSingleObject(eventHandle, INFINITE);
-            CloseHandle(eventHandle);
-        }
+        mQueue->Signal(fence.D3DFence(), fence.ExpectedValue());
     }
 
 

@@ -56,10 +56,10 @@ namespace PathFinder
         void UseSwapChain(HAL::SwapChain& swapChain);
 
         HAL::Resource* GetResource(ResourceName resourceName);
-        const std::vector<ResourceName>& GetScheduledResourceNamesForCurrentPass() const;
-        std::optional<HAL::ResourceState> GetResourceCurrentState(ResourceName resourceName) const;
-        std::optional<HAL::ResourceState> GetResourceStateForCurrentPass(ResourceName resourceName) const;
-        std::optional<HAL::ResourceFormat::Color> GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const;
+        const std::vector<ResourceName>& GetScheduledResourceNamesForCurrentPass();
+        std::optional<HAL::ResourceState> GetResourceCurrentState(ResourceName resourceName);
+        std::optional<HAL::ResourceState> GetResourceStateForCurrentPass(ResourceName resourceName);
+        std::optional<HAL::ResourceFormat::Color> GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName);
 
     private:
         const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };

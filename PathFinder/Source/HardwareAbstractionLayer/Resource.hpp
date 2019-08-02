@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <dxgi.h>
 #include <cstdint>
+#include <optional>
 #include <d3d12.h>
 
 #include "Device.hpp"
@@ -16,7 +17,10 @@
 namespace HAL
 {
 
-    enum class HeapType { Default, Upload, Readback };
+    enum class CPUAccessibleHeapType 
+    {
+        Upload, Readback 
+    };
     
     class Resource
     {
@@ -26,10 +30,9 @@ namespace HAL
         Resource(const Resource& other) = delete;
         Resource(Resource&& other) = default;
 
-  /*      Resource operator=(const Resource& other) = delete;
-        Resource operator=(Resource&& other) = default;*/
-
         virtual ~Resource() = 0;
+
+        virtual D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress() const;
 
     protected:
         Resource(
@@ -37,7 +40,7 @@ namespace HAL
             const ResourceFormat& format,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
-            HeapType heapType
+            std::optional<CPUAccessibleHeapType> heapType
         );
 
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;

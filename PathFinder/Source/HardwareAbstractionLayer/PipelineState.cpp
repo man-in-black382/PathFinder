@@ -51,7 +51,6 @@ namespace HAL
 #if defined(DEBUG) || defined(_DEBUG) 
         desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
-
         ThrowIfFailed(device.D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
     }
 

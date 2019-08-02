@@ -9,6 +9,19 @@ struct VertexOut
     float4 Color : COLOR;  
 };
 
+//cbuffer CB : register(b0)
+//{
+//    int a;
+//};
+//
+//struct Test
+//{
+//
+//};
+//
+//ConstantBuffer<Test> cb1 : register(b1);
+//StructuredBuffer<Test> cb1 : register(b1);
+
 VertexOut VSMain(VertexIn vin)
 {
     VertexOut vout;

@@ -35,6 +35,9 @@ namespace PathFinder
         HAL::GraphicsPipelineState mDefaultGraphicsState;
 
         std::unordered_map<PSOName, HAL::GraphicsPipelineState> mGraphicPSOs;
+
+    public:
+        inline const HAL::RootSignature& UniversalRootSignature() const { return mUniversalRootSignature; }
     };
 
 }

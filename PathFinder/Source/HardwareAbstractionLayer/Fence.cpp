@@ -24,5 +24,23 @@ namespace HAL
         ThrowIfFailed(mFence->SetEventOnCompletion(mExpectedValue, handle));
     }
 
+    void Fence::StallCurrentThreadUntilCompletion(uint8_t allowedSimultaneousFramesCount)
+    {
+        uint8_t framesInFlight = ExpectedValue() - CompletedValue();
+
+        if (framesInFlight < allowedSimultaneousFramesCount) {
+            return;
+        }
+
+        OutputDebugString("Stalling thread \n");
+
+        HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+        // Fire event when GPU hits current fence.  
+        SetCompletionEventHandle(eventHandle);
+        // Wait until the GPU hits current fence event is fired.
+        WaitForSingleObject(eventHandle, INFINITE);
+        CloseHandle(eventHandle);
+    }
+
 }
 

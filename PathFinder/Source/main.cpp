@@ -19,7 +19,9 @@
 #include "HardwareAbstractionLayer/TextureResource.hpp"
 #include "HardwareAbstractionLayer/BufferResource.hpp"
 #include "HardwareAbstractionLayer/Fence.hpp"
+#include "HardwareAbstractionLayer/RingBufferResource.hpp"
 
+#include "Scene/Scene.hpp"
 #include "Scene/MeshLoader.hpp"
 #include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderPasses/PlaygroundRenderPass.hpp"
@@ -503,75 +505,22 @@ int main(int argc, char** argv)
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
+   
+
     std::filesystem::path executablePath{ argv[0] };
     std::filesystem::path executableFolder = executablePath.parent_path();
-
-    ResourceFormat::Color backBufferFormat = ResourceFormat::Color::RGBA8_Usigned_Norm;
-
-    DisplayAdapterFetcher adapterFetcher;
-    DisplayAdapter adapter = adapterFetcher.Fetch()[1];
-    Device device{ adapter };
-
-
-    // Deal with vertices ---------------------------------------------------------------- //
-    Vertex vertices[3] = { 
-        Vertex{ { 0.0f, 0.0f, 0.5f, 1.0f }, { 1.0f, 0.5f, 0.5f, 1.0f } },
-        Vertex{ { 1.0f, 0.0f, 0.5f, 1.0f }, { 1.0f, 0.0f, 0.5f, 1.0f } },
-        Vertex{ { 1.0f, 1.0f, 0.5f, 1.0f }, { 0.0f, 0.5f, 0.5f, 1.0f } }
-    };
-
-   /* VertexBuffer<Vertex> uploadVertexBuffer{ device, 3, HeapType::Upload };
-    VertexBuffer<Vertex> vertexBuffer{ device, 3 };
-
-    CopyCommandAllocator copyAllocator{ device };
-    CopyCommandList copyCommandList{ device, copyAllocator };
-    CopyCommandQueue copyQueue{ device };
-
-    uploadVertexBuffer.Write(0, vertices, 3);
-    copyCommandList.TransitionResourceState({ ResourceState::VertexBuffer, ResourceState::CopySource, &uploadVertexBuffer });
-    copyCommandList.TransitionResourceState({ ResourceState::VertexBuffer, ResourceState::CopyDestination, &vertexBuffer });
-    copyCommandList.CopyResource(uploadVertexBuffer, vertexBuffer);
-    copyCommandList.TransitionResourceState({ ResourceState::CopyDestination, ResourceState::VertexBuffer, &vertexBuffer });
-    copyCommandList.Close();
-    copyQueue.ExecuteCommandList(copyCommandList);
-    copyQueue.StallCPUUntilDone(fence);
-    copyAllocator.Reset();*/
-
-    // Deal with constant buffers -------------------------------------------------------- //
-    //BufferResource<glm::mat4> viewProjectionsBuffer{ device, 1, ResourceState::ConstantBuffer, ResourceState::ConstantBuffer, HeapType::Upload };
-
-    Shader playgroundVS{ executableFolder.wstring() + L"/Shaders/Playground.hlsl", Shader::PipelineStage::Vertex };
-    Shader playgroundPS{ executableFolder.wstring() + L"/Shaders/Playground.hlsl", Shader::PipelineStage::Pixel };
-
-    RootSignature rootSignature;
-    rootSignature.Compile(device);
-
-    BlendState blendState;
-    RasterizerState rasterizerState;
-    DepthStencilState depthStencilState;
 
     InputAssemblerLayout inputLayout;
     /*inputLayout.AddPerVertexLayoutElement("POSITION", 0, ResourceFormat::Color::RGBA32_Float, 0, 0);
     inputLayout.AddPerVertexLayoutElement("COLOR", 0, ResourceFormat::Color::RGBA32_Float, 0, 16);*/
 
-    //GraphicsPipelineState pipelineState{
-    //    device,
-    //    rootSignature,
-    //    playgroundVS,
-    //    playgroundPS,
-    //    nullptr, nullptr, nullptr,
-    //    blendState,
-    //    rasterizerState,
-    //    depthStencilState,
-    //    inputLayout,
-    //    {{ RenderTarget::RT0, backBufferFormat }},
-    //    ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned,
-    //    PrimitiveTopology::TriangleList
-    //};
+    PathFinder::Scene scene;
+    PathFinder::RenderEngine engine{ hwnd, executableFolder, &scene };
+    PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };    
 
-    PathFinder::RenderEngine engine{ hwnd, executableFolder };
-    PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models", &engine.VertexGPUStorage() };
-    PathFinder::Mesh deer = meshLoader.Load("deer.obj");
+    const PathFinder::Mesh& deer = scene.AddMesh(meshLoader.Load("deer.obj"));
+    PathFinder::MeshInstance deerInstance{ &deer };
+    scene.AddMeshInstance(deerInstance);
 
     engine.VertexGPUStorage().TransferDataToGPU();
     engine.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());

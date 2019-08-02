@@ -16,15 +16,16 @@ namespace HAL
         void IncreaseExpectedValue();
         bool IsCompleted() const;
         void SetCompletionEventHandle(HANDLE handle);
+        void StallCurrentThreadUntilCompletion(uint8_t allowedSimultaneousFramesCount = 1);
     
     private:
         Microsoft::WRL::ComPtr<ID3D12Fence> mFence;
         uint64_t mExpectedValue = 0;
     
     public:
-        inline const auto D3DPtr() const { return mFence.Get(); }
-        inline const auto ExpectedValue() const { return mExpectedValue; }
-        inline const auto CompletedValue() const { return mFence->GetCompletedValue(); }
+        inline ID3D12Fence* D3DFence() const { return mFence.Get(); }
+        inline uint64_t ExpectedValue() const { return mExpectedValue; }
+        inline uint64_t CompletedValue() const { return mFence->GetCompletedValue(); }
     };
 }
 

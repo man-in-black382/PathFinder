@@ -33,7 +33,7 @@ namespace HAL
             const Geometry::Dimensions& dimensions,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
-            HeapType heapType = HeapType::Default
+            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
         );
 
         ~ColorTextureResource() = default;
@@ -57,7 +57,7 @@ namespace HAL
             const Geometry::Dimensions& dimensions,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
-            HeapType heapType = HeapType::Default
+            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
         );
 
         ~TypelessTextureResource() = default;
@@ -74,7 +74,7 @@ namespace HAL
             const Geometry::Dimensions& dimensions,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
-            HeapType heapType = HeapType::Default
+            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
         );
 
         ~DepthStencilTextureResource() = default;

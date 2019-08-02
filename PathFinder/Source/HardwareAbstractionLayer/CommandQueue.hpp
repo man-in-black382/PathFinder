@@ -17,7 +17,6 @@ namespace HAL
         virtual ~CommandQueue() = 0;
 
         void SignalFence(const Fence& fence);
-        void StallCPUUntilDone(Fence& fence);
 
     protected:
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> mQueue;

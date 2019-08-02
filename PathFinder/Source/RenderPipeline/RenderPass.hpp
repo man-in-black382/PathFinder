@@ -7,6 +7,7 @@
 #include "IShaderManager.hpp"
 #include "IPipelineStateManager.hpp"
 #include "GraphicsDevice.hpp"
+#include "RenderContext.hpp"
 
 #include "RenderPasses/PipelineNames.hpp"
 
@@ -20,21 +21,13 @@ namespace PathFinder
 
         virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) = 0;
         virtual void ScheduleResources(IResourceScheduler* scheduler) = 0;
-        virtual void Render(IGraphicsDevice* device) = 0;
+        virtual void Render(RenderContext* context) = 0;
 
     private:
         Foundation::Name mName;
-        std::string mVertexShaderFileName;
-        std::string mPixelShaderFileName;
-        std::string mGeometryShaderFileName;
-        std::string mComputeShaderFileName;
 
     public:
         inline Foundation::Name Name() const { return mName; }
-        inline const std::string& VertexShaderFileName() const { return mVertexShaderFileName; }
-        inline const std::string& PixelShaderFileName() const { return mPixelShaderFileName; }
-        inline const std::string& GeometryShaderFileName() const { return mGeometryShaderFileName; }
-        inline const std::string& ComputeShaderFileName() const { return mComputeShaderFileName; }
     };
 
 }

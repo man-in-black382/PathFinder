@@ -10,7 +10,7 @@ namespace HAL
         const Geometry::Dimensions& dimensions,
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
-        HeapType heapType)
+        std::optional<CPUAccessibleHeapType> heapType)
         :
         TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType)
     {
@@ -26,7 +26,7 @@ namespace HAL
         const Geometry::Dimensions& dimensions,
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
-        HeapType heapType)
+        std::optional<CPUAccessibleHeapType> heapType)
         :
         TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType)
     {
@@ -40,7 +40,7 @@ namespace HAL
         const Geometry::Dimensions& dimensions,
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
-        HeapType heapType)
+        std::optional<CPUAccessibleHeapType> heapType)
         :
         TextureResource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), initialStateMask, expectedStateMask, heapType)
     {

@@ -5,30 +5,38 @@
 
 namespace HAL
 {
-    
+
     Resource::Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr)
-        : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) 
-    {
+        : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) {}
 
-    }
-
-    Resource::Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask, HeapType heapType)
-        : mDescription(format.D3DResourceDescription())
+    Resource::Resource(
+        const Device& device,
+        const ResourceFormat& format, 
+        ResourceState initialStateMask,
+        ResourceState expectedStateMask,
+        std::optional<CPUAccessibleHeapType> heapType)
+        :
+        mDescription(format.D3DResourceDescription())
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
         D3D12_RESOURCE_STATES initialStates = D3DResourceState(initialStateMask);
 
-        switch (heapType) {
-        case HeapType::Default:
+        if (heapType)
+        {
+            switch (*heapType)
+            {
+            case CPUAccessibleHeapType::Upload:
+                heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+                initialStates |= D3D12_RESOURCE_STATE_GENERIC_READ;
+                break;
+
+            case CPUAccessibleHeapType::Readback:
+                heapProperties.Type = D3D12_HEAP_TYPE_READBACK;
+                break;
+            }
+        }
+        else {
             heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-            break;
-        case HeapType::Upload:
-            heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-            initialStates |= D3D12_RESOURCE_STATE_GENERIC_READ;
-            break;
-        case HeapType::Readback:
-            heapProperties.Type = D3D12_HEAP_TYPE_READBACK;
-            break;
         }
 
         SetExpectedUsageFlags(expectedStateMask);
@@ -46,6 +54,11 @@ namespace HAL
     }
 
     Resource::~Resource() {}
+
+    D3D12_GPU_VIRTUAL_ADDRESS Resource::GPUVirtualAddress() const
+    {
+        return mResource->GetGPUVirtualAddress();
+    }
 
     void Resource::SetExpectedUsageFlags(ResourceState stateMask)
     {

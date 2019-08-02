@@ -165,9 +165,6 @@
     <ClCompile Include="Source\Foundation\Color.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\BufferResource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\TextureResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -246,10 +243,13 @@
     <ClCompile Include="Source\RenderPipeline\VertexStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\CommonInputAssemblerLayouts.cpp">
+    <ClCompile Include="Source\Scene\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Scene\Scene.cpp">
+    <ClCompile Include="Source\RenderPipeline\VertexLayouts.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\RingBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1706,10 +1706,19 @@
     <ClInclude Include="Source\RenderPipeline\VertexStorageLocation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\CommonInputAssemblerLayouts.hpp">
+    <ClInclude Include="Source\Scene\Scene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Scene\Scene.hpp">
+    <ClInclude Include="Source\RenderPipeline\VertexLayouts.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\RingBufferResource.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\RingCommandList.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\RingBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2163,6 +2172,7 @@
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
     <Text Include="Source\RenderPipeline\Shaders\Playground.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />

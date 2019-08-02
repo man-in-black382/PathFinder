@@ -34,13 +34,13 @@ namespace PathFinder
         if (!package.VertexBuffer)
         {
             package.VertexBuffer = std::make_unique<HAL::BufferResource<Vertex>>(
-                *mDevice, mUploadBufferCapacity, 1, HAL::ResourceState::Common, HAL::ResourceState::CopySource, HAL::HeapType::Upload);
+                *mDevice, mUploadBufferCapacity, 1, HAL::ResourceState::Common, HAL::ResourceState::CopySource, HAL::CPUAccessibleHeapType::Upload);
         }
 
         if (!package.IndexBuffer)
         {
             package.IndexBuffer = std::make_unique<HAL::BufferResource<uint32_t>>(
-                *mDevice, mUploadBufferCapacity, 1, HAL::ResourceState::Common, HAL::ResourceState::CopySource, HAL::HeapType::Upload);
+                *mDevice, mUploadBufferCapacity, 1, HAL::ResourceState::Common, HAL::ResourceState::CopySource, HAL::CPUAccessibleHeapType::Upload);
         }
     }
 
@@ -107,12 +107,34 @@ namespace PathFinder
         
         mCommandList.Close();
         mCommandQueue.ExecuteCommandList(mCommandList);
-        mCommandQueue.StallCPUUntilDone(mFence);
+        mFence.IncreaseExpectedValue();
+        mCommandQueue.SignalFence(mFence);
+        mFence.StallCurrentThreadUntilCompletion();
         mCommandAllocator.Reset();
         mCommandList.Reset(mCommandAllocator);
 
         uploadBuffers.VertexBuffer = nullptr;
         uploadBuffers.IndexBuffer = nullptr;
+    }
+
+    const HAL::VertexBufferDescriptor* VertexStorage::UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const
+    {
+        switch (layout)
+        {
+        case VertexLayout::Layout1P1N1UV1T1BT: return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBufferDescriptor.get();
+        case VertexLayout::Layout1P1N1UV: return std::get< FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).VertexBufferDescriptor.get();
+        case VertexLayout::Layout1P3: return std::get< FinalBufferPackage<Vertex1P3>>(mFinalBuffers).VertexBufferDescriptor.get();
+        }
+    }
+
+    const HAL::IndexBufferDescriptor* VertexStorage::UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const
+    {
+        switch (layout)
+        {
+        case VertexLayout::Layout1P1N1UV1T1BT: return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBufferDescriptor.get();
+        case VertexLayout::Layout1P1N1UV: return std::get<FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).IndexBufferDescriptor.get();
+        case VertexLayout::Layout1P3: return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).IndexBufferDescriptor.get();
+        }
     }
 
     void VertexStorage::TransferDataToGPU()

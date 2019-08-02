@@ -87,6 +87,7 @@ namespace HAL
 
         void SetDescriptorHeap(const DescriptorHeap& heap);
         void SetPipelineState(const ComputePipelineState& state);
+        void SetComputeRootSignature(const RootSignature& signature);
     };
 
     class DirectCommandListBase : public ComputeCommandListBase {
@@ -99,27 +100,29 @@ namespace HAL
         void CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue);
         void SetFence(const Fence& fence);
         void SetVertexBuffer(const VertexBufferDescriptor& descriptor);
+        void SetIndexBuffer(const IndexBufferDescriptor& descriptor);
         void SetPrimitiveTopology(PrimitiveTopology topology);
         void SetPipelineState(const PipelineState& state);
+        void SetGraphicsRootSignature(const RootSignature& signature);
     };
 
 
 
     class CopyCommandList : public CopyCommandListBase {
     public:
-        CopyCommandList(Device& device, CopyCommandAllocator& allocator);
+        CopyCommandList(const Device& device, const CopyCommandAllocator& allocator);
         ~CopyCommandList() = default;
     };
 
     class ComputeCommandList : public ComputeCommandListBase {
     public:
-        ComputeCommandList(Device& device, ComputeCommandAllocator& allocator);
+        ComputeCommandList(const Device& device, const ComputeCommandAllocator& allocator);
         ~ComputeCommandList() = default;
     };
     
     class BundleCommandList : public DirectCommandListBase {
     public:
-        BundleCommandList(Device& device, BundleCommandAllocator& allocator);
+        BundleCommandList(const Device& device, const BundleCommandAllocator& allocator);
         ~BundleCommandList() = default;
     };
 

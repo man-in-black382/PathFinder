@@ -199,7 +199,7 @@ namespace PathFinder
             HAL::ResourceState initialState = mResourcePerPassStates[passName][resourceName];
             HAL::ResourceState expectedStates = mResourceExpectedStates[resourceName];
 
-            auto resource = std::make_unique<TextureT>(args..., initialState, expectedStates, HAL::HeapType::Default);
+            auto resource = std::make_unique<TextureT>(args..., initialState, expectedStates);
 
             // Call all callbacks associated with this resource name
             TextureAllocationCallbackMap<TextureT>& callbackMap = std::get<TextureAllocationCallbackMap<TextureT>>(mTextureAllocationCallbacks);
@@ -225,21 +225,19 @@ namespace PathFinder
         return it->second.get();
     }
 
-    const std::vector<PathFinder::ResourceManager::ResourceName>& ResourceManager::GetScheduledResourceNamesForCurrentPass() const
-{
-        auto it = mScheduledResourceNames.find(mCurrentPassName);
-        if (it == mScheduledResourceNames.end()) return {};
-        return it->second;
+    const std::vector<PathFinder::ResourceManager::ResourceName>& ResourceManager::GetScheduledResourceNamesForCurrentPass()
+    {
+        return mScheduledResourceNames[mCurrentPassName];
     }
 
-    std::optional<HAL::ResourceState> ResourceManager::GetResourceCurrentState(ResourceName resourceName) const
+    std::optional<HAL::ResourceState> ResourceManager::GetResourceCurrentState(ResourceName resourceName)
     {
         auto stateIt = mResourceCurrentStates.find(resourceName);
         if (stateIt == mResourceCurrentStates.end()) return std::nullopt;
         return stateIt->second;
     }
 
-    std::optional<HAL::ResourceState> ResourceManager::GetResourceStateForCurrentPass(ResourceName resourceName) const
+    std::optional<HAL::ResourceState> ResourceManager::GetResourceStateForCurrentPass(ResourceName resourceName)
     {
         auto mapIt = mResourcePerPassStates.find(mCurrentPassName);
 
@@ -253,7 +251,7 @@ namespace PathFinder
         return stateIt->second;
     }
 
-    std::optional<HAL::ResourceFormat::Color> ResourceManager::GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const
+    std::optional<HAL::ResourceFormat::Color> ResourceManager::GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName)
     {
         auto mapIt = mResourceShaderVisibleFormatMap.find(mCurrentPassName);
 
