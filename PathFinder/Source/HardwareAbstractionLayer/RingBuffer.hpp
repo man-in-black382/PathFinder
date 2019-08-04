@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <functional>
 
 namespace HAL
 {
@@ -9,19 +10,21 @@ namespace HAL
     class RingBuffer
     {
     public:
-        typedef size_t OffsetType;
+        using OffsetType = size_t;
 
         struct FrameTailAttributes
         {
             FrameTailAttributes(uint64_t fv, OffsetType off, OffsetType sz) 
-                : FenceValue(fv), Offset(off), Size(sz) {}
+                : FenceValue(fv), Tail(off), Size(sz) {}
 
             // Fence value associated with the command list in which
             // the allocation could have been referenced last time
             uint64_t FenceValue;
-            OffsetType Offset;
+            OffsetType Tail;
             OffsetType Size;
         };
+
+        using DeallocationCallback = std::function<void(const FrameTailAttributes& frameAttributes)>;
 
         static const OffsetType InvalidOffset = static_cast<OffsetType>(-1);
 
@@ -31,6 +34,7 @@ namespace HAL
 
         void FinishCurrentFrame(uint64_t fenceValue);
         void ReleaseCompletedFrames(uint64_t completedFenceValue);
+        void SetDeallocationCallback(const DeallocationCallback& callback);
 
         inline OffsetType MaxSize() const { return mMaxSize; }
         inline bool IsFull() const { return mUsedSize == mMaxSize; };
@@ -40,6 +44,7 @@ namespace HAL
 
     private:
         std::deque<FrameTailAttributes> mCompletedFrameTails;
+        DeallocationCallback mDeallocationCallback = [](const FrameTailAttributes& frameAttributes){};
 
         OffsetType mHead = 0;
         OffsetType mTail = 0;

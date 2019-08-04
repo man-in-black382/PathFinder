@@ -27,7 +27,7 @@ namespace HAL
         desc.DepthStencilState = mDepthStencilState.D3DState();
         desc.InputLayout = mInputLayout.D3DLayout();
         desc.PrimitiveTopologyType = D3DPrimitiveTopologyType(mPrimitiveTopology);
-        desc.NumRenderTargets = mRenderTargetFormats.size();
+        desc.NumRenderTargets = (UINT)mRenderTargetFormats.size();
         desc.DSVFormat = ResourceFormat::D3DFormat(mDepthStencilFormat);
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;

@@ -18,8 +18,8 @@ namespace PathFinder
         
         ResourceDescriptorStorage(HAL::Device* device);
 
-        HAL::RTDescriptor* TryGetRTDescriptor(ResourceName resourceName, HAL::ResourceFormat::Color format);
-        HAL::DSDescriptor* TryGetDSDescriptor(ResourceName resourceName);
+        const HAL::RTDescriptor* TryGetRTDescriptor(ResourceName resourceName, HAL::ResourceFormat::Color format) const;
+        const HAL::DSDescriptor* TryGetDSDescriptor(ResourceName resourceName) const;
 
         HAL::RTDescriptor EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTextureResource& texture);
         HAL::RTDescriptor EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTextureResource& texture, HAL::ResourceFormat::Color format);

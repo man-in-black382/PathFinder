@@ -75,9 +75,15 @@ namespace HAL
             }
 
             mUsedSize -= oldestFrameTail.Size;
-            mHead = oldestFrameTail.Offset;
+            mHead = oldestFrameTail.Tail;
+            mDeallocationCallback(oldestFrameTail);
             mCompletedFrameTails.pop_front();
         }
+    }
+
+    void RingBuffer::SetDeallocationCallback(const DeallocationCallback& callback)
+    {
+        mDeallocationCallback = callback;
     }
 
 }

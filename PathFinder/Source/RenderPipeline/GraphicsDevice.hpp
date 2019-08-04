@@ -15,9 +15,11 @@ namespace PathFinder
     {
     public:
         GraphicsDevice(
-            HAL::Device* device, HWND windowHandle, const RenderSurface& renderSurface,
-            ResourceManager* resourceManager, PipelineStateManager* pipelineStateManager,
-            VertexStorage* vertexStorage
+            const HAL::Device& device,
+            const ResourceManager* resourceManager, 
+            const PipelineStateManager* pipelineStateManager,
+            const VertexStorage* vertexStorage, 
+            uint8_t simultaneousFramesInFlight
         );
 
         virtual void SetRenderTarget(Foundation::Name resourceName) override;
@@ -34,35 +36,21 @@ namespace PathFinder
         virtual void DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount) override;
         virtual void Draw(const VertexStorageLocation& vertexStorageLocation) override;
 
+        void BeginFrame(uint64_t frameFenceValue);
         void TransitionResource(const HAL::ResourceTransitionBarrier& barrier);
-        void ExecuteCommandBuffer();
+        void ExecuteCommandsThenSignalFence(HAL::Fence& fence);
+        void EndFrame(uint64_t completedFrameFenceValue);
 
-    public:
-        HAL::Device* mDevice;
+    private:
         HAL::DirectCommandQueue mCommandQueue;
         HAL::DirectRingCommandList mRingCommandList;
-        HAL::Fence mFence;
-        HAL::SwapChain mSwapChain;
 
-        ResourceManager* mResourceManager;
-        PipelineStateManager* mPipelineStateManager;
-        VertexStorage* mVertexStorage;
+        const ResourceManager* mResourceManager;
+        const PipelineStateManager* mPipelineStateManager;
+        const VertexStorage* mVertexStorage;
 
     public:
-        inline HAL::SwapChain& SwapChain() { return mSwapChain; }
+        inline const HAL::DirectCommandQueue& CommandQueue() const { return mCommandQueue; }
     };
-
-  /*  template <class Index>
-    void PathFinder::GraphicsDevice::SetIndexBuffer(const HAL::BufferResource<Index>& indexBuffer)
-    {
-
-    }
-
-    template <class Vertex>
-    void PathFinder::GraphicsDevice::SetVertexBuffer(const HAL::BufferResource<Vertex>& vertexBuffer)
-    {
-
-    }*/
-
 
 }

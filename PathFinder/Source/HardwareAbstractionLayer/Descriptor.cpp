@@ -20,7 +20,7 @@ namespace HAL
         case D3D12_RESOURCE_DIMENSION_BUFFER: 
             desc.ViewDimension = D3D12_RTV_DIMENSION_BUFFER;
             desc.Buffer.FirstElement = 0;
-            desc.Buffer.NumElements = resourceDesc.Width;
+            desc.Buffer.NumElements = (UINT)resourceDesc.Width;
             break;
 
         case D3D12_RESOURCE_DIMENSION_TEXTURE1D:

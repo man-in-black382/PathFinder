@@ -20,7 +20,7 @@ namespace PathFinder
         virtual HAL::GraphicsPipelineState CloneExistingGraphicsState(PSOName name) override;
         virtual void StoreGraphicsState(PSOName name, const HAL::GraphicsPipelineState& pso) override;
 
-        HAL::PipelineState& GetPipelineState(PSOName name);
+        const HAL::PipelineState& GetPipelineState(PSOName name) const;
 
         void CompileStates();
 

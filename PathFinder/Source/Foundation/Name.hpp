@@ -9,7 +9,7 @@ namespace Foundation
     {
     public:
         Name();
-        Name(const class std::string& string);
+        Name(const std::string& string);
         Name(const char* cString);
         explicit Name(uint64_t id);
         ~Name();
@@ -23,7 +23,7 @@ namespace Foundation
         bool operator==(const Name& other) const;
         bool operator<(const Name& other) const;
 
-        const class std::string& ToSring() const;
+        const std::string& ToSring() const;
         uint64_t ToId() const;
 
         bool IsValid() const;

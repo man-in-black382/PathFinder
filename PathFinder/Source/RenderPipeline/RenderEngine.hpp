@@ -37,23 +37,25 @@ namespace PathFinder
         void MoveToNextBackBuffer();
         void TransitionResourceStates();
 
+        uint8_t mCurrentBackBufferIndex = 0;
+        uint8_t mSimultaneousFramesInFlight = 3;
+
         RenderSurface mDefaultRenderSurface;
         std::filesystem::path mExecutablePath;
 
         HAL::Device mDevice;
+        HAL::Fence mFrameFence;
+
         VertexStorage mVertexStorage;
         ResourceManager mResourceManager;
         ShaderManager mShaderManager;
         PipelineStateManager mPipelineStateManager;
         GraphicsDevice mGraphicsDevice;
-        RenderContext mContext;
+        RenderContext mContext;  
 
-        HAL::Fence mFrameFence;
-        HAL::RingBufferResource<int> mRingBuffer;
+        HAL::SwapChain mSwapChain;
 
         std::vector<std::unique_ptr<RenderPass>> mRenderPasses;
-
-        uint8_t mCurrentBackBufferIndex = 0;
 
     public:
         inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }

@@ -26,8 +26,8 @@ namespace HAL
 
         virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
 
-        void NewFrameStarted(uint64_t fenceValue);
-        void FrameCompleted(uint64_t completedFenceValue);
+        void PrepareMemoryForNewFrame(uint64_t newFrameFenceValue);
+        void DiscardMemoryForCompletedFrames(uint64_t completedFrameFenceValue);
 
     private:
         RingBuffer mRingBuffer;
@@ -62,16 +62,16 @@ namespace HAL
     }
 
     template <class T>
-    void HAL::RingBufferResource<T>::NewFrameStarted(uint64_t fenceValue)
+    void HAL::RingBufferResource<T>::PrepareMemoryForNewFrame(uint64_t newFrameFenceValue)
     {
         mCurrentRingOffset = mRingBuffer.Allocate(mElementCapacity);
-        mRingBuffer.FinishCurrentFrame(fenceValue);
+        mRingBuffer.FinishCurrentFrame(newFrameFenceValue);
     }
 
     template <class T>
-    void HAL::RingBufferResource<T>::FrameCompleted(uint64_t completedFenceValue)
+    void HAL::RingBufferResource<T>::DiscardMemoryForCompletedFrames(uint64_t completedFrameFenceValue)
     {
-        mRingBuffer.ReleaseCompletedFrames(completedFenceValue);
+        mRingBuffer.ReleaseCompletedFrames(completedFrameFenceValue);
     }
 
 }

@@ -15,8 +15,8 @@ namespace HAL
 
         uint8_t bufferCount = std::underlying_type<BackBufferingStrategy>::type(strategy);
 
-        chain.BufferDesc.Width = dimensions.Width;
-        chain.BufferDesc.Height = dimensions.Height;
+        chain.BufferDesc.Width = (UINT)dimensions.Width;
+        chain.BufferDesc.Height = (UINT)dimensions.Height;
         chain.BufferDesc.RefreshRate.Numerator = 60;
         chain.BufferDesc.RefreshRate.Denominator = 1;
         chain.BufferDesc.Format = ResourceFormat::D3DFormat(backBufferFormat);

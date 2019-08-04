@@ -19,7 +19,7 @@ namespace HAL
     {
         mRanges.push_back(range.D3DRange());
         mParameter.DescriptorTable.pDescriptorRanges = &mRanges[0];
-        mParameter.DescriptorTable.NumDescriptorRanges = mRanges.size();
+        mParameter.DescriptorTable.NumDescriptorRanges = (UINT)mRanges.size();
     }
 
     void RootDescriptorTableParameter::AddDescriptorRange(const SamplerDescriptorTableRange& range)

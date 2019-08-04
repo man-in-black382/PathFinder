@@ -45,9 +45,9 @@ namespace PathFinder
         virtual void WillRenderToRenderTarget(Foundation::Name resourceName) override;
         virtual void WillRenderToDepthStencil(Foundation::Name resourceName) override;
 
-        HAL::RTDescriptor GetRenderTarget(Foundation::Name resourceName);
-        HAL::DSDescriptor GetDepthStencil(Foundation::Name resourceName);
-        HAL::RTDescriptor GetBackBuffer();
+        HAL::RTDescriptor GetRenderTarget(Foundation::Name resourceName) const;
+        HAL::DSDescriptor GetDepthStencil(Foundation::Name resourceName) const;
+        HAL::RTDescriptor GetBackBuffer() const;
 
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(Foundation::Name passName);
@@ -56,10 +56,10 @@ namespace PathFinder
         void UseSwapChain(HAL::SwapChain& swapChain);
 
         HAL::Resource* GetResource(ResourceName resourceName);
-        const std::vector<ResourceName>& GetScheduledResourceNamesForCurrentPass();
-        std::optional<HAL::ResourceState> GetResourceCurrentState(ResourceName resourceName);
-        std::optional<HAL::ResourceState> GetResourceStateForCurrentPass(ResourceName resourceName);
-        std::optional<HAL::ResourceFormat::Color> GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName);
+        const std::vector<ResourceName>* GetScheduledResourceNamesForCurrentPass() const;
+        std::optional<HAL::ResourceState> GetResourceCurrentState(ResourceName resourceName) const;
+        std::optional<HAL::ResourceState> GetResourceStateForCurrentPass(ResourceName resourceName) const;
+        std::optional<HAL::ResourceFormat::Color> GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const;
 
     private:
         const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };

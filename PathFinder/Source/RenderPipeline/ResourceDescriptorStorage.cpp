@@ -8,7 +8,7 @@ namespace PathFinder
         mDSDescriptorHeap{ device, mDescriptorHeapCapacity },
         mCBSRUADescriptorHeap{ device, mDescriptorHeapCapacity } {}
 
-    HAL::RTDescriptor* ResourceDescriptorStorage::TryGetRTDescriptor(ResourceName resourceName, HAL::ResourceFormat::Color format)
+    const HAL::RTDescriptor* ResourceDescriptorStorage::TryGetRTDescriptor(ResourceName resourceName, HAL::ResourceFormat::Color format) const
     {
         auto mapIt = mRTDescriptorMap.find(resourceName);
         if (mapIt == mRTDescriptorMap.end()) return nullptr;
@@ -20,7 +20,7 @@ namespace PathFinder
         return &nestedMapIt->second;
     }
 
-    HAL::DSDescriptor* ResourceDescriptorStorage::TryGetDSDescriptor(ResourceName resourceName)
+    const HAL::DSDescriptor* ResourceDescriptorStorage::TryGetDSDescriptor(ResourceName resourceName) const
     {
         auto mapIt = mDSDescriptorMap.find(resourceName);
         if (mapIt == mDSDescriptorMap.end()) return nullptr;
@@ -30,7 +30,7 @@ namespace PathFinder
 
     HAL::RTDescriptor ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTextureResource& texture)
     {
-        if (HAL::RTDescriptor* descriptor = TryGetRTDescriptor(resourceName, texture.DataFormat())) return *descriptor;
+        if (auto descriptor = TryGetRTDescriptor(resourceName, texture.DataFormat())) return *descriptor;
 
         HAL::RTDescriptor descriptor = mRTDescriptorHeap.EmplaceDescriptorForResource(texture);
         mRTDescriptorMap[resourceName].emplace(texture.DataFormat(), descriptor);
@@ -39,7 +39,7 @@ namespace PathFinder
 
     HAL::RTDescriptor ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTextureResource& texture, HAL::ResourceFormat::Color format)
     {
-        if (HAL::RTDescriptor* descriptor = TryGetRTDescriptor(resourceName, format)) return *descriptor;
+        if (auto descriptor = TryGetRTDescriptor(resourceName, format)) return *descriptor;
 
         HAL::RTDescriptor descriptor = mRTDescriptorHeap.EmplaceDescriptorForResource(texture, format);
         mRTDescriptorMap[resourceName].emplace(format, descriptor);
@@ -48,7 +48,7 @@ namespace PathFinder
 
     HAL::DSDescriptor ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded(ResourceName resourceName, const HAL::DepthStencilTextureResource& texture)
     {
-        if (HAL::DSDescriptor* descriptor = TryGetDSDescriptor(resourceName)) return *descriptor;
+        if (auto descriptor = TryGetDSDescriptor(resourceName)) return *descriptor;
 
         HAL::DSDescriptor descriptor = mDSDescriptorHeap.EmplaceDescriptorForResource(texture);
         mDSDescriptorMap.emplace(resourceName, descriptor);

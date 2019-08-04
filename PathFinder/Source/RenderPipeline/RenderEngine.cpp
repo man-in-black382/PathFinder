@@ -8,22 +8,18 @@ namespace PathFinder
 
     RenderEngine::RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath, const Scene* scene)
         : mExecutablePath{ executablePath },
-            mDefaultRenderSurface{
-                { 1280, 720 },
-                HAL::ResourceFormat::Color::RGBA8_Usigned_Norm,
-                HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
-
-            mDevice{ FetchDefaultDisplayAdapter() },
-            mVertexStorage{ &mDevice },
-            mResourceManager{ &mDevice, mDefaultRenderSurface },
-            mShaderManager{ mExecutablePath / "Shaders/" },
-            mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
-            mGraphicsDevice{ &mDevice, windowHandle, mDefaultRenderSurface, &mResourceManager, &mPipelineStateManager, &mVertexStorage },
-            mContext{ scene, &mGraphicsDevice },
-            mFrameFence { mDevice },
-            mRingBuffer{ mDevice, 100, 3, 256, HAL::ResourceState::GenericRead, HAL::ResourceState::GenericRead, HAL::CPUAccessibleHeapType::Upload }
+        mDefaultRenderSurface{ { 1280, 720 }, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
+        mDevice{ FetchDefaultDisplayAdapter() },
+        mFrameFence{ mDevice },
+        mVertexStorage{ &mDevice },
+        mResourceManager{ &mDevice, mDefaultRenderSurface },
+        mShaderManager{ mExecutablePath / "Shaders/" },
+        mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
+        mGraphicsDevice{ mDevice, &mResourceManager, &mPipelineStateManager, &mVertexStorage, mSimultaneousFramesInFlight },
+        mContext{ scene, &mGraphicsDevice },
+        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() }
     {
-        mResourceManager.UseSwapChain(mGraphicsDevice.SwapChain());
+        mResourceManager.UseSwapChain(mSwapChain);
     }
 
     void RenderEngine::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
@@ -51,13 +47,11 @@ namespace PathFinder
         OutputDebugString("Queueing commands\n");
 
         mFrameFence.IncreaseExpectedValue();
-
-        mRingBuffer.NewFrameStarted(mFrameFence.ExpectedValue());
-        mGraphicsDevice.mRingCommandList.NewFrameStarted(mFrameFence.ExpectedValue());
+        mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
 
         MoveToNextBackBuffer();
 
-        HAL::ColorTextureResource* currentBackBuffer = mGraphicsDevice.SwapChain().BackBuffers()[mCurrentBackBufferIndex].get();
+        HAL::ColorTextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
         mGraphicsDevice.TransitionResource({ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer });
 
         for (auto& passPtr : mRenderPasses)
@@ -68,20 +62,11 @@ namespace PathFinder
         }
 
         mGraphicsDevice.TransitionResource({ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
-        
-        mGraphicsDevice.SwapChain().Present();
-
-        mGraphicsDevice.mRingCommandList.CurrentCommandList().Close();
-        mGraphicsDevice.mCommandQueue.ExecuteCommandList(mGraphicsDevice.mRingCommandList.CurrentCommandList());
-
-        mGraphicsDevice.mCommandQueue.SignalFence(mFrameFence);
-        mFrameFence.StallCurrentThreadUntilCompletion(3);
-
-        mGraphicsDevice.mRingCommandList.CurrentCommandAllocator().Reset();
-        mGraphicsDevice.mRingCommandList.CurrentCommandList().Reset(mGraphicsDevice.mRingCommandList.CurrentCommandAllocator());
-
-        mRingBuffer.FrameCompleted(mFrameFence.CompletedValue());
-        mGraphicsDevice.mRingCommandList.FrameCompleted(mFrameFence.CompletedValue());
+       
+        mSwapChain.Present();
+        mGraphicsDevice.ExecuteCommandsThenSignalFence(mFrameFence);
+        mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
+        mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
     }
 
     HAL::DisplayAdapter RenderEngine::FetchDefaultDisplayAdapter() const
@@ -92,13 +77,13 @@ namespace PathFinder
 
     void RenderEngine::MoveToNextBackBuffer()
     {
-        mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % mGraphicsDevice.SwapChain().BackBuffers().size();
+        mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % mSwapChain.BackBuffers().size();
         mResourceManager.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
     }
 
     void RenderEngine::TransitionResourceStates()
     {
-        for (ResourceManager::ResourceName resourceName : mResourceManager.GetScheduledResourceNamesForCurrentPass())
+        for (ResourceManager::ResourceName resourceName : *mResourceManager.GetScheduledResourceNamesForCurrentPass())
         {
             HAL::ResourceState currentState = *mResourceManager.GetResourceCurrentState(resourceName);
             HAL::ResourceState nextState = *mResourceManager.GetResourceStateForCurrentPass(resourceName);

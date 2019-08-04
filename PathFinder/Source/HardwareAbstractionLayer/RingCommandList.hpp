@@ -14,8 +14,8 @@ namespace HAL
     public:
         RingCommandList(const Device& device, uint8_t frameCapacity);
 
-        void NewFrameStarted(uint64_t fenceValue);
-        void FrameCompleted(uint64_t completedFenceValue);
+        void PrepareCommandListForNewFrame(uint64_t newFrameFenceValue);
+        void ReleaseAndResetForCompletedFrames(uint64_t completedFrameFenceValue);
 
         CommandListT& CurrentCommandList();
         CommandAllocatorT& CurrentCommandAllocator();
@@ -28,8 +28,7 @@ namespace HAL
     };
 
     template <class CommandListT, class CommandAllocatorT>
-    HAL::RingCommandList<CommandListT, CommandAllocatorT>::RingCommandList(const Device& device, uint8_t frameCapacity) 
-        : mRingBuffer{ frameCapacity }
+    HAL::RingCommandList<CommandListT, CommandAllocatorT>::RingCommandList(const Device& device, uint8_t frameCapacity) : mRingBuffer{ frameCapacity }
     {
         for (auto i = 0u; i < frameCapacity; i++)
         {
@@ -37,24 +36,25 @@ namespace HAL
             mCommandLists.emplace_back(device, mCommandAllocators.back());
         }
 
-        //for (auto i = 0u; i < frameCapacity; i++)
-        //{
-        //    //mCommandAllocators.emplace_back(device);
-        //    mCommandLists.emplace_back(device, mCommandAllocators[i]);
-        //}
+        mRingBuffer.SetDeallocationCallback([this](const RingBuffer::FrameTailAttributes& frameAttributes) 
+        {
+            auto indexToReset = frameAttributes.Tail - frameAttributes.Size;
+            mCommandAllocators[indexToReset].Reset();
+            mCommandLists[indexToReset].Reset(mCommandAllocators[indexToReset]);
+        });
     }
 
     template <class CommandListT, class CommandAllocatorT>
-    void HAL::RingCommandList<CommandListT, CommandAllocatorT>::NewFrameStarted(uint64_t fenceValue)
+    void HAL::RingCommandList<CommandListT, CommandAllocatorT>::PrepareCommandListForNewFrame(uint64_t newFrameFenceValue)
     {
         mCurrentIndex = mRingBuffer.Allocate(1);
-        mRingBuffer.FinishCurrentFrame(fenceValue);
+        mRingBuffer.FinishCurrentFrame(newFrameFenceValue);
     }
 
     template <class CommandListT, class CommandAllocatorT>
-    void HAL::RingCommandList<CommandListT, CommandAllocatorT>::FrameCompleted(uint64_t completedFenceValue)
+    void HAL::RingCommandList<CommandListT, CommandAllocatorT>::ReleaseAndResetForCompletedFrames(uint64_t completedFrameFenceValue)
     {
-        mRingBuffer.ReleaseCompletedFrames(completedFenceValue);
+        mRingBuffer.ReleaseCompletedFrames(completedFrameFenceValue);
     }
 
     template <class CommandListT, class CommandAllocatorT>

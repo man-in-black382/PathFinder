@@ -17,9 +17,14 @@ namespace PathFinder
         mGraphicPSOs[name].SetRootSignature(&mUniversalRootSignature);
     }
 
-    HAL::PipelineState& PipelineStateManager::GetPipelineState(PSOName name)
+    const HAL::PipelineState& PipelineStateManager::GetPipelineState(PSOName name) const 
     {
-        return mGraphicPSOs[name];
+        auto stateIt = mGraphicPSOs.find(name);
+        if (stateIt == mGraphicPSOs.end()) {
+            throw std::invalid_argument("Pipeline state does not exist");
+        }
+
+        return stateIt->second;
     }
 
     void PipelineStateManager::CompileStates()

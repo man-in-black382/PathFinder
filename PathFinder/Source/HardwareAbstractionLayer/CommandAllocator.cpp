@@ -9,10 +9,7 @@ namespace HAL
         ThrowIfFailed(device.D3DPtr()->CreateCommandAllocator(commandListType, IID_PPV_ARGS(&mAllocator)));
     }
 
-    CommandAllocator::~CommandAllocator() 
-    {
-        Reset();
-    }
+    CommandAllocator::~CommandAllocator() {}
 
     void CommandAllocator::Reset()
     {

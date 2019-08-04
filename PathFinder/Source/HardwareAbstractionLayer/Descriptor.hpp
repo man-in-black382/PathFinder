@@ -118,7 +118,7 @@ namespace HAL
     IndexBufferDescriptor::IndexBufferDescriptor(const BufferResource<Index>& indexBuffer, ResourceFormat::Color format)
     {
         mDescriptor.BufferLocation = indexBuffer.D3DPtr()->GetGPUVirtualAddress();
-        mDescriptor.SizeInBytes = indexBuffer.D3DDescription().Width;
+        mDescriptor.SizeInBytes = (UINT)indexBuffer.D3DDescription().Width;
         mDescriptor.Format = ResourceFormat::D3DFormat(format);
     }
 

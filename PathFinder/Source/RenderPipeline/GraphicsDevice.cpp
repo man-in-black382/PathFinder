@@ -4,20 +4,17 @@ namespace PathFinder
 {
 
     GraphicsDevice::GraphicsDevice(
-        HAL::Device* device, HWND windowHandle, const RenderSurface& renderSurface,
-        ResourceManager* resourceManager, PipelineStateManager* pipelineStateManager,
-        VertexStorage* vertexStorage)
-        : 
-        mDevice{ device },
-        mCommandQueue{ *device },
-        mRingCommandList{ *device, 3 },
-        mFence{ *device },
-        mSwapChain{ mCommandQueue, windowHandle, HAL::BackBufferingStrategy::Double,
-                renderSurface.RenderTargetFormat(), renderSurface.Dimensions() },
+        const HAL::Device& device,
+        const ResourceManager* resourceManager,
+        const PipelineStateManager* pipelineStateManager,
+        const VertexStorage* vertexStorage,
+        uint8_t simultaneousFramesInFlight)
+        :
+        mCommandQueue{ device },
+        mRingCommandList{ device, simultaneousFramesInFlight },
         mResourceManager{ resourceManager },
         mPipelineStateManager{ pipelineStateManager },
         mVertexStorage{ vertexStorage } {}
-
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
@@ -80,6 +77,8 @@ namespace PathFinder
         mRingCommandList.CurrentCommandList().Draw(vertexCount, vertexStart);
     }
 
+    
+
     void GraphicsDevice::DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount)
     {
         mRingCommandList.CurrentCommandList().DrawInstanced(vertexCount, vertexStart, instanceCount);
@@ -105,9 +104,21 @@ namespace PathFinder
         mRingCommandList.CurrentCommandList().TransitionResourceState(barrier);
     }
 
-    void GraphicsDevice::ExecuteCommandBuffer()
+    void GraphicsDevice::BeginFrame(uint64_t frameFenceValue)
     {
-        
+        mRingCommandList.PrepareCommandListForNewFrame(frameFenceValue);
+    }
+
+    void GraphicsDevice::EndFrame(uint64_t completedFrameFenceValue)
+    {
+        mRingCommandList.ReleaseAndResetForCompletedFrames(completedFrameFenceValue);
+    }
+
+    void GraphicsDevice::ExecuteCommandsThenSignalFence(HAL::Fence& fence)
+    {
+        mRingCommandList.CurrentCommandList().Close();
+        mCommandQueue.ExecuteCommandList(mRingCommandList.CurrentCommandList());
+        mCommandQueue.SignalFence(fence);
     }
 
 }
