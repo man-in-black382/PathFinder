@@ -160,8 +160,13 @@ namespace PathFinder
 
         if (alreadyAllocated) return;
 
-        mRootConstantBuffers.emplace(mCurrentPassName, std::make_unique<HAL::RingBufferResource<BufferDataT>>(
-            *mDevice, 1, mSimultaneousFramesInFlight, 256,
+        // Because we store complex objects in unified buffers of primitive type
+        // we must alight manually beforehand and pass alignment of 1 to the buffer
+        //
+        auto bufferSize = Foundation::MemoryUtils::Align(sizeof(BufferDataT), 256);
+
+        mRootConstantBuffers.emplace(mCurrentPassName, std::make_unique<HAL::RingBufferResource<uint8_t>>(
+            *mDevice, bufferSize, mSimultaneousFramesInFlight, 1,
             HAL::ResourceState::GenericRead,
             HAL::ResourceState::GenericRead,
             HAL::CPUAccessibleHeapType::Upload)

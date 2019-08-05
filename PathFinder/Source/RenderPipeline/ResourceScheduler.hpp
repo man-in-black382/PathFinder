@@ -40,9 +40,9 @@ namespace PathFinder
     };
 
     template <class BufferDataT>
-    void PathFinder::ResourceScheduler::WillUseRootConstantBuffer()
+    void ResourceScheduler::WillUseRootConstantBuffer()
     {
-
+        mResourceStorage->AllocateRootConstantBufferIfNeeded<BufferDataT>();
     }
 
 }
