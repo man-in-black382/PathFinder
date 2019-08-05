@@ -17,9 +17,10 @@ namespace PathFinder
         psoManager->StoreGraphicsState(PSONames::GBuffer, pso);
     }
 
-    void PlaygroundRenderPass::ScheduleResources(IResourceScheduler* scheduler)
+    void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         scheduler->WillRenderToDepthStencil(ResourceNames::MainDepthStencil);
+        scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
     }
 
     void PlaygroundRenderPass::Render(RenderContext* context)
@@ -28,6 +29,8 @@ namespace PathFinder
         context->GraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::MainDepthStencil);
         context->GraphicsDevice()->ClearBackBuffer(Foundation::Color::Green());
         context->GraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
+
+
 
         context->World()->IterateMeshInstances([&](const MeshInstance& instance)
         {

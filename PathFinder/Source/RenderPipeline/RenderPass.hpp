@@ -2,8 +2,8 @@
 
 #include "../Foundation/Name.hpp"
 
-#include "IResourceScheduler.hpp"
-#include "IResourceProvider.hpp"
+#include "ResourceScheduler.hpp"
+#include "ResourceProvider.hpp"
 #include "IShaderManager.hpp"
 #include "IPipelineStateManager.hpp"
 #include "GraphicsDevice.hpp"
@@ -17,10 +17,11 @@ namespace PathFinder
     class RenderPass
     {
     public:
-        RenderPass(Foundation::Name name);
+
+        RenderPass(Foundation::Name name) : mName{ name } {}
 
         virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) = 0;
-        virtual void ScheduleResources(IResourceScheduler* scheduler) = 0;
+        virtual void ScheduleResources(ResourceScheduler* scheduler) = 0;
         virtual void Render(RenderContext* context) = 0;
 
     private:

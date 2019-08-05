@@ -47,7 +47,7 @@ namespace HAL
     template <class CommandListT, class CommandAllocatorT>
     void HAL::RingCommandList<CommandListT, CommandAllocatorT>::PrepareCommandListForNewFrame(uint64_t newFrameFenceValue)
     {
-        mCurrentIndex = mRingBuffer.Allocate(1);
+        mCurrentIndex = (uint8_t)mRingBuffer.Allocate(1);
         mRingBuffer.FinishCurrentFrame(newFrameFenceValue);
     }
 

@@ -2,7 +2,7 @@
 
 #include "IGraphicsDevice.hpp"
 #include "RenderSurface.hpp"
-#include "ResourceManager.hpp"
+#include "ResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
 #include "VertexStorage.hpp"
 
@@ -16,7 +16,7 @@ namespace PathFinder
     public:
         GraphicsDevice(
             const HAL::Device& device,
-            const ResourceManager* resourceManager, 
+            const ResourceStorage* resourceManager, 
             const PipelineStateManager* pipelineStateManager,
             const VertexStorage* vertexStorage, 
             uint8_t simultaneousFramesInFlight
@@ -45,7 +45,7 @@ namespace PathFinder
         HAL::DirectCommandQueue mCommandQueue;
         HAL::DirectRingCommandList mRingCommandList;
 
-        const ResourceManager* mResourceManager;
+        const ResourceStorage* mResourceStorage;
         const PipelineStateManager* mPipelineStateManager;
         const VertexStorage* mVertexStorage;
 

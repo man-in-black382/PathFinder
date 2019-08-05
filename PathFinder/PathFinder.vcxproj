@@ -207,6 +207,10 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClCompile Include="Source\IO\Input.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
+    <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
+    <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp" />
+    <ClCompile Include="Source\RenderPipeline\ResourceStorage.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp" />
     <ClCompile Include="Source\RenderPipeline\VertexLayouts.cpp" />
     <ClCompile Include="Source\RenderPipeline\VertexStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateManager.cpp" />
@@ -216,7 +220,6 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClCompile Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderSurface.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceDescriptorStorage.cpp" />
-    <ClCompile Include="Source\RenderPipeline\ResourceManager.cpp" />
     <ClCompile Include="Source\RenderPipeline\ShaderManager.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\Cameraman.cpp" />
@@ -242,6 +245,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\Foundation\BitwiseEnum.hpp" />
     <ClInclude Include="Source\Foundation\Color.hpp" />
     <ClInclude Include="Source\Foundation\Event.hpp" />
+    <ClInclude Include="Source\Foundation\MemoryUtils.hpp" />
     <ClInclude Include="Source\Foundation\Name.hpp" />
     <ClInclude Include="Source\Foundation\NameHolder.hpp" />
     <ClInclude Include="Source\Foundation\NameRegistry.hpp" />
@@ -298,9 +302,11 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\RenderPipeline\GraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
-    <ClInclude Include="Source\RenderPipeline\IResourceProvider.hpp" />
-    <ClInclude Include="Source\RenderPipeline\IResourceScheduler.hpp" />
+    <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
+    <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RootConstantProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexLayouts.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateManager.hpp" />
@@ -311,7 +317,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\RenderPipeline\RenderPasses\PipelineNames.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderSurface.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceDescriptorStorage.hpp" />
-    <ClInclude Include="Source\RenderPipeline\ResourceManager.hpp" />
+    <ClInclude Include="Source\RenderPipeline\ResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceView.hpp" />
     <ClInclude Include="Source\RenderPipeline\ShaderManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexStorageLocation.hpp" />

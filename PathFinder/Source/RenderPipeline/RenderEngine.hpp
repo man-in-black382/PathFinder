@@ -13,7 +13,9 @@
 
 #include "RenderPass.hpp"
 #include "VertexStorage.hpp"
-#include "ResourceManager.hpp"
+#include "ResourceStorage.hpp"
+#include "ResourceScheduler.hpp"
+#include "RootConstantsUpdater.hpp"
 #include "GraphicsDevice.hpp"
 #include "ShaderManager.hpp"
 #include "PipelineStateManager.hpp"
@@ -47,7 +49,10 @@ namespace PathFinder
         HAL::Fence mFrameFence;
 
         VertexStorage mVertexStorage;
-        ResourceManager mResourceManager;
+        ResourceStorage mResourceStorage;
+        ResourceScheduler mResourceScheduler;
+        ResourceProvider mResourceProvider;
+        RootConstantsUpdater mRootConstantsUpdater;
         ShaderManager mShaderManager;
         PipelineStateManager mPipelineStateManager;
         GraphicsDevice mGraphicsDevice;

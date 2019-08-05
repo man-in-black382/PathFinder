@@ -5,20 +5,20 @@ namespace PathFinder
 
     GraphicsDevice::GraphicsDevice(
         const HAL::Device& device,
-        const ResourceManager* resourceManager,
+        const ResourceStorage* resourceManager,
         const PipelineStateManager* pipelineStateManager,
         const VertexStorage* vertexStorage,
         uint8_t simultaneousFramesInFlight)
         :
         mCommandQueue{ device },
         mRingCommandList{ device, simultaneousFramesInFlight },
-        mResourceManager{ resourceManager },
+        mResourceStorage{ resourceManager },
         mPipelineStateManager{ pipelineStateManager },
         mVertexStorage{ vertexStorage } {}
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
-        mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceManager->GetRenderTarget(resourceName));
+        mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetRenderTarget(resourceName));
     }
 
     void GraphicsDevice::SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName)
@@ -26,36 +26,36 @@ namespace PathFinder
         if (depthStencilResourceName)
         {
             mRingCommandList.CurrentCommandList().SetRenderTarget(
-                mResourceManager->GetBackBuffer(),
-                mResourceManager->GetDepthStencil(*depthStencilResourceName)
+                mResourceStorage->GetBackBuffer(),
+                mResourceStorage->GetDepthStencil(*depthStencilResourceName)
             );
         }
         else {
-            mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceManager->GetBackBuffer());
+            mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetBackBuffer());
         }
     }
 
     void GraphicsDevice::SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName)
     {
         mRingCommandList.CurrentCommandList().SetRenderTarget(
-            mResourceManager->GetRenderTarget(rtResourceName),
-            mResourceManager->GetDepthStencil(dsResourceName)
+            mResourceStorage->GetRenderTarget(rtResourceName),
+            mResourceStorage->GetDepthStencil(dsResourceName)
         );
     }
 
     void GraphicsDevice::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)
     {
-        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceManager->GetRenderTarget(resourceName), color);
+        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetRenderTarget(resourceName), color);
     }
 
     void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
     {
-        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceManager->GetBackBuffer(), color);
+        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetBackBuffer(), color);
     }
 
     void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)
     {
-        mRingCommandList.CurrentCommandList().CleadDepthStencil(mResourceManager->GetDepthStencil(resourceName), depthValue);
+        mRingCommandList.CurrentCommandList().CleadDepthStencil(mResourceStorage->GetDepthStencil(resourceName), depthValue);
     }
 
     void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)

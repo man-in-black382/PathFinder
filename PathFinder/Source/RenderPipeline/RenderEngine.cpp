@@ -12,14 +12,17 @@ namespace PathFinder
         mDevice{ FetchDefaultDisplayAdapter() },
         mFrameFence{ mDevice },
         mVertexStorage{ &mDevice },
-        mResourceManager{ &mDevice, mDefaultRenderSurface },
+        mResourceStorage{ &mDevice, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mResourceScheduler{ &mResourceStorage },
+        mResourceProvider{ &mResourceStorage },
+        mRootConstantsUpdater{ &mResourceStorage },
         mShaderManager{ mExecutablePath / "Shaders/" },
         mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
-        mGraphicsDevice{ mDevice, &mResourceManager, &mPipelineStateManager, &mVertexStorage, mSimultaneousFramesInFlight },
+        mGraphicsDevice{ mDevice, &mResourceStorage, &mPipelineStateManager, &mVertexStorage, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() }
     {
-        mResourceManager.UseSwapChain(mSwapChain);
+        mResourceStorage.UseSwapChain(mSwapChain);
     }
 
     void RenderEngine::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
@@ -31,12 +34,12 @@ namespace PathFinder
     {
         for (auto& passPtr : mRenderPasses)
         {
-            mResourceManager.SetCurrentPassName(passPtr->Name());
+            mResourceStorage.SetCurrentPassName(passPtr->Name());
             passPtr->SetupPipelineStates(&mShaderManager, &mPipelineStateManager);
-            passPtr->ScheduleResources(&mResourceManager);
+            passPtr->ScheduleResources(&mResourceScheduler);
         }
 
-        mResourceManager.AllocateScheduledResources();
+        mResourceStorage.AllocateScheduledResources();
         mPipelineStateManager.CompileStates();
     }
 
@@ -56,7 +59,7 @@ namespace PathFinder
 
         for (auto& passPtr : mRenderPasses)
         {
-            mResourceManager.SetCurrentPassName(passPtr->Name());
+            mResourceStorage.SetCurrentPassName(passPtr->Name());
             TransitionResourceStates();
             passPtr->Render(&mContext);
         }
@@ -78,21 +81,21 @@ namespace PathFinder
     void RenderEngine::MoveToNextBackBuffer()
     {
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % mSwapChain.BackBuffers().size();
-        mResourceManager.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
+        mResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
     }
 
     void RenderEngine::TransitionResourceStates()
     {
-        for (ResourceManager::ResourceName resourceName : *mResourceManager.GetScheduledResourceNamesForCurrentPass())
+        for (ResourceStorage::ResourceName resourceName : *mResourceStorage.GetScheduledResourceNamesForCurrentPass())
         {
-            HAL::ResourceState currentState = *mResourceManager.GetResourceCurrentState(resourceName);
-            HAL::ResourceState nextState = *mResourceManager.GetResourceStateForCurrentPass(resourceName);
-            HAL::Resource* resource = mResourceManager.GetResource(resourceName);
+            HAL::ResourceState currentState = *mResourceStorage.GetResourceCurrentState(resourceName);
+            HAL::ResourceState nextState = *mResourceStorage.GetResourceStateForCurrentPass(resourceName);
+            HAL::Resource* resource = mResourceStorage.GetResource(resourceName);
 
             if (currentState != nextState)
             {
                 mGraphicsDevice.TransitionResource({ currentState, nextState, resource });
-                mResourceManager.SetCurrentStateForResource(resourceName, nextState);
+                mResourceStorage.SetCurrentStateForResource(resourceName, nextState);
             }
         }
     }

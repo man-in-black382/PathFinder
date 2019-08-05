@@ -23,18 +23,42 @@ namespace HAL
         ~BufferResource();
 
         virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
+        virtual T* At(uint64_t index);
+
+    private:
+        void ValidateMappedMemory() const;
+        void ValidateIndex(uint64_t index) const;
 
     protected:
         uint64_t PaddedElementSize(uint64_t alignment);
 
         uint8_t* mMappedMemory = nullptr;
+        uint64_t mNonPaddedElementSize = 0;
         uint64_t mPaddedElementSize = 0;
         uint64_t mCapacity = 0;
 
     public:
         inline const auto Capacity() const { return mCapacity; }
         inline const auto PaddedElementSize() const { return mPaddedElementSize; }
+        inline const auto NonPaddedElementSize() const { return mNonPaddedElementSize; }
     };
+
+    template <class T>
+    void HAL::BufferResource<T>::ValidateMappedMemory() const
+    {
+        if (!mMappedMemory)
+        {
+            throw std::runtime_error("Buffer resource is not readable by CPU");
+        }
+    }
+
+    template <class T>
+    void HAL::BufferResource<T>::ValidateIndex(uint64_t index) const
+    {
+        if (index >= mCapacity) {
+            throw std::invalid_argument("Index is out of bounds");
+        }
+    }
 
     template <class T>
     uint64_t BufferResource<T>::PaddedElementSize(uint64_t alignment)
@@ -62,7 +86,9 @@ namespace HAL
             expectedStates,
             heapType
         ),
-        mPaddedElementSize(PaddedElementSize(perElementAlignment)), mCapacity(capacity)
+        mNonPaddedElementSize{ sizeof(T) },
+        mPaddedElementSize{ PaddedElementSize(perElementAlignment) },
+        mCapacity{ capacity }
     {
         if (heapType)
         {
@@ -83,6 +109,9 @@ namespace HAL
     template <class T>
     void BufferResource<T>::Write(uint64_t startIndex, const T* data, uint64_t dataLength)
     {
+        ValidateMappedMemory();
+        ValidateIndex(startIndex);
+
         if (mPaddedElementSize > sizeof(T) && dataLength > 1) {
             throw std::invalid_argument(
                 "Writing several objects into buffer that requires per object memory padding."
@@ -90,11 +119,16 @@ namespace HAL
             );
         }
 
-        if (startIndex >= mCapacity) {
-            throw std::invalid_argument("Index is out of bounds");
-        }
-
         memcpy(mMappedMemory + startIndex * mPaddedElementSize, data, sizeof(T) * dataLength);
+    }
+
+    template <class T>
+    T* HAL::BufferResource<T>::At(uint64_t index)
+    {
+        ValidateMappedMemory();
+        ValidateIndex(index);
+
+        return reinterpret_cast<T*>(mMappedMemory + index * mPaddedElementSize);
     }
 
 }

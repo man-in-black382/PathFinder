@@ -40,8 +40,8 @@ namespace PathFinder
         {
             std::unique_ptr<HAL::BufferResource<Vertex>> VertexBuffer;
             std::unique_ptr<HAL::BufferResource<uint32_t>> IndexBuffer;
-            uint64_t CurrentVertexOffset = 0;
-            uint64_t CurrentIndexOffset = 0;
+            uint32_t CurrentVertexOffset = 0;
+            uint32_t CurrentIndexOffset = 0;
         };
 
         template <class Vertex>

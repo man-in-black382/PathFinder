@@ -23,8 +23,8 @@ namespace HAL
         virtual ~RingBufferResource() = default;
 
         virtual D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress() const override;
-
         virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
+        virtual T* At(uint64_t index) override;
 
         void PrepareMemoryForNewFrame(uint64_t newFrameFenceValue);
         void DiscardMemoryForCompletedFrames(uint64_t completedFrameFenceValue);
@@ -32,7 +32,10 @@ namespace HAL
     private:
         RingBuffer mRingBuffer;
         RingBuffer::OffsetType mCurrentRingOffset = 0;
-        uint64_t mElementCapacity = 0;
+        uint64_t mPerFrameCapacity = 0;
+
+    public:
+        uint64_t PerFrameCapacity() const { return mPerFrameCapacity; }
     };
 
     template <class T>
@@ -47,7 +50,7 @@ namespace HAL
         :
         BufferResource<T>(device, elementCapacity * frameCapacity, perElementAlignment, initialState, expectedStates, heapType),
         mRingBuffer{ this->Capacity() },
-        mElementCapacity{ elementCapacity } {}
+        mPerFrameCapacity{ elementCapacity } {}
 
     template <class T>
     D3D12_GPU_VIRTUAL_ADDRESS RingBufferResource<T>::GPUVirtualAddress() const
@@ -62,9 +65,15 @@ namespace HAL
     }
 
     template <class T>
+    T* HAL::RingBufferResource<T>::At(uint64_t index)
+    {
+        return BufferResource<T>::At(index + mCurrentRingOffset);
+    }
+
+    template <class T>
     void HAL::RingBufferResource<T>::PrepareMemoryForNewFrame(uint64_t newFrameFenceValue)
     {
-        mCurrentRingOffset = mRingBuffer.Allocate(mElementCapacity);
+        mCurrentRingOffset = mRingBuffer.Allocate(mPerFrameCapacity);
         mRingBuffer.FinishCurrentFrame(newFrameFenceValue);
     }
 
