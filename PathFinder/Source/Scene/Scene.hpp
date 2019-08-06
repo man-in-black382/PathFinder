@@ -2,6 +2,7 @@
 
 #include "Mesh.hpp"
 #include "MeshInstance.hpp"
+#include "Camera.hpp"
 
 #include <functional>
 #include <list>
@@ -25,8 +26,11 @@ namespace PathFinder
         std::list<Mesh> mMeshes;
         std::list<MeshInstance> mMeshInstances;
 
+        Camera mCamera;
+
     public:
-        
+        inline Camera& MainCamera() { return mCamera; }
+        inline const Camera& MainCamera() const { return mCamera; }
     };
 
 }

@@ -32,7 +32,7 @@ namespace HAL
             return;
         }
 
-        OutputDebugString("Stalling thread \n");
+        //OutputDebugString("Stalling thread \n");
 
         HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
         // Fire event when GPU hits current fence.  

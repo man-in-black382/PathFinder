@@ -1,6 +1,8 @@
 #include "ResourceStorage.hpp"
 #include "RenderPass.hpp"
 
+#include "../Foundation/StringUtils.hpp"
+
 namespace PathFinder
 {
 
@@ -10,7 +12,25 @@ namespace PathFinder
         mDescriptorStorage{ device },
         mSimultaneousFramesInFlight{ simultaneousFramesInFlight } {}
 
-    HAL::RTDescriptor ResourceStorage::GetRenderTarget(Foundation::Name resourceName) const
+    void ResourceStorage::BeginFrame(uint64_t frameFenceValue)
+    {
+        for (auto& passBufferPair : mRootConstantBuffers)
+        {
+            auto& buffer = passBufferPair.second;
+            buffer->PrepareMemoryForNewFrame(frameFenceValue);
+        }
+    }
+
+    void ResourceStorage::EndFrame(uint64_t completedFrameFenceValue)
+    {
+        for (auto& passBufferPair : mRootConstantBuffers)
+        {
+            auto& buffer = passBufferPair.second;
+            buffer->DiscardMemoryForCompletedFrames(completedFrameFenceValue);
+        }
+    }
+
+    HAL::RTDescriptor ResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName) const
     {
         if (auto format = GetResourceShaderVisibleFormatForCurrentPass(resourceName); 
             auto descriptor = mDescriptorStorage.TryGetRTDescriptor(resourceName, format.value()))
@@ -21,12 +41,12 @@ namespace PathFinder
         throw std::invalid_argument("Resource was not scheduled to be used as render target");
     }
 
-    HAL::RTDescriptor ResourceStorage::GetBackBuffer() const
+    HAL::RTDescriptor ResourceStorage::GetBackBufferDescriptor() const
     {
         return mBackBufferDescriptors[mCurrentBackBufferIndex];
     }
 
-    HAL::DSDescriptor ResourceStorage::GetDepthStencil(ResourceName resourceName) const
+    HAL::DSDescriptor ResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName) const
     {
         if (auto descriptor = mDescriptorStorage.TryGetDSDescriptor(resourceName))
         {
@@ -70,8 +90,6 @@ namespace PathFinder
         }
     }
 
-    //-------------------------------- Resource Management --------------------------------//
-
     void ResourceStorage::RegisterStateForResource(ResourceName resourceName, HAL::ResourceState state)
     {
         mResourcePerPassStates[mCurrentPassName][resourceName] = state;
@@ -83,7 +101,12 @@ namespace PathFinder
         mScheduledResourceNames[mCurrentPassName].push_back(name);
     }
 
-    //-------------------------------- Getters --------------------------------//
+    HAL::BufferResource<uint8_t>* ResourceStorage::GetRootConstantBufferForCurrentPass() const
+    {
+        auto it = mRootConstantBuffers.find(mCurrentPassName);
+        if (it == mRootConstantBuffers.end()) return nullptr;
+        return it->second.get();
+    }
 
     HAL::Resource* ResourceStorage::GetResource(ResourceName resourceName) const
     {

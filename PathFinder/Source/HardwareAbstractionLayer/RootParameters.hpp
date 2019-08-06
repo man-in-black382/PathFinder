@@ -18,10 +18,11 @@ namespace HAL
         D3D12_ROOT_PARAMETER mParameter;
 
     public:
-        inline const auto& D3DParameter() const { return mParameter; }
+        inline const D3D12_ROOT_PARAMETER& D3DParameter() const { return mParameter; }
     };
 
     
+
     class RootDescriptorTableParameter : public RootParameter {
     public:
         RootDescriptorTableParameter();
@@ -35,23 +36,18 @@ namespace HAL
     };
 
 
+
     class RootConstantsParameter : public RootParameter {
     public:
         //RootConstantsParameter();
         ~RootConstantsParameter() = default;
-
-    private:
-        D3D12_ROOT_CONSTANTS mConstants;
     };
 
 
     class RootDescriptorParameter : public RootParameter {
     public:
-        //RootDescriptorParameter();
+        RootDescriptorParameter(uint32_t shaderRegister, uint32_t registerSpace);
         ~RootDescriptorParameter() = default;
-
-    private:
-        D3D12_ROOT_DESCRIPTOR mDescriptor;
     };
 
 }

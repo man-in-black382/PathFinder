@@ -30,6 +30,7 @@ namespace PathFinder
         virtual void ClearDepth(Foundation::Name resourceName, float depthValue) override;
         virtual void ApplyPipelineState(Foundation::Name psoName) override;
         virtual void UseVertexBufferOfLayout(VertexLayout layout) override;
+        virtual void SetViewport(const HAL::Viewport& viewport) override;
         virtual void Draw(uint32_t vertexCount, uint32_t vertexStart) override;
         virtual void DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount) override;
         virtual void DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart) override;
@@ -37,12 +38,11 @@ namespace PathFinder
         virtual void Draw(const VertexStorageLocation& vertexStorageLocation) override;
 
         void BeginFrame(uint64_t frameFenceValue);
-        void TransitionResource(const HAL::ResourceTransitionBarrier& barrier);
         void ExecuteCommandsThenSignalFence(HAL::Fence& fence);
         void EndFrame(uint64_t completedFrameFenceValue);
 
     private:
-        HAL::DirectCommandQueue mCommandQueue;
+        HAL::GraphicsCommandQueue mCommandQueue;
         HAL::DirectRingCommandList mRingCommandList;
 
         const ResourceStorage* mResourceStorage;
@@ -50,7 +50,8 @@ namespace PathFinder
         const VertexStorage* mVertexStorage;
 
     public:
-        inline const HAL::DirectCommandQueue& CommandQueue() const { return mCommandQueue; }
+        inline HAL::GraphicsCommandList& CommandList() { return mRingCommandList.CurrentCommandList(); }
+        inline HAL::GraphicsCommandQueue& CommandQueue() { return mCommandQueue; }
     };
 
 }

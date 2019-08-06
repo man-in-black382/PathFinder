@@ -19,7 +19,7 @@ namespace PathFinder
         mShaderManager{ mExecutablePath / "Shaders/" },
         mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
         mGraphicsDevice{ mDevice, &mResourceStorage, &mPipelineStateManager, &mVertexStorage, mSimultaneousFramesInFlight },
-        mContext{ scene, &mGraphicsDevice },
+        mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() }
     {
         mResourceStorage.UseSwapChain(mSwapChain);
@@ -47,28 +47,39 @@ namespace PathFinder
     {
         if (mRenderPasses.empty()) return;
 
-        OutputDebugString("Queueing commands\n");
+        //OutputDebugString("Queueing commands\n");
 
         mFrameFence.IncreaseExpectedValue();
+        mResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
 
         MoveToNextBackBuffer();
 
         HAL::ColorTextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
-        mGraphicsDevice.TransitionResource({ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer });
+
+        mGraphicsDevice.CommandList().TransitionResourceState(
+            { HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer }
+        );
+
+        mGraphicsDevice.CommandList().SetGraphicsRootSignature(mPipelineStateManager.UniversalRootSignature());
 
         for (auto& passPtr : mRenderPasses)
         {
             mResourceStorage.SetCurrentPassName(passPtr->Name());
             TransitionResourceStates();
+            SetRootConstantBuffer();
             passPtr->Render(&mContext);
         }
 
-        mGraphicsDevice.TransitionResource({ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
+        mGraphicsDevice.CommandList().TransitionResourceState(
+            { HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer }
+        );
        
         mSwapChain.Present();
         mGraphicsDevice.ExecuteCommandsThenSignalFence(mFrameFence);
         mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
+
+        mResourceStorage.EndFrame(mFrameFence.CompletedValue());
         mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
     }
 
@@ -84,6 +95,12 @@ namespace PathFinder
         mResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
     }
 
+    void RenderEngine::SetRootConstantBuffer()
+    {
+        uint32_t index = 0;
+        mGraphicsDevice.CommandList().SetGraphicsRootConstantBuffer(*mResourceStorage.GetRootConstantBufferForCurrentPass(), index);
+    }
+
     void RenderEngine::TransitionResourceStates()
     {
         for (ResourceStorage::ResourceName resourceName : *mResourceStorage.GetScheduledResourceNamesForCurrentPass())
@@ -94,7 +111,7 @@ namespace PathFinder
 
             if (currentState != nextState)
             {
-                mGraphicsDevice.TransitionResource({ currentState, nextState, resource });
+                mGraphicsDevice.CommandList().TransitionResourceState({ currentState, nextState, resource });
                 mResourceStorage.SetCurrentStateForResource(resourceName, nextState);
             }
         }

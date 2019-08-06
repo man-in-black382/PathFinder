@@ -508,10 +508,6 @@ int main(int argc, char** argv)
     std::filesystem::path executablePath{ argv[0] };
     std::filesystem::path executableFolder = executablePath.parent_path();
 
-    InputAssemblerLayout inputLayout;
-    /*inputLayout.AddPerVertexLayoutElement("POSITION", 0, ResourceFormat::Color::RGBA32_Float, 0, 0);
-    inputLayout.AddPerVertexLayoutElement("COLOR", 0, ResourceFormat::Color::RGBA32_Float, 0, 16);*/
-
     PathFinder::Scene scene;
     PathFinder::RenderEngine engine{ hwnd, executableFolder, &scene };
     PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };    
@@ -523,6 +519,13 @@ int main(int argc, char** argv)
     engine.VertexGPUStorage().TransferDataToGPU();
     engine.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());
     engine.Schedule();
+
+    PathFinder::Camera& camera = scene.MainCamera();
+    camera.SetFarPlane(1000);
+    camera.SetNearPlane(1);
+    camera.MoveTo({ 0.0f, 0.0f, -500.f });
+    camera.LookAt({ 0.f, 0.f, 0.f });
+    camera.SetViewportAspectRatio(16.0f / 9.0f);
 
     // Main loop
     MSG msg;
@@ -538,63 +541,8 @@ int main(int argc, char** argv)
 
         engine.Render();
 
-   /*     commandList.SetPipelineState(pipelineState);
-        commandList.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
-        commandList.SetVertexBuffer(vertexBuffer.Descriptor());
-        commandList.SetViewport({ 1280, 720 });
-        commandList.SetRenderTarget(*currentRTDescriptor);
-        commandList.TransitionResourceState({ ResourceState::Present, ResourceState::RenderTarget, currentBackBuffer });
-        commandList.ClearRenderTarget(*currentRTDescriptor, Foundation::Color::Blue());
-        commandList.Draw(3, 0);
-        commandList.TransitionResourceState({ ResourceState::RenderTarget, ResourceState::Present, currentBackBuffer });
-        commandList.Close();
-        commandQueue.ExecuteCommandList(commandList);
-        commandQueue.StallCPUUntilDone(fence);
-
-        allocator.Reset();
-        commandList.Reset(allocator);
-
-        swapChain.Present();
-
-        currentRTDescriptor = frameIndex == 1 ? &backBuffer1Descriptor : &backBuffer2Descriptor;
-        currentBackBuffer = frameIndex == 1 ? backBuffer1 : backBuffer2;
-
-        frameIndex = (frameIndex + 1) % 2;*/
-
-
-        //FrameContext* frameCtxt = WaitForNextFrameResources();
-        //UINT backBufferIdx = g_pSwapChain->GetCurrentBackBufferIndex();
-        //frameCtxt->CommandAllocator->Reset();
-
-        //D3D12_RESOURCE_BARRIER barrier = {};
-        //barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        //barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        //barrier.Transition.pResource   = g_mainRenderTargetResource[backBufferIdx];
-        //barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        //barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-        //barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-        //g_pd3dCommandList->Reset(frameCtxt->CommandAllocator, NULL);
-        //g_pd3dCommandList->ResourceBarrier(1, &barrier);
-        //g_pd3dCommandList->ClearRenderTargetView(g_mainRenderTargetDescriptor[backBufferIdx], (float*)&clear_color, 0, NULL);
-        //g_pd3dCommandList->OMSetRenderTargets(1, &g_mainRenderTargetDescriptor[backBufferIdx], FALSE, NULL);
-        //g_pd3dCommandList->SetDescriptorHeaps(1, &g_pd3dSrvDescHeap);
-        //ImGui::Render();
-        //ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), g_pd3dCommandList);
-        //barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-        //barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
-        //g_pd3dCommandList->ResourceBarrier(1, &barrier);
-        //g_pd3dCommandList->Close();
-
-        //g_pd3dCommandQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&g_pd3dCommandList);
-
         //g_pSwapChain->Present(1, 0); // Present with vsync
         ////g_pSwapChain->Present(0, 0); // Present without vsync
-
-        //UINT64 fenceValue = g_fenceLastSignaledValue + 1;
-        //g_pd3dCommandQueue->Signal(g_fence, fenceValue);
-        //g_fenceLastSignaledValue = fenceValue;
-        //frameCtxt->FenceValue = fenceValue;
     }
 
     ::DestroyWindow(hwnd);

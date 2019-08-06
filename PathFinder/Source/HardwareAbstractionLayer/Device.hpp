@@ -16,6 +16,6 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12Device> mDevice;
 
     public:
-        inline const auto D3DPtr() const { return mDevice.Get(); }
+        inline ID3D12Device* D3DPtr() const { return mDevice.Get(); }
     };
 }

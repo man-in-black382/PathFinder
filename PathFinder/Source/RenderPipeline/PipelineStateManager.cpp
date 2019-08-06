@@ -4,7 +4,11 @@ namespace PathFinder
 {
 
     PipelineStateManager::PipelineStateManager(HAL::Device* device, const RenderSurface& defaultRenderSurface)
-        : mDevice{ device }, mDefaultRenderSurface{ defaultRenderSurface } {}
+        : mDevice{ device }, mDefaultRenderSurface{ defaultRenderSurface } 
+    {
+        ConfigureDefaultStates();
+        BuildUniversalRootSignature();
+    }
 
     HAL::GraphicsPipelineState PipelineStateManager::CloneExistingGraphicsState(PSOName name)
     {
@@ -57,7 +61,8 @@ namespace PathFinder
 
     void PipelineStateManager::BuildUniversalRootSignature()
     {
-        
+        HAL::RootDescriptorParameter rootCB{ 0, 0 };
+        mUniversalRootSignature.AddDescriptorParameter(rootCB);
     }
 
 }

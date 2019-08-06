@@ -20,13 +20,7 @@ namespace PathFinder
     template <class RootCBufferData>
     RootCBufferData* RootConstantsUpdater::UpdateRootConstantBuffer()
     {
-        if (RootCBufferData* data = mResourceStorage->GetRootConstantDataForCurrentPass())
-        {
-            return data;
-        }
-        else {
-            throw std::runtime_error("Root constant buffer was not scheduled for use for this pass");
-        }
+        return mResourceStorage->GetRootConstantDataForCurrentPass<RootCBufferData>();
     }
 
 }

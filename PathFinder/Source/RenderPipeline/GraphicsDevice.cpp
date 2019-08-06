@@ -18,7 +18,7 @@ namespace PathFinder
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
-        mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetRenderTarget(resourceName));
+        mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName));
     }
 
     void GraphicsDevice::SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName)
@@ -26,36 +26,36 @@ namespace PathFinder
         if (depthStencilResourceName)
         {
             mRingCommandList.CurrentCommandList().SetRenderTarget(
-                mResourceStorage->GetBackBuffer(),
-                mResourceStorage->GetDepthStencil(*depthStencilResourceName)
+                mResourceStorage->GetBackBufferDescriptor(),
+                mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName)
             );
         }
         else {
-            mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetBackBuffer());
+            mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetBackBufferDescriptor());
         }
     }
 
     void GraphicsDevice::SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName)
     {
         mRingCommandList.CurrentCommandList().SetRenderTarget(
-            mResourceStorage->GetRenderTarget(rtResourceName),
-            mResourceStorage->GetDepthStencil(dsResourceName)
+            mResourceStorage->GetRenderTargetDescriptor(rtResourceName),
+            mResourceStorage->GetDepthStencilDescriptor(dsResourceName)
         );
     }
 
     void GraphicsDevice::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)
     {
-        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetRenderTarget(resourceName), color);
+        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName), color);
     }
 
     void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
     {
-        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetBackBuffer(), color);
+        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetBackBufferDescriptor(), color);
     }
 
     void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)
     {
-        mRingCommandList.CurrentCommandList().CleadDepthStencil(mResourceStorage->GetDepthStencil(resourceName), depthValue);
+        mRingCommandList.CurrentCommandList().CleadDepthStencil(mResourceStorage->GetDepthStencilDescriptor(resourceName), depthValue);
     }
 
     void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)
@@ -71,13 +71,15 @@ namespace PathFinder
         mRingCommandList.CurrentCommandList().SetIndexBuffer(*mVertexStorage->UnifiedIndexBufferDescriptorForLayout(layout));
         mRingCommandList.CurrentCommandList().SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
     }
+    void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)
+    {
+        mRingCommandList.CurrentCommandList().SetViewport(viewport);
+    }
 
     void GraphicsDevice::Draw(uint32_t vertexCount, uint32_t vertexStart)
     {
         mRingCommandList.CurrentCommandList().Draw(vertexCount, vertexStart);
     }
-
-    
 
     void GraphicsDevice::DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount)
     {
@@ -97,11 +99,6 @@ namespace PathFinder
     void GraphicsDevice::Draw(const VertexStorageLocation& vertexStorageLocation)
     {
         mRingCommandList.CurrentCommandList().DrawIndexed(vertexStorageLocation.VertexBufferOffset, vertexStorageLocation.IndexCount, vertexStorageLocation.IndexBufferOffset);
-    }
-
-    void GraphicsDevice::TransitionResource(const HAL::ResourceTransitionBarrier& barrier)
-    {
-        mRingCommandList.CurrentCommandList().TransitionResourceState(barrier);
     }
 
     void GraphicsDevice::BeginFrame(uint64_t frameFenceValue)

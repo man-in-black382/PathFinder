@@ -24,9 +24,9 @@ namespace PathFinder
     public:
         VertexStorage(HAL::Device* device);
 
-        VertexStorageLocation AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint64_t vertexCount, const uint32_t* indices = nullptr, uint64_t indexCount = 0);
-        VertexStorageLocation AddVertices(const Vertex1P1N1UV* vertices, uint64_t vertexCount, const uint32_t* indices = nullptr, uint64_t indexCount = 0);
-        VertexStorageLocation AddVertices(const Vertex1P3* vertices, uint64_t vertexCount, const uint32_t* indices = nullptr, uint64_t indexCount = 0);
+        VertexStorageLocation AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
+        VertexStorageLocation AddVertices(const Vertex1P1N1UV* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
+        VertexStorageLocation AddVertices(const Vertex1P3* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
 
         const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const;
         const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const;
@@ -63,7 +63,7 @@ namespace PathFinder
         void CopyBuffersToDefaultHeap();
 
         template <class Vertex>
-        VertexStorageLocation WriteToUploadBuffers(const Vertex* vertices, uint64_t vertexCount, const uint32_t* indices = nullptr, uint64_t indexCount = 0);
+        VertexStorageLocation WriteToUploadBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
 
         uint64_t mUploadBufferCapacity = 50 * 1024 * 1024;
 
@@ -72,8 +72,8 @@ namespace PathFinder
 
         HAL::Device* mDevice;
         HAL::DirectCommandAllocator mCommandAllocator;
-        HAL::DirectCommandList mCommandList;
-        HAL::DirectCommandQueue mCommandQueue;
+        HAL::GraphicsCommandList mCommandList;
+        HAL::GraphicsCommandQueue mCommandQueue;
         HAL::Fence mFence;
     };
 

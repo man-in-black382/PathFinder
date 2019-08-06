@@ -18,7 +18,7 @@ namespace Geometry {
         glm::vec3 max = glm::max(p1, p2);
         max = glm::max(min, p3);
 
-        return {min, max};
+        return { min, max };
     }
 
     std::array<Triangle3D, 4> Triangle3D::split() const {

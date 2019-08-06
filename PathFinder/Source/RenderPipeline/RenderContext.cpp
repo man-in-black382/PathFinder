@@ -3,7 +3,7 @@
 namespace PathFinder
 {
 
-    RenderContext::RenderContext(const Scene* scene, IGraphicsDevice* graphicsDevice)
-        : mScene{ scene }, mGraphicsDevice{ graphicsDevice } {}
+    RenderContext::RenderContext(const Scene* scene, IGraphicsDevice* graphicsDevice, RootConstantsUpdater* rootConstantsUpdater)
+        : mScene{ scene }, mGraphicsDevice{ graphicsDevice }, mRootConstantsUpdater{ rootConstantsUpdater } {}
 
 }

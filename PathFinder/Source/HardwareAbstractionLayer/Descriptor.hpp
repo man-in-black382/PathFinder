@@ -40,7 +40,7 @@ namespace HAL
         using CPUDescriptor::CPUDescriptor;
         ~RTDescriptor() = default;
 
-        D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc);
+        D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
     };
 
     class DSDescriptor : public CPUDescriptor
@@ -49,12 +49,13 @@ namespace HAL
         using CPUDescriptor::CPUDescriptor;
         ~DSDescriptor() = default;
 
-        D3D12_DEPTH_STENCIL_VIEW_DESC ResourceToDSVDescription(const D3D12_RESOURCE_DESC& resourceDesc);
+        D3D12_DEPTH_STENCIL_VIEW_DESC ResourceToDSVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
     };
 
     class CBDescriptor : public GPUDescriptor
     {
     public:
+        using GPUDescriptor::GPUDescriptor;
         ~CBDescriptor() = default;
     };
 
@@ -95,8 +96,8 @@ namespace HAL
     VertexBufferDescriptor::VertexBufferDescriptor(const BufferResource<Vertex>& vertexBuffer)
     {
         mDescriptor.BufferLocation = vertexBuffer.D3DPtr()->GetGPUVirtualAddress();
-        mDescriptor.SizeInBytes = vertexBuffer.D3DDescription().Width;
-        mDescriptor.StrideInBytes = vertexBuffer.PaddedElementSize();
+        mDescriptor.SizeInBytes = (UINT)vertexBuffer.D3DDescription().Width;
+        mDescriptor.StrideInBytes = (UINT)vertexBuffer.PaddedElementSize();
     }
 
 

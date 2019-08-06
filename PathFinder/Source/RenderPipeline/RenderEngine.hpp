@@ -37,10 +37,11 @@ namespace PathFinder
     private:
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const;
         void MoveToNextBackBuffer();
+        void SetRootConstantBuffer();
         void TransitionResourceStates();
 
         uint8_t mCurrentBackBufferIndex = 0;
-        uint8_t mSimultaneousFramesInFlight = 3;
+        uint8_t mSimultaneousFramesInFlight = 1;
 
         RenderSurface mDefaultRenderSurface;
         std::filesystem::path mExecutablePath;

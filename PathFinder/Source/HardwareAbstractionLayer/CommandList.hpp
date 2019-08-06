@@ -36,7 +36,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mList;
 
     public:
-        inline const auto D3DList() const { return mList.Get(); }
+        inline ID3D12GraphicsCommandList* D3DList() const { return mList.Get(); }
     };
 
 
@@ -72,25 +72,31 @@ namespace HAL
         }
     };
 
+
+
     class ComputeCommandListBase : public CopyCommandListBase {
     public:
         using CopyCommandListBase::CopyCommandListBase;
 
-        //void SetComputeRootConstantBuffer(const TypelessBufferResource& cbResource, uint32_t rootParameterIndex);
-        //void SetComputeRootConstantBuffer(const ColorBufferResource& cbResource, uint32_t rootParameterIndex);
-        void SetComputeRootShaderResource(const TypelessTextureResource& resource, uint32_t rootParameterIndex);
-        void SetComputeRootShaderResource(const ColorTextureResource& resource, uint32_t rootParameterIndex);
-        void SetComputeRootShaderResource(const DepthStencilTextureResource& resource, uint32_t rootParameterIndex);
-        void SetComputeRootUnorderedAccessResource(const TypelessTextureResource& resource, uint32_t rootParameterIndex);
-        void SetComputeRootUnorderedAccessResource(const ColorTextureResource& resource, uint32_t rootParameterIndex);
-        void SetComputeRootUnorderedAccessResource(const DepthStencilTextureResource& resource, uint32_t rootParameterIndex);
-
         void SetDescriptorHeap(const DescriptorHeap& heap);
         void SetPipelineState(const ComputePipelineState& state);
         void SetComputeRootSignature(const RootSignature& signature);
+
+        template <class T> void SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex);
+
+        void SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
+        void SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
     };
 
-    class DirectCommandListBase : public ComputeCommandListBase {
+    template <class T>
+    void ComputeCommandListBase::SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex)
+    {
+        mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
+    }
+
+
+
+    class GraphicsCommandListBase : public ComputeCommandListBase {
     public:
         using ComputeCommandListBase::ComputeCommandListBase;
 
@@ -104,7 +110,18 @@ namespace HAL
         void SetPrimitiveTopology(PrimitiveTopology topology);
         void SetPipelineState(const PipelineState& state);
         void SetGraphicsRootSignature(const RootSignature& signature);
+
+        template <class T> void SetGraphicsRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex);
+
+        void SetGraphicsRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
+        void SetGraphicsRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
     };
+
+    template <class T>
+    void GraphicsCommandListBase::SetGraphicsRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex)
+    {
+        mList->SetGraphicsRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
+    }
 
 
 
@@ -120,16 +137,16 @@ namespace HAL
         ~ComputeCommandList() = default;
     };
     
-    class BundleCommandList : public DirectCommandListBase {
+    class BundleCommandList : public GraphicsCommandListBase {
     public:
         BundleCommandList(const Device& device, const BundleCommandAllocator& allocator);
         ~BundleCommandList() = default;
     };
 
-    class DirectCommandList : public DirectCommandListBase {
+    class GraphicsCommandList : public GraphicsCommandListBase {
     public:
-        DirectCommandList(const Device& device, const DirectCommandAllocator& allocator);
-        ~DirectCommandList() = default;
+        GraphicsCommandList(const Device& device, const DirectCommandAllocator& allocator);
+        ~GraphicsCommandList() = default;
 
         void ExecuteBundle(const BundleCommandList& bundle);
 

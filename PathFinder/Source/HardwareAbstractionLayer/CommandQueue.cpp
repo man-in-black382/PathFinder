@@ -23,10 +23,10 @@ namespace HAL
 
 
 
-    DirectCommandQueue::DirectCommandQueue(const Device& device)
+    GraphicsCommandQueue::GraphicsCommandQueue(const Device& device)
         : CommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
 
-    void DirectCommandQueue::ExecuteCommandList(const DirectCommandList& list)
+    void GraphicsCommandQueue::ExecuteCommandList(const GraphicsCommandList& list)
     {
         auto ptr = list.D3DList();
         mQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&ptr);

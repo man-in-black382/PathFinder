@@ -5,6 +5,7 @@
 #include "../Foundation/Name.hpp"
 #include "../Foundation/Color.hpp"
 #include "../Geometry/Dimensions.hpp"
+#include "../HardwareAbstractionLayer/Viewport.hpp"
 
 #include "VertexLayouts.hpp"
 #include "VertexStorageLocation.hpp"
@@ -23,6 +24,7 @@ namespace PathFinder
         virtual void ClearDepth(Foundation::Name resourceName, float depthValue) = 0;
         virtual void ApplyPipelineState(Foundation::Name psoName) = 0;
         virtual void UseVertexBufferOfLayout(VertexLayout layout) = 0;
+        virtual void SetViewport(const HAL::Viewport& viewport) = 0;
 
         virtual void Draw(uint32_t vertexCount, uint32_t vertexStart) = 0;
         virtual void DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount) = 0;

@@ -5,7 +5,7 @@ namespace HAL
 {
 
     SwapChain::SwapChain(
-        const DirectCommandQueue& commandQueue,
+        const GraphicsCommandQueue& commandQueue,
         HWND windowHandle,
         BackBufferingStrategy strategy,
         ResourceFormat::Color backBufferFormat,

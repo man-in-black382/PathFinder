@@ -56,46 +56,14 @@ namespace HAL
         //mList->CopyTextureRegion(&dstLocation, destinationRectOrigin.x, destinationRectOrigin.y, destinationRectOrigin.z, &srcLocation, )
     }
 
-
-
-    /* void ComputeCommandListBase::SetComputeRootConstantBuffer(const TypelessBufferResource& cbResource, uint32_t rootParameterIndex)
-    { 
-        mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.D3DPtr()->GetGPUVirtualAddress());
+    void ComputeCommandListBase::SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex)
+    {
+        mList->SetComputeRootShaderResourceView(rootParameterIndex, resource.GPUVirtualAddress());
     }
 
-    void ComputeCommandListBase::SetComputeRootConstantBuffer(const ColorBufferResource& cbResource, uint32_t rootParameterIndex)
+    void ComputeCommandListBase::SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex)
     {
-        mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.D3DPtr()->GetGPUVirtualAddress());
-    }*/
-
-    void ComputeCommandListBase::SetComputeRootShaderResource(const TypelessTextureResource& resource, uint32_t rootParameterIndex)
-    {
-        mList->SetComputeRootShaderResourceView(rootParameterIndex, resource.D3DPtr()->GetGPUVirtualAddress());
-    }
-
-    void ComputeCommandListBase::SetComputeRootShaderResource(const ColorTextureResource& resource, uint32_t rootParameterIndex)
-    {
-        mList->SetComputeRootShaderResourceView(rootParameterIndex, resource.D3DPtr()->GetGPUVirtualAddress());
-    }
-
-    void ComputeCommandListBase::SetComputeRootShaderResource(const DepthStencilTextureResource& resource, uint32_t rootParameterIndex)
-    {
-        mList->SetComputeRootShaderResourceView(rootParameterIndex, resource.D3DPtr()->GetGPUVirtualAddress());
-    }
-
-    void ComputeCommandListBase::SetComputeRootUnorderedAccessResource(const TypelessTextureResource& resource, uint32_t rootParameterIndex)
-    {
-        mList->SetComputeRootUnorderedAccessView(rootParameterIndex, resource.D3DPtr()->GetGPUVirtualAddress());
-    }
-
-    void ComputeCommandListBase::SetComputeRootUnorderedAccessResource(const ColorTextureResource& resource, uint32_t rootParameterIndex) 
-    {
-        mList->SetComputeRootUnorderedAccessView(rootParameterIndex, resource.D3DPtr()->GetGPUVirtualAddress());
-    }
-
-    void ComputeCommandListBase::SetComputeRootUnorderedAccessResource(const DepthStencilTextureResource& resource, uint32_t rootParameterIndex) 
-    { 
-        mList->SetComputeRootUnorderedAccessView(rootParameterIndex, resource.D3DPtr()->GetGPUVirtualAddress());
+        mList->SetComputeRootUnorderedAccessView(rootParameterIndex, resource.GPUVirtualAddress());
     }
 
     void ComputeCommandListBase::SetDescriptorHeap(const DescriptorHeap& heap)
@@ -116,7 +84,7 @@ namespace HAL
 
 
 
-    void DirectCommandListBase::SetViewport(const Viewport& viewport)
+    void GraphicsCommandListBase::SetViewport(const Viewport& viewport)
     {
         auto d3dViewport = viewport.D3DViewport();
         mList->RSSetViewports(1, &d3dViewport);
@@ -124,52 +92,62 @@ namespace HAL
         mList->RSSetScissorRects(1, &scissorRect);
     }
 
-    void DirectCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor)
+    void GraphicsCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor)
     {
         const D3D12_CPU_DESCRIPTOR_HANDLE* dsHandle = depthStencilDescriptor.has_value() ? &depthStencilDescriptor->CPUHandle() : nullptr;
         mList->OMSetRenderTargets(1, &rtDescriptor.CPUHandle(), false, dsHandle);
     }
 
-    void DirectCommandListBase::ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color)
+    void GraphicsCommandListBase::ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color)
     {
         mList->ClearRenderTargetView(rtDescriptor.CPUHandle(), color.Ptr(), 0, nullptr);
     }
 
-    void DirectCommandListBase::CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue)
+    void GraphicsCommandListBase::CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue)
     {
         mList->ClearDepthStencilView(dsDescriptor.CPUHandle(), D3D12_CLEAR_FLAG_DEPTH, depthValue, 0, 0, nullptr);
     }
 
-    void DirectCommandListBase::SetFence(const Fence& fence)
+    void GraphicsCommandListBase::SetFence(const Fence& fence)
     {
         
     }
 
-    void DirectCommandListBase::SetVertexBuffer(const VertexBufferDescriptor& descriptor)
+    void GraphicsCommandListBase::SetVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
         mList->IASetVertexBuffers(0, 1, &descriptor.D3DDescriptor());
     }
    
-    void DirectCommandListBase::SetIndexBuffer(const IndexBufferDescriptor& descriptor)
+    void GraphicsCommandListBase::SetIndexBuffer(const IndexBufferDescriptor& descriptor)
     {
         mList->IASetIndexBuffer(&descriptor.D3DDescriptor());
     }
 
-    void DirectCommandListBase::SetPrimitiveTopology(PrimitiveTopology topology)
+    void GraphicsCommandListBase::SetPrimitiveTopology(PrimitiveTopology topology)
     {
         mList->IASetPrimitiveTopology(D3DPrimitiveTopology(topology));
     }
 
-    void DirectCommandListBase::SetPipelineState(const PipelineState& state)
+    void GraphicsCommandListBase::SetPipelineState(const PipelineState& state)
     {
         mList->SetPipelineState(state.D3DCompiledState());
     }
 
-    void DirectCommandListBase::SetGraphicsRootSignature(const RootSignature& signature)
+    void GraphicsCommandListBase::SetGraphicsRootSignature(const RootSignature& signature)
     {
         mList->SetGraphicsRootSignature(signature.D3DSignature());
     }
     
+    void GraphicsCommandListBase::SetGraphicsRootShaderResource(const Resource& resource, uint32_t rootParameterIndex)
+    {
+        mList->SetGraphicsRootShaderResourceView(rootParameterIndex, resource.GPUVirtualAddress());
+    }
+
+    void GraphicsCommandListBase::SetGraphicsRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex)
+    {
+        mList->SetGraphicsRootUnorderedAccessView(rootParameterIndex, resource.GPUVirtualAddress());
+    }
+
 
 
     CopyCommandList::CopyCommandList(const Device& device, const CopyCommandAllocator& allocator)
@@ -183,34 +161,34 @@ namespace HAL
 
 
     BundleCommandList::BundleCommandList(const Device& device, const BundleCommandAllocator& allocator)
-        : DirectCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_BUNDLE) {}
+        : GraphicsCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_BUNDLE) {}
 
 
 
-    DirectCommandList::DirectCommandList(const Device& device, const DirectCommandAllocator& allocator)
-        : DirectCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
+    GraphicsCommandList::GraphicsCommandList(const Device& device, const DirectCommandAllocator& allocator)
+        : GraphicsCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
 
-    void DirectCommandList::ExecuteBundle(const BundleCommandList& bundle)
+    void GraphicsCommandList::ExecuteBundle(const BundleCommandList& bundle)
     {
 
     }
 
-    void DirectCommandList::Draw(uint32_t vertexCount, uint32_t vertexStart)
+    void GraphicsCommandList::Draw(uint32_t vertexCount, uint32_t vertexStart)
     {
         mList->DrawInstanced(vertexCount, 1, vertexStart, 0);
     }
 
-    void DirectCommandList::DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount)
+    void GraphicsCommandList::DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount)
     {
         mList->DrawInstanced(vertexCount, instanceCount, vertexStart, 1);
     }
 
-    void DirectCommandList::DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart)
+    void GraphicsCommandList::DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart)
     {
         mList->DrawIndexedInstanced(indexCount, 1, indexStart, vertexStart, 0);
     }
 
-    void DirectCommandList::DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount)
+    void GraphicsCommandList::DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount)
     {
         mList->DrawIndexedInstanced(indexCount, instanceCount, indexStart, vertexStart, 1);
     }

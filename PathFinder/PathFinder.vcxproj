@@ -250,6 +250,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\Foundation\NameHolder.hpp" />
     <ClInclude Include="Source\Foundation\NameRegistry.hpp" />
     <ClInclude Include="Source\Foundation\Pi.hpp" />
+    <ClInclude Include="Source\Foundation\StringUtils.hpp" />
     <ClInclude Include="Source\Foundation\Visitor.hpp" />
     <ClInclude Include="Source\Geometry\AxisAlignedBox3D.hpp" />
     <ClInclude Include="Source\Geometry\Collision.hpp" />
@@ -304,7 +305,6 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RootConstantProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexLayouts.hpp" />
@@ -738,6 +738,12 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeap.inl">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\ResourceStorage.inl">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
     <None Include="Source\ThirdParty\assimp\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\material.inl" />

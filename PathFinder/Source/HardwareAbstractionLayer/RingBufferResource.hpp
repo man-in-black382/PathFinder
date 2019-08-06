@@ -7,7 +7,7 @@ namespace HAL
 {
 
     template <class T>
-    class RingBufferResource : protected BufferResource<T>
+    class RingBufferResource : public BufferResource<T>
     {
     public:
         RingBufferResource(
@@ -55,7 +55,7 @@ namespace HAL
     template <class T>
     D3D12_GPU_VIRTUAL_ADDRESS RingBufferResource<T>::GPUVirtualAddress() const
     {
-        return this->GPUVirtualAddress() + mCurrentRingOffset * this->PaddedElementSize();
+        return BufferResource<T>::GPUVirtualAddress() + mCurrentRingOffset * this->PaddedElementSize();
     }
 
     template <class T>

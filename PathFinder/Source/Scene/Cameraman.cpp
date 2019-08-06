@@ -38,10 +38,10 @@ namespace PathFinder {
     void Cameraman::handleKeyDown(const Input *input) {
         glm::vec3 direction = glm::zero<glm::vec3>();
 
-        if (input->isKeyPressed(Input::Key::W)) {direction += mCamera->front();}
-        if (input->isKeyPressed(Input::Key::A)) {direction -= mCamera->right();}
-        if (input->isKeyPressed(Input::Key::S)) {direction -= mCamera->front();}
-        if (input->isKeyPressed(Input::Key::D)) {direction += mCamera->right();}
+        if (input->isKeyPressed(Input::Key::W)) {direction += mCamera->Front();}
+        if (input->isKeyPressed(Input::Key::A)) {direction -= mCamera->Right();}
+        if (input->isKeyPressed(Input::Key::S)) {direction -= mCamera->Front();}
+        if (input->isKeyPressed(Input::Key::D)) {direction += mCamera->Right();}
 
         mKeyboardMoveDirection = glm::length(direction) > std::numeric_limits<float>::epsilon() ? glm::normalize(direction) : direction;
         mKeyboardMoveDirection *= 0.05f;
@@ -64,9 +64,9 @@ namespace PathFinder {
                 mMouseLockDirection = isMouseMovingVertically(mouseDirection) ? glm::vec2(0.0, 1.0) : glm::vec2(1.0, 0.0);
             }
             if (mMouseLockDirection.x == 0.0) {
-                mMouseMoveDirection = mCamera->up() * mouseDirection.y * 0.005f;
+                mMouseMoveDirection = mCamera->Up() * mouseDirection.y * 0.005f;
             } else {
-                mMouseMoveDirection = mCamera->right() * mouseDirection.x * 0.005f;
+                mMouseMoveDirection = mCamera->Right() * mouseDirection.x * 0.005f;
             }
         } else if (input->pressedMouseButtonsMask() && mKeyboardMoveDirection != glm::zero<glm::vec3>()) {
             // Acting like FPS-style camera with 'noclip' enabled
@@ -76,7 +76,7 @@ namespace PathFinder {
                 mMouseLockDirection = isMouseMovingVertically(mouseDirection) ? glm::vec2(0.0, 1.0) : glm::vec2(1.0, 0.0);
             }
             if (mMouseLockDirection.x == 0.0) {
-                mMouseMoveDirection = mCamera->front() * mouseDirection.y * 0.005f;
+                mMouseMoveDirection = mCamera->Front() * mouseDirection.y * 0.005f;
             } else {
                 mRotation = mouseDirection;
                 mRotation.y = 0.0;
@@ -84,8 +84,8 @@ namespace PathFinder {
         } else if (input->isMouseButtonPressed(1)) {
             mRotation = mouseDirection;
         } else if (input->isMouseButtonPressed(2)) {
-            glm::vec3 up = mCamera->up() * mouseDirection.y * 0.005f;
-            glm::vec3 right = mCamera->right() * mouseDirection.x * 0.005f;
+            glm::vec3 up = mCamera->Up() * mouseDirection.y * 0.005f;
+            glm::vec3 right = mCamera->Right() * mouseDirection.x * 0.005f;
             mMouseMoveDirection = up + right;
         }
 
@@ -94,8 +94,8 @@ namespace PathFinder {
 
     void Cameraman::handleMouseScroll(const Input *input) {
         glm::vec2 scrollDelta = input->scrollDelta();
-        glm::vec3 front = mCamera->front() * scrollDelta.y * -0.005f;
-        glm::vec3 right = mCamera->right() * scrollDelta.x * 0.005f;
+        glm::vec3 front = mCamera->Front() * scrollDelta.y * -0.005f;
+        glm::vec3 right = mCamera->Right() * scrollDelta.x * 0.005f;
         mMouseMoveDirection = front + right;
     }
 
@@ -114,9 +114,9 @@ namespace PathFinder {
 
     void Cameraman::updateCamera() {
         if (mIsEnabled) {
-            mCamera->moveBy(mKeyboardMoveDirection);
-            mCamera->moveBy(mMouseMoveDirection);
-            mCamera->rotateBy(mRotation.y, mRotation.x);
+            mCamera->MoveBy(mKeyboardMoveDirection);
+            mCamera->MoveBy(mMouseMoveDirection);
+            mCamera->RotateBy(mRotation.y, mRotation.x);
             //mCamera->setViewportAspectRatio(mViewport->aspectRatio());
         }
 

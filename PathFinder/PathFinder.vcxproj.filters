@@ -1721,9 +1721,6 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\RingBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RootConstantProvider.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1737,6 +1734,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Foundation\MemoryUtils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Foundation\StringUtils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeap.inl">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\ResourceStorage.inl">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

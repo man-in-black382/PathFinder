@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "TextureResource.hpp"
+#include "BufferResource.hpp"
 #include "Descriptor.hpp"
 #include "Device.hpp"
 #include "Utils.h"
@@ -55,10 +56,14 @@ namespace HAL
     public:
         CBSRUADescriptorHeap(const Device* device, uint32_t capacity);
         ~CBSRUADescriptorHeap() = default;
-        /*CBDescriptor EmplaceDescriptorForConstantBufferResource(const Device& device, const Resource& resource);
-        SRDescriptor EmplaceDescriptorForShaderResource(const Device& device, const Resource& resource);
+
+        template <class T> CBDescriptor EmplaceDescriptorForConstantBufferResource(const Device& device, const BufferResource<T>& resource);
+        template <class T> CBDescriptor EmplaceDescriptorForConstantBufferResource(const Device& device, const BufferResource<T>& resource, uint64_t byteCount);
+     /*   SRDescriptor EmplaceDescriptorForShaderResource(const Device& device, const Resource& resource);
         UADescriptor EmplaceDescriptorForUnorderedAccessResource(const Device& device, const Resource& resource);*/
     };
 
 }
+
+#include "DescriptorHeap.inl"
 

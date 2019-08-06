@@ -11,17 +11,17 @@ namespace PathFinder
         mFence{ *device } {}
 
 
-    VertexStorageLocation VertexStorage::AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint64_t vertexCount, const uint32_t* indices, uint64_t indexCount)
+    VertexStorageLocation VertexStorage::AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
         return WriteToUploadBuffers(vertices, vertexCount, indices, indexCount);
     }
 
-    VertexStorageLocation VertexStorage::AddVertices(const Vertex1P1N1UV* vertices, uint64_t vertexCount, const uint32_t* indices, uint64_t indexCount)
+    VertexStorageLocation VertexStorage::AddVertices(const Vertex1P1N1UV* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
         return WriteToUploadBuffers(vertices, vertexCount, indices, indexCount);
     }
 
-    VertexStorageLocation VertexStorage::AddVertices(const Vertex1P3* vertices, uint64_t vertexCount, const uint32_t* indices, uint64_t indexCount)
+    VertexStorageLocation VertexStorage::AddVertices(const Vertex1P3* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
         return WriteToUploadBuffers(vertices, vertexCount, indices, indexCount);
     }
@@ -64,7 +64,7 @@ namespace PathFinder
     }
 
     template <class Vertex>
-    VertexStorageLocation PathFinder::VertexStorage::WriteToUploadBuffers(const Vertex* vertices, uint64_t vertexCount, const uint32_t* indices, uint64_t indexCount)
+    VertexStorageLocation PathFinder::VertexStorage::WriteToUploadBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
         AllocateUploadBuffersIfNeeded<Vertex>();
 

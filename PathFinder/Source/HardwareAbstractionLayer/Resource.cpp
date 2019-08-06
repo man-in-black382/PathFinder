@@ -80,7 +80,12 @@ namespace HAL
 
         if (!EnumMaskBitSet(stateMask, ResourceState::PixelShaderAccess) &&
             !EnumMaskBitSet(stateMask, ResourceState::NonPixelShaderAccess) &&
-            !EnumMaskBitSet(stateMask, ResourceState::RenderTarget))
+            !EnumMaskBitSet(stateMask, ResourceState::RenderTarget) &&
+            !EnumMaskBitSet(stateMask, ResourceState::GenericRead) &&
+            !EnumMaskBitSet(stateMask, ResourceState::IndirectArgument) &&
+            !EnumMaskBitSet(stateMask, ResourceState::CopySource) &&
+            !EnumMaskBitSet(stateMask, ResourceState::DepthRead) &&
+            !EnumMaskBitSet(stateMask, ResourceState::ConstantBuffer))
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
         }

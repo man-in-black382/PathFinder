@@ -29,8 +29,10 @@ namespace PathFinder
         context->GraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::MainDepthStencil);
         context->GraphicsDevice()->ClearBackBuffer(Foundation::Color::Green());
         context->GraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
+        context->GraphicsDevice()->SetViewport({ 1280, 720 });
 
-
+        /* auto cbContent = context->ConstantsUpdater()->UpdateRootConstantBuffer<PlaygroundCBContent>();
+         cbContent->cameraMat = context->World()->MainCamera().ViewProjection();*/
 
         context->World()->IterateMeshInstances([&](const MeshInstance& instance)
         {

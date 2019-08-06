@@ -5,9 +5,43 @@
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
-namespace PathFinder {
+namespace PathFinder
+{
 
-    class Camera {
+    class Camera
+    {
+    public:
+        Camera();
+        Camera(float fieldOfView, float zNear, float zFar);
+
+        void MoveTo(const glm::vec3 &position);
+        void MoveBy(const glm::vec3 &translation);
+        void LookAt(const glm::vec3 &point);
+        void RotateTo(float pitch, float yaw);
+        void RotateBy(float pitch, float yaw);
+        void Zoom(float zoomFactor);
+        void SetNearPlane(float nearPlane);
+        void SetFarPlane(float farPlane);
+        void SetViewportAspectRatio(float aspectRatio);
+
+        //Ray3D rayFromPointOnViewport(const glm::vec2 &point, const GLViewport *viewport) const;
+
+        glm::vec3 WorldToNDC(const glm::vec3 &v) const;
+        const glm::vec3& Position() const;
+        const glm::vec3& Front() const;
+        const glm::vec3& Right() const;
+        const glm::vec3& Up() const;
+        float NearClipPlane() const;
+        float FarClipPlane() const;
+        float FOVH() const;
+        float FOVV() const;
+        glm::mat4 ViewProjection() const;
+        glm::mat4 View() const;
+        glm::mat4 Projection() const;
+        glm::mat4 InverseViewProjection() const;
+        glm::mat4 InverseView() const;
+        glm::mat4 InverseProjection() const;
+
     private:
         glm::vec3 mFront;
         glm::vec3 mRight;
@@ -23,62 +57,7 @@ namespace PathFinder {
         float mFarClipPlane;
         float mViewportAspectRatio;
 
-        void updateVectors();
-
-    public:
-        Camera();
-
-        Camera(float fieldOfView,
-                float zNear,
-                float zFar);
-
-        void moveTo(const glm::vec3 &position);
-
-        void moveBy(const glm::vec3 &translation);
-
-        void lookAt(const glm::vec3 &point);
-
-        void rotateTo(float pitch, float yaw);
-
-        void rotateBy(float pitch, float yaw);
-
-        void zoom(float zoomFactor);
-
-        void setFarPlane(float farPlane);
-
-        //Ray3D rayFromPointOnViewport(const glm::vec2 &point, const GLViewport *viewport) const;
-
-        glm::vec3 worldToNDC(const glm::vec3 &v) const;
-
-        const glm::vec3 &position() const;
-
-        const glm::vec3 &front() const;
-
-        const glm::vec3 &right() const;
-
-        const glm::vec3 &up() const;
-
-        float nearClipPlane() const;
-
-        float farClipPlane() const;
-
-        float FOVH() const;
-
-        float FOVV() const;
-
-        glm::mat4 viewProjectionMatrix() const;
-
-        glm::mat4 viewMatrix() const;
-
-        glm::mat4 projectionMatrix() const;
-
-        glm::mat4 inverseViewProjectionMatrix() const;
-
-        glm::mat4 inverseViewMatrix() const;
-
-        glm::mat4 inverseProjectionMatrix() const;
-
-        void setViewportAspectRatio(float aspectRatio);
+        void UpdateVectors();
     };
 
 }

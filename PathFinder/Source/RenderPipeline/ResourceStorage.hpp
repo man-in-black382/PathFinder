@@ -31,19 +31,23 @@ namespace PathFinder
 
         ResourceStorage(HAL::Device* device, const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight);
 
-        HAL::RTDescriptor GetRenderTarget(Foundation::Name resourceName) const;
-        HAL::DSDescriptor GetDepthStencil(Foundation::Name resourceName) const;
-        HAL::RTDescriptor GetBackBuffer() const;
+        void BeginFrame(uint64_t frameFenceValue);
+        void EndFrame(uint64_t completedFrameFenceValue);
 
+        HAL::RTDescriptor GetRenderTargetDescriptor(Foundation::Name resourceName) const;
+        HAL::DSDescriptor GetDepthStencilDescriptor(Foundation::Name resourceName) const;
+        HAL::RTDescriptor GetBackBufferDescriptor() const;
+        
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(PassName passName);
         void SetCurrentStateForResource(ResourceName name, HAL::ResourceState state);
         void AllocateScheduledResources();
         void UseSwapChain(HAL::SwapChain& swapChain);
 
-        template <class RootConstants>
+        template <class RootConstants> 
         RootConstants* GetRootConstantDataForCurrentPass() const;
 
+        HAL::BufferResource<uint8_t>* GetRootConstantBufferForCurrentPass() const;
         HAL::Resource* GetResource(ResourceName resourceName) const;
 
         const std::vector<ResourceName>* GetScheduledResourceNamesForCurrentPass() const;
@@ -105,72 +109,6 @@ namespace PathFinder
         uint8_t mCurrentBackBufferIndex = 0;
     };
 
-    template <class RootConstants>
-    RootConstants* ResourceStorage::GetRootConstantDataForCurrentPass() const
-    {
-        auto bufferIt = mRootConstantBuffers.find(mCurrentPassName);
-        if (bufferIt == mRootConstantBuffers.end()) return nullptr;
-
-        return static_cast<RootConstants *>(bufferIt->second.at(0));
-    }
-
-    template <class TextureT, class ...Args>
-    void ResourceStorage::QueueTextureAllocationIfNeeded(ResourceName resourceName, const TextureAllocationCallback<TextureT>& callback, Args&&... args)
-    {
-        auto resourceIt = mResources.find(resourceName);
-        bool isAlreadyAllocated = resourceIt != mResources.end();
-        if (isAlreadyAllocated) return;
-
-        // Save callback until resource is created
-        TextureAllocationCallbackMap<TextureT>& callbacks = std::get<TextureAllocationCallbackMap<TextureT>>(mTextureAllocationCallbacks);
-        callbacks[resourceName].push_back(callback);
-
-        bool isWaitingForAllocation = mResourceDelayedAllocations.find(resourceName) != mResourceDelayedAllocations.end();
-        if (isWaitingForAllocation) return;
-
-        Foundation::Name passName = mCurrentPassName;
-
-        mResourceDelayedAllocations[resourceName] = [this, passName, resourceName, args...]()
-        {
-            HAL::ResourceState initialState = mResourcePerPassStates[passName][resourceName];
-            HAL::ResourceState expectedStates = mResourceExpectedStates[resourceName];
-
-            auto resource = std::make_unique<TextureT>(args..., initialState, expectedStates);
-
-            // Call all callbacks associated with this resource name
-            TextureAllocationCallbackMap<TextureT>& callbackMap = std::get<TextureAllocationCallbackMap<TextureT>>(mTextureAllocationCallbacks);
-            std::vector<TextureAllocationCallback<TextureT>>& callbackList = callbackMap[resourceName];
-
-            for (TextureAllocationCallback<TextureT>& callback : callbackList)
-            {
-                callback(*resource);
-            }
-
-            // Store the actual resource
-            mResources.emplace(resourceName, std::move(resource));
-            mResourceCurrentStates[resourceName] = initialState;
-        };
-    }
-
-    template <class BufferDataT>
-    void ResourceStorage::AllocateRootConstantBufferIfNeeded()
-    {
-        auto bufferIt = mRootConstantBuffers.find(mCurrentPassName);
-        bool alreadyAllocated = bufferIt != mRootConstantBuffers.end();
-
-        if (alreadyAllocated) return;
-
-        // Because we store complex objects in unified buffers of primitive type
-        // we must alight manually beforehand and pass alignment of 1 to the buffer
-        //
-        auto bufferSize = Foundation::MemoryUtils::Align(sizeof(BufferDataT), 256);
-
-        mRootConstantBuffers.emplace(mCurrentPassName, std::make_unique<HAL::RingBufferResource<uint8_t>>(
-            *mDevice, bufferSize, mSimultaneousFramesInFlight, 1,
-            HAL::ResourceState::GenericRead,
-            HAL::ResourceState::GenericRead,
-            HAL::CPUAccessibleHeapType::Upload)
-        );
-    }
-
 }
+
+#include "ResourceStorage.inl"

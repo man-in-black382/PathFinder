@@ -10,8 +10,18 @@ namespace HAL
         desc.NumDescriptors = capacity;
         desc.Type = heapType;
         desc.NodeMask = 0;
-        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
+        switch (heapType)
+        {
+            case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+            case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+                desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE; break;
+
+            case D3D12_DESCRIPTOR_HEAP_TYPE_RTV:
+            case D3D12_DESCRIPTOR_HEAP_TYPE_DSV:
+                desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE; break;
+        }
+        
         ThrowIfFailed(device->D3DPtr()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mHeap)));
         mCurrentHeapHandle = mHeap->GetCPUDescriptorHandleForHeapStart();
     }
@@ -89,11 +99,6 @@ namespace HAL
     CBSRUADescriptorHeap::CBSRUADescriptorHeap(const Device* device, uint32_t capacity)
         : DescriptorHeap(device, capacity, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {}
 
-  /*  CBDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForConstantBufferResource(const Device& device, const Resource& resource)
-    {
-        
-    }*/
-
     //SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForShaderResource(const Device& device, const Resource& resource)
     //{
 
@@ -104,4 +109,4 @@ namespace HAL
 
     //}
 
-    }
+ }
