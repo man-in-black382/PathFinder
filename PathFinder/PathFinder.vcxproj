@@ -307,6 +307,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexLayouts.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateManager.hpp" />

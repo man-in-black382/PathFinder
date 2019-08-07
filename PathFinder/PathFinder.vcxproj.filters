@@ -1745,6 +1745,9 @@
     <ClInclude Include="Source\RenderPipeline\ResourceStorage.inl">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
