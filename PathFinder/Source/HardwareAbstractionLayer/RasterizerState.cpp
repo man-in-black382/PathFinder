@@ -9,6 +9,7 @@ namespace HAL
         SetFillMode(FillMode::Solid);
 
         mDesc.DepthClipEnable = true;
+        mDesc.FrontCounterClockwise = true;
     }
 
     void RasterizerState::SetFillMode(FillMode mode)

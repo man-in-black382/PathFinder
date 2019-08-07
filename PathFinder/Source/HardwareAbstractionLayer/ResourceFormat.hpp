@@ -58,7 +58,7 @@ namespace HAL
         D3D12_RESOURCE_DESC mDesc{};
 
     public:
-        inline const auto& D3DResourceDescription() const { return mDesc; }
+        inline const D3D12_RESOURCE_DESC& D3DResourceDescription() const { return mDesc; }
     };
 
 }

@@ -41,7 +41,7 @@ namespace PathFinder
         void TransitionResourceStates();
 
         uint8_t mCurrentBackBufferIndex = 0;
-        uint8_t mSimultaneousFramesInFlight = 1;
+        uint8_t mSimultaneousFramesInFlight = 3;
 
         RenderSurface mDefaultRenderSurface;
         std::filesystem::path mExecutablePath;

@@ -17,8 +17,6 @@ namespace HAL
 
         chain.BufferDesc.Width = (UINT)dimensions.Width;
         chain.BufferDesc.Height = (UINT)dimensions.Height;
-        chain.BufferDesc.RefreshRate.Numerator = 60;
-        chain.BufferDesc.RefreshRate.Denominator = 1;
         chain.BufferDesc.Format = ResourceFormat::D3DFormat(backBufferFormat);
         chain.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
         chain.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
@@ -45,7 +43,7 @@ namespace HAL
 
     void SwapChain::Present()
     {
-        ThrowIfFailed(mSwapChain->Present(0, 0));
+        ThrowIfFailed(mSwapChain->Present(1, 0));
     }
 
 }

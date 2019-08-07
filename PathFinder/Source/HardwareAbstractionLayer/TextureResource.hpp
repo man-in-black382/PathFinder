@@ -31,6 +31,7 @@ namespace HAL
             ResourceFormat::Color dataType,
             ResourceFormat::TextureKind kind,
             const Geometry::Dimensions& dimensions,
+            const ClearValue& optimizedClearValue,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
             std::optional<CPUAccessibleHeapType> heapType = std::nullopt
@@ -55,6 +56,7 @@ namespace HAL
             ResourceFormat::TypelessColor dataType,
             ResourceFormat::TextureKind kind,
             const Geometry::Dimensions& dimensions,
+            const ClearValue& optimizedClearValue,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
             std::optional<CPUAccessibleHeapType> heapType = std::nullopt
@@ -72,6 +74,7 @@ namespace HAL
             const Device& device,
             ResourceFormat::DepthStencil dataType,
             const Geometry::Dimensions& dimensions,
+            const ClearValue& optimizedClearValue,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
             std::optional<CPUAccessibleHeapType> heapType = std::nullopt

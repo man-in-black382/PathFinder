@@ -84,6 +84,7 @@ namespace HAL
             ),
             initialState,
             expectedStates,
+            std::nullopt,
             heapType
         ),
         mNonPaddedElementSize{ sizeof(T) },

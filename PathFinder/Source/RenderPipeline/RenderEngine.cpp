@@ -53,8 +53,6 @@ namespace PathFinder
         mResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
 
-        MoveToNextBackBuffer();
-
         HAL::ColorTextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
 
         mGraphicsDevice.CommandList().TransitionResourceState(
@@ -74,19 +72,22 @@ namespace PathFinder
         mGraphicsDevice.CommandList().TransitionResourceState(
             { HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer }
         );
-       
-        mSwapChain.Present();
+
         mGraphicsDevice.ExecuteCommandsThenSignalFence(mFrameFence);
+        mSwapChain.Present();
+
         mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
         mResourceStorage.EndFrame(mFrameFence.CompletedValue());
         mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
+
+        MoveToNextBackBuffer();
     }
 
     HAL::DisplayAdapter RenderEngine::FetchDefaultDisplayAdapter() const
     {
         HAL::DisplayAdapterFetcher adapterFetcher;
-        return adapterFetcher.Fetch().back();
+        return adapterFetcher.Fetch()[0];// .back();
     }
 
     void RenderEngine::MoveToNextBackBuffer()

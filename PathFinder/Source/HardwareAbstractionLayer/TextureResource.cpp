@@ -8,11 +8,12 @@ namespace HAL
         ResourceFormat::Color dataType,
         ResourceFormat::TextureKind kind,
         const Geometry::Dimensions& dimensions,
+        const ClearValue& optimizedClearValue,
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
         std::optional<CPUAccessibleHeapType> heapType)
         :
-        TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType)
+        TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, optimizedClearValue, heapType)
     {
         mDimensions = dimensions;
         mKind = kind;
@@ -24,11 +25,12 @@ namespace HAL
         ResourceFormat::TypelessColor dataType,
         ResourceFormat::TextureKind kind,
         const Geometry::Dimensions& dimensions,
+        const ClearValue& optimizedClearValue,
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
         std::optional<CPUAccessibleHeapType> heapType)
         :
-        TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, heapType)
+        TextureResource(device, ResourceFormat(dataType, kind, dimensions), initialStateMask, expectedStateMask, optimizedClearValue, heapType)
     {
         mDimensions = dimensions;
         mKind = kind;
@@ -38,11 +40,12 @@ namespace HAL
         const Device& device,
         ResourceFormat::DepthStencil dataType,
         const Geometry::Dimensions& dimensions,
+        const ClearValue& optimizedClearValue,
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
         std::optional<CPUAccessibleHeapType> heapType)
         :
-        TextureResource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), initialStateMask, expectedStateMask, heapType)
+        TextureResource(device, ResourceFormat(dataType, ResourceFormat::TextureKind::Texture2D, dimensions), initialStateMask, expectedStateMask, optimizedClearValue, heapType)
     {
         mDimensions = dimensions;
         mKind = ResourceFormat::TextureKind::Texture2D;

@@ -22,7 +22,8 @@ namespace PathFinder
             *mResourceStorage->mDevice,
             dataFormat, 
             kind, 
-            dimensions);
+            dimensions,
+            HAL::Resource::ColorClearValue{ 0.f, 0.f, 0.f, 0.f });
     }
 
     void ResourceScheduler::WillRenderToRenderTarget(
@@ -44,7 +45,8 @@ namespace PathFinder
             *mResourceStorage->mDevice,
             dataFormat, 
             kind, 
-            dimensions);
+            dimensions,
+            HAL::Resource::ColorClearValue{ 0.f, 0.f, 0.f, 0.f });
     }
 
     void ResourceScheduler::WillRenderToRenderTarget(Foundation::Name resourceName)
@@ -61,7 +63,8 @@ namespace PathFinder
             *mResourceStorage->mDevice,
             mResourceStorage->mDefaultRenderSurface.RenderTargetFormat(),
             HAL::ResourceFormat::TextureKind::Texture2D, 
-            mResourceStorage->mDefaultRenderSurface.Dimensions());
+            mResourceStorage->mDefaultRenderSurface.Dimensions(),
+            HAL::Resource::ColorClearValue{ 0.f, 0.f, 0.f, 0.f });
     }
 
     void ResourceScheduler::WillRenderToDepthStencil(
@@ -80,7 +83,8 @@ namespace PathFinder
         }, 
             *mResourceStorage->mDevice,
             dataFormat, 
-            dimensions);
+            dimensions,
+            HAL::Resource::DepthStencilClearValue{ 1.f, 0 });
     }
 
     void ResourceScheduler::WillRenderToDepthStencil(Foundation::Name resourceName)
@@ -96,7 +100,8 @@ namespace PathFinder
         },
             *mResourceStorage->mDevice,
             mResourceStorage->mDefaultRenderSurface.DepthStencilFormat(),
-            mResourceStorage->mDefaultRenderSurface.Dimensions());
+            mResourceStorage->mDefaultRenderSurface.Dimensions(),
+            HAL::Resource::DepthStencilClearValue{ 1.f, 0 });
     }
 
 }

@@ -19,20 +19,21 @@ namespace PathFinder
 
     void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->WillRenderToDepthStencil(ResourceNames::MainDepthStencil);
+        scheduler->WillRenderToDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
     }
 
     void PlaygroundRenderPass::Render(RenderContext* context)
     {
         context->GraphicsDevice()->ApplyPipelineState(PSONames::GBuffer);
-        context->GraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::MainDepthStencil);
-        context->GraphicsDevice()->ClearBackBuffer(Foundation::Color::Green());
+        context->GraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::GBufferDepthStencil);
+        context->GraphicsDevice()->ClearBackBuffer(Foundation::Color::Gray());
+        context->GraphicsDevice()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
         context->GraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
         context->GraphicsDevice()->SetViewport({ 1280, 720 });
 
-        /* auto cbContent = context->ConstantsUpdater()->UpdateRootConstantBuffer<PlaygroundCBContent>();
-         cbContent->cameraMat = context->World()->MainCamera().ViewProjection();*/
+        auto cbContent = context->ConstantsUpdater()->UpdateRootConstantBuffer<PlaygroundCBContent>();
+        cbContent->cameraMat = context->World()->MainCamera().ViewProjection();
 
         context->World()->IterateMeshInstances([&](const MeshInstance& instance)
         {
