@@ -20,6 +20,10 @@ namespace PathFinder
         virtual HAL::GraphicsPipelineState CloneExistingGraphicsState(PSOName name) override;
         virtual void StoreGraphicsState(PSOName name, const HAL::GraphicsPipelineState& pso) override;
 
+        virtual HAL::ComputePipelineState CloneDefaultComputeState() override;
+        virtual HAL::ComputePipelineState CloneExistingComputeState(PSOName name) override;
+        virtual void StoreComputeState(PSOName name, const HAL::ComputePipelineState& pso) override;
+
         const HAL::PipelineState& GetPipelineState(PSOName name) const;
 
         void CompileStates();
@@ -33,8 +37,10 @@ namespace PathFinder
         HAL::Device* mDevice;
         HAL::RootSignature mUniversalRootSignature;
         HAL::GraphicsPipelineState mDefaultGraphicsState;
+        HAL::ComputePipelineState mDefaultComputeState;
 
         std::unordered_map<PSOName, HAL::GraphicsPipelineState> mGraphicPSOs;
+        std::unordered_map<PSOName, HAL::ComputePipelineState> mComputePSOs;
 
     public:
         inline const HAL::RootSignature& UniversalRootSignature() const { return mUniversalRootSignature; }

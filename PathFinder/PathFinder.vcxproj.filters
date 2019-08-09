@@ -261,6 +261,9 @@
     <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1748,6 +1751,9 @@
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2200,6 +2206,7 @@
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
     <Text Include="Source\RenderPipeline\Shaders\Playground.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\Blur.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />

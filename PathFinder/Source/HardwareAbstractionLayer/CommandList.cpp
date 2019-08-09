@@ -68,7 +68,7 @@ namespace HAL
 
     void ComputeCommandListBase::SetDescriptorHeap(const DescriptorHeap& heap)
     {
-        auto ptr = heap.D3DPtr();
+        auto ptr = heap.D3DHeap();
         mList->SetDescriptorHeaps(1, (ID3D12DescriptorHeap* const*)&ptr);
     }
 

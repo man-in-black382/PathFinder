@@ -6,7 +6,7 @@
 namespace PathFinder
 {
 
-    struct RootPersistentData
+    struct RootGlobalData
     {
         glm::ivec2 BackBufferResolution;
     };

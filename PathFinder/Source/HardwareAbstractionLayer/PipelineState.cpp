@@ -61,4 +61,26 @@ namespace HAL
         return newState;
     }
 
-}
+
+    void ComputePipelineState::Compile(const Device& device)
+    {
+        D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
+
+        desc.pRootSignature = mRootSignature->D3DSignature();
+        desc.CS = mComputeShader->D3DBytecode();
+        desc.NodeMask = 0;
+        
+#if defined(DEBUG) || defined(_DEBUG) 
+        //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
+#endif
+        ThrowIfFailed(device.D3DPtr()->CreateComputePipelineState(&desc, IID_PPV_ARGS(&mState)));
+    }
+
+    ComputePipelineState ComputePipelineState::Clone() const
+    {
+        ComputePipelineState newState = *this;
+        newState.mState = nullptr;
+        return newState;
+    }
+
+ }

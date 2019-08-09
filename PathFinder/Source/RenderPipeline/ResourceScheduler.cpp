@@ -13,11 +13,14 @@ namespace PathFinder
         mResourceStorage->MarkResourceNameAsScheduled(resourceName);
         mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
 
+        auto passName = mResourceStorage->mCurrentPassName;
+
         mResourceStorage->QueueTextureAllocationIfNeeded<HAL::ColorTextureResource>(
             resourceName, 
-            [this, resourceName](const HAL::ColorTextureResource& resource) 
+            [this, resourceName, passName](const HAL::ColorTextureResource& resource) 
         { 
             mResourceStorage->mDescriptorStorage.EmplaceRTDescriptorIfNeeded(resourceName, resource);
+            mResourceStorage->mResourceShaderVisibleFormatMap[passName][resourceName] = resource.DataFormat();
         }, 
             *mResourceStorage->mDevice,
             dataFormat, 
@@ -36,11 +39,14 @@ namespace PathFinder
         mResourceStorage->MarkResourceNameAsScheduled(resourceName);
         mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
 
+        auto passName = mResourceStorage->mCurrentPassName;
+
         mResourceStorage->QueueTextureAllocationIfNeeded<HAL::TypelessTextureResource>(
             resourceName, 
-            [this, resourceName, shaderVisisbleFormat](const HAL::TypelessTextureResource& resource)
+            [this, resourceName, passName, shaderVisisbleFormat](const HAL::TypelessTextureResource& resource)
         {
             mResourceStorage->mDescriptorStorage.EmplaceRTDescriptorIfNeeded(resourceName, resource, shaderVisisbleFormat);
+            mResourceStorage->mResourceShaderVisibleFormatMap[passName][resourceName] = shaderVisisbleFormat;
         }, 
             *mResourceStorage->mDevice,
             dataFormat, 
@@ -54,11 +60,14 @@ namespace PathFinder
         mResourceStorage->MarkResourceNameAsScheduled(resourceName);
         mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
 
+        auto passName = mResourceStorage->mCurrentPassName;
+
         mResourceStorage->QueueTextureAllocationIfNeeded<HAL::ColorTextureResource>(
             resourceName, 
-            [this, resourceName](const HAL::ColorTextureResource& resource)
+            [this, resourceName, passName](const HAL::ColorTextureResource& resource)
         {
             mResourceStorage->mDescriptorStorage.EmplaceRTDescriptorIfNeeded(resourceName, resource);
+            mResourceStorage->mResourceShaderVisibleFormatMap[passName][resourceName] = resource.DataFormat();
         }, 
             *mResourceStorage->mDevice,
             mResourceStorage->mDefaultRenderSurface.RenderTargetFormat(),

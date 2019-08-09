@@ -32,7 +32,7 @@ namespace PathFinder
     {
         if (auto descriptor = TryGetRTDescriptor(resourceName, texture.DataFormat())) return *descriptor;
 
-        HAL::RTDescriptor descriptor = mRTDescriptorHeap.EmplaceDescriptorForResource(texture);
+        HAL::RTDescriptor descriptor = mRTDescriptorHeap.EmplaceDescriptorForTexture(texture);
         mRTDescriptorMap[resourceName].emplace(texture.DataFormat(), descriptor);
         return descriptor;
     }
@@ -41,7 +41,7 @@ namespace PathFinder
     {
         if (auto descriptor = TryGetRTDescriptor(resourceName, format)) return *descriptor;
 
-        HAL::RTDescriptor descriptor = mRTDescriptorHeap.EmplaceDescriptorForResource(texture, format);
+        HAL::RTDescriptor descriptor = mRTDescriptorHeap.EmplaceDescriptorForTexture(texture, format);
         mRTDescriptorMap[resourceName].emplace(format, descriptor);
         return descriptor;
     }

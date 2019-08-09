@@ -32,13 +32,19 @@ namespace PathFinder
 
     HAL::RTDescriptor ResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName) const
     {
-        if (auto format = GetResourceShaderVisibleFormatForCurrentPass(resourceName); 
-            auto descriptor = mDescriptorStorage.TryGetRTDescriptor(resourceName, format.value()))
+        if (auto format = GetResourceShaderVisibleFormatForCurrentPass(resourceName))
         {
-            return *descriptor;
+            if (auto descriptor = mDescriptorStorage.TryGetRTDescriptor(resourceName, format.value()))
+            {
+                return *descriptor;
+            }
+            else {
+                throw std::invalid_argument("Resource was not scheduled to be used as render target");
+            }
         }
-
-        throw std::invalid_argument("Resource was not scheduled to be used as render target");
+        else {
+            throw std::invalid_argument("Resource format for this pass is unknown");
+        }
     }
 
     HAL::RTDescriptor ResourceStorage::GetBackBufferDescriptor() const

@@ -10,6 +10,8 @@ namespace HAL
     public:
         using Resource::Resource;
 
+        bool IsArray() const;
+
     protected:
         Geometry::Dimensions mDimensions;
         ResourceFormat::TextureKind mKind;

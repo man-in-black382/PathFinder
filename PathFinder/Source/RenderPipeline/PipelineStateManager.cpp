@@ -23,12 +23,31 @@ namespace PathFinder
 
     const HAL::PipelineState& PipelineStateManager::GetPipelineState(PSOName name) const 
     {
-        auto stateIt = mGraphicPSOs.find(name);
-        if (stateIt == mGraphicPSOs.end()) {
-            throw std::invalid_argument("Pipeline state does not exist");
-        }
+        if (mGraphicPSOs.find(name) != mGraphicPSOs.end()) return mGraphicPSOs.at(name);
+        if (mComputePSOs.find(name) != mComputePSOs.end()) return mComputePSOs.at(name);
 
-        return stateIt->second;
+        throw std::invalid_argument("Pipeline state was not scheduled for usage");
+    }
+
+    HAL::ComputePipelineState PipelineStateManager::CloneDefaultComputeState()
+    {
+        return mDefaultComputeState.Clone();
+    }
+
+    HAL::ComputePipelineState PipelineStateManager::CloneExistingComputeState(PSOName name)
+    {
+        return mComputePSOs[name].Clone();
+    }
+
+    void PipelineStateManager::StoreComputeState(PSOName name, const HAL::ComputePipelineState& pso)
+    {
+        mComputePSOs[name] = pso;
+        mComputePSOs[name].SetRootSignature(&mUniversalRootSignature);
+    }
+
+    HAL::GraphicsPipelineState PipelineStateManager::CloneDefaultGraphicsState()
+    {
+        return mDefaultGraphicsState.Clone();
     }
 
     void PipelineStateManager::CompileStates()
@@ -40,11 +59,12 @@ namespace PathFinder
             HAL::GraphicsPipelineState& pso = nameStatePair.second;
             pso.Compile(*mDevice);
         }
-    }
 
-    HAL::GraphicsPipelineState PipelineStateManager::CloneDefaultGraphicsState()
-    {
-        return mDefaultGraphicsState.Clone();
+        for (auto& nameStatePair : mComputePSOs)
+        {
+            HAL::ComputePipelineState& pso = nameStatePair.second;
+            pso.Compile(*mDevice);
+        }
     }
 
     void PipelineStateManager::ConfigureDefaultStates()
@@ -57,6 +77,8 @@ namespace PathFinder
         mDefaultGraphicsState.GetRasterizerState().SetFillMode(HAL::RasterizerState::FillMode::Solid);
         mDefaultGraphicsState.SetDepthStencilFormat(mDefaultRenderSurface.DepthStencilFormat());
         mDefaultGraphicsState.SetRootSignature(&mUniversalRootSignature);
+
+        mDefaultComputeState.SetRootSignature(&mUniversalRootSignature);
     }
 
     void PipelineStateManager::BuildUniversalRootSignature()

@@ -46,21 +46,6 @@ namespace HAL
 
         GraphicsPipelineState Clone() const;
 
-    private:
-        Shader* mVertexShader;
-        Shader* mPixelShader;
-        Shader* mDomainShader;
-        Shader* mHullShader;
-        Shader* mGeometryShader;
-        BlendState mBlendState;
-        RasterizerState mRasterizerState;
-        DepthStencilState mDepthStencilState;
-        InputAssemblerLayout mInputLayout;
-        RenderTargetFormatMap mRenderTargetFormats;
-        ResourceFormat::DepthStencil mDepthStencilFormat;
-        PrimitiveTopology mPrimitiveTopology;
-
-    public:
         inline void SetRootSignature(RootSignature* rootSignature) { mRootSignature = rootSignature; }
         inline void SetVertexShader(Shader* vertexShader) { mVertexShader = vertexShader; }
         inline void SetPixelShader(Shader* pixelShader) { mPixelShader = pixelShader; }
@@ -103,11 +88,35 @@ namespace HAL
         inline BlendState& GetBlendState() { return mBlendState; }
         inline RasterizerState& GetRasterizerState() { return mRasterizerState; }
         inline DepthStencilState& GetDepthStencilState() { return mDepthStencilState; }
+
+    private:
+        Shader* mVertexShader;
+        Shader* mPixelShader;
+        Shader* mDomainShader;
+        Shader* mHullShader;
+        Shader* mGeometryShader;
+        BlendState mBlendState;
+        RasterizerState mRasterizerState;
+        DepthStencilState mDepthStencilState;
+        InputAssemblerLayout mInputLayout;
+        RenderTargetFormatMap mRenderTargetFormats;
+        ResourceFormat::DepthStencil mDepthStencilFormat;
+        PrimitiveTopology mPrimitiveTopology;
     };
 
+
+
     class ComputePipelineState : public PipelineState {
+    public:
+        virtual void Compile(const Device& device) override;
+
+        ComputePipelineState Clone() const;
+
+        inline void SetShaders(const ShaderBundle& bundle) { mComputeShader = bundle.ComputeShader(); }
+        inline void SetComputeShader(Shader* computeShader) { mComputeShader = computeShader; }
+
     private:
-        D3D12_COMPUTE_PIPELINE_STATE_DESC mDesc{};
+        Shader* mComputeShader;
     };
 
 }

@@ -39,8 +39,6 @@ namespace HAL
     public:
         using CPUDescriptor::CPUDescriptor;
         ~RTDescriptor() = default;
-
-        D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
     };
 
     class DSDescriptor : public CPUDescriptor
@@ -48,8 +46,6 @@ namespace HAL
     public:
         using CPUDescriptor::CPUDescriptor;
         ~DSDescriptor() = default;
-
-        D3D12_DEPTH_STENCIL_VIEW_DESC ResourceToDSVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
     };
 
     class CBDescriptor : public GPUDescriptor
@@ -62,12 +58,14 @@ namespace HAL
     class SRDescriptor : public GPUDescriptor
     {
     public:
+        using GPUDescriptor::GPUDescriptor;
         ~SRDescriptor() = default;
     };
 
     class UADescriptor : public GPUDescriptor
     {
     public:
+        using GPUDescriptor::GPUDescriptor;
         ~UADescriptor() = default;
     };
 

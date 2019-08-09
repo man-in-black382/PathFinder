@@ -35,6 +35,8 @@ namespace PathFinder
             HAL::ResourceFormat::DepthStencil dataFormat,
             const Geometry::Dimensions& dimensions);
 
+        //void WillReadResource
+
     private:
         ResourceStorage* mResourceStorage;
     };

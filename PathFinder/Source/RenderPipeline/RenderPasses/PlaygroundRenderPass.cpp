@@ -19,6 +19,7 @@ namespace PathFinder
 
     void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
+        scheduler->WillRenderToRenderTarget(ResourceNames::PlaygroundRenderTarget);
         scheduler->WillRenderToDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
     }
@@ -26,7 +27,7 @@ namespace PathFinder
     void PlaygroundRenderPass::Render(RenderContext* context)
     {
         context->GraphicsDevice()->ApplyPipelineState(PSONames::GBuffer);
-        context->GraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::GBufferDepthStencil);
+        context->GraphicsDevice()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
         context->GraphicsDevice()->ClearBackBuffer(Foundation::Color::Gray());
         context->GraphicsDevice()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
         context->GraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);

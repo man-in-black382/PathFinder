@@ -51,5 +51,17 @@ namespace HAL
         mKind = ResourceFormat::TextureKind::Texture2D;
     }
 
+    bool TextureResource::IsArray() const
+    {
+        switch (mKind)
+        {
+        case ResourceFormat::TextureKind::Texture1D: 
+        case ResourceFormat::TextureKind::Texture2D: 
+            return mDimensions.Depth > 1;
+
+        default:
+            return false;
+        }
+    }
 
 }
