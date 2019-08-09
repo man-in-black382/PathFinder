@@ -8,6 +8,22 @@ namespace PathFinder
     class ResourceScheduler
     {
     public:
+      /*  struct ReadOnlyMetadata
+        {
+            HAL::ResourceFormat::Color ShaderVisibleFormat;
+        };
+
+        struct WriteOnlyMetadata
+        {
+            HAL::ResourceFormat::TypelessColor DataFormat,
+            HAL::ResourceFormat::Color ShaderVisibleFormat;
+        };
+
+        struct ReadWriteMetadata
+        {
+            HAL::ResourceFormat::Color ShaderVisibleFormat;
+        };*/
+
         ResourceScheduler(ResourceStorage* manager);
 
         template <class BufferDataT>
@@ -31,11 +47,30 @@ namespace PathFinder
             const Geometry::Dimensions& dimensions);
 
         void WillRenderToDepthStencil(
-            Foundation::Name resourceName,
+            Foundation::Name resourceName, 
             HAL::ResourceFormat::DepthStencil dataFormat,
             const Geometry::Dimensions& dimensions);
 
-        //void WillReadResource
+        // New scheduling system
+
+        void NewRenderTarget(); // 
+        void NewDepthStencil(); // 
+        void NewTexture(); // RWTexture..[]
+        void NewBuffer(); // RWStructuredBuffer
+        void UseRenderTarget(); // 
+        void UseDepthStencil(); // 
+        void ReadTexture(); // Texture..[]
+        void ReadBuffer(); // StructuredBuffer
+        void ReadWriteTexture(); // RWTexture..[]
+        void ReadWriteBuffer(); // RWStructuredBuffer
+
+        /*  void WillReadTexture();
+
+          void WillReadBuffer();
+
+          void WillReadWriteTexture();
+
+          void WillReadWriteBuffer();*/
 
     private:
         ResourceStorage* mResourceStorage;

@@ -22,7 +22,7 @@ namespace PathFinder
         scheduler->WillRenderToRenderTarget(ResourceNames::PlaygroundRenderTarget);
         scheduler->WillRenderToDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
-    }
+    } 
 
     void PlaygroundRenderPass::Render(RenderContext* context)
     {

@@ -22,7 +22,7 @@ namespace HAL
         case PipelineStage::Compute:	entryPoint = "CSMain"; featureLevel = "cs_5_1"; macro.Name = "CSEntryPoint"; break;
         }
 
-        uint32_t compilerFlags = 0; 
+        uint32_t compilerFlags = 0;  
 
 #if defined(DEBUG) || defined(_DEBUG)   
         compilerFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;

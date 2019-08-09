@@ -30,7 +30,7 @@ namespace PathFinder
 
     private:
         void ConfigureDefaultStates();
-        void BuildUniversalRootSignature();
+        void BuildUniversalRootSignature(); 
 
         RenderSurface mDefaultRenderSurface;
         

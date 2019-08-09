@@ -32,7 +32,7 @@ namespace PathFinder
          using UADescriptorMap = std::unordered_map<ResourceName, std::unordered_map<HAL::ResourceFormat::UnderlyingType, UADescriptor>;
          using CBDescriptorMap = std::unordered_map<ResourceName, std::unordered_map<HAL::ResourceFormat::UnderlyingType, CBDescriptor>;*/
 
-        uint32_t mDescriptorHeapCapacity = 1000000;
+        uint32_t mDescriptorHeapCapacity = 10000;
 
         HAL::RTDescriptorHeap mRTDescriptorHeap;
         HAL::DSDescriptorHeap mDSDescriptorHeap;

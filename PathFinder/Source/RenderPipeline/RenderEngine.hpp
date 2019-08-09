@@ -35,7 +35,7 @@ namespace PathFinder
         void Render();
 
     private:
-        HAL::DisplayAdapter FetchDefaultDisplayAdapter() const;
+        HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
         void MoveToNextBackBuffer();
         void SetRootConstantBuffer();
         void TransitionResourceStates();
