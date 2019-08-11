@@ -8,71 +8,56 @@ namespace PathFinder
     class ResourceScheduler
     {
     public:
-      /*  struct ReadOnlyMetadata
+        struct NewTextureProperties
         {
-            HAL::ResourceFormat::Color ShaderVisibleFormat;
+            NewTextureProperties(
+                std::optional<HAL::ResourceFormat::TextureKind> kind = std::nullopt,
+                std::optional<Geometry::Dimensions> dimensions = std::nullopt,
+                std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt,
+                std::optional<HAL::ResourceFormat::TypelessColor> typelessFormat = std::nullopt,
+                uint8_t mipCount = 0)
+                : 
+                TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat }, 
+                Kind{ kind }, Dimensions{ dimensions }, MipCount{ mipCount } {}
+
+            std::optional<HAL::ResourceFormat::TypelessColor> TypelessFormat;
+            std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
+            std::optional<HAL::ResourceFormat::TextureKind> Kind;
+            std::optional<Geometry::Dimensions> Dimensions;
+            std::optional<uint8_t> MipCount;
         };
 
-        struct WriteOnlyMetadata
+        struct NewDepthStencilProperties
         {
-            HAL::ResourceFormat::TypelessColor DataFormat,
-            HAL::ResourceFormat::Color ShaderVisibleFormat;
-        };
+            NewDepthStencilProperties(HAL::ResourceFormat::DepthStencil format, const Geometry::Dimensions& dimensions)
+                : Format{ format }, Dimensions{ dimensions } {}
 
-        struct ReadWriteMetadata
-        {
-            HAL::ResourceFormat::Color ShaderVisibleFormat;
-        };*/
+            std::optional<HAL::ResourceFormat::DepthStencil> Format;
+            std::optional<Geometry::Dimensions> Dimensions;
+        };
 
         ResourceScheduler(ResourceStorage* manager);
 
         template <class BufferDataT>
         void WillUseRootConstantBuffer();
 
-        void WillRenderToRenderTarget(Foundation::Name resourceName);
-
-        void WillRenderToDepthStencil(Foundation::Name resourceName);
-
-        void WillRenderToRenderTarget(
-            Foundation::Name resourceName,
-            HAL::ResourceFormat::Color dataFormat,
-            HAL::ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions);
-
-        void WillRenderToRenderTarget(
-            Foundation::Name resourceName,
-            HAL::ResourceFormat::TypelessColor dataFormat,
-            HAL::ResourceFormat::Color shaderVisisbleFormat,
-            HAL::ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions);
-
-        void WillRenderToDepthStencil(
-            Foundation::Name resourceName, 
-            HAL::ResourceFormat::DepthStencil dataFormat,
-            const Geometry::Dimensions& dimensions);
-
         // New scheduling system
 
-        void NewRenderTarget(); // 
-        void NewDepthStencil(); // 
-        void NewTexture(); // RWTexture..[]
-        void NewBuffer(); // RWStructuredBuffer
-        void UseRenderTarget(); // 
-        void UseDepthStencil(); // 
-        void ReadTexture(); // Texture..[]
-        void ReadBuffer(); // StructuredBuffer
-        void ReadWriteTexture(); // RWTexture..[]
-        void ReadWriteBuffer(); // RWStructuredBuffer
-
-        /*  void WillReadTexture();
-
-          void WillReadBuffer();
-
-          void WillReadWriteTexture();
-
-          void WillReadWriteBuffer();*/
+        void NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt);
+        void NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties = std::nullopt); 
+        void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 
+        void NewBuffer(); // TODO: Implement buffer API (RWStructuredBuffer)
+        void UseRenderTarget(Foundation::Name resourceName); 
+        void UseDepthStencil(Foundation::Name resourceName); 
+        void ReadTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt); 
+        void ReadBuffer(); // TODO: Implement buffer API (StructuredBuffer)
+        void ReadWriteTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt);
+        void ReadWriteBuffer(); // TODO: Implement buffer API (RWStructuredBuffer)
 
     private:
+        NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties);
+        NewDepthStencilProperties FillMissingFields(std::optional<NewDepthStencilProperties> properties);
+
         ResourceStorage* mResourceStorage;
     };
 

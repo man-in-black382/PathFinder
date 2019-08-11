@@ -23,12 +23,12 @@ namespace HAL
 
 
 
-    class ColorTextureResource : public TextureResource
+    class ColorTexture : public TextureResource
     {
     public:
         using TextureResource::TextureResource;
 
-        ColorTextureResource(
+        ColorTexture(
             const Device& device,
             ResourceFormat::Color dataType,
             ResourceFormat::TextureKind kind,
@@ -39,7 +39,7 @@ namespace HAL
             std::optional<CPUAccessibleHeapType> heapType = std::nullopt
         );
 
-        ~ColorTextureResource() = default;
+        ~ColorTexture() = default;
 
     private:
         ResourceFormat::Color mDataFormat;
@@ -48,12 +48,12 @@ namespace HAL
         inline ResourceFormat::Color DataFormat() const { return mDataFormat; };
     };
 
-    class TypelessTextureResource : public TextureResource
+    class TypelessTexture : public TextureResource
     {
     public:
         using TextureResource::TextureResource;
 
-        TypelessTextureResource(
+        TypelessTexture(
             const Device& device,
             ResourceFormat::TypelessColor dataType,
             ResourceFormat::TextureKind kind,
@@ -64,15 +64,15 @@ namespace HAL
             std::optional<CPUAccessibleHeapType> heapType = std::nullopt
         );
 
-        ~TypelessTextureResource() = default;
+        ~TypelessTexture() = default;
     };
 
-    class DepthStencilTextureResource : public TextureResource
+    class DepthStencilTexture : public TextureResource
     {
     public:
         using TextureResource::TextureResource;
 
-        DepthStencilTextureResource(
+        DepthStencilTexture(
             const Device& device,
             ResourceFormat::DepthStencil dataType,
             const Geometry::Dimensions& dimensions,
@@ -82,7 +82,7 @@ namespace HAL
             std::optional<CPUAccessibleHeapType> heapType = std::nullopt
         );
 
-        ~DepthStencilTextureResource() = default;
+        ~DepthStencilTexture() = default;
     };
 
 }

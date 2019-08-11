@@ -51,8 +51,8 @@ namespace HAL
         RTDescriptorHeap(const Device* device, uint32_t capacity);
         ~RTDescriptorHeap() = default;
 
-        RTDescriptor EmplaceDescriptorForTexture(const ColorTextureResource& resource);
-        RTDescriptor EmplaceDescriptorForTexture(const TypelessTextureResource& resource, ResourceFormat::Color concreteFormat);
+        RTDescriptor EmplaceDescriptorForTexture(const ColorTexture& resource);
+        RTDescriptor EmplaceDescriptorForTexture(const TypelessTexture& resource, ResourceFormat::Color concreteFormat);
 
     private:
         D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
@@ -65,7 +65,7 @@ namespace HAL
         DSDescriptorHeap(const Device* device, uint32_t capacity);
         ~DSDescriptorHeap() = default;
 
-        DSDescriptor EmplaceDescriptorForResource(const DepthStencilTextureResource& resource);
+        DSDescriptor EmplaceDescriptorForResource(const DepthStencilTexture& resource);
 
     private:
         D3D12_DEPTH_STENCIL_VIEW_DESC ResourceToDSVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
@@ -90,13 +90,13 @@ namespace HAL
         template <class T> SRDescriptor EmplaceDescriptorForStructuredBuffer(const BufferResource<T>& resource);
         template <class T> UADescriptor EmplaceDescriptorForUnorderedAccessBuffer(const BufferResource<T>& resource);
 
-        SRDescriptor EmplaceDescriptorForTexture(const ColorTextureResource& texture);
-        SRDescriptor EmplaceDescriptorForTexture(const DepthStencilTextureResource& texture);
-        SRDescriptor EmplaceDescriptorForTexture(const TypelessTextureResource& texture, ResourceFormat::Color shaderVisibleFormat);
+        SRDescriptor EmplaceDescriptorForTexture(const ColorTexture& texture);
+        SRDescriptor EmplaceDescriptorForTexture(const DepthStencilTexture& texture);
+        SRDescriptor EmplaceDescriptorForTexture(const TypelessTexture& texture, ResourceFormat::Color shaderVisibleFormat);
 
-        UADescriptor EmplaceDescriptorForUnorderedAccessTexture(const ColorTextureResource& texture);
-        UADescriptor EmplaceDescriptorForUnorderedAccessTexture(const DepthStencilTextureResource& texture);
-        UADescriptor EmplaceDescriptorForUnorderedAccessTexture(const TypelessTextureResource& texture, ResourceFormat::Color shaderVisibleFormat);
+        UADescriptor EmplaceDescriptorForUnorderedAccessTexture(const ColorTexture& texture);
+        UADescriptor EmplaceDescriptorForUnorderedAccessTexture(const DepthStencilTexture& texture);
+        UADescriptor EmplaceDescriptorForUnorderedAccessTexture(const TypelessTexture& texture, ResourceFormat::Color shaderVisibleFormat);
 
     private:
         D3D12_SHADER_RESOURCE_VIEW_DESC ResourceToSRVDescription(const D3D12_RESOURCE_DESC& resourceDesc, std::optional<ResourceFormat::Color> explicitFormat = std::nullopt) const;

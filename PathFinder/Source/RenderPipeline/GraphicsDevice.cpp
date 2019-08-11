@@ -26,12 +26,12 @@ namespace PathFinder
         if (depthStencilResourceName)
         {
             mRingCommandList.CurrentCommandList().SetRenderTarget(
-                mResourceStorage->GetBackBufferDescriptor(),
+                mResourceStorage->GetCurrentBackBufferDescriptor(),
                 mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName)
             );
         }
         else {
-            mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetBackBufferDescriptor());
+            mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor());
         }
     }
 
@@ -50,7 +50,7 @@ namespace PathFinder
 
     void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
     {
-        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetBackBufferDescriptor(), color);
+        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor(), color);
     }
 
     void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)

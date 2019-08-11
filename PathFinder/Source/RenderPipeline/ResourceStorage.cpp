@@ -14,7 +14,7 @@ namespace PathFinder
 
     void ResourceStorage::BeginFrame(uint64_t frameFenceValue)
     {
-        for (auto& passBufferPair : mRootConstantBuffers)
+        for (auto& passBufferPair : mPerpassConstantBuffers)
         {
             auto& buffer = passBufferPair.second;
             buffer->PrepareMemoryForNewFrame(frameFenceValue);
@@ -23,7 +23,7 @@ namespace PathFinder
 
     void ResourceStorage::EndFrame(uint64_t completedFrameFenceValue)
     {
-        for (auto& passBufferPair : mRootConstantBuffers)
+        for (auto& passBufferPair : mPerpassConstantBuffers)
         {
             auto& buffer = passBufferPair.second;
             buffer->DiscardMemoryForCompletedFrames(completedFrameFenceValue);
@@ -34,7 +34,7 @@ namespace PathFinder
     {
         if (auto format = GetResourceShaderVisibleFormatForCurrentPass(resourceName))
         {
-            if (auto descriptor = mDescriptorStorage.TryGetRTDescriptor(resourceName, format.value()))
+            if (auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, format.value()))
             {
                 return *descriptor;
             }
@@ -47,14 +47,14 @@ namespace PathFinder
         }
     }
 
-    HAL::RTDescriptor ResourceStorage::GetBackBufferDescriptor() const
+    HAL::RTDescriptor ResourceStorage::GetCurrentBackBufferDescriptor() const
     {
         return mBackBufferDescriptors[mCurrentBackBufferIndex];
     }
 
     HAL::DSDescriptor ResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName) const
     {
-        if (auto descriptor = mDescriptorStorage.TryGetDSDescriptor(resourceName))
+        if (auto descriptor = mDescriptorStorage.GetDSDescriptor(resourceName))
         {
             return *descriptor;
         }
@@ -79,13 +79,13 @@ namespace PathFinder
 
     void ResourceStorage::AllocateScheduledResources()
     {
-        for (auto& nameAllocationPair : mResourceDelayedAllocations)
+        for (auto& nameAllocationPair : mResourceAllocationActions)
         {
             auto& allocation = nameAllocationPair.second;
             allocation();
         }
 
-        mResourceDelayedAllocations.clear();
+        mResourceAllocationActions.clear();
     }
 
     void ResourceStorage::UseSwapChain(HAL::SwapChain& swapChain)
@@ -102,6 +102,11 @@ namespace PathFinder
         mResourceExpectedStates[resourceName] |= state;
     }
 
+    void ResourceStorage::RegisterColorFormatForResource(ResourceName resourceName, HAL::ResourceFormat::Color format)
+    {
+        mResourceShaderVisibleFormatMap[mCurrentPassName][resourceName] = format;
+    }
+
     void ResourceStorage::MarkResourceNameAsScheduled(ResourceName name)
     {
         mScheduledResourceNames[mCurrentPassName].push_back(name);
@@ -109,8 +114,8 @@ namespace PathFinder
 
     HAL::BufferResource<uint8_t>* ResourceStorage::GetRootConstantBufferForCurrentPass() const
     {
-        auto it = mRootConstantBuffers.find(mCurrentPassName);
-        if (it == mRootConstantBuffers.end()) return nullptr;
+        auto it = mPerpassConstantBuffers.find(mCurrentPassName);
+        if (it == mPerpassConstantBuffers.end()) return nullptr;
         return it->second.get();
     }
 

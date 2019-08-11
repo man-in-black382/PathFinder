@@ -53,7 +53,7 @@ namespace PathFinder
         mResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
 
-        HAL::ColorTextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
+        HAL::ColorTexture* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
 
         mGraphicsDevice.CommandList().TransitionResourceState(
             { HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer }

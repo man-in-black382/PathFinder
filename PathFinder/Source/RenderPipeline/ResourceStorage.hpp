@@ -36,7 +36,7 @@ namespace PathFinder
 
         HAL::RTDescriptor GetRenderTargetDescriptor(Foundation::Name resourceName) const;
         HAL::DSDescriptor GetDepthStencilDescriptor(Foundation::Name resourceName) const;
-        HAL::RTDescriptor GetBackBufferDescriptor() const;
+        HAL::RTDescriptor GetCurrentBackBufferDescriptor() const;
         
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(PassName passName);
@@ -64,19 +64,19 @@ namespace PathFinder
         using ResourceStateMap = std::unordered_map<ResourceName, HAL::ResourceState>;
         using ResourcePerPassStateMap = std::unordered_map<PassName, std::unordered_map<ResourceName, HAL::ResourceState>>;
         using ResourceFormatMap = std::unordered_map<PassName, std::unordered_map<ResourceName, HAL::ResourceFormat::Color>>;
-        using ResourceAllocationMap = std::unordered_map<ResourceName, std::function<void()>>;
+        using ResourceAllocationActions = std::unordered_map<ResourceName, std::function<void()>>;
         using BackBufferDescriptors = std::vector<HAL::RTDescriptor>;
-        using BackBufferResources = std::vector<HAL::ColorTextureResource*>;
+        using BackBufferResources = std::vector<HAL::ColorTexture*>;
         using RootConstantBufferMap = std::unordered_map<PassName, std::unique_ptr<HAL::RingBufferResource<uint8_t>>>;
 
         //template <class BufferT> using TextureAllocationCallback = std::function<void(const ResourceT&)>;
         template <class TextureT> using TextureAllocationCallback = std::function<void(const TextureT&)>;
-        template <class TextureT> using TextureAllocationCallbackMap = std::unordered_map<ResourceName, std::vector<TextureAllocationCallback<TextureT>>>;
+        template <class TextureT> using TexturePostAllocationActionMap = std::unordered_map<ResourceName, std::vector<TextureAllocationCallback<TextureT>>>;
 
-        using TextureAllocationCallbacks = std::tuple<
-            TextureAllocationCallbackMap<HAL::ColorTextureResource>,
-            TextureAllocationCallbackMap<HAL::TypelessTextureResource>,
-            TextureAllocationCallbackMap<HAL::DepthStencilTextureResource>
+        using TexturePostAllocationActions = std::tuple<
+            TexturePostAllocationActionMap<HAL::ColorTexture>,
+            TexturePostAllocationActionMap<HAL::TypelessTexture>,
+            TexturePostAllocationActionMap<HAL::DepthStencilTexture>
         >;
 
         template <class TextureT, class ...Args>
@@ -86,25 +86,58 @@ namespace PathFinder
         void AllocateRootConstantBufferIfNeeded();
 
         void RegisterStateForResource(ResourceName resourceName, HAL::ResourceState state);
+        void RegisterColorFormatForResource(ResourceName resourceName, HAL::ResourceFormat::Color format);
         void MarkResourceNameAsScheduled(ResourceName name);
 
         HAL::Device* mDevice;
 
         RenderSurface mDefaultRenderSurface;
+
+        // This class's logic works with 'the current' render pass.
+        // Saves the user from passing current pass name in every possible API.
         PassName mCurrentPassName;
+
+        // Amount of frames to be scheduled until a CPU wait is required.
         uint8_t mSimultaneousFramesInFlight;
 
+        // Names of all registered resources for every render pass
         ScheduledResourceNames mScheduledResourceNames;
+
+        // Storage for resource pointers. Holds them in memory.
         ResourceMap mResources;
+
+        // Stores states that are requested for each render pass
         ResourcePerPassStateMap mResourcePerPassStates;
+
+        // Masks of all states of each resource. 
+        // Each mask contains all states the resource will
+        // go through in the frame.
         ResourceStateMap mResourceExpectedStates;
+
+        // Marks current states of each resource.
+        // Changes through the frame in each render pass.
         ResourceStateMap mResourceCurrentStates;
-        ResourceAllocationMap mResourceDelayedAllocations;
+
+        // Holds per-pass color formats of each resource:
+        // actual types for typeless textures for a typed shader access,
+        // actual types of primitive (non-structured) buffers and so on
         ResourceFormatMap mResourceShaderVisibleFormatMap;
-        TextureAllocationCallbacks mTextureAllocationCallbacks;
+
+        // Lambdas that'll allocate texture resources after frame scheduling is done
+        ResourceAllocationActions mResourceAllocationActions;
+
+        // Callbacks to be called after texture resource is allocated
+        TexturePostAllocationActions mTexturePostAllocationActions;
+
+        // Manages descriptor heaps
         ResourceDescriptorStorage mDescriptorStorage;
+
+        // Dedicated storage for back buffer descriptors.
+        // No fancy management is required.
         BackBufferDescriptors mBackBufferDescriptors;
-        RootConstantBufferMap mRootConstantBuffers;
+
+        // Constant buffers for each pass that require it.
+        RootConstantBufferMap mPerpassConstantBuffers;
 
         uint8_t mCurrentBackBufferIndex = 0;
     };

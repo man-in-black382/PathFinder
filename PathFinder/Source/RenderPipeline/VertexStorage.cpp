@@ -124,6 +124,7 @@ namespace PathFinder
         case VertexLayout::Layout1P1N1UV1T1BT: return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBufferDescriptor.get();
         case VertexLayout::Layout1P1N1UV: return std::get< FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).VertexBufferDescriptor.get();
         case VertexLayout::Layout1P3: return std::get< FinalBufferPackage<Vertex1P3>>(mFinalBuffers).VertexBufferDescriptor.get();
+        default: return nullptr;
         }
     }
 
@@ -134,6 +135,7 @@ namespace PathFinder
         case VertexLayout::Layout1P1N1UV1T1BT: return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBufferDescriptor.get();
         case VertexLayout::Layout1P1N1UV: return std::get<FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).IndexBufferDescriptor.get();
         case VertexLayout::Layout1P3: return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).IndexBufferDescriptor.get();
+        default: return nullptr;
         }
     }
 

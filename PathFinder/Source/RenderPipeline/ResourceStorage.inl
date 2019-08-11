@@ -6,8 +6,8 @@ namespace PathFinder
     template <class RootConstants>
     RootConstants* ResourceStorage::GetRootConstantDataForCurrentPass() const
     {
-        auto bufferIt = mRootConstantBuffers.find(mCurrentPassName);
-        if (bufferIt == mRootConstantBuffers.end()) return nullptr;
+        auto bufferIt = mPerpassConstantBuffers.find(mCurrentPassName);
+        if (bufferIt == mPerpassConstantBuffers.end()) return nullptr;
 
         return reinterpret_cast<RootConstants *>(bufferIt->second->At(0));
     }
@@ -16,27 +16,30 @@ namespace PathFinder
     void ResourceStorage::QueueTextureAllocationIfNeeded(ResourceName resourceName, const TextureAllocationCallback<TextureT>& callback, Args&&... args)
     {
         auto resourceIt = mResources.find(resourceName);
+
         bool isAlreadyAllocated = resourceIt != mResources.end();
+        // Resource is already allocated, therefore scheduling stage is over,
+        // why are you even here?
         if (isAlreadyAllocated) return;
 
         // Save callback until resource is created
-        TextureAllocationCallbackMap<TextureT>& callbacks = std::get<TextureAllocationCallbackMap<TextureT>>(mTextureAllocationCallbacks);
-        callbacks[resourceName].push_back(callback);
+        TexturePostAllocationActionMap<TextureT>& postAllocationActions = std::get<TexturePostAllocationActionMap<TextureT>>(mTexturePostAllocationActions);
+        postAllocationActions[resourceName].push_back(callback);
 
-        bool isWaitingForAllocation = mResourceDelayedAllocations.find(resourceName) != mResourceDelayedAllocations.end();
+        bool isWaitingForAllocation = mResourceAllocationActions.find(resourceName) != mResourceAllocationActions.end();
         if (isWaitingForAllocation) return;
 
         Foundation::Name passName = mCurrentPassName;
 
-        mResourceDelayedAllocations[resourceName] = [this, passName, resourceName, args...]()
+        mResourceAllocationActions[resourceName] = [this, passName, resourceName, args...]()
         {
             HAL::ResourceState initialState = mResourcePerPassStates[passName][resourceName];
             HAL::ResourceState expectedStates = mResourceExpectedStates[resourceName];
 
-            auto resource = std::make_unique<TextureT>(args..., initialState, expectedStates);
+            auto resource = std::make_unique<TextureT>(*mDevice, args..., initialState, expectedStates);
 
             // Call all callbacks associated with this resource name
-            TextureAllocationCallbackMap<TextureT>& callbackMap = std::get<TextureAllocationCallbackMap<TextureT>>(mTextureAllocationCallbacks);
+            TexturePostAllocationActionMap<TextureT>& callbackMap = std::get<TexturePostAllocationActionMap<TextureT>>(mTexturePostAllocationActions);
             std::vector<TextureAllocationCallback<TextureT>>& callbackList = callbackMap[resourceName];
 
             for (TextureAllocationCallback<TextureT>& callback : callbackList)
@@ -53,8 +56,8 @@ namespace PathFinder
     template <class BufferDataT>
     void ResourceStorage::AllocateRootConstantBufferIfNeeded()
     {
-        auto bufferIt = mRootConstantBuffers.find(mCurrentPassName);
-        bool alreadyAllocated = bufferIt != mRootConstantBuffers.end();
+        auto bufferIt = mPerpassConstantBuffers.find(mCurrentPassName);
+        bool alreadyAllocated = bufferIt != mPerpassConstantBuffers.end();
 
         if (alreadyAllocated) return;
 
@@ -63,7 +66,7 @@ namespace PathFinder
         //
         auto bufferSize = Foundation::MemoryUtils::Align(sizeof(BufferDataT), 256);
 
-        mRootConstantBuffers.emplace(mCurrentPassName, std::make_unique<HAL::RingBufferResource<uint8_t>>(
+        mPerpassConstantBuffers.emplace(mCurrentPassName, std::make_unique<HAL::RingBufferResource<uint8_t>>(
             *mDevice, bufferSize, mSimultaneousFramesInFlight, 1,
             HAL::ResourceState::GenericRead,
             HAL::ResourceState::GenericRead,

@@ -19,8 +19,8 @@ namespace PathFinder
 
     void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->WillRenderToRenderTarget(ResourceNames::PlaygroundRenderTarget);
-        scheduler->WillRenderToDepthStencil(ResourceNames::GBufferDepthStencil);
+        /*scheduler->WillRenderToRenderTarget(ResourceNames::PlaygroundRenderTarget);
+        scheduler->WillRenderToDepthStencil(ResourceNames::GBufferDepthStencil);*/
         scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
     } 
 

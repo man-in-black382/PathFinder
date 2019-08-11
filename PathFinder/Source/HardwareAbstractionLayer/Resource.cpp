@@ -1,7 +1,7 @@
 #include "Resource.hpp"
 #include "Utils.h"
 
-#include "../Foundation/Visitor.hpp"
+#include "../Foundation/STDHelpers.hpp"
 
 namespace HAL
 {

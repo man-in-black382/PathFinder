@@ -3,7 +3,7 @@
 namespace HAL
 {
 
-    ColorTextureResource::ColorTextureResource(
+    ColorTexture::ColorTexture(
         const Device& device,
         ResourceFormat::Color dataType,
         ResourceFormat::TextureKind kind,
@@ -20,7 +20,7 @@ namespace HAL
         mDataFormat = dataType;
     }
 
-    TypelessTextureResource::TypelessTextureResource(
+    TypelessTexture::TypelessTexture(
         const Device& device,
         ResourceFormat::TypelessColor dataType,
         ResourceFormat::TextureKind kind,
@@ -36,7 +36,7 @@ namespace HAL
         mKind = kind;
     }
 
-    DepthStencilTextureResource::DepthStencilTextureResource(
+    DepthStencilTexture::DepthStencilTexture(
         const Device& device,
         ResourceFormat::DepthStencil dataType,
         const Geometry::Dimensions& dimensions,

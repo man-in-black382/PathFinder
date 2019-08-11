@@ -1,7 +1,8 @@
 #pragma once
 
-namespace Foundation
-{
+#include <variant>
+
+namespace Foundation {
 
     template<typename ...Ts>
     struct Visitor : Ts ... {
@@ -14,25 +15,12 @@ namespace Foundation
         return Visitor<Ts...>(lambdas...);
     }
 
-    /*  template<class Texture>
-      void GLFramebuffer::attachTextures(uint16_t mipLevel, const Texture &texture) {
-          attachTextureToColorAttachment(texture, ColorAttachment::Automatic, mipLevel);
-      }
-
-      template<class Texture, class... Textures>
-      void GLFramebuffer::attachTextures(uint16_t mipLevel, const Texture &head, const Textures &... tail) {
-          attachTextureToColorAttachment(head, ColorAttachment::Automatic, mipLevel);
-          attachTextures(mipLevel, tail...);
-      }*/
-
-
-
-    template<
+ /*   template<
         template<class...> class AssociativeContainer,
         class Key,
         class Value
     >
-    decltype(auto) Find(const AssocitiveContainer<Key, Value>& container, Key&& key)
+        decltype(auto) Find(const AssocitiveContainer<Key, Value>& container, Key&& key)
     {
         auto iterator = container.find(std::forward<Key>(key));
 
@@ -50,7 +38,7 @@ namespace Foundation
         class Key,
         class... Keys
     >
-    decltype(auto) Find(const AssociativeContainer<Key, Value>& container, Key&& key, Keys&&... keys)
+        decltype(auto) Find(const AssociativeContainer<Key, Value>& container, Key&& key, Keys&&... keys)
     {
         auto valuePtr = Find(container, std::forward<Key>(keys));
 
@@ -60,7 +48,7 @@ namespace Foundation
         }
 
 
-    }
+    }*/
 
 }
 

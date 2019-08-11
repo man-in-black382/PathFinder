@@ -61,7 +61,7 @@ namespace HAL
     RTDescriptorHeap::RTDescriptorHeap(const Device* device, uint32_t capacity)
         : DescriptorHeap(device, capacity, 1, D3D12_DESCRIPTOR_HEAP_TYPE_RTV) {}
 
-    RTDescriptor RTDescriptorHeap::EmplaceDescriptorForTexture(const ColorTextureResource& resource)
+    RTDescriptor RTDescriptorHeap::EmplaceDescriptorForTexture(const ColorTexture& resource)
     {
         ValidateCapacity(0);
 
@@ -76,7 +76,7 @@ namespace HAL
         return descriptor;
     }
 
-    RTDescriptor RTDescriptorHeap::EmplaceDescriptorForTexture(const TypelessTextureResource& resource, ResourceFormat::Color concreteFormat)
+    RTDescriptor RTDescriptorHeap::EmplaceDescriptorForTexture(const TypelessTexture& resource, ResourceFormat::Color concreteFormat)
     {
         ValidateCapacity(0);
 
@@ -155,7 +155,7 @@ namespace HAL
     DSDescriptorHeap::DSDescriptorHeap(const Device* device, uint32_t capacity)
         : DescriptorHeap(device, capacity, 1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV) {}
 
-    DSDescriptor DSDescriptorHeap::EmplaceDescriptorForResource(const DepthStencilTextureResource& resource)
+    DSDescriptor DSDescriptorHeap::EmplaceDescriptorForResource(const DepthStencilTexture& resource)
     {
         ValidateCapacity(0);
 
@@ -204,32 +204,32 @@ namespace HAL
     CBSRUADescriptorHeap::CBSRUADescriptorHeap(const Device* device, uint32_t rangeCapacity)
         : DescriptorHeap(device, rangeCapacity, std::underlying_type_t<Range>(Range::TotalCount), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {}
 
-    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const ColorTextureResource& texture)
+    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const ColorTexture& texture)
     {
         return EmplaceDescriptorForSRTexture(texture);
     }
 
-    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const DepthStencilTextureResource& texture)
+    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const DepthStencilTexture& texture)
     {
         return EmplaceDescriptorForSRTexture(texture);
     }
 
-    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const TypelessTextureResource& texture, ResourceFormat::Color shaderVisibleFormat)
+    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const TypelessTexture& texture, ResourceFormat::Color shaderVisibleFormat)
     {
         return EmplaceDescriptorForSRTexture(texture, shaderVisibleFormat);
     }
 
-    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const ColorTextureResource& texture)
+    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const ColorTexture& texture)
     {
         return EmplaceDescriptorForUATexture(texture);
     }
 
-    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const DepthStencilTextureResource& texture)
+    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const DepthStencilTexture& texture)
     {
         return EmplaceDescriptorForUATexture(texture);
     }
 
-    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const TypelessTextureResource& texture, ResourceFormat::Color shaderVisibleFormat)
+    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const TypelessTexture& texture, ResourceFormat::Color shaderVisibleFormat)
     {
         return EmplaceDescriptorForUATexture(texture, shaderVisibleFormat);
     }

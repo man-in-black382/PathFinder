@@ -15,7 +15,7 @@ namespace HAL
         mInputElements.push_back(desc);
         mElementSemanticNames.push_back(semanticName);
 
-        mDesc.NumElements = mInputElements.size();
+        mDesc.NumElements = (UINT)mInputElements.size();
         mDesc.pInputElementDescs = &mInputElements[0];
 
         SetSemanticNames();
@@ -34,7 +34,7 @@ namespace HAL
         mInputElements.push_back(desc);
         mElementSemanticNames.push_back(semanticName);
 
-        mDesc.NumElements = mInputElements.size();
+        mDesc.NumElements = (UINT)mInputElements.size();
         mDesc.pInputElementDescs = &mInputElements[0];
 
         SetSemanticNames();
