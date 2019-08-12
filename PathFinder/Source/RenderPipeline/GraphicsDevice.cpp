@@ -5,9 +5,9 @@ namespace PathFinder
 
     GraphicsDevice::GraphicsDevice(
         const HAL::Device& device,
-        const ResourceStorage* resourceManager,
-        const PipelineStateManager* pipelineStateManager,
-        const VertexStorage* vertexStorage,
+        ResourceStorage* resourceManager,
+        PipelineStateManager* pipelineStateManager,
+        VertexStorage* vertexStorage,
         uint8_t simultaneousFramesInFlight)
         :
         mCommandQueue{ device },

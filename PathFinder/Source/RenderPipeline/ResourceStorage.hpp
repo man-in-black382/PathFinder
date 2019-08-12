@@ -3,6 +3,7 @@
 #include "ResourceStorage.hpp"
 #include "RenderSurface.hpp"
 #include "ResourceDescriptorStorage.hpp"
+#include "HashSpecializations.hpp"
 
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
@@ -34,14 +35,14 @@ namespace PathFinder
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
 
-        HAL::RTDescriptor GetRenderTargetDescriptor(Foundation::Name resourceName) const;
-        HAL::DSDescriptor GetDepthStencilDescriptor(Foundation::Name resourceName) const;
-        HAL::RTDescriptor GetCurrentBackBufferDescriptor() const;
+        const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName);
+        const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName);
+        const HAL::RTDescriptor& GetCurrentBackBufferDescriptor();
         
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(PassName passName);
         void SetCurrentStateForResource(ResourceName name, HAL::ResourceState state);
-        void AllocateScheduledResources();
+        void AllocateScheduledResources(); 
         void UseSwapChain(HAL::SwapChain& swapChain);
 
         template <class RootConstants> 
@@ -59,14 +60,22 @@ namespace PathFinder
         const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };
 
     private:
+       /* using TextureResourceVariant = std::variant<
+            std::unique_ptr<HAL::ColorTexture>, 
+            std::unique_ptr<HAL::TypelessTexture>,
+            std::unique_ptr<HAL::DepthStencilTexture>
+        >;*/
+
         using ScheduledResourceNames = std::unordered_map<PassName, std::vector<ResourceName>>;
         using ResourceMap = std::unordered_map<ResourceName, std::unique_ptr<HAL::Resource>>;
         using ResourceStateMap = std::unordered_map<ResourceName, HAL::ResourceState>;
-        using ResourcePerPassStateMap = std::unordered_map<PassName, std::unordered_map<ResourceName, HAL::ResourceState>>;
-        using ResourceFormatMap = std::unordered_map<PassName, std::unordered_map<ResourceName, HAL::ResourceFormat::Color>>;
+        using ResourcePerPassStateMap = std::unordered_map<NameNameTuple, HAL::ResourceState>;
+        using ResourceFormatMap = std::unordered_map<NameNameTuple, HAL::ResourceFormat::Color>;
         using ResourceAllocationActions = std::unordered_map<ResourceName, std::function<void()>>;
+
         using BackBufferDescriptors = std::vector<HAL::RTDescriptor>;
         using BackBufferResources = std::vector<HAL::ColorTexture*>;
+
         using RootConstantBufferMap = std::unordered_map<PassName, std::unique_ptr<HAL::RingBufferResource<uint8_t>>>;
 
         //template <class BufferT> using TextureAllocationCallback = std::function<void(const ResourceT&)>;

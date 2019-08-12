@@ -16,9 +16,9 @@ namespace PathFinder
     public:
         GraphicsDevice(
             const HAL::Device& device,
-            const ResourceStorage* resourceManager, 
-            const PipelineStateManager* pipelineStateManager,
-            const VertexStorage* vertexStorage, 
+            ResourceStorage* resourceManager, 
+            PipelineStateManager* pipelineStateManager,
+            VertexStorage* vertexStorage, 
             uint8_t simultaneousFramesInFlight
         );
 
@@ -45,9 +45,9 @@ namespace PathFinder
         HAL::GraphicsCommandQueue mCommandQueue;
         HAL::DirectRingCommandList mRingCommandList;
 
-        const ResourceStorage* mResourceStorage;
-        const PipelineStateManager* mPipelineStateManager;
-        const VertexStorage* mVertexStorage;
+        ResourceStorage* mResourceStorage;
+        PipelineStateManager* mPipelineStateManager;
+        VertexStorage* mVertexStorage;
 
     public:
         inline HAL::GraphicsCommandList& CommandList() { return mRingCommandList.CurrentCommandList(); }

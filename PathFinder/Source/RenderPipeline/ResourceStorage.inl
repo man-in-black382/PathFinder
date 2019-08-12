@@ -33,7 +33,7 @@ namespace PathFinder
 
         mResourceAllocationActions[resourceName] = [this, passName, resourceName, args...]()
         {
-            HAL::ResourceState initialState = mResourcePerPassStates[passName][resourceName];
+            HAL::ResourceState initialState = mResourcePerPassStates[std::make_tuple(passName, resourceName)];
             HAL::ResourceState expectedStates = mResourceExpectedStates[resourceName];
 
             auto resource = std::make_unique<TextureT>(*mDevice, args..., initialState, expectedStates);

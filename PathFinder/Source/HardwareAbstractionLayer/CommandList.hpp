@@ -78,15 +78,22 @@ namespace HAL
     public:
         using CopyCommandListBase::CopyCommandListBase;
 
-        void SetDescriptorHeap(const DescriptorHeap& heap);
         void SetPipelineState(const ComputePipelineState& state);
         void SetComputeRootSignature(const RootSignature& signature);
 
+        template <class... Descriptors> void SetDescriptorHeap(const DescriptorHeap<Descriptors...>& heap);
         template <class T> void SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex);
 
         void SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
     };
+
+    template <class... Descriptors>
+    void ComputeCommandListBase::SetDescriptorHeap(const DescriptorHeap<Descriptors...>& heap)
+    {
+        auto ptr = heap.D3DHeap();
+        mList->SetDescriptorHeaps(1, (ID3D12DescriptorHeap* const*)&ptr);
+    }
 
     template <class T>
     void ComputeCommandListBase::SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex)

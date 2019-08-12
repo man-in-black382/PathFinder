@@ -54,7 +54,7 @@ namespace PathFinder
     void ResourceScheduler::NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
     {
         mResourceStorage->MarkResourceNameAsScheduled(resourceName);
-        mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
+        mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::UnorderedAccess);
 
         HAL::Resource::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
         NewTextureProperties props = FillMissingFields(properties);
@@ -63,7 +63,7 @@ namespace PathFinder
         {
             auto descriptorCreationAction = [this, resourceName, props](const HAL::TypelessTexture& resource)
             {
-                mResourceStorage->mDescriptorStorage.EmplaceRTDescriptorIfNeeded(resourceName, resource, *props.ShaderVisibleFormat);
+                mResourceStorage->mDescriptorStorage.EmplaceUADescriptorIfNeeded(resourceName, resource, *props.ShaderVisibleFormat);
                 mResourceStorage->RegisterColorFormatForResource(resourceName, *props.ShaderVisibleFormat);
             };
 
@@ -72,7 +72,7 @@ namespace PathFinder
         else {
             auto descriptorCreationAction = [this, resourceName](const HAL::ColorTexture& resource)
             {
-                mResourceStorage->mDescriptorStorage.EmplaceRTDescriptorIfNeeded(resourceName, resource);
+                mResourceStorage->mDescriptorStorage.EmplaceUADescriptorIfNeeded(resourceName, resource);
                 mResourceStorage->RegisterColorFormatForResource(resourceName, resource.DataFormat());
             };
 
@@ -87,12 +87,16 @@ namespace PathFinder
 
     void ResourceScheduler::UseRenderTarget(Foundation::Name resourceName)
     {
+        mResourceStorage->MarkResourceNameAsScheduled(resourceName);
+        mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
 
+        //HAL::ResourceFormat::Color format = 
     }
 
     void ResourceScheduler::UseDepthStencil(Foundation::Name resourceName)
     {
-
+        mResourceStorage->MarkResourceNameAsScheduled(resourceName);
+        mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::DepthWrite);
     }
 
     void ResourceScheduler::ReadTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)

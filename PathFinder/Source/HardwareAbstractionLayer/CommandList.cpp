@@ -66,12 +66,6 @@ namespace HAL
         mList->SetComputeRootUnorderedAccessView(rootParameterIndex, resource.GPUVirtualAddress());
     }
 
-    void ComputeCommandListBase::SetDescriptorHeap(const DescriptorHeap& heap)
-    {
-        auto ptr = heap.D3DHeap();
-        mList->SetDescriptorHeaps(1, (ID3D12DescriptorHeap* const*)&ptr);
-    }
-
     void ComputeCommandListBase::SetPipelineState(const ComputePipelineState& state)
     {
         mList->SetPipelineState(state.D3DCompiledState());

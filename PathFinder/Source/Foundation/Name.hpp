@@ -8,10 +8,12 @@ namespace Foundation
     class Name
     {
     public:
+        using ID = uint16_t;
+
         Name();
         Name(const std::string& string);
         Name(const char* cString);
-        explicit Name(uint64_t id);
+        explicit Name(ID id);
         ~Name();
 
         Name(const Name& other);
@@ -24,12 +26,12 @@ namespace Foundation
         bool operator<(const Name& other) const;
 
         const std::string& ToSring() const;
-        uint64_t ToId() const;
+        ID ToId() const;
 
         bool IsValid() const;
 
     private:
-        uint64_t m_Id;
+        ID m_Id;
     };
 }
 

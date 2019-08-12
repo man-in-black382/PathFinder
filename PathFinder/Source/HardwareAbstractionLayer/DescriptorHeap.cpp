@@ -4,70 +4,16 @@
 namespace HAL
 {
 
-    DescriptorHeap::DescriptorHeap(const Device* device, uint32_t rangeCapacity, uint32_t rangeCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
-        : mDevice{ device }, mRangeCapacity{ rangeCapacity }, mIncrementSize{ device->D3DPtr()->GetDescriptorHandleIncrementSize(heapType) }
-    {
-        D3D12_DESCRIPTOR_HEAP_DESC desc{};
-        desc.NumDescriptors = rangeCapacity * rangeCount;
-        desc.Type = heapType;
-        desc.NodeMask = 0;
-
-        bool shaderVisible = heapType == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV || heapType == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-
-        desc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-        ThrowIfFailed(device->D3DPtr()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mHeap)));
-
-        D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle = mHeap->GetCPUDescriptorHandleForHeapStart();
-        D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle{};
-
-        if (shaderVisible)
-        {
-            GPUHandle = mHeap->GetGPUDescriptorHandleForHeapStart();
-        }
-
-        for (auto rangeIdx = 0u; rangeIdx < rangeCount; rangeIdx++)
-        {
-            RangeAllocationInfo range{ { CPUHandle.ptr + rangeIdx * mIncrementSize }, { GPUHandle.ptr + rangeIdx * mIncrementSize }, 0 };
-            mRanges.push_back(range);
-        }
-    }
-
-    DescriptorHeap::~DescriptorHeap() {}
-
-    void DescriptorHeap::ValidateCapacity(uint32_t rangeIndex) const
-    {
-        if (mRanges[rangeIndex].InsertedDescriptorCount >= mRangeCapacity)
-        {
-            throw std::runtime_error("Exceeded descriptor heap's capacity");
-        }
-    }
-
-    void DescriptorHeap::IncrementCounters(uint32_t rangeIndex)
-    {
-        RangeAllocationInfo& range = mRanges[rangeIndex];
-        range.CurrentCPUHandle.ptr += mIncrementSize;
-        range.CurrentGPUHandle.ptr += mIncrementSize;
-        range.InsertedDescriptorCount++;
-    }
-
-    DescriptorHeap::RangeAllocationInfo& DescriptorHeap::GetRange(uint32_t rangeIndex)
-    {
-        return mRanges[rangeIndex];
-    }
-
-
-
     RTDescriptorHeap::RTDescriptorHeap(const Device* device, uint32_t capacity)
         : DescriptorHeap(device, capacity, 1, D3D12_DESCRIPTOR_HEAP_TYPE_RTV) {}
 
-    RTDescriptor RTDescriptorHeap::EmplaceDescriptorForTexture(const ColorTexture& resource)
+    const RTDescriptor& RTDescriptorHeap::EmplaceDescriptorForTexture(const ColorTexture& resource)
     {
         ValidateCapacity(0);
 
         RangeAllocationInfo& range = GetRange(0);
 
-        RTDescriptor descriptor{ range.CurrentCPUHandle, range.InsertedDescriptorCount };
+        RTDescriptor& descriptor = std::get<DescriptorContainer<RTDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.InsertedDescriptorCount);
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(resource.D3DDescription());
         mDevice->D3DPtr()->CreateRenderTargetView(resource.D3DPtr(), &rtvDesc, range.CurrentCPUHandle);
 
@@ -76,13 +22,13 @@ namespace HAL
         return descriptor;
     }
 
-    RTDescriptor RTDescriptorHeap::EmplaceDescriptorForTexture(const TypelessTexture& resource, ResourceFormat::Color concreteFormat)
+    const RTDescriptor& RTDescriptorHeap::EmplaceDescriptorForTexture(const TypelessTexture& resource, ResourceFormat::Color concreteFormat)
     {
         ValidateCapacity(0);
 
         RangeAllocationInfo& range = GetRange(0);
 
-        RTDescriptor descriptor{ range.CurrentCPUHandle, range.InsertedDescriptorCount };
+        RTDescriptor& descriptor = std::get<DescriptorContainer<RTDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.InsertedDescriptorCount);
 
         D3D12_RESOURCE_DESC d3dDesc = resource.D3DDescription();
         d3dDesc.Format = ResourceFormat::D3DFormat(concreteFormat);
@@ -155,13 +101,13 @@ namespace HAL
     DSDescriptorHeap::DSDescriptorHeap(const Device* device, uint32_t capacity)
         : DescriptorHeap(device, capacity, 1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV) {}
 
-    DSDescriptor DSDescriptorHeap::EmplaceDescriptorForResource(const DepthStencilTexture& resource)
+    const DSDescriptor& DSDescriptorHeap::EmplaceDescriptorForResource(const DepthStencilTexture& resource)
     {
         ValidateCapacity(0);
 
         RangeAllocationInfo& range = GetRange(0);
 
-        DSDescriptor descriptor{ range.CurrentCPUHandle, range.InsertedDescriptorCount };
+        const DSDescriptor& descriptor = std::get<DescriptorContainer<DSDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.InsertedDescriptorCount);
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = ResourceToDSVDescription(resource.D3DDescription());
         mDevice->D3DPtr()->CreateDepthStencilView(resource.D3DPtr(), &dsvDesc, range.CurrentCPUHandle);
 
@@ -204,32 +150,32 @@ namespace HAL
     CBSRUADescriptorHeap::CBSRUADescriptorHeap(const Device* device, uint32_t rangeCapacity)
         : DescriptorHeap(device, rangeCapacity, std::underlying_type_t<Range>(Range::TotalCount), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {}
 
-    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const ColorTexture& texture)
+    const SRDescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const ColorTexture& texture)
     {
         return EmplaceDescriptorForSRTexture(texture);
     }
 
-    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const DepthStencilTexture& texture)
+    const SRDescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const DepthStencilTexture& texture)
     {
         return EmplaceDescriptorForSRTexture(texture);
     }
 
-    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const TypelessTexture& texture, ResourceFormat::Color shaderVisibleFormat)
+    const SRDescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForTexture(const TypelessTexture& texture, ResourceFormat::Color shaderVisibleFormat)
     {
         return EmplaceDescriptorForSRTexture(texture, shaderVisibleFormat);
     }
 
-    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const ColorTexture& texture)
+    const UADescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const ColorTexture& texture)
     {
         return EmplaceDescriptorForUATexture(texture);
     }
 
-    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const DepthStencilTexture& texture)
+    const UADescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const DepthStencilTexture& texture)
     {
         return EmplaceDescriptorForUATexture(texture);
     }
 
-    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const TypelessTexture& texture, ResourceFormat::Color shaderVisibleFormat)
+    const UADescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessTexture(const TypelessTexture& texture, ResourceFormat::Color shaderVisibleFormat)
     {
         return EmplaceDescriptorForUATexture(texture, shaderVisibleFormat);
     }
@@ -355,7 +301,7 @@ namespace HAL
         return desc;
     }
 
-    SRDescriptor CBSRUADescriptorHeap::EmplaceDescriptorForSRTexture(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat)
+    const SRDescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForSRTexture(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat)
     {
         auto index = std::underlying_type_t<Range>(RangeTypeForTexture(texture));
 
@@ -363,7 +309,7 @@ namespace HAL
 
         RangeAllocationInfo& range = GetRange(index);
 
-        SRDescriptor descriptor{ range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount };
+        const SRDescriptor& descriptor = std::get<DescriptorContainer<SRDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount);
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), shaderVisibleFormat);
 
         mDevice->D3DPtr()->CreateShaderResourceView(texture.D3DPtr(), &desc, range.CurrentCPUHandle);
@@ -373,7 +319,7 @@ namespace HAL
         return descriptor;
     }
 
-    UADescriptor CBSRUADescriptorHeap::EmplaceDescriptorForUATexture(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat)
+    const UADescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForUATexture(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat)
     {
         auto index = std::underlying_type_t<Range>(RangeTypeForTexture(texture));
 
@@ -381,7 +327,7 @@ namespace HAL
 
         RangeAllocationInfo& range = GetRange(index);
 
-        UADescriptor descriptor{ range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount };
+        const UADescriptor& descriptor = std::get<DescriptorContainer<UADescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount);
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), shaderVisibleFormat);
 
         mDevice->D3DPtr()->CreateUnorderedAccessView(texture.D3DPtr(), nullptr, &desc, range.CurrentCPUHandle);

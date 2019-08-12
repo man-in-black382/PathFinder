@@ -11,7 +11,7 @@ namespace Foundation
 
     }
 
-    Name::Name(uint64_t id)
+    Name::Name(ID id)
         : m_Id{ id }
     {
 
@@ -58,7 +58,7 @@ namespace Foundation
         return *this;
     }
 
-    uint64_t Name::ToId() const
+    Name::ID Name::ToId() const
     {
         assert(m_Id != NameRegistry::INVALID_ID);
         return m_Id;

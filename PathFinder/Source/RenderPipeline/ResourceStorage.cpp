@@ -30,11 +30,11 @@ namespace PathFinder
         }
     }
 
-    HAL::RTDescriptor ResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName) const
+    const HAL::RTDescriptor& ResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
     {
         if (auto format = GetResourceShaderVisibleFormatForCurrentPass(resourceName))
         {
-            if (auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, format.value()))
+            if (auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, *format))
             {
                 return *descriptor;
             }
@@ -47,12 +47,12 @@ namespace PathFinder
         }
     }
 
-    HAL::RTDescriptor ResourceStorage::GetCurrentBackBufferDescriptor() const
+    const HAL::RTDescriptor& ResourceStorage::GetCurrentBackBufferDescriptor()
     {
         return mBackBufferDescriptors[mCurrentBackBufferIndex];
     }
 
-    HAL::DSDescriptor ResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName) const
+    const HAL::DSDescriptor& ResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
     {
         if (auto descriptor = mDescriptorStorage.GetDSDescriptor(resourceName))
         {
@@ -98,13 +98,13 @@ namespace PathFinder
 
     void ResourceStorage::RegisterStateForResource(ResourceName resourceName, HAL::ResourceState state)
     {
-        mResourcePerPassStates[mCurrentPassName][resourceName] = state;
+        mResourcePerPassStates[std::make_tuple(mCurrentPassName, resourceName)] = state;
         mResourceExpectedStates[resourceName] |= state;
     }
 
     void ResourceStorage::RegisterColorFormatForResource(ResourceName resourceName, HAL::ResourceFormat::Color format)
     {
-        mResourceShaderVisibleFormatMap[mCurrentPassName][resourceName] = format;
+        mResourceShaderVisibleFormatMap[std::make_tuple(mCurrentPassName, resourceName)] = format;
     }
 
     void ResourceStorage::MarkResourceNameAsScheduled(ResourceName name)
@@ -141,30 +141,16 @@ namespace PathFinder
 
     std::optional<HAL::ResourceState> ResourceStorage::GetResourceStateForCurrentPass(ResourceName resourceName) const
     {
-        auto mapIt = mResourcePerPassStates.find(mCurrentPassName);
-
-        if (mapIt == mResourcePerPassStates.end()) return std::nullopt;
-
-        auto& map = mapIt->second;
-        auto stateIt = map.find(resourceName);
-
-        if (stateIt == map.end()) return std::nullopt;
-
-        return stateIt->second;
+        auto it = mResourcePerPassStates.find(std::make_tuple(mCurrentPassName, resourceName));
+        if (it == mResourcePerPassStates.end()) return std::nullopt;
+        return it->second;
     }
 
     std::optional<HAL::ResourceFormat::Color> ResourceStorage::GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const
     {
-        auto mapIt = mResourceShaderVisibleFormatMap.find(mCurrentPassName);
-
-        if (mapIt == mResourceShaderVisibleFormatMap.end()) return std::nullopt;
-
-        auto& map = mapIt->second;
-        auto formatIt = map.find(resourceName);
-
-        if (formatIt == map.end()) return std::nullopt;
-
-        return formatIt->second;
+        auto it = mResourceShaderVisibleFormatMap.find(std::make_tuple(mCurrentPassName, resourceName));
+        if (it == mResourceShaderVisibleFormatMap.end()) return std::nullopt;
+        return it->second;
     }
 
 }
