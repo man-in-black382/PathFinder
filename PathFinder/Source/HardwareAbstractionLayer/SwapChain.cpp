@@ -37,7 +37,7 @@ namespace HAL
         for (int bufferIdx = 0; bufferIdx < bufferCount; bufferIdx++)
         {
             ThrowIfFailed(mSwapChain->GetBuffer(bufferIdx, IID_PPV_ARGS(&backBufferResourcePtr)));
-            mBackBuffers.emplace_back(std::make_unique<ColorTexture>(backBufferResourcePtr));
+            mBackBuffers.emplace_back(std::make_unique<TextureResource>(backBufferResourcePtr));
         }
     }
 

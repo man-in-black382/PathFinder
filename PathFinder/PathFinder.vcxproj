@@ -243,6 +243,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClCompile Include="Source\ThirdParty\imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Foundation\Assert.hpp" />
     <ClInclude Include="Source\Foundation\BitwiseEnum.hpp" />
     <ClInclude Include="Source\Foundation\Color.hpp" />
     <ClInclude Include="Source\Foundation\Event.hpp" />

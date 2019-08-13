@@ -47,7 +47,7 @@ namespace PathFinder
         void NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties = std::nullopt); 
         void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 
         void NewBuffer(); // TODO: Implement buffer API (RWStructuredBuffer)
-        void UseRenderTarget(Foundation::Name resourceName); 
+        void UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt);
         void UseDepthStencil(Foundation::Name resourceName); 
         void ReadTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt); 
         void ReadBuffer(); // TODO: Implement buffer API (StructuredBuffer)

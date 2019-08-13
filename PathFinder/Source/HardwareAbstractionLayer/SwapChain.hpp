@@ -31,7 +31,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<IDXGIFactory> mDXGIFactory;
         Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
 
-        std::vector<std::unique_ptr<ColorTexture>> mBackBuffers;
+        std::vector<std::unique_ptr<TextureResource>> mBackBuffers;
 
     public:
         inline auto& BackBuffers() { return mBackBuffers; }

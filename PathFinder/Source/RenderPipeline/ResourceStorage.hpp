@@ -56,16 +56,12 @@ namespace PathFinder
         std::optional<HAL::ResourceState> GetResourceStateForCurrentPass(ResourceName resourceName) const;
         std::optional<HAL::ResourceFormat::Color> GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const;
 
+        bool IsResourceScheduled(ResourceName resourceName) const;
+
     private:
         const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };
 
     private:
-       /* using TextureResourceVariant = std::variant<
-            std::unique_ptr<HAL::ColorTexture>, 
-            std::unique_ptr<HAL::TypelessTexture>,
-            std::unique_ptr<HAL::DepthStencilTexture>
-        >;*/
-
         using ScheduledResourceNames = std::unordered_map<PassName, std::vector<ResourceName>>;
         using ResourceMap = std::unordered_map<ResourceName, std::unique_ptr<HAL::Resource>>;
         using ResourceStateMap = std::unordered_map<ResourceName, HAL::ResourceState>;
@@ -74,7 +70,7 @@ namespace PathFinder
         using ResourceAllocationActions = std::unordered_map<ResourceName, std::function<void()>>;
 
         using BackBufferDescriptors = std::vector<HAL::RTDescriptor>;
-        using BackBufferResources = std::vector<HAL::ColorTexture*>;
+        using BackBufferResources = std::vector<HAL::TextureResource*>;
 
         using RootConstantBufferMap = std::unordered_map<PassName, std::unique_ptr<HAL::RingBufferResource<uint8_t>>>;
 
@@ -82,11 +78,14 @@ namespace PathFinder
         template <class TextureT> using TextureAllocationCallback = std::function<void(const TextureT&)>;
         template <class TextureT> using TexturePostAllocationActionMap = std::unordered_map<ResourceName, std::vector<TextureAllocationCallback<TextureT>>>;
 
-        using TexturePostAllocationActions = std::tuple<
-            TexturePostAllocationActionMap<HAL::ColorTexture>,
-            TexturePostAllocationActionMap<HAL::TypelessTexture>,
-            TexturePostAllocationActionMap<HAL::DepthStencilTexture>
-        >;
+        struct ResourcePipelineAdapter
+        {
+            std::unique_ptr<HAL::Resource> Resource;
+            std::unordered_map<PassName, HAL::ResourceState> PerPassStates;
+            HAL::ResourceState CurrentState;
+            std::function<void()> Allocator;
+            //std::vector
+        };
 
         template <class TextureT, class ...Args>
         void QueueTextureAllocationIfNeeded(ResourceName resourceName, const TextureAllocationCallback<TextureT>& callback, Args&&... args);
@@ -136,7 +135,7 @@ namespace PathFinder
         ResourceAllocationActions mResourceAllocationActions;
 
         // Callbacks to be called after texture resource is allocated
-        TexturePostAllocationActions mTexturePostAllocationActions;
+        //TexturePostAllocationActions mTexturePostAllocationActions;
 
         // Manages descriptor heaps
         ResourceDescriptorStorage mDescriptorStorage;

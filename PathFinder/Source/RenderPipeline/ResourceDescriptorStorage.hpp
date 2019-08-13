@@ -7,6 +7,7 @@
 #include "../HardwareAbstractionLayer/BufferResource.hpp"
 
 #include <unordered_map>
+#include <optional>
 
 namespace PathFinder
 {
@@ -24,16 +25,21 @@ namespace PathFinder
         const HAL::UADescriptor* GetUADescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
         const HAL::CBDescriptor* GetCBDescriptor(ResourceName resourceName);
 
-        const HAL::RTDescriptor& EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTexture& texture);
-        const HAL::RTDescriptor& EmplaceRTDescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTexture& texture, HAL::ResourceFormat::Color format);
+        const HAL::RTDescriptor& EmplaceRTDescriptorIfNeeded(
+            ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt
+        );
 
-        const HAL::DSDescriptor& EmplaceDSDescriptorIfNeeded(ResourceName resourceName, const HAL::DepthStencilTexture& texture);
+        const HAL::DSDescriptor& EmplaceDSDescriptorIfNeeded(
+            ResourceName resourceName, const HAL::TextureResource& texture
+        );
 
-        const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTexture& texture);
-        const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTexture& texture, HAL::ResourceFormat::Color format);
+        const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(
+            ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt
+        );
 
-        const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(ResourceName resourceName, const HAL::ColorTexture& texture);
-        const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(ResourceName resourceName, const HAL::TypelessTexture& texture, HAL::ResourceFormat::Color format);
+        const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(
+            ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt
+        );
 
     private:
         struct DSCBSet
@@ -42,22 +48,29 @@ namespace PathFinder
             const HAL::CBDescriptor* cbDescriptor = nullptr;
         };
 
-        struct RTSRUASet
+        struct SRUASet
         {
-            const HAL::RTDescriptor* rtDescriptor = nullptr;
             const HAL::SRDescriptor* srDescriptor = nullptr;
             const HAL::UADescriptor* uaDescriptor = nullptr;
         };
 
+        struct RTSRUASet : SRUASet
+        {
+            const HAL::RTDescriptor* rtDescriptor = nullptr;
+        };
+        
         struct DescriptorSet
         {
             DSCBSet DSCB;
-            RTSRUASet TypelessRTSRUA;
-            std::unordered_map<HAL::ResourceFormat::Color, RTSRUASet> RTSRUA;
+            RTSRUASet TypelessSRUA; // For typeless buffers (StructuredBuffer for example)
+            std::unordered_map<HAL::ResourceFormat::Color, RTSRUASet> RTSRUA; // For typed resources, such as textures and typed buffers
         };
 
+        void ValidateRTFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat);
+        void ValidateSRUAFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat);
+
         const DSCBSet& GetDSCBSet(ResourceName name);
-        const RTSRUASet& GetRTSRUASet(ResourceName name);
+        const SRUASet& GetTypelessSRUASet(ResourceName name);
         const RTSRUASet& GetRTSRUASet(ResourceName name, HAL::ResourceFormat::Color format);
 
         uint32_t mDescriptorHeapCapacity = 10000;

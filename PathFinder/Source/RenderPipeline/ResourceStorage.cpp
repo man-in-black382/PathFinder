@@ -153,4 +153,9 @@ namespace PathFinder
         return it->second;
     }
 
+    bool ResourceStorage::IsResourceScheduled(ResourceName resourceName) const
+    {
+        return mResourceAllocationActions.find(resourceName) != mResourceAllocationActions.end();
+    }
+
 }

@@ -8,6 +8,8 @@ namespace PathFinder
 
     void ResourceScheduler::NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
     {
+       /* if (mResourceStorage->IsResourceScheduled(resourceName)) throw std::invalid_argument("New render target has already been scheduled");
+
         mResourceStorage->MarkResourceNameAsScheduled(resourceName);
         mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
 
@@ -32,11 +34,13 @@ namespace PathFinder
             };
 
             mResourceStorage->QueueTextureAllocationIfNeeded<HAL::ColorTexture>(resourceName, descriptorCreationAction, *props.ShaderVisibleFormat, *props.Kind, *props.Dimensions, clearValue);
-        }
+        }*/
     }
 
     void ResourceScheduler::NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties)
     {
+      /*  if (mResourceStorage->IsResourceScheduled(resourceName)) throw std::invalid_argument("New depth-stencil texture has already been scheduled");
+
         mResourceStorage->MarkResourceNameAsScheduled(resourceName);
         mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::DepthWrite);
 
@@ -48,11 +52,13 @@ namespace PathFinder
             mResourceStorage->mDescriptorStorage.EmplaceDSDescriptorIfNeeded(resourceName, resource);
         };
 
-        mResourceStorage->QueueTextureAllocationIfNeeded<HAL::DepthStencilTexture>(resourceName, descriptorCreationAction, *props.Format, *props.Dimensions, clearValue);
+        mResourceStorage->QueueTextureAllocationIfNeeded<HAL::DepthStencilTexture>(resourceName, descriptorCreationAction, *props.Format, *props.Dimensions, clearValue);*/
     }
 
     void ResourceScheduler::NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
     {
+      /*  if (mResourceStorage->IsResourceScheduled(resourceName)) throw std::invalid_argument("Texture creation has already been scheduled");
+
         mResourceStorage->MarkResourceNameAsScheduled(resourceName);
         mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::UnorderedAccess);
 
@@ -77,7 +83,7 @@ namespace PathFinder
             };
 
             mResourceStorage->QueueTextureAllocationIfNeeded<HAL::ColorTexture>(resourceName, descriptorCreationAction, *props.ShaderVisibleFormat, *props.Kind, *props.Dimensions, clearValue);
-        }
+        }*/
     }
 
     void ResourceScheduler::NewBuffer()
@@ -85,18 +91,49 @@ namespace PathFinder
 
     }
 
-    void ResourceScheduler::UseRenderTarget(Foundation::Name resourceName)
+    void ResourceScheduler::UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)
     {
-        mResourceStorage->MarkResourceNameAsScheduled(resourceName);
-        mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
+       /* HAL::Resource* resource = mResourceStorage->GetResource(resourceName);
 
-        //HAL::ResourceFormat::Color format = 
+        if (!resource) throw std::invalid_argument("Cannot use render target that does not exist");
+
+        if (concreteFormat)
+        {
+            if (HAL::TypelessTexture* existingRT = dynamic_cast<HAL::TypelessTexture *>(resource))
+            {
+                mResourceStorage->MarkResourceNameAsScheduled(resourceName);
+                mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
+                mResourceStorage->RegisterColorFormatForResource(resourceName, *concreteFormat)
+            }
+            else {
+                throw std::invalid_argument("Redefinition of render target format for typed render target is not allowed");
+            }
+        }
+        else if (HAL::ColorTexture* existingRT = dynamic_cast<HAL::ColorTexture *>(resource))
+        {
+            mResourceStorage->MarkResourceNameAsScheduled(resourceName);
+            mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::RenderTarget);
+            mResourceStorage->RegisterColorFormatForResource(resourceName, existingRT->DataFormat())
+        } 
+        else {
+            throw std::invalid_argument("Resource name does not belong to a render target");
+        }*/
     }
 
     void ResourceScheduler::UseDepthStencil(Foundation::Name resourceName)
     {
-        mResourceStorage->MarkResourceNameAsScheduled(resourceName);
-        mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::DepthWrite);
+       /* HAL::Resource* resource = mResourceStorage->GetResource(resourceName);
+
+        if (!resource) throw std::invalid_argument("Cannot use depth stencil that does not exist");
+
+        if (HAL::DepthStencilTexture* existingRT = dynamic_cast<HAL::DepthStencilTexture *>(resource))
+        {
+            mResourceStorage->MarkResourceNameAsScheduled(resourceName);
+            mResourceStorage->RegisterStateForResource(resourceName, HAL::ResourceState::DepthWrite);
+        }
+        else {
+            throw std::invalid_argument("Resource name does not belong to a depth stencil texture");
+        }        */
     }
 
     void ResourceScheduler::ReadTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)

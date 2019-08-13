@@ -8,81 +8,30 @@ namespace HAL
     class TextureResource : public Resource
     {
     public:
-        using Resource::Resource;
+        TextureResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);
+
+        TextureResource(
+            const Device& device,
+            ResourceFormat::FormatVariant format,
+            ResourceFormat::TextureKind kind,
+            const Geometry::Dimensions& dimensions,
+            const ClearValue& optimizedClearValue,
+            ResourceState initialStateMask,
+            ResourceState expectedStateMask,
+            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
+        );
 
         bool IsArray() const;
 
     protected:
         Geometry::Dimensions mDimensions;
+        ResourceFormat::FormatVariant mFormat;
         ResourceFormat::TextureKind mKind;
 
     public:
         inline const Geometry::Dimensions& Dimensions() const { return mDimensions; }
         inline ResourceFormat::TextureKind Kind() const { return mKind; }
-    };
-
-
-
-    class ColorTexture : public TextureResource
-    {
-    public:
-        using TextureResource::TextureResource;
-
-        ColorTexture(
-            const Device& device,
-            ResourceFormat::Color dataType,
-            ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions,
-            const ClearValue& optimizedClearValue,
-            ResourceState initialStateMask,
-            ResourceState expectedStateMask,
-            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
-        );
-
-        ~ColorTexture() = default;
-
-    private:
-        ResourceFormat::Color mDataFormat;
-
-    public:
-        inline ResourceFormat::Color DataFormat() const { return mDataFormat; };
-    };
-
-    class TypelessTexture : public TextureResource
-    {
-    public:
-        using TextureResource::TextureResource;
-
-        TypelessTexture(
-            const Device& device,
-            ResourceFormat::TypelessColor dataType,
-            ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions,
-            const ClearValue& optimizedClearValue,
-            ResourceState initialStateMask,
-            ResourceState expectedStateMask,
-            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
-        );
-
-        ~TypelessTexture() = default;
-    };
-
-    class DepthStencilTexture : public TextureResource
-    {
-    public:
-        using TextureResource::TextureResource;
-
-        DepthStencilTexture(
-            const Device& device,
-            ResourceFormat::DepthStencil dataType,
-            const Geometry::Dimensions& dimensions,
-            const ClearValue& optimizedClearValue,
-            ResourceState initialStateMask,
-            ResourceState expectedStateMask,
-            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
-        );
-
-        ~DepthStencilTexture() = default;
+        inline ResourceFormat::FormatVariant Format() const { return mFormat; }
     };
 
 }
