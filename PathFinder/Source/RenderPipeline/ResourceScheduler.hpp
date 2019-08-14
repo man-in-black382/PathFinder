@@ -41,8 +41,6 @@ namespace PathFinder
         template <class BufferDataT>
         void WillUseRootConstantBuffer();
 
-        // New scheduling system
-
         void NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt);
         void NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties = std::nullopt); 
         void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 

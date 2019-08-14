@@ -20,15 +20,64 @@ namespace PathFinder
 
     class RenderPass;
 
+    using ResourceName = Foundation::Name;
+    using PassName = Foundation::Name;
+
+    class PipelineResourceAllocator
+    {
+    public:
+        friend class ResourceStorage;
+        friend class ResourceScheduler;
+
+        using TextureRTDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded);
+        using TextureDSDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded);
+        using TextureSRDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded);
+        using TextureUADescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded);
+
+        struct PerPassEntities
+        {
+            HAL::ResourceState RequestedState;
+            std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
+            TextureRTDescriptorInserterPtr RTInserter = nullptr;
+            TextureDSDescriptorInserterPtr DSInserter = nullptr;
+            TextureSRDescriptorInserterPtr SRInserter = nullptr;
+            TextureUADescriptorInserterPtr UAInserter = nullptr;
+        };
+
+    private:
+        HAL::ResourceState GatherExpectedStates() const;
+
+        HAL::ResourceFormat::FormatVariant Format;
+        std::function<void()> AllocationAction;
+        std::unordered_map<PassName, PerPassEntities> PerPassData;
+    };
+
+    class PipelineResource
+    {
+    public:
+        friend class ResourceStorage;
+        friend class ResoruceScheduler;
+
+        struct PerPassEntities
+        {
+            std::optional<HAL::ResourceState> OptimizedState;
+            std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
+        };
+
+    private:
+        HAL::ResourceState CurrentState;
+        std::unique_ptr<HAL::Resource> Resource;
+        std::unordered_map<PassName, PerPassEntities> PerPassData;
+    };
+
     class ResourceStorage
     {
     public:
+        using PassNameResourceName = NameNameTuple;
+
         friend class ResourceScheduler;
         friend class ResourceProvider;
         friend class RootConstantsUpdater;
-
-        using ResourceName = Foundation::Name;
-        using PassName = Foundation::Name;
 
         ResourceStorage(HAL::Device* device, const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight);
 
@@ -56,46 +105,26 @@ namespace PathFinder
         std::optional<HAL::ResourceState> GetResourceStateForCurrentPass(ResourceName resourceName) const;
         std::optional<HAL::ResourceFormat::Color> GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const;
 
-        bool IsResourceScheduled(ResourceName resourceName) const;
-
     private:
         const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };
 
     private:
-        using ScheduledResourceNames = std::unordered_map<PassName, std::vector<ResourceName>>;
-        using ResourceMap = std::unordered_map<ResourceName, std::unique_ptr<HAL::Resource>>;
-        using ResourceStateMap = std::unordered_map<ResourceName, HAL::ResourceState>;
-        using ResourcePerPassStateMap = std::unordered_map<NameNameTuple, HAL::ResourceState>;
-        using ResourceFormatMap = std::unordered_map<NameNameTuple, HAL::ResourceFormat::Color>;
-        using ResourceAllocationActions = std::unordered_map<ResourceName, std::function<void()>>;
+        bool IsResourceAllocationScheduled(ResourceName name) const;
 
-        using BackBufferDescriptors = std::vector<HAL::RTDescriptor>;
-        using BackBufferResources = std::vector<HAL::TextureResource*>;
+        PipelineResourceAllocator* GetResourceAllocator(ResourceName name);
 
-        using RootConstantBufferMap = std::unordered_map<PassName, std::unique_ptr<HAL::RingBufferResource<uint8_t>>>;
+        PipelineResourceAllocator* QueueTextureAllocationIfNeeded(
+            ResourceName resourceName,
+            HAL::ResourceFormat::FormatVariant format,
+            HAL::ResourceFormat::TextureKind kind,
+            const Geometry::Dimensions& dimensions,
+            const HAL::Resource::ClearValue& optimizedClearValue
+        );
 
-        //template <class BufferT> using TextureAllocationCallback = std::function<void(const ResourceT&)>;
-        template <class TextureT> using TextureAllocationCallback = std::function<void(const TextureT&)>;
-        template <class TextureT> using TexturePostAllocationActionMap = std::unordered_map<ResourceName, std::vector<TextureAllocationCallback<TextureT>>>;
+        HAL::ResourceState GatherExpectedStates(const PipelineResourceAllocator& allocator);
+        void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture);
 
-        struct ResourcePipelineAdapter
-        {
-            std::unique_ptr<HAL::Resource> Resource;
-            std::unordered_map<PassName, HAL::ResourceState> PerPassStates;
-            HAL::ResourceState CurrentState;
-            std::function<void()> Allocator;
-            //std::vector
-        };
-
-        template <class TextureT, class ...Args>
-        void QueueTextureAllocationIfNeeded(ResourceName resourceName, const TextureAllocationCallback<TextureT>& callback, Args&&... args);
-
-        template <class BufferDataT>
-        void AllocateRootConstantBufferIfNeeded();
-
-        void RegisterStateForResource(ResourceName resourceName, HAL::ResourceState state);
-        void RegisterColorFormatForResource(ResourceName resourceName, HAL::ResourceFormat::Color format);
-        void MarkResourceNameAsScheduled(ResourceName name);
+        template <class BufferDataT> void AllocateRootConstantBufferIfNeeded();
 
         HAL::Device* mDevice;
 
@@ -108,44 +137,21 @@ namespace PathFinder
         // Amount of frames to be scheduled until a CPU wait is required.
         uint8_t mSimultaneousFramesInFlight;
 
-        // Names of all registered resources for every render pass
-        ScheduledResourceNames mScheduledResourceNames;
-
-        // Storage for resource pointers. Holds them in memory.
-        ResourceMap mResources;
-
-        // Stores states that are requested for each render pass
-        ResourcePerPassStateMap mResourcePerPassStates;
-
-        // Masks of all states of each resource. 
-        // Each mask contains all states the resource will
-        // go through in the frame.
-        ResourceStateMap mResourceExpectedStates;
-
-        // Marks current states of each resource.
-        // Changes through the frame in each render pass.
-        ResourceStateMap mResourceCurrentStates;
-
-        // Holds per-pass color formats of each resource:
-        // actual types for typeless textures for a typed shader access,
-        // actual types of primitive (non-structured) buffers and so on
-        ResourceFormatMap mResourceShaderVisibleFormatMap;
-
-        // Lambdas that'll allocate texture resources after frame scheduling is done
-        ResourceAllocationActions mResourceAllocationActions;
-
-        // Callbacks to be called after texture resource is allocated
-        //TexturePostAllocationActions mTexturePostAllocationActions;
-
         // Manages descriptor heaps
         ResourceDescriptorStorage mDescriptorStorage;
 
         // Dedicated storage for back buffer descriptors.
         // No fancy management is required.
-        BackBufferDescriptors mBackBufferDescriptors;
+        std::vector<HAL::RTDescriptor> mBackBufferDescriptors;
 
         // Constant buffers for each pass that require it.
-        RootConstantBufferMap mPerpassConstantBuffers;
+        std::unordered_map<PassName, std::unique_ptr<HAL::RingBufferResource<uint8_t>>> mPerPassConstantBuffers;
+        
+        std::unordered_map<PassName, std::vector<ResourceName>> mPerPassResourceNames;
+
+        std::unordered_map<ResourceName, PipelineResourceAllocator> mPipelineResourceAllocators;
+
+        std::unordered_map<ResourceName, PipelineResource> mPipelineResources;
 
         uint8_t mCurrentBackBufferIndex = 0;
     };

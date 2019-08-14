@@ -14,7 +14,7 @@ namespace PathFinder
 
     void ResourceStorage::BeginFrame(uint64_t frameFenceValue)
     {
-        for (auto& passBufferPair : mPerpassConstantBuffers)
+        for (auto& passBufferPair : mPerPassConstantBuffers)
         {
             auto& buffer = passBufferPair.second;
             buffer->PrepareMemoryForNewFrame(frameFenceValue);
@@ -23,7 +23,7 @@ namespace PathFinder
 
     void ResourceStorage::EndFrame(uint64_t completedFrameFenceValue)
     {
-        for (auto& passBufferPair : mPerpassConstantBuffers)
+        for (auto& passBufferPair : mPerPassConstantBuffers)
         {
             auto& buffer = passBufferPair.second;
             buffer->DiscardMemoryForCompletedFrames(completedFrameFenceValue);
@@ -74,18 +74,18 @@ namespace PathFinder
 
     void ResourceStorage::SetCurrentStateForResource(ResourceName name, HAL::ResourceState state)
     {
-        mResourceCurrentStates[name] = state;
+        mPipelineResources[name].CurrentState = state;
     }
 
     void ResourceStorage::AllocateScheduledResources()
     {
-        for (auto& nameAllocationPair : mResourceAllocationActions)
+       /* for (auto& nameAllocationPair : mResourceAllocationActions)
         {
             auto& allocation = nameAllocationPair.second;
             allocation();
         }
 
-        mResourceAllocationActions.clear();
+        mResourceAllocationActions.clear();*/
     }
 
     void ResourceStorage::UseSwapChain(HAL::SwapChain& swapChain)
@@ -96,66 +96,132 @@ namespace PathFinder
         }
     }
 
-    void ResourceStorage::RegisterStateForResource(ResourceName resourceName, HAL::ResourceState state)
+    bool ResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
     {
-        mResourcePerPassStates[std::make_tuple(mCurrentPassName, resourceName)] = state;
-        mResourceExpectedStates[resourceName] |= state;
+        return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end();
     }
 
-    void ResourceStorage::RegisterColorFormatForResource(ResourceName resourceName, HAL::ResourceFormat::Color format)
+    PipelineResourceAllocator* ResourceStorage::GetResourceAllocator(ResourceName name)
     {
-        mResourceShaderVisibleFormatMap[std::make_tuple(mCurrentPassName, resourceName)] = format;
+        return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end() ? &mPipelineResourceAllocators.at(name) : nullptr;
     }
 
-    void ResourceStorage::MarkResourceNameAsScheduled(ResourceName name)
+    PipelineResourceAllocator* ResourceStorage::QueueTextureAllocationIfNeeded(
+        ResourceName resourceName,
+        HAL::ResourceFormat::FormatVariant format,
+        HAL::ResourceFormat::TextureKind kind,
+        const Geometry::Dimensions& dimensions,
+        const HAL::Resource::ClearValue& optimizedClearValue)
     {
-        mScheduledResourceNames[mCurrentPassName].push_back(name);
+        auto it = mPipelineResourceAllocators.find(resourceName);
+
+        if (it != mPipelineResourceAllocators.end())
+        {
+            return &it->second;
+        }
+
+        PassName passThatRequestedAllocation = mCurrentPassName;
+
+        PipelineResourceAllocator& allocator = mPipelineResourceAllocators[resourceName];
+
+        allocator.AllocationAction = [=, &allocator]()
+        {
+            HAL::ResourceState expectedStates = allocator.GatherExpectedStates();
+            HAL::ResourceState initialState = allocator.PerPassData[passThatRequestedAllocation].RequestedState;
+            
+            auto texture = std::make_unique<HAL::TextureResource>(
+                *mDevice, format, kind, dimensions, optimizedClearValue, initialState, expectedStates);
+
+            PipelineResource newResource;
+            newResource.CurrentState = initialState;
+
+            // TransferShaderVisibleFormats();
+            // OptimizeStates();
+            CreateDescriptors(resourceName, allocator, *texture);
+
+            newResource.Resource = std::move(texture);
+            mPipelineResources[resourceName] = std::move(newResource);
+        };
+    }
+
+    void ResourceStorage::CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture)
+    {
+        for (const auto& pair : allocator.PerPassData)
+        {
+            const PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
+
+            if (perPassData.RTInserter) (mDescriptorStorage.*perPassData.RTInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
+            if (perPassData.DSInserter) (mDescriptorStorage.*perPassData.DSInserter)(resourceName, texture);
+            if (perPassData.SRInserter) (mDescriptorStorage.*perPassData.SRInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
+            if (perPassData.UAInserter) (mDescriptorStorage.*perPassData.UAInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
+        }
     }
 
     HAL::BufferResource<uint8_t>* ResourceStorage::GetRootConstantBufferForCurrentPass() const
     {
-        auto it = mPerpassConstantBuffers.find(mCurrentPassName);
-        if (it == mPerpassConstantBuffers.end()) return nullptr;
+        auto it = mPerPassConstantBuffers.find(mCurrentPassName);
+        if (it == mPerPassConstantBuffers.end()) return nullptr;
         return it->second.get();
     }
 
     HAL::Resource* ResourceStorage::GetResource(ResourceName resourceName) const
     {
-        auto it = mResources.find(resourceName);
-        if (it == mResources.end()) return nullptr;
-        return it->second.get();
+        auto it = mPipelineResources.find(resourceName);
+        if (it == mPipelineResources.end()) return nullptr;
+        
+        return it->second.Resource.get(); // ?: second.Buffer // TODO:
     }
 
-    const std::vector<ResourceStorage::ResourceName>* ResourceStorage::GetScheduledResourceNamesForCurrentPass() const
+    const std::vector<ResourceName>* ResourceStorage::GetScheduledResourceNamesForCurrentPass() const
     {
-        if (mScheduledResourceNames.find(mCurrentPassName) == mScheduledResourceNames.end()) return nullptr;
-        return &mScheduledResourceNames.at(mCurrentPassName);
+        if (mPerPassResourceNames.find(mCurrentPassName) == mPerPassResourceNames.end()) return nullptr;
+        return &mPerPassResourceNames.at(mCurrentPassName);
     }
 
     std::optional<HAL::ResourceState> ResourceStorage::GetResourceCurrentState(ResourceName resourceName) const
     {
-        auto stateIt = mResourceCurrentStates.find(resourceName);
-        if (stateIt == mResourceCurrentStates.end()) return std::nullopt;
-        return stateIt->second;
+       /* PipelineResource *pipelineResource = GetPipelineResource(resourceName);
+        if (!pipelineResource) return std::nullopt;
+        return pipelineResource->CurrentState;*/
+
+        return std::nullopt;
     }
 
     std::optional<HAL::ResourceState> ResourceStorage::GetResourceStateForCurrentPass(ResourceName resourceName) const
     {
-        auto it = mResourcePerPassStates.find(std::make_tuple(mCurrentPassName, resourceName));
-        if (it == mResourcePerPassStates.end()) return std::nullopt;
-        return it->second;
+        /*  PipelineResource *pipelineResource = GetPipelineResource(resourceName);
+          if (!pipelineResource) return std::nullopt;
+
+          auto perPassDataIt = pipelineResource->PerPassData.find(mCurrentPassName);
+          if (perPassDataIt == pipelineResource->PerPassData.end()) return std::nullopt;
+
+          return perPassDataIt->second.State;*/
+        return std::nullopt;
     }
 
     std::optional<HAL::ResourceFormat::Color> ResourceStorage::GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const
     {
-        auto it = mResourceShaderVisibleFormatMap.find(std::make_tuple(mCurrentPassName, resourceName));
-        if (it == mResourceShaderVisibleFormatMap.end()) return std::nullopt;
-        return it->second;
+        /*  PipelineResource *pipelineResource = GetPipelineResource(resourceName);
+          if (!pipelineResource) return std::nullopt;
+
+          auto perPassDataIt = pipelineResource->PerPassData.find(mCurrentPassName);
+          if (perPassDataIt == pipelineResource->PerPassData.end()) return std::nullopt;
+
+          return perPassDataIt->second.ColorFormat;*/
+        return std::nullopt;
     }
 
-    bool ResourceStorage::IsResourceScheduled(ResourceName resourceName) const
+    HAL::ResourceState PipelineResourceAllocator::GatherExpectedStates() const
     {
-        return mResourceAllocationActions.find(resourceName) != mResourceAllocationActions.end();
+        HAL::ResourceState expectedStates = HAL::ResourceState::Common;
+
+        for (const auto& pair : PerPassData)
+        {
+            const PerPassEntities& perPassData = pair.second;
+            expectedStates |= perPassData.RequestedState;
+        }
+
+        return expectedStates;
     }
 
 }
