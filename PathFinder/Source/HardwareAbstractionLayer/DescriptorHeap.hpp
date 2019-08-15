@@ -28,6 +28,8 @@ namespace HAL
         DescriptorHeap(const Device* device, uint32_t rangeCapacity, uint32_t rangeCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
         virtual ~DescriptorHeap() = 0;
 
+        uint32_t Capacity() const;
+
     protected:
         template <class T> using DescriptorContainer = std::vector<T>;
 
@@ -36,12 +38,13 @@ namespace HAL
         RangeAllocationInfo& GetRange(uint32_t rangeIndex);
 
         const Device* mDevice = nullptr;
+        uint32_t mRangeCapacity = 0;
+
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mHeap;
         std::tuple<DescriptorContainer<Descriptors>...> mDescriptors;
 
     private:
         uint32_t mIncrementSize = 0;
-        uint32_t mRangeCapacity = 0;
 
         std::vector<RangeAllocationInfo> mRanges;
 
@@ -89,6 +92,9 @@ namespace HAL
 
         CBSRUADescriptorHeap(const Device* device, uint32_t rangeCapacity);
         ~CBSRUADescriptorHeap() = default;
+
+        uint32_t RangeCapacity() const;
+        uint32_t RangeStartIndex(Range range) const;
 
         /*  template <class T> const CBDescriptor& EmplaceDescriptorForConstantBuffer(const BufferResource<T>& resource, std::optional<uint64_t> explicitStride = nullopt);
           template <class T> const SRDescriptor& EmplaceDescriptorForStructuredBuffer(const BufferResource<T>& resource);

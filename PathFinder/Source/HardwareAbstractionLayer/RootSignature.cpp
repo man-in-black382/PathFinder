@@ -15,6 +15,8 @@ namespace HAL
         mD3DParameters.push_back(table.D3DParameter());
         mDesc.NumParameters = (UINT)mD3DParameters.size();
         mDesc.pParameters = &mD3DParameters[0];
+
+        //mParameterIndices[GenerateParameterKey(table.D3DParameter().DescriptorTable.)]
     }
 
     void RootSignature::AddDescriptorParameter(const RootDescriptorParameter& descriptor)
@@ -38,7 +40,20 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> errors;
         ThrowIfFailed(D3D12SerializeRootSignature(&mDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errors));
+
+        if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
+
         ThrowIfFailed(device.D3DPtr()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
+    }
+
+    RootSignature::ParameterKey RootSignature::GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace)
+    {
+        uint64_t key = 0;
+        key |= shaderRegister;
+        key <<= 32;
+        key |= registerSpace;
+        
+        return key;
     }
 
 }

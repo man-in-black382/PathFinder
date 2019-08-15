@@ -7,7 +7,11 @@
 namespace HAL
 {
 
-    class RootDescriprorTableRange {
+    class RootDescriprorTableRange 
+    {
+    public:
+        inline static uint32_t UnboundedRangeSize = UINT_MAX;
+
     protected:
         RootDescriprorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, uint32_t descriptorHeapIndex, uint32_t rangeSize, uint32_t baseRegister, uint32_t registerSpace);
         virtual ~RootDescriprorTableRange() = 0;
@@ -16,19 +20,32 @@ namespace HAL
         D3D12_DESCRIPTOR_RANGE mRange;
 
     public:
-        inline const auto& D3DRange() const { return mRange; }
+        inline const D3D12_DESCRIPTOR_RANGE& D3DRange() const { return mRange; }
     };
 
-    class CBSRUADescriptorTableRange : public RootDescriprorTableRange {
+    class CBDescriptorTableRange : public RootDescriprorTableRange 
+    {
     public:
-        CBSRUADescriptorTableRange(const CBDescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t baseRegister, uint32_t registerSpace = 0);
-        CBSRUADescriptorTableRange(const SRDescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t baseRegister, uint32_t registerSpace = 0);
-        CBSRUADescriptorTableRange(const UADescriptor& rangeStartDescriptor, uint32_t rangeSize, uint32_t baseRegister, uint32_t registerSpace = 0);
-
-        ~CBSRUADescriptorTableRange() = default;
+        CBDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize = RootDescriprorTableRange::UnboundedRangeSize);
+        ~CBDescriptorTableRange() = default;
     };
 
-    class SamplerDescriptorTableRange : public RootDescriprorTableRange {
+    class SRDescriptorTableRange : public RootDescriprorTableRange 
+    {
+    public:
+        SRDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize = RootDescriprorTableRange::UnboundedRangeSize);
+        ~SRDescriptorTableRange() = default;
+    };
+
+    class UADescriptorTableRange : public RootDescriprorTableRange
+    {
+    public:
+        UADescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize = RootDescriprorTableRange::UnboundedRangeSize);
+        ~UADescriptorTableRange() = default;
+    };
+
+    class SamplerDescriptorTableRange : public RootDescriprorTableRange
+    {
     public:
         ~SamplerDescriptorTableRange() = default;
     };

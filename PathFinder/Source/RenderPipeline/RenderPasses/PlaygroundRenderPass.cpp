@@ -8,26 +8,30 @@ namespace PathFinder
 
     void PlaygroundRenderPass::SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager)
     {
+        auto rootSig = psoManager->CloneBaseRootSignature();
+        psoManager->StoreRootSignature(RootSignatureNames::Universal, rootSig);
+
         auto pso = psoManager->CloneDefaultGraphicsState();
         pso.SetShaders(shaderManager->LoadShaders("Playground.hlsl", "Playground.hlsl")); 
         pso.SetInputAssemblerLayout(InputAssemblerLayoutForVertexLayout(VertexLayout::Layout1P1N1UV1T1BT));
         pso.SetDepthStencilFormat(HAL::ResourceFormat::Depth24_Float_Stencil8_Unsigned);
         pso.SetRenderTargetFormats(HAL::ResourceFormat::Color::RGBA8_Usigned_Norm);
         pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
-        psoManager->StoreGraphicsState(PSONames::GBuffer, pso);
+        psoManager->StoreGraphicsState(PSONames::GBuffer, pso, RootSignatureNames::Universal);
     }
 
     void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        /*scheduler->WillRenderToRenderTarget(ResourceNames::PlaygroundRenderTarget);
-        scheduler->WillRenderToDepthStencil(ResourceNames::GBufferDepthStencil);*/
+        /*scheduler->WillRenderToRenderTarget(ResourceNames::PlaygroundRenderTarget);*/
+        scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
     } 
 
     void PlaygroundRenderPass::Render(RenderContext* context)
     {
         context->GraphicsDevice()->ApplyPipelineState(PSONames::GBuffer);
-        context->GraphicsDevice()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
+        context->GraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::GBufferDepthStencil);
+        //context->GraphicsDevice()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
         context->GraphicsDevice()->ClearBackBuffer(Foundation::Color::Gray());
         context->GraphicsDevice()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
         context->GraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);

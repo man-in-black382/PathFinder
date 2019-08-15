@@ -63,8 +63,8 @@ namespace HAL
         void SetExpectedUsageFlags(ResourceState stateMask);
 
     public:
-        inline const auto D3DPtr() const { return mResource.Get(); }
-        inline const auto& D3DDescription() const { return mDescription; };
+        inline ID3D12Resource* D3DPtr() const { return mResource.Get(); }
+        inline const D3D12_RESOURCE_DESC& D3DDescription() const { return mDescription; };
     };
 
 }

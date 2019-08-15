@@ -19,11 +19,11 @@ namespace HAL
 
         if (shaderVisisbleFormat)
         {
-            assert(std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for texture that has it's own format");
+            assert_format(std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for texture that has it's own format");
             d3dDesc.Format = ResourceFormat::D3DFormat(*shaderVisisbleFormat);
         }
         else {
-            assert(std::holds_alternative<ResourceFormat::Color>(texture.Format()), "Texture format is not suited for render targets");
+            assert_format(std::holds_alternative<ResourceFormat::Color>(texture.Format()), "Texture format is not suited for render targets");
         }
 
         RTDescriptor& descriptor = std::get<DescriptorContainer<RTDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.InsertedDescriptorCount);
@@ -99,7 +99,7 @@ namespace HAL
         ValidateCapacity(0);
         RangeAllocationInfo& range = GetRange(0);
 
-        assert(std::holds_alternative<ResourceFormat::DepthStencil>(texture.Format()), "Texture is not of depth-stencil format");
+        assert_format(std::holds_alternative<ResourceFormat::DepthStencil>(texture.Format()), "Texture is not of depth-stencil format");
 
         const DSDescriptor& descriptor = std::get<DescriptorContainer<DSDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.InsertedDescriptorCount);
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = ResourceToDSVDescription(texture.D3DDescription());
@@ -264,13 +264,23 @@ namespace HAL
         return desc;
     }
 
+    uint32_t CBSRUADescriptorHeap::RangeCapacity() const
+    {
+        return mRangeCapacity;
+    }
+
+    uint32_t CBSRUADescriptorHeap::RangeStartIndex(Range range) const
+    {
+        return mRangeCapacity * std::underlying_type_t<Range>(range);
+    }
+
     const SRDescriptor& CBSRUADescriptorHeap::EmplaceSRDescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat)
     {
         auto index = std::underlying_type_t<Range>(RangeTypeForTexture(texture));
         ValidateCapacity(index);
         RangeAllocationInfo& range = GetRange(index);
 
-        assert(shaderVisibleFormat && std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for typed texture");
+        assert_format(shaderVisibleFormat && std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for typed texture");
 
         const SRDescriptor& descriptor = std::get<DescriptorContainer<SRDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount);
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), shaderVisibleFormat);
@@ -286,7 +296,7 @@ namespace HAL
         ValidateCapacity(index);
         RangeAllocationInfo& range = GetRange(index);
 
-        assert(shaderVisibleFormat && std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for typed texture");
+        assert_format(shaderVisibleFormat && std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for typed texture");
 
         const UADescriptor& descriptor = std::get<DescriptorContainer<UADescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount);
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), shaderVisibleFormat);

@@ -4,6 +4,7 @@
 #include <d3d12.h>
 #include <cstdint>
 #include <vector>
+#include <unordered_map>
 
 #include "Device.hpp"
 #include "RootParameters.hpp"
@@ -22,10 +23,16 @@ namespace HAL
         void Compile(const Device& device);
 
     private:
+        using ParameterKey = uint64_t;
+
+        ParameterKey GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace);
+
         std::vector<RootDescriptorTableParameter> mDescriptorTableParameters;
         std::vector<RootDescriptorParameter> mDescriptorParameters;
         std::vector<RootConstantsParameter> mConstantParameters;
         std::vector<D3D12_ROOT_PARAMETER> mD3DParameters;
+
+        std::unordered_map<ParameterKey, uint32_t> mParameterIndices;
 
         D3D12_ROOT_SIGNATURE_DESC mDesc{};
         Microsoft::WRL::ComPtr<ID3D12RootSignature> mSignature;

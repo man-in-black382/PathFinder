@@ -53,18 +53,16 @@ namespace PathFinder
         mResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
 
-        HAL::ColorTexture* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
+        HAL::TextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
 
         mGraphicsDevice.CommandList().TransitionResourceState(
             { HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer }
         );
 
-        mGraphicsDevice.CommandList().SetGraphicsRootSignature(mPipelineStateManager.UniversalRootSignature());
-
         for (auto& passPtr : mRenderPasses)
         {
             mResourceStorage.SetCurrentPassName(passPtr->Name());
-            TransitionResourceStates();
+            TransitionResourceStates(passPtr->Name());
             SetRootConstantBuffer();
             passPtr->Render(&mContext);
         }
@@ -102,18 +100,23 @@ namespace PathFinder
         mGraphicsDevice.CommandList().SetGraphicsRootConstantBuffer(*mResourceStorage.GetRootConstantBufferForCurrentPass(), index);
     }
 
-    void RenderEngine::TransitionResourceStates()
+    void RenderEngine::TransitionResourceStates(PassName passName)
     {
-        for (ResourceStorage::ResourceName resourceName : *mResourceStorage.GetScheduledResourceNamesForCurrentPass())
+        for (ResourceName resourceName : *mResourceStorage.GetScheduledResourceNamesForCurrentPass())
         {
-            HAL::ResourceState currentState = *mResourceStorage.GetResourceCurrentState(resourceName);
-            HAL::ResourceState nextState = *mResourceStorage.GetResourceStateForCurrentPass(resourceName);
-            HAL::Resource* resource = mResourceStorage.GetResource(resourceName);
+            PipelineResource& pipelineResource = mResourceStorage.GetPipelineResource(resourceName);
+            HAL::ResourceState currentState = pipelineResource.CurrentState;
+
+            auto perPassData = pipelineResource.GetPerPassData(passName);
+
+            if (!perPassData || !perPassData->OptimizedState) continue;
+
+            HAL::ResourceState nextState = *perPassData->OptimizedState;
 
             if (currentState != nextState)
             {
-                mGraphicsDevice.CommandList().TransitionResourceState({ currentState, nextState, resource });
-                mResourceStorage.SetCurrentStateForResource(resourceName, nextState);
+                mGraphicsDevice.CommandList().TransitionResourceState({ currentState, nextState, pipelineResource.Resource() });
+                pipelineResource.CurrentState = nextState;
             }
         }
     }

@@ -41,6 +41,10 @@ namespace PathFinder
             ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt
         );
 
+        const HAL::RTDescriptorHeap& RTDescriptorHeap() const { return mRTDescriptorHeap; }
+        const HAL::DSDescriptorHeap& DSDescriptorHeap() const { return mDSDescriptorHeap; }
+        const HAL::CBSRUADescriptorHeap& CBSRUADescriptorHeap() const { return mCBSRUADescriptorHeap; }
+
     private:
         struct DSCBSet
         {

@@ -1,5 +1,7 @@
 #include "ResourceFormat.hpp"
 
+#include "../Foundation/Assert.hpp"
+
 namespace HAL
 {
 
@@ -44,9 +46,9 @@ namespace HAL
         case TextureKind::Texture1D: mDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D; break;
         }
 
-        mDesc.Height = dimensions.Height;
+        mDesc.Height = (UINT)dimensions.Height;
         mDesc.Width = dimensions.Width;
-        mDesc.DepthOrArraySize = dimensions.Depth;
+        mDesc.DepthOrArraySize = (UINT16)dimensions.Depth;
         mDesc.SampleDesc.Count = 1;
         mDesc.SampleDesc.Quality = 0;
     }
@@ -86,7 +88,7 @@ namespace HAL
 
         case Color::R16_Float:         return DXGI_FORMAT_R16_FLOAT;
         case Color::RG16_Float:        return DXGI_FORMAT_R16G16_FLOAT;
-        case Color::RGBA16_Float:      return DXGI_FORMAT_R16G16B16A16_TYPELESS;
+        case Color::RGBA16_Float:      return DXGI_FORMAT_R16G16B16A16_FLOAT;
 
         case Color::R16_Signed:        return DXGI_FORMAT_R16_SINT;
         case Color::RG16_Signed:       return DXGI_FORMAT_R16G16_SINT;
@@ -119,6 +121,69 @@ namespace HAL
         {
         case DepthStencil::Depth24_Float_Stencil8_Unsigned: return DXGI_FORMAT_D24_UNORM_S8_UINT;
         case DepthStencil::Depth32_Float:                   return DXGI_FORMAT_D32_FLOAT;
+        }
+    }
+
+    ResourceFormat::FormatVariant ResourceFormat::FormatFromD3DFormat(DXGI_FORMAT format)
+    {
+        switch (format)
+        {
+        case DXGI_FORMAT_R8_TYPELESS: return TypelessColor::R8;
+        case DXGI_FORMAT_R8G8_TYPELESS: return TypelessColor::RG8;
+        case DXGI_FORMAT_R8G8B8A8_TYPELESS: return TypelessColor::RGBA8;
+        case DXGI_FORMAT_R16_TYPELESS: return TypelessColor::R16;
+        case DXGI_FORMAT_R16G16_TYPELESS: return TypelessColor::RG16;
+        case DXGI_FORMAT_R16G16B16A16_TYPELESS: return TypelessColor::RGBA16;
+        case DXGI_FORMAT_R32_TYPELESS: return TypelessColor::R32;
+        case DXGI_FORMAT_R32G32_TYPELESS: return TypelessColor::RG32;
+        case DXGI_FORMAT_R32G32B32_TYPELESS: return TypelessColor::RGB32;
+        case DXGI_FORMAT_R32G32B32A32_TYPELESS: return TypelessColor::RGBA32;
+
+        case DXGI_FORMAT_R8_UNORM: return Color::R8_Usigned_Norm;
+        case DXGI_FORMAT_R8G8_UNORM: return Color::RG8_Usigned_Norm;
+        case DXGI_FORMAT_R8G8B8A8_UNORM: return Color::RGBA8_Usigned_Norm;
+
+        case DXGI_FORMAT_R8_SINT: return Color::R8_Signed;
+        case DXGI_FORMAT_R8G8_SINT: return Color::RG8_Signed;
+        case DXGI_FORMAT_R8G8B8A8_SINT: return Color::RGBA8_Signed;
+
+        case DXGI_FORMAT_R8_UINT: return Color::R8_Unsigned;
+        case DXGI_FORMAT_R8G8_UINT: return Color::RG8_Unsigned;
+        case DXGI_FORMAT_R8G8B8A8_UINT: return Color::RGBA8_Unsigned;
+
+        case DXGI_FORMAT_R16_FLOAT: return Color::R16_Float;
+        case DXGI_FORMAT_R16G16_FLOAT: return Color::RG16_Float;
+        case DXGI_FORMAT_R16G16B16A16_FLOAT: return Color::RGBA16_Float;
+
+        case DXGI_FORMAT_R16_SINT: return Color::R16_Signed;
+        case DXGI_FORMAT_R16G16_SINT: return Color::RG16_Signed;
+        case DXGI_FORMAT_R16G16B16A16_SINT: return Color::RGBA16_Signed;
+
+        case DXGI_FORMAT_R16_UINT: return Color::R16_Unsigned;
+        case DXGI_FORMAT_R16G16_UINT: return Color::RG16_Unsigned;
+        case DXGI_FORMAT_R16G16B16A16_UINT: return Color::RGBA16_Unsigned;
+
+        case DXGI_FORMAT_R32_FLOAT: return Color::R32_Float;
+        case DXGI_FORMAT_R32G32_FLOAT: return Color::RG32_Float;
+        case DXGI_FORMAT_R32G32B32_FLOAT: return Color::RGB32_Float;
+        case DXGI_FORMAT_R32G32B32A32_FLOAT: return Color::RGBA32_Float;
+
+        case DXGI_FORMAT_R32_SINT: return Color::R32_Signed;
+        case DXGI_FORMAT_R32G32_SINT: return Color::RG32_Signed;
+        case DXGI_FORMAT_R32G32B32_SINT: return Color::RGB32_Signed;
+        case DXGI_FORMAT_R32G32B32A32_SINT: return Color::RGBA32_Signed;
+
+        case DXGI_FORMAT_R32_UINT: return Color::R32_Unsigned;
+        case DXGI_FORMAT_R32G32_UINT: return Color::RG32_Unsigned;
+        case DXGI_FORMAT_R32G32B32_UINT: return Color::RGB32_Unsigned;
+        case DXGI_FORMAT_R32G32B32A32_UINT: return Color::RGBA32_Unsigned;
+
+        case DXGI_FORMAT_D24_UNORM_S8_UINT: return DepthStencil::Depth24_Float_Stencil8_Unsigned;
+        case DXGI_FORMAT_D32_FLOAT: return DepthStencil::Depth32_Float;
+
+        default:
+            assert_format(false, "Unsupported D3D format");
+            return TypelessColor::R8;
         }
     }
 

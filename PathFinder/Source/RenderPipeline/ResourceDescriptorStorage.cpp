@@ -56,7 +56,7 @@ namespace PathFinder
 
         if (auto descriptor = GetRTDescriptor(resourceName, format)) return *descriptor;
 
-        const HAL::RTDescriptor& descriptor = mRTDescriptorHeap.EmplaceRTDescriptor(texture, format);
+        const HAL::RTDescriptor& descriptor = mRTDescriptorHeap.EmplaceRTDescriptor(texture, shaderVisibleFormat);
         mDescriptors[resourceName].RTSRUA[format].rtDescriptor = &descriptor;
         return descriptor;
     }
@@ -64,7 +64,7 @@ namespace PathFinder
     const HAL::DSDescriptor& ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded(
         ResourceName resourceName, const HAL::TextureResource& texture)
     {
-        assert(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(texture.Format()), "Texture is not of depth-stencil format");
+        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(texture.Format()), "Texture is not of depth-stencil format");
 
         if (auto descriptor = GetDSDescriptor(resourceName)) return *descriptor;
 
@@ -82,7 +82,7 @@ namespace PathFinder
 
         if (auto descriptor = GetSRDescriptor(resourceName, format)) return *descriptor;
 
-        const HAL::SRDescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceSRDescriptor(texture, format);
+        const HAL::SRDescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceSRDescriptor(texture, shaderVisibleFormat);
         mDescriptors[resourceName].RTSRUA[format].srDescriptor = &descriptor;
         return descriptor;
     }
@@ -96,7 +96,7 @@ namespace PathFinder
 
         if (auto descriptor = GetUADescriptor(resourceName, format)) return *descriptor;
 
-        const HAL::UADescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(texture);
+        const HAL::UADescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(texture, shaderVisibleFormat);
         mDescriptors[resourceName].RTSRUA[format].uaDescriptor = &descriptor;
         return descriptor;
     }
@@ -106,17 +106,17 @@ namespace PathFinder
     {
         if (shaderVisibleFormat)
         {
-            assert(std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for texture that has it's own format");
+            assert_format(std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for texture that has it's own format");
         }
         else {
-            assert(std::holds_alternative<HAL::ResourceFormat::Color>(textureFormat), "Texture format is not suited for render targets");
+            assert_format(std::holds_alternative<HAL::ResourceFormat::Color>(textureFormat), "Texture format is not suited for render targets");
         }
     }
 
     void ResourceDescriptorStorage::ValidateSRUAFormatsCompatibility(
         HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
     {
-        assert(shaderVisibleFormat && std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for typed texture");
+        assert_format(shaderVisibleFormat && std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for typed texture");
     }
 
     const ResourceDescriptorStorage::DSCBSet& ResourceDescriptorStorage::GetDSCBSet(ResourceName name)

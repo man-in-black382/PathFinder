@@ -60,9 +60,11 @@ namespace PathFinder
 
     void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)
     {
-        mRingCommandList.CurrentCommandList().SetPipelineState(mPipelineStateManager->GetPipelineState(psoName));
-        mRingCommandList.CurrentCommandList().SetGraphicsRootSignature(mPipelineStateManager->UniversalRootSignature());
-        mRingCommandList.CurrentCommandList().SetComputeRootSignature(mPipelineStateManager->UniversalRootSignature());
+        auto& pso = mPipelineStateManager->GetPipelineState(psoName);
+
+        mRingCommandList.CurrentCommandList().SetPipelineState(pso);
+        mRingCommandList.CurrentCommandList().SetGraphicsRootSignature(*pso.GetRootSignature());
+        mRingCommandList.CurrentCommandList().SetComputeRootSignature(*pso.GetRootSignature());
     }
 
     void GraphicsDevice::UseVertexBufferOfLayout(VertexLayout layout)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <cassert>
 
 template< typename... Args >
 inline void print_assertion(std::ostream& out, Args&&... args)
@@ -9,14 +10,14 @@ inline void print_assertion(std::ostream& out, Args&&... args)
     //if constexpr (debug_mode)
     //{
     (out << ... << args) << std::endl;
-    abort();
     //}
+    abort();
 }
 
-#ifdef assert
-#undef assert
+#ifdef assert_format
+#undef assert_format
 #endif
-#define assert(EXPRESSION, ... ) ((EXPRESSION) ? (void)0 : print_assertion(std::cerr, \
+#define assert_format(EXPRESSION, ... ) ((EXPRESSION) ? (void)0 : print_assertion(std::cerr, \
         "Assertion failure: ", \
         #EXPRESSION, \
         " in File: ", \

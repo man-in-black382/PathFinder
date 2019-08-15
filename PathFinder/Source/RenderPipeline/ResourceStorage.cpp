@@ -2,6 +2,7 @@
 #include "RenderPass.hpp"
 
 #include "../Foundation/StringUtils.hpp"
+#include "../Foundation/Assert.hpp"
 
 namespace PathFinder
 {
@@ -32,19 +33,18 @@ namespace PathFinder
 
     const HAL::RTDescriptor& ResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
     {
-        if (auto format = GetResourceShaderVisibleFormatForCurrentPass(resourceName))
-        {
-            if (auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, *format))
-            {
-                return *descriptor;
-            }
-            else {
-                throw std::invalid_argument("Resource was not scheduled to be used as render target");
-            }
-        }
-        else {
-            throw std::invalid_argument("Resource format for this pass is unknown");
-        }
+        PipelineResource& pipelineResource = GetPipelineResource(resourceName);
+
+        auto perPassData = pipelineResource.GetPerPassData(mCurrentPassName);
+        assert_format(perPassData, "Resource ", resourceName.ToSring(), " was not scheduled to be used as render target");
+
+        auto format = perPassData->ShaderVisibleFormat;
+        assert_format(format, "Render target format for pass ", mCurrentPassName.ToSring(), " is unknown");
+
+        auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, *format);
+        assert_format(descriptor, "Resource ", resourceName.ToSring(), " was not scheduled to be used as render target");
+
+        return *descriptor;
     }
 
     const HAL::RTDescriptor& ResourceStorage::GetCurrentBackBufferDescriptor()
@@ -54,12 +54,9 @@ namespace PathFinder
 
     const HAL::DSDescriptor& ResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
     {
-        if (auto descriptor = mDescriptorStorage.GetDSDescriptor(resourceName))
-        {
-            return *descriptor;
-        }
-
-        throw std::invalid_argument("Resource was not scheduled to be used as depth-stencil");
+        auto descriptor = mDescriptorStorage.GetDSDescriptor(resourceName);
+        assert_format(descriptor, "Resource ", resourceName.ToSring(), " was not scheduled to be used as depth-stencil target");
+        return *descriptor;
     }
 
     void ResourceStorage::SetCurrentBackBufferIndex(uint8_t index)
@@ -79,13 +76,11 @@ namespace PathFinder
 
     void ResourceStorage::AllocateScheduledResources()
     {
-       /* for (auto& nameAllocationPair : mResourceAllocationActions)
+        for (auto& pair : mPipelineResourceAllocators)
         {
-            auto& allocation = nameAllocationPair.second;
-            allocation();
+            PipelineResourceAllocator& allocator = pair.second;
+            allocator.AllocationAction();
         }
-
-        mResourceAllocationActions.clear();*/
     }
 
     void ResourceStorage::UseSwapChain(HAL::SwapChain& swapChain)
@@ -135,13 +130,24 @@ namespace PathFinder
             PipelineResource newResource;
             newResource.CurrentState = initialState;
 
-            // TransferShaderVisibleFormats();
+            for (auto& pair : allocator.PerPassData)
+            {
+                PassName passName = pair.first;
+                PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
+                newResource.mPerPassData[passName].ShaderVisibleFormat = perPassData.ShaderVisibleFormat;
+
+                // TODO: Compute optimized states
+                newResource.mPerPassData[passName].OptimizedState = perPassData.RequestedState;
+            }
+
             // OptimizeStates();
             CreateDescriptors(resourceName, allocator, *texture);
 
-            newResource.Resource = std::move(texture);
+            newResource.mResource = std::move(texture);
             mPipelineResources[resourceName] = std::move(newResource);
         };
+
+        return &allocator;
     }
 
     void ResourceStorage::CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture)
@@ -164,51 +170,17 @@ namespace PathFinder
         return it->second.get();
     }
 
-    HAL::Resource* ResourceStorage::GetResource(ResourceName resourceName) const
-    {
-        auto it = mPipelineResources.find(resourceName);
-        if (it == mPipelineResources.end()) return nullptr;
-        
-        return it->second.Resource.get(); // ?: second.Buffer // TODO:
-    }
-
     const std::vector<ResourceName>* ResourceStorage::GetScheduledResourceNamesForCurrentPass() const
     {
         if (mPerPassResourceNames.find(mCurrentPassName) == mPerPassResourceNames.end()) return nullptr;
         return &mPerPassResourceNames.at(mCurrentPassName);
     }
 
-    std::optional<HAL::ResourceState> ResourceStorage::GetResourceCurrentState(ResourceName resourceName) const
+    PipelineResource& ResourceStorage::GetPipelineResource(ResourceName resourceName)
     {
-       /* PipelineResource *pipelineResource = GetPipelineResource(resourceName);
-        if (!pipelineResource) return std::nullopt;
-        return pipelineResource->CurrentState;*/
-
-        return std::nullopt;
-    }
-
-    std::optional<HAL::ResourceState> ResourceStorage::GetResourceStateForCurrentPass(ResourceName resourceName) const
-    {
-        /*  PipelineResource *pipelineResource = GetPipelineResource(resourceName);
-          if (!pipelineResource) return std::nullopt;
-
-          auto perPassDataIt = pipelineResource->PerPassData.find(mCurrentPassName);
-          if (perPassDataIt == pipelineResource->PerPassData.end()) return std::nullopt;
-
-          return perPassDataIt->second.State;*/
-        return std::nullopt;
-    }
-
-    std::optional<HAL::ResourceFormat::Color> ResourceStorage::GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const
-    {
-        /*  PipelineResource *pipelineResource = GetPipelineResource(resourceName);
-          if (!pipelineResource) return std::nullopt;
-
-          auto perPassDataIt = pipelineResource->PerPassData.find(mCurrentPassName);
-          if (perPassDataIt == pipelineResource->PerPassData.end()) return std::nullopt;
-
-          return perPassDataIt->second.ColorFormat;*/
-        return std::nullopt;
+        auto it = mPipelineResources.find(resourceName);
+        assert_format(it != mPipelineResources.end(), "Pipeline resource ", resourceName.ToSring(), " does not exist");
+        return it->second;
     }
 
     HAL::ResourceState PipelineResourceAllocator::GatherExpectedStates() const

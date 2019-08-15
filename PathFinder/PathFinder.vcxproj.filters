@@ -2216,6 +2216,7 @@
     <Text Include="Source\RenderPipeline\Shaders\Playground.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\Blur.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\BaseRootSignature.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />

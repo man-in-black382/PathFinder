@@ -25,13 +25,13 @@ namespace HAL
 
     protected:
         Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
-        RootSignature* mRootSignature;
+        const RootSignature* mRootSignature;
 
     public:
         inline ID3D12PipelineState* D3DCompiledState() const { return mState.Get(); }
-        inline RootSignature* GetRootSignature() const { return mRootSignature; }
+        inline const RootSignature* GetRootSignature() const { return mRootSignature; }
 
-        inline void SetRootSignature(RootSignature* signature) { mRootSignature = signature; }
+        inline void SetRootSignature(const RootSignature* signature) { mRootSignature = signature; }
     };
 
     class GraphicsPipelineState : public PipelineState
@@ -46,7 +46,6 @@ namespace HAL
 
         GraphicsPipelineState Clone() const;
 
-        inline void SetRootSignature(RootSignature* rootSignature) { mRootSignature = rootSignature; }
         inline void SetVertexShader(Shader* vertexShader) { mVertexShader = vertexShader; }
         inline void SetPixelShader(Shader* pixelShader) { mPixelShader = pixelShader; }
         inline void SetDomainShader(Shader* domainShader) { mDomainShader = domainShader; }

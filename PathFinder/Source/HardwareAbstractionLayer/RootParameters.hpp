@@ -28,8 +28,7 @@ namespace HAL
         RootDescriptorTableParameter();
         ~RootDescriptorTableParameter() = default;
 
-        void AddDescriptorRange(const CBSRUADescriptorTableRange& range);
-        void AddDescriptorRange(const SamplerDescriptorTableRange& range);
+        void AddDescriptorRange(const RootDescriprorTableRange& range);
 
     private:
         std::vector<D3D12_DESCRIPTOR_RANGE> mRanges;

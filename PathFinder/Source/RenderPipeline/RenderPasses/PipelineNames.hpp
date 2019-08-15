@@ -18,4 +18,9 @@ namespace PathFinder
         inline Foundation::Name Blur{ "PSO_Blur" };
     }
 
+    namespace RootSignatureNames
+    {
+        inline Foundation::Name Universal{ "Universal_Root_Sig" };
+    }
+
 }

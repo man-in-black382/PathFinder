@@ -10,7 +10,7 @@ namespace PathFinder
     {
         auto pso = psoManager->CloneDefaultComputeState();
         pso.SetShaders(shaderManager->LoadShaders("Blur.hlsl")); 
-        psoManager->StoreComputeState(PSONames::Blur, pso);
+        //psoManager->StoreComputeState(PSONames::Blur, pso);
     }
 
     void BlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)

@@ -51,6 +51,8 @@ namespace HAL
         static DXGI_FORMAT D3DFormat(Color type);
         static DXGI_FORMAT D3DFormat(DepthStencil type);
 
+        static FormatVariant FormatFromD3DFormat(DXGI_FORMAT format);
+
     private:
         void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);
         void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions);

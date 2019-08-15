@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <functional>
 #include <tuple>
+#include <memory>
 
 namespace PathFinder
 {
@@ -52,6 +53,8 @@ namespace PathFinder
         std::unordered_map<PassName, PerPassEntities> PerPassData;
     };
 
+
+
     class PipelineResource
     {
     public:
@@ -64,11 +67,24 @@ namespace PathFinder
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
         };
 
-    private:
         HAL::ResourceState CurrentState;
-        std::unique_ptr<HAL::Resource> Resource;
-        std::unordered_map<PassName, PerPassEntities> PerPassData;
+
+    private:
+        std::unique_ptr<HAL::Resource> mResource;
+        std::unordered_map<PassName, PerPassEntities> mPerPassData;
+
+    public:
+        const HAL::Resource* Resource() const { return mResource.get(); }
+
+        std::optional<PerPassEntities> GetPerPassData(PassName passName) const
+        {
+            auto it = mPerPassData.find(passName);
+            if (it == mPerPassData.end()) return std::nullopt;
+            return it->second;
+        };
     };
+
+
 
     class ResourceStorage
     {
@@ -98,12 +114,9 @@ namespace PathFinder
         RootConstants* GetRootConstantDataForCurrentPass() const;
 
         HAL::BufferResource<uint8_t>* GetRootConstantBufferForCurrentPass() const;
-        HAL::Resource* GetResource(ResourceName resourceName) const;
 
         const std::vector<ResourceName>* GetScheduledResourceNamesForCurrentPass() const;
-        std::optional<HAL::ResourceState> GetResourceCurrentState(ResourceName resourceName) const;
-        std::optional<HAL::ResourceState> GetResourceStateForCurrentPass(ResourceName resourceName) const;
-        std::optional<HAL::ResourceFormat::Color> GetResourceShaderVisibleFormatForCurrentPass(ResourceName resourceName) const;
+        PipelineResource& GetPipelineResource(ResourceName resourceName);
 
     private:
         const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };

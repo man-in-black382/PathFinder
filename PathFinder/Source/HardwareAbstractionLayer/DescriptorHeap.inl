@@ -58,6 +58,14 @@ namespace HAL
     {
         return mRanges[rangeIndex];
     }
+
+    template <class... Descriptors>
+    uint32_t HAL::DescriptorHeap<Descriptors...>::Capacity() const
+    {
+        return mRangeCapacity * mRanges.size();
+    }
+
+
    /* template <class T>
     const UADescriptor& CBSRUADescriptorHeap::EmplaceDescriptorForUnorderedAccessBuffer(const BufferResource<T>& resource)
     {
