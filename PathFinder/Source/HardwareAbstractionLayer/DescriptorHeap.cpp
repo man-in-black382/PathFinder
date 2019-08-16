@@ -26,7 +26,7 @@ namespace HAL
             assert_format(std::holds_alternative<ResourceFormat::Color>(texture.Format()), "Texture format is not suited for render targets");
         }
 
-        RTDescriptor& descriptor = std::get<DescriptorContainer<RTDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.InsertedDescriptorCount);
+        const RTDescriptor& descriptor = *mDescriptors.emplace_back(std::make_unique<RTDescriptor>(range.CurrentCPUHandle, range.InsertedDescriptorCount));
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(d3dDesc);
         mDevice->D3DPtr()->CreateRenderTargetView(texture.D3DPtr(), &rtvDesc, range.CurrentCPUHandle);
 
@@ -94,14 +94,14 @@ namespace HAL
     DSDescriptorHeap::DSDescriptorHeap(const Device* device, uint32_t capacity)
         : DescriptorHeap(device, capacity, 1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV) {}
 
-    const HAL::DSDescriptor& DSDescriptorHeap::EmplaceDSDescriptor(const TextureResource& texture)
+    const DSDescriptor& DSDescriptorHeap::EmplaceDSDescriptor(const TextureResource& texture)
     {
         ValidateCapacity(0);
         RangeAllocationInfo& range = GetRange(0);
 
         assert_format(std::holds_alternative<ResourceFormat::DepthStencil>(texture.Format()), "Texture is not of depth-stencil format");
 
-        const DSDescriptor& descriptor = std::get<DescriptorContainer<DSDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.InsertedDescriptorCount);
+        const DSDescriptor& descriptor = *mDescriptors.emplace_back(std::make_unique<RTDescriptor>(range.CurrentCPUHandle, range.InsertedDescriptorCount));
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = ResourceToDSVDescription(texture.D3DDescription());
         mDevice->D3DPtr()->CreateDepthStencilView(texture.D3DPtr(), &dsvDesc, range.CurrentCPUHandle);
 
@@ -274,6 +274,16 @@ namespace HAL
         return mRangeCapacity * std::underlying_type_t<Range>(range);
     }
 
+    std::optional<GPUDescriptor> CBSRUADescriptorHeap::GetDescriptor(Range range, uint32_t indexInRange) const
+    {
+        auto rangeIndex = std::underlying_type_t<Range>(range);
+        const RangeAllocationInfo& rangeInfo = GetRange(rangeIndex);
+        
+        if (rangeInfo.InsertedDescriptorCount > indexInRange) return std::nullopt;
+
+        return mDescriptors[mRangeCapacity * rangeIndex + indexInRange];
+    }
+
     const SRDescriptor& CBSRUADescriptorHeap::EmplaceSRDescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat)
     {
         auto index = std::underlying_type_t<Range>(RangeTypeForTexture(texture));
@@ -282,7 +292,7 @@ namespace HAL
 
         assert_format(shaderVisibleFormat && std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for typed texture");
 
-        const SRDescriptor& descriptor = std::get<DescriptorContainer<SRDescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount);
+        const SRDescriptor& descriptor = *mDescriptors.emplace_back(std::make_unique<RTDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount));
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), shaderVisibleFormat);
         mDevice->D3DPtr()->CreateShaderResourceView(texture.D3DPtr(), &desc, range.CurrentCPUHandle);
 
@@ -298,7 +308,7 @@ namespace HAL
 
         assert_format(shaderVisibleFormat && std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for typed texture");
 
-        const UADescriptor& descriptor = std::get<DescriptorContainer<UADescriptor>>(mDescriptors).emplace_back(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount);
+        const UADescriptor& descriptor = *mDescriptors.emplace_back(std::make_unique<RTDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount));
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), shaderVisibleFormat);
         mDevice->D3DPtr()->CreateUnorderedAccessView(texture.D3DPtr(), nullptr, &desc, range.CurrentCPUHandle);
 

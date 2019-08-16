@@ -18,26 +18,26 @@ namespace PathFinder
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
-        mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName));
+        CommandList().SetRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName));
     }
 
     void GraphicsDevice::SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName)
     {
         if (depthStencilResourceName)
         {
-            mRingCommandList.CurrentCommandList().SetRenderTarget(
+            CommandList().SetRenderTarget(
                 mResourceStorage->GetCurrentBackBufferDescriptor(),
                 mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName)
             );
         }
         else {
-            mRingCommandList.CurrentCommandList().SetRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor());
+            CommandList().SetRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor());
         }
     }
 
     void GraphicsDevice::SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName)
     {
-        mRingCommandList.CurrentCommandList().SetRenderTarget(
+        CommandList().SetRenderTarget(
             mResourceStorage->GetRenderTargetDescriptor(rtResourceName),
             mResourceStorage->GetDepthStencilDescriptor(dsResourceName)
         );
@@ -45,62 +45,64 @@ namespace PathFinder
 
     void GraphicsDevice::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)
     {
-        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName), color);
+        CommandList().ClearRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName), color);
     }
 
     void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
     {
-        mRingCommandList.CurrentCommandList().ClearRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor(), color);
+        CommandList().ClearRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor(), color);
     }
 
     void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)
     {
-        mRingCommandList.CurrentCommandList().CleadDepthStencil(mResourceStorage->GetDepthStencilDescriptor(resourceName), depthValue);
+        CommandList().CleadDepthStencil(mResourceStorage->GetDepthStencilDescriptor(resourceName), depthValue);
     }
 
     void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)
     {
         auto& pso = mPipelineStateManager->GetPipelineState(psoName);
 
-        mRingCommandList.CurrentCommandList().SetPipelineState(pso);
-        mRingCommandList.CurrentCommandList().SetGraphicsRootSignature(*pso.GetRootSignature());
-        mRingCommandList.CurrentCommandList().SetComputeRootSignature(*pso.GetRootSignature());
+        CommandList().SetPipelineState(pso);
+        CommandList().SetGraphicsRootSignature(*pso.GetRootSignature());
+        CommandList().SetComputeRootSignature(*pso.GetRootSignature());
+
+        ReapplyCommonResourceBindings();
     }
 
     void GraphicsDevice::UseVertexBufferOfLayout(VertexLayout layout)
     {
-        mRingCommandList.CurrentCommandList().SetVertexBuffer(*mVertexStorage->UnifiedVertexBufferDescriptorForLayout(layout));
-        mRingCommandList.CurrentCommandList().SetIndexBuffer(*mVertexStorage->UnifiedIndexBufferDescriptorForLayout(layout));
-        mRingCommandList.CurrentCommandList().SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
+        CommandList().SetVertexBuffer(*mVertexStorage->UnifiedVertexBufferDescriptorForLayout(layout));
+        CommandList().SetIndexBuffer(*mVertexStorage->UnifiedIndexBufferDescriptorForLayout(layout));
+        CommandList().SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
     }
     void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)
     {
-        mRingCommandList.CurrentCommandList().SetViewport(viewport);
+        CommandList().SetViewport(viewport);
     }
 
     void GraphicsDevice::Draw(uint32_t vertexCount, uint32_t vertexStart)
     {
-        mRingCommandList.CurrentCommandList().Draw(vertexCount, vertexStart);
+        CommandList().Draw(vertexCount, vertexStart);
     }
 
     void GraphicsDevice::DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount)
     {
-        mRingCommandList.CurrentCommandList().DrawInstanced(vertexCount, vertexStart, instanceCount);
+        CommandList().DrawInstanced(vertexCount, vertexStart, instanceCount);
     }
 
     void GraphicsDevice::DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart)
     {
-        mRingCommandList.CurrentCommandList().DrawIndexed(vertexStart, indexCount, indexStart);
+        CommandList().DrawIndexed(vertexStart, indexCount, indexStart);
     }
 
     void GraphicsDevice::DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount)
     {
-        mRingCommandList.CurrentCommandList().DrawIndexedInstanced(vertexStart, indexCount, indexStart, instanceCount);
+        CommandList().DrawIndexedInstanced(vertexStart, indexCount, indexStart, instanceCount);
     }
 
     void GraphicsDevice::Draw(const VertexStorageLocation& vertexStorageLocation)
     {
-        mRingCommandList.CurrentCommandList().DrawIndexed(vertexStorageLocation.VertexBufferOffset, vertexStorageLocation.IndexCount, vertexStorageLocation.IndexBufferOffset);
+        CommandList().DrawIndexed(vertexStorageLocation.VertexBufferOffset, vertexStorageLocation.IndexCount, vertexStorageLocation.IndexBufferOffset);
     }
 
     void GraphicsDevice::BeginFrame(uint64_t frameFenceValue)
@@ -115,9 +117,36 @@ namespace PathFinder
 
     void GraphicsDevice::ExecuteCommandsThenSignalFence(HAL::Fence& fence)
     {
-        mRingCommandList.CurrentCommandList().Close();
-        mCommandQueue.ExecuteCommandList(mRingCommandList.CurrentCommandList());
+        CommandList().Close();
+        mCommandQueue.ExecuteCommandList(CommandList());
         mCommandQueue.SignalFence(fence);
+    }
+
+    void GraphicsDevice::ReapplyCommonResourceBindings()
+    {
+        const HAL::CBSRUADescriptorHeap& heap = mResourceStorage->DescriptorStorage().CBSRUADescriptorHeap();
+        
+        // Look at PipelineStateManager for base root signature parameter ordering
+
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
+        {
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 0);
+        }
+
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
+        {
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 1);
+        }
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
+        {
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 2);
+        }
+
+        if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
+        {
+            CommandList().SetGraphicsRootConstantBuffer(*buffer, 5); 
+        }
+        
     }
 
 }

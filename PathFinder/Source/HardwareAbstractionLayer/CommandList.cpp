@@ -66,6 +66,11 @@ namespace HAL
         mList->SetComputeRootUnorderedAccessView(rootParameterIndex, resource.GPUVirtualAddress());
     }
 
+    void ComputeCommandListBase::SetComputeRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex)
+    {
+        mList->SetComputeRootDescriptorTable(rootParameterIndex, baseDescriptor.GPUHandle());
+    }
+
     void ComputeCommandListBase::SetPipelineState(const ComputePipelineState& state)
     {
         mList->SetPipelineState(state.D3DCompiledState());
@@ -140,6 +145,11 @@ namespace HAL
     void GraphicsCommandListBase::SetGraphicsRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex)
     {
         mList->SetGraphicsRootUnorderedAccessView(rootParameterIndex, resource.GPUVirtualAddress());
+    }
+
+    void GraphicsCommandListBase::SetGraphicsRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex)
+    {
+        mList->SetGraphicsRootDescriptorTable(rootParameterIndex, baseDescriptor.GPUHandle());
     }
 
 

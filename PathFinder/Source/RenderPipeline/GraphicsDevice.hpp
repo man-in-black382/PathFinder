@@ -16,7 +16,7 @@ namespace PathFinder
     public:
         GraphicsDevice(
             const HAL::Device& device,
-            ResourceStorage* resourceManager, 
+            ResourceStorage* resourceStorage, 
             PipelineStateManager* pipelineStateManager,
             VertexStorage* vertexStorage, 
             uint8_t simultaneousFramesInFlight
@@ -42,6 +42,8 @@ namespace PathFinder
         void EndFrame(uint64_t completedFrameFenceValue);
 
     private:
+        void ReapplyCommonResourceBindings();
+
         HAL::GraphicsCommandQueue mCommandQueue;
         HAL::DirectRingCommandList mRingCommandList;
 

@@ -2,8 +2,8 @@
 
 namespace HAL
 {
-    template <class... Descriptors>
-    DescriptorHeap<Descriptors...>::DescriptorHeap(const Device* device, uint32_t rangeCapacity, uint32_t rangeCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
+    template <class DescriptorT>
+    DescriptorHeap<DescriptorT>::DescriptorHeap(const Device* device, uint32_t rangeCapacity, uint32_t rangeCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
         : mDevice{ device }, mRangeCapacity{ rangeCapacity }, mIncrementSize{ device->D3DPtr()->GetDescriptorHandleIncrementSize(heapType) }
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc{};
@@ -32,11 +32,11 @@ namespace HAL
         }
     }
 
-    template <class... Descriptors>
-    DescriptorHeap<Descriptors...>::~DescriptorHeap() {}
+    template <class DescriptorT>
+    DescriptorHeap<DescriptorT>::~DescriptorHeap() {}
 
-    template <class... Descriptors>
-    void DescriptorHeap<Descriptors...>::ValidateCapacity(uint32_t rangeIndex) const
+    template <class DescriptorT>
+    void DescriptorHeap<DescriptorT>::ValidateCapacity(uint32_t rangeIndex) const
     {
         if (mRanges[rangeIndex].InsertedDescriptorCount >= mRangeCapacity)
         {
@@ -44,8 +44,8 @@ namespace HAL
         }
     }
 
-    template <class... Descriptors>
-    void DescriptorHeap<Descriptors...>::IncrementCounters(uint32_t rangeIndex)
+    template <class DescriptorT>
+    void DescriptorHeap<DescriptorT>::IncrementCounters(uint32_t rangeIndex)
     {
         RangeAllocationInfo& range = mRanges[rangeIndex];
         range.CurrentCPUHandle.ptr += mIncrementSize;
@@ -53,14 +53,20 @@ namespace HAL
         range.InsertedDescriptorCount++;
     }
 
-    template <class... Descriptors>
-    typename DescriptorHeap<Descriptors...>::RangeAllocationInfo& DescriptorHeap<Descriptors...>::GetRange(uint32_t rangeIndex)
+    template <class DescriptorT>
+    typename DescriptorHeap<DescriptorT>::RangeAllocationInfo& DescriptorHeap<DescriptorT>::GetRange(uint32_t rangeIndex)
     {
         return mRanges[rangeIndex];
     }
 
-    template <class... Descriptors>
-    uint32_t HAL::DescriptorHeap<Descriptors...>::Capacity() const
+    template <class DescriptorT>
+    typename const DescriptorHeap<DescriptorT>::RangeAllocationInfo& DescriptorHeap<DescriptorT>::GetRange(uint32_t rangeIndex) const
+    {
+        return mRanges.at(rangeIndex);
+    }
+
+    template <class DescriptorT>
+    uint32_t HAL::DescriptorHeap<DescriptorT>::Capacity() const
     {
         return mRangeCapacity * mRanges.size();
     }

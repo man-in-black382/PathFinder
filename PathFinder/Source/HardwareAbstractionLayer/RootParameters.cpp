@@ -19,6 +19,40 @@ namespace HAL
     RootDescriptorTableParameter::RootDescriptorTableParameter() 
         : RootParameter(D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {}
 
+    RootDescriptorTableParameter::RootDescriptorTableParameter(const RootDescriptorTableParameter& that)
+        : RootDescriptorTableParameter()
+    {
+        *this = that;
+    }
+
+    RootDescriptorTableParameter::RootDescriptorTableParameter(RootDescriptorTableParameter&& that)
+        : RootDescriptorTableParameter()
+    {
+        *this = std::move(that);
+    }
+
+    RootDescriptorTableParameter& RootDescriptorTableParameter::operator=(const RootDescriptorTableParameter& that)
+    {
+        if (this == &that) return *this;
+
+        mRanges = that.mRanges;
+        mParameter.DescriptorTable.NumDescriptorRanges = (UINT)mRanges.size();
+        mParameter.DescriptorTable.pDescriptorRanges = mRanges.data();
+
+        return *this;
+    }
+
+    RootDescriptorTableParameter& RootDescriptorTableParameter::operator=(RootDescriptorTableParameter&& that)
+    {
+        if (this == &that) return *this;
+
+        mRanges = std::move(that.mRanges);
+        mParameter.DescriptorTable.NumDescriptorRanges = (UINT)mRanges.size();
+        mParameter.DescriptorTable.pDescriptorRanges = mRanges.data();
+
+        return *this;
+    }
+
     void RootDescriptorTableParameter::AddDescriptorRange(const RootDescriprorTableRange& range)
     {
         assert_format(mRanges.empty() || mRanges.back().NumDescriptors != RootDescriprorTableRange::UnboundedRangeSize,

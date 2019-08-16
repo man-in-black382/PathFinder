@@ -110,12 +110,10 @@ namespace PathFinder
         void AllocateScheduledResources(); 
         void UseSwapChain(HAL::SwapChain& swapChain);
 
-        template <class RootConstants> 
-        RootConstants* GetRootConstantDataForCurrentPass() const;
-
-        HAL::BufferResource<uint8_t>* GetRootConstantBufferForCurrentPass() const;
-
-        const std::vector<ResourceName>* GetScheduledResourceNamesForCurrentPass() const;
+        const ResourceDescriptorStorage& DescriptorStorage() const;
+        template <class RootConstants> RootConstants* RootConstantDataForCurrentPass() const;
+        HAL::BufferResource<uint8_t>* RootConstantBufferForCurrentPass() const;
+        const std::vector<ResourceName>& ScheduledResourceNamesForCurrentPass();
         PipelineResource& GetPipelineResource(ResourceName resourceName);
 
     private:

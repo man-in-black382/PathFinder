@@ -86,6 +86,7 @@ namespace HAL
 
         void SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
+        void SetComputeRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex);
     };
 
     template <class... Descriptors>
@@ -122,6 +123,7 @@ namespace HAL
 
         void SetGraphicsRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetGraphicsRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
+        void SetGraphicsRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex);
     };
 
     template <class T>

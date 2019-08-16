@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <tuple>
+#include <optional>
 
 #include "TextureResource.hpp"
 #include "BufferResource.hpp"
@@ -14,7 +15,7 @@
 
 namespace HAL
 {
-    template <class... Descriptors>
+    template <class DescriptorT>
     class DescriptorHeap
     {
     public:
@@ -31,21 +32,20 @@ namespace HAL
         uint32_t Capacity() const;
 
     protected:
-        template <class T> using DescriptorContainer = std::vector<T>;
-
         void ValidateCapacity(uint32_t rangeIndex) const;
         void IncrementCounters(uint32_t rangeIndex);
+        
         RangeAllocationInfo& GetRange(uint32_t rangeIndex);
+        const RangeAllocationInfo& GetRange(uint32_t rangeIndex) const;
 
         const Device* mDevice = nullptr;
         uint32_t mRangeCapacity = 0;
 
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mHeap;
-        std::tuple<DescriptorContainer<Descriptors>...> mDescriptors;
+        std::vector<std::unique_ptr<DescriptorT>> mDescriptors;
 
     private:
         uint32_t mIncrementSize = 0;
-
         std::vector<RangeAllocationInfo> mRanges;
 
     public:
@@ -54,7 +54,7 @@ namespace HAL
 
 
 
-    class RTDescriptorHeap : public DescriptorHeap<RTDescriptor> {
+    class RTDescriptorHeap : public DescriptorHeap<CPUDescriptor> {
     public:
         RTDescriptorHeap(const Device* device, uint32_t capacity);
         ~RTDescriptorHeap() = default;
@@ -67,7 +67,7 @@ namespace HAL
 
 
 
-    class DSDescriptorHeap : public DescriptorHeap<DSDescriptor> {
+    class DSDescriptorHeap : public DescriptorHeap<CPUDescriptor> {
     public:
         DSDescriptorHeap(const Device* device, uint32_t capacity);
         ~DSDescriptorHeap() = default;
@@ -80,7 +80,7 @@ namespace HAL
 
 
 
-    class CBSRUADescriptorHeap : public DescriptorHeap<CBDescriptor, SRDescriptor, UADescriptor> {        
+    class CBSRUADescriptorHeap : public DescriptorHeap<GPUDescriptor> {        
     public:
         enum class Range : uint8_t
         {
@@ -95,6 +95,8 @@ namespace HAL
 
         uint32_t RangeCapacity() const;
         uint32_t RangeStartIndex(Range range) const;
+
+        std::optional<GPUDescriptor> GetDescriptor(Range range, uint32_t indexInRange) const;
 
         /*  template <class T> const CBDescriptor& EmplaceDescriptorForConstantBuffer(const BufferResource<T>& resource, std::optional<uint64_t> explicitStride = nullopt);
           template <class T> const SRDescriptor& EmplaceDescriptorForStructuredBuffer(const BufferResource<T>& resource);

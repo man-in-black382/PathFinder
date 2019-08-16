@@ -91,6 +91,11 @@ namespace PathFinder
         }
     }
 
+    const ResourceDescriptorStorage& ResourceStorage::DescriptorStorage() const
+    {
+        return mDescriptorStorage;
+    }
+
     bool ResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
     {
         return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end();
@@ -108,6 +113,8 @@ namespace PathFinder
         const Geometry::Dimensions& dimensions,
         const HAL::Resource::ClearValue& optimizedClearValue)
     {
+        mPerPassResourceNames[mCurrentPassName].push_back(resourceName);
+
         auto it = mPipelineResourceAllocators.find(resourceName);
 
         if (it != mPipelineResourceAllocators.end())
@@ -163,17 +170,16 @@ namespace PathFinder
         }
     }
 
-    HAL::BufferResource<uint8_t>* ResourceStorage::GetRootConstantBufferForCurrentPass() const
+    HAL::BufferResource<uint8_t>* ResourceStorage::RootConstantBufferForCurrentPass() const
     {
         auto it = mPerPassConstantBuffers.find(mCurrentPassName);
         if (it == mPerPassConstantBuffers.end()) return nullptr;
         return it->second.get();
     }
 
-    const std::vector<ResourceName>* ResourceStorage::GetScheduledResourceNamesForCurrentPass() const
+    const std::vector<ResourceName>& ResourceStorage::ScheduledResourceNamesForCurrentPass()
     {
-        if (mPerPassResourceNames.find(mCurrentPassName) == mPerPassResourceNames.end()) return nullptr;
-        return &mPerPassResourceNames.at(mCurrentPassName);
+        return mPerPassResourceNames[mCurrentPassName];
     }
 
     PipelineResource& ResourceStorage::GetPipelineResource(ResourceName resourceName)

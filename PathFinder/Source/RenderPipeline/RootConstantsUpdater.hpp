@@ -20,7 +20,7 @@ namespace PathFinder
     template <class RootCBufferData>
     RootCBufferData* RootConstantsUpdater::UpdateRootConstantBuffer()
     {
-        return mResourceStorage->GetRootConstantDataForCurrentPass<RootCBufferData>();
+        return mResourceStorage->RootConstantDataForCurrentPass<RootCBufferData>();
     }
 
 }

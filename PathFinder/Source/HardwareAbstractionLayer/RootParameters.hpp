@@ -26,7 +26,12 @@ namespace HAL
     class RootDescriptorTableParameter : public RootParameter {
     public:
         RootDescriptorTableParameter();
+        RootDescriptorTableParameter(const RootDescriptorTableParameter& that);
+        RootDescriptorTableParameter(RootDescriptorTableParameter&& that);
         ~RootDescriptorTableParameter() = default;
+
+        RootDescriptorTableParameter& operator=(const RootDescriptorTableParameter& that);
+        RootDescriptorTableParameter& operator=(RootDescriptorTableParameter&& that);
 
         void AddDescriptorRange(const RootDescriprorTableRange& range);
 

@@ -26,6 +26,7 @@ namespace HAL
         using ParameterKey = uint64_t;
 
         ParameterKey GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace);
+        void CopyD3DParameters();
 
         std::vector<RootDescriptorTableParameter> mDescriptorTableParameters;
         std::vector<RootDescriptorParameter> mDescriptorParameters;

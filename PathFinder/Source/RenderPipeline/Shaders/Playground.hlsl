@@ -1,3 +1,12 @@
+struct PlaygroundPassData
+{
+    float4 Color;
+};
+
+#define PassDataType PlaygroundPassData
+
+#include "BaseRootSignature.hlsl"
+
 struct VertexIn
 {
     float3 Position : POSITION;

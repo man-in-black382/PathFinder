@@ -4,7 +4,7 @@ namespace PathFinder
 {
 
     template <class RootConstants>
-    RootConstants* ResourceStorage::GetRootConstantDataForCurrentPass() const
+    RootConstants* ResourceStorage::RootConstantDataForCurrentPass() const
     {
         auto bufferIt = mPerPassConstantBuffers.find(mCurrentPassName);
         if (bufferIt == mPerPassConstantBuffers.end()) return nullptr;

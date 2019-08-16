@@ -63,7 +63,6 @@ namespace PathFinder
         {
             mResourceStorage.SetCurrentPassName(passPtr->Name());
             TransitionResourceStates(passPtr->Name());
-            SetRootConstantBuffer();
             passPtr->Render(&mContext);
         }
 
@@ -94,15 +93,9 @@ namespace PathFinder
         mResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
     }
 
-    void RenderEngine::SetRootConstantBuffer()
-    {
-        uint32_t index = 0;
-        mGraphicsDevice.CommandList().SetGraphicsRootConstantBuffer(*mResourceStorage.GetRootConstantBufferForCurrentPass(), index);
-    }
-
     void RenderEngine::TransitionResourceStates(PassName passName)
     {
-        for (ResourceName resourceName : *mResourceStorage.GetScheduledResourceNamesForCurrentPass())
+        for (ResourceName resourceName : mResourceStorage.ScheduledResourceNamesForCurrentPass())
         {
             PipelineResource& pipelineResource = mResourceStorage.GetPipelineResource(resourceName);
             HAL::ResourceState currentState = pipelineResource.CurrentState;

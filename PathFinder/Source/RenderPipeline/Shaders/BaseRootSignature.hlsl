@@ -1,13 +1,17 @@
 struct GlobalData
 {
-
+    float2 PipelineRTResolution;
 };
 
 struct FrameData
 {
-    // Camera proj
-    // Camera view
-    // Sun data
+    float4 CameraPosition;
+    float4x4 CameraView;
+    float4x4 CameraProjection;
+    float4x4 CameraViewProjection;
+    float4x4 CameraInverseView;
+    float4x4 CameraInverseProjection;
+    float4x4 CameraInverseViewProjection;
 }; 
 
 #ifndef PassDataType
