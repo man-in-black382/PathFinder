@@ -96,7 +96,7 @@ namespace HAL
         uint32_t RangeCapacity() const;
         uint32_t RangeStartIndex(Range range) const;
 
-        std::optional<GPUDescriptor> GetDescriptor(Range range, uint32_t indexInRange) const;
+        const GPUDescriptor* GetDescriptor(Range range, uint32_t indexInRange) const;
 
         /*  template <class T> const CBDescriptor& EmplaceDescriptorForConstantBuffer(const BufferResource<T>& resource, std::optional<uint64_t> explicitStride = nullopt);
           template <class T> const SRDescriptor& EmplaceDescriptorForStructuredBuffer(const BufferResource<T>& resource);

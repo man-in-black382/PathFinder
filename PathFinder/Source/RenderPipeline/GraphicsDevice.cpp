@@ -137,6 +137,7 @@ namespace PathFinder
         {
             CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 1);
         }
+
         if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
         {
             CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 2);

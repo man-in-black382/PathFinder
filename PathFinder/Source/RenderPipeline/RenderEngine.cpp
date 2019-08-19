@@ -47,8 +47,6 @@ namespace PathFinder
     {
         if (mRenderPasses.empty()) return;
 
-        //OutputDebugString("Queueing commands\n");
-
         mFrameFence.IncreaseExpectedValue();
         mResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());

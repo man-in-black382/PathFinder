@@ -28,11 +28,7 @@ namespace HAL
     {
         uint8_t framesInFlight = ExpectedValue() - CompletedValue();
 
-        if (framesInFlight < allowedSimultaneousFramesCount) {
-            return;
-        }
-
-        //OutputDebugString("Stalling thread \n");
+        if (framesInFlight < allowedSimultaneousFramesCount) return;
 
         HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
         // Fire event when GPU hits current fence.  

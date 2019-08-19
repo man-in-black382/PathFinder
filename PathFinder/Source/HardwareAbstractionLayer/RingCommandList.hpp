@@ -71,7 +71,7 @@ namespace HAL
 
 
 
-    class DirectRingCommandList : public RingCommandList<GraphicsCommandList, DirectCommandAllocator> 
+    class GraphicsRingCommandList : public RingCommandList<GraphicsCommandList, DirectCommandAllocator> 
     {
     public:
         using RingCommandList<GraphicsCommandList, DirectCommandAllocator>::RingCommandList;

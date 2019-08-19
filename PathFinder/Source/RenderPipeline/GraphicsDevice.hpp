@@ -45,7 +45,7 @@ namespace PathFinder
         void ReapplyCommonResourceBindings();
 
         HAL::GraphicsCommandQueue mCommandQueue;
-        HAL::DirectRingCommandList mRingCommandList;
+        HAL::GraphicsRingCommandList mRingCommandList;
 
         ResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
