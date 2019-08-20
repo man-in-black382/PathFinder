@@ -98,16 +98,23 @@ namespace HAL
 
         const GPUDescriptor* GetDescriptor(Range range, uint32_t indexInRange) const;
 
-        /*  template <class T> const CBDescriptor& EmplaceDescriptorForConstantBuffer(const BufferResource<T>& resource, std::optional<uint64_t> explicitStride = nullopt);
-          template <class T> const SRDescriptor& EmplaceDescriptorForStructuredBuffer(const BufferResource<T>& resource);
-          template <class T> const UADescriptor& EmplaceDescriptorForUnorderedAccessBuffer(const BufferResource<T>& resource);*/
+        template <class T> const CBDescriptor& EmplaceCBDescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        template <class T> const SRDescriptor& EmplaceSRDescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        template <class T> const UADescriptor& EmplaceUADescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
 
-        const SRDescriptor& EmplaceSRDescriptor(const TextureResource& resource, std::optional<ResourceFormat::Color> concreteFormat = std::nullopt);
-        const UADescriptor& EmplaceUADescriptor(const TextureResource& resource, std::optional<ResourceFormat::Color> concreteFormat = std::nullopt);
+        const SRDescriptor& EmplaceSRDescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> concreteFormat = std::nullopt);
+        const UADescriptor& EmplaceUADescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> concreteFormat = std::nullopt);
 
     private:
-        D3D12_SHADER_RESOURCE_VIEW_DESC ResourceToSRVDescription(const D3D12_RESOURCE_DESC& resourceDesc, std::optional<ResourceFormat::Color> explicitFormat = std::nullopt) const;
-        D3D12_UNORDERED_ACCESS_VIEW_DESC ResourceToUAVDescription(const D3D12_RESOURCE_DESC& resourceDesc, std::optional<ResourceFormat::Color> explicitFormat = std::nullopt) const;
+        D3D12_SHADER_RESOURCE_VIEW_DESC ResourceToSRVDescription(
+            const D3D12_RESOURCE_DESC& resourceDesc, 
+            uint64_t bufferStride,
+            std::optional<ResourceFormat::Color> explicitFormat = std::nullopt) const;
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC ResourceToUAVDescription(
+            const D3D12_RESOURCE_DESC& resourceDesc,
+            uint64_t bufferStride,
+            std::optional<ResourceFormat::Color> explicitFormat = std::nullopt) const;
 
         Range RangeTypeForTexture(const TextureResource& texture) const;
         Range UARangeTypeForTexture(const TextureResource& texture) const;

@@ -147,7 +147,10 @@ namespace HAL
     CBSRUADescriptorHeap::CBSRUADescriptorHeap(const Device* device, uint32_t rangeCapacity)
         : DescriptorHeap(device, rangeCapacity, std::underlying_type_t<Range>(Range::TotalCount), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {}
   
-    D3D12_SHADER_RESOURCE_VIEW_DESC CBSRUADescriptorHeap::ResourceToSRVDescription(const D3D12_RESOURCE_DESC& resourceDesc, std::optional<ResourceFormat::Color> explicitFormat) const
+    D3D12_SHADER_RESOURCE_VIEW_DESC CBSRUADescriptorHeap::ResourceToSRVDescription(
+        const D3D12_RESOURCE_DESC& resourceDesc, 
+        uint64_t bufferStride,
+        std::optional<ResourceFormat::Color> explicitFormat) const
     {
         D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
 
@@ -158,7 +161,7 @@ namespace HAL
             desc.Buffer.FirstElement = 0;
             desc.Buffer.NumElements = (UINT)resourceDesc.Width;
             desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-            desc.Buffer.StructureByteStride = 1; // TODO: Change to an actual stride of a buffer content
+            desc.Buffer.StructureByteStride = (UINT)bufferStride;
             break;
 
         case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
@@ -212,7 +215,10 @@ namespace HAL
         return desc;
     }
 
-    D3D12_UNORDERED_ACCESS_VIEW_DESC CBSRUADescriptorHeap::ResourceToUAVDescription(const D3D12_RESOURCE_DESC& resourceDesc, std::optional<ResourceFormat::Color> explicitFormat) const
+    D3D12_UNORDERED_ACCESS_VIEW_DESC CBSRUADescriptorHeap::ResourceToUAVDescription(
+        const D3D12_RESOURCE_DESC& resourceDesc,
+        uint64_t bufferStride,
+        std::optional<ResourceFormat::Color> explicitFormat) const
     {
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc{};
 
@@ -222,7 +228,7 @@ namespace HAL
             desc.Buffer.FirstElement = 0;
             desc.Buffer.NumElements = (UINT)resourceDesc.Width;
             desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-            desc.Buffer.StructureByteStride = 1; // TODO: Change to an actual stride of a buffer content
+            desc.Buffer.StructureByteStride = (UINT)bufferStride;
             break;
 
         case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
@@ -299,7 +305,7 @@ namespace HAL
         auto& descriptor = dynamic_cast<SRDescriptor&>(*mDescriptors.emplace_back(
             std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount)));
 
-        D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), shaderVisibleFormat);
+        D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
         mDevice->D3DPtr()->CreateShaderResourceView(texture.D3DPtr(), &desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);
@@ -317,7 +323,7 @@ namespace HAL
         auto& descriptor = dynamic_cast<UADescriptor&>(*mDescriptors.emplace_back(
             std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount)));
 
-        D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), shaderVisibleFormat);
+        D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
         mDevice->D3DPtr()->CreateUnorderedAccessView(texture.D3DPtr(), nullptr, &desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);

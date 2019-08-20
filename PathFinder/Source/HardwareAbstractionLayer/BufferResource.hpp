@@ -113,7 +113,8 @@ namespace HAL
         ValidateMappedMemory();
         ValidateIndex(startIndex);
 
-        if (mPaddedElementSize > sizeof(T) && dataLength > 1) {
+        if (mPaddedElementSize > sizeof(T) && dataLength > 1) 
+        {
             throw std::invalid_argument(
                 "Writing several objects into buffer that requires per object memory padding."
                 "Instead of writing a continuous chunk of memory, write objects one by one in a loop."
