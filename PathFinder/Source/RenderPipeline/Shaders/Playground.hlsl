@@ -22,7 +22,10 @@ VertexOut VSMain(VertexIn vin)
 {
     VertexOut vout;
     vout.Color = float4(0.6, 0.8, 1.0, 1.0);
-    vout.PosH = float4(vin.Position, 1.0);
+
+    float4 position = float4(vin.Position, 1.0);
+    vout.PosH = mul(FrameDataCB.CameraViewProjection, position);
+
     return vout;
 }
 

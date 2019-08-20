@@ -11,7 +11,18 @@ namespace PathFinder
         : mDevice{ device },
         mDefaultRenderSurface{ defaultRenderSurface },
         mDescriptorStorage{ device },
-        mSimultaneousFramesInFlight{ simultaneousFramesInFlight } {}
+        mSimultaneousFramesInFlight{ simultaneousFramesInFlight },
+
+        mGlobalRootConstantsBuffer{
+            *device, 1, simultaneousFramesInFlight, 256,
+            HAL::ResourceState::ConstantBuffer, HAL::ResourceState::ConstantBuffer,
+            HAL::CPUAccessibleHeapType::Upload },
+
+        mPerFrameRootConstantsBuffer{
+            *device, 1, simultaneousFramesInFlight, 256,
+            HAL::ResourceState::ConstantBuffer, HAL::ResourceState::ConstantBuffer,
+            HAL::CPUAccessibleHeapType::Upload }
+    {}
 
     void ResourceStorage::BeginFrame(uint64_t frameFenceValue)
     {
@@ -20,6 +31,9 @@ namespace PathFinder
             auto& buffer = passBufferPair.second;
             buffer->PrepareMemoryForNewFrame(frameFenceValue);
         }
+
+        mGlobalRootConstantsBuffer.PrepareMemoryForNewFrame(frameFenceValue);
+        mPerFrameRootConstantsBuffer.PrepareMemoryForNewFrame(frameFenceValue);
     }
 
     void ResourceStorage::EndFrame(uint64_t completedFrameFenceValue)
@@ -29,6 +43,9 @@ namespace PathFinder
             auto& buffer = passBufferPair.second;
             buffer->DiscardMemoryForCompletedFrames(completedFrameFenceValue);
         }
+
+        mGlobalRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameFenceValue);
+        mPerFrameRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameFenceValue);
     }
 
     const HAL::RTDescriptor& ResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
@@ -94,6 +111,16 @@ namespace PathFinder
     const ResourceDescriptorStorage& ResourceStorage::DescriptorStorage() const
     {
         return mDescriptorStorage;
+    }
+
+    GlobalRootConstants* ResourceStorage::GlobalRootConstantData()
+    {
+        return mGlobalRootConstantsBuffer.At(0);
+    }
+
+    PerFrameRootConstants* ResourceStorage::PerFrameRootConstantData()
+    {
+        return mPerFrameRootConstantsBuffer.At(0);
     }
 
     bool ResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
@@ -175,6 +202,16 @@ namespace PathFinder
         auto it = mPerPassConstantBuffers.find(mCurrentPassName);
         if (it == mPerPassConstantBuffers.end()) return nullptr;
         return it->second.get();
+    }
+
+    const HAL::BufferResource<GlobalRootConstants>& ResourceStorage::GlobalRootConstantsBuffer() const
+    {
+        return mGlobalRootConstantsBuffer;
+    }
+
+    const HAL::BufferResource<PerFrameRootConstants>& ResourceStorage::PerFrameRootConstantsBuffer() const
+    {
+        return mPerFrameRootConstantsBuffer;
     }
 
     const std::vector<ResourceName>& ResourceStorage::ScheduledResourceNamesForCurrentPass()

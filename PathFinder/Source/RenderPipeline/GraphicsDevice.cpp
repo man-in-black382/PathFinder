@@ -143,6 +143,9 @@ namespace PathFinder
             CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 2);
         }
 
+        CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 3);
+        CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 4);
+
         if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
         {
             CommandList().SetGraphicsRootConstantBuffer(*buffer, 5); 

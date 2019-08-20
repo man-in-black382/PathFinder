@@ -20,7 +20,8 @@ namespace PathFinder
         mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
         mGraphicsDevice{ mDevice, &mResourceStorage, &mPipelineStateManager, &mVertexStorage, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater },
-        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() }
+        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
+        mScene{ scene }
     {
         mResourceStorage.UseSwapChain(mSwapChain);
     }
@@ -50,6 +51,8 @@ namespace PathFinder
         mFrameFence.IncreaseExpectedValue();
         mResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
+
+        UpdateCommonRootConstants();
 
         HAL::TextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
 
@@ -110,6 +113,24 @@ namespace PathFinder
                 pipelineResource.CurrentState = nextState;
             }
         }
+    }
+
+    void RenderEngine::UpdateCommonRootConstants()
+    {
+        GlobalRootConstants* globalConstants = mResourceStorage.GlobalRootConstantData();
+        PerFrameRootConstants* perFrameConstants = mResourceStorage.PerFrameRootConstantData();
+
+        globalConstants->PipelineRTResolution = { mDefaultRenderSurface.Dimensions().Width, mDefaultRenderSurface.Dimensions().Height };
+
+        const Camera& camera = mScene->MainCamera();
+
+        perFrameConstants->CameraPosition = glm::vec4{ camera.Position(), 1.0 };
+        perFrameConstants->CameraInverseView = camera.View();
+        perFrameConstants->CameraProjection = camera.Projection();
+        perFrameConstants->CameraViewProjection = camera.ViewProjection();
+        perFrameConstants->CameraInverseView = camera.InverseView();
+        perFrameConstants->CameraInverseProjection = camera.InverseProjection();
+        perFrameConstants->CameraInverseViewProjection = camera.InverseViewProjection();
     }
 
 }

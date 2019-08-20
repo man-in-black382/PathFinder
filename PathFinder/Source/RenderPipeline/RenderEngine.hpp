@@ -38,6 +38,7 @@ namespace PathFinder
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
         void MoveToNextBackBuffer();
         void TransitionResourceStates(PassName passName);
+        void UpdateCommonRootConstants();
 
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 3;
@@ -61,6 +62,8 @@ namespace PathFinder
         HAL::SwapChain mSwapChain;
 
         std::vector<std::unique_ptr<RenderPass>> mRenderPasses;
+
+        const Scene* mScene;
 
     public:
         inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }

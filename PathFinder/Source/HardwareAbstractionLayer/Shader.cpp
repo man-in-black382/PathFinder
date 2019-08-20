@@ -25,7 +25,7 @@ namespace HAL
         uint32_t compilerFlags = 0;  
 
 #if defined(DEBUG) || defined(_DEBUG)    
-        compilerFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+        compilerFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION; 
 #endif
          
         Microsoft::WRL::ComPtr<ID3DBlob> errors;

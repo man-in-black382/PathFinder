@@ -303,10 +303,12 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
     <ClInclude Include="Source\IO\Input.hpp" />
+    <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
     <ClInclude Include="Source\RenderPipeline\GraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\HashSpecializations.hpp" />
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
+    <ClInclude Include="Source\RenderPipeline\PerFrameRootConstants.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />

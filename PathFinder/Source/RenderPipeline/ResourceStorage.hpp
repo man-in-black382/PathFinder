@@ -4,6 +4,8 @@
 #include "RenderSurface.hpp"
 #include "ResourceDescriptorStorage.hpp"
 #include "HashSpecializations.hpp"
+#include "GlobalRootConstants.hpp"
+#include "PerFrameRootConstants.hpp"
 
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
@@ -111,8 +113,12 @@ namespace PathFinder
         void UseSwapChain(HAL::SwapChain& swapChain);
 
         const ResourceDescriptorStorage& DescriptorStorage() const;
+        GlobalRootConstants* GlobalRootConstantData();
+        PerFrameRootConstants* PerFrameRootConstantData();
         template <class RootConstants> RootConstants* RootConstantDataForCurrentPass() const;
         HAL::BufferResource<uint8_t>* RootConstantBufferForCurrentPass() const;
+        const HAL::BufferResource<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
+        const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
         const std::vector<ResourceName>& ScheduledResourceNamesForCurrentPass();
         PipelineResource& GetPipelineResource(ResourceName resourceName);
 
@@ -163,6 +169,10 @@ namespace PathFinder
         std::unordered_map<ResourceName, PipelineResourceAllocator> mPipelineResourceAllocators;
 
         std::unordered_map<ResourceName, PipelineResource> mPipelineResources;
+
+        HAL::RingBufferResource<GlobalRootConstants> mGlobalRootConstantsBuffer;
+
+        HAL::RingBufferResource<PerFrameRootConstants> mPerFrameRootConstantsBuffer;
 
         uint8_t mCurrentBackBufferIndex = 0;
     };
