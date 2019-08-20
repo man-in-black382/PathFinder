@@ -130,6 +130,21 @@ namespace PathFinder
         texture2DArrays.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 2 });
         mBaseRootSignature.AddDescriptorTableParameter(texture2DArrays);
 
+        // Unbounded RWTexture2D range
+        HAL::RootDescriptorTableParameter RWTextures2D;
+        RWTextures2D.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 0 });
+        mBaseRootSignature.AddDescriptorTableParameter(RWTextures2D);
+
+        // Unbounded RWTexture3D range
+        HAL::RootDescriptorTableParameter RWTextures3D;
+        RWTextures3D.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 1 });
+        mBaseRootSignature.AddDescriptorTableParameter(RWTextures3D);
+
+        // Unbounded RWTexture2DArray range
+        HAL::RootDescriptorTableParameter RWTexture2DArrays;
+        RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 2 });
+        mBaseRootSignature.AddDescriptorTableParameter(RWTexture2DArrays);
+
         // Global data CB
         mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 0, 0 });
 

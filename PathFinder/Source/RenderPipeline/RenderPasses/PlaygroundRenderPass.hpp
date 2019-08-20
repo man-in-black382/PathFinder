@@ -12,7 +12,7 @@ namespace PathFinder
         glm::mat4 cameraMat;
     };
 
-    class PlaygroundRenderPass : public RenderPass
+    class PlaygroundRenderPass : public RenderPass 
     {
     public:
         PlaygroundRenderPass();

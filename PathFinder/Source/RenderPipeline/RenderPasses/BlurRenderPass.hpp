@@ -10,6 +10,7 @@ namespace PathFinder
     struct BlurCBContent
     {
         uint32_t Radius;
+        uint32_t TextureIndex;
     };
 
     class BlurRenderPass : public RenderPass

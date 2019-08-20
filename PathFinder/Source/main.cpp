@@ -517,7 +517,8 @@ int main(int argc, char** argv)
     scene.AddMeshInstance(deerInstance);
 
     engine.VertexGPUStorage().TransferDataToGPU();
-    engine.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());
+    engine.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());  
+    //engine.AddRenderPass(std::make_unique<PathFinder::BlurRenderPass>());
     engine.Schedule();
 
     PathFinder::Camera& camera = scene.MainCamera();

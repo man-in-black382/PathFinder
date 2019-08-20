@@ -128,29 +128,17 @@ namespace PathFinder
         
         // Look at PipelineStateManager for base root signature parameter ordering
 
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
-        {
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 0);
-        }
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 0);
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 1);
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 2);
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 3);
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 4);
+        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 5);
 
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
-        {
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 1);
-        }
+        CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 6);
+        CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 7);
 
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
-        {
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 2);
-        }
-
-        CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 3);
-        CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 4);
-
-        if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
-        {
-            CommandList().SetGraphicsRootConstantBuffer(*buffer, 5); 
-        }
-        
+        if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass()) CommandList().SetGraphicsRootConstantBuffer(*buffer, 8);         
     }
 
 }
