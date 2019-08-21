@@ -19,7 +19,7 @@ namespace PathFinder
         
         ResourceDescriptorStorage(HAL::Device* device);
 
-        const HAL::RTDescriptor* GetRTDescriptor(ResourceName resourceName, HAL::ResourceFormat::Color format);
+        const HAL::RTDescriptor* GetRTDescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
         const HAL::DSDescriptor* GetDSDescriptor(ResourceName resourceName);
         const HAL::SRDescriptor* GetSRDescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
         const HAL::UADescriptor* GetUADescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
@@ -66,16 +66,15 @@ namespace PathFinder
         struct DescriptorSet
         {
             DSCBSet DSCB;
-            RTSRUASet TypelessSRUA; // For typeless buffers (StructuredBuffer for example)
-            std::unordered_map<HAL::ResourceFormat::Color, RTSRUASet> RTSRUA; // For typed resources, such as textures and typed buffers
+            RTSRUASet ImplicitlyTypedRTSRUA; // For typeless buffers (StructuredBuffer for example)
+            std::unordered_map<HAL::ResourceFormat::Color, RTSRUASet> ExplicitlyTypedRTSRUA; // For typed resources, such as textures and typed buffers
         };
 
         void ValidateRTFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat);
         void ValidateSRUAFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat);
 
         const DSCBSet& GetDSCBSet(ResourceName name);
-        const SRUASet& GetTypelessSRUASet(ResourceName name);
-        const RTSRUASet& GetRTSRUASet(ResourceName name, HAL::ResourceFormat::Color format);
+        const RTSRUASet& GetRTSRUASet(ResourceName name, std::optional<HAL::ResourceFormat::Color> format);
 
         uint32_t mDescriptorHeapCapacity = 10000;
 

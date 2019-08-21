@@ -10,27 +10,27 @@ namespace HAL
 
     class CPUDescriptor {
     public:
-        CPUDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, uint32_t indexInHeap);
+        CPUDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle);
         virtual ~CPUDescriptor() = 0;
 
     private:
         D3D12_CPU_DESCRIPTOR_HANDLE mCPUHandle;
-        uint32_t mIndexInHeap;
 
     public:
         inline const auto& CPUHandle() const { return mCPUHandle; }
-        inline const auto& IndexInHeap() const { return mIndexInHeap; }
     };
 
     class GPUDescriptor : public CPUDescriptor {
     public:
-        GPUDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle, uint32_t indexInHeap);
+        GPUDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle, uint32_t indexInHeapRange);
 
     private:
         D3D12_GPU_DESCRIPTOR_HANDLE mGPUHandle;
+        uint32_t mIndexInHeapRange;
 
     public:
         inline const auto& GPUHandle() const { return mGPUHandle; }
+        inline const auto& IndexInHeapRange() const { return mIndexInHeapRange; }
     };
 
 

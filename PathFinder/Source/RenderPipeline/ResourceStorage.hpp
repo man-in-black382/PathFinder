@@ -14,6 +14,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <functional>
 #include <tuple>
 #include <memory>
@@ -119,7 +120,7 @@ namespace PathFinder
         HAL::BufferResource<uint8_t>* RootConstantBufferForCurrentPass() const;
         const HAL::BufferResource<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
         const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
-        const std::vector<ResourceName>& ScheduledResourceNamesForCurrentPass();
+        const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         PipelineResource& GetPipelineResource(ResourceName resourceName);
 
     private:
@@ -164,7 +165,7 @@ namespace PathFinder
         // Constant buffers for each pass that require it.
         std::unordered_map<PassName, std::unique_ptr<HAL::RingBufferResource<uint8_t>>> mPerPassConstantBuffers;
         
-        std::unordered_map<PassName, std::vector<ResourceName>> mPerPassResourceNames;
+        std::unordered_map<PassName, std::unordered_set<ResourceName>> mPerPassResourceNames;
 
         std::unordered_map<ResourceName, PipelineResourceAllocator> mPipelineResourceAllocators;
 

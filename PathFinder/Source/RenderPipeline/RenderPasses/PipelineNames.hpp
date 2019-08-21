@@ -8,6 +8,7 @@ namespace PathFinder
     namespace ResourceNames
     {
         inline Foundation::Name PlaygroundRenderTarget{ "Resource_PlaygroundRT" };
+        inline Foundation::Name BlurResult{ "Resource_BlurResult" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
     }
 

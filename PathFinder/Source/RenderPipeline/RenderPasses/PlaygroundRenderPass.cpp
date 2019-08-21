@@ -16,35 +16,35 @@ namespace PathFinder
         pso.SetInputAssemblerLayout(InputAssemblerLayoutForVertexLayout(VertexLayout::Layout1P1N1UV1T1BT));
         pso.SetDepthStencilFormat(HAL::ResourceFormat::Depth24_Float_Stencil8_Unsigned);
         pso.SetRenderTargetFormats(HAL::ResourceFormat::Color::RGBA8_Usigned_Norm);
-        pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
-        psoManager->StoreGraphicsState(PSONames::GBuffer, pso, RootSignatureNames::Universal);
+        pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList); 
+        psoManager->StoreGraphicsState(PSONames::GBuffer, pso, RootSignatureNames::Universal); 
     }
 
     void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
-    {
-        /*scheduler->WillRenderToRenderTarget(ResourceNames::PlaygroundRenderTarget);*/
+    { 
+        scheduler->NewRenderTarget(ResourceNames::PlaygroundRenderTarget);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
     } 
 
-    void PlaygroundRenderPass::Render(RenderContext* context)
+    void PlaygroundRenderPass::Render(RenderContext* context) 
     {
-        context->GraphicsDevice()->ApplyPipelineState(PSONames::GBuffer);
-        context->GraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::GBufferDepthStencil);
-        //context->GraphicsDevice()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
-        context->GraphicsDevice()->ClearBackBuffer(Foundation::Color::Gray());
-        context->GraphicsDevice()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
-        context->GraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
-        context->GraphicsDevice()->SetViewport({ 1280, 720 });
+        context->GetGraphicsDevice()->ApplyPipelineState(PSONames::GBuffer);
+        //context->GetGraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::GBufferDepthStencil);
+        context->GetGraphicsDevice()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
+        context->GetGraphicsDevice()->ClearBackBuffer(Foundation::Color::Gray());
+        context->GetGraphicsDevice()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
+        context->GetGraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
+        context->GetGraphicsDevice()->SetViewport({ 1280, 720 });
 
-        auto cbContent = context->ConstantsUpdater()->UpdateRootConstantBuffer<PlaygroundCBContent>();
-        cbContent->cameraMat = context->World()->MainCamera().ViewProjection();
+        auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<PlaygroundCBContent>();
+        cbContent->cameraMat = context->GetScene()->MainCamera().ViewProjection();
 
-        context->World()->IterateMeshInstances([&](const MeshInstance& instance)
+        context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
-            context->World()->IterateSubMeshes(*instance.AssosiatedMesh(), [&](const SubMesh& subMesh)
+            context->GetScene()->IterateSubMeshes(*instance.AssosiatedMesh(), [&](const SubMesh& subMesh)
             {
-                context->GraphicsDevice()->Draw(subMesh.LocationInVertexStorage());
+                context->GetGraphicsDevice()->Draw(subMesh.LocationInVertexStorage());
             });
         });
     }

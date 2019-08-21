@@ -5,6 +5,7 @@
 
 #include "IGraphicsDevice.hpp"
 #include "RootConstantsUpdater.hpp"
+#include "ResourceProvider.hpp"
 
 namespace PathFinder
 {
@@ -12,17 +13,19 @@ namespace PathFinder
     class RenderContext
     {
     public:
-        RenderContext(const Scene* scene, IGraphicsDevice* graphicsDevice, RootConstantsUpdater* rootConstantsUpdater);
+        RenderContext(const Scene* scene, IGraphicsDevice* graphicsDevice, RootConstantsUpdater* rootConstantsUpdater, ResourceProvider* resourceProvider);
 
     private:
         const Scene* mScene;
         IGraphicsDevice* mGraphicsDevice;
         RootConstantsUpdater* mRootConstantsUpdater;
+        ResourceProvider* mResourceProvider;
 
     public:
-        inline const Scene* World() const { return mScene; }
-        inline IGraphicsDevice* GraphicsDevice() const { return mGraphicsDevice; }
-        inline RootConstantsUpdater* ConstantsUpdater() const { return mRootConstantsUpdater; }
+        inline const Scene* GetScene() const { return mScene; }
+        inline IGraphicsDevice* GetGraphicsDevice() const { return mGraphicsDevice; }
+        inline RootConstantsUpdater* GetConstantsUpdater() const { return mRootConstantsUpdater; }
+        inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }
     };
 
 }

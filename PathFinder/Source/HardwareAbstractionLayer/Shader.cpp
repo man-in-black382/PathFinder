@@ -25,8 +25,10 @@ namespace HAL
         uint32_t compilerFlags = 0;  
 
 #if defined(DEBUG) || defined(_DEBUG)    
-        compilerFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION; 
+        compilerFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;  
 #endif
+
+        compilerFlags |= D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
          
         Microsoft::WRL::ComPtr<ID3DBlob> errors;
         ThrowIfFailed(D3DCompileFromFile(filePath.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), featureLevel.c_str(), compilerFlags, 0, &mBlob, &errors));

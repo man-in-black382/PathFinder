@@ -10,7 +10,7 @@ namespace PathFinder
         mDSDescriptorHeap{ device, mDescriptorHeapCapacity },
         mCBSRUADescriptorHeap{ device, mDescriptorHeapCapacity } {}
 
-    const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(ResourceName resourceName, HAL::ResourceFormat::Color format)
+    const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format)
     {
         return GetRTSRUASet(resourceName, format).rtDescriptor;
     }
@@ -22,24 +22,12 @@ namespace PathFinder
 
     const HAL::SRDescriptor* ResourceDescriptorStorage::GetSRDescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format)
     {
-        if (format)
-        {
-            return GetRTSRUASet(resourceName, *format).srDescriptor;
-        }
-        else {
-            return GetTypelessSRUASet(resourceName).srDescriptor;
-        }
+        return GetRTSRUASet(resourceName, format).srDescriptor;
     }
 
     const HAL::UADescriptor* ResourceDescriptorStorage::GetUADescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format)
     {
-        if (format)
-        {
-            return GetRTSRUASet(resourceName, *format).uaDescriptor;
-        }
-        else {
-            return GetTypelessSRUASet(resourceName).uaDescriptor;
-        }
+        return GetRTSRUASet(resourceName, format).uaDescriptor;
     }
 
     const HAL::CBDescriptor* ResourceDescriptorStorage::GetCBDescriptor(ResourceName resourceName)
@@ -52,12 +40,18 @@ namespace PathFinder
     {
         ValidateRTFormatsCompatibility(texture.Format(), shaderVisibleFormat);
 
-        auto format = shaderVisibleFormat.value_or(std::get<HAL::ResourceFormat::Color>(texture.Format()));
-
-        if (auto descriptor = GetRTDescriptor(resourceName, format)) return *descriptor;
+        if (auto descriptor = GetRTDescriptor(resourceName, shaderVisibleFormat)) return *descriptor;
 
         const HAL::RTDescriptor& descriptor = mRTDescriptorHeap.EmplaceRTDescriptor(texture, shaderVisibleFormat);
-        mDescriptors[resourceName].RTSRUA[format].rtDescriptor = &descriptor;
+
+        if (shaderVisibleFormat)
+        {
+            mDescriptors[resourceName].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].rtDescriptor = &descriptor;
+        }
+        else {
+            mDescriptors[resourceName].ImplicitlyTypedRTSRUA.rtDescriptor = &descriptor;
+        }
+
         return descriptor;
     }
 
@@ -78,12 +72,18 @@ namespace PathFinder
     {
         ValidateSRUAFormatsCompatibility(texture.Format(), shaderVisibleFormat);
 
-        auto format = shaderVisibleFormat.value_or(std::get<HAL::ResourceFormat::Color>(texture.Format()));
-
-        if (auto descriptor = GetSRDescriptor(resourceName, format)) return *descriptor;
+        if (auto descriptor = GetSRDescriptor(resourceName, shaderVisibleFormat)) return *descriptor;
 
         const HAL::SRDescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceSRDescriptor(texture, shaderVisibleFormat);
-        mDescriptors[resourceName].RTSRUA[format].srDescriptor = &descriptor;
+
+        if (shaderVisibleFormat)
+        {
+            mDescriptors[resourceName].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].srDescriptor = &descriptor;
+        } 
+        else {
+            mDescriptors[resourceName].ImplicitlyTypedRTSRUA.srDescriptor = &descriptor;
+        }
+        
         return descriptor;
     }
 
@@ -92,12 +92,18 @@ namespace PathFinder
     {
         ValidateSRUAFormatsCompatibility(texture.Format(), shaderVisibleFormat);
 
-        auto format = shaderVisibleFormat.value_or(std::get<HAL::ResourceFormat::Color>(texture.Format()));
-
-        if (auto descriptor = GetUADescriptor(resourceName, format)) return *descriptor;
+        if (auto descriptor = GetUADescriptor(resourceName, shaderVisibleFormat)) return *descriptor;
 
         const HAL::UADescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(texture, shaderVisibleFormat);
-        mDescriptors[resourceName].RTSRUA[format].uaDescriptor = &descriptor;
+
+        if (shaderVisibleFormat)
+        {
+            mDescriptors[resourceName].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].uaDescriptor = &descriptor;
+        }
+        else {
+            mDescriptors[resourceName].ImplicitlyTypedRTSRUA.uaDescriptor = &descriptor;
+        }
+
         return descriptor;
     }
 
@@ -124,14 +130,15 @@ namespace PathFinder
         return mDescriptors[name].DSCB;
     }
 
-    const ResourceDescriptorStorage::SRUASet& ResourceDescriptorStorage::GetTypelessSRUASet(ResourceName name)
+    const ResourceDescriptorStorage::RTSRUASet& ResourceDescriptorStorage::GetRTSRUASet(ResourceName name, std::optional<HAL::ResourceFormat::Color> format)
     {
-        return mDescriptors[name].TypelessSRUA;
-    }
-
-    const ResourceDescriptorStorage::RTSRUASet& ResourceDescriptorStorage::GetRTSRUASet(ResourceName name, HAL::ResourceFormat::Color format)
-    {
-        return mDescriptors[name].RTSRUA[format];
+        if (format)
+        {
+            return mDescriptors[name].ExplicitlyTypedRTSRUA[*format];
+        } 
+        else {
+            return mDescriptors[name].ImplicitlyTypedRTSRUA;
+        }
     }
 
 }

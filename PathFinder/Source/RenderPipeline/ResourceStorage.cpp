@@ -140,7 +140,7 @@ namespace PathFinder
         const Geometry::Dimensions& dimensions,
         const HAL::Resource::ClearValue& optimizedClearValue)
     {
-        mPerPassResourceNames[mCurrentPassName].push_back(resourceName);
+        mPerPassResourceNames[mCurrentPassName].insert(resourceName);
 
         auto it = mPipelineResourceAllocators.find(resourceName);
 
@@ -190,6 +190,11 @@ namespace PathFinder
         {
             const PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
 
+            //std::optional<HAL::Res>
+
+            //if (std::holds_alternative<HAL::ResourceFormat::Color>(texture.Format()) &&
+            //    std::get<HAL::ResourceFormat::Color>(texture.Format())
+
             if (perPassData.RTInserter) (mDescriptorStorage.*perPassData.RTInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
             if (perPassData.DSInserter) (mDescriptorStorage.*perPassData.DSInserter)(resourceName, texture);
             if (perPassData.SRInserter) (mDescriptorStorage.*perPassData.SRInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
@@ -214,7 +219,7 @@ namespace PathFinder
         return mPerFrameRootConstantsBuffer;
     }
 
-    const std::vector<ResourceName>& ResourceStorage::ScheduledResourceNamesForCurrentPass()
+    const std::unordered_set<ResourceName>& ResourceStorage::ScheduledResourceNamesForCurrentPass()
     {
         return mPerPassResourceNames[mCurrentPassName];
     }

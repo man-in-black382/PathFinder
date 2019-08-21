@@ -9,8 +9,12 @@ namespace PathFinder
 
     struct BlurCBContent
     {
-        uint32_t Radius;
-        uint32_t TextureIndex;
+        static const int MaximumRadius = 64;
+
+        uint32_t BlurRadius; 
+        float Weights[MaximumRadius + 1];
+        uint32_t InputTextureIndex;
+        uint32_t OutputTextureIndex;
     };
 
     class BlurRenderPass : public RenderPass

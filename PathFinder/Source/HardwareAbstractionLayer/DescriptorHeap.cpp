@@ -27,7 +27,7 @@ namespace HAL
         }
 
         auto& descriptor = dynamic_cast<RTDescriptor&>(*mDescriptors.emplace_back(
-            std::make_unique<RTDescriptor>(range.CurrentCPUHandle, range.InsertedDescriptorCount)));
+            std::make_unique<RTDescriptor>(range.CurrentCPUHandle)));
 
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(d3dDesc);
         mDevice->D3DPtr()->CreateRenderTargetView(texture.D3DPtr(), &rtvDesc, range.CurrentCPUHandle);
@@ -104,7 +104,7 @@ namespace HAL
         assert_format(std::holds_alternative<ResourceFormat::DepthStencil>(texture.Format()), "Texture is not of depth-stencil format");
 
         auto& descriptor = dynamic_cast<DSDescriptor&>(*mDescriptors.emplace_back(
-            std::make_unique<DSDescriptor>(range.CurrentCPUHandle, range.InsertedDescriptorCount)));
+            std::make_unique<DSDescriptor>(range.CurrentCPUHandle)));
 
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = ResourceToDSVDescription(texture.D3DDescription());
         mDevice->D3DPtr()->CreateDepthStencilView(texture.D3DPtr(), &dsvDesc, range.CurrentCPUHandle);

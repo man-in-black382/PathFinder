@@ -87,16 +87,16 @@ namespace PathFinder
 
         PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        assert_format(concreteFormat && !std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format), 
-            "Redefinition of render target format for typed render target is not allowed");
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
 
-        assert_format(!concreteFormat && std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format), 
-            "Render target is typeless and concrete color format was not provided");
+        assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
+        assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
 
         auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
-        passData.ShaderVisibleFormat = concreteFormat;
+
+        if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
     }
 
     void ResourceScheduler::UseDepthStencil(Foundation::Name resourceName)
@@ -118,11 +118,10 @@ namespace PathFinder
 
         PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        assert_format(concreteFormat && !std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format),
-            "Redefinition of texture format is not allowed");
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
 
-        assert_format(!concreteFormat && std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format),
-            "Texture is typeless and concrete color format was not provided");
+        assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
+        assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
         auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
@@ -132,7 +131,8 @@ namespace PathFinder
             passData.RequestedState |= HAL::ResourceState::DepthRead;
         } 
 
-        passData.ShaderVisibleFormat = concreteFormat;
+        if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
+
         passData.SRInserter = &ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded;
     }
 
@@ -147,16 +147,16 @@ namespace PathFinder
 
         PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        assert_format(concreteFormat && !std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format),
-            "Redefinition of texture format is not allowed");
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
 
-        assert_format(!concreteFormat && std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format),
-            "Texture is typeless and concrete color format was not provided");
+        assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
+        assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
         auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
-        passData.ShaderVisibleFormat = concreteFormat;
         passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
+
+        if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
     }
 
     void ResourceScheduler::ReadWriteBuffer()

@@ -16,17 +16,25 @@ namespace PathFinder
     void BlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         scheduler->WillUseRootConstantBuffer<BlurCBContent>();
+        scheduler->ReadTexture(ResourceNames::PlaygroundRenderTarget);
+        scheduler->NewTexture(ResourceNames::BlurResult);
     }
 
     void BlurRenderPass::Render(RenderContext* context)
     {
-        context->GraphicsDevice()->ApplyPipelineState(PSONames::Blur);
-        context->GraphicsDevice()->SetViewport({ 1280, 720 });
+        context->GetGraphicsDevice()->ApplyPipelineState(PSONames::Blur);
+        context->GetGraphicsDevice()->SetViewport({ 1280, 720 });
 
-        auto cbContent = context->ConstantsUpdater()->UpdateRootConstantBuffer<BlurCBContent>();
-        cbContent->Radius = 5;
-
+        auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<BlurCBContent>();
+        cbContent->BlurRadius = 5;
+        cbContent->Weights[0] = 0.2f;
+        cbContent->Weights[1] = 0.2f;
+        cbContent->Weights[2] = 0.2f;
+        cbContent->Weights[3] = 0.2f;
+        cbContent->Weights[4] = 0.2f;
         
+        cbContent->InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::PlaygroundRenderTarget);
+        cbContent->OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
     }
 
 }
