@@ -18,7 +18,7 @@ namespace PathFinder
         inline Foundation::Name GBuffer{ "PSO_GBuffer" };
         inline Foundation::Name Blur{ "PSO_Blur" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
-    }
+    }  
 
     namespace RootSignatureNames
     {

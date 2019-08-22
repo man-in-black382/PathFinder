@@ -19,7 +19,7 @@ namespace PathFinder
         pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList); 
         psoManager->StoreGraphicsState(PSONames::GBuffer, pso, RootSignatureNames::Universal); 
     }
-
+     
     void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         scheduler->NewRenderTarget(ResourceNames::PlaygroundRenderTarget);
@@ -36,9 +36,6 @@ namespace PathFinder
         context->GetGraphicsDevice()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
         context->GetGraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
         context->GetGraphicsDevice()->SetViewport({ 1280, 720 });
-
-        auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<PlaygroundCBContent>();
-        cbContent->cameraMat = context->GetScene()->MainCamera().ViewProjection();
 
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {

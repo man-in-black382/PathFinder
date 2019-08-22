@@ -13,18 +13,34 @@ struct VertexOut
     float2 UV : TEXCOORD0;
 };
 
+static const float2 Vertices[4] =
+{
+    float2(-1.0, 1.0),
+    float2(-1.0, -1.0),
+    float2(1.0, 1.0),
+    float2(1.0, -1.0)
+};
+
+//void main() {
+//    gl_Position = vec4(kVertices[gl_VertexID], -0.99, 1.0);
+//    vTexCoords = gl_Position.xy / 2.0 + 0.5;
+//}
+//
+
 VertexOut VSMain(uint vertexId : SV_VertexID)
 {
     VertexOut output;
 
-    output.UV = float2((vertexId << 1) & 2, vertexId & 2);
-    output.Position = float4(output.UV  * float2(2, -2) + float2(-1, 1), 0, 1);
+    output.Position = float4(Vertices[vertexId], 0, 1);
+    output.UV = output.Position.xy / 2.0 + 0.5;
 
     return output;
 }
 
 float4 PSMain(VertexOut pin) : SV_Target
 {
+    int3 coords = int3(pin.UV * float2(1280.0, 720.0), 0);
     Texture2D source = Textures2D[PassDataCB.SourceTextureIndex];
-    return float4(0.5, 0.5, 0.0, 1.0);
+    float3 color = source.Load(coords);
+    return float4(color, 1.0);
 }

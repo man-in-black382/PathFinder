@@ -13,12 +13,12 @@ namespace PathFinder
         pso.SetRenderTargetFormats(HAL::ResourceFormat::Color::RGBA8_Usigned_Norm);
         pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleStrip); 
         pso.GetDepthStencilState().SetDepthTestEnabled(false);
-        psoManager->StoreGraphicsState(PSONames::BackBufferOutput, pso, RootSignatureNames::Universal); 
+        psoManager->StoreGraphicsState(PSONames::BackBufferOutput, pso, RootSignatureNames::Universal);   
     }
      
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        scheduler->ReadTexture(ResourceNames::BlurResult); 
+        scheduler->ReadTexture(ResourceNames::BlurResult);  
         scheduler->WillUseRootConstantBuffer<BackBufferOutputPassData>();
     } 
 

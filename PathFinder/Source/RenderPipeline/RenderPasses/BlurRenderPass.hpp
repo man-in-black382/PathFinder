@@ -18,7 +18,7 @@ namespace PathFinder
     };
 
     class BlurRenderPass : public RenderPass
-    {
+    { 
     public:
         BlurRenderPass();
 

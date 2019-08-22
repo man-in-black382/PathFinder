@@ -29,14 +29,14 @@ namespace PathFinder
         cbContent->BlurRadius = 5;
         cbContent->Weights[0] = 0.2f;
         cbContent->Weights[1] = 0.2f;
-        cbContent->Weights[2] = 0.2f;
+        cbContent->Weights[2] = 0.2f; 
         cbContent->Weights[3] = 0.2f;
         cbContent->Weights[4] = 0.2f;
         
         cbContent->InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::PlaygroundRenderTarget);
         cbContent->OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
 
-        context->GetGraphicsDevice()->Dispatch(5, 3, 1);
+        context->GetGraphicsDevice()->Dispatch(5, 720, 1);
     }
 
 }
