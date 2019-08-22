@@ -3,6 +3,7 @@
 #include <d3d12.h>
 #include <optional>
 #include <variant>
+#include <array>
 
 #include "../Geometry/Dimensions.hpp"
 
@@ -11,6 +12,16 @@ namespace HAL
     class ResourceFormat
     {
     public:
+        using ColorClearValue = std::array<float, 4>;
+
+        struct DepthStencilClearValue
+        {
+            float Depth;
+            uint8_t Stencil;
+        };
+
+        using ClearValue = std::variant<ColorClearValue, DepthStencilClearValue>;
+
         using UnderlyingType = uint8_t;
 
         enum class TypelessColor : UnderlyingType {
@@ -44,8 +55,8 @@ namespace HAL
 
         using FormatVariant = std::variant<TypelessColor, Color, DepthStencil>;
 
-        ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions);
-        ResourceFormat(std::optional<FormatVariant> dataType, BufferKind , const Geometry::Dimensions& dimensions);
+        ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions, ClearValue optimizedClearValue);
+        ResourceFormat(std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
 
         static DXGI_FORMAT D3DFormat(TypelessColor type);
         static DXGI_FORMAT D3DFormat(Color type);
@@ -58,9 +69,11 @@ namespace HAL
         void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions);
 
         D3D12_RESOURCE_DESC mDesc{};
+        std::optional<D3D12_CLEAR_VALUE> mClearValue;
 
     public:
         inline const D3D12_RESOURCE_DESC& D3DResourceDescription() const { return mDesc; }
+        inline const D3D12_CLEAR_VALUE* D3DOptimizedClearValue() const { return mClearValue ? &(*mClearValue) : nullptr; }
     };
 
 }

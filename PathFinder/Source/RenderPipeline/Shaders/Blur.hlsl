@@ -64,5 +64,5 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         color += gCache[i + radius + groupThreadID.x] * weight;
     }
 
-    destination[dispatchThreadID.xy] = float4(color, 1.0);
+    destination[dispatchThreadID.xy] = float4(1.0, 0.0, 1.0, 1.0);
 }

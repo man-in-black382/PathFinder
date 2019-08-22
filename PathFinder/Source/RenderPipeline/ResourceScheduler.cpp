@@ -12,12 +12,13 @@ namespace PathFinder
     {
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "New render target has already been scheduled");
 
-        HAL::Resource::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
+        HAL::ResourceFormat::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
         NewTextureProperties props = FillMissingFields(properties);
 
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
 
-        if (props.TypelessFormat) {
+        if (props.TypelessFormat) 
+        {
             format = *props.TypelessFormat;
         }
 
@@ -28,16 +29,22 @@ namespace PathFinder
         auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
-        passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
-        
+
+        if (props.TypelessFormat)
+        {
+            passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
+        }
+
         allocator->Format = format;
+
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
     void ResourceScheduler::NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties)
     {
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "New depth-stencil texture has already been scheduled");
 
-        HAL::Resource::DepthStencilClearValue clearValue{ 1.0, 0 };
+        HAL::ResourceFormat::DepthStencilClearValue clearValue{ 1.0, 0 };
         NewDepthStencilProperties props = FillMissingFields(properties);
 
         PipelineResourceAllocator* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
@@ -49,18 +56,21 @@ namespace PathFinder
         passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
 
         allocator->Format = *props.Format;
+
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
     void ResourceScheduler::NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
     {
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "Texture creation has already been scheduled");
 
-        HAL::Resource::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
+        HAL::ResourceFormat::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
         NewTextureProperties props = FillMissingFields(properties);
 
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
 
-        if (props.TypelessFormat) {
+        if (props.TypelessFormat)
+        {
             format = *props.TypelessFormat;
         }
 
@@ -71,9 +81,15 @@ namespace PathFinder
         auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
-        passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
+
+        if (props.TypelessFormat) 
+        {
+            passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
+        }
 
         allocator->Format = format;
+
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
     void ResourceScheduler::NewBuffer()
@@ -97,6 +113,8 @@ namespace PathFinder
         passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
 
         if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
+
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
     void ResourceScheduler::UseDepthStencil(Foundation::Name resourceName)
@@ -110,6 +128,8 @@ namespace PathFinder
         auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
+
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
     void ResourceScheduler::ReadTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)
@@ -134,6 +154,8 @@ namespace PathFinder
         if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
 
         passData.SRInserter = &ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded;
+
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
     void ResourceScheduler::ReadBuffer()
@@ -157,6 +179,8 @@ namespace PathFinder
         passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
 
         if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
+
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
     void ResourceScheduler::ReadWriteBuffer()

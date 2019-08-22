@@ -1,11 +1,12 @@
 #include "ResourceFormat.hpp"
 
 #include "../Foundation/Assert.hpp"
+#include "../Foundation/Visitor.hpp"
 
 namespace HAL
 {
 
-    ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions)
+    ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions, ClearValue optimizedClearValue)
     {
         if (dataType) 
         {
@@ -13,6 +14,26 @@ namespace HAL
         }
         
         ResolveDemensionData(kind, dimensions);
+
+        mClearValue = D3D12_CLEAR_VALUE{};
+        mClearValue->Format = mDesc.Format;
+
+        std::visit(Foundation::MakeVisitor(
+            [this](const ColorClearValue& value)
+        {
+            mClearValue->Color[0] = value[0];
+            mClearValue->Color[1] = value[1];
+            mClearValue->Color[2] = value[2];
+            mClearValue->Color[3] = value[3];
+        },
+            [this](const DepthStencilClearValue& value)
+        {
+            mClearValue->DepthStencil.Depth = value.Depth;
+            mClearValue->DepthStencil.Stencil = value.Stencil;
+        }),
+            optimizedClearValue);
+
+        mDesc.MipLevels = 1;
     }
 
     ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)

@@ -26,16 +26,6 @@ namespace HAL
     class Resource
     {
     public:
-        using ColorClearValue = std::array<float, 4>;
-       
-        struct DepthStencilClearValue
-        {
-            float Depth;
-            uint8_t Stencil;
-        };
-
-        using ClearValue = std::variant<ColorClearValue, DepthStencilClearValue>;
-
         Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);
 
         Resource(const Resource& other) = delete;
@@ -51,7 +41,6 @@ namespace HAL
             const ResourceFormat& format,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
-            std::optional<ClearValue> optimizedClearValue,
             std::optional<CPUAccessibleHeapType> heapType
         );
 

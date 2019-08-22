@@ -3,7 +3,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <cstdint>
-#include <unordered_map>
+#include <vector>
 #include <tuple>
 #include <optional>
 
@@ -23,7 +23,10 @@ namespace HAL
         {
             D3D12_CPU_DESCRIPTOR_HANDLE CurrentCPUHandle;
             D3D12_GPU_DESCRIPTOR_HANDLE CurrentGPUHandle;
-            uint32_t InsertedDescriptorCount;
+            std::vector<std::unique_ptr<DescriptorT>> Descriptors;
+
+            RangeAllocationInfo(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle) :
+                CurrentCPUHandle{ cpuHandle }, CurrentGPUHandle{ gpuHandle } {}
         };
 
         DescriptorHeap(const Device* device, uint32_t rangeCapacity, uint32_t rangeCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
@@ -42,7 +45,6 @@ namespace HAL
         uint32_t mRangeCapacity = 0;
 
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mHeap;
-        std::vector<std::unique_ptr<DescriptorT>> mDescriptors;
 
     private:
         uint32_t mIncrementSize = 0;

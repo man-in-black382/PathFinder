@@ -128,6 +128,7 @@ namespace PathFinder
 
     private:
         bool IsResourceAllocationScheduled(ResourceName name) const;
+        void RegisterResourceNameForCurrentPass(ResourceName name);
 
         PipelineResourceAllocator* GetResourceAllocator(ResourceName name);
 
@@ -136,7 +137,7 @@ namespace PathFinder
             HAL::ResourceFormat::FormatVariant format,
             HAL::ResourceFormat::TextureKind kind,
             const Geometry::Dimensions& dimensions,
-            const HAL::Resource::ClearValue& optimizedClearValue
+            const HAL::ResourceFormat::ClearValue& optimizedClearValue
         );
 
         HAL::ResourceState GatherExpectedStates(const PipelineResourceAllocator& allocator);

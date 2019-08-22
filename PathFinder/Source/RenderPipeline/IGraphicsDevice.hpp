@@ -9,6 +9,7 @@
 
 #include "VertexLayouts.hpp"
 #include "VertexStorageLocation.hpp"
+#include "DrawablePrimitive.hpp"
 
 namespace PathFinder
 {
@@ -17,7 +18,7 @@ namespace PathFinder
     {
     public:
         virtual void SetRenderTarget(Foundation::Name resourceName) = 0;
-        virtual void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName) = 0;
+        virtual void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName = std::nullopt) = 0;
         virtual void SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName) = 0;
         virtual void ClearBackBuffer(const Foundation::Color& color) = 0;
         virtual void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color) = 0;
@@ -31,6 +32,9 @@ namespace PathFinder
         virtual void DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart) = 0;
         virtual void DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount) = 0;
         virtual void Draw(const VertexStorageLocation& vertexStorageLocation) = 0;
+        virtual void Draw(const DrawablePrimitive& primitive) = 0;
+
+        virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
     };
 
 }

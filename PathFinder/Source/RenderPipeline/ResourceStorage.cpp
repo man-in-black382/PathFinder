@@ -52,13 +52,12 @@ namespace PathFinder
     {
         PipelineResource& pipelineResource = GetPipelineResource(resourceName);
 
+        std::optional<HAL::ResourceFormat::Color> format = std::nullopt;
+
         auto perPassData = pipelineResource.GetPerPassData(mCurrentPassName);
-        assert_format(perPassData, "Resource ", resourceName.ToSring(), " was not scheduled to be used as render target");
+        if (perPassData) format = perPassData->ShaderVisibleFormat;
 
-        auto format = perPassData->ShaderVisibleFormat;
-        assert_format(format, "Render target format for pass ", mCurrentPassName.ToSring(), " is unknown");
-
-        auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, *format);
+        auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, format);
         assert_format(descriptor, "Resource ", resourceName.ToSring(), " was not scheduled to be used as render target");
 
         return *descriptor;
@@ -128,6 +127,11 @@ namespace PathFinder
         return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end();
     }
 
+    void ResourceStorage::RegisterResourceNameForCurrentPass(ResourceName name)
+    {
+        mPerPassResourceNames[mCurrentPassName].insert(name);
+    }
+
     PipelineResourceAllocator* ResourceStorage::GetResourceAllocator(ResourceName name)
     {
         return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end() ? &mPipelineResourceAllocators.at(name) : nullptr;
@@ -138,10 +142,8 @@ namespace PathFinder
         HAL::ResourceFormat::FormatVariant format,
         HAL::ResourceFormat::TextureKind kind,
         const Geometry::Dimensions& dimensions,
-        const HAL::Resource::ClearValue& optimizedClearValue)
+        const HAL::ResourceFormat::ClearValue& optimizedClearValue)
     {
-        mPerPassResourceNames[mCurrentPassName].insert(resourceName);
-
         auto it = mPipelineResourceAllocators.find(resourceName);
 
         if (it != mPipelineResourceAllocators.end())
@@ -168,7 +170,6 @@ namespace PathFinder
             {
                 PassName passName = pair.first;
                 PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
-                newResource.mPerPassData[passName].ShaderVisibleFormat = perPassData.ShaderVisibleFormat;
 
                 // TODO: Compute optimized states
                 newResource.mPerPassData[passName].OptimizedState = perPassData.RequestedState;

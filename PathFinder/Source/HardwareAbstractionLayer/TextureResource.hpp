@@ -15,7 +15,7 @@ namespace HAL
             ResourceFormat::FormatVariant format,
             ResourceFormat::TextureKind kind,
             const Geometry::Dimensions& dimensions,
-            const ClearValue& optimizedClearValue,
+            const ResourceFormat::ClearValue& optimizedClearValue,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
             std::optional<CPUAccessibleHeapType> heapType = std::nullopt

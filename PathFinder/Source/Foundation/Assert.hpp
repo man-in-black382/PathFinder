@@ -1,27 +1,31 @@
 #pragma once
 
-#include <iostream>
+#include <sstream>
 #include <cassert>
 
 template< typename... Args >
-inline void print_assertion(std::ostream& out, Args&&... args)
+inline void print_assertion(Args&&... args)
 {
-    out.precision(10);
+    std::stringstream ss;
+    ss.precision(10);
     //if constexpr (debug_mode)
     //{
-    (out << ... << args) << std::endl;
+    (ss << ... << args) << std::endl;
     //}
+    OutputDebugString(ss.str().c_str());
     abort();
 }
 
 #ifdef assert_format
 #undef assert_format
 #endif
-#define assert_format(EXPRESSION, ... ) ((EXPRESSION) ? (void)0 : print_assertion(std::cerr, \
+#define assert_format(EXPRESSION, ... ) ((EXPRESSION) ? (void)0 : print_assertion(\
         "Assertion failure: ", \
         #EXPRESSION, \
         " in File: ", \
         __FILE__, \
         " in Line: ", \
-        __LINE__, __VA_ARGS__))
+        __LINE__, \
+        " ",\
+        __VA_ARGS__))
 

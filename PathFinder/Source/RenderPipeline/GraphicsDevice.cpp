@@ -104,6 +104,17 @@ namespace PathFinder
     {
         CommandList().DrawIndexed(vertexStorageLocation.VertexBufferOffset, vertexStorageLocation.IndexCount, vertexStorageLocation.IndexBufferOffset);
     }
+    
+    void GraphicsDevice::Draw(const DrawablePrimitive& primitive)
+    {
+        CommandList().SetPrimitiveTopology(primitive.Topology());
+        CommandList().Draw(primitive.VertexCount(), 0);
+    }
+
+    void GraphicsDevice::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+    {
+        CommandList().Dispatch(groupCountX, groupCountY, groupCountZ);
+    }
 
     void GraphicsDevice::BeginFrame(uint64_t frameFenceValue)
     {
@@ -126,6 +137,8 @@ namespace PathFinder
     {
         const HAL::CBSRUADescriptorHeap& heap = mResourceStorage->DescriptorStorage().CBSRUADescriptorHeap();
         
+        CommandList().SetDescriptorHeap(heap);
+
         // Look at PipelineStateManager for base root signature parameter ordering
 
         if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 0);

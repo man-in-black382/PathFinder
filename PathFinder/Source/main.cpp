@@ -26,6 +26,7 @@
 #include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderPasses/PlaygroundRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BlurRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
@@ -487,12 +488,6 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-struct Vertex
-{
-    glm::vec4 position;
-    glm::vec4 color;
-};
-
 int main(int argc, char** argv)
 {
     using namespace HAL;
@@ -520,6 +515,7 @@ int main(int argc, char** argv)
     engine.VertexGPUStorage().TransferDataToGPU();
     engine.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());  
     engine.AddRenderPass(std::make_unique<PathFinder::BlurRenderPass>());
+    engine.AddRenderPass(std::make_unique<PathFinder::BackBufferOutputPass>());
     engine.Schedule();
 
     PathFinder::Camera& camera = scene.MainCamera();

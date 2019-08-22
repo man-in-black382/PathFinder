@@ -10,12 +10,12 @@ namespace HAL
         ResourceFormat::FormatVariant format,
         ResourceFormat::TextureKind kind, 
         const Geometry::Dimensions& dimensions, 
-        const ClearValue& optimizedClearValue, 
+        const ResourceFormat::ClearValue& optimizedClearValue,
         ResourceState initialStateMask, 
         ResourceState expectedStateMask,
         std::optional<CPUAccessibleHeapType> heapType)
         :
-        Resource(device, ResourceFormat(format, kind, dimensions), initialStateMask, expectedStateMask, optimizedClearValue, heapType),
+        Resource(device, ResourceFormat(format, kind, dimensions, optimizedClearValue), initialStateMask, expectedStateMask, heapType),
         mDimensions{ dimensions }, mKind{ kind }, mFormat{ format } {}
 
     TextureResource::TextureResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr) : Resource(existingResourcePtr)

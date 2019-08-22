@@ -12,4 +12,6 @@ namespace HAL
     GPUDescriptor::GPUDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle, uint32_t indexInHeapRange)
         : CPUDescriptor(cpuHandle), mGPUHandle{ gpuHandle }, mIndexInHeapRange{ indexInHeapRange } {}
 
+    GPUDescriptor::~GPUDescriptor() {}
+
 }

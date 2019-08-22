@@ -122,7 +122,7 @@ namespace PathFinder
     void ResourceDescriptorStorage::ValidateSRUAFormatsCompatibility(
         HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
     {
-        assert_format(shaderVisibleFormat && std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for typed texture");
+        assert_format(!shaderVisibleFormat || std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for typed texture");
     }
 
     const ResourceDescriptorStorage::DSCBSet& ResourceDescriptorStorage::GetDSCBSet(ResourceName name)

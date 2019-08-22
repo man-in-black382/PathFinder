@@ -71,6 +71,17 @@ namespace HAL
         mList->SetComputeRootDescriptorTable(rootParameterIndex, baseDescriptor.GPUHandle());
     }
 
+    void ComputeCommandListBase::SetDescriptorHeap(const CBSRUADescriptorHeap& heap)
+    {
+        auto ptr = heap.D3DHeap();
+        mList->SetDescriptorHeaps(1, &ptr);
+    }
+
+    void ComputeCommandListBase::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+    {
+        mList->Dispatch(groupCountX, groupCountY, groupCountZ);
+    }
+
     void ComputeCommandListBase::SetPipelineState(const ComputePipelineState& state)
     {
         mList->SetPipelineState(state.D3DCompiledState());

@@ -35,6 +35,8 @@ namespace PathFinder
         
         cbContent->InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::PlaygroundRenderTarget);
         cbContent->OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
+
+        context->GetGraphicsDevice()->Dispatch(5, 3, 1);
     }
 
 }

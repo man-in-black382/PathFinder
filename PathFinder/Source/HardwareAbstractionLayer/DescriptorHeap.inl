@@ -27,8 +27,10 @@ namespace HAL
 
         for (auto rangeIdx = 0u; rangeIdx < rangeCount; rangeIdx++)
         {
-            RangeAllocationInfo range{ { CPUHandle.ptr + rangeIdx * mIncrementSize }, { GPUHandle.ptr + rangeIdx * mIncrementSize }, 0 };
-            mRanges.push_back(range);
+            mRanges.emplace_back(
+                D3D12_CPU_DESCRIPTOR_HANDLE{ CPUHandle.ptr + rangeIdx * mIncrementSize }, 
+                D3D12_GPU_DESCRIPTOR_HANDLE{ GPUHandle.ptr + rangeIdx * mIncrementSize }
+            );
         }
     }
 
@@ -38,7 +40,7 @@ namespace HAL
     template <class DescriptorT>
     void DescriptorHeap<DescriptorT>::ValidateCapacity(uint32_t rangeIndex) const
     {
-        if (mRanges[rangeIndex].InsertedDescriptorCount >= mRangeCapacity)
+        if (mRanges[rangeIndex].Descriptors.size() >= mRangeCapacity)
         {
             throw std::runtime_error("Exceeded descriptor heap's capacity");
         }
@@ -50,7 +52,6 @@ namespace HAL
         RangeAllocationInfo& range = mRanges[rangeIndex];
         range.CurrentCPUHandle.ptr += mIncrementSize;
         range.CurrentGPUHandle.ptr += mIncrementSize;
-        range.InsertedDescriptorCount++;
     }
 
     template <class DescriptorT>
@@ -80,8 +81,8 @@ namespace HAL
         ValidateCapacity(index);
         RangeAllocationInfo& range = GetRange(index);
 
-        auto& descriptor = dynamic_cast<CBDescriptor&>(*mDescriptors.emplace_back(
-            std::make_unique<CBDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount)));
+        auto& descriptor = dynamic_cast<CBDescriptor&>(*range.Descriptors.emplace_back(
+            std::make_unique<CBDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC desc{ buffer.GPUVirtualAddress(), explicitStride ? *explicitStride : sizeof(T) };
         mDevice->D3DPtr()->CreateConstantBufferView(&desc, range.CurrentCPUHandle);
@@ -98,8 +99,8 @@ namespace HAL
         ValidateCapacity(index);
         RangeAllocationInfo& range = GetRange(index);
 
-        auto& descriptor = dynamic_cast<SRDescriptor&>(*mDescriptors.emplace_back(
-            std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount)));
+        auto& descriptor = dynamic_cast<SRDescriptor&>(*range.Descriptors.emplace_back(
+            std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(buffer.D3DDescription(), explicitStride ? *explicitStride : sizeof(T));
         mDevice->D3DPtr()->CreateShaderResourceView(buffer.D3DPtr(), &desc, range.CurrentCPUHandle);
@@ -116,8 +117,8 @@ namespace HAL
         ValidateCapacity(index);
         RangeAllocationInfo& range = GetRange(index);
 
-        auto& descriptor = dynamic_cast<UADescriptor&>(*mDescriptors.emplace_back(
-            std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.InsertedDescriptorCount)));
+        auto& descriptor = dynamic_cast<UADescriptor&>(*range.Descriptors.emplace_back(
+            std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(buffer.D3DDescription(), explicitStride ? *explicitStride : sizeof(T));
         mDevice->D3DPtr()->CreateUnorderedAccessView(buffer.D3DPtr(), nullptr, &desc, range.CurrentCPUHandle);

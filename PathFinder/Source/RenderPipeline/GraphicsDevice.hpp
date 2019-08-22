@@ -36,6 +36,8 @@ namespace PathFinder
         virtual void DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart) override;
         virtual void DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount) override;
         virtual void Draw(const VertexStorageLocation& vertexStorageLocation) override;
+        virtual void Draw(const DrawablePrimitive& primitive) override;
+        virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
         void BeginFrame(uint64_t frameFenceValue);
         void ExecuteCommandsThenSignalFence(HAL::Fence& fence);

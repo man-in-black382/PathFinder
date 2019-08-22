@@ -14,7 +14,6 @@ namespace HAL
         const ResourceFormat& format, 
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
-        std::optional<ClearValue> optimizedClearValue,
         std::optional<CPUAccessibleHeapType> heapType)
         :
         mDescription(format.D3DResourceDescription())
@@ -42,33 +41,14 @@ namespace HAL
 
         SetExpectedUsageFlags(expectedStateMask);
 
-        D3D12_CLEAR_VALUE d3dClearValue{};
-        d3dClearValue.Format = format.D3DResourceDescription().Format;
-
-        if (optimizedClearValue)
-        {
-            std::visit(Foundation::MakeVisitor(
-                [&d3dClearValue](const ColorClearValue& value)
-            {
-                d3dClearValue.Color[0] = value[0];
-                d3dClearValue.Color[1] = value[1];
-                d3dClearValue.Color[2] = value[2];
-                d3dClearValue.Color[3] = value[3];
-            },
-                [&d3dClearValue](const DepthStencilClearValue& value)
-            {
-                d3dClearValue.DepthStencil.Depth = value.Depth;
-                d3dClearValue.DepthStencil.Stencil = value.Stencil;
-            }),
-                *optimizedClearValue);
-        }
+        bool isSubjectForClearing = EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) || EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
 
         ThrowIfFailed(device.D3DPtr()->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &mDescription,
             initialStates,
-            optimizedClearValue ? &d3dClearValue : nullptr,
+            isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
             IID_PPV_ARGS(&mResource)
         ));
     }
@@ -105,7 +85,8 @@ namespace HAL
             !EnumMaskBitSet(stateMask, ResourceState::IndirectArgument) &&
             !EnumMaskBitSet(stateMask, ResourceState::CopySource) &&
             !EnumMaskBitSet(stateMask, ResourceState::DepthRead) &&
-            !EnumMaskBitSet(stateMask, ResourceState::ConstantBuffer))
+            !EnumMaskBitSet(stateMask, ResourceState::ConstantBuffer) &&
+            !EnumMaskBitSet(stateMask, ResourceState::UnorderedAccess))
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
         }
