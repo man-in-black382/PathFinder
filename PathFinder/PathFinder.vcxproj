@@ -159,6 +159,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Foundation\Color.cpp" />
+    <ClCompile Include="Source\Foundation\GaussianFunction.cpp" />
     <ClCompile Include="Source\Foundation\Name.cpp" />
     <ClCompile Include="Source\Foundation\NameHolder.cpp" />
     <ClCompile Include="Source\Foundation\NameRegistry.cpp" />
@@ -248,6 +249,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\Foundation\BitwiseEnum.hpp" />
     <ClInclude Include="Source\Foundation\Color.hpp" />
     <ClInclude Include="Source\Foundation\Event.hpp" />
+    <ClInclude Include="Source\Foundation\GaussianFunction.hpp" />
     <ClInclude Include="Source\Foundation\MemoryUtils.hpp" />
     <ClInclude Include="Source\Foundation\Name.hpp" />
     <ClInclude Include="Source\Foundation\NameHolder.hpp" />

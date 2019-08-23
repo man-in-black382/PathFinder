@@ -27,7 +27,8 @@ namespace PathFinder
         virtual void StoreComputeState(PSOName name, const HAL::ComputePipelineState& pso, RootSignatureName assosiatedSignatureName) override;
 
         const HAL::RootSignature& GetRootSignature(RootSignatureName name) const;
-        const HAL::PipelineState& GetPipelineState(PSOName name) const;
+        const HAL::GraphicsPipelineState* GetGraphicsPipelineState(PSOName name) const;
+        const HAL::ComputePipelineState* GetComputePipelineState(PSOName name) const;
 
         void CompileStates();
 

@@ -44,7 +44,8 @@ namespace PathFinder
         void EndFrame(uint64_t completedFrameFenceValue);
 
     private:
-        void ReapplyCommonResourceBindings();
+        void ReapplyCommonGraphicsResourceBindings();
+        void ReapplyCommonComputeResourceBindings();
 
         HAL::GraphicsCommandQueue mCommandQueue;
         HAL::GraphicsRingCommandList mRingCommandList;

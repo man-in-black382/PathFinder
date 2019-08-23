@@ -68,6 +68,10 @@ namespace PathFinder
         {
             std::optional<HAL::ResourceState> OptimizedState;
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
+            bool IsRTDescriptorRequested = false;
+            bool IsDSDescriptorRequested = false;
+            bool IsSRDescriptorRequested = false;
+            bool IsUADescriptorRequested = false;
         };
 
         HAL::ResourceState CurrentState;
@@ -121,7 +125,7 @@ namespace PathFinder
         const HAL::BufferResource<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
         const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
-        PipelineResource& GetPipelineResource(ResourceName resourceName);
+        PipelineResource* GetPipelineResource(ResourceName resourceName);
 
     private:
         const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };
@@ -140,7 +144,6 @@ namespace PathFinder
             const HAL::ResourceFormat::ClearValue& optimizedClearValue
         );
 
-        HAL::ResourceState GatherExpectedStates(const PipelineResourceAllocator& allocator);
         void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture);
 
         template <class BufferDataT> void AllocateRootConstantBufferIfNeeded();

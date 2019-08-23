@@ -19,7 +19,7 @@ namespace PathFinder
         inline Foundation::Name Blur{ "PSO_Blur" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
     }  
-
+   
     namespace RootSignatureNames
     {
         inline Foundation::Name Universal{ "Universal_Root_Sig" }; 

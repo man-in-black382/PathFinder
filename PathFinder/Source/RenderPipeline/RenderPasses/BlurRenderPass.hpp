@@ -11,15 +11,17 @@ namespace PathFinder
     {
         static const int MaximumRadius = 64;
 
-        uint32_t BlurRadius; 
-        float Weights[MaximumRadius + 1];
+        std::array<float, MaximumRadius> Weights;
+
+        uint32_t BlurRadius;
         uint32_t InputTextureIndex;
         uint32_t OutputTextureIndex;
+        
     };
 
     class BlurRenderPass : public RenderPass
     { 
-    public:
+    public: 
         BlurRenderPass();
 
         virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) override;

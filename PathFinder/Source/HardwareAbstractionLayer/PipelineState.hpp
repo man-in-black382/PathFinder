@@ -17,7 +17,8 @@
 namespace HAL
 {
 
-    class PipelineState {
+    class PipelineState 
+    {
     public:
         virtual ~PipelineState() = 0;
 

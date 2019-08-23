@@ -56,6 +56,8 @@ namespace PathFinder
         NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties);
         NewDepthStencilProperties FillMissingFields(std::optional<NewDepthStencilProperties> properties);
 
+        void EnsureSingleSchedulingRequestForCurrentPass(ResourceName resourceName);
+
         ResourceStorage* mResourceStorage;
     };
 

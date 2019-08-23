@@ -50,11 +50,11 @@ namespace PathFinder
 
     const HAL::RTDescriptor& ResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
     {
-        PipelineResource& pipelineResource = GetPipelineResource(resourceName);
+        PipelineResource* pipelineResource = GetPipelineResource(resourceName);
 
         std::optional<HAL::ResourceFormat::Color> format = std::nullopt;
 
-        auto perPassData = pipelineResource.GetPerPassData(mCurrentPassName);
+        auto perPassData = pipelineResource->GetPerPassData(mCurrentPassName);
         if (perPassData) format = perPassData->ShaderVisibleFormat;
 
         auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, format);
@@ -163,16 +163,22 @@ namespace PathFinder
             auto texture = std::make_unique<HAL::TextureResource>(
                 *mDevice, format, kind, dimensions, optimizedClearValue, initialState, expectedStates);
 
+            texture->D3DPtr()->SetName(StringToWString(resourceName.ToSring()).c_str());
+
             PipelineResource newResource;
             newResource.CurrentState = initialState;
 
             for (auto& pair : allocator.PerPassData)
             {
                 PassName passName = pair.first;
-                PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
+                PipelineResourceAllocator::PerPassEntities& allocatorPerPassData = pair.second;
+                PipelineResource::PerPassEntities& newResourcePerPassData = newResource.mPerPassData[passName];
 
-                // TODO: Compute optimized states
-                newResource.mPerPassData[passName].OptimizedState = perPassData.RequestedState;
+                newResourcePerPassData.IsRTDescriptorRequested = allocatorPerPassData.RTInserter != nullptr;
+                newResourcePerPassData.IsDSDescriptorRequested = allocatorPerPassData.DSInserter != nullptr;
+                newResourcePerPassData.IsSRDescriptorRequested = allocatorPerPassData.SRInserter != nullptr;
+                newResourcePerPassData.IsUADescriptorRequested = allocatorPerPassData.UAInserter != nullptr;
+                newResourcePerPassData.OptimizedState = allocatorPerPassData.RequestedState;
             }
 
             // OptimizeStates();
@@ -190,11 +196,6 @@ namespace PathFinder
         for (const auto& pair : allocator.PerPassData)
         {
             const PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
-
-            //std::optional<HAL::Res>
-
-            //if (std::holds_alternative<HAL::ResourceFormat::Color>(texture.Format()) &&
-            //    std::get<HAL::ResourceFormat::Color>(texture.Format())
 
             if (perPassData.RTInserter) (mDescriptorStorage.*perPassData.RTInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
             if (perPassData.DSInserter) (mDescriptorStorage.*perPassData.DSInserter)(resourceName, texture);
@@ -225,11 +226,11 @@ namespace PathFinder
         return mPerPassResourceNames[mCurrentPassName];
     }
 
-    PipelineResource& ResourceStorage::GetPipelineResource(ResourceName resourceName)
+    PathFinder::PipelineResource* ResourceStorage::GetPipelineResource(ResourceName resourceName)
     {
         auto it = mPipelineResources.find(resourceName);
-        assert_format(it != mPipelineResources.end(), "Pipeline resource ", resourceName.ToSring(), " does not exist");
-        return it->second;
+        if (it == mPipelineResources.end()) return nullptr;
+        return &it->second;
     }
 
     HAL::ResourceState PipelineResourceAllocator::GatherExpectedStates() const

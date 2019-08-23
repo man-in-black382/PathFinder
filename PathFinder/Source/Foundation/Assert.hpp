@@ -20,7 +20,7 @@ inline void print_assertion(Args&&... args)
 #undef assert_format
 #endif
 #define assert_format(EXPRESSION, ... ) ((EXPRESSION) ? (void)0 : print_assertion(\
-        "Assertion failure: ", \
+        "Error: ", \
         #EXPRESSION, \
         " in File: ", \
         __FILE__, \

@@ -98,10 +98,12 @@ namespace PathFinder
     {
         for (ResourceName resourceName : mResourceStorage.ScheduledResourceNamesForCurrentPass())
         {
-            PipelineResource& pipelineResource = mResourceStorage.GetPipelineResource(resourceName);
-            HAL::ResourceState currentState = pipelineResource.CurrentState;
+            PipelineResource* pipelineResource = mResourceStorage.GetPipelineResource(resourceName);
 
-            auto perPassData = pipelineResource.GetPerPassData(passName);
+            if (!pipelineResource) continue;
+
+            HAL::ResourceState currentState = pipelineResource->CurrentState;
+            auto perPassData = pipelineResource->GetPerPassData(passName);
 
             if (!perPassData || !perPassData->OptimizedState) continue;
 
@@ -109,8 +111,8 @@ namespace PathFinder
 
             if (currentState != nextState)
             {
-                mGraphicsDevice.CommandList().TransitionResourceState({ currentState, nextState, pipelineResource.Resource() });
-                pipelineResource.CurrentState = nextState;
+                mGraphicsDevice.CommandList().TransitionResourceState({ currentState, nextState, pipelineResource->Resource() });
+                pipelineResource->CurrentState = nextState;
             }
         }
     }

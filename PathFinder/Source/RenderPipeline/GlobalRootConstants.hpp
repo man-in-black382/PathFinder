@@ -7,7 +7,7 @@ namespace PathFinder
 
     struct GlobalRootConstants
     {
-        glm::ivec2 PipelineRTResolution;
+        glm::uvec2 PipelineRTResolution;
     };
 
 }

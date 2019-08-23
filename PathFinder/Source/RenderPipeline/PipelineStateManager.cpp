@@ -62,12 +62,18 @@ namespace PathFinder
         return it->second;
     }
 
-    const HAL::PipelineState& PipelineStateManager::GetPipelineState(PSOName name) const
+    const HAL::GraphicsPipelineState* PipelineStateManager::GetGraphicsPipelineState(PSOName name) const
     {
-        if (mGraphicPSOs.find(name) != mGraphicPSOs.end()) return mGraphicPSOs.at(name);
-        if (mComputePSOs.find(name) != mComputePSOs.end()) return mComputePSOs.at(name);
+        auto it = mGraphicPSOs.find(name);
+        if (it == mGraphicPSOs.end()) return nullptr;
+        return &it->second;
+    }
 
-        assert_format("Pipeline state ", name.ToSring(), " does not exist");
+    const HAL::ComputePipelineState* PipelineStateManager::GetComputePipelineState(PSOName name) const
+    {
+        auto it = mComputePSOs.find(name);
+        if (it == mComputePSOs.end()) return nullptr;
+        return &it->second;
     }
 
     void PipelineStateManager::CompileStates()
@@ -107,14 +113,24 @@ namespace PathFinder
     {
         // BaseRootSignature.hlsl
         //
+        // ConstantBuffer<GlobalData>      GlobalDataCB    : register(b0, space0);
+        // ConstantBuffer<FrameData>       FrameDataCB     : register(b1, space0);
+        // ConstantBuffer<PassDataType>    PassDataCB      : register(b2, space0);
+        //
         // Texture2D       Textures2D[]        : register(t0, space0);
         // Texture3D       Textures3D[]        : register(t0, space1);
         // Texture2DArray  Texture2DArrays[]   : register(t0, space2);
         //
-        // ConstantBuffer<GlobalData>      GlobalDataCB    : register(b0, space0);
-        // ConstantBuffer<FrameData>       FrameDataCB     : register(b1, space0);
-        // ConstantBuffer<PassDataType>    PassDataCB      : register(b2, space0);
         
+        // Global data CB
+        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 0, 0 });
+
+        // Frame-specific data CB
+        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 1, 0 });
+
+        // Pass-specific data CB
+        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 2, 0 });
+
         // Unbounded Texture2D range
         HAL::RootDescriptorTableParameter textures2D;
         textures2D.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 0 });
@@ -144,15 +160,6 @@ namespace PathFinder
         HAL::RootDescriptorTableParameter RWTexture2DArrays;
         RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 2 });
         mBaseRootSignature.AddDescriptorTableParameter(RWTexture2DArrays);
-
-        // Global data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 0, 0 });
-
-        // Frame-specific data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 1, 0 });
-
-        // Pass-specific data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 2, 0 });
     }
 
 }

@@ -19,13 +19,13 @@ namespace PathFinder
         pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList); 
         psoManager->StoreGraphicsState(PSONames::GBuffer, pso, RootSignatureNames::Universal); 
     }
-     
+      
     void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         scheduler->NewRenderTarget(ResourceNames::PlaygroundRenderTarget);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
-    } 
+    }  
 
     void PlaygroundRenderPass::Render(RenderContext* context) 
     {
