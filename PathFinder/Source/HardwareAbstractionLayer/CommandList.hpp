@@ -33,7 +33,7 @@ namespace HAL
         void Close();
 
     protected:
-        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mList;
+        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> mList;
 
     public:
         inline ID3D12GraphicsCommandList* D3DList() const { return mList.Get(); }

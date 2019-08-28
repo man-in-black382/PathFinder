@@ -20,13 +20,15 @@ namespace HAL
     class PipelineState 
     {
     public:
+        PipelineState(const Device* device);
         virtual ~PipelineState() = 0;
 
-        virtual void Compile(const Device& device) = 0;
+        virtual void Compile() = 0;
 
     protected:
         Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
         const RootSignature* mRootSignature;
+        const Device* mDevice;
 
     public:
         inline ID3D12PipelineState* D3DCompiledState() const { return mState.Get(); }
@@ -41,9 +43,11 @@ namespace HAL
         using RenderTargetFormat = std::variant<ResourceFormat::Color, ResourceFormat::TypelessColor>;
         using RenderTargetFormatMap = std::unordered_map<RenderTarget, RenderTargetFormat>;
 
+        using PipelineState::PipelineState;
+
         ~GraphicsPipelineState() = default;
 
-        virtual void Compile(const Device& device) override;
+        virtual void Compile() override;
 
         GraphicsPipelineState Clone() const;
 
@@ -108,7 +112,9 @@ namespace HAL
 
     class ComputePipelineState : public PipelineState {
     public:
-        virtual void Compile(const Device& device) override;
+        using PipelineState::PipelineState;
+
+        virtual void Compile() override;
 
         ComputePipelineState Clone() const;
 

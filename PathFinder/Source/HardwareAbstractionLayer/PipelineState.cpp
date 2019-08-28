@@ -8,9 +8,12 @@
 namespace HAL
 {
 
+    PipelineState::PipelineState(const Device* device)
+        : mDevice{ device } {}
+
     PipelineState::~PipelineState() {}
 
-    void GraphicsPipelineState::Compile(const Device& device)
+    void GraphicsPipelineState::Compile()
     {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
 
@@ -32,7 +35,7 @@ namespace HAL
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
         desc.SampleMask = 0xFFFFFFFF;
-
+        
         for (auto& keyValue : mRenderTargetFormats)
         {
             auto rtIdx = std::underlying_type<RenderTarget>::type(keyValue.first);
@@ -51,7 +54,7 @@ namespace HAL
 #if defined(DEBUG) || defined(_DEBUG) 
         //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
-        ThrowIfFailed(device.D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
+        ThrowIfFailed(mDevice->D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
     }
 
     GraphicsPipelineState GraphicsPipelineState::Clone() const
@@ -62,7 +65,7 @@ namespace HAL
     }
 
 
-    void ComputePipelineState::Compile(const Device& device)
+    void ComputePipelineState::Compile()
     {
         D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
 
@@ -73,7 +76,7 @@ namespace HAL
 #if defined(DEBUG) || defined(_DEBUG) 
         //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
-        ThrowIfFailed(device.D3DPtr()->CreateComputePipelineState(&desc, IID_PPV_ARGS(&mState)));
+        ThrowIfFailed(mDevice->D3DPtr()->CreateComputePipelineState(&desc, IID_PPV_ARGS(&mState)));
     }
 
     ComputePipelineState ComputePipelineState::Clone() const

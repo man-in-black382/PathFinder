@@ -189,10 +189,13 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapter.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Fence.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PipelineState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PrimitiveTopology.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RasterizerState.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingBottomAS.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingTopAS.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RenderTarget.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Resource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceBarrier.cpp" />
@@ -286,10 +289,13 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapter.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Fence.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PipelineState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PrimitiveTopology.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RasterizerState.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingBottomAS.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingTopAS.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RenderTarget.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Resource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceBarrier.hpp" />
@@ -757,6 +763,7 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\RenderPipeline\ResourceStorage.inl">
       <FileType>CppHeader</FileType>
     </ClInclude>
+    <None Include="Source\HardwareAbstractionLayer\RayTracingBottomAS.inl" />
     <None Include="Source\ThirdParty\assimp\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\material.inl" />

@@ -13,9 +13,9 @@ namespace HAL
         Device(const DisplayAdapter& adapter);
 
     private:
-        Microsoft::WRL::ComPtr<ID3D12Device> mDevice;
+        Microsoft::WRL::ComPtr<ID3D12Device5> mDevice;
 
     public:
-        inline ID3D12Device* D3DPtr() const { return mDevice.Get(); }
+        inline ID3D12Device5* D3DPtr() const { return mDevice.Get(); }
     };
 }

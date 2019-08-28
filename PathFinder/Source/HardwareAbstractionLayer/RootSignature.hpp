@@ -14,13 +14,13 @@ namespace HAL
 
     class RootSignature {
     public:
-        RootSignature();
+        RootSignature(const Device* device);
 
         void AddDescriptorTableParameter(const RootDescriptorTableParameter& table);
         void AddDescriptorParameter(const RootDescriptorParameter& descriptor);
         void AddConstantsParameter(const RootConstantsParameter& constants);
 
-        void Compile(const Device& device);
+        void Compile();
 
     private:
         using ParameterKey = uint64_t;
@@ -36,6 +36,7 @@ namespace HAL
 
         D3D12_ROOT_SIGNATURE_DESC mDesc{};
         Microsoft::WRL::ComPtr<ID3D12RootSignature> mSignature;
+        const Device* mDevice;
 
     public:
         inline ID3D12RootSignature* D3DSignature() const { return mSignature.Get(); }

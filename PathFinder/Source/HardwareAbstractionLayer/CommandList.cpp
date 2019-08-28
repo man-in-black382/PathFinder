@@ -59,6 +59,7 @@ namespace HAL
     void ComputeCommandListBase::SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex)
     {
         mList->SetComputeRootShaderResourceView(rootParameterIndex, resource.GPUVirtualAddress());
+        
     }
 
     void ComputeCommandListBase::SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex)

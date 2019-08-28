@@ -6,7 +6,11 @@ namespace PathFinder
 {
 
     PipelineStateManager::PipelineStateManager(HAL::Device* device, const RenderSurface& defaultRenderSurface)
-        : mDevice{ device }, mDefaultRenderSurface{ defaultRenderSurface }
+        : mDevice{ device }, 
+        mDefaultRenderSurface{ defaultRenderSurface }, 
+        mBaseRootSignature{ device },
+        mDefaultGraphicsState{ device },
+        mDefaultComputeState{ device }
     {
         ConfigureDefaultStates();
         BuildBaseRootSignature();
@@ -81,19 +85,19 @@ namespace PathFinder
         for (auto& nameSigPair : mRootSignatures)
         {
             HAL::RootSignature& signature = nameSigPair.second;
-            signature.Compile(*mDevice);
+            signature.Compile();
         }
 
         for (auto& nameStatePair : mGraphicPSOs)
         {
             HAL::GraphicsPipelineState& pso = nameStatePair.second;
-            pso.Compile(*mDevice);
+            pso.Compile();
         }
 
         for (auto& nameStatePair : mComputePSOs)
         {
             HAL::ComputePipelineState& pso = nameStatePair.second;
-            pso.Compile(*mDevice);
+            pso.Compile();
         }
     }
 

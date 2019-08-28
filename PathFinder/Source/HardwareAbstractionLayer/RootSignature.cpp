@@ -4,7 +4,8 @@
 namespace HAL
 {
 
-    RootSignature::RootSignature()
+    RootSignature::RootSignature(const Device* device)
+        : mDevice{ device }
     {
         mDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     }
@@ -27,7 +28,7 @@ namespace HAL
         mD3DParameters.push_back(constants.D3DParameter());
     }
 
-    void RootSignature::Compile(const Device& device)
+    void RootSignature::Compile()
     {
         // Reassign pointers that might have been lost after RootSignature moves/copies
         //
@@ -54,7 +55,7 @@ namespace HAL
 
         if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
 
-        ThrowIfFailed(device.D3DPtr()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
+        ThrowIfFailed(mDevice->D3DPtr()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
     }
 
     RootSignature::ParameterKey RootSignature::GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace)
