@@ -55,7 +55,7 @@ namespace HAL
 
         if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
 
-        ThrowIfFailed(mDevice->D3DPtr()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
+        ThrowIfFailed(mDevice->D3DDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
     }
 
     RootSignature::ParameterKey RootSignature::GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace)

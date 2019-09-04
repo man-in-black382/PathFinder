@@ -2,6 +2,7 @@
 
 #include "IShaderManager.hpp"
 #include "../HardwareAbstractionLayer/Shader.hpp"
+#include "../HardwareAbstractionLayer/ShaderCompiler.hpp"
 
 #include <unordered_map>
 #include <filesystem>
@@ -19,13 +20,13 @@ namespace PathFinder
         virtual HAL::ShaderBundle LoadShaders(const std::string& csFileName) override;
 
     private:
-        std::string ConstructFullShaderPath(const std::string& relativePath);
-        HAL::Shader& GetShader(HAL::Shader::PipelineStage pipelineStage, const std::string& relativePath);
-        HAL::Shader* FindCachedShader(HAL::Shader::PipelineStage pipelineStage, const std::string& fullFilePath);
-        HAL::Shader& LoadAndCacheShader(HAL::Shader::PipelineStage pipelineStage, const std::string& fullFilePath);
+        HAL::Shader& GetShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
+        HAL::Shader* FindCachedShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& fullFilePath);
+        HAL::Shader& LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& fullFilePath);
 
+        HAL::ShaderCompiler mCompiler;
         std::filesystem::path mShaderRootPath;
-        std::unordered_map<HAL::Shader::PipelineStage, std::unordered_map<std::string, HAL::Shader>> mShaderCache;
+        std::unordered_map<HAL::Shader::Stage, std::unordered_map<std::string, HAL::Shader>> mShaderCache;
     };
 
 }

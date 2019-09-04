@@ -1,4 +1,5 @@
 #include "ShaderManager.hpp"
+#include "../HardwareAbstractionLayer/ShaderCompiler.hpp"
 
 namespace PathFinder
 {
@@ -9,8 +10,8 @@ namespace PathFinder
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& vsFileName, const std::string& psFileName)
     {
         return {
-            &GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
-            &GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
+            &GetShader(HAL::Shader::Stage::Vertex, vsFileName),
+            &GetShader(HAL::Shader::Stage::Pixel, psFileName),
             nullptr, nullptr, nullptr, nullptr
         };
     }
@@ -18,42 +19,37 @@ namespace PathFinder
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName)
     {
         return {
-            &GetShader(HAL::Shader::PipelineStage::Vertex, vsFileName),
-            &GetShader(HAL::Shader::PipelineStage::Pixel, psFileName),
+            &GetShader(HAL::Shader::Stage::Vertex, vsFileName),
+            &GetShader(HAL::Shader::Stage::Pixel, psFileName),
             nullptr, nullptr,
-            &GetShader(HAL::Shader::PipelineStage::Geometry, gsFileName),
+            &GetShader(HAL::Shader::Stage::Geometry, gsFileName),
             nullptr
         };
     }
 
     HAL::ShaderBundle ShaderManager::LoadShaders(const std::string& csFileName)
     {
-        return { nullptr, nullptr, nullptr, nullptr, nullptr, &GetShader(HAL::Shader::PipelineStage::Compute, csFileName) };
+        return { nullptr, nullptr, nullptr, nullptr, nullptr, &GetShader(HAL::Shader::Stage::Compute, csFileName) };
     }
 
-    std::string ShaderManager::ConstructFullShaderPath(const std::string& relativePath)
+    HAL::Shader& ShaderManager::GetShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath)
     {
-        return mShaderRootPath.string() + relativePath;
-    }
-
-    HAL::Shader& ShaderManager::GetShader(HAL::Shader::PipelineStage pipelineStage, const std::string& relativePath)
-    {
-        std::string fullPath = ConstructFullShaderPath(relativePath);
+        auto fullPath = mShaderRootPath / relativePath;
         HAL::Shader* shader = FindCachedShader(pipelineStage, fullPath);
         return shader ? *shader : LoadAndCacheShader(pipelineStage, fullPath);
     }
 
-    HAL::Shader* ShaderManager::FindCachedShader(HAL::Shader::PipelineStage pipelineStage, const std::string& fullFilePath)
+    HAL::Shader* ShaderManager::FindCachedShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& fullFilePath)
     {
         auto& internalMap = mShaderCache[pipelineStage];
-        auto shaderIt = internalMap.find(fullFilePath);
+        auto shaderIt = internalMap.find(fullFilePath.string());
         return (shaderIt == internalMap.end()) ? nullptr : &shaderIt->second;
     }
 
-    HAL::Shader& ShaderManager::LoadAndCacheShader(HAL::Shader::PipelineStage pipelineStage, const std::string& fullFilePath)
+    HAL::Shader& ShaderManager::LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& fullFilePath)
     {
-        mShaderCache[pipelineStage].emplace(fullFilePath, HAL::Shader{ fullFilePath, pipelineStage });
-        return mShaderCache[pipelineStage].at(fullFilePath);
+        mShaderCache[pipelineStage].emplace(fullFilePath.string(), mCompiler.Compile(fullFilePath, pipelineStage));
+        return mShaderCache[pipelineStage].at(fullFilePath.string());
     }
 
 }

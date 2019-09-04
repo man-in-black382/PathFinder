@@ -92,10 +92,11 @@
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
-xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Command>
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
+xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -108,11 +109,12 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
-xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Command>
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
+xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -129,11 +131,12 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
-xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Command>
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
+xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,11 +153,12 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
-xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Command>
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
+xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -188,14 +192,18 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClCompile Include="Source\HardwareAbstractionLayer\Device.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapter.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\DXILLibrary.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Fence.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PipelineState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PrimitiveTopology.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RasterizerState.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingBottomAS.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingTopAS.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayDispatchInfo.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingHitGroup.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingPipelineConfig.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingShaderConfig.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RenderTarget.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Resource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceBarrier.cpp" />
@@ -205,6 +213,9 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClCompile Include="Source\HardwareAbstractionLayer\RootParameters.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RootSignature.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Shader.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\ShaderCompiler.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\ShaderExport.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\ShaderTable.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\SwapChain.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\TextureResource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
@@ -288,14 +299,18 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\HardwareAbstractionLayer\Device.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapter.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\DXILLibrary.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Fence.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PipelineState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PrimitiveTopology.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RasterizerState.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingBottomAS.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingTopAS.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayDispatchInfo.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingHitGroup.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingPipelineConfig.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingShaderConfig.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RenderTarget.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Resource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceBarrier.hpp" />
@@ -307,6 +322,9 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\HardwareAbstractionLayer\RootParameters.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RootSignature.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Shader.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderCompiler.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderExport.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderTable.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\SwapChain.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\TextureResource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
@@ -763,7 +781,9 @@ xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r</Co
     <ClInclude Include="Source\RenderPipeline\ResourceStorage.inl">
       <FileType>CppHeader</FileType>
     </ClInclude>
-    <None Include="Source\HardwareAbstractionLayer\RayTracingBottomAS.inl" />
+    <None Include="Libs\dxcompiler.dll" />
+    <None Include="Libs\dxil.dll" />
+    <None Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.inl" />
     <None Include="Source\ThirdParty\assimp\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\material.inl" />

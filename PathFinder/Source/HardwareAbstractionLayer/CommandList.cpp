@@ -6,7 +6,7 @@ namespace HAL
 
     CommandList::CommandList(const Device& device, const CommandAllocator& allocator, D3D12_COMMAND_LIST_TYPE type)
     {
-        ThrowIfFailed(device.D3DPtr()->CreateCommandList(0, type, allocator.D3DPtr(), nullptr, IID_PPV_ARGS(&mList)));
+        ThrowIfFailed(device.D3DDevice()->CreateCommandList(0, type, allocator.D3DPtr(), nullptr, IID_PPV_ARGS(&mList)));
     }
 
     CommandList::~CommandList() {}
@@ -59,7 +59,6 @@ namespace HAL
     void ComputeCommandListBase::SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex)
     {
         mList->SetComputeRootShaderResourceView(rootParameterIndex, resource.GPUVirtualAddress());
-        
     }
 
     void ComputeCommandListBase::SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex)
@@ -174,6 +173,11 @@ namespace HAL
     ComputeCommandList::ComputeCommandList(const Device& device, const ComputeCommandAllocator& allocator)
         : ComputeCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_COMPUTE) {}
 
+    void ComputeCommandList::BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as)
+    {
+        mList->BuildRaytracingAccelerationStructure(&as.D3DAccelerationStructure(), 0, nullptr);
+    }
+
 
 
     BundleCommandList::BundleCommandList(const Device& device, const BundleCommandAllocator& allocator)
@@ -187,6 +191,11 @@ namespace HAL
     void GraphicsCommandList::ExecuteBundle(const BundleCommandList& bundle)
     {
 
+    }
+
+    void GraphicsCommandList::BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as)
+    {
+        mList->BuildRaytracingAccelerationStructure(&as.D3DAccelerationStructure(), 0, nullptr);
     }
 
     void GraphicsCommandList::Draw(uint32_t vertexCount, uint32_t vertexStart)

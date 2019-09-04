@@ -11,7 +11,7 @@ namespace HAL
         desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
         desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
         desc.NodeMask = 1;
-        ThrowIfFailed(device.D3DPtr()->CreateCommandQueue(&desc, IID_PPV_ARGS(&mQueue)));
+        ThrowIfFailed(device.D3DDevice()->CreateCommandQueue(&desc, IID_PPV_ARGS(&mQueue)));
     }
 
     CommandQueue::~CommandQueue() {}

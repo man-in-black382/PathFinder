@@ -54,7 +54,7 @@ namespace HAL
 #if defined(DEBUG) || defined(_DEBUG) 
         //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
-        ThrowIfFailed(mDevice->D3DPtr()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
+        ThrowIfFailed(mDevice->D3DDevice()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
     }
 
     GraphicsPipelineState GraphicsPipelineState::Clone() const
@@ -76,7 +76,7 @@ namespace HAL
 #if defined(DEBUG) || defined(_DEBUG) 
         //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
-        ThrowIfFailed(mDevice->D3DPtr()->CreateComputePipelineState(&desc, IID_PPV_ARGS(&mState)));
+        ThrowIfFailed(mDevice->D3DDevice()->CreateComputePipelineState(&desc, IID_PPV_ARGS(&mState)));
     }
 
     ComputePipelineState ComputePipelineState::Clone() const
@@ -86,4 +86,85 @@ namespace HAL
         return newState;
     }
 
- }
+
+
+    void RayTracingPipelineState::AddShaderBundle(const RayTracingShaderBundle& bundle, const RootSignature* localRootSignature)
+    {
+        ShaderExport* closestHitExport = nullptr;
+        ShaderExport* anyHitExport = nullptr;
+        ShaderExport* intersectionExport = nullptr;
+
+        AddDXILLibrary(bundle.RayGenerationShader(), localRootSignature);
+        AddDXILLibrary(bundle.MissShader(), localRootSignature);
+
+        closestHitExport = &AddDXILLibrary(bundle.ClosestHitShader(), localRootSignature);
+        anyHitExport = &AddDXILLibrary(bundle.AnyHitShader(), localRootSignature);
+
+        if (bundle->IntersectionShader()) 
+        {
+            intersectionExport = &AddDXILLibrary(bundle.IntersectionShader(), localRootSignature);
+        }
+
+        mHitGroups.emplace_back(closestHitExport, anyHitExport, intersectionExport);
+    }
+
+    void RayTracingPipelineState::SetGlobalRootSignature(const RootSignature* signature)
+    {
+        mGlobalRootSignature = signature;
+
+        mDevice->D3DDevice()->CreateStateObject()
+    }
+
+    void RayTracingPipelineState::Compile()
+    {
+        // Build associations 
+        for (auto& pair : mDXILLibraries)
+        {
+            DXILLibrary& library = pair->second;
+            ShaderExport& shaderExport = library.Export();
+
+            D3D12_STATE_SUBOBJECT librarySubobject{ D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &library.D3DLibrary() };
+            D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION association{ &librarySubobject, 1, shaderExport.ExportName().c_str() };
+            D3D12_STATE_SUBOBJECT associationSubobject{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &association };
+        }
+        /*typedef
+            enum D3D12_STATE_SUBOBJECT_TYPE
+        {
+            D3D12_STATE_SUBOBJECT_TYPE_STATE_OBJECT_CONFIG = 0,
+            D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE = 1,
+            D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE = 2,
+            D3D12_STATE_SUBOBJECT_TYPE_NODE_MASK = 3,
+            D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY = 5,
+            D3D12_STATE_SUBOBJECT_TYPE_EXISTING_COLLECTION = 6,
+            D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION = 7,
+            D3D12_STATE_SUBOBJECT_TYPE_DXIL_SUBOBJECT_TO_EXPORTS_ASSOCIATION = 8,
+            D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG = 9,
+            D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG = 10,
+            D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP = 11,
+         */
+        mDevice->D3DDevice()->CreateStateObject(&mRTPSODesc, IID_PPV_ARGS(mState.GetAddressOf()));
+    }
+
+    std::wstring RayTracingPipelineState::GenerateUniqueExportName(const Shader& shader)
+    {
+        mUniqueShaderID++;
+        return std::to_wstring(mUniqueShaderID) + shader.EntryPoint();
+    }
+
+    HAL::DXILLibrary& RayTracingPipelineState::AddDXILLibrary(const Shader* shader, const RootSignature* localRootSignature)
+    {
+        ShaderExport shaderExport{ shader };
+        shaderExport.SetExportName(GenerateUniqueExportName(*shader));
+        DXILLibrary lib{ shaderExport };
+        lib.SetLocalRootSignature(localRootSignature);
+        return mDXILLibraries.emplace(shader, lib).second;
+
+
+
+    /*    D3D12_STATE_SUBOBJECT dxilLibrarySubobject{};
+        dxilLibrarySubobject.Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
+        dxilLibrarySubobject.pDesc = &shader.D3DDXILLibrary();
+        mSubobjects.push_back(dxilLibrarySubobject);*/
+    }
+
+}

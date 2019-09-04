@@ -6,7 +6,7 @@ namespace HAL
   
     Fence::Fence(const Device& device)
     {
-        ThrowIfFailed(device.D3DPtr()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
+        ThrowIfFailed(device.D3DDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
     }
 
     void Fence::IncreaseExpectedValue()

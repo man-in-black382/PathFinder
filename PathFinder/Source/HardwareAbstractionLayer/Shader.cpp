@@ -2,47 +2,30 @@
 #include "Utils.h"
 
 #include <d3dcompiler.h>
+#include <dxcapi.h>
 
 namespace HAL
 {
 
-    Shader::Shader(const std::wstring& filePath, PipelineStage pipelineStage)
+    Shader::Shader(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const std::wstring& entryPoint, Stage stage)
+        : mBlob{ blob }, mEntryPoint{ entryPoint }, mStage{ stage } 
     {
-        std::string entryPoint;
-        std::string featureLevel;
-        D3D_SHADER_MACRO macro{};
-        macro.Definition = "";
+        mExport.Flags = D3D12_EXPORT_FLAG_NONE;
+        mExport.Name = mEntryPoint.c_str();
+        mExport.ExportToRename = mExport.Name;
 
-        switch (pipelineStage) {
-        case PipelineStage::Vertex:		entryPoint = "VSMain"; featureLevel = "vs_5_1"; macro.Name = "VSEntryPoint"; break;
-        case PipelineStage::Hull:		entryPoint = "HSMain"; featureLevel = "hs_5_1"; macro.Name = "HSEntryPoint"; break;
-        case PipelineStage::Domain:		entryPoint = "DSMain"; featureLevel = "ds_5_1"; macro.Name = "DSEntryPoint"; break;
-        case PipelineStage::Geometry:	entryPoint = "GSMain"; featureLevel = "gs_5_1"; macro.Name = "GSEntryPoint"; break;
-        case PipelineStage::Pixel:		entryPoint = "PSMain"; featureLevel = "ps_5_1"; macro.Name = "PSEntryPoint"; break;
-        case PipelineStage::Compute:	entryPoint = "CSMain"; featureLevel = "cs_5_1"; macro.Name = "CSEntryPoint"; break;
-        }
-
-        uint32_t compilerFlags = 0;  
-
-#if defined(DEBUG) || defined(_DEBUG)    
-        compilerFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;  
-#endif
-
-        compilerFlags |= D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES;
-         
-        Microsoft::WRL::ComPtr<ID3DBlob> errors;
-        ThrowIfFailed(D3DCompileFromFile(filePath.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryPoint.c_str(), featureLevel.c_str(), compilerFlags, 0, &mBlob, &errors));
-        if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
-         
-        mBytecode = mBlob->GetBufferPointer();
-        mBytecodeSize = mBlob->GetBufferSize();
+        mDXILLibrary.DXILLibrary = D3DBytecode();
+        mDXILLibrary.NumExports = 1;
+        mDXILLibrary.pExports = &mExport;
     }
-
-    Shader::Shader(const std::string& filePath, PipelineStage pipelineStage)
-        : Shader(std::wstring(filePath.begin(), filePath.end()), pipelineStage) {}
 
     ShaderBundle::ShaderBundle(Shader* vs, Shader* ps, Shader* ds, Shader* hs, Shader* gs, Shader* cs)
         : mVertexShader{ vs }, mPixelShader{ ps }, mDomainShader{ ds }, mHullShader{ hs }, mGeometryShader{ gs }, mComputeShader{ cs } {}
 
+    RayTracingShaderBundle::RayTracingShaderBundle(Shader* rayGeneration, Shader* closestHit, Shader* anyHit, Shader* miss, Shader* intersection)
+        : mRayGenerationShader{ rayGeneration }, mClosestHitShader{ closestHit }, mAnyHitShader{ anyHit }, mMissShader{ miss }, mIntersectionShader{ intersection } {}
+
 }
+
+
 

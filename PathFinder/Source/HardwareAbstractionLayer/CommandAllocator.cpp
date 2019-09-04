@@ -6,7 +6,7 @@ namespace HAL
 
     CommandAllocator::CommandAllocator(const Device& device, D3D12_COMMAND_LIST_TYPE commandListType)
     {
-        ThrowIfFailed(device.D3DPtr()->CreateCommandAllocator(commandListType, IID_PPV_ARGS(&mAllocator)));
+        ThrowIfFailed(device.D3DDevice()->CreateCommandAllocator(commandListType, IID_PPV_ARGS(&mAllocator)));
     }
 
     CommandAllocator::~CommandAllocator() {}

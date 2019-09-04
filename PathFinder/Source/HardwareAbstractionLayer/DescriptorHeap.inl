@@ -4,7 +4,7 @@ namespace HAL
 {
     template <class DescriptorT>
     DescriptorHeap<DescriptorT>::DescriptorHeap(const Device* device, uint32_t rangeCapacity, uint32_t rangeCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
-        : mDevice{ device }, mRangeCapacity{ rangeCapacity }, mIncrementSize{ device->D3DPtr()->GetDescriptorHandleIncrementSize(heapType) }
+        : mDevice{ device }, mRangeCapacity{ rangeCapacity }, mIncrementSize{ device->D3DDevice()->GetDescriptorHandleIncrementSize(heapType) }
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc{};
         desc.NumDescriptors = rangeCapacity * rangeCount;
@@ -15,7 +15,7 @@ namespace HAL
 
         desc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-        ThrowIfFailed(device->D3DPtr()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mHeap)));
+        ThrowIfFailed(device->D3DDevice()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mHeap)));
 
         D3D12_CPU_DESCRIPTOR_HANDLE CPUHandle = mHeap->GetCPUDescriptorHandleForHeapStart();
         D3D12_GPU_DESCRIPTOR_HANDLE GPUHandle{};
@@ -85,7 +85,7 @@ namespace HAL
             std::make_unique<CBDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC desc{ buffer.GPUVirtualAddress(), explicitStride ? *explicitStride : sizeof(T) };
-        mDevice->D3DPtr()->CreateConstantBufferView(&desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateConstantBufferView(&desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);
         return descriptor;
@@ -103,7 +103,7 @@ namespace HAL
             std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(buffer.D3DDescription(), explicitStride ? *explicitStride : sizeof(T));
-        mDevice->D3DPtr()->CreateShaderResourceView(buffer.D3DPtr(), &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DPtr(), &desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);
         return descriptor;
@@ -121,7 +121,7 @@ namespace HAL
             std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(buffer.D3DDescription(), explicitStride ? *explicitStride : sizeof(T));
-        mDevice->D3DPtr()->CreateUnorderedAccessView(buffer.D3DPtr(), nullptr, &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DPtr(), nullptr, &desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);
         return descriptor;

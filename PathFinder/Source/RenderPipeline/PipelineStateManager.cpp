@@ -18,7 +18,8 @@ namespace PathFinder
 
     HAL::GraphicsPipelineState PipelineStateManager::CloneExistingGraphicsState(PSOName name)
     {
-        return mGraphicPSOs[name].Clone();
+        assert_format(mGraphicPSOs.find(name) == mGraphicPSOs.end(), "Graphic state ", name.ToSring(), " does not exist.");
+        return mGraphicPSOs.at(name).Clone();
     }
 
     HAL::ComputePipelineState PipelineStateManager::CloneDefaultComputeState()
@@ -28,7 +29,8 @@ namespace PathFinder
 
     HAL::ComputePipelineState PipelineStateManager::CloneExistingComputeState(PSOName name)
     {
-        return mComputePSOs[name].Clone();
+        assert_format(mComputePSOs.find(name) == mComputePSOs.end(), "Compute state ", name.ToSring(), " does not exist.");
+        return mComputePSOs.at(name).Clone();
     }
 
     HAL::GraphicsPipelineState PipelineStateManager::CloneDefaultGraphicsState()
@@ -43,20 +45,20 @@ namespace PathFinder
 
     void PipelineStateManager::StoreComputeState(PSOName name, const HAL::ComputePipelineState& pso, RootSignatureName assosiatedSignatureName)
     {
-        mComputePSOs[name] = pso;
-        mComputePSOs[name].SetRootSignature(&GetRootSignature(assosiatedSignatureName));
+        mComputePSOs.emplace(name, pso);
+        mComputePSOs.at(name).SetRootSignature(&GetRootSignature(assosiatedSignatureName));
     }
 
     void PipelineStateManager::StoreGraphicsState(PSOName name, const HAL::GraphicsPipelineState& pso, RootSignatureName assosiatedSignatureName)
     {
-        mGraphicPSOs[name] = pso;
-        mGraphicPSOs[name].SetRootSignature(&GetRootSignature(assosiatedSignatureName));
+        mGraphicPSOs.emplace(name, pso);
+        mGraphicPSOs.at(name).SetRootSignature(&GetRootSignature(assosiatedSignatureName));
     }
 
     void PipelineStateManager::StoreRootSignature(RootSignatureName name, const HAL::RootSignature& signature)
     {
         assert_format(mRootSignatures.find(name) == mRootSignatures.end(), "Rewriting root signatures is forbidden. ", name.ToSring(), " already exists.");
-        mRootSignatures[name] = signature;
+        mRootSignatures.emplace(name, signature);
     }
 
     const HAL::RootSignature& PipelineStateManager::GetRootSignature(RootSignatureName name) const

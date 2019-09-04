@@ -10,6 +10,8 @@
 #include "ResourceFormat.hpp"
 #include "InputAssemblerLayout.hpp"
 #include "RenderTarget.hpp"
+#include "DXILLibrary.hpp"
+#include "RayTracingHitGroup.hpp"
 
 #include <variant>
 #include <unordered_map>
@@ -123,6 +125,33 @@ namespace HAL
 
     private:
         Shader* mComputeShader;
+    };
+
+
+
+    class RayTracingPipelineState
+    {
+    public:
+        RayTracingPipelineState(const Device* device);
+
+        void AddShaderBundle(const RayTracingShaderBundle& bundle, const RootSignature* localRootSignature = nullptr);
+        void SetGlobalRootSignature(const RootSignature* signature);
+        void Compile();
+
+    private:
+        std::wstring GenerateUniqueExportName(const Shader shader);
+        DXILLibrary& AddDXILLibrary(const Shader* shader, const RootSignature* localRootSignature);
+
+        const Device* mDevice = nullptr;
+        const RootSignature* mGlobalRootSignature = nullptr;
+        uint32_t mUniqueShaderID = 0;
+        D3D12_STATE_OBJECT_DESC mRTPSODesc{};
+        std::unordered_map<Shader*, DXILLibrary> mDXILLibraries;
+        std::vector<RayTracingHitGroup> mHitGroups;
+        Microsoft::WRL::ComPtr<ID3D12StateObject> mState;
+
+    public:
+        inline ID3D12StateObject* D3DCompiledState() const { return mState.Get(); }
     };
 
 }

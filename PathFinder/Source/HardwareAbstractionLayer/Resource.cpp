@@ -43,7 +43,7 @@ namespace HAL
 
         bool isSubjectForClearing = EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) || EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
 
-        ThrowIfFailed(device.D3DPtr()->CreateCommittedResource(
+        ThrowIfFailed(device.D3DDevice()->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &mDescription,

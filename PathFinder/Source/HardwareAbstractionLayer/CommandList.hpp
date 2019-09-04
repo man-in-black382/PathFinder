@@ -13,6 +13,7 @@
 #include "DescriptorHeap.hpp"
 #include "Fence.hpp"
 #include "BufferResource.hpp"
+#include "RayTracingAccelerationStructure.hpp"
 
 #include "../Foundation/Color.hpp"
 #include "../Geometry/Rect2D.hpp"
@@ -147,6 +148,8 @@ namespace HAL
     public:
         ComputeCommandList(const Device& device, const ComputeCommandAllocator& allocator);
         ~ComputeCommandList() = default;
+
+        void BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as);
     };
     
     class BundleCommandList : public GraphicsCommandListBase {
@@ -161,6 +164,8 @@ namespace HAL
         ~GraphicsCommandList() = default;
 
         void ExecuteBundle(const BundleCommandList& bundle);
+
+        void BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as);
 
         void Draw(uint32_t vertexCount, uint32_t vertexStart);
         void DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount);
