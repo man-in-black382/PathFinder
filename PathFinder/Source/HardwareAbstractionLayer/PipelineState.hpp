@@ -12,6 +12,8 @@
 #include "RenderTarget.hpp"
 #include "DXILLibrary.hpp"
 #include "RayTracingHitGroup.hpp"
+#include "RayTracingPipelineConfig.hpp"
+#include "RayTracingShaderConfig.hpp"
 
 #include <variant>
 #include <unordered_map>
@@ -134,21 +136,42 @@ namespace HAL
     public:
         RayTracingPipelineState(const Device* device);
 
-        void AddShaderBundle(const RayTracingShaderBundle& bundle, const RootSignature* localRootSignature = nullptr);
+        void AddShaders(const RayTracingShaderBundle& bundle, const RayTracingShaderConfig& config, const RootSignature* localRootSignature = nullptr);
+        void SetConfig(const RayTracingPipelineConfig& config);
         void SetGlobalRootSignature(const RootSignature* signature);
         void Compile();
 
     private:
-        std::wstring GenerateUniqueExportName(const Shader shader);
-        DXILLibrary& AddDXILLibrary(const Shader* shader, const RootSignature* localRootSignature);
+        struct ShaderAssociations
+        {
+            DXILLibrary Library;
+            RayTracingShaderConfig Config;
+        };
+
+        std::wstring GenerateUniqueExportName(const Shader& shader);
+        ShaderAssociations& AddShader(const Shader* shader, const RayTracingShaderConfig& config, const RootSignature* localRootSignature);
+        void AssociateLibraryWithItsExport(const DXILLibrary& library);
+        void AssociateConfigWithExport(const RayTracingShaderConfig& config, const ShaderExport& shaderExport);
+        void AssociateRootSignatureWithExport(const RootSignature& signature, const ShaderExport& shaderExport);
+        void AddHitGroupSubobject(const RayTracingHitGroup& group);
+        void AddGlobalRootSignatureSubobject();
+        void AddPipelineConfigSubobject();
+        void ClearInternalContainers();
 
         const Device* mDevice = nullptr;
         const RootSignature* mGlobalRootSignature = nullptr;
-        uint32_t mUniqueShaderID = 0;
+
+        uint32_t mUniqueShaderExportID = 0;
+        RayTracingPipelineConfig mConfig;
         D3D12_STATE_OBJECT_DESC mRTPSODesc{};
-        std::unordered_map<Shader*, DXILLibrary> mDXILLibraries;
+        std::unordered_map<const Shader*, ShaderAssociations> mShaderAssociations;
         std::vector<RayTracingHitGroup> mHitGroups;
+
+        std::vector<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION> mAssociations;
+        std::vector<D3D12_STATE_SUBOBJECT> mSubobjects;
+
         Microsoft::WRL::ComPtr<ID3D12StateObject> mState;
+        Microsoft::WRL::ComPtr<ID3D12StateObjectProperties> mProperties;
 
     public:
         inline ID3D12StateObject* D3DCompiledState() const { return mState.Get(); }

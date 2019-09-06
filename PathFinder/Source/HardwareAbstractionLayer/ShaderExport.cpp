@@ -23,7 +23,7 @@ namespace HAL
         *this = std::move(that);
     }
 
-    HAL::ShaderExport::ShaderExport& ShaderExport::operator=(const ShaderExport& that)
+    ShaderExport& ShaderExport::operator=(const ShaderExport& that)
     {
         mExport = that.mExport;
         mName = that.mName;
@@ -33,7 +33,7 @@ namespace HAL
         return *this;
     }
 
-    HAL::ShaderExport::ShaderExport& ShaderExport::operator=(ShaderExport&& that)
+    ShaderExport& ShaderExport::operator=(ShaderExport&& that)
     {
         mExport = std::move(that.mExport);
         mName = std::move(that.mName);

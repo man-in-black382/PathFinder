@@ -25,8 +25,9 @@ namespace HAL
         const RootSignature* mLocalRootSignature;
 
     public:
-        const D3D12_DXIL_LIBRARY_DESC& D3DLibrary() const { mLibrary; }
+        const D3D12_DXIL_LIBRARY_DESC& D3DLibrary() const { return mLibrary; }
         const ShaderExport& Export() const { return mExport; }
+        const RootSignature* LocalRootSignature() const { return mLocalRootSignature; }
     };
 
 }

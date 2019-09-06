@@ -13,17 +13,19 @@ namespace HAL
         mLibrary.pExports = &mExport.D3DExport();
     }
 
-    DXILLibrary::DXILLibrary(const DXILLibrary& that)
+    DXILLibrary::DXILLibrary(const DXILLibrary& that) 
+        : mExport{ that.mExport }
     {
         *this = that;
     }
 
     DXILLibrary::DXILLibrary(DXILLibrary&& that)
+        : mExport{ std::move(that.mExport) }
     {
         *this = std::move(that);
     }
 
-    DXILLibrary::DXILLibrary& DXILLibrary::operator=(DXILLibrary&& that)
+    DXILLibrary& DXILLibrary::operator=(DXILLibrary&& that)
     {
         mExport = std::move(that.mExport);
         mLibrary = std::move(that.mLibrary);
@@ -31,7 +33,7 @@ namespace HAL
         return *this;
     }
 
-    DXILLibrary::DXILLibrary& DXILLibrary::operator=(const DXILLibrary& that)
+    DXILLibrary& DXILLibrary::operator=(const DXILLibrary& that)
     {
         mExport = that.mExport;
         mLibrary = that.mLibrary;

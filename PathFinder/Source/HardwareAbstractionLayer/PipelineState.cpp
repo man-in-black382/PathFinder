@@ -88,83 +88,152 @@ namespace HAL
 
 
 
-    void RayTracingPipelineState::AddShaderBundle(const RayTracingShaderBundle& bundle, const RootSignature* localRootSignature)
+    RayTracingPipelineState::RayTracingPipelineState(const Device* device)
+        : mDevice{ device } {}
+
+    void RayTracingPipelineState::AddShaders(const RayTracingShaderBundle& bundle, const RayTracingShaderConfig& config, const RootSignature* localRootSignature)
     {
-        ShaderExport* closestHitExport = nullptr;
-        ShaderExport* anyHitExport = nullptr;
-        ShaderExport* intersectionExport = nullptr;
+        AddShader(bundle.RayGenerationShader(), config, localRootSignature);
+        AddShader(bundle.MissShader(), config, localRootSignature);
 
-        AddDXILLibrary(bundle.RayGenerationShader(), localRootSignature);
-        AddDXILLibrary(bundle.MissShader(), localRootSignature);
-
-        closestHitExport = &AddDXILLibrary(bundle.ClosestHitShader(), localRootSignature);
-        anyHitExport = &AddDXILLibrary(bundle.AnyHitShader(), localRootSignature);
-
-        if (bundle->IntersectionShader()) 
-        {
-            intersectionExport = &AddDXILLibrary(bundle.IntersectionShader(), localRootSignature);
-        }
+        const ShaderExport* closestHitExport = &AddShader(bundle.ClosestHitShader(), config, localRootSignature).Library.Export();
+        const ShaderExport* anyHitExport = &AddShader(bundle.AnyHitShader(), config, localRootSignature).Library.Export();
+        const ShaderExport* intersectionExport = bundle.IntersectionShader() ?
+            &AddShader(bundle.IntersectionShader(), config, localRootSignature).Library.Export() :
+            nullptr;
 
         mHitGroups.emplace_back(closestHitExport, anyHitExport, intersectionExport);
+    }
+
+    void RayTracingPipelineState::SetConfig(const RayTracingPipelineConfig& config)
+    {
+        mConfig = config;
     }
 
     void RayTracingPipelineState::SetGlobalRootSignature(const RootSignature* signature)
     {
         mGlobalRootSignature = signature;
-
-        mDevice->D3DDevice()->CreateStateObject()
     }
 
     void RayTracingPipelineState::Compile()
     {
-        // Build associations 
-        for (auto& pair : mDXILLibraries)
+        for (auto& pair : mShaderAssociations)
         {
-            DXILLibrary& library = pair->second;
-            ShaderExport& shaderExport = library.Export();
+            const ShaderAssociations& shaderAssociations = pair.second;
+            const DXILLibrary& library = shaderAssociations.Library;
+            const ShaderExport& shaderExport = library.Export();
+            const RayTracingShaderConfig& shaderConfig = shaderAssociations.Config;
 
-            D3D12_STATE_SUBOBJECT librarySubobject{ D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &library.D3DLibrary() };
-            D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION association{ &librarySubobject, 1, shaderExport.ExportName().c_str() };
-            D3D12_STATE_SUBOBJECT associationSubobject{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &association };
+            AssociateLibraryWithItsExport(library);
+            AssociateConfigWithExport(shaderConfig, shaderExport);
+
+            if (library.LocalRootSignature())
+            {
+                AssociateRootSignatureWithExport(*library.LocalRootSignature(), shaderExport);
+            }
         }
-        /*typedef
-            enum D3D12_STATE_SUBOBJECT_TYPE
+
+        for (RayTracingHitGroup& hitGroup : mHitGroups)
         {
-            D3D12_STATE_SUBOBJECT_TYPE_STATE_OBJECT_CONFIG = 0,
-            D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE = 1,
-            D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE = 2,
-            D3D12_STATE_SUBOBJECT_TYPE_NODE_MASK = 3,
-            D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY = 5,
-            D3D12_STATE_SUBOBJECT_TYPE_EXISTING_COLLECTION = 6,
-            D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION = 7,
-            D3D12_STATE_SUBOBJECT_TYPE_DXIL_SUBOBJECT_TO_EXPORTS_ASSOCIATION = 8,
-            D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG = 9,
-            D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG = 10,
-            D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP = 11,
-         */
+            AddHitGroupSubobject(hitGroup);
+        }
+
+        AddGlobalRootSignatureSubobject();
+        AddPipelineConfigSubobject();
+
+        mRTPSODesc.NumSubobjects = mSubobjects.size();
+        mRTPSODesc.pSubobjects = mSubobjects.data();
+
         mDevice->D3DDevice()->CreateStateObject(&mRTPSODesc, IID_PPV_ARGS(mState.GetAddressOf()));
+        mState->QueryInterface(IID_PPV_ARGS(mProperties.GetAddressOf()));
+
+        ClearInternalContainers();
     }
 
     std::wstring RayTracingPipelineState::GenerateUniqueExportName(const Shader& shader)
     {
-        mUniqueShaderID++;
-        return std::to_wstring(mUniqueShaderID) + shader.EntryPoint();
+        mUniqueShaderExportID++;
+        return std::to_wstring(mUniqueShaderExportID) + shader.EntryPoint();
     }
 
-    HAL::DXILLibrary& RayTracingPipelineState::AddDXILLibrary(const Shader* shader, const RootSignature* localRootSignature)
+    RayTracingPipelineState::ShaderAssociations& RayTracingPipelineState::AddShader(const Shader* shader, const RayTracingShaderConfig& config, const RootSignature* localRootSignature)
     {
         ShaderExport shaderExport{ shader };
         shaderExport.SetExportName(GenerateUniqueExportName(*shader));
         DXILLibrary lib{ shaderExport };
         lib.SetLocalRootSignature(localRootSignature);
-        return mDXILLibraries.emplace(shader, lib).second;
+        ShaderAssociations associations{ lib, config };
+        mShaderAssociations.emplace(shader, associations);
+        return mShaderAssociations.at(shader);
+    }
 
+    void RayTracingPipelineState::AssociateLibraryWithItsExport(const DXILLibrary& library)
+    {
+        LPCWSTR exportName = library.Export().ExportName().c_str();
 
+        D3D12_STATE_SUBOBJECT librarySubobject{ D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &library.D3DLibrary() };
+        D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION libToExportAssociation{ &librarySubobject, 1, &exportName };
+        D3D12_STATE_SUBOBJECT libToExportAssociationSubobject{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &libToExportAssociation };
 
-    /*    D3D12_STATE_SUBOBJECT dxilLibrarySubobject{};
-        dxilLibrarySubobject.Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
-        dxilLibrarySubobject.pDesc = &shader.D3DDXILLibrary();
-        mSubobjects.push_back(dxilLibrarySubobject);*/
+        // Hold in memory until compilation
+        mSubobjects.push_back(librarySubobject);
+        mSubobjects.push_back(libToExportAssociationSubobject);
+        mAssociations.push_back(libToExportAssociation);
+    }
+
+    void RayTracingPipelineState::AssociateConfigWithExport(const RayTracingShaderConfig& config, const ShaderExport& shaderExport)
+    {
+        LPCWSTR exportName = shaderExport.ExportName().c_str();
+
+        // Associate shader exports with shader config
+        D3D12_STATE_SUBOBJECT configSubobject{ D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG, &config.D3DConfig() };
+        D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION configToExportAssociation{ &configSubobject, 1, &exportName };
+        D3D12_STATE_SUBOBJECT configToExportAssociationSubobject{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &configToExportAssociation };
+
+        mSubobjects.push_back(configSubobject);
+        mSubobjects.push_back(configToExportAssociationSubobject);
+        mAssociations.push_back(configToExportAssociation);
+    }
+
+    void RayTracingPipelineState::AssociateRootSignatureWithExport(const RootSignature& signature, const ShaderExport& shaderExport)
+    {
+        LPCWSTR exportName = shaderExport.ExportName().c_str();
+
+        // Associate local root signatures with shader exports
+        D3D12_STATE_SUBOBJECT localRootSignatureSubobject{ D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE, signature.D3DSignature() };
+        D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION localRootSigToExportAssociation{ &localRootSignatureSubobject, 1, &exportName };
+        D3D12_STATE_SUBOBJECT localRootSigToExportAssociationSubobject{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &localRootSigToExportAssociation };
+
+        // Hold in memory until compilation
+        mSubobjects.push_back(localRootSignatureSubobject);
+        mSubobjects.push_back(localRootSigToExportAssociationSubobject);
+        mAssociations.push_back(localRootSigToExportAssociation);
+    }
+
+    void RayTracingPipelineState::AddHitGroupSubobject(const RayTracingHitGroup& group)
+    {
+        D3D12_STATE_SUBOBJECT hitGroupSubobject{ D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP, &group.D3DHitGroup() };
+        mSubobjects.push_back(hitGroupSubobject);
+    }
+
+    void RayTracingPipelineState::AddGlobalRootSignatureSubobject()
+    {
+        if (!mGlobalRootSignature) return;
+
+        D3D12_STATE_SUBOBJECT globalRootSignatureSubobject{ D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, mGlobalRootSignature->D3DSignature() };
+        mSubobjects.push_back(globalRootSignatureSubobject);
+    }
+
+    void RayTracingPipelineState::AddPipelineConfigSubobject()
+    {
+        D3D12_STATE_SUBOBJECT configSubobject{ D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &mConfig.D3DConfig() };
+        mSubobjects.push_back(configSubobject);
+    }
+
+    void RayTracingPipelineState::ClearInternalContainers()
+    {
+        mShaderAssociations.clear();
+        mHitGroups.clear();
     }
 
 }

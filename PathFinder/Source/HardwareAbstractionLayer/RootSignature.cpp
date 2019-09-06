@@ -58,6 +58,11 @@ namespace HAL
         ThrowIfFailed(mDevice->D3DDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
     }
 
+    uint16_t RootSignature::ParameterCount() const
+    {
+        return mDescriptorTableParameters.size() + mDescriptorParameters.size() + mConstantParameters.size();
+    }
+
     RootSignature::ParameterKey RootSignature::GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace)
     {
         uint64_t key = 0;

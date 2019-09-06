@@ -22,6 +22,8 @@ namespace HAL
 
         void Compile();
 
+        uint16_t ParameterCount() const;
+
     private:
         using ParameterKey = uint64_t;
 

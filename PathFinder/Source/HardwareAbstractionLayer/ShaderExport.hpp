@@ -24,7 +24,9 @@ namespace HAL
         D3D12_EXPORT_DESC mExport{};
 
     public:
+        D3D12_EXPORT_DESC& D3DExport() { return mExport; }
         const D3D12_EXPORT_DESC& D3DExport() const { return mExport; }
+
         const Shader* AssosiatedShader() const { return mShader; }
         const std::wstring& ExportName() const { return mName; }
     };
