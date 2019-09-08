@@ -10,5 +10,4 @@ namespace PathFinder
     };
 
     const HAL::InputAssemblerLayout& InputAssemblerLayoutForVertexLayout(VertexLayout layout);
-
 }

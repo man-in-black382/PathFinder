@@ -34,6 +34,7 @@ namespace HAL
     public:
         inline D3D12_SHADER_BYTECODE D3DBytecode() const { return { mBlob->GetBufferPointer(), mBlob->GetBufferSize() }; }
         inline const std::wstring& EntryPoint() const { return mEntryPoint; }
+        inline const Stage PipelineStage() const { return mStage; }
         inline const D3D12_EXPORT_DESC& D3DExport() const { mExport; }
         inline const D3D12_DXIL_LIBRARY_DESC& D3DDXILLibrary() const { mDXILLibrary; }
     };

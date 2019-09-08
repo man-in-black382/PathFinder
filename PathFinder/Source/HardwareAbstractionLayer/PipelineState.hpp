@@ -14,6 +14,7 @@
 #include "RayTracingHitGroup.hpp"
 #include "RayTracingPipelineConfig.hpp"
 #include "RayTracingShaderConfig.hpp"
+#include "ShaderTable.hpp"
 
 #include <variant>
 #include <unordered_map>
@@ -130,7 +131,16 @@ namespace HAL
     };
 
 
-
+    //https://devblogs.nvidia.com/rtx-best-practices/
+    // 
+    // Consider using more than one ray tracing pipeline (State Object). 
+    // This especially applies when you trace several types of rays,
+    // such as shadows and reflections where one type (shadows) has a few simple shaders,
+    // small payloads, and/or low register pressure, 
+    // while the other type (reflections) involves many complex shaders and/or larger payloads.
+    // Separating these cases into different pipelines helps the driver schedule
+    // shader execution more efficiently and run workloads at higher occupancy.
+    //
     class RayTracingPipelineState
     {
     public:
@@ -172,6 +182,8 @@ namespace HAL
 
         Microsoft::WRL::ComPtr<ID3D12StateObject> mState;
         Microsoft::WRL::ComPtr<ID3D12StateObjectProperties> mProperties;
+
+        ShaderTable mShaderTable;
 
     public:
         inline ID3D12StateObject* D3DCompiledState() const { return mState.Get(); }
