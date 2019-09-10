@@ -8,11 +8,11 @@ namespace PathFinder
     BlurRenderPass::BlurRenderPass()
         : RenderPass("Blur") {}
 
-    void BlurRenderPass::SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager)
+    void BlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-        auto pso = psoManager->CloneDefaultComputeState();
-        pso.SetShaders(shaderManager->LoadShaders("Blur.hlsl")); 
-        psoManager->StoreComputeState(PSONames::Blur, pso, RootSignatureNames::Universal);
+        /* auto pso = psoManager->CloneDefaultComputeState();
+         pso.SetShaders(shaderManager->LoadShaders("Blur.hlsl"));
+         psoManager->StoreComputeState(PSONames::Blur, pso, RootSignatureNames::Universal);*/
     }
 
     void BlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)

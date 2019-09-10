@@ -5,19 +5,20 @@
 #include <string>
 #include <unordered_map>
 #include <filesystem>
-
 #include <dxcapi.h>
+
+#include "GraphicAPIObject.hpp"
 
 namespace HAL
 {
     
-    class Shader
+    class Shader : public GraphicAPIObject
     {
     public:
         enum class Stage 
         {
             Vertex, Hull, Domain, Geometry, Pixel, Compute,
-            RayGeneration, RayHit, RayAnyHit, RayMiss, RayIntersection
+            RayGeneration, RayClosestHit, RayAnyHit, RayMiss, RayIntersection
         };
 
         enum class Profile { P5_1, P6_1 };
@@ -41,10 +42,10 @@ namespace HAL
 
 
 
-    class ShaderBundle
+    class GraphicsShaderBundle
     {
     public:
-        ShaderBundle(Shader* vs, Shader* ps, Shader* ds, Shader* hs, Shader* gs, Shader* cs);
+        GraphicsShaderBundle(Shader* vs, Shader* ps, Shader* ds, Shader* hs, Shader* gs);
 
     private:
         Shader* mVertexShader = nullptr;
@@ -52,7 +53,6 @@ namespace HAL
         Shader* mDomainShader = nullptr;
         Shader* mHullShader = nullptr;
         Shader* mGeometryShader = nullptr;
-        Shader* mComputeShader = nullptr;
 
     public:
         inline Shader* VertexShader() const { return mVertexShader; }
@@ -60,6 +60,19 @@ namespace HAL
         inline Shader* DomainShader() const { return mDomainShader; }
         inline Shader* HullShader() const { return mHullShader; }
         inline Shader* GeometryShader() const { return mGeometryShader; }
+    };
+
+
+
+    class ComputeShaderBundle
+    {
+    public:
+        ComputeShaderBundle(Shader* cs);
+
+    private:
+        Shader* mComputeShader = nullptr;
+
+    public:
         inline Shader* ComputeShader() const { return mComputeShader; }
     };
 

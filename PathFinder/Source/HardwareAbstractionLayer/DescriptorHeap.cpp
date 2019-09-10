@@ -339,6 +339,7 @@ namespace HAL
         case ResourceFormat::TextureKind::Texture1D: return Range::Texture1D;
         case ResourceFormat::TextureKind::Texture2D: return texture.IsArray() ? Range::Texture2DArray : Range::Texture2D;
         case ResourceFormat::TextureKind::Texture3D: return Range::Texture3D;
+        default: assert_format(false, "Should never be hit");
         }
     }
 
@@ -349,6 +350,7 @@ namespace HAL
         case ResourceFormat::TextureKind::Texture1D: return Range::UATexture1D;
         case ResourceFormat::TextureKind::Texture2D: return texture.IsArray() ? Range::UATexture2DArray : Range::UATexture2D;
         case ResourceFormat::TextureKind::Texture3D: return Range::UATexture3D;
+        default: assert_format(false, "Should never be hit");
         }
     }
 

@@ -24,7 +24,7 @@
 #include "Scene/Scene.hpp"
 #include "Scene/MeshLoader.hpp"
 #include "RenderPipeline/RenderEngine.hpp"
-#include "RenderPipeline/RenderPasses/PlaygroundRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 
@@ -513,7 +513,7 @@ int main(int argc, char** argv)
     scene.AddMeshInstance(deerInstance);
 
     engine.VertexGPUStorage().TransferDataToGPU();
-    engine.AddRenderPass(std::make_unique<PathFinder::PlaygroundRenderPass>());  
+    engine.AddRenderPass(std::make_unique<PathFinder::GBufferRenderPass>());  
     engine.AddRenderPass(std::make_unique<PathFinder::BlurRenderPass>());
     engine.AddRenderPass(std::make_unique<PathFinder::BackBufferOutputPass>());
     engine.Schedule();

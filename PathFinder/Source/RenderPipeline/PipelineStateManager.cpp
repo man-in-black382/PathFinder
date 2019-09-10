@@ -5,67 +5,40 @@
 namespace PathFinder
 {
 
-    PipelineStateManager::PipelineStateManager(HAL::Device* device, const RenderSurface& defaultRenderSurface)
+    PipelineStateManager::PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurface& defaultRenderSurface)
         : mDevice{ device }, 
+        mShaderManager{ shaderManager },
         mDefaultRenderSurface{ defaultRenderSurface }, 
         mBaseRootSignature{ device },
-        mDefaultGraphicsState{ device },
-        mDefaultComputeState{ device }
+        mDefaultGraphicsState{ device }
     {
         ConfigureDefaultStates();
         BuildBaseRootSignature();
     }
 
-    HAL::GraphicsPipelineState PipelineStateManager::CloneExistingGraphicsState(PSOName name)
-    {
-        assert_format(mGraphicPSOs.find(name) == mGraphicPSOs.end(), "Graphic state ", name.ToSring(), " does not exist.");
-        return mGraphicPSOs.at(name).Clone();
-    }
-
-    HAL::ComputePipelineState PipelineStateManager::CloneDefaultComputeState()
-    {
-        return mDefaultComputeState.Clone();
-    }
-
-    HAL::ComputePipelineState PipelineStateManager::CloneExistingComputeState(PSOName name)
-    {
-        assert_format(mComputePSOs.find(name) == mComputePSOs.end(), "Compute state ", name.ToSring(), " does not exist.");
-        return mComputePSOs.at(name).Clone();
-    }
-
-    HAL::GraphicsPipelineState PipelineStateManager::CloneDefaultGraphicsState()
-    {
-        return mDefaultGraphicsState.Clone();
-    }
-
-    HAL::RootSignature PipelineStateManager::CloneBaseRootSignature()
-    {
-        return mBaseRootSignature;
-    }
-
-    void PipelineStateManager::StoreComputeState(PSOName name, const HAL::ComputePipelineState& pso, RootSignatureName assosiatedSignatureName)
-    {
-        mComputePSOs.emplace(name, pso);
-        mComputePSOs.at(name).SetRootSignature(&GetRootSignature(assosiatedSignatureName));
-    }
-
-    void PipelineStateManager::StoreGraphicsState(PSOName name, const HAL::GraphicsPipelineState& pso, RootSignatureName assosiatedSignatureName)
-    {
-        mGraphicPSOs.emplace(name, pso);
-        mGraphicPSOs.at(name).SetRootSignature(&GetRootSignature(assosiatedSignatureName));
-    }
-
-    void PipelineStateManager::StoreRootSignature(RootSignatureName name, const HAL::RootSignature& signature)
-    {
-        assert_format(mRootSignatures.find(name) == mRootSignatures.end(), "Rewriting root signatures is forbidden. ", name.ToSring(), " already exists.");
-        mRootSignatures.emplace(name, signature);
-    }
-
-    const HAL::RootSignature& PipelineStateManager::GetRootSignature(RootSignatureName name) const
+    const HAL::RootSignature* PipelineStateManager::GetRootSignature(RootSignatureName name) const
     {
         auto it = mRootSignatures.find(name);
-        assert_format(it != mRootSignatures.end(), "Root signature ", name.ToSring(), " does not exist");
-        return it->second;
+        if (it == mRootSignatures.end()) return nullptr;
+        return &it->second;
+    }
+
+    const HAL::RootSignature* PipelineStateManager::GetNamedRootSignatureOrDefault(std::optional<RootSignatureName> name) const
+    {
+        if (!name) return &mBaseRootSignature;
+
+        const HAL::RootSignature* signature = GetRootSignature(*name);
+        assert_format(signature, "Root signature ", name->ToSring(), " doesn't exist");
+        return signature;
+    }
+
+    const HAL::RootSignature* PipelineStateManager::GetNamedRootSignatureOrNull(std::optional<RootSignatureName> name) const
+    {
+        if (!name) return nullptr;
+
+        const HAL::RootSignature* signature = GetRootSignature(*name);
+        assert_format(signature, "Root signature ", name->ToSring(), " doesn't exist");
+        return signature;
     }
 
     const HAL::GraphicsPipelineState* PipelineStateManager::GetGraphicsPipelineState(PSOName name) const
@@ -79,6 +52,13 @@ namespace PathFinder
     {
         auto it = mComputePSOs.find(name);
         if (it == mComputePSOs.end()) return nullptr;
+        return &it->second;
+    }
+
+    const HAL::RayTracingPipelineState* PipelineStateManager::GetRayTracingPipelineState(PSOName name) const
+    {
+        auto it = mRayTracingPSOs.find(name);
+        if (it == mRayTracingPSOs.end()) return nullptr;
         return &it->second;
     }
 
@@ -99,6 +79,12 @@ namespace PathFinder
         for (auto& nameStatePair : mComputePSOs)
         {
             HAL::ComputePipelineState& pso = nameStatePair.second;
+            pso.Compile();
+        }
+
+        for (auto& nameStatePair : mRayTracingPSOs)
+        {
+            HAL::RayTracingPipelineState& pso = nameStatePair.second;
             pso.Compile();
         }
     }

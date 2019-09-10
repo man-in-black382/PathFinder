@@ -9,7 +9,6 @@ namespace HAL
     class RayTracingShaderConfig
     {
     public:
-        RayTracingShaderConfig(uint32_t maxPayloadSize);
         RayTracingShaderConfig(uint32_t maxPayloadSize, uint32_t maxAttributesSize);
 
     private:

@@ -7,9 +7,6 @@
 namespace HAL
 {
 
-    RayTracingShaderConfig::RayTracingShaderConfig(uint32_t maxPayloadSize)
-        : RayTracingShaderConfig(maxPayloadSize, D3D12_RAYTRACING_MAX_ATTRIBUTE_SIZE_IN_BYTES) {}
-
     RayTracingShaderConfig::RayTracingShaderConfig(uint32_t maxPayloadSize, uint32_t maxAttributesSize)
     {
         assert_format(maxAttributesSize <= D3D12_RAYTRACING_MAX_ATTRIBUTE_SIZE_IN_BYTES, "Exceeded maximum attribute size");

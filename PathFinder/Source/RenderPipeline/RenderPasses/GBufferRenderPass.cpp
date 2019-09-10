@@ -1,14 +1,14 @@
-#include "PlaygroundRenderPass.hpp"
+#include "GBufferRenderPass.hpp"
 
 namespace PathFinder
 {
 
-    PlaygroundRenderPass::PlaygroundRenderPass()
-        : RenderPass("Playground") {}
+    GBufferRenderPass::GBufferRenderPass()
+        : RenderPass("GBuffer") {}
 
-    void PlaygroundRenderPass::SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager)
+    void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-        auto rootSig = psoManager->CloneBaseRootSignature();
+      /*  auto rootSig = psoManager->CloneBaseRootSignature();
         psoManager->StoreRootSignature(RootSignatureNames::Universal, rootSig);
 
         auto pso = psoManager->CloneDefaultGraphicsState();
@@ -17,20 +17,19 @@ namespace PathFinder
         pso.SetDepthStencilFormat(HAL::ResourceFormat::Depth24_Float_Stencil8_Unsigned);
         pso.SetRenderTargetFormats(HAL::ResourceFormat::Color::RGBA8_Usigned_Norm);
         pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList); 
-        psoManager->StoreGraphicsState(PSONames::GBuffer, pso, RootSignatureNames::Universal); 
+        psoManager->StoreGraphicsState(PSONames::GBuffer, pso, RootSignatureNames::Universal); */
     }
       
-    void PlaygroundRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void GBufferRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         scheduler->NewRenderTarget(ResourceNames::PlaygroundRenderTarget);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
     }  
 
-    void PlaygroundRenderPass::Render(RenderContext* context) 
+    void GBufferRenderPass::Render(RenderContext* context) 
     {
         context->GetGraphicsDevice()->ApplyPipelineState(PSONames::GBuffer);
-        //context->GetGraphicsDevice()->SetBackBufferAsRenderTarget(ResourceNames::GBufferDepthStencil);
         context->GetGraphicsDevice()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
         context->GetGraphicsDevice()->ClearBackBuffer(Foundation::Color::Gray());
         context->GetGraphicsDevice()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);

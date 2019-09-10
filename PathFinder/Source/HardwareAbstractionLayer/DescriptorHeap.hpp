@@ -7,6 +7,7 @@
 #include <tuple>
 #include <optional>
 
+#include "GraphicAPIObject.hpp"
 #include "TextureResource.hpp"
 #include "BufferResource.hpp"
 #include "Descriptor.hpp"
@@ -16,7 +17,7 @@
 namespace HAL
 {
     template <class DescriptorT>
-    class DescriptorHeap
+    class DescriptorHeap : public GraphicAPIObject
     {
     public:
         struct RangeAllocationInfo

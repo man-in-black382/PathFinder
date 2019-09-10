@@ -4,10 +4,11 @@
 #include <wrl.h>
 
 #include "DisplayAdapter.hpp"
+#include "GraphicAPIObject.hpp"
 
 namespace HAL
 {
-    class Device
+    class Device : public GraphicAPIObject
     {
     public:
         Device(const DisplayAdapter& adapter);

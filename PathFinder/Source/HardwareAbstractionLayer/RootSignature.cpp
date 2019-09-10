@@ -28,6 +28,13 @@ namespace HAL
         mD3DParameters.push_back(constants.D3DParameter());
     }
 
+    RootSignature RootSignature::Clone()
+    {
+        RootSignature newSignature = *this;
+        newSignature.mSignature = nullptr;
+        return newSignature;
+    }
+
     void RootSignature::Compile()
     {
         // Reassign pointers that might have been lost after RootSignature moves/copies

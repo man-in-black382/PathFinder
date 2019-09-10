@@ -89,7 +89,7 @@ namespace HAL
 
 
     RayTracingPipelineState::RayTracingPipelineState(const Device* device)
-        : mDevice{ device } {}
+        : mDevice{ device }, mShaderTable{ device } {}
 
     void RayTracingPipelineState::AddShaders(const RayTracingShaderBundle& bundle, const RayTracingShaderConfig& config, const RootSignature* localRootSignature)
     {
@@ -147,7 +147,7 @@ namespace HAL
         mDevice->D3DDevice()->CreateStateObject(&mRTPSODesc, IID_PPV_ARGS(mState.GetAddressOf()));
         mState->QueryInterface(IID_PPV_ARGS(mProperties.GetAddressOf()));
 
-        ClearInternalContainers();
+        BuildShaderTable();
     }
 
     std::wstring RayTracingPipelineState::GenerateUniqueExportName(const Shader& shader)
@@ -234,6 +234,21 @@ namespace HAL
     {
         mShaderAssociations.clear();
         mHitGroups.clear();
+    }
+
+    void RayTracingPipelineState::BuildShaderTable()
+    {
+        for (auto& pair : mShaderAssociations)
+        {
+            const ShaderAssociations& shaderAssociations = pair.second;
+            const DXILLibrary& library = shaderAssociations.Library;
+            const ShaderExport& shaderExport = library.Export();
+
+            auto shaderId = reinterpret_cast<ShaderTable::ShaderID *>(mProperties->GetShaderIdentifier(shaderExport.ExportName().c_str()));
+            mShaderTable.AddShader(*shaderExport.AssosiatedShader(), *shaderId, library.LocalRootSignature());
+        }
+
+        mShaderTable.UploadToGPUMemory();
     }
 
 }

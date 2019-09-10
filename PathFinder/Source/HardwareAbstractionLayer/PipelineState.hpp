@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GraphicAPIObject.hpp"
 #include "Device.hpp"
 #include "RootSignature.hpp"
 #include "Shader.hpp"
@@ -22,7 +23,7 @@
 namespace HAL
 {
 
-    class PipelineState 
+    class PipelineState : public GraphicAPIObject
     {
     public:
         PipelineState(const Device* device);
@@ -64,6 +65,9 @@ namespace HAL
         inline void SetPrimitiveTopology(PrimitiveTopology topology) { mPrimitiveTopology = topology; }
         inline void SetDepthStencilFormat(ResourceFormat::DepthStencil format) { mDepthStencilFormat = format; }
         inline void SetInputAssemblerLayout(const InputAssemblerLayout& layout) { mInputLayout = layout; }
+        inline void SetBlendState(const BlendState& state) { mBlendState = state; }
+        inline void SetRasterizerState(const RasterizerState& state) { mRasterizerState = state; }
+        inline void SetDepthStencilState(const DepthStencilState& state) { mDepthStencilState = state; }
 
         inline void SetRenderTargetFormats(
             std::optional<RenderTargetFormat> rt0 = std::nullopt,
@@ -76,16 +80,16 @@ namespace HAL
             std::optional<RenderTargetFormat> rt7 = std::nullopt)
         {
             if (rt0) mRenderTargetFormats[RenderTarget::RT0] = *rt0;
-            if (rt1) mRenderTargetFormats[RenderTarget::RT0] = *rt1;
-            if (rt2) mRenderTargetFormats[RenderTarget::RT0] = *rt2;
-            if (rt3) mRenderTargetFormats[RenderTarget::RT0] = *rt3;
-            if (rt4) mRenderTargetFormats[RenderTarget::RT0] = *rt4;
-            if (rt5) mRenderTargetFormats[RenderTarget::RT0] = *rt5;
-            if (rt6) mRenderTargetFormats[RenderTarget::RT0] = *rt6;
-            if (rt7) mRenderTargetFormats[RenderTarget::RT0] = *rt7;
+            if (rt1) mRenderTargetFormats[RenderTarget::RT1] = *rt1;
+            if (rt2) mRenderTargetFormats[RenderTarget::RT2] = *rt2;
+            if (rt3) mRenderTargetFormats[RenderTarget::RT3] = *rt3;
+            if (rt4) mRenderTargetFormats[RenderTarget::RT4] = *rt4;
+            if (rt5) mRenderTargetFormats[RenderTarget::RT5] = *rt5;
+            if (rt6) mRenderTargetFormats[RenderTarget::RT6] = *rt6;
+            if (rt7) mRenderTargetFormats[RenderTarget::RT7] = *rt7;
         }
 
-        inline void SetShaders(const ShaderBundle& bundle)
+        inline void SetShaders(const GraphicsShaderBundle& bundle)
         {
             mVertexShader = bundle.VertexShader();
             mPixelShader = bundle.PixelShader();
@@ -123,8 +127,7 @@ namespace HAL
 
         ComputePipelineState Clone() const;
 
-        inline void SetShaders(const ShaderBundle& bundle) { mComputeShader = bundle.ComputeShader(); }
-        inline void SetComputeShader(Shader* computeShader) { mComputeShader = computeShader; }
+        inline void SetShaders(const ComputeShaderBundle& bundle) { mComputeShader = bundle.ComputeShader(); }
 
     private:
         Shader* mComputeShader;
@@ -141,7 +144,7 @@ namespace HAL
     // Separating these cases into different pipelines helps the driver schedule
     // shader execution more efficiently and run workloads at higher occupancy.
     //
-    class RayTracingPipelineState
+    class RayTracingPipelineState : public GraphicAPIObject
     {
     public:
         RayTracingPipelineState(const Device* device);
@@ -167,6 +170,7 @@ namespace HAL
         void AddGlobalRootSignatureSubobject();
         void AddPipelineConfigSubobject();
         void ClearInternalContainers();
+        void BuildShaderTable();
 
         const Device* mDevice = nullptr;
         const RootSignature* mGlobalRootSignature = nullptr;

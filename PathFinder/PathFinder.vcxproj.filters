@@ -189,9 +189,6 @@
     <ClCompile Include="Source\Foundation\NameRegistry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Scene\MeshLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -298,6 +295,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingHitGroup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PipelineStateCreator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\GraphicAPIObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1229,9 +1238,6 @@
     <ClInclude Include="Source\Foundation\Name.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\PlaygroundRenderPass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ThirdParty\assimp\include\Compiler\poppack1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1842,6 +1848,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingHitGroup.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineStateProxy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\ShaderFileNames.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineStateCreator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\GraphicAPIObject.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

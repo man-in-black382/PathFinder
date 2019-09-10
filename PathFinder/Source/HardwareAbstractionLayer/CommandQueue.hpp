@@ -3,6 +3,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 
+#include "GraphicAPIObject.hpp"
 #include "Device.hpp"
 #include "CommandList.hpp"
 #include "Fence.hpp"
@@ -10,7 +11,7 @@
 namespace HAL
 {
 
-    class CommandQueue
+    class CommandQueue : public GraphicAPIObject
     {
     public:
         CommandQueue(const Device& device, D3D12_COMMAND_LIST_TYPE commandListType);

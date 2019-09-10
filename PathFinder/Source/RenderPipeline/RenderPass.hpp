@@ -4,10 +4,9 @@
 
 #include "ResourceScheduler.hpp"
 #include "ResourceProvider.hpp"
-#include "IShaderManager.hpp"
-#include "IPipelineStateManager.hpp"
 #include "GraphicsDevice.hpp"
 #include "RenderContext.hpp"
+#include "PipelineStateCreator.hpp"
 
 #include "RenderPasses/PipelineNames.hpp"
 
@@ -20,7 +19,7 @@ namespace PathFinder
 
         RenderPass(Foundation::Name name) : mName{ name } {}
 
-        virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) = 0;
+        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) = 0;
         virtual void ScheduleResources(ResourceScheduler* scheduler) = 0;
         virtual void Render(RenderContext* context) = 0;
 

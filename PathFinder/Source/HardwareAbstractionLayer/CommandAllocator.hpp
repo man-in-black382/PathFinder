@@ -3,11 +3,12 @@
 #include <d3d12.h>
 #include <wrl.h>
 
+#include "GraphicAPIObject.hpp"
 #include "Device.hpp"
 
 namespace HAL
 {
-    class CommandAllocator
+    class CommandAllocator : public GraphicAPIObject
     {
     public:
         CommandAllocator(const Device& device, D3D12_COMMAND_LIST_TYPE commandListType);

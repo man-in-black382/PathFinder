@@ -3,6 +3,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 
+#include "GraphicAPIObject.hpp"
 #include "Device.hpp"
 #include "CommandAllocator.hpp"
 #include "Viewport.hpp"
@@ -24,7 +25,7 @@
 
 namespace HAL
 {
-    class CommandList
+    class CommandList : public GraphicAPIObject
     {
     public:
         CommandList(const Device& device, const CommandAllocator& allocator, D3D12_COMMAND_LIST_TYPE type);

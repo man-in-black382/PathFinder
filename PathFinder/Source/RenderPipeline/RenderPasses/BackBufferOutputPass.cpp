@@ -6,14 +6,14 @@ namespace PathFinder
     BackBufferOutputPass::BackBufferOutputPass()
         : RenderPass("BackBufferOutput") {}
 
-    void BackBufferOutputPass::SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager)
+    void BackBufferOutputPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-        auto pso = psoManager->CloneDefaultGraphicsState(); 
+       /* auto pso = psoManager->CloneDefaultGraphicsState(); 
         pso.SetShaders(shaderManager->LoadShaders("BackBufferOutput.hlsl", "BackBufferOutput.hlsl")); 
         pso.SetRenderTargetFormats(HAL::ResourceFormat::Color::RGBA8_Usigned_Norm);
         pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleStrip); 
         pso.GetDepthStencilState().SetDepthTestEnabled(false);
-        psoManager->StoreGraphicsState(PSONames::BackBufferOutput, pso, RootSignatureNames::Universal);   
+        psoManager->StoreGraphicsState(PSONames::BackBufferOutput, pso, RootSignatureNames::Universal);   */
     }
      
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)

@@ -24,7 +24,7 @@ namespace PathFinder
     public: 
         BlurRenderPass();
 
-        virtual void SetupPipelineStates(IShaderManager* shaderManager, IPipelineStateManager* psoManager) override;
+        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;
         virtual void Render(RenderContext* context) override;
     };

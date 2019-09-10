@@ -3,48 +3,47 @@
 #include "../Foundation/Name.hpp"
 #include "../HardwareAbstractionLayer/PipelineState.hpp"
 
+#include "ShaderManager.hpp"
 #include "RenderSurface.hpp"
-#include "IPipelineStateManager.hpp"
 
 #include <unordered_map>
 
 namespace PathFinder
 {
+    using PSOName = Foundation::Name;
+    using RootSignatureName = Foundation::Name;
 
-    class PipelineStateManager : public IPipelineStateManager
+    class PipelineStateManager
     {
+        friend class PipelineStateCreator;
+
     public:
-        PipelineStateManager(HAL::Device* device, const RenderSurface& defaultRenderSurface);
+        PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurface& defaultRenderSurface);
 
-        virtual HAL::GraphicsPipelineState CloneDefaultGraphicsState() override;
-        virtual HAL::GraphicsPipelineState CloneExistingGraphicsState(PSOName name) override;
-        virtual HAL::ComputePipelineState CloneDefaultComputeState() override;
-        virtual HAL::ComputePipelineState CloneExistingComputeState(PSOName name) override;
-        virtual HAL::RootSignature CloneBaseRootSignature() override;
-
-        virtual void StoreRootSignature(RootSignatureName name, const HAL::RootSignature& signature) override;
-        virtual void StoreGraphicsState(PSOName name, const HAL::GraphicsPipelineState& pso, RootSignatureName assosiatedSignatureName) override;
-        virtual void StoreComputeState(PSOName name, const HAL::ComputePipelineState& pso, RootSignatureName assosiatedSignatureName) override;
-
-        const HAL::RootSignature& GetRootSignature(RootSignatureName name) const;
+        const HAL::RootSignature* GetRootSignature(RootSignatureName name) const;
         const HAL::GraphicsPipelineState* GetGraphicsPipelineState(PSOName name) const;
         const HAL::ComputePipelineState* GetComputePipelineState(PSOName name) const;
+        const HAL::RayTracingPipelineState* GetRayTracingPipelineState(PSOName name) const;
 
         void CompileStates();
 
     private:
+        const HAL::RootSignature* GetNamedRootSignatureOrDefault(std::optional<RootSignatureName> name) const;
+        const HAL::RootSignature* GetNamedRootSignatureOrNull(std::optional<RootSignatureName> name) const;
+
         void ConfigureDefaultStates();
         void BuildBaseRootSignature(); 
 
+        ShaderManager* mShaderManager;
         RenderSurface mDefaultRenderSurface;
         
         HAL::Device* mDevice;
         HAL::RootSignature mBaseRootSignature;
         HAL::GraphicsPipelineState mDefaultGraphicsState;
-        HAL::ComputePipelineState mDefaultComputeState;
 
         std::unordered_map<PSOName, HAL::GraphicsPipelineState> mGraphicPSOs;
         std::unordered_map<PSOName, HAL::ComputePipelineState> mComputePSOs;
+        std::unordered_map<PSOName, HAL::RayTracingPipelineState> mRayTracingPSOs;
         std::unordered_map<RootSignatureName, HAL::RootSignature> mRootSignatures;
     };
 

@@ -17,7 +17,8 @@ namespace PathFinder
         mResourceProvider{ &mResourceStorage },
         mRootConstantsUpdater{ &mResourceStorage },
         mShaderManager{ mExecutablePath / "Shaders/" },
-        mPipelineStateManager{ &mDevice, mDefaultRenderSurface },
+        mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
+        mPipelineStateCreator{ &mPipelineStateManager },
         mGraphicsDevice{ mDevice, &mResourceStorage, &mPipelineStateManager, &mVertexStorage, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
@@ -36,7 +37,7 @@ namespace PathFinder
         for (auto& passPtr : mRenderPasses)
         {
             mResourceStorage.SetCurrentPassName(passPtr->Name());
-            passPtr->SetupPipelineStates(&mShaderManager, &mPipelineStateManager);
+            passPtr->SetupPipelineStates(&mPipelineStateCreator);
             passPtr->ScheduleResources(&mResourceScheduler);
         }
 

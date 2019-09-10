@@ -6,19 +6,23 @@
 #include <vector>
 #include <unordered_map>
 
+#include "GraphicAPIObject.hpp"
 #include "Device.hpp"
 #include "RootParameters.hpp"
 
 namespace HAL
 {
 
-    class RootSignature {
+    class RootSignature : public GraphicAPIObject
+    {
     public:
         RootSignature(const Device* device);
 
         void AddDescriptorTableParameter(const RootDescriptorTableParameter& table);
         void AddDescriptorParameter(const RootDescriptorParameter& descriptor);
         void AddConstantsParameter(const RootConstantsParameter& constants);
+
+        RootSignature Clone();
 
         void Compile();
 

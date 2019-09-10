@@ -12,6 +12,8 @@
 #include "ResourceState.hpp"
 #include "Utils.h"
 
+#include "GraphicAPIObject.hpp"
+
 #include "../Geometry/Dimensions.hpp"
 #include "../Foundation/BitwiseEnum.hpp"
 
@@ -23,7 +25,7 @@ namespace HAL
         Upload, Readback 
     };
     
-    class Resource
+    class Resource : public GraphicAPIObject
     {
     public:
         Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);

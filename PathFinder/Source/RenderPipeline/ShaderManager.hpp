@@ -1,8 +1,9 @@
 #pragma once
 
-#include "IShaderManager.hpp"
 #include "../HardwareAbstractionLayer/Shader.hpp"
 #include "../HardwareAbstractionLayer/ShaderCompiler.hpp"
+
+#include "ShaderFileNames.hpp"
 
 #include <unordered_map>
 #include <filesystem>
@@ -10,14 +11,14 @@
 namespace PathFinder
 {
 
-    class ShaderManager : public IShaderManager
+    class ShaderManager
     {
     public:
         ShaderManager(const std::filesystem::path& shaderRootPath);
 
-        virtual HAL::ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& psFileName) override;
-        virtual HAL::ShaderBundle LoadShaders(const std::string& vsFileName, const std::string& gsFileName, const std::string& psFileName) override;
-        virtual HAL::ShaderBundle LoadShaders(const std::string& csFileName) override;
+        HAL::GraphicsShaderBundle LoadShaders(const GraphicsShaderFileNames& fileNames);
+        HAL::ComputeShaderBundle LoadShaders(const ComputeShaderFileNames& fileNames);
+        HAL::RayTracingShaderBundle LoadShaders(const RayTracingShaderFileNames& fileNames);
 
     private:
         HAL::Shader& GetShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);

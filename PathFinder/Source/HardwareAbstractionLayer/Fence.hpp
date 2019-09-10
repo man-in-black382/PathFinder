@@ -4,11 +4,12 @@
 #include <d3d12.h>
 #include <cstdint>
 
+#include "GraphicAPIObject.hpp"
 #include "Device.hpp"
 
 namespace HAL
 {
-    class Fence
+    class Fence : public GraphicAPIObject
     {
     public:
         Fence(const Device& device);

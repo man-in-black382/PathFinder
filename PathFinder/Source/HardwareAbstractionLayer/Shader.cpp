@@ -19,8 +19,11 @@ namespace HAL
         mDXILLibrary.pExports = &mExport;
     }
 
-    ShaderBundle::ShaderBundle(Shader* vs, Shader* ps, Shader* ds, Shader* hs, Shader* gs, Shader* cs)
-        : mVertexShader{ vs }, mPixelShader{ ps }, mDomainShader{ ds }, mHullShader{ hs }, mGeometryShader{ gs }, mComputeShader{ cs } {}
+    GraphicsShaderBundle::GraphicsShaderBundle(Shader* vs, Shader* ps, Shader* ds, Shader* hs, Shader* gs)
+        : mVertexShader{ vs }, mPixelShader{ ps }, mDomainShader{ ds }, mHullShader{ hs }, mGeometryShader{ gs } {}
+    
+    ComputeShaderBundle::ComputeShaderBundle(Shader* cs)
+        : mComputeShader{ cs } {}
 
     RayTracingShaderBundle::RayTracingShaderBundle(Shader* rayGeneration, Shader* closestHit, Shader* anyHit, Shader* miss, Shader* intersection)
         : mRayGenerationShader{ rayGeneration }, mClosestHitShader{ closestHit }, mAnyHitShader{ anyHit }, mMissShader{ miss }, mIntersectionShader{ intersection } {}

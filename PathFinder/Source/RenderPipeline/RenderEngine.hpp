@@ -20,6 +20,7 @@
 #include "ShaderManager.hpp"
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
+#include "PipelineStateCreator.hpp"
 
 namespace PathFinder
 {
@@ -56,6 +57,7 @@ namespace PathFinder
         RootConstantsUpdater mRootConstantsUpdater;
         ShaderManager mShaderManager;
         PipelineStateManager mPipelineStateManager;
+        PipelineStateCreator mPipelineStateCreator;
         GraphicsDevice mGraphicsDevice;
         RenderContext mContext;  
 
