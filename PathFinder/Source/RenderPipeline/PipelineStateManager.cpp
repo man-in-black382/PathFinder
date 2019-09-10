@@ -64,6 +64,8 @@ namespace PathFinder
 
     void PipelineStateManager::CompileStates()
     {
+        mBaseRootSignature.Compile();
+
         for (auto& nameSigPair : mRootSignatures)
         {
             HAL::RootSignature& signature = nameSigPair.second;

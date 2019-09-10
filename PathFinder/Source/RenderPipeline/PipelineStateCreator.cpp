@@ -13,7 +13,7 @@ namespace PathFinder
         return mPipelineStateManager->mBaseRootSignature.Clone();
     }
 
-    void PipelineStateCreator::CreateGraphicsState(PSOName name, const std::function<void(GraphicsStateProxy& state)>& configurator)
+    void PipelineStateCreator::CreateGraphicsState(PSOName name, const GraphicsStateConfigurator& configurator)
     {
         assert_format(mPipelineStateManager->GetGraphicsPipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToSring(), " already exists.");
 
@@ -41,6 +41,8 @@ namespace PathFinder
         newState.SetDepthStencilState(proxy.DepthStencilState);
         newState.SetDepthStencilFormat(proxy.DepthStencilFormat);
         newState.SetPrimitiveTopology(proxy.PrimitiveTopology);
+        newState.SetInputAssemblerLayout(proxy.InputLayout);
+
         newState.SetRenderTargetFormats(
             proxy.RenderTargetFormats.size() > 0 ? std::optional(proxy.RenderTargetFormats[0]) : std::nullopt,
             proxy.RenderTargetFormats.size() > 1 ? std::optional(proxy.RenderTargetFormats[1]) : std::nullopt,
@@ -58,7 +60,7 @@ namespace PathFinder
         mPipelineStateManager->mGraphicPSOs.emplace(name, std::move(newState));
     }
 
-    void PipelineStateCreator::CreateComputeState(PSOName name, const std::function<void(ComputeStateProxy& state)>& configurator)
+    void PipelineStateCreator::CreateComputeState(PSOName name, const ComputeStateConfigurator& configurator)
     {
         assert_format(mPipelineStateManager->GetComputePipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToSring(), " already exists.");
 
@@ -73,7 +75,7 @@ namespace PathFinder
         mPipelineStateManager->mComputePSOs.emplace(name, std::move(newState));
     }
 
-    void PipelineStateCreator::CreateRayTracingState(PSOName name, const std::function<void(RayTracingStateProxy& state)>& configurator)
+    void PipelineStateCreator::CreateRayTracingState(PSOName name, const RayTracingStateConfigurator& configurator)
     {
         assert_format(mPipelineStateManager->GetRayTracingPipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToSring(), " already exists.");
 

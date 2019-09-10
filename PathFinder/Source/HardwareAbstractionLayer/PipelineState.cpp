@@ -141,7 +141,7 @@ namespace HAL
         AddGlobalRootSignatureSubobject();
         AddPipelineConfigSubobject();
 
-        mRTPSODesc.NumSubobjects = mSubobjects.size();
+        mRTPSODesc.NumSubobjects = (UINT)mSubobjects.size();
         mRTPSODesc.pSubobjects = mSubobjects.data();
 
         mDevice->D3DDevice()->CreateStateObject(&mRTPSODesc, IID_PPV_ARGS(mState.GetAddressOf()));

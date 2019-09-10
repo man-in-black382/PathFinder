@@ -8,16 +8,13 @@ namespace PathFinder
 
     void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-      /*  auto rootSig = psoManager->CloneBaseRootSignature();
-        psoManager->StoreRootSignature(RootSignatureNames::Universal, rootSig);
-
-        auto pso = psoManager->CloneDefaultGraphicsState();
-        pso.SetShaders(shaderManager->LoadShaders("Playground.hlsl", "Playground.hlsl")); 
-        pso.SetInputAssemblerLayout(InputAssemblerLayoutForVertexLayout(VertexLayout::Layout1P1N1UV1T1BT));
-        pso.SetDepthStencilFormat(HAL::ResourceFormat::Depth24_Float_Stencil8_Unsigned);
-        pso.SetRenderTargetFormats(HAL::ResourceFormat::Color::RGBA8_Usigned_Norm);
-        pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList); 
-        psoManager->StoreGraphicsState(PSONames::GBuffer, pso, RootSignatureNames::Universal); */
+        stateCreator->CreateGraphicsState(PSONames::GBuffer, [](GraphicsStateProxy& state)
+        {
+            state.ShaderFileNames.VertexShaderFileName = L"Playground.hlsl";
+            state.ShaderFileNames.PixelShaderFileName = L"Playground.hlsl";
+            state.InputLayout = InputAssemblerLayoutForVertexLayout(VertexLayout::Layout1P1N1UV1T1BT);
+            state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
+        });
     }
       
     void GBufferRenderPass::ScheduleResources(ResourceScheduler* scheduler)

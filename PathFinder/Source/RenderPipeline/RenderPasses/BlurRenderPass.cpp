@@ -10,9 +10,10 @@ namespace PathFinder
 
     void BlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-        /* auto pso = psoManager->CloneDefaultComputeState();
-         pso.SetShaders(shaderManager->LoadShaders("Blur.hlsl"));
-         psoManager->StoreComputeState(PSONames::Blur, pso, RootSignatureNames::Universal);*/
+        stateCreator->CreateComputeState(PSONames::Blur, [](ComputeStateProxy& state)
+        {
+            state.ShaderFileNames.ComputeShaderFileName = L"Blur.hlsl";
+        });
     }
 
     void BlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)

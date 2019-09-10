@@ -26,7 +26,7 @@ namespace PathFinder
     {
     public:
         ComputeShaderFileNames ShaderFileNames;
-        Foundation::Name RootSignatureName;
+        std::optional<Foundation::Name> RootSignatureName;
     };
 
     class RayTracingStateProxy

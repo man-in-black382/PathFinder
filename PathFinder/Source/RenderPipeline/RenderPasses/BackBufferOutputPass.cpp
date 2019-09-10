@@ -8,12 +8,13 @@ namespace PathFinder
 
     void BackBufferOutputPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-       /* auto pso = psoManager->CloneDefaultGraphicsState(); 
-        pso.SetShaders(shaderManager->LoadShaders("BackBufferOutput.hlsl", "BackBufferOutput.hlsl")); 
-        pso.SetRenderTargetFormats(HAL::ResourceFormat::Color::RGBA8_Usigned_Norm);
-        pso.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleStrip); 
-        pso.GetDepthStencilState().SetDepthTestEnabled(false);
-        psoManager->StoreGraphicsState(PSONames::BackBufferOutput, pso, RootSignatureNames::Universal);   */
+        stateCreator->CreateGraphicsState(PSONames::BackBufferOutput, [](GraphicsStateProxy& state)
+        {
+            state.ShaderFileNames.VertexShaderFileName = L"BackBufferOutput.hlsl";
+            state.ShaderFileNames.PixelShaderFileName = L"BackBufferOutput.hlsl";
+            state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleStrip;
+            state.DepthStencilState.SetDepthTestEnabled(false);
+        });
     }
      
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
