@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IGraphicsDevice.hpp"
+#include "GraphicCommandRecorder.hpp"
 #include "RenderSurface.hpp"
 #include "ResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
@@ -11,7 +11,7 @@
 namespace PathFinder
 {
 
-    class GraphicsDevice : public IGraphicsDevice
+    class GraphicsDevice : public GraphicCommandRecorder
     {
     public:
         GraphicsDevice(
@@ -19,6 +19,7 @@ namespace PathFinder
             ResourceStorage* resourceStorage, 
             PipelineStateManager* pipelineStateManager,
             VertexStorage* vertexStorage, 
+            RenderSurface defaultRenderSurface,
             uint8_t simultaneousFramesInFlight
         );
 
@@ -43,9 +44,12 @@ namespace PathFinder
         void ExecuteCommandsThenSignalFence(HAL::Fence& fence);
         void EndFrame(uint64_t completedFrameFenceValue);
 
+        void SetCurrentRenderPass(const RenderPass* pass);
+
     private:
         void ReapplyCommonGraphicsResourceBindings();
         void ReapplyCommonComputeResourceBindings();
+        void ApplyDefaultViewportIfNeeded();
 
         HAL::GraphicsCommandQueue mCommandQueue;
         HAL::GraphicsRingCommandList mRingCommandList;
@@ -53,6 +57,10 @@ namespace PathFinder
         ResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
         VertexStorage* mVertexStorage;
+
+        const RenderPass* mCurrentRenderPass;
+        RenderSurface mDefaultRenderSurface;
+        std::optional<HAL::Viewport> mCurrentPassViewport;
 
     public:
         inline HAL::GraphicsCommandList& CommandList() { return mRingCommandList.CurrentCommandList(); }

@@ -7,9 +7,9 @@
 namespace PathFinder
 {
 
-    struct PlaygroundCBContent
+    struct GBufferCBContent
     {
-        glm::mat4 cameraMat;
+        
     };
 
     class GBufferRenderPass : public RenderPass  

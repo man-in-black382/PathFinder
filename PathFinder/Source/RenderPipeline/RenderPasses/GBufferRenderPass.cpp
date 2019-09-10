@@ -21,23 +21,22 @@ namespace PathFinder
     { 
         scheduler->NewRenderTarget(ResourceNames::PlaygroundRenderTarget);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
-        scheduler->WillUseRootConstantBuffer<PlaygroundCBContent>();
+        scheduler->WillUseRootConstantBuffer<GBufferCBContent>();
     }  
 
     void GBufferRenderPass::Render(RenderContext* context) 
     {
-        context->GetGraphicsDevice()->ApplyPipelineState(PSONames::GBuffer);
-        context->GetGraphicsDevice()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
-        context->GetGraphicsDevice()->ClearBackBuffer(Foundation::Color::Gray());
-        context->GetGraphicsDevice()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
-        context->GetGraphicsDevice()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
-        context->GetGraphicsDevice()->SetViewport({ 1280, 720 });
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBuffer);
+        context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
+        context->GetCommandRecorder()->ClearBackBuffer(Foundation::Color::Gray());
+        context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
+        context->GetCommandRecorder()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
 
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
             context->GetScene()->IterateSubMeshes(*instance.AssosiatedMesh(), [&](const SubMesh& subMesh)
             {
-                context->GetGraphicsDevice()->Draw(subMesh.LocationInVertexStorage());
+                context->GetCommandRecorder()->Draw(subMesh.LocationInVertexStorage());
             });
         });
     }

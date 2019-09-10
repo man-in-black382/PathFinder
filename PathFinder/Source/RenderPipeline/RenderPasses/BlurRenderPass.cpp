@@ -25,8 +25,7 @@ namespace PathFinder
      
     void BlurRenderPass::Render(RenderContext* context)
     {
-        context->GetGraphicsDevice()->ApplyPipelineState(PSONames::Blur);
-        context->GetGraphicsDevice()->SetViewport({ 1280, 720 });
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::Blur);
 
         auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<BlurCBContent>();
         cbContent->BlurRadius = 20;
@@ -36,7 +35,7 @@ namespace PathFinder
         cbContent->InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::PlaygroundRenderTarget);
         cbContent->OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
 
-        context->GetGraphicsDevice()->Dispatch(5, 720, 1);
+        context->GetCommandRecorder()->Dispatch(5, 720, 1);
     }
 
 }

@@ -1,6 +1,6 @@
 struct PlaygroundPassData
 {
-    float4 Color;
+    
 };
 
 #define PassDataType PlaygroundPassData

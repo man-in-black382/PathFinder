@@ -14,7 +14,7 @@
 namespace PathFinder
 {
 
-    class IGraphicsDevice
+    class GraphicCommandRecorder
     {
     public:
         virtual void SetRenderTarget(Foundation::Name resourceName) = 0;

@@ -10,12 +10,14 @@ namespace PathFinder
         ResourceStorage* resourceManager,
         PipelineStateManager* pipelineStateManager,
         VertexStorage* vertexStorage,
+        RenderSurface defaultRenderSurface,
         uint8_t simultaneousFramesInFlight)
         :
         mCommandQueue{ device },
         mRingCommandList{ device, simultaneousFramesInFlight },
         mResourceStorage{ resourceManager },
         mPipelineStateManager{ pipelineStateManager },
+        mDefaultRenderSurface{ defaultRenderSurface },
         mVertexStorage{ vertexStorage } {}
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
@@ -87,36 +89,43 @@ namespace PathFinder
     }
     void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)
     {
+        mCurrentPassViewport = viewport;
         CommandList().SetViewport(viewport);
     }
 
     void GraphicsDevice::Draw(uint32_t vertexCount, uint32_t vertexStart)
     {
+        ApplyDefaultViewportIfNeeded();
         CommandList().Draw(vertexCount, vertexStart);
     }
 
     void GraphicsDevice::DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount)
     {
+        ApplyDefaultViewportIfNeeded();
         CommandList().DrawInstanced(vertexCount, vertexStart, instanceCount);
     }
 
     void GraphicsDevice::DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart)
     {
+        ApplyDefaultViewportIfNeeded();
         CommandList().DrawIndexed(vertexStart, indexCount, indexStart);
     }
 
     void GraphicsDevice::DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount)
     {
+        ApplyDefaultViewportIfNeeded();
         CommandList().DrawIndexedInstanced(vertexStart, indexCount, indexStart, instanceCount);
     }
 
     void GraphicsDevice::Draw(const VertexStorageLocation& vertexStorageLocation)
     {
+        ApplyDefaultViewportIfNeeded();
         CommandList().DrawIndexed(vertexStorageLocation.VertexBufferOffset, vertexStorageLocation.IndexCount, vertexStorageLocation.IndexBufferOffset);
     }
     
     void GraphicsDevice::Draw(const DrawablePrimitive& primitive)
     {
+        ApplyDefaultViewportIfNeeded();
         CommandList().SetPrimitiveTopology(primitive.Topology());
         CommandList().Draw(primitive.VertexCount(), 0);
     }
@@ -134,6 +143,12 @@ namespace PathFinder
     void GraphicsDevice::EndFrame(uint64_t completedFrameFenceValue)
     {
         mRingCommandList.ReleaseAndResetForCompletedFrames(completedFrameFenceValue);
+    }
+
+    void GraphicsDevice::SetCurrentRenderPass(const RenderPass* pass)
+    {
+        mCurrentRenderPass = pass;
+        mCurrentPassViewport = std::nullopt;
     }
 
     void GraphicsDevice::ExecuteCommandsThenSignalFence(HAL::Fence& fence)
@@ -181,6 +196,14 @@ namespace PathFinder
         if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 6);
         if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 7);
         if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 8);
+    }
+
+    void GraphicsDevice::ApplyDefaultViewportIfNeeded()
+    {
+        if (mCurrentPassViewport) return;
+           
+        mCurrentPassViewport = HAL::Viewport(mDefaultRenderSurface.Dimensions().Width, mDefaultRenderSurface.Dimensions().Height);
+        CommandList().SetViewport(*mCurrentPassViewport);
     }
 
 }

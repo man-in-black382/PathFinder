@@ -19,7 +19,7 @@ namespace PathFinder
         mShaderManager{ mExecutablePath / "Shaders/" },
         mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
         mPipelineStateCreator{ &mPipelineStateManager },
-        mGraphicsDevice{ mDevice, &mResourceStorage, &mPipelineStateManager, &mVertexStorage, mSimultaneousFramesInFlight },
+        mGraphicsDevice{ mDevice, &mResourceStorage, &mPipelineStateManager, &mVertexStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
@@ -29,7 +29,7 @@ namespace PathFinder
 
     void RenderEngine::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
     {
-        mRenderPasses.emplace_back(std::move(pass));
+        mRenderPasses.push_back(std::move(pass));
     }
 
     void RenderEngine::Schedule()
@@ -63,6 +63,7 @@ namespace PathFinder
 
         for (auto& passPtr : mRenderPasses)
         {
+            mGraphicsDevice.SetCurrentRenderPass(passPtr.get());
             mResourceStorage.SetCurrentPassName(passPtr->Name());
             TransitionResourceStates(passPtr->Name());
             passPtr->Render(&mContext);

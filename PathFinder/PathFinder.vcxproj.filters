@@ -1865,6 +1865,9 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\GraphicAPIObject.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\GraphicCommandRecorder.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">

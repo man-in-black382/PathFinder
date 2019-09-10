@@ -25,14 +25,13 @@ namespace PathFinder
 
     void BackBufferOutputPass::Render(RenderContext* context)
     {
-        context->GetGraphicsDevice()->ApplyPipelineState(PSONames::BackBufferOutput);
-        context->GetGraphicsDevice()->SetBackBufferAsRenderTarget();
-        context->GetGraphicsDevice()->SetViewport({ 1280, 720 });
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::BackBufferOutput);
+        context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
     
         auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<BackBufferOutputPassData>();
         cbContent->SourceTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
 
-        context->GetGraphicsDevice()->Draw(DrawablePrimitive::Quad());
+        context->GetCommandRecorder()->Draw(DrawablePrimitive::Quad());
     }
 
 }

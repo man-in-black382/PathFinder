@@ -336,6 +336,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\IO\Input.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
+    <ClInclude Include="Source\RenderPipeline\GraphicCommandRecorder.hpp" />
     <ClInclude Include="Source\RenderPipeline\GraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\HashSpecializations.hpp" />
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp" />
