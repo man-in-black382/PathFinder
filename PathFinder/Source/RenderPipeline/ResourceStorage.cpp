@@ -1,5 +1,6 @@
 #include "ResourceStorage.hpp"
 #include "RenderPass.hpp"
+#include "RenderPassExecutionGraph.hpp"
 
 #include "../Foundation/StringUtils.hpp"
 #include "../Foundation/Assert.hpp"
@@ -90,13 +91,15 @@ namespace PathFinder
         mPipelineResources[name].CurrentState = state;
     }
 
-    void ResourceStorage::AllocateScheduledResources()
+    void ResourceStorage::AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph)
     {
         for (auto& pair : mPipelineResourceAllocators)
         {
             PipelineResourceAllocator& allocator = pair.second;
             allocator.AllocationAction();
         }
+
+        OptimizeResourceStates(executionGraph);
     }
 
     void ResourceStorage::UseSwapChain(HAL::SwapChain& swapChain)
@@ -181,7 +184,6 @@ namespace PathFinder
                 newResourcePerPassData.OptimizedState = allocatorPerPassData.RequestedState;
             }
 
-            // OptimizeStates();
             CreateDescriptors(resourceName, allocator, *texture);
 
             newResource.mResource = std::move(texture);
@@ -201,6 +203,88 @@ namespace PathFinder
             if (perPassData.DSInserter) (mDescriptorStorage.*perPassData.DSInserter)(resourceName, texture);
             if (perPassData.SRInserter) (mDescriptorStorage.*perPassData.SRInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
             if (perPassData.UAInserter) (mDescriptorStorage.*perPassData.UAInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
+        }
+    }
+
+    void ResourceStorage::OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph)
+    {
+        for (auto& pair : mPipelineResourceAllocators)
+        {
+            ResourceName resourceName = pair.first;
+            PipelineResourceAllocator& allocator = pair.second;
+            PipelineResource& resource = mPipelineResources.at(resourceName);
+
+            auto firstPassIt = executionGraph.ExecutionOrder().end();
+            auto lastPassIt = executionGraph.ExecutionOrder().end();
+
+            HAL::ResourceState firstState = allocator.PerPassData.at((*firstPassIt)->Name()).RequestedState;
+            HAL::ResourceState lastState = allocator.PerPassData.at((*lastPassIt)->Name()).RequestedState;
+
+            bool canBeImplicitlyPromotedToFirstState = 
+
+            std::optional<HAL::ResourceState> combinedReadStates = std::nullopt;
+            HAL::ResourceState previousState = resource.Resource()->InitialStates();
+
+            // A pass on which a transition to combined read-only states will be performed
+            PassName combinedStateChangePassName = (*graphIterator)->Name();
+       
+            // Optimize transitions from first to last pass
+            for (auto passIt = firstPassIt; passIt != executionGraph.ExecutionOrder().end(); ++passIt)
+            {
+                PassName currentPassName = (*passIt)->Name();;
+                HAL::ResourceState currentRequestedState = allocator.PerPassData.at(currentPassName).RequestedState;
+
+                bool isCombiningReadStates = combinedReadStates != std::nullopt;
+                bool isCurrentStateReadOnly = HAL::IsResourceStateReadOnly(currentRequestedState);
+
+                if (isCurrentStateReadOnly)
+                {
+                    if (isCombiningReadStates)
+                    {
+                        // Accumulate read states if we're on a read-only state streak
+                        *combinedReadStates |= currentRequestedState;
+                    } 
+                    else {
+                        // This is a first read-only state in a possible sequence
+                        // Remember the pass on which the streak starts
+                        combinedStateChangePassName = currentPassName;
+
+                        // Remember the first read-only state in a streak
+                        combinedReadStates = currentRequestedState;
+                    }
+                }
+                else {
+                    if (isCombiningReadStates)
+                    {
+                        bool canBeImplicitlyPromoted = !previousState && resource.Resource()->CanImplicitlyPromoteFromCommonStateToState(*combinedReadStates);
+
+                        if (canBeImplicitlyPromoted)
+                        {
+                            previousState = combinedReadStates;
+                        } 
+                        else {
+                            // New state is not read-only, but previous is
+                            // Assign read-only transition to the correct pass
+                            resource.mPerPassData[combinedStateChangePassName].OptimizedState = combinedReadStates;
+                            
+
+                            // End read-only streak
+                            combinedReadStates = std::nullopt;
+                        }
+                    }
+
+                    bool canBeImplicitlyPromoted = !previousState && resource.Resource()->CanImplicitlyPromoteFromCommonStateToState(currentRequestedState);
+
+                    if (!canBeImplicitlyPromoted)
+                    {
+                        previousState = currentRequestedState;
+                        resource.mPerPassData[currentPassName].OptimizedState = currentRequestedState;
+                    }
+                }
+            }
+
+            // Loop last transition on current frame to the first transition on the next frame
+
         }
     }
 

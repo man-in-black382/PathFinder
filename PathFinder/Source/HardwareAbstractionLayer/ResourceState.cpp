@@ -28,5 +28,24 @@ namespace HAL
         return states;
     }
 
+    bool IsResourceStateReadOnly(ResourceState state)
+    {
+        return (EnumMaskBitSet(state, ResourceState::Common)) ||
+            (EnumMaskBitSet(state, ResourceState::PixelShaderAccess)) ||
+            (EnumMaskBitSet(state, ResourceState::NonPixelShaderAccess)) ||
+            (EnumMaskBitSet(state, ResourceState::IndirectArgument)) ||
+            (EnumMaskBitSet(state, ResourceState::CopySource)) ||
+            (EnumMaskBitSet(state, ResourceState::GenericRead)) ||
+            (EnumMaskBitSet(state, ResourceState::RaytracingAccelerationStructure)) ||
+            (EnumMaskBitSet(state, ResourceState::Predication)) ||
+            //(EnumMaskBitSet(state, ResourceState::ResolveSource)) ||
+            (EnumMaskBitSet(state, ResourceState::Present)) ||
+            (EnumMaskBitSet(state, ResourceState::DepthRead)) ||
+            (EnumMaskBitSet(state, ResourceState::VertexBuffer)) ||
+            (EnumMaskBitSet(state, ResourceState::ConstantBuffer)) ||
+            (EnumMaskBitSet(state, ResourceState::IndexBuffer));
+
+    }
+
 }
 

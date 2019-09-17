@@ -36,6 +36,8 @@ namespace HAL
         virtual ~Resource() = 0;
 
         virtual D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress() const;
+        virtual bool CanImplicitlyPromoteFromCommonStateToState(HAL::ResourceState state) const;
+        virtual bool CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const;
 
     protected:
         Resource(
@@ -47,6 +49,8 @@ namespace HAL
         );
 
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
+        ResourceState mInitialStates;
+        ResourceState mExpectedStates;
 
     private:
         D3D12_RESOURCE_DESC mDescription{};
@@ -56,6 +60,8 @@ namespace HAL
     public:
         inline ID3D12Resource* D3DPtr() const { return mResource.Get(); }
         inline const D3D12_RESOURCE_DESC& D3DDescription() const { return mDescription; };
+        inline ResourceState InitialStates() const { return mInitialStates; };
+        inline ResourceState ExpectedStates() const { return mExpectedStates; };
     };
 
 }

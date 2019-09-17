@@ -227,6 +227,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceStorage.cpp" />
@@ -346,6 +347,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\PipelineStateProxy.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
@@ -791,6 +793,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </ClInclude>
     <None Include="Libs\dxcompiler.dll" />
     <None Include="Libs\dxil.dll" />
+    <None Include="Source\HardwareAbstractionLayer\BufferResource.inl" />
     <None Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.inl" />
     <None Include="Source\ThirdParty\assimp\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\color4.inl" />

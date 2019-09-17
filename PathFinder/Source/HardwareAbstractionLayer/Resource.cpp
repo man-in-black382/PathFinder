@@ -16,7 +16,9 @@ namespace HAL
         ResourceState expectedStateMask,
         std::optional<CPUAccessibleHeapType> heapType)
         :
-        mDescription(format.D3DResourceDescription())
+        mDescription{ format.D3DResourceDescription() },
+        mInitialStates{ initialStateMask },
+        mExpectedStates{ expectedStateMask }
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
         D3D12_RESOURCE_STATES initialStates = D3DResourceState(initialStateMask);
@@ -58,6 +60,16 @@ namespace HAL
     D3D12_GPU_VIRTUAL_ADDRESS Resource::GPUVirtualAddress() const
     {
         return mResource->GetGPUVirtualAddress();
+    }
+
+    bool Resource::CanImplicitlyPromoteFromCommonStateToState(ResourceState state) const
+    {
+        return false;
+    }
+
+    bool Resource::CanImplicitlyDecayToCommonStateFromState(ResourceState state) const
+    {
+        return false;
     }
 
     void Resource::SetExpectedUsageFlags(ResourceState stateMask)

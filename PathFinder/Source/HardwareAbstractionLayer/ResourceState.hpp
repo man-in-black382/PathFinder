@@ -33,6 +33,8 @@ namespace HAL
         IndexBuffer                     = 1 << 19
     };
 
+    bool IsResourceStateReadOnly(ResourceState state);
+
     D3D12_RESOURCE_STATES D3DResourceState(ResourceState state);
 
 }

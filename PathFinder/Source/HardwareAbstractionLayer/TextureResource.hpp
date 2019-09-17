@@ -23,6 +23,9 @@ namespace HAL
 
         bool IsArray() const;
 
+        virtual bool CanImplicitlyPromoteFromCommonStateToState(HAL::ResourceState state) const override;
+        virtual bool CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const override;
+
     protected:
         Geometry::Dimensions mDimensions;
         ResourceFormat::FormatVariant mFormat;

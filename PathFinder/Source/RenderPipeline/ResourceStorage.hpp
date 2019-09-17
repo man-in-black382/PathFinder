@@ -23,6 +23,7 @@ namespace PathFinder
 {
 
     class RenderPass;
+    class RenderPassExecutionGraph;
 
     using ResourceName = Foundation::Name;
     using PassName = Foundation::Name;
@@ -66,7 +67,7 @@ namespace PathFinder
 
         struct PerPassEntities
         {
-            std::optional<HAL::ResourceState> OptimizedState;
+            std::optional<HAL::ResourceTransitionBarrier> StateTransition;
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
             bool IsRTDescriptorRequested = false;
             bool IsDSDescriptorRequested = false;
@@ -114,7 +115,7 @@ namespace PathFinder
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(PassName passName);
         void SetCurrentStateForResource(ResourceName name, HAL::ResourceState state);
-        void AllocateScheduledResources(); 
+        void AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph);
         void UseSwapChain(HAL::SwapChain& swapChain);
 
         const ResourceDescriptorStorage& DescriptorStorage() const;
@@ -145,7 +146,9 @@ namespace PathFinder
         );
 
         void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture);
-
+        
+        void OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph);
+        
         template <class BufferDataT> void AllocateRootConstantBufferIfNeeded();
 
         HAL::Device* mDevice;

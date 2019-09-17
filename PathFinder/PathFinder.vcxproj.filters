@@ -309,6 +309,9 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\GraphicAPIObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1868,6 +1871,9 @@
     <ClInclude Include="Source\RenderPipeline\GraphicCommandRecorder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2320,6 +2326,9 @@
     </None>
     <None Include="Libs\dxcompiler.dll" />
     <None Include="Libs\dxil.dll" />
+    <None Include="Source\HardwareAbstractionLayer\BufferResource.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
