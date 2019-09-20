@@ -28,7 +28,7 @@ namespace PathFinder
             resourceName, format, *props.Kind, *props.Dimensions, clearValue
         );
 
-        auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
 
@@ -37,7 +37,7 @@ namespace PathFinder
             passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
         }
 
-        allocator->Format = format;
+        allocator->mFormat = format;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -55,11 +55,11 @@ namespace PathFinder
             resourceName, *props.Format, HAL::ResourceFormat::TextureKind::Texture2D, *props.Dimensions, clearValue
         );
 
-        auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
 
-        allocator->Format = *props.Format;
+        allocator->mFormat = *props.Format;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -84,7 +84,7 @@ namespace PathFinder
             resourceName, format, *props.Kind, *props.Dimensions, clearValue
         );
 
-        auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
 
@@ -93,7 +93,7 @@ namespace PathFinder
             passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
         }
 
-        allocator->Format = format;
+        allocator->mFormat = format;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -110,12 +110,12 @@ namespace PathFinder
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot use non-scheduled render target");
 
         PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
 
@@ -132,9 +132,9 @@ namespace PathFinder
 
         PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->Format), "Cannot reuse non-depth-stencil texture");
+        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->mFormat), "Cannot reuse non-depth-stencil texture");
 
-        auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
 
@@ -149,15 +149,15 @@ namespace PathFinder
 
         PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
-        if (std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->Format))
+        if (std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->mFormat))
         {
             passData.RequestedState |= HAL::ResourceState::DepthRead;
         } 
@@ -181,12 +181,12 @@ namespace PathFinder
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot read/write non-scheduled texture");
 
         PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->PerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
 

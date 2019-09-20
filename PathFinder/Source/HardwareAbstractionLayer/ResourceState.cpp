@@ -30,8 +30,7 @@ namespace HAL
 
     bool IsResourceStateReadOnly(ResourceState state)
     {
-        return (EnumMaskBitSet(state, ResourceState::Common)) ||
-            (EnumMaskBitSet(state, ResourceState::PixelShaderAccess)) ||
+        return (EnumMaskBitSet(state, ResourceState::PixelShaderAccess)) ||
             (EnumMaskBitSet(state, ResourceState::NonPixelShaderAccess)) ||
             (EnumMaskBitSet(state, ResourceState::IndirectArgument)) ||
             (EnumMaskBitSet(state, ResourceState::CopySource)) ||

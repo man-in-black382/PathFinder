@@ -30,6 +30,7 @@ namespace PathFinder
     void RenderEngine::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
     {
         mRenderPasses.push_back(std::move(pass));
+        mPassExecutionGraph.AddPass(mRenderPasses.back().get());
     }
 
     void RenderEngine::Schedule()
@@ -41,7 +42,7 @@ namespace PathFinder
             passPtr->ScheduleResources(&mResourceScheduler);
         }
 
-        mResourceStorage.AllocateScheduledResources();
+        mResourceStorage.AllocateScheduledResources(mPassExecutionGraph);
         mPipelineStateManager.CompileStates();
     }
 
@@ -98,7 +99,7 @@ namespace PathFinder
 
     void RenderEngine::TransitionResourceStates(PassName passName)
     {
-        for (ResourceName resourceName : mResourceStorage.ScheduledResourceNamesForCurrentPass())
+        /*for (ResourceName resourceName : mResourceStorage.ScheduledResourceNamesForCurrentPass())
         {
             PipelineResource* pipelineResource = mResourceStorage.GetPipelineResource(resourceName);
 
@@ -116,7 +117,7 @@ namespace PathFinder
                 mGraphicsDevice.CommandList().TransitionResourceState({ currentState, nextState, pipelineResource->Resource() });
                 pipelineResource->CurrentState = nextState;
             }
-        }
+        }*/
     }
 
     void RenderEngine::UpdateCommonRootConstants()

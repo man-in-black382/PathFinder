@@ -21,6 +21,7 @@
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
 #include "PipelineStateCreator.hpp"
+#include "RenderPassExecutionGraph.hpp"
 
 namespace PathFinder
 {
@@ -60,6 +61,7 @@ namespace PathFinder
         PipelineStateCreator mPipelineStateCreator;
         GraphicsDevice mGraphicsDevice;
         RenderContext mContext;  
+        RenderPassExecutionGraph mPassExecutionGraph;
 
         HAL::SwapChain mSwapChain;
 

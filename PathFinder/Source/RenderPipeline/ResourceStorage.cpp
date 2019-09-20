@@ -96,7 +96,7 @@ namespace PathFinder
         for (auto& pair : mPipelineResourceAllocators)
         {
             PipelineResourceAllocator& allocator = pair.second;
-            allocator.AllocationAction();
+            allocator.mAllocationAction();
         }
 
         OptimizeResourceStates(executionGraph);
@@ -158,10 +158,10 @@ namespace PathFinder
 
         PipelineResourceAllocator& allocator = mPipelineResourceAllocators[resourceName];
 
-        allocator.AllocationAction = [=, &allocator]()
+        allocator.mAllocationAction = [=, &allocator]()
         {
             HAL::ResourceState expectedStates = allocator.GatherExpectedStates();
-            HAL::ResourceState initialState = allocator.PerPassData[passThatRequestedAllocation].RequestedState;
+            HAL::ResourceState initialState = allocator.mPerPassData[passThatRequestedAllocation].RequestedState;
             
             auto texture = std::make_unique<HAL::TextureResource>(
                 *mDevice, format, kind, dimensions, optimizedClearValue, initialState, expectedStates);
@@ -171,7 +171,7 @@ namespace PathFinder
             PipelineResource newResource;
             newResource.CurrentState = initialState;
 
-            for (auto& pair : allocator.PerPassData)
+            for (auto& pair : allocator.mPerPassData)
             {
                 PassName passName = pair.first;
                 PipelineResourceAllocator::PerPassEntities& allocatorPerPassData = pair.second;
@@ -181,7 +181,6 @@ namespace PathFinder
                 newResourcePerPassData.IsDSDescriptorRequested = allocatorPerPassData.DSInserter != nullptr;
                 newResourcePerPassData.IsSRDescriptorRequested = allocatorPerPassData.SRInserter != nullptr;
                 newResourcePerPassData.IsUADescriptorRequested = allocatorPerPassData.UAInserter != nullptr;
-                newResourcePerPassData.OptimizedState = allocatorPerPassData.RequestedState;
             }
 
             CreateDescriptors(resourceName, allocator, *texture);
@@ -195,7 +194,7 @@ namespace PathFinder
 
     void ResourceStorage::CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture)
     {
-        for (const auto& pair : allocator.PerPassData)
+        for (const auto& pair : allocator.mPerPassData)
         {
             const PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
 
@@ -214,75 +213,82 @@ namespace PathFinder
             PipelineResourceAllocator& allocator = pair.second;
             PipelineResource& resource = mPipelineResources.at(resourceName);
 
-            auto firstPassIt = executionGraph.ExecutionOrder().end();
-            auto lastPassIt = executionGraph.ExecutionOrder().end();
+            PassName stateTransitionPassName;
+            HAL::ResourceState stateSequence = HAL::ResourceState::Common;
 
-            HAL::ResourceState firstState = allocator.PerPassData.at((*firstPassIt)->Name()).RequestedState;
-            HAL::ResourceState lastState = allocator.PerPassData.at((*lastPassIt)->Name()).RequestedState;
+            bool canImplicitlyPromote = true;
+            bool canImplicitlyDecay = true;
+            bool firstSequenceFound = false;
 
-            bool canBeImplicitlyPromotedToFirstState = 
+            std::vector<PassName> currentResourceRelevantPassNames;
+            std::vector<std::pair<PassName, HAL::ResourceState>> optimizedStateChain;
 
-            std::optional<HAL::ResourceState> combinedReadStates = std::nullopt;
-            HAL::ResourceState previousState = resource.Resource()->InitialStates();
-
-            // A pass on which a transition to combined read-only states will be performed
-            PassName combinedStateChangePassName = (*graphIterator)->Name();
-       
-            // Optimize transitions from first to last pass
-            for (auto passIt = firstPassIt; passIt != executionGraph.ExecutionOrder().end(); ++passIt)
+            for (const RenderPass* pass : executionGraph.ExecutionOrder())
             {
-                PassName currentPassName = (*passIt)->Name();;
-                HAL::ResourceState currentRequestedState = allocator.PerPassData.at(currentPassName).RequestedState;
-
-                bool isCombiningReadStates = combinedReadStates != std::nullopt;
-                bool isCurrentStateReadOnly = HAL::IsResourceStateReadOnly(currentRequestedState);
-
-                if (isCurrentStateReadOnly)
+                if (allocator.GetPerPassData(pass->Name()))
                 {
-                    if (isCombiningReadStates)
-                    {
-                        // Accumulate read states if we're on a read-only state streak
-                        *combinedReadStates |= currentRequestedState;
-                    } 
-                    else {
-                        // This is a first read-only state in a possible sequence
-                        // Remember the pass on which the streak starts
-                        combinedStateChangePassName = currentPassName;
-
-                        // Remember the first read-only state in a streak
-                        combinedReadStates = currentRequestedState;
-                    }
-                }
-                else {
-                    if (isCombiningReadStates)
-                    {
-                        bool canBeImplicitlyPromoted = !previousState && resource.Resource()->CanImplicitlyPromoteFromCommonStateToState(*combinedReadStates);
-
-                        if (canBeImplicitlyPromoted)
-                        {
-                            previousState = combinedReadStates;
-                        } 
-                        else {
-                            // New state is not read-only, but previous is
-                            // Assign read-only transition to the correct pass
-                            resource.mPerPassData[combinedStateChangePassName].OptimizedState = combinedReadStates;
-                            
-
-                            // End read-only streak
-                            combinedReadStates = std::nullopt;
-                        }
-                    }
-
-                    bool canBeImplicitlyPromoted = !previousState && resource.Resource()->CanImplicitlyPromoteFromCommonStateToState(currentRequestedState);
-
-                    if (!canBeImplicitlyPromoted)
-                    {
-                        previousState = currentRequestedState;
-                        resource.mPerPassData[currentPassName].OptimizedState = currentRequestedState;
-                    }
+                    currentResourceRelevantPassNames.push_back(pass->Name());
                 }
             }
 
+            // Gather first state sequence
+            for (auto relevantPassIdx = 0u; relevantPassIdx < currentResourceRelevantPassNames.size(); ++relevantPassIdx)
+            {
+                PassName currentPassName = currentResourceRelevantPassNames[relevantPassIdx];
+                auto perPassData = allocator.GetPerPassData(currentPassName);
+
+                bool isLastPass = relevantPassIdx == currentResourceRelevantPassNames.size() - 1;
+
+                // Is state read-only
+                if (HAL::IsResourceStateReadOnly(perPassData->RequestedState))
+                {
+                    if (HAL::IsResourceStateReadOnly(stateSequence))
+                    {
+                        // If previous state was read-only, then combine next with previous
+                        stateSequence |= perPassData->RequestedState;
+                    }
+                    else {
+                        // This is a first read-only state in a possible read-only sequence
+                        stateSequence = perPassData->RequestedState;
+                        stateTransitionPassName = currentPassName;
+                    }
+
+                    
+                    if (!isLastPass)
+                    {
+                        // If next state is not read-only then this sequence should be dumped
+                        PassName nextPassName = currentResourceRelevantPassNames[relevantPassIdx + 1];
+                        auto nextPerPassData = allocator.GetPerPassData(nextPassName);
+
+                        if (!HAL::IsResourceStateReadOnly(nextPerPassData->RequestedState))
+                        {
+                            optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
+                        }
+                    } 
+                    else {
+                        // If there is no next state then this sequence definitely should be dumped
+                        optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
+                    }
+                }
+                else {
+                    stateSequence = perPassData->RequestedState;
+                    stateTransitionPassName = currentPassName;
+
+                    optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
+                }
+
+                if (!firstSequenceFound)
+                {
+                    canImplicitlyPromote = resource.Resource()->CanImplicitlyPromoteFromCommonStateToState(stateSequence);
+                    firstSequenceFound = true;
+                }
+
+                if (isLastPass)
+                {
+                    canImplicitlyDecay = resource.Resource()->CanImplicitlyDecayToCommonStateFromState(stateSequence);
+                }
+            }
+                
             // Loop last transition on current frame to the first transition on the next frame
 
         }
@@ -321,13 +327,27 @@ namespace PathFinder
     {
         HAL::ResourceState expectedStates = HAL::ResourceState::Common;
 
-        for (const auto& pair : PerPassData)
+        for (const auto& pair : mPerPassData)
         {
             const PerPassEntities& perPassData = pair.second;
             expectedStates |= perPassData.RequestedState;
         }
 
         return expectedStates;
+    }
+
+    std::optional<PipelineResourceAllocator::PerPassEntities> PipelineResourceAllocator::GetPerPassData(PassName passName) const
+    {
+        auto it = mPerPassData.find(passName);
+        if (it == mPerPassData.end()) return std::nullopt;
+        return it->second;
+    }
+
+    std::optional<PipelineResource::PerPassEntities> PipelineResource::GetPerPassData(PassName passName) const
+    {
+        auto it = mPerPassData.find(passName);
+        if (it == mPerPassData.end()) return std::nullopt;
+        return it->second;
     }
 
 }

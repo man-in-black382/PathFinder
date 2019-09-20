@@ -49,12 +49,13 @@ namespace PathFinder
             TextureUADescriptorInserterPtr UAInserter = nullptr;
         };
 
-    private:
         HAL::ResourceState GatherExpectedStates() const;
+        std::optional<PerPassEntities> GetPerPassData(PassName passName) const;
 
-        HAL::ResourceFormat::FormatVariant Format;
-        std::function<void()> AllocationAction;
-        std::unordered_map<PassName, PerPassEntities> PerPassData;
+    private:
+        HAL::ResourceFormat::FormatVariant mFormat;
+        std::function<void()> mAllocationAction;
+        std::unordered_map<PassName, PerPassEntities> mPerPassData;
     };
 
 
@@ -77,19 +78,14 @@ namespace PathFinder
 
         HAL::ResourceState CurrentState;
 
+        std::optional<PerPassEntities> GetPerPassData(PassName passName) const;
+
     private:
         std::unique_ptr<HAL::Resource> mResource;
         std::unordered_map<PassName, PerPassEntities> mPerPassData;
 
     public:
         const HAL::Resource* Resource() const { return mResource.get(); }
-
-        std::optional<PerPassEntities> GetPerPassData(PassName passName) const
-        {
-            auto it = mPerPassData.find(passName);
-            if (it == mPerPassData.end()) return std::nullopt;
-            return it->second;
-        };
     };
 
 
@@ -146,9 +142,7 @@ namespace PathFinder
         );
 
         void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture);
-        
         void OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph);
-        
         template <class BufferDataT> void AllocateRootConstantBufferIfNeeded();
 
         HAL::Device* mDevice;

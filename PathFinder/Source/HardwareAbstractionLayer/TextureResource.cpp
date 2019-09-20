@@ -51,17 +51,27 @@ namespace HAL
         // Simultaneous-Access Textures are able to be explicitly promoted 
         // to a larger number of states.
         // Promotes from common to these states:
-        return EnumMaskBitSet(state, ResourceState::NonPixelShaderAccess) ||
-            EnumMaskBitSet(state, ResourceState::PixelShaderAccess) ||
-            EnumMaskBitSet(state, ResourceState::CopyDestination) ||
-            EnumMaskBitSet(state, ResourceState::CopySource);
+        //
+        ResourceState compatibleStatesMask =
+            ResourceState::NonPixelShaderAccess |
+            ResourceState::PixelShaderAccess |
+            ResourceState::CopyDestination |
+            ResourceState::CopySource;
+
+        return EnumMaskBitSet(compatibleStatesMask, state);
     }
 
     bool TextureResource::CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const
     {
         // Decay rules for Simultaneous-Access Textures are not considered at the moment.
         // Decays to common from any read-only state
-        return IsResourceStateReadOnly(state);
+        //
+        ResourceState compatibleStatesMask =
+            ResourceState::NonPixelShaderAccess |
+            ResourceState::PixelShaderAccess |
+            ResourceState::CopySource;
+
+        return EnumMaskBitSet(compatibleStatesMask, state);
     }
 
 }
