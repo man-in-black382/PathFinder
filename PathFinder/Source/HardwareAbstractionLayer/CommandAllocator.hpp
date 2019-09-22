@@ -24,10 +24,10 @@ namespace HAL
     };
 
 
-    class DirectCommandAllocator : public CommandAllocator {
+    class GraphicsCommandAllocator : public CommandAllocator {
     public:
-        DirectCommandAllocator(const Device& device);
-        ~DirectCommandAllocator() = default;
+        GraphicsCommandAllocator(const Device& device);
+        ~GraphicsCommandAllocator() = default;
     };
 
     class BundleCommandAllocator : public CommandAllocator {

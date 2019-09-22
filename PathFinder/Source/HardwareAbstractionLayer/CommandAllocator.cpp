@@ -16,7 +16,7 @@ namespace HAL
         ThrowIfFailed(mAllocator->Reset());
     }
 
-    DirectCommandAllocator::DirectCommandAllocator(const Device& device)
+    GraphicsCommandAllocator::GraphicsCommandAllocator(const Device& device)
         : CommandAllocator(device, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
 
     CopyCommandAllocator::CopyCommandAllocator(const Device& device)

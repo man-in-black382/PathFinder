@@ -23,9 +23,14 @@ namespace HAL
 
 
 
-    void CopyCommandListBase::TransitionResourceState(const ResourceTransitionBarrier& barrier)
+    void CopyCommandListBase::InsertBarrier(const ResourceBarrier& barrier)
     {
         mList->ResourceBarrier(1, &barrier.D3DBarrier());
+    }
+
+    void CopyCommandListBase::InsertBarriers(const ResourceBarrierCollection& collection)
+    {
+        mList->ResourceBarrier(collection.BarrierCount(), collection.D3DBarriers());
     }
 
     void CopyCommandListBase::CopyResource(const Resource& source, Resource& destination)
@@ -185,7 +190,7 @@ namespace HAL
 
 
 
-    GraphicsCommandList::GraphicsCommandList(const Device& device, const DirectCommandAllocator& allocator)
+    GraphicsCommandList::GraphicsCommandList(const Device& device, const GraphicsCommandAllocator& allocator)
         : GraphicsCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
 
     void GraphicsCommandList::ExecuteBundle(const BundleCommandList& bundle)

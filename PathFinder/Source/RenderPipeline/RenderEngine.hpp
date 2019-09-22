@@ -39,7 +39,6 @@ namespace PathFinder
     private:
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
         void MoveToNextBackBuffer();
-        void TransitionResourceStates(PassName passName);
         void UpdateCommonRootConstants();
 
         uint8_t mCurrentBackBufferIndex = 0;

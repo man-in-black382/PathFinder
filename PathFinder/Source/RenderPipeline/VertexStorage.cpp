@@ -92,16 +92,12 @@ namespace PathFinder
         if (uploadBuffers.VertexBuffer && finalBuffers.VertexBuffer)
         {
             mCommandList.CopyBufferRegion(*uploadBuffers.VertexBuffer, *finalBuffers.VertexBuffer, 0, uploadBuffers.CurrentVertexOffset, 0);
-            mCommandList.TransitionResourceState({ HAL::ResourceState::CopyDestination, HAL::ResourceState::VertexBuffer, finalBuffers.VertexBuffer.get() });
-
             finalBuffers.VertexBufferDescriptor = std::make_unique<HAL::VertexBufferDescriptor>(*finalBuffers.VertexBuffer);
         }
-        
+
         if (uploadBuffers.IndexBuffer && finalBuffers.IndexBuffer)
         {
             mCommandList.CopyBufferRegion(*uploadBuffers.IndexBuffer, *finalBuffers.IndexBuffer, 0, uploadBuffers.CurrentIndexOffset, 0);
-            mCommandList.TransitionResourceState({ HAL::ResourceState::CopyDestination, HAL::ResourceState::IndexBuffer, finalBuffers.IndexBuffer.get() });
-
             finalBuffers.IndexBufferDescriptor = std::make_unique<HAL::IndexBufferDescriptor>(*finalBuffers.IndexBuffer, HAL::ResourceFormat::Color::R32_Unsigned);
         }
         

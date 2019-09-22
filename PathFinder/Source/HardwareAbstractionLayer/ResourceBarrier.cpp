@@ -20,5 +20,10 @@ namespace HAL
         mDesc.Transition.pResource = resource->D3DPtr();
     }
 
+    void ResourceBarrierCollection::AddBarrier(const ResourceBarrier& barrier)
+    {
+        mD3DBarriers.push_back(barrier.D3DBarrier());
+    }
+
 }
 

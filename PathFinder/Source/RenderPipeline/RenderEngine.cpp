@@ -44,6 +44,7 @@ namespace PathFinder
 
         mResourceStorage.AllocateScheduledResources(mPassExecutionGraph);
         mPipelineStateManager.CompileStates();
+        mGraphicsDevice.CommandList().InsertBarriers(mResourceStorage.OneTimeResourceBarriers());
     }
 
     void RenderEngine::Render()
@@ -58,20 +59,20 @@ namespace PathFinder
 
         HAL::TextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
 
-        mGraphicsDevice.CommandList().TransitionResourceState(
-            { HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer }
+        mGraphicsDevice.CommandList().InsertBarrier(
+            HAL::ResourceTransitionBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer }
         );
 
         for (auto& passPtr : mRenderPasses)
         {
             mGraphicsDevice.SetCurrentRenderPass(passPtr.get());
             mResourceStorage.SetCurrentPassName(passPtr->Name());
-            TransitionResourceStates(passPtr->Name());
+            mGraphicsDevice.CommandList().InsertBarriers(mResourceStorage.ResourceBarriersForCurrentPass());
             passPtr->Render(&mContext);
         }
 
-        mGraphicsDevice.CommandList().TransitionResourceState(
-            { HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer }
+        mGraphicsDevice.CommandList().InsertBarrier(
+            HAL::ResourceTransitionBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer }
         );
 
         mGraphicsDevice.ExecuteCommandsThenSignalFence(mFrameFence);
@@ -95,29 +96,6 @@ namespace PathFinder
     {
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % mSwapChain.BackBuffers().size();
         mResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
-    }
-
-    void RenderEngine::TransitionResourceStates(PassName passName)
-    {
-        /*for (ResourceName resourceName : mResourceStorage.ScheduledResourceNamesForCurrentPass())
-        {
-            PipelineResource* pipelineResource = mResourceStorage.GetPipelineResource(resourceName);
-
-            if (!pipelineResource) continue;
-
-            HAL::ResourceState currentState = pipelineResource->CurrentState;
-            auto perPassData = pipelineResource->GetPerPassData(passName);
-
-            if (!perPassData || !perPassData->OptimizedState) continue;
-
-            HAL::ResourceState nextState = *perPassData->OptimizedState;
-
-            if (currentState != nextState)
-            {
-                mGraphicsDevice.CommandList().TransitionResourceState({ currentState, nextState, pipelineResource->Resource() });
-                pipelineResource->CurrentState = nextState;
-            }
-        }*/
     }
 
     void RenderEngine::UpdateCommonRootConstants()

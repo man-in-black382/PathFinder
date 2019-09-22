@@ -47,8 +47,14 @@ namespace HAL
     public:
         using CommandList::CommandList;
 
-        void TransitionResourceState(const ResourceTransitionBarrier& barrier);
+        void InsertBarrier(const ResourceBarrier& barrier);
+        void InsertBarriers(const ResourceBarrierCollection& collection);
         void CopyResource(const Resource& source, Resource& destination);
+
+        template <class T>
+        void CopyBufferRegion(
+            const BufferResource<T>& source, BufferResource<T>& destination,
+            uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
 
         void CopyTextureRegion(
             const TextureResource& source, TextureResource& destination,
@@ -56,22 +62,6 @@ namespace HAL
             const glm::ivec3& sourceOrigin, const glm::ivec3& destinationOrigin,
             const Geometry::Dimensions& regionDimensions
         );
-
-        template <class T> 
-        void CopyBufferRegion(
-            const BufferResource<T>& source, BufferResource<T>& destination,
-            uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset)
-        {
-            if (source.PaddedElementSize() != destination.PaddedElementSize()) {
-                throw std::runtime_error("Buffers are misaligned. Copy will lay out data incorrectly.");
-            }
-
-            auto sourceOffsetInBytes = source.PaddedElementSize() * sourceOffset;
-            auto destinationOffsetInBytes = destination.PaddedElementSize() * destinationOffset;
-            auto regionSizeInBytes = source.PaddedElementSize() * objectCount;
-
-            mList->CopyBufferRegion(destination.D3DPtr(), destinationOffsetInBytes, source.D3DPtr(), sourceOffsetInBytes, regionSizeInBytes);
-        }
     };
 
 
@@ -93,19 +83,6 @@ namespace HAL
 
         void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
     };
-
-    template <class... Descriptors>
-    void ComputeCommandListBase::SetDescriptorHeap(const DescriptorHeap<Descriptors...>& heap)
-    {
-        auto ptr = heap.D3DHeap();
-        mList->SetDescriptorHeaps(1, (ID3D12DescriptorHeap* const*)&ptr);
-    }
-
-    template <class T>
-    void ComputeCommandListBase::SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex)
-    {
-        mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
-    }
 
 
 
@@ -131,12 +108,6 @@ namespace HAL
         void SetGraphicsRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex);
     };
 
-    template <class T>
-    void GraphicsCommandListBase::SetGraphicsRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex)
-    {
-        mList->SetGraphicsRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
-    }
-
 
 
     class CopyCommandList : public CopyCommandListBase {
@@ -161,7 +132,7 @@ namespace HAL
 
     class GraphicsCommandList : public GraphicsCommandListBase {
     public:
-        GraphicsCommandList(const Device& device, const DirectCommandAllocator& allocator);
+        GraphicsCommandList(const Device& device, const GraphicsCommandAllocator& allocator);
         ~GraphicsCommandList() = default;
 
         void ExecuteBundle(const BundleCommandList& bundle);
@@ -175,3 +146,4 @@ namespace HAL
     };
 }
 
+#include "CommandList.inl"

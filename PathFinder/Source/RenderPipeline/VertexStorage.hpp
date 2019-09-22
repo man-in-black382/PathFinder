@@ -71,9 +71,9 @@ namespace PathFinder
         std::tuple<FinalBufferPackage<Vertex1P1N1UV1T1BT>, FinalBufferPackage<Vertex1P1N1UV>, FinalBufferPackage<Vertex1P3>> mFinalBuffers;
 
         HAL::Device* mDevice;
-        HAL::DirectCommandAllocator mCommandAllocator;
-        HAL::GraphicsCommandList mCommandList;
-        HAL::GraphicsCommandQueue mCommandQueue;
+        HAL::CopyCommandAllocator mCommandAllocator;
+        HAL::CopyCommandList mCommandList;
+        HAL::CopyCommandQueue mCommandQueue;
         HAL::Fence mFence;
     };
 

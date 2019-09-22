@@ -2,6 +2,7 @@
 
 #include <wrl.h>
 #include <d3d12.h>
+#include <vector>
 
 #include "Resource.hpp"
 
@@ -35,6 +36,22 @@ namespace HAL
         inline const auto BeforeStates() const { return mBeforeStates; }
         inline const auto AfterStates() const { return mAfterStates; }
     };
+
+
+
+    class ResourceBarrierCollection
+    {
+    public:
+        void AddBarrier(const ResourceBarrier& barrier);
+
+    private:
+        std::vector<D3D12_RESOURCE_BARRIER> mD3DBarriers;
+
+    public:
+        inline const D3D12_RESOURCE_BARRIER* D3DBarriers() const { return mD3DBarriers.data(); }
+        inline const size_t BarrierCount() const { return mD3DBarriers.size(); }
+    };
+
 
 }
 

@@ -68,7 +68,6 @@ namespace PathFinder
 
         struct PerPassEntities
         {
-            std::optional<HAL::ResourceTransitionBarrier> StateTransition;
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
             bool IsRTDescriptorRequested = false;
             bool IsDSDescriptorRequested = false;
@@ -76,13 +75,13 @@ namespace PathFinder
             bool IsUADescriptorRequested = false;
         };
 
-        HAL::ResourceState CurrentState;
-
         std::optional<PerPassEntities> GetPerPassData(PassName passName) const;
+        std::optional<HAL::ResourceTransitionBarrier> GetStateTransition() const;
 
     private:
         std::unique_ptr<HAL::Resource> mResource;
         std::unordered_map<PassName, PerPassEntities> mPerPassData;
+        std::optional<HAL::ResourceTransitionBarrier> mOneTimeStateTransition;
 
     public:
         const HAL::Resource* Resource() const { return mResource.get(); }
@@ -110,7 +109,6 @@ namespace PathFinder
         
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(PassName passName);
-        void SetCurrentStateForResource(ResourceName name, HAL::ResourceState state);
         void AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph);
         void UseSwapChain(HAL::SwapChain& swapChain);
 
@@ -123,15 +121,27 @@ namespace PathFinder
         const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         PipelineResource* GetPipelineResource(ResourceName resourceName);
+        const HAL::ResourceBarrierCollection& OneTimeResourceBarriers() const;
+        const HAL::ResourceBarrierCollection& ResourceBarriersForCurrentPass();
 
     private:
         const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };
 
     private:
         bool IsResourceAllocationScheduled(ResourceName name) const;
+
         void RegisterResourceNameForCurrentPass(ResourceName name);
 
         PipelineResourceAllocator* GetResourceAllocator(ResourceName name);
+
+        void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture);
+
+        void OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph);
+
+        std::vector<std::pair<PassName, HAL::ResourceState>> CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocator& allocator);
+        
+        template <class BufferDataT> 
+        void AllocateRootConstantBufferIfNeeded();
 
         PipelineResourceAllocator* QueueTextureAllocationIfNeeded(
             ResourceName resourceName,
@@ -140,10 +150,6 @@ namespace PathFinder
             const Geometry::Dimensions& dimensions,
             const HAL::ResourceFormat::ClearValue& optimizedClearValue
         );
-
-        void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture);
-        void OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph);
-        template <class BufferDataT> void AllocateRootConstantBufferIfNeeded();
 
         HAL::Device* mDevice;
 
@@ -154,6 +160,7 @@ namespace PathFinder
         PassName mCurrentPassName;
 
         // Amount of frames to be scheduled until a CPU wait is required.
+        // To be used by ring buffers.
         uint8_t mSimultaneousFramesInFlight;
 
         // Manages descriptor heaps
@@ -166,16 +173,28 @@ namespace PathFinder
         // Constant buffers for each pass that require it.
         std::unordered_map<PassName, std::unique_ptr<HAL::RingBufferResource<uint8_t>>> mPerPassConstantBuffers;
         
+        // Resource names scheduled for each pass
         std::unordered_map<PassName, std::unordered_set<ResourceName>> mPerPassResourceNames;
 
+        // Allocations info for each resource
         std::unordered_map<ResourceName, PipelineResourceAllocator> mPipelineResourceAllocators;
 
+        // Allocated pipeline resources
         std::unordered_map<ResourceName, PipelineResource> mPipelineResources;
 
+        // Resource barriers for each pass
+        std::unordered_map<PassName, HAL::ResourceBarrierCollection> mPerPassResourceBarriers;
+
+        // Constant buffer for global data that changes rarely
         HAL::RingBufferResource<GlobalRootConstants> mGlobalRootConstantsBuffer;
 
+        // Constant buffer for data that changes every frame
         HAL::RingBufferResource<PerFrameRootConstants> mPerFrameRootConstantsBuffer;
 
+        // Resource barriers to be performed once as initial state setup
+        HAL::ResourceBarrierCollection mOneTimeResourceBarriers;
+
+        // 
         uint8_t mCurrentBackBufferIndex = 0;
     };
 

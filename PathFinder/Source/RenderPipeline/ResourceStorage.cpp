@@ -86,11 +86,6 @@ namespace PathFinder
         mCurrentPassName = passName;
     }
 
-    void ResourceStorage::SetCurrentStateForResource(ResourceName name, HAL::ResourceState state)
-    {
-        mPipelineResources[name].CurrentState = state;
-    }
-
     void ResourceStorage::AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph)
     {
         for (auto& pair : mPipelineResourceAllocators)
@@ -137,7 +132,8 @@ namespace PathFinder
 
     PipelineResourceAllocator* ResourceStorage::GetResourceAllocator(ResourceName name)
     {
-        return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end() ? &mPipelineResourceAllocators.at(name) : nullptr;
+        return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end()
+            ? &mPipelineResourceAllocators.at(name) : nullptr;
     }
 
     PipelineResourceAllocator* ResourceStorage::QueueTextureAllocationIfNeeded(
@@ -161,7 +157,7 @@ namespace PathFinder
         allocator.mAllocationAction = [=, &allocator]()
         {
             HAL::ResourceState expectedStates = allocator.GatherExpectedStates();
-            HAL::ResourceState initialState = allocator.mPerPassData[passThatRequestedAllocation].RequestedState;
+            HAL::ResourceState initialState = HAL::ResourceState::Common;
             
             auto texture = std::make_unique<HAL::TextureResource>(
                 *mDevice, format, kind, dimensions, optimizedClearValue, initialState, expectedStates);
@@ -169,7 +165,6 @@ namespace PathFinder
             texture->D3DPtr()->SetName(StringToWString(resourceName.ToSring()).c_str());
 
             PipelineResource newResource;
-            newResource.CurrentState = initialState;
 
             for (auto& pair : allocator.mPerPassData)
             {
@@ -213,85 +208,125 @@ namespace PathFinder
             PipelineResourceAllocator& allocator = pair.second;
             PipelineResource& resource = mPipelineResources.at(resourceName);
 
-            PassName stateTransitionPassName;
-            HAL::ResourceState stateSequence = HAL::ResourceState::Common;
+            auto optimizedStateChain = CollapseStateSequences(executionGraph, allocator);
 
-            bool canImplicitlyPromote = true;
-            bool canImplicitlyDecay = true;
-            bool firstSequenceFound = false;
-
-            std::vector<PassName> currentResourceRelevantPassNames;
-            std::vector<std::pair<PassName, HAL::ResourceState>> optimizedStateChain;
-
-            for (const RenderPass* pass : executionGraph.ExecutionOrder())
+            assert_format(!optimizedStateChain.empty(), "Resource mush have at least one state");
+          
+            // If resource will have only one state then it's sufficient 
+            // to make a single transition in the first rendering loop
+            //
+            if (optimizedStateChain.size() == 1)
             {
-                if (allocator.GetPerPassData(pass->Name()))
-                {
-                    currentResourceRelevantPassNames.push_back(pass->Name());
-                }
+                mOneTimeResourceBarriers.AddBarrier(HAL::ResourceTransitionBarrier{ HAL::ResourceState::Common, optimizedStateChain.back().second, resource.Resource() });
+                continue;
             }
 
-            // Gather first state sequence
-            for (auto relevantPassIdx = 0u; relevantPassIdx < currentResourceRelevantPassNames.size(); ++relevantPassIdx)
+            // See whether automatic state transitions are possible
+            bool canImplicitlyPromoteToFirstState = resource.Resource()->CanImplicitlyPromoteFromCommonStateToState(optimizedStateChain.front().second);
+            bool canImplicitlyDecayFromLastState = resource.Resource()->CanImplicitlyDecayToCommonStateFromState(optimizedStateChain.back().second);
+            bool canSkipFirstTransition = canImplicitlyPromoteToFirstState && canImplicitlyDecayFromLastState;
+
+            uint32_t firstExplicitTransitionIndex = 0;
+
+            if (canSkipFirstTransition)
             {
-                PassName currentPassName = currentResourceRelevantPassNames[relevantPassIdx];
-                auto perPassData = allocator.GetPerPassData(currentPassName);
+                // Skip first transition if possible
+                //
+                PassName secondPassName = optimizedStateChain[1].first;
+                HAL::ResourceState implicitFirstState = optimizedStateChain[0].second;
+                HAL::ResourceState explicitSecondState = optimizedStateChain[1].second;
 
-                bool isLastPass = relevantPassIdx == currentResourceRelevantPassNames.size() - 1;
+                mPerPassResourceBarriers[secondPassName].AddBarrier(HAL::ResourceTransitionBarrier{ implicitFirstState, explicitSecondState, resource.Resource() });
 
-                // Is state read-only
-                if (HAL::IsResourceStateReadOnly(perPassData->RequestedState))
+                firstExplicitTransitionIndex = 1;
+            }
+            else {
+                // No way to skip first transition, loop last transition to first
+                //
+                PassName firstPassName = optimizedStateChain[0].first;
+                HAL::ResourceState explicitLastState = optimizedStateChain[optimizedStateChain.size() - 1].second;
+                HAL::ResourceState explicitFirstState = optimizedStateChain[0].second;
+
+                mPerPassResourceBarriers[firstPassName].AddBarrier(HAL::ResourceTransitionBarrier{ explicitLastState, explicitFirstState, resource.Resource() });
+            }
+
+            // Create the rest of the transitions
+            for (auto i = firstExplicitTransitionIndex + 1; i < optimizedStateChain.size(); ++i)
+            {
+                PassName currentPassName = optimizedStateChain[i].first;
+                mPerPassResourceBarriers[currentPassName].AddBarrier(HAL::ResourceTransitionBarrier{ optimizedStateChain[i - 1].second, optimizedStateChain[i].second, resource.Resource() });
+            }
+        }
+    }
+
+    std::vector<std::pair<PassName, HAL::ResourceState>> ResourceStorage::CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocator& allocator)
+    {
+        std::vector<PassName> relevantPassNames;
+        std::vector<std::pair<PassName, HAL::ResourceState>> optimizedStateChain;
+        HAL::ResourceState stateSequence = HAL::ResourceState::Common;
+        PassName stateTransitionPassName;
+
+        // Build a list of passes this resource is scheduled for
+        for (const RenderPass* pass : executionGraph.ExecutionOrder())
+        {
+            if (allocator.GetPerPassData(pass->Name()))
+            {
+                relevantPassNames.push_back(pass->Name());
+            }
+        }
+
+        if (relevantPassNames.empty())
+        {
+            return {};
+        }
+
+        // Gather first state sequence
+        for (auto relevantPassIdx = 0u; relevantPassIdx < relevantPassNames.size(); ++relevantPassIdx)
+        {
+            PassName currentPassName = relevantPassNames[relevantPassIdx];
+            auto perPassData = allocator.GetPerPassData(currentPassName);
+
+            bool isLastPass = relevantPassIdx == relevantPassNames.size() - 1;
+
+            // Is state read-only
+            if (HAL::IsResourceStateReadOnly(perPassData->RequestedState))
+            {
+                if (HAL::IsResourceStateReadOnly(stateSequence))
                 {
-                    if (HAL::IsResourceStateReadOnly(stateSequence))
-                    {
-                        // If previous state was read-only, then combine next with previous
-                        stateSequence |= perPassData->RequestedState;
-                    }
-                    else {
-                        // This is a first read-only state in a possible read-only sequence
-                        stateSequence = perPassData->RequestedState;
-                        stateTransitionPassName = currentPassName;
-                    }
+                    // If previous state was read-only, then combine next with previous
+                    stateSequence |= perPassData->RequestedState;
+                }
+                else {
+                    // This is a first read-only state in a possible read-only sequence
+                    stateSequence = perPassData->RequestedState;
+                    stateTransitionPassName = currentPassName;
+                }
 
-                    
-                    if (!isLastPass)
-                    {
-                        // If next state is not read-only then this sequence should be dumped
-                        PassName nextPassName = currentResourceRelevantPassNames[relevantPassIdx + 1];
-                        auto nextPerPassData = allocator.GetPerPassData(nextPassName);
+                if (!isLastPass)
+                {
+                    // If next state is not read-only then this sequence should be dumped
+                    PassName nextPassName = relevantPassNames[relevantPassIdx + 1];
+                    auto nextPerPassData = allocator.GetPerPassData(nextPassName);
 
-                        if (!HAL::IsResourceStateReadOnly(nextPerPassData->RequestedState))
-                        {
-                            optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
-                        }
-                    } 
-                    else {
-                        // If there is no next state then this sequence definitely should be dumped
+                    if (!HAL::IsResourceStateReadOnly(nextPerPassData->RequestedState))
+                    {
                         optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
                     }
                 }
                 else {
-                    stateSequence = perPassData->RequestedState;
-                    stateTransitionPassName = currentPassName;
-
+                    // If there is no next state then this sequence definitely should be dumped
                     optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
                 }
-
-                if (!firstSequenceFound)
-                {
-                    canImplicitlyPromote = resource.Resource()->CanImplicitlyPromoteFromCommonStateToState(stateSequence);
-                    firstSequenceFound = true;
-                }
-
-                if (isLastPass)
-                {
-                    canImplicitlyDecay = resource.Resource()->CanImplicitlyDecayToCommonStateFromState(stateSequence);
-                }
             }
-                
-            // Loop last transition on current frame to the first transition on the next frame
+            else {
+                stateSequence = perPassData->RequestedState;
+                stateTransitionPassName = currentPassName;
 
+                optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
+            }
         }
+
+        return optimizedStateChain;
     }
 
     HAL::BufferResource<uint8_t>* ResourceStorage::RootConstantBufferForCurrentPass() const
@@ -323,6 +358,16 @@ namespace PathFinder
         return &it->second;
     }
 
+    const HAL::ResourceBarrierCollection& ResourceStorage::OneTimeResourceBarriers() const
+    {
+        return mOneTimeResourceBarriers;
+    }
+
+    const HAL::ResourceBarrierCollection& ResourceStorage::ResourceBarriersForCurrentPass()
+    {
+        return mPerPassResourceBarriers[mCurrentPassName];
+    }
+
     HAL::ResourceState PipelineResourceAllocator::GatherExpectedStates() const
     {
         HAL::ResourceState expectedStates = HAL::ResourceState::Common;
@@ -348,6 +393,11 @@ namespace PathFinder
         auto it = mPerPassData.find(passName);
         if (it == mPerPassData.end()) return std::nullopt;
         return it->second;
+    }
+
+    std::optional<HAL::ResourceTransitionBarrier> PipelineResource::GetStateTransition() const
+    {
+        return mOneTimeStateTransition;
     }
 
 }
