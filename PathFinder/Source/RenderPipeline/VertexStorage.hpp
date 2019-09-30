@@ -1,10 +1,12 @@
 #pragma once
 
-#include "../Scene/Mesh.hpp"
-#include "../Scene/MeshInstance.hpp"
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/BufferResource.hpp"
+#include "../HardwareAbstractionLayer/CopyDevice.hpp"
+
+#include "../Scene/Mesh.hpp"
+#include "../Scene/MeshInstance.hpp"
 #include "../Scene/Vertices/Vertex1P1N1UV1T1BT.hpp"
 #include "../Scene/Vertices/Vertex1P1N1UV.hpp"
 #include "../Scene/Vertices/Vertex1P3.hpp"
@@ -22,7 +24,7 @@ namespace PathFinder
     class VertexStorage
     {
     public:
-        VertexStorage(HAL::Device* device);
+        VertexStorage(HAL::Device* device, HAL::CopyDevice* copyDevice);
 
         VertexStorageLocation AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
         VertexStorageLocation AddVertices(const Vertex1P1N1UV* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
@@ -38,10 +40,8 @@ namespace PathFinder
         template <class Vertex>
         struct UploadBufferPackage
         {
-            std::unique_ptr<HAL::BufferResource<Vertex>> VertexBuffer;
-            std::unique_ptr<HAL::BufferResource<uint32_t>> IndexBuffer;
-            uint32_t CurrentVertexOffset = 0;
-            uint32_t CurrentIndexOffset = 0;
+            std::vector<Vertex> Vertices;
+            std::vector<uint32_t> Indices;
         };
 
         template <class Vertex>
@@ -54,27 +54,16 @@ namespace PathFinder
         };
 
         template <class Vertex>
-        void AllocateUploadBuffersIfNeeded();
-
-        template <class Vertex>
-        void AllocateFinalBuffersIfNeeded();
-
-        template <class Vertex>
         void CopyBuffersToDefaultHeap();
 
         template <class Vertex>
         VertexStorageLocation WriteToUploadBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
 
-        uint64_t mUploadBufferCapacity = 50 * 1024 * 1024;
-
         std::tuple<UploadBufferPackage<Vertex1P1N1UV1T1BT>, UploadBufferPackage<Vertex1P1N1UV>, UploadBufferPackage<Vertex1P3>> mUploadBuffers;
         std::tuple<FinalBufferPackage<Vertex1P1N1UV1T1BT>, FinalBufferPackage<Vertex1P1N1UV>, FinalBufferPackage<Vertex1P3>> mFinalBuffers;
 
         HAL::Device* mDevice;
-        HAL::CopyCommandAllocator mCommandAllocator;
-        HAL::CopyCommandList mCommandList;
-        HAL::CopyCommandQueue mCommandQueue;
-        HAL::Fence mFence;
+        HAL::CopyDevice* mCopyDevice;
     };
 
 }

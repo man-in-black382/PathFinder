@@ -1,15 +1,14 @@
 #include "VertexStorage.hpp"
 
+#include <algorithm>
+#include <iterator>
+
 namespace PathFinder
 {
 
-    VertexStorage::VertexStorage(HAL::Device* device)
+    VertexStorage::VertexStorage(HAL::Device* device, HAL::CopyDevice* copyDevice)
         : mDevice{ device },
-        mCommandAllocator{ *device },
-        mCommandList{ *device, mCommandAllocator },
-        mCommandQueue{ *device }, 
-        mFence{ *device } {}
-
+        mCopyDevice{ copyDevice } {}
 
     VertexStorageLocation VertexStorage::AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
@@ -27,56 +26,19 @@ namespace PathFinder
     }
 
     template <class Vertex>
-    void VertexStorage::AllocateUploadBuffersIfNeeded()
-    {
-        auto& package = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
-
-        if (!package.VertexBuffer)
-        {
-            package.VertexBuffer = std::make_unique<HAL::BufferResource<Vertex>>(
-                *mDevice, mUploadBufferCapacity, 1, HAL::ResourceState::Common, HAL::ResourceState::CopySource, HAL::CPUAccessibleHeapType::Upload);
-        }
-
-        if (!package.IndexBuffer)
-        {
-            package.IndexBuffer = std::make_unique<HAL::BufferResource<uint32_t>>(
-                *mDevice, mUploadBufferCapacity, 1, HAL::ResourceState::Common, HAL::ResourceState::CopySource, HAL::CPUAccessibleHeapType::Upload);
-        }
-    }
-
-    template <class Vertex>
-    void VertexStorage::AllocateFinalBuffersIfNeeded()
-    {
-        auto& uploadBuffers = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
-        auto& finalBuffers = std::get<FinalBufferPackage<Vertex>>(mFinalBuffers);
-
-        if (uploadBuffers.VertexBuffer)
-        {
-            finalBuffers.VertexBuffer = std::make_unique<HAL::BufferResource<Vertex>>(
-                *mDevice, uploadBuffers.CurrentVertexOffset, 1, HAL::ResourceState::CopyDestination, HAL::ResourceState::VertexBuffer);
-        }
-        
-        if (uploadBuffers.IndexBuffer)
-        {
-            finalBuffers.IndexBuffer = std::make_unique<HAL::BufferResource<uint32_t>>(
-                *mDevice, uploadBuffers.CurrentIndexOffset, 1, HAL::ResourceState::CopyDestination, HAL::ResourceState::IndexBuffer);
-        }
-    }
-
-    template <class Vertex>
     VertexStorageLocation PathFinder::VertexStorage::WriteToUploadBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
-        AllocateUploadBuffersIfNeeded<Vertex>();
-
         auto& package = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
+        auto vertexStartIndex = package.Vertices.size();
+        auto indexStartIndex = package.Indices.size();
 
-        VertexStorageLocation location{ package.CurrentVertexOffset, vertexCount, package.CurrentIndexOffset, indexCount };
+        VertexStorageLocation location{ vertexStartIndex, vertexCount, indexStartIndex, indexCount };
 
-        package.VertexBuffer->Write(location.VertexBufferOffset, vertices, location.VertexCount);
-        package.IndexBuffer->Write(location.IndexBufferOffset, indices, location.IndexCount);
+        package.Vertices.reserve(package.Vertices.size() + vertexCount);
+        package.Indices.reserve(package.Indices.size() + indexCount);
         
-        package.CurrentVertexOffset += location.VertexCount;
-        package.CurrentIndexOffset += location.IndexCount;
+        std::copy(vertices, vertices + vertexCount, std::back_inserter(package.Vertices));
+        std::copy(indices, indices + indexCount, std::back_inserter(package.Indices));
 
         return location;
     }
@@ -84,33 +46,30 @@ namespace PathFinder
     template <class Vertex>
     void VertexStorage::CopyBuffersToDefaultHeap()
     {
-        AllocateFinalBuffersIfNeeded<Vertex>();
-
         auto& uploadBuffers = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
         auto& finalBuffers = std::get<FinalBufferPackage<Vertex>>(mFinalBuffers);
 
-        if (uploadBuffers.VertexBuffer && finalBuffers.VertexBuffer)
+        if (!uploadBuffers.Vertices.empty())
         {
-            mCommandList.CopyBufferRegion(*uploadBuffers.VertexBuffer, *finalBuffers.VertexBuffer, 0, uploadBuffers.CurrentVertexOffset, 0);
+            auto uploadVertexBuffer = std::make_shared<HAL::BufferResource<Vertex>>(
+                *mDevice, uploadBuffers.Vertices.size(), 1, HAL::ResourceState::CopySource, HAL::ResourceState::VertexBuffer, HAL::CPUAccessibleHeapType::Upload);
+
+            uploadVertexBuffer->Write(0, uploadBuffers.Vertices.data(), uploadBuffers.Vertices.size());
+            finalBuffers.VertexBuffer = mCopyDevice->QueueResourceCopyToDefaultHeap(uploadVertexBuffer);
             finalBuffers.VertexBufferDescriptor = std::make_unique<HAL::VertexBufferDescriptor>(*finalBuffers.VertexBuffer);
+            uploadBuffers.Vertices.clear();
         }
 
-        if (uploadBuffers.IndexBuffer && finalBuffers.IndexBuffer)
+        if (!uploadBuffers.Indices.empty())
         {
-            mCommandList.CopyBufferRegion(*uploadBuffers.IndexBuffer, *finalBuffers.IndexBuffer, 0, uploadBuffers.CurrentIndexOffset, 0);
-            finalBuffers.IndexBufferDescriptor = std::make_unique<HAL::IndexBufferDescriptor>(*finalBuffers.IndexBuffer, HAL::ResourceFormat::Color::R32_Unsigned);
-        }
-        
-        mCommandList.Close();
-        mCommandQueue.ExecuteCommandList(mCommandList);
-        mFence.IncreaseExpectedValue();
-        mCommandQueue.SignalFence(mFence);
-        mFence.StallCurrentThreadUntilCompletion();
-        mCommandAllocator.Reset();
-        mCommandList.Reset(mCommandAllocator);
+            auto uploadIndexBuffer = std::make_shared<HAL::BufferResource<uint32_t>>(
+                *mDevice, uploadBuffers.Indices.size(), 1, HAL::ResourceState::CopySource, HAL::ResourceState::IndexBuffer, HAL::CPUAccessibleHeapType::Upload);
 
-        uploadBuffers.VertexBuffer = nullptr;
-        uploadBuffers.IndexBuffer = nullptr;
+            uploadIndexBuffer->Write(0, uploadBuffers.Indices.data(), uploadBuffers.Indices.size());
+            finalBuffers.IndexBuffer = mCopyDevice->QueueResourceCopyToDefaultHeap(uploadIndexBuffer);
+            finalBuffers.IndexBufferDescriptor = std::make_unique<HAL::IndexBufferDescriptor>(*finalBuffers.IndexBuffer, HAL::ResourceFormat::Color::R32_Unsigned);
+            uploadBuffers.Indices.clear();
+        }
     }
 
     const HAL::VertexBufferDescriptor* VertexStorage::UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const

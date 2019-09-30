@@ -312,6 +312,9 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\CopyDevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1874,6 +1877,12 @@
     <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ThirdParty\dds\dds-ktx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\CopyDevice.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2330,6 +2339,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\HardwareAbstractionLayer\CopyDevice.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

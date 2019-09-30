@@ -53,6 +53,12 @@ namespace HAL
             isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
             IID_PPV_ARGS(&mResource)
         ));
+
+        UINT GPUMask = 0;
+        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
+
+        mMemoryAlignment = allocInfo.Alignment;
+        mMemoryFootprint = allocInfo.SizeInBytes;
     }
 
     Resource::~Resource() {}

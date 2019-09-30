@@ -51,6 +51,8 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
         ResourceState mInitialStates;
         ResourceState mExpectedStates;
+        size_t mMemoryFootprint;
+        size_t mMemoryAlignment;
 
     private:
         D3D12_RESOURCE_DESC mDescription{};
@@ -62,6 +64,8 @@ namespace HAL
         inline const D3D12_RESOURCE_DESC& D3DDescription() const { return mDescription; };
         inline ResourceState InitialStates() const { return mInitialStates; };
         inline ResourceState ExpectedStates() const { return mExpectedStates; };
+        inline size_t MemoryFootprint() const { return mMemoryFootprint; }
+        inline size_t MemoryAlignment() const { return mMemoryAlignment; }
     };
 
 }

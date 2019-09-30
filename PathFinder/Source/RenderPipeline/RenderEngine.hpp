@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "../HardwareAbstractionLayer/Device.hpp"
+#include "../HardwareAbstractionLayer/CopyDevice.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 
@@ -33,7 +34,7 @@ namespace PathFinder
 
         void AddRenderPass(std::unique_ptr<RenderPass>&& pass);
 
-        void Schedule();
+        void PreRender();
         void Render();
 
     private:
@@ -48,6 +49,7 @@ namespace PathFinder
         std::filesystem::path mExecutablePath;
 
         HAL::Device mDevice;
+        HAL::CopyDevice mCopyDevice;
         HAL::Fence mFrameFence;
 
         VertexStorage mVertexStorage;

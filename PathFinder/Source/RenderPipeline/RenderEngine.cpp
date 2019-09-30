@@ -10,8 +10,9 @@ namespace PathFinder
         : mExecutablePath{ executablePath },
         mDefaultRenderSurface{ { 1280, 720 }, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
         mDevice{ FetchDefaultDisplayAdapter() },
+        mCopyDevice{ &mDevice },
         mFrameFence{ mDevice },
-        mVertexStorage{ &mDevice },
+        mVertexStorage{ &mDevice, &mCopyDevice },
         mResourceStorage{ &mDevice, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mResourceScheduler{ &mResourceStorage },
         mResourceProvider{ &mResourceStorage },
@@ -33,7 +34,7 @@ namespace PathFinder
         mPassExecutionGraph.AddPass(mRenderPasses.back().get());
     }
 
-    void RenderEngine::Schedule()
+    void RenderEngine::PreRender()
     {
         for (auto& passPtr : mRenderPasses)
         {
@@ -45,6 +46,7 @@ namespace PathFinder
         mResourceStorage.AllocateScheduledResources(mPassExecutionGraph);
         mPipelineStateManager.CompileStates();
         mGraphicsDevice.CommandList().InsertBarriers(mResourceStorage.OneTimeResourceBarriers());
+        mCopyDevice.CopyResources();
     }
 
     void RenderEngine::Render()

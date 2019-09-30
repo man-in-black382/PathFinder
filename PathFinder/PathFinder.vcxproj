@@ -208,6 +208,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\RenderTarget.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Resource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceBarrier.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\CopyDevice.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceFormat.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RingBuffer.cpp" />
@@ -319,6 +320,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\RenderTarget.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Resource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceBarrier.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\CopyDevice.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceFormat.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RingBuffer.hpp" />
@@ -528,6 +530,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\assimp\version.h" />
     <ClInclude Include="Source\ThirdParty\assimp\Vertex.h" />
     <ClInclude Include="Source\ThirdParty\assimp\XMLTools.h" />
+    <ClInclude Include="Source\ThirdParty\dds\dds-ktx.h" />
     <ClInclude Include="Source\ThirdParty\glm\common.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\detail\compute_common.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\detail\compute_vector_relational.hpp" />
@@ -795,6 +798,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Libs\dxil.dll" />
     <None Include="Source\HardwareAbstractionLayer\BufferResource.inl" />
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl" />
+    <None Include="Source\HardwareAbstractionLayer\CopyDevice.inl" />
     <None Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.inl" />
     <None Include="Source\ThirdParty\assimp\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\color4.inl" />

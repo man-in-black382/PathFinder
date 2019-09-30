@@ -516,7 +516,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(std::make_unique<PathFinder::GBufferRenderPass>());  
     engine.AddRenderPass(std::make_unique<PathFinder::BlurRenderPass>());
     engine.AddRenderPass(std::make_unique<PathFinder::BackBufferOutputPass>());
-    engine.Schedule();
+    engine.PreRender();
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(10000);

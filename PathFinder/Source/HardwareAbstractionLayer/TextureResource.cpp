@@ -13,12 +13,14 @@ namespace HAL
         const ResourceFormat::ClearValue& optimizedClearValue,
         ResourceState initialStateMask, 
         ResourceState expectedStateMask,
+        uint16_t mipCount,
         std::optional<CPUAccessibleHeapType> heapType)
         :
         Resource(device, ResourceFormat(format, kind, dimensions, optimizedClearValue), initialStateMask, expectedStateMask, heapType),
-        mDimensions{ dimensions }, mKind{ kind }, mFormat{ format } {}
+        mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
 
-    TextureResource::TextureResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr) : Resource(existingResourcePtr)
+    TextureResource::TextureResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr) 
+        : Resource(existingResourcePtr)
     {
         mFormat = ResourceFormat::FormatFromD3DFormat(D3DDescription().Format);
         mDimensions = { D3DDescription().Width, D3DDescription().Height, D3DDescription().DepthOrArraySize };

@@ -18,6 +18,7 @@ namespace HAL
             const ResourceFormat::ClearValue& optimizedClearValue,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
+            uint16_t mipCount = 0,
             std::optional<CPUAccessibleHeapType> heapType = std::nullopt
         );
 
@@ -30,11 +31,14 @@ namespace HAL
         Geometry::Dimensions mDimensions;
         ResourceFormat::FormatVariant mFormat;
         ResourceFormat::TextureKind mKind;
+        ResourceFormat::ClearValue mOptimizedClearValue;
+        uint16_t mMipCount;
 
     public:
         inline const Geometry::Dimensions& Dimensions() const { return mDimensions; }
         inline ResourceFormat::TextureKind Kind() const { return mKind; }
         inline ResourceFormat::FormatVariant Format() const { return mFormat; }
+        inline ResourceFormat::ClearValue OptimizedClearValue() const { return mOptimizedClearValue; }
     };
 
 }
