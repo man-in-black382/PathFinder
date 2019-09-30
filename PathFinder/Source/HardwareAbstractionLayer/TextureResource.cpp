@@ -5,20 +5,6 @@
 namespace HAL
 {
 
-    TextureResource::TextureResource(
-        const Device& device, 
-        ResourceFormat::FormatVariant format,
-        ResourceFormat::TextureKind kind, 
-        const Geometry::Dimensions& dimensions, 
-        const ResourceFormat::ClearValue& optimizedClearValue,
-        ResourceState initialStateMask, 
-        ResourceState expectedStateMask,
-        uint16_t mipCount,
-        std::optional<CPUAccessibleHeapType> heapType)
-        :
-        Resource(device, ResourceFormat(format, kind, dimensions, optimizedClearValue), initialStateMask, expectedStateMask, heapType),
-        mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
-
     TextureResource::TextureResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr) 
         : Resource(existingResourcePtr)
     {
@@ -33,6 +19,22 @@ namespace HAL
         default: assert_format(false, "Existing resource is not a texture");
         }
     }
+
+    TextureResource::TextureResource(
+        const Device& device, ResourceFormat::FormatVariant format, ResourceFormat::TextureKind kind,
+        const Geometry::Dimensions& dimensions, const ResourceFormat::ClearValue& optimizedClearValue, 
+        ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount)
+        :
+        Resource(device, ResourceFormat(format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
+        mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
+
+    TextureResource::TextureResource(
+        const Device& device, ResourceFormat::FormatVariant format, ResourceFormat::TextureKind kind, 
+        const Geometry::Dimensions& dimensions, const ResourceFormat::ClearValue& optimizedClearValue, 
+        CPUAccessibleHeapType heapType, uint16_t mipCount)
+        :
+        Resource(device, ResourceFormat(format, kind, dimensions, mipCount, optimizedClearValue), heapType),
+        mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
 
     bool TextureResource::IsArray() const
     {

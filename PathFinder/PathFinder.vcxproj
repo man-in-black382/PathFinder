@@ -208,7 +208,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\RenderTarget.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Resource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceBarrier.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\CopyDevice.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceFormat.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RingBuffer.cpp" />
@@ -223,6 +222,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
     <ClCompile Include="Source\IO\Input.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateCreator.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp" />
@@ -320,7 +320,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\RenderTarget.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Resource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceBarrier.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\CopyDevice.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceFormat.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RingBuffer.hpp" />
@@ -337,6 +336,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
     <ClInclude Include="Source\IO\Input.hpp" />
+    <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
     <ClInclude Include="Source\RenderPipeline\GraphicCommandRecorder.hpp" />
@@ -798,8 +798,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Libs\dxil.dll" />
     <None Include="Source\HardwareAbstractionLayer\BufferResource.inl" />
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl" />
-    <None Include="Source\HardwareAbstractionLayer\CopyDevice.inl" />
     <None Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.inl" />
+    <None Include="Source\HardwareAbstractionLayer\RingBufferResource.inl" />
+    <None Include="Source\RenderPipeline\CopyDevice.inl" />
     <None Include="Source\ThirdParty\assimp\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\material.inl" />

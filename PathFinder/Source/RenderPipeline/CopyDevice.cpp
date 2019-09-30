@@ -1,20 +1,22 @@
 #include "CopyDevice.hpp"
 
-namespace HAL
+namespace PathFinder
 {
 
-    CopyDevice::CopyDevice(const Device* device)
+    CopyDevice::CopyDevice(const HAL::Device* device)
         : mDevice{ device },
         mCommandAllocator{ *mDevice },
         mCommandList{ *mDevice, mCommandAllocator },
         mCommandQueue{ *device },
         mFence{ *mDevice } {}
  
-    std::unique_ptr<TextureResource> CopyDevice::QueueResourceCopyToDefaultHeap(std::shared_ptr<TextureResource> texture)
+    std::unique_ptr<HAL::TextureResource> CopyDevice::QueueResourceCopyToDefaultHeap(std::shared_ptr<HAL::TextureResource> texture)
     {
-        auto emptyClone = std::make_unique<TextureResource>(
+        assert_format(IsCopyableState(texture->InitialStates()), "Resource must be in a copyable state");
+
+        auto emptyClone = std::make_unique<HAL::TextureResource>(
             *mDevice, texture->Format(), texture->Kind(), texture->Dimensions(),
-            texture->OptimizedClearValue(), texture->InitialStates(), texture->ExpectedStates()
+            texture->OptimizedClearValue(), HAL::ResourceState::CopyDestination, texture->ExpectedStates()
         );
 
         mCommandList.CopyResource(*texture, *emptyClone);
@@ -36,6 +38,13 @@ namespace HAL
         mCommandList.Reset(mCommandAllocator);
 
         mResourcesToCopy.clear();
+    }
+
+    bool CopyDevice::IsCopyableState(HAL::ResourceState state)
+    {
+        return EnumMaskBitSet(state, HAL::ResourceState::Common) ||
+            EnumMaskBitSet(state, HAL::ResourceState::GenericRead) ||
+            EnumMaskBitSet(state, HAL::ResourceState::CopySource);
     }
 
 }

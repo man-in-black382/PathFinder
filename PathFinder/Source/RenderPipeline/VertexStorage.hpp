@@ -3,7 +3,6 @@
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/BufferResource.hpp"
-#include "../HardwareAbstractionLayer/CopyDevice.hpp"
 
 #include "../Scene/Mesh.hpp"
 #include "../Scene/MeshInstance.hpp"
@@ -13,6 +12,7 @@
 
 #include "VertexStorageLocation.hpp"
 #include "VertexLayouts.hpp"
+#include "CopyDevice.hpp"
 
 #include <unordered_map>
 #include <memory>
@@ -24,7 +24,7 @@ namespace PathFinder
     class VertexStorage
     {
     public:
-        VertexStorage(HAL::Device* device, HAL::CopyDevice* copyDevice);
+        VertexStorage(HAL::Device* device, CopyDevice* copyDevice);
 
         VertexStorageLocation AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
         VertexStorageLocation AddVertices(const Vertex1P1N1UV* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
@@ -63,7 +63,8 @@ namespace PathFinder
         std::tuple<FinalBufferPackage<Vertex1P1N1UV1T1BT>, FinalBufferPackage<Vertex1P1N1UV>, FinalBufferPackage<Vertex1P3>> mFinalBuffers;
 
         HAL::Device* mDevice;
-        HAL::CopyDevice* mCopyDevice;
+        
+        CopyDevice* mCopyDevice;
     };
 
 }

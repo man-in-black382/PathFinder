@@ -6,7 +6,7 @@
 namespace PathFinder
 {
 
-    VertexStorage::VertexStorage(HAL::Device* device, HAL::CopyDevice* copyDevice)
+    VertexStorage::VertexStorage(HAL::Device* device, CopyDevice* copyDevice)
         : mDevice{ device },
         mCopyDevice{ copyDevice } {}
 
@@ -52,7 +52,7 @@ namespace PathFinder
         if (!uploadBuffers.Vertices.empty())
         {
             auto uploadVertexBuffer = std::make_shared<HAL::BufferResource<Vertex>>(
-                *mDevice, uploadBuffers.Vertices.size(), 1, HAL::ResourceState::CopySource, HAL::ResourceState::VertexBuffer, HAL::CPUAccessibleHeapType::Upload);
+                *mDevice, uploadBuffers.Vertices.size(), 1, HAL::CPUAccessibleHeapType::Upload);
 
             uploadVertexBuffer->Write(0, uploadBuffers.Vertices.data(), uploadBuffers.Vertices.size());
             finalBuffers.VertexBuffer = mCopyDevice->QueueResourceCopyToDefaultHeap(uploadVertexBuffer);
@@ -63,7 +63,7 @@ namespace PathFinder
         if (!uploadBuffers.Indices.empty())
         {
             auto uploadIndexBuffer = std::make_shared<HAL::BufferResource<uint32_t>>(
-                *mDevice, uploadBuffers.Indices.size(), 1, HAL::ResourceState::CopySource, HAL::ResourceState::IndexBuffer, HAL::CPUAccessibleHeapType::Upload);
+                *mDevice, uploadBuffers.Indices.size(), 1, HAL::CPUAccessibleHeapType::Upload);
 
             uploadIndexBuffer->Write(0, uploadBuffers.Indices.data(), uploadBuffers.Indices.size());
             finalBuffers.IndexBuffer = mCopyDevice->QueueResourceCopyToDefaultHeap(uploadIndexBuffer);

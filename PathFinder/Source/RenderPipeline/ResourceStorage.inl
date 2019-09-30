@@ -26,11 +26,7 @@ namespace PathFinder
         auto bufferSize = Foundation::MemoryUtils::Align(sizeof(BufferDataT), 256);
 
         mPerPassConstantBuffers.emplace(mCurrentPassName, std::make_unique<HAL::RingBufferResource<uint8_t>>(
-            *mDevice, bufferSize, mSimultaneousFramesInFlight, 1,
-            HAL::ResourceState::GenericRead,
-            HAL::ResourceState::GenericRead,
-            HAL::CPUAccessibleHeapType::Upload)
-        );
+            *mDevice, bufferSize, mSimultaneousFramesInFlight, 1, HAL::CPUAccessibleHeapType::Upload));
     }
 
 }

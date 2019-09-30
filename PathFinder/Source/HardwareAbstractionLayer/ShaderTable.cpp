@@ -22,7 +22,7 @@ namespace HAL
     void ShaderTable::UploadToGPUMemory()
     {
         mGPUTable = std::make_unique<RingBufferResource<uint8_t>>(
-            *mDevice, mTableSize, mFrameCapacity, 1, ResourceState::GenericRead, ResourceState::GenericRead, CPUAccessibleHeapType::Upload);
+            *mDevice, mTableSize, mFrameCapacity, 1, CPUAccessibleHeapType::Upload);
 
         for (const auto& keyValue : mRecords)
         {

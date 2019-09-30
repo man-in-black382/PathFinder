@@ -30,7 +30,7 @@ namespace HAL
 
     void CopyCommandListBase::InsertBarriers(const ResourceBarrierCollection& collection)
     {
-        mList->ResourceBarrier(collection.BarrierCount(), collection.D3DBarriers());
+        mList->ResourceBarrier((UINT)collection.BarrierCount(), collection.D3DBarriers());
     }
 
     void CopyCommandListBase::CopyResource(const Resource& source, Resource& destination)

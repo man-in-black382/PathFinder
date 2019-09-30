@@ -11,14 +11,8 @@ namespace HAL
     public:
         using Resource::Resource;
 
-        BufferResource(
-            const Device& device,
-            uint64_t capacity,
-            uint64_t perElementAlignment, 
-            ResourceState initialState,
-            ResourceState expectedStates,
-            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
-        );
+        BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
+        BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType);
 
         ~BufferResource();
 
@@ -39,11 +33,13 @@ namespace HAL
         uint64_t mNonPaddedElementSize = 0;
         uint64_t mPaddedElementSize = 0;
         uint64_t mCapacity = 0;
+        uint64_t mPerElementAlignment = 1;
 
     public:
         inline const auto Capacity() const { return mCapacity; }
         inline const auto PaddedElementSize() const { return mPaddedElementSize; }
         inline const auto NonPaddedElementSize() const { return mNonPaddedElementSize; }
+        inline const auto PerElementAlignment() const { return mPerElementAlignment; }
     };
 
 }

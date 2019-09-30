@@ -18,8 +18,17 @@ namespace HAL
             const ResourceFormat::ClearValue& optimizedClearValue,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
-            uint16_t mipCount = 0,
-            std::optional<CPUAccessibleHeapType> heapType = std::nullopt
+            uint16_t mipCount = 1
+        );
+
+        TextureResource(
+            const Device& device,
+            ResourceFormat::FormatVariant format,
+            ResourceFormat::TextureKind kind,
+            const Geometry::Dimensions& dimensions,
+            const ResourceFormat::ClearValue& optimizedClearValue,
+            CPUAccessibleHeapType heapType,
+            uint16_t mipCount = 1
         );
 
         bool IsArray() const;

@@ -35,7 +35,7 @@ namespace HAL
     void RayTracingBottomAccelerationStructure::AllocateBuffers()
     {
         mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-        mD3DInputs.NumDescs = mD3DGeometries.size();
+        mD3DInputs.NumDescs = (UINT)mD3DGeometries.size();
         mD3DInputs.pGeometryDescs = mD3DGeometries.data();
 
         RayTracingBottomAccelerationStructure::AllocateBuffers();
@@ -66,12 +66,12 @@ namespace HAL
     void RayTracingTopAccelerationStructure::AllocateBuffers()
     {
         mInstanceBuffer = std::make_unique<BufferResource<D3D12_RAYTRACING_INSTANCE_DESC>>(
-            *mDevice, mD3DInstances.size(), 1, ResourceState::GenericRead, ResourceState::GenericRead, CPUAccessibleHeapType::Upload);
+            *mDevice, mD3DInstances.size(), 1, CPUAccessibleHeapType::Upload);
 
         mInstanceBuffer->Write(0, mD3DInstances.data(), mD3DInstances.size());
 
         mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-        mD3DInputs.NumDescs = mD3DInstances.size();
+        mD3DInputs.NumDescs = (UINT)mD3DInstances.size();
         mD3DInputs.InstanceDescs = mInstanceBuffer->GPUVirtualAddress();
 
         RayTracingAccelerationStructure::AllocateBuffers();

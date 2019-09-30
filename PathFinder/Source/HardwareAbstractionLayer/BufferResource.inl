@@ -2,7 +2,53 @@
 
 namespace HAL
 {
-   
+    template <class T>
+    BufferResource<T>::BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType)
+        : Resource(
+            device,
+            ResourceFormat(
+                std::nullopt,
+                ResourceFormat::BufferKind::Buffer,
+                Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
+            ),
+            heapType
+        ),
+        mNonPaddedElementSize{ sizeof(T) },
+        mPaddedElementSize{ PaddedElementSize(perElementAlignment) },
+        mCapacity{ capacity },
+        mPerElementAlignment{ perElementAlignment }
+    {
+        ThrowIfFailed(mResource->Map(0, nullptr, (void**)& mMappedMemory));
+    }
+
+    template <class T>
+    BufferResource<T>::BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates)
+        : Resource(
+            device,
+            ResourceFormat(
+                std::nullopt,
+                ResourceFormat::BufferKind::Buffer,
+                Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
+            ),
+            initialState,
+            expectedStates
+        ),
+        mNonPaddedElementSize{ sizeof(T) },
+        mPaddedElementSize{ PaddedElementSize(perElementAlignment) },
+        mCapacity{ capacity },
+        mPerElementAlignment{ perElementAlignment }
+    { }
+
+    template <class T>
+    BufferResource<T>::~BufferResource()
+    {
+        if (mMappedMemory)
+        {
+            mResource->Unmap(0, nullptr);
+            mMappedMemory = nullptr;
+        }
+    }
+
     template <class T>
     void HAL::BufferResource<T>::ValidateMappedMemory() const
     {
@@ -24,46 +70,6 @@ namespace HAL
     uint64_t BufferResource<T>::PaddedElementSize(uint64_t alignment)
     {
         return (sizeof(T) + alignment - 1) & ~(alignment - 1);
-    }
-
-    template <class T>
-    BufferResource<T>::BufferResource(
-        const Device& device,
-        uint64_t capacity,
-        uint64_t perElementAlignment,
-        ResourceState initialState,
-        ResourceState expectedStates,
-        std::optional<CPUAccessibleHeapType> heapType)
-        :
-        Resource(
-            device,
-            ResourceFormat(
-                std::nullopt,
-                ResourceFormat::BufferKind::Buffer,
-                Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
-            ),
-            initialState,
-            expectedStates,
-            heapType
-        ),
-        mNonPaddedElementSize{ sizeof(T) },
-        mPaddedElementSize{ PaddedElementSize(perElementAlignment) },
-        mCapacity{ capacity }
-    {
-        if (heapType)
-        {
-            ThrowIfFailed(mResource->Map(0, nullptr, (void**)&mMappedMemory));
-        }
-    }
-
-    template <class T>
-    BufferResource<T>::~BufferResource()
-    {
-        if (mMappedMemory)
-        {
-            mResource->Unmap(0, nullptr);
-            mMappedMemory = nullptr;
-        }
     }
 
     template <class T>

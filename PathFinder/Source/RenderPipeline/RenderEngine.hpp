@@ -6,7 +6,6 @@
 #include <filesystem>
 
 #include "../HardwareAbstractionLayer/Device.hpp"
-#include "../HardwareAbstractionLayer/CopyDevice.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 
@@ -23,6 +22,7 @@
 #include "RenderContext.hpp"
 #include "PipelineStateCreator.hpp"
 #include "RenderPassExecutionGraph.hpp"
+#include "CopyDevice.hpp"
 
 namespace PathFinder
 {
@@ -49,9 +49,9 @@ namespace PathFinder
         std::filesystem::path mExecutablePath;
 
         HAL::Device mDevice;
-        HAL::CopyDevice mCopyDevice;
         HAL::Fence mFrameFence;
 
+        CopyDevice mCopyDevice;
         VertexStorage mVertexStorage;
         ResourceStorage mResourceStorage;
         ResourceScheduler mResourceScheduler;

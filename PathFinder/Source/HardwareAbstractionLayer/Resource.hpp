@@ -29,7 +29,6 @@ namespace HAL
     {
     public:
         Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);
-
         Resource(const Resource& other) = delete;
         Resource(Resource&& other) = default;
 
@@ -40,13 +39,8 @@ namespace HAL
         virtual bool CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const;
 
     protected:
-        Resource(
-            const Device& device,
-            const ResourceFormat& format,
-            ResourceState initialStateMask,
-            ResourceState expectedStateMask,
-            std::optional<CPUAccessibleHeapType> heapType
-        );
+        Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask);
+        Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType);
 
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
         ResourceState mInitialStates;

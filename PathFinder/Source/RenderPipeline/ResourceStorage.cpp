@@ -13,16 +13,8 @@ namespace PathFinder
         mDefaultRenderSurface{ defaultRenderSurface },
         mDescriptorStorage{ device },
         mSimultaneousFramesInFlight{ simultaneousFramesInFlight },
-
-        mGlobalRootConstantsBuffer{
-            *device, 1, simultaneousFramesInFlight, 256,
-            HAL::ResourceState::ConstantBuffer, HAL::ResourceState::ConstantBuffer,
-            HAL::CPUAccessibleHeapType::Upload },
-
-        mPerFrameRootConstantsBuffer{
-            *device, 1, simultaneousFramesInFlight, 256,
-            HAL::ResourceState::ConstantBuffer, HAL::ResourceState::ConstantBuffer,
-            HAL::CPUAccessibleHeapType::Upload }
+        mGlobalRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
+        mPerFrameRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload }
     {}
 
     void ResourceStorage::BeginFrame(uint64_t frameFenceValue)

@@ -6,7 +6,7 @@
 namespace HAL
 {
 
-    ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions, ClearValue optimizedClearValue)
+    ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue)
     {
         if (dataType) 
         {
@@ -33,7 +33,7 @@ namespace HAL
         }),
             optimizedClearValue);
 
-        mDesc.MipLevels = 1;
+        mDesc.MipLevels = mipCount;
     }
 
     ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
@@ -88,6 +88,7 @@ namespace HAL
         case TypelessColor::RG32:              return DXGI_FORMAT_R32G32_TYPELESS;
         case TypelessColor::RGB32:             return DXGI_FORMAT_R32G32B32_TYPELESS;
         case TypelessColor::RGBA32:            return DXGI_FORMAT_R32G32B32A32_TYPELESS;
+        default: assert_format("Should never be hit"); return DXGI_FORMAT_UNKNOWN;
         }
     }
 
@@ -133,6 +134,8 @@ namespace HAL
         case Color::RG32_Unsigned:     return DXGI_FORMAT_R32G32_UINT;
         case Color::RGB32_Unsigned:    return DXGI_FORMAT_R32G32B32_UINT;
         case Color::RGBA32_Unsigned:   return DXGI_FORMAT_R32G32B32A32_UINT;
+
+        default: assert_format("Should never be hit"); return DXGI_FORMAT_UNKNOWN;
         }
     }
 
@@ -142,6 +145,7 @@ namespace HAL
         {
         case DepthStencil::Depth24_Float_Stencil8_Unsigned: return DXGI_FORMAT_D24_UNORM_S8_UINT;
         case DepthStencil::Depth32_Float:                   return DXGI_FORMAT_D32_FLOAT;
+        default: assert_format("Should never be hit"); return DXGI_FORMAT_UNKNOWN;
         }
     }
 

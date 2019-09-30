@@ -55,7 +55,7 @@ namespace HAL
 
         using FormatVariant = std::variant<TypelessColor, Color, DepthStencil>;
 
-        ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions, ClearValue optimizedClearValue);
+        ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue);
         ResourceFormat(std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
 
         static DXGI_FORMAT D3DFormat(TypelessColor type);
