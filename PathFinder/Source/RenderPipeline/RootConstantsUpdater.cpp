@@ -3,7 +3,7 @@
 namespace PathFinder
 {
 
-    RootConstantsUpdater::RootConstantsUpdater(ResourceStorage* storage)
+    RootConstantsUpdater::RootConstantsUpdater(PipelineResourceStorage* storage)
         : mResourceStorage{ storage } {}
 
 }

@@ -1,4 +1,4 @@
-#include "ResourceStorage.hpp"
+#include "PipelineResourceStorage.hpp"
 #include "RenderPass.hpp"
 #include "RenderPassExecutionGraph.hpp"
 
@@ -8,7 +8,7 @@
 namespace PathFinder
 {
 
-    ResourceStorage::ResourceStorage(HAL::Device* device, const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
+    PipelineResourceStorage::PipelineResourceStorage(HAL::Device* device, const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
         : mDevice{ device },
         mDefaultRenderSurface{ defaultRenderSurface },
         mDescriptorStorage{ device },
@@ -17,7 +17,7 @@ namespace PathFinder
         mPerFrameRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload }
     {}
 
-    void ResourceStorage::BeginFrame(uint64_t frameFenceValue)
+    void PipelineResourceStorage::BeginFrame(uint64_t frameFenceValue)
     {
         for (auto& passBufferPair : mPerPassConstantBuffers)
         {
@@ -29,7 +29,7 @@ namespace PathFinder
         mPerFrameRootConstantsBuffer.PrepareMemoryForNewFrame(frameFenceValue);
     }
 
-    void ResourceStorage::EndFrame(uint64_t completedFrameFenceValue)
+    void PipelineResourceStorage::EndFrame(uint64_t completedFrameFenceValue)
     {
         for (auto& passBufferPair : mPerPassConstantBuffers)
         {
@@ -41,7 +41,7 @@ namespace PathFinder
         mPerFrameRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameFenceValue);
     }
 
-    const HAL::RTDescriptor& ResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
+    const HAL::RTDescriptor& PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
     {
         PipelineResource* pipelineResource = GetPipelineResource(resourceName);
 
@@ -56,29 +56,29 @@ namespace PathFinder
         return *descriptor;
     }
 
-    const HAL::RTDescriptor& ResourceStorage::GetCurrentBackBufferDescriptor()
+    const HAL::RTDescriptor& PipelineResourceStorage::GetCurrentBackBufferDescriptor()
     {
         return mBackBufferDescriptors[mCurrentBackBufferIndex];
     }
 
-    const HAL::DSDescriptor& ResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
+    const HAL::DSDescriptor& PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
     {
         auto descriptor = mDescriptorStorage.GetDSDescriptor(resourceName);
         assert_format(descriptor, "Resource ", resourceName.ToSring(), " was not scheduled to be used as depth-stencil target");
         return *descriptor;
     }
 
-    void ResourceStorage::SetCurrentBackBufferIndex(uint8_t index)
+    void PipelineResourceStorage::SetCurrentBackBufferIndex(uint8_t index)
     {
         mCurrentBackBufferIndex = index;
     }
 
-    void ResourceStorage::SetCurrentPassName(PassName passName)
+    void PipelineResourceStorage::SetCurrentPassName(PassName passName)
     {
         mCurrentPassName = passName;
     }
 
-    void ResourceStorage::AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph)
+    void PipelineResourceStorage::AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph)
     {
         for (auto& pair : mPipelineResourceAllocators)
         {
@@ -89,7 +89,7 @@ namespace PathFinder
         OptimizeResourceStates(executionGraph);
     }
 
-    void ResourceStorage::UseSwapChain(HAL::SwapChain& swapChain)
+    void PipelineResourceStorage::UseSwapChain(HAL::SwapChain& swapChain)
     {
         for (auto i = 0; i < swapChain.BackBuffers().size(); i++)
         {
@@ -97,38 +97,38 @@ namespace PathFinder
         }
     }
 
-    const ResourceDescriptorStorage& ResourceStorage::DescriptorStorage() const
+    const ResourceDescriptorStorage& PipelineResourceStorage::DescriptorStorage() const
     {
         return mDescriptorStorage;
     }
 
-    GlobalRootConstants* ResourceStorage::GlobalRootConstantData()
+    GlobalRootConstants* PipelineResourceStorage::GlobalRootConstantData()
     {
         return mGlobalRootConstantsBuffer.At(0);
     }
 
-    PerFrameRootConstants* ResourceStorage::PerFrameRootConstantData()
+    PerFrameRootConstants* PipelineResourceStorage::PerFrameRootConstantData()
     {
         return mPerFrameRootConstantsBuffer.At(0);
     }
 
-    bool ResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
+    bool PipelineResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
     {
         return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end();
     }
 
-    void ResourceStorage::RegisterResourceNameForCurrentPass(ResourceName name)
+    void PipelineResourceStorage::RegisterResourceNameForCurrentPass(ResourceName name)
     {
         mPerPassResourceNames[mCurrentPassName].insert(name);
     }
 
-    PipelineResourceAllocator* ResourceStorage::GetResourceAllocator(ResourceName name)
+    PipelineResourceAllocator* PipelineResourceStorage::GetResourceAllocator(ResourceName name)
     {
         return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end()
             ? &mPipelineResourceAllocators.at(name) : nullptr;
     }
 
-    PipelineResourceAllocator* ResourceStorage::QueueTextureAllocationIfNeeded(
+    PipelineResourceAllocator* PipelineResourceStorage::QueueTextureAllocationIfNeeded(
         ResourceName resourceName,
         HAL::ResourceFormat::FormatVariant format,
         HAL::ResourceFormat::TextureKind kind,
@@ -179,7 +179,7 @@ namespace PathFinder
         return &allocator;
     }
 
-    void ResourceStorage::CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture)
+    void PipelineResourceStorage::CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture)
     {
         for (const auto& pair : allocator.mPerPassData)
         {
@@ -192,7 +192,7 @@ namespace PathFinder
         }
     }
 
-    void ResourceStorage::OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph)
+    void PipelineResourceStorage::OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph)
     {
         for (auto& pair : mPipelineResourceAllocators)
         {
@@ -251,7 +251,7 @@ namespace PathFinder
         }
     }
 
-    std::vector<std::pair<PassName, HAL::ResourceState>> ResourceStorage::CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocator& allocator)
+    std::vector<std::pair<PassName, HAL::ResourceState>> PipelineResourceStorage::CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocator& allocator)
     {
         std::vector<PassName> relevantPassNames;
         std::vector<std::pair<PassName, HAL::ResourceState>> optimizedStateChain;
@@ -321,41 +321,41 @@ namespace PathFinder
         return optimizedStateChain;
     }
 
-    HAL::BufferResource<uint8_t>* ResourceStorage::RootConstantBufferForCurrentPass() const
+    HAL::BufferResource<uint8_t>* PipelineResourceStorage::RootConstantBufferForCurrentPass() const
     {
         auto it = mPerPassConstantBuffers.find(mCurrentPassName);
         if (it == mPerPassConstantBuffers.end()) return nullptr;
         return it->second.get();
     }
 
-    const HAL::BufferResource<GlobalRootConstants>& ResourceStorage::GlobalRootConstantsBuffer() const
+    const HAL::BufferResource<GlobalRootConstants>& PipelineResourceStorage::GlobalRootConstantsBuffer() const
     {
         return mGlobalRootConstantsBuffer;
     }
 
-    const HAL::BufferResource<PerFrameRootConstants>& ResourceStorage::PerFrameRootConstantsBuffer() const
+    const HAL::BufferResource<PerFrameRootConstants>& PipelineResourceStorage::PerFrameRootConstantsBuffer() const
     {
         return mPerFrameRootConstantsBuffer;
     }
 
-    const std::unordered_set<ResourceName>& ResourceStorage::ScheduledResourceNamesForCurrentPass()
+    const std::unordered_set<ResourceName>& PipelineResourceStorage::ScheduledResourceNamesForCurrentPass()
     {
         return mPerPassResourceNames[mCurrentPassName];
     }
 
-    PathFinder::PipelineResource* ResourceStorage::GetPipelineResource(ResourceName resourceName)
+    PathFinder::PipelineResource* PipelineResourceStorage::GetPipelineResource(ResourceName resourceName)
     {
         auto it = mPipelineResources.find(resourceName);
         if (it == mPipelineResources.end()) return nullptr;
         return &it->second;
     }
 
-    const HAL::ResourceBarrierCollection& ResourceStorage::OneTimeResourceBarriers() const
+    const HAL::ResourceBarrierCollection& PipelineResourceStorage::OneTimeResourceBarriers() const
     {
         return mOneTimeResourceBarriers;
     }
 
-    const HAL::ResourceBarrierCollection& ResourceStorage::ResourceBarriersForCurrentPass()
+    const HAL::ResourceBarrierCollection& PipelineResourceStorage::ResourceBarriersForCurrentPass()
     {
         return mPerPassResourceBarriers[mCurrentPassName];
     }

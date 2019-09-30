@@ -4,7 +4,7 @@
 namespace PathFinder
 {
 
-    ResourceProvider::ResourceProvider(ResourceStorage* storage)
+    ResourceProvider::ResourceProvider(PipelineResourceStorage* storage)
         : mResourceStorage{ storage } {}
 
     uint32_t ResourceProvider::GetTextureDescriptorTableIndex(Foundation::Name resourceName)

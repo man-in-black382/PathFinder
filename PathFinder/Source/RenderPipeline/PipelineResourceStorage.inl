@@ -4,7 +4,7 @@ namespace PathFinder
 {
 
     template <class RootConstants>
-    RootConstants* ResourceStorage::RootConstantDataForCurrentPass() const
+    RootConstants* PipelineResourceStorage::RootConstantDataForCurrentPass() const
     {
         auto bufferIt = mPerPassConstantBuffers.find(mCurrentPassName);
         if (bufferIt == mPerPassConstantBuffers.end()) return nullptr;
@@ -13,7 +13,7 @@ namespace PathFinder
     }
 
     template <class BufferDataT>
-    void ResourceStorage::AllocateRootConstantBufferIfNeeded()
+    void PipelineResourceStorage::AllocateRootConstantBufferIfNeeded()
     {
         auto bufferIt = mPerPassConstantBuffers.find(mCurrentPassName);
         bool alreadyAllocated = bufferIt != mPerPassConstantBuffers.end();

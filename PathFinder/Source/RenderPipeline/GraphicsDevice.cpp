@@ -7,7 +7,7 @@ namespace PathFinder
 
     GraphicsDevice::GraphicsDevice(
         const HAL::Device& device,
-        ResourceStorage* resourceManager,
+        PipelineResourceStorage* resourceManager,
         PipelineStateManager* pipelineStateManager,
         VertexStorage* vertexStorage,
         RenderSurface defaultRenderSurface,

@@ -2,7 +2,7 @@
 
 #include "GraphicCommandRecorder.hpp"
 #include "RenderSurface.hpp"
-#include "ResourceStorage.hpp"
+#include "PipelineResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
 #include "VertexStorage.hpp"
 
@@ -16,7 +16,7 @@ namespace PathFinder
     public:
         GraphicsDevice(
             const HAL::Device& device,
-            ResourceStorage* resourceStorage, 
+            PipelineResourceStorage* resourceStorage, 
             PipelineStateManager* pipelineStateManager,
             VertexStorage* vertexStorage, 
             RenderSurface defaultRenderSurface,
@@ -54,7 +54,7 @@ namespace PathFinder
         HAL::GraphicsCommandQueue mCommandQueue;
         HAL::GraphicsRingCommandList mRingCommandList;
 
-        ResourceStorage* mResourceStorage;
+        PipelineResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
         VertexStorage* mVertexStorage;
 

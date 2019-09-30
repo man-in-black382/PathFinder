@@ -13,8 +13,10 @@
 
 #include "RenderPass.hpp"
 #include "VertexStorage.hpp"
-#include "ResourceStorage.hpp"
+#include "PipelineResourceStorage.hpp"
+#include "AssetResourceStorage.hpp"
 #include "ResourceScheduler.hpp"
+#include "ResourceDescriptorStorage.hpp"
 #include "RootConstantsUpdater.hpp"
 #include "GraphicsDevice.hpp"
 #include "ShaderManager.hpp"
@@ -53,7 +55,7 @@ namespace PathFinder
 
         CopyDevice mCopyDevice;
         VertexStorage mVertexStorage;
-        ResourceStorage mResourceStorage;
+        PipelineResourceStorage mPipelineResourceStorage;
         ResourceScheduler mResourceScheduler;
         ResourceProvider mResourceProvider;
         RootConstantsUpdater mRootConstantsUpdater;

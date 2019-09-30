@@ -249,9 +249,6 @@
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\ResourceStorage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -312,10 +309,13 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\CopyDevice.cpp">
+    <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp">
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1781,9 +1781,6 @@
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceStorage.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1794,9 +1791,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeap.inl">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceStorage.inl">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp">
@@ -1883,10 +1877,16 @@
     <ClInclude Include="Source\ThirdParty\dds\dds-ktx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\CopyDevice.hpp">
+    <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp">
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.inl">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2345,9 +2345,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\HardwareAbstractionLayer\CopyDevice.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\HardwareAbstractionLayer\RingBufferResource.inl">

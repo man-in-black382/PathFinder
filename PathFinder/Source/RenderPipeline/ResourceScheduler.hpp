@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ResourceStorage.hpp"
+#include "PipelineResourceStorage.hpp"
 
 namespace PathFinder
 {
@@ -36,7 +36,7 @@ namespace PathFinder
             std::optional<Geometry::Dimensions> Dimensions;
         };
 
-        ResourceScheduler(ResourceStorage* manager);
+        ResourceScheduler(PipelineResourceStorage* manager);
 
         template <class BufferDataT>
         void WillUseRootConstantBuffer();
@@ -58,7 +58,7 @@ namespace PathFinder
 
         void EnsureSingleSchedulingRequestForCurrentPass(ResourceName resourceName);
 
-        ResourceStorage* mResourceStorage;
+        PipelineResourceStorage* mResourceStorage;
     };
 
     template <class BufferDataT>

@@ -222,6 +222,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
     <ClCompile Include="Source\IO\Input.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateCreator.cpp" />
@@ -231,7 +232,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp" />
-    <ClCompile Include="Source\RenderPipeline\ResourceStorage.cpp" />
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp" />
     <ClCompile Include="Source\RenderPipeline\VertexLayouts.cpp" />
     <ClCompile Include="Source\RenderPipeline\VertexStorage.cpp" />
@@ -336,6 +337,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
     <ClInclude Include="Source\IO\Input.hpp" />
+    <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
@@ -366,7 +368,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\PipelineNames.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderSurface.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceDescriptorStorage.hpp" />
-    <ClInclude Include="Source\RenderPipeline\ResourceStorage.hpp" />
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceView.hpp" />
     <ClInclude Include="Source\RenderPipeline\ShaderManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexStorageLocation.hpp" />
@@ -791,7 +793,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeap.inl">
       <FileType>CppHeader</FileType>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceStorage.inl">
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.inl">
       <FileType>CppHeader</FileType>
     </ClInclude>
     <None Include="Libs\dxcompiler.dll" />

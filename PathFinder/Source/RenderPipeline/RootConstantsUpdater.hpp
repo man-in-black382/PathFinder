@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ResourceStorage.hpp"
+#include "PipelineResourceStorage.hpp"
 
 namespace PathFinder
 {
@@ -8,13 +8,13 @@ namespace PathFinder
     class RootConstantsUpdater
     {
     public:
-        RootConstantsUpdater(ResourceStorage* storage);
+        RootConstantsUpdater(PipelineResourceStorage* storage);
 
         template <class RootCBufferContent>
         RootCBufferContent* UpdateRootConstantBuffer();
 
     private:
-        ResourceStorage* mResourceStorage;
+        PipelineResourceStorage* mResourceStorage;
     };
 
     template <class RootCBufferData>

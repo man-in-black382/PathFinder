@@ -13,19 +13,19 @@ namespace PathFinder
         mFrameFence{ mDevice },
         mCopyDevice{ &mDevice },
         mVertexStorage{ &mDevice, &mCopyDevice },
-        mResourceStorage{ &mDevice, mDefaultRenderSurface, mSimultaneousFramesInFlight },
-        mResourceScheduler{ &mResourceStorage },
-        mResourceProvider{ &mResourceStorage },
-        mRootConstantsUpdater{ &mResourceStorage },
+        mPipelineResourceStorage{ &mDevice, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mResourceScheduler{ &mPipelineResourceStorage },
+        mResourceProvider{ &mPipelineResourceStorage },
+        mRootConstantsUpdater{ &mPipelineResourceStorage },
         mShaderManager{ mExecutablePath / "Shaders/" },
         mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
         mPipelineStateCreator{ &mPipelineStateManager },
-        mGraphicsDevice{ mDevice, &mResourceStorage, &mPipelineStateManager, &mVertexStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mGraphicsDevice{ mDevice, &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
     {
-        mResourceStorage.UseSwapChain(mSwapChain);
+        mPipelineResourceStorage.UseSwapChain(mSwapChain);
     }
 
     void RenderEngine::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
@@ -38,14 +38,14 @@ namespace PathFinder
     {
         for (auto& passPtr : mRenderPasses)
         {
-            mResourceStorage.SetCurrentPassName(passPtr->Name());
+            mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
             passPtr->SetupPipelineStates(&mPipelineStateCreator);
             passPtr->ScheduleResources(&mResourceScheduler);
         }
 
-        mResourceStorage.AllocateScheduledResources(mPassExecutionGraph);
+        mPipelineResourceStorage.AllocateScheduledResources(mPassExecutionGraph);
         mPipelineStateManager.CompileStates();
-        mGraphicsDevice.CommandList().InsertBarriers(mResourceStorage.OneTimeResourceBarriers());
+        mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.OneTimeResourceBarriers());
         mCopyDevice.CopyResources();
     }
 
@@ -54,7 +54,7 @@ namespace PathFinder
         if (mRenderPasses.empty()) return;
 
         mFrameFence.IncreaseExpectedValue();
-        mResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
+        mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
 
         UpdateCommonRootConstants();
@@ -68,8 +68,8 @@ namespace PathFinder
         for (auto& passPtr : mRenderPasses)
         {
             mGraphicsDevice.SetCurrentRenderPass(passPtr.get());
-            mResourceStorage.SetCurrentPassName(passPtr->Name());
-            mGraphicsDevice.CommandList().InsertBarriers(mResourceStorage.ResourceBarriersForCurrentPass());
+            mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
+            mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.ResourceBarriersForCurrentPass());
             passPtr->Render(&mContext);
         }
 
@@ -82,7 +82,7 @@ namespace PathFinder
 
         mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
-        mResourceStorage.EndFrame(mFrameFence.CompletedValue());
+        mPipelineResourceStorage.EndFrame(mFrameFence.CompletedValue());
         mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
 
         MoveToNextBackBuffer();
@@ -96,14 +96,14 @@ namespace PathFinder
 
     void RenderEngine::MoveToNextBackBuffer()
     {
-        mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % mSwapChain.BackBuffers().size();
-        mResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
+        mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % (uint8_t)mSwapChain.BackBuffers().size();
+        mPipelineResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
     }
 
     void RenderEngine::UpdateCommonRootConstants()
     {
-        GlobalRootConstants* globalConstants = mResourceStorage.GlobalRootConstantData();
-        PerFrameRootConstants* perFrameConstants = mResourceStorage.PerFrameRootConstantData();
+        GlobalRootConstants* globalConstants = mPipelineResourceStorage.GlobalRootConstantData();
+        PerFrameRootConstants* perFrameConstants = mPipelineResourceStorage.PerFrameRootConstantData();
 
         globalConstants->PipelineRTResolution = { mDefaultRenderSurface.Dimensions().Width, mDefaultRenderSurface.Dimensions().Height };
 

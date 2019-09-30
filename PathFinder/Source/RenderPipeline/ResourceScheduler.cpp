@@ -5,7 +5,7 @@
 namespace PathFinder
 {
 
-    ResourceScheduler::ResourceScheduler(ResourceStorage* manager)
+    ResourceScheduler::ResourceScheduler(PipelineResourceStorage* manager)
         : mResourceStorage{ manager } {}
 
     void ResourceScheduler::NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)

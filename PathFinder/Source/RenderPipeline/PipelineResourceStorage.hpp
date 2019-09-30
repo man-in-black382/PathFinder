@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ResourceStorage.hpp"
+#include "PipelineResourceStorage.hpp"
 #include "RenderSurface.hpp"
 #include "ResourceDescriptorStorage.hpp"
 #include "HashSpecializations.hpp"
@@ -31,7 +31,7 @@ namespace PathFinder
     class PipelineResourceAllocator
     {
     public:
-        friend class ResourceStorage;
+        friend class PipelineResourceStorage;
         friend class ResourceScheduler;
 
         using TextureRTDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded);
@@ -63,7 +63,7 @@ namespace PathFinder
     class PipelineResource
     {
     public:
-        friend class ResourceStorage;
+        friend class PipelineResourceStorage;
         friend class ResoruceScheduler;
 
         struct PerPassEntities
@@ -89,7 +89,7 @@ namespace PathFinder
 
 
 
-    class ResourceStorage
+    class PipelineResourceStorage
     {
     public:
         using PassNameResourceName = NameNameTuple;
@@ -98,7 +98,7 @@ namespace PathFinder
         friend class ResourceProvider;
         friend class RootConstantsUpdater;
 
-        ResourceStorage(HAL::Device* device, const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight);
+        PipelineResourceStorage(HAL::Device* device, const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight);
 
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
@@ -200,4 +200,4 @@ namespace PathFinder
 
 }
 
-#include "ResourceStorage.inl"
+#include "PipelineResourceStorage.inl"
