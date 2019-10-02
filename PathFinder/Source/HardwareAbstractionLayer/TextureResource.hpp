@@ -21,16 +21,6 @@ namespace HAL
             uint16_t mipCount = 1
         );
 
-        TextureResource(
-            const Device& device,
-            ResourceFormat::FormatVariant format,
-            ResourceFormat::TextureKind kind,
-            const Geometry::Dimensions& dimensions,
-            const ResourceFormat::ClearValue& optimizedClearValue,
-            CPUAccessibleHeapType heapType,
-            uint16_t mipCount = 1
-        );
-
         bool IsArray() const;
 
         virtual bool CanImplicitlyPromoteFromCommonStateToState(HAL::ResourceState state) const override;
