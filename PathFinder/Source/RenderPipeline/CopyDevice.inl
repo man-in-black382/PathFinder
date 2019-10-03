@@ -2,6 +2,19 @@ namespace PathFinder
 {
 
     template <class T>
+    void CopyDevice::QueueBufferToTextureCopy(std::shared_ptr<HAL::BufferResource<T>> buffer, const HAL::TextureResource& texture, const ResourceFootprint& footprint)
+    {
+        assert_format(IsCopyableState(buffer->InitialStates()), "Resource must be in a copyable state");
+
+        for (const SubresourceFootprint& subresourceFootprint : footprint.SubresourceFootprints())
+        {
+            mCommandList.CopyBufferToTexture(*buffer, texture, subresourceFootprint);
+        }
+
+        mResourcesToCopy.push_back(buffer);
+    }
+
+    template <class T>
     std::unique_ptr<HAL::BufferResource<T>> CopyDevice::QueueResourceCopyToDefaultHeap(std::shared_ptr<HAL::BufferResource<T>> buffer)
     {
         assert_format(IsCopyableState(buffer->InitialStates()), "Resource must be in a copyable state");

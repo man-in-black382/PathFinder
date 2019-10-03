@@ -35,11 +35,11 @@ namespace HAL
 
     void CopyCommandListBase::CopyResource(const Resource& source, Resource& destination)
     {
-        mList->CopyResource(destination.D3DPtr(), source.D3DPtr());
+        mList->CopyResource(destination.D3DResource(), source.D3DResource());
     }
 
     void CopyCommandListBase::CopyTextureRegion(
-        const TextureResource& source, TextureResource& destination,
+        const TextureResource& source, const TextureResource& destination,
         uint16_t sourceSubresource, uint16_t destinationSubresource, 
         const glm::ivec3& sourceOrigin, const glm::ivec3& destinationOrigin,
         const Geometry::Dimensions& regionDimensions)
@@ -47,11 +47,11 @@ namespace HAL
         D3D12_TEXTURE_COPY_LOCATION srcLocation{};
         D3D12_TEXTURE_COPY_LOCATION dstLocation{};
 
-        srcLocation.pResource = source.D3DPtr();
+        srcLocation.pResource = source.D3DResource();
         srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
         srcLocation.SubresourceIndex = sourceSubresource;
 
-        dstLocation.pResource = destination.D3DPtr();
+        dstLocation.pResource = destination.D3DResource();
         dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
         dstLocation.SubresourceIndex = destinationSubresource;
 

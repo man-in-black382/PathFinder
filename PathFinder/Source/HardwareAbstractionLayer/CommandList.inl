@@ -16,7 +16,24 @@ namespace HAL
         auto destinationOffsetInBytes = destination.PaddedElementSize() * destinationOffset;
         auto regionSizeInBytes = source.PaddedElementSize() * objectCount;
 
-        mList->CopyBufferRegion(destination.D3DPtr(), destinationOffsetInBytes, source.D3DPtr(), sourceOffsetInBytes, regionSizeInBytes);
+        mList->CopyBufferRegion(destination.D3DResource(), destinationOffsetInBytes, source.D3DResource(), sourceOffsetInBytes, regionSizeInBytes);
+    }
+
+    template <class T>
+    void CopyCommandListBase::CopyBufferToTexture(const BufferResource<T>& buffer, const TextureResource& texture, const SubresourceFootprint& footprint)
+    {
+        D3D12_TEXTURE_COPY_LOCATION srcLocation{};
+        D3D12_TEXTURE_COPY_LOCATION dstLocation{};
+
+        srcLocation.pResource = buffer.D3DResource();
+        srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        srcLocation.PlacedFootprint = footprint.D3DFootprint();
+
+        dstLocation.pResource = texture.D3DResource();
+        dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        dstLocation.PlacedFootprint = footprint.D3DFootprint();
+
+        mList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, nullptr);
     }
 
 

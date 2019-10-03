@@ -17,7 +17,7 @@ namespace HAL
         mDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         mDesc.Transition.StateBefore = D3DResourceState(beforeStateMask);
         mDesc.Transition.StateAfter = D3DResourceState(afterStateMask);
-        mDesc.Transition.pResource = resource->D3DPtr();
+        mDesc.Transition.pResource = resource->D3DResource();
     }
 
     void ResourceBarrierCollection::AddBarrier(const ResourceBarrier& barrier)

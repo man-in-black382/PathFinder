@@ -103,7 +103,7 @@ namespace HAL
             std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(buffer.D3DDescription(), explicitStride ? *explicitStride : sizeof(T));
-        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DPtr(), &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DResource(), &desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);
         return descriptor;
@@ -121,7 +121,7 @@ namespace HAL
             std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(buffer.D3DDescription(), explicitStride ? *explicitStride : sizeof(T));
-        mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DPtr(), nullptr, &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DResource(), nullptr, &desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);
         return descriptor;

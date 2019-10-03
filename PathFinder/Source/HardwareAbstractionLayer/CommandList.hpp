@@ -15,6 +15,7 @@
 #include "Fence.hpp"
 #include "BufferResource.hpp"
 #include "RayTracingAccelerationStructure.hpp"
+#include "ResourceFootprint.hpp"
 
 #include "../Foundation/Color.hpp"
 #include "../Geometry/Rect2D.hpp"
@@ -57,11 +58,14 @@ namespace HAL
             uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
 
         void CopyTextureRegion(
-            const TextureResource& source, TextureResource& destination,
+            const TextureResource& source, const TextureResource& destination,
             uint16_t sourceSubresource, uint16_t destinationSubresource,
             const glm::ivec3& sourceOrigin, const glm::ivec3& destinationOrigin,
             const Geometry::Dimensions& regionDimensions
         );
+
+        template <class T>
+        void CopyBufferToTexture(const BufferResource<T>& buffer, const TextureResource& texture, const SubresourceFootprint& footprint);
     };
 
 

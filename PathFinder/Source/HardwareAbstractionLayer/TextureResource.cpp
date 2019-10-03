@@ -70,4 +70,9 @@ namespace HAL
         return EnumMaskBitSet(compatibleStatesMask, state);
     }
 
+    uint32_t TextureResource::SubresourceCount() const
+    {
+        return IsArray() ? mDimensions.Depth * mMipCount : mMipCount;
+    }
+
 }

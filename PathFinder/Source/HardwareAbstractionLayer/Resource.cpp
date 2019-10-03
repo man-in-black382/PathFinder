@@ -1,7 +1,10 @@
 #include "Resource.hpp"
 #include "Utils.h"
+#include "ResourceFootprint.hpp"
 
 #include "../Foundation/STDHelpers.hpp"
+
+#include <vector>
 
 namespace HAL
 {
@@ -33,8 +36,8 @@ namespace HAL
         UINT GPUMask = 0;
         D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
 
-        mMemoryAlignment = allocInfo.Alignment;
-        mMemoryFootprint = allocInfo.SizeInBytes;
+        mResourceAlignment = allocInfo.Alignment;
+        mTotalMemory = allocInfo.SizeInBytes;
     }
 
     Resource::Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType)
@@ -72,8 +75,8 @@ namespace HAL
         UINT GPUMask = 0;
         D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
 
-        mMemoryAlignment = allocInfo.Alignment;
-        mMemoryFootprint = allocInfo.SizeInBytes;
+        mResourceAlignment = allocInfo.Alignment;
+        mTotalMemory = allocInfo.SizeInBytes;
     }
 
     Resource::~Resource() {}
@@ -91,6 +94,11 @@ namespace HAL
     bool Resource::CanImplicitlyDecayToCommonStateFromState(ResourceState state) const
     {
         return false;
+    }
+
+    uint32_t Resource::SubresourceCount() const
+    {
+        return 1;
     }
 
     void Resource::SetExpectedUsageFlags(ResourceState stateMask)

@@ -30,7 +30,7 @@ namespace HAL
             std::make_unique<RTDescriptor>(range.CurrentCPUHandle)));
 
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(d3dDesc);
-        mDevice->D3DDevice()->CreateRenderTargetView(texture.D3DPtr(), &rtvDesc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateRenderTargetView(texture.D3DResource(), &rtvDesc, range.CurrentCPUHandle);
 
         IncrementCounters(0);
         return descriptor;
@@ -107,7 +107,7 @@ namespace HAL
             std::make_unique<DSDescriptor>(range.CurrentCPUHandle)));
 
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = ResourceToDSVDescription(texture.D3DDescription());
-        mDevice->D3DDevice()->CreateDepthStencilView(texture.D3DPtr(), &dsvDesc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateDepthStencilView(texture.D3DResource(), &dsvDesc, range.CurrentCPUHandle);
 
         IncrementCounters(0);
         return descriptor;
@@ -308,7 +308,7 @@ namespace HAL
             std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
-        mDevice->D3DDevice()->CreateShaderResourceView(texture.D3DPtr(), &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateShaderResourceView(texture.D3DResource(), &desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);
         return descriptor;
@@ -326,7 +326,7 @@ namespace HAL
             std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
-        mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DPtr(), nullptr, &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DResource(), nullptr, &desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);
         return descriptor;

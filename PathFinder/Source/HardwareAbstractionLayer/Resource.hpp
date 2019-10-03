@@ -37,6 +37,7 @@ namespace HAL
         virtual D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress() const;
         virtual bool CanImplicitlyPromoteFromCommonStateToState(HAL::ResourceState state) const;
         virtual bool CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const;
+        virtual uint32_t SubresourceCount() const;
 
     protected:
         Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask);
@@ -45,21 +46,22 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
         ResourceState mInitialStates;
         ResourceState mExpectedStates;
-        size_t mMemoryFootprint;
-        size_t mMemoryAlignment;
 
     private:
+        size_t mTotalMemory;
+        size_t mResourceAlignment;
+        size_t mSubresourceCount;
         D3D12_RESOURCE_DESC mDescription{};
 
         void SetExpectedUsageFlags(ResourceState stateMask);
 
     public:
-        inline ID3D12Resource* D3DPtr() const { return mResource.Get(); }
+        inline ID3D12Resource* D3DResource() const { return mResource.Get(); }
         inline const D3D12_RESOURCE_DESC& D3DDescription() const { return mDescription; };
         inline ResourceState InitialStates() const { return mInitialStates; };
         inline ResourceState ExpectedStates() const { return mExpectedStates; };
-        inline size_t MemoryFootprint() const { return mMemoryFootprint; }
-        inline size_t MemoryAlignment() const { return mMemoryAlignment; }
+        inline size_t TotalMemory() const { return mTotalMemory; }
+        inline size_t ResourceAlignment() const { return mResourceAlignment; }
     };
 
 }

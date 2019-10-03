@@ -24,15 +24,26 @@ namespace PathFinder
         ddsktx_error error;
 
         assert_format(ddsktx_parse(&textureInfo, bytes.data(), (int)bytes.size(), &error), "Couldn't read texture file: ", error.msg);
+        assert_format(textureInfo.num_layers == 1, "Texture array are not supported yet");
+
+        std::unique_ptr<HAL::TextureResource> texture = AllocateTexture(textureInfo);
+        HAL::ResourceFootprint textureFootprint{ texture };
+
+        auto uploadBuffer = std::make_shared<HAL::BufferResource<uint8_t>>(
+            *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Upload);
 
         for (int mip = 0; mip < textureInfo.num_mips; mip++)
         {
             ddsktx_sub_data subData;
             ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, 0, mip);
+
+            const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
+
+            uploadBuffer->Write(mip * mipFootprint.)
         }
 
         input.close();
-
+        
         return nullptr;
     }
 

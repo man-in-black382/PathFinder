@@ -154,7 +154,7 @@ namespace PathFinder
             auto texture = std::make_unique<HAL::TextureResource>(
                 *mDevice, format, kind, dimensions, optimizedClearValue, initialState, expectedStates);
 
-            texture->D3DPtr()->SetName(StringToWString(resourceName.ToSring()).c_str());
+            texture->D3DResource()->SetName(StringToWString(resourceName.ToSring()).c_str());
 
             PipelineResource newResource;
 
