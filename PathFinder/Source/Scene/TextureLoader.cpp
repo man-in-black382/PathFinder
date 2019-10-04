@@ -39,7 +39,10 @@ namespace PathFinder
 
             const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
 
-            uploadBuffer->Write(mip * mipFootprint.)
+            bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes;
+            if ()
+
+            //uploadBuffer->Write(mip * mipFootprint.)
         }
 
         input.close();
