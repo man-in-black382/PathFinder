@@ -34,7 +34,7 @@ namespace HAL
 
     private:
         std::vector<SubresourceFootprint> mSubresourceFootprints;
-        uint64_t mTotalSize;
+        uint64_t mTotalSize = 0;
 
     public:
         inline const std::vector<SubresourceFootprint>& SubresourceFootprints() const { return mSubresourceFootprints; }

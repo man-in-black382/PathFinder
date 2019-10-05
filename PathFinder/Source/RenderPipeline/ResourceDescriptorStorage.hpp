@@ -19,31 +19,16 @@ namespace PathFinder
         
         ResourceDescriptorStorage(HAL::Device* device);
 
-        const HAL::RTDescriptor* GetRTDescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
-        const HAL::DSDescriptor* GetDSDescriptor(ResourceName resourceName);
-        const HAL::SRDescriptor* GetSRDescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
-        const HAL::UADescriptor* GetUADescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
-        const HAL::CBDescriptor* GetCBDescriptor(ResourceName resourceName);
+        const HAL::RTDescriptor* GetRTDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
+        const HAL::DSDescriptor* GetDSDescriptor(const HAL::Resource* resource);
+        const HAL::SRDescriptor* GetSRDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
+        const HAL::UADescriptor* GetUADescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format = std::nullopt);
+        const HAL::CBDescriptor* GetCBDescriptor(const HAL::Resource* resource);
 
-        const HAL::RTDescriptor& EmplaceRTDescriptorIfNeeded(
-            ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt
-        );
-
-        const HAL::DSDescriptor& EmplaceDSDescriptorIfNeeded(
-            ResourceName resourceName, const HAL::TextureResource& texture
-        );
-
-        const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(
-            ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt
-        );
-
-        const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(
-            ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt
-        );
-
-        const HAL::RTDescriptorHeap& RTDescriptorHeap() const { return mRTDescriptorHeap; }
-        const HAL::DSDescriptorHeap& DSDescriptorHeap() const { return mDSDescriptorHeap; }
-        const HAL::CBSRUADescriptorHeap& CBSRUADescriptorHeap() const { return mCBSRUADescriptorHeap; }
+        const HAL::RTDescriptor& EmplaceRTDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt);
+        const HAL::DSDescriptor& EmplaceDSDescriptorIfNeeded(const HAL::TextureResource* texture);
+        const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt);
+        const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt);
 
     private:
         struct DSCBSet
@@ -73,8 +58,8 @@ namespace PathFinder
         void ValidateRTFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat);
         void ValidateSRUAFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat);
 
-        const DSCBSet& GetDSCBSet(ResourceName name);
-        const RTSRUASet& GetRTSRUASet(ResourceName name, std::optional<HAL::ResourceFormat::Color> format);
+        const DSCBSet& GetDSCBSet(const HAL::Resource* resource);
+        const RTSRUASet& GetRTSRUASet(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format);
 
         uint32_t mDescriptorHeapCapacity = 10000;
 
@@ -82,7 +67,12 @@ namespace PathFinder
         HAL::DSDescriptorHeap mDSDescriptorHeap;
         HAL::CBSRUADescriptorHeap mCBSRUADescriptorHeap;
        
-        std::unordered_map<ResourceName, DescriptorSet> mDescriptors;
+        std::unordered_map<const HAL::Resource*, DescriptorSet> mDescriptors;
+
+    public:
+        const HAL::RTDescriptorHeap& RTDescriptorHeap() const { return mRTDescriptorHeap; }
+        const HAL::DSDescriptorHeap& DSDescriptorHeap() const { return mDSDescriptorHeap; }
+        const HAL::CBSRUADescriptorHeap& CBSRUADescriptorHeap() const { return mCBSRUADescriptorHeap; }
     };
 
 }

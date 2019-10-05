@@ -10,98 +10,95 @@ namespace PathFinder
         mDSDescriptorHeap{ device, mDescriptorHeapCapacity },
         mCBSRUADescriptorHeap{ device, mDescriptorHeapCapacity } {}
 
-    const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format)
+    const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
     {
-        return GetRTSRUASet(resourceName, format).rtDescriptor;
+        return GetRTSRUASet(resource, format).rtDescriptor;
     }
 
-    const HAL::DSDescriptor* ResourceDescriptorStorage::GetDSDescriptor(ResourceName resourceName)
+    const HAL::DSDescriptor* ResourceDescriptorStorage::GetDSDescriptor(const HAL::Resource* resource)
     {
-        return GetDSCBSet(resourceName).dsDescriptor;
+        return GetDSCBSet(resource).dsDescriptor;
     }
 
-    const HAL::SRDescriptor* ResourceDescriptorStorage::GetSRDescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format)
+    const HAL::SRDescriptor* ResourceDescriptorStorage::GetSRDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
     {
-        return GetRTSRUASet(resourceName, format).srDescriptor;
+        return GetRTSRUASet(resource, format).srDescriptor;
     }
 
-    const HAL::UADescriptor* ResourceDescriptorStorage::GetUADescriptor(ResourceName resourceName, std::optional<HAL::ResourceFormat::Color> format)
+    const HAL::UADescriptor* ResourceDescriptorStorage::GetUADescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
     {
-        return GetRTSRUASet(resourceName, format).uaDescriptor;
+        return GetRTSRUASet(resource, format).uaDescriptor;
     }
 
-    const HAL::CBDescriptor* ResourceDescriptorStorage::GetCBDescriptor(ResourceName resourceName)
+    const HAL::CBDescriptor* ResourceDescriptorStorage::GetCBDescriptor(const HAL::Resource* resource)
     {
-        return GetDSCBSet(resourceName).cbDescriptor;
+        return GetDSCBSet(resource).cbDescriptor;
     }
 
-    const HAL::RTDescriptor& ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(
-        ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
+    const HAL::RTDescriptor& ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
     {
-        ValidateRTFormatsCompatibility(texture.Format(), shaderVisibleFormat);
+        ValidateRTFormatsCompatibility(texture->Format(), shaderVisibleFormat);
 
-        if (auto descriptor = GetRTDescriptor(resourceName, shaderVisibleFormat)) return *descriptor;
+        if (auto descriptor = GetRTDescriptor(texture, shaderVisibleFormat)) return *descriptor;
 
-        const HAL::RTDescriptor& descriptor = mRTDescriptorHeap.EmplaceRTDescriptor(texture, shaderVisibleFormat);
+        const HAL::RTDescriptor& descriptor = mRTDescriptorHeap.EmplaceRTDescriptor(*texture, shaderVisibleFormat);
 
         if (shaderVisibleFormat)
         {
-            mDescriptors[resourceName].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].rtDescriptor = &descriptor;
+            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].rtDescriptor = &descriptor;
         }
         else {
-            mDescriptors[resourceName].ImplicitlyTypedRTSRUA.rtDescriptor = &descriptor;
+            mDescriptors[texture].ImplicitlyTypedRTSRUA.rtDescriptor = &descriptor;
         }
 
         return descriptor;
     }
 
-    const HAL::DSDescriptor& ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded(
-        ResourceName resourceName, const HAL::TextureResource& texture)
+    const HAL::DSDescriptor& ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded(const HAL::TextureResource* texture)
     {
-        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(texture.Format()), "Texture is not of depth-stencil format");
+        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(texture->Format()), "Texture is not of depth-stencil format");
 
-        if (auto descriptor = GetDSDescriptor(resourceName)) return *descriptor;
+        if (auto descriptor = GetDSDescriptor(texture)) return *descriptor;
 
-        const HAL::DSDescriptor& descriptor = mDSDescriptorHeap.EmplaceDSDescriptor(texture);
-        mDescriptors[resourceName].DSCB.dsDescriptor = &descriptor;
+        const HAL::DSDescriptor& descriptor = mDSDescriptorHeap.EmplaceDSDescriptor(*texture);
+        mDescriptors[texture].DSCB.dsDescriptor = &descriptor;
         return descriptor;
     }
 
-    const HAL::SRDescriptor& ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded(
-        ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
+    const HAL::SRDescriptor& ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
     {
-        ValidateSRUAFormatsCompatibility(texture.Format(), shaderVisibleFormat);
+        ValidateSRUAFormatsCompatibility(texture->Format(), shaderVisibleFormat);
 
-        if (auto descriptor = GetSRDescriptor(resourceName, shaderVisibleFormat)) return *descriptor;
+        if (auto descriptor = GetSRDescriptor(texture, shaderVisibleFormat)) return *descriptor;
 
-        const HAL::SRDescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceSRDescriptor(texture, shaderVisibleFormat);
+        const HAL::SRDescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceSRDescriptor(*texture, shaderVisibleFormat);
 
         if (shaderVisibleFormat)
         {
-            mDescriptors[resourceName].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].srDescriptor = &descriptor;
+            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].srDescriptor = &descriptor;
         } 
         else {
-            mDescriptors[resourceName].ImplicitlyTypedRTSRUA.srDescriptor = &descriptor;
+            mDescriptors[texture].ImplicitlyTypedRTSRUA.srDescriptor = &descriptor;
         }
         
         return descriptor;
     }
 
     const HAL::UADescriptor& ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded(
-        ResourceName resourceName, const HAL::TextureResource& texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
+        const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
     {
-        ValidateSRUAFormatsCompatibility(texture.Format(), shaderVisibleFormat);
+        ValidateSRUAFormatsCompatibility(texture->Format(), shaderVisibleFormat);
 
-        if (auto descriptor = GetUADescriptor(resourceName, shaderVisibleFormat)) return *descriptor;
+        if (auto descriptor = GetUADescriptor(texture, shaderVisibleFormat)) return *descriptor;
 
-        const HAL::UADescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(texture, shaderVisibleFormat);
+        const HAL::UADescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(*texture, shaderVisibleFormat);
 
         if (shaderVisibleFormat)
         {
-            mDescriptors[resourceName].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].uaDescriptor = &descriptor;
+            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].uaDescriptor = &descriptor;
         }
         else {
-            mDescriptors[resourceName].ImplicitlyTypedRTSRUA.uaDescriptor = &descriptor;
+            mDescriptors[texture].ImplicitlyTypedRTSRUA.uaDescriptor = &descriptor;
         }
 
         return descriptor;
@@ -125,19 +122,19 @@ namespace PathFinder
         assert_format(!shaderVisibleFormat || std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for typed texture");
     }
 
-    const ResourceDescriptorStorage::DSCBSet& ResourceDescriptorStorage::GetDSCBSet(ResourceName name)
+    const PathFinder::ResourceDescriptorStorage::DSCBSet& ResourceDescriptorStorage::GetDSCBSet(const HAL::Resource* resource)
     {
-        return mDescriptors[name].DSCB;
+        return mDescriptors[resource].DSCB;
     }
 
-    const ResourceDescriptorStorage::RTSRUASet& ResourceDescriptorStorage::GetRTSRUASet(ResourceName name, std::optional<HAL::ResourceFormat::Color> format)
+    const ResourceDescriptorStorage::RTSRUASet& ResourceDescriptorStorage::GetRTSRUASet(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
     {
         if (format)
         {
-            return mDescriptors[name].ExplicitlyTypedRTSRUA[*format];
+            return mDescriptors[resource].ExplicitlyTypedRTSRUA[*format];
         } 
         else {
-            return mDescriptors[name].ImplicitlyTypedRTSRUA;
+            return mDescriptors[resource].ImplicitlyTypedRTSRUA;
         }
     }
 

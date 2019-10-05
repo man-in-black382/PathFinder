@@ -27,7 +27,7 @@ namespace PathFinder
         assert_format(textureInfo.num_layers == 1, "Texture array are not supported yet");
 
         std::unique_ptr<HAL::TextureResource> texture = AllocateTexture(textureInfo);
-        HAL::ResourceFootprint textureFootprint{ texture };
+        HAL::ResourceFootprint textureFootprint{ *texture };
 
         auto uploadBuffer = std::make_shared<HAL::BufferResource<uint8_t>>(
             *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Upload);
@@ -40,7 +40,7 @@ namespace PathFinder
             const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
 
             bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes;
-            if ()
+
 
             //uploadBuffer->Write(mip * mipFootprint.)
         }

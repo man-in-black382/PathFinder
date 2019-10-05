@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
+#include "../HardwareAbstractionLayer/ResourceFootprint.hpp"
 
 #include <memory>
 
@@ -12,7 +13,7 @@ namespace PathFinder
     public:
         CopyDevice(const HAL::Device* device);
 
-        template <class T> void QueueBufferToTextureCopy(std::shared_ptr<HAL::BufferResource<T>> buffer, const HAL::TextureResource& texture, const ResourceFootprint& footprint);
+        template <class T> void QueueBufferToTextureCopy(std::shared_ptr<HAL::BufferResource<T>> buffer, const HAL::TextureResource& texture, const HAL::ResourceFootprint& footprint);
         template <class T> std::unique_ptr<HAL::BufferResource<T>> QueueResourceCopyToDefaultHeap(std::shared_ptr<HAL::BufferResource<T>> buffer);
         std::unique_ptr<HAL::TextureResource> QueueResourceCopyToDefaultHeap(std::shared_ptr<HAL::TextureResource> texture);
         

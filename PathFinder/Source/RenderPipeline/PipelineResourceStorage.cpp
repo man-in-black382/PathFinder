@@ -50,7 +50,7 @@ namespace PathFinder
         auto perPassData = pipelineResource->GetPerPassData(mCurrentPassName);
         if (perPassData) format = perPassData->ShaderVisibleFormat;
 
-        auto descriptor = mDescriptorStorage.GetRTDescriptor(resourceName, format);
+        auto descriptor = mDescriptorStorage.GetRTDescriptor(pipelineResource->Resource(), format);
         assert_format(descriptor, "Resource ", resourceName.ToSring(), " was not scheduled to be used as render target");
 
         return *descriptor;
@@ -63,7 +63,8 @@ namespace PathFinder
 
     const HAL::DSDescriptor& PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
     {
-        auto descriptor = mDescriptorStorage.GetDSDescriptor(resourceName);
+        PipelineResource* pipelineResource = GetPipelineResource(resourceName);
+        auto descriptor = mDescriptorStorage.GetDSDescriptor(pipelineResource->Resource());
         assert_format(descriptor, "Resource ", resourceName.ToSring(), " was not scheduled to be used as depth-stencil target");
         return *descriptor;
     }
@@ -93,7 +94,7 @@ namespace PathFinder
     {
         for (auto i = 0; i < swapChain.BackBuffers().size(); i++)
         {
-            mBackBufferDescriptors.push_back(mDescriptorStorage.EmplaceRTDescriptorIfNeeded(BackBufferNames[i], *swapChain.BackBuffers()[i]));
+            mBackBufferDescriptors.push_back(mDescriptorStorage.EmplaceRTDescriptorIfNeeded(swapChain.BackBuffers()[i].get()));
         }
     }
 
@@ -185,10 +186,10 @@ namespace PathFinder
         {
             const PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
 
-            if (perPassData.RTInserter) (mDescriptorStorage.*perPassData.RTInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
-            if (perPassData.DSInserter) (mDescriptorStorage.*perPassData.DSInserter)(resourceName, texture);
-            if (perPassData.SRInserter) (mDescriptorStorage.*perPassData.SRInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
-            if (perPassData.UAInserter) (mDescriptorStorage.*perPassData.UAInserter)(resourceName, texture, perPassData.ShaderVisibleFormat);
+            if (perPassData.RTInserter) (mDescriptorStorage.*perPassData.RTInserter)(&texture, perPassData.ShaderVisibleFormat);
+            if (perPassData.DSInserter) (mDescriptorStorage.*perPassData.DSInserter)(&texture);
+            if (perPassData.SRInserter) (mDescriptorStorage.*perPassData.SRInserter)(&texture, perPassData.ShaderVisibleFormat);
+            if (perPassData.UAInserter) (mDescriptorStorage.*perPassData.UAInserter)(&texture, perPassData.ShaderVisibleFormat);
         }
     }
 

@@ -17,13 +17,13 @@ namespace PathFinder
 
         if (perPassData->IsSRDescriptorRequested)
         {
-            const HAL::SRDescriptor* srDescriptor = mResourceStorage->mDescriptorStorage.GetSRDescriptor(resourceName, perPassData->ShaderVisibleFormat);
+            const HAL::SRDescriptor* srDescriptor = mResourceStorage->mDescriptorStorage.GetSRDescriptor(resource->Resource(), perPassData->ShaderVisibleFormat);
             return srDescriptor->IndexInHeapRange();
         } 
 
         if (perPassData->IsUADescriptorRequested)
         {
-            const HAL::UADescriptor* uaDescriptor = mResourceStorage->mDescriptorStorage.GetUADescriptor(resourceName, perPassData->ShaderVisibleFormat);
+            const HAL::UADescriptor* uaDescriptor = mResourceStorage->mDescriptorStorage.GetUADescriptor(resource->Resource(), perPassData->ShaderVisibleFormat);
             return uaDescriptor->IndexInHeapRange();
         }
 
