@@ -35,6 +35,7 @@ namespace HAL
 
     public:
         inline auto& BackBuffers() { return mBackBuffers; }
+        inline const auto& BackBuffers() const { return mBackBuffers; }
     };
 }
 

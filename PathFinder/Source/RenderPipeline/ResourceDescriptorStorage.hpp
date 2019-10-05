@@ -61,7 +61,7 @@ namespace PathFinder
         const DSCBSet& GetDSCBSet(const HAL::Resource* resource);
         const RTSRUASet& GetRTSRUASet(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format);
 
-        uint32_t mDescriptorHeapCapacity = 10000;
+        uint32_t mDescriptorHeapRangeCapacity = 1000;
 
         HAL::RTDescriptorHeap mRTDescriptorHeap;
         HAL::DSDescriptorHeap mDSDescriptorHeap;

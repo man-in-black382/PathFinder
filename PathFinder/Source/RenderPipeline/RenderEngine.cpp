@@ -13,19 +13,21 @@ namespace PathFinder
         mFrameFence{ mDevice },
         mCopyDevice{ &mDevice },
         mVertexStorage{ &mDevice, &mCopyDevice },
-        mPipelineResourceStorage{ &mDevice, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mDescriptorStorage{ &mDevice },
+        mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mAssetResourceStorage{ &mDescriptorStorage },
         mResourceScheduler{ &mPipelineResourceStorage },
         mResourceProvider{ &mPipelineResourceStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
         mShaderManager{ mExecutablePath / "Shaders/" },
         mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
         mPipelineStateCreator{ &mPipelineStateManager },
-        mGraphicsDevice{ mDevice, &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
     {
-        mPipelineResourceStorage.UseSwapChain(mSwapChain);
+        mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);
     }
 
     void RenderEngine::AddRenderPass(std::unique_ptr<RenderPass>&& pass)

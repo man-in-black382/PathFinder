@@ -4,6 +4,7 @@
 #include "../Geometry/AxisAlignedBox3D.hpp"
 
 #include "Mesh.hpp"
+#include "Material.hpp"
 
 #include <unordered_map>
 #include <glm/mat4x4.hpp>
@@ -16,22 +17,15 @@ namespace PathFinder
     class MeshInstance
     {
     public:
-        
-
-        /// Material reference that overrides individual sub mesh materials if set
-        //std::optional<MaterialReference> materialReference;
-
-        MeshInstance(const Mesh* mesh);
-
-        //void setMaterialReferenceForSubMeshID(const MaterialReference &ref, ID subMeshID);
+        MeshInstance(const Mesh* mesh, const Material* material);
 
     private:
         const Mesh* mMesh;
+        const Material* mMaterial;
         bool mIsSelected = false;
         bool mIsHighlighted = false;
         Geometry::Transformation mTransformation;
         glm::mat4 mModelMatrix;
-        //std::unordered_map<ID, MaterialReference> mSubMeshMaterialMap;
 
     public:
         inline bool IsSelected() const { return mIsSelected; }

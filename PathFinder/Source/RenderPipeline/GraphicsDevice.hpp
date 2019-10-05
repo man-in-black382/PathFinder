@@ -16,6 +16,7 @@ namespace PathFinder
     public:
         GraphicsDevice(
             const HAL::Device& device,
+            const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
             PipelineResourceStorage* resourceStorage, 
             PipelineStateManager* pipelineStateManager,
             VertexStorage* vertexStorage, 
@@ -53,6 +54,8 @@ namespace PathFinder
 
         HAL::GraphicsCommandQueue mCommandQueue;
         HAL::GraphicsRingCommandList mRingCommandList;
+        
+        const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap;
 
         PipelineResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;

@@ -8,10 +8,13 @@
 namespace PathFinder
 {
 
-    PipelineResourceStorage::PipelineResourceStorage(HAL::Device* device, const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
-        : mDevice{ device },
+    PipelineResourceStorage::PipelineResourceStorage(
+        HAL::Device* device, ResourceDescriptorStorage* descriptorStorage,
+        const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
+        : 
+        mDevice{ device },
         mDefaultRenderSurface{ defaultRenderSurface },
-        mDescriptorStorage{ device },
+        mDescriptorStorage{ descriptorStorage },
         mSimultaneousFramesInFlight{ simultaneousFramesInFlight },
         mGlobalRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
         mPerFrameRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload }
@@ -50,7 +53,7 @@ namespace PathFinder
         auto perPassData = pipelineResource->GetPerPassData(mCurrentPassName);
         if (perPassData) format = perPassData->ShaderVisibleFormat;
 
-        auto descriptor = mDescriptorStorage.GetRTDescriptor(pipelineResource->Resource(), format);
+        auto descriptor = mDescriptorStorage->GetRTDescriptor(pipelineResource->Resource(), format);
         assert_format(descriptor, "Resource ", resourceName.ToSring(), " was not scheduled to be used as render target");
 
         return *descriptor;
@@ -64,7 +67,7 @@ namespace PathFinder
     const HAL::DSDescriptor& PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
     {
         PipelineResource* pipelineResource = GetPipelineResource(resourceName);
-        auto descriptor = mDescriptorStorage.GetDSDescriptor(pipelineResource->Resource());
+        auto descriptor = mDescriptorStorage->GetDSDescriptor(pipelineResource->Resource());
         assert_format(descriptor, "Resource ", resourceName.ToSring(), " was not scheduled to be used as depth-stencil target");
         return *descriptor;
     }
@@ -90,17 +93,12 @@ namespace PathFinder
         OptimizeResourceStates(executionGraph);
     }
 
-    void PipelineResourceStorage::UseSwapChain(HAL::SwapChain& swapChain)
+    void PipelineResourceStorage::CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain)
     {
         for (auto i = 0; i < swapChain.BackBuffers().size(); i++)
         {
-            mBackBufferDescriptors.push_back(mDescriptorStorage.EmplaceRTDescriptorIfNeeded(swapChain.BackBuffers()[i].get()));
+            mBackBufferDescriptors.push_back(mDescriptorStorage->EmplaceRTDescriptorIfNeeded(swapChain.BackBuffers()[i].get()));
         }
-    }
-
-    const ResourceDescriptorStorage& PipelineResourceStorage::DescriptorStorage() const
-    {
-        return mDescriptorStorage;
     }
 
     GlobalRootConstants* PipelineResourceStorage::GlobalRootConstantData()
@@ -186,10 +184,10 @@ namespace PathFinder
         {
             const PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
 
-            if (perPassData.RTInserter) (mDescriptorStorage.*perPassData.RTInserter)(&texture, perPassData.ShaderVisibleFormat);
-            if (perPassData.DSInserter) (mDescriptorStorage.*perPassData.DSInserter)(&texture);
-            if (perPassData.SRInserter) (mDescriptorStorage.*perPassData.SRInserter)(&texture, perPassData.ShaderVisibleFormat);
-            if (perPassData.UAInserter) (mDescriptorStorage.*perPassData.UAInserter)(&texture, perPassData.ShaderVisibleFormat);
+            if (perPassData.RTInserter) (mDescriptorStorage->*perPassData.RTInserter)(&texture, perPassData.ShaderVisibleFormat);
+            if (perPassData.DSInserter) (mDescriptorStorage->*perPassData.DSInserter)(&texture);
+            if (perPassData.SRInserter) (mDescriptorStorage->*perPassData.SRInserter)(&texture, perPassData.ShaderVisibleFormat);
+            if (perPassData.UAInserter) (mDescriptorStorage->*perPassData.UAInserter)(&texture, perPassData.ShaderVisibleFormat);
         }
     }
 

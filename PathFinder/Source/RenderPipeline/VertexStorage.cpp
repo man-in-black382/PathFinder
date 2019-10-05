@@ -94,7 +94,7 @@ namespace PathFinder
         }
     }
 
-    void VertexStorage::TransferDataToGPU()
+    void VertexStorage::FinilazeVertexBuffers()
     {
         CopyBuffersToDefaultHeap<Vertex1P1N1UV1T1BT>();
         CopyBuffersToDefaultHeap<Vertex1P1N1UV>();

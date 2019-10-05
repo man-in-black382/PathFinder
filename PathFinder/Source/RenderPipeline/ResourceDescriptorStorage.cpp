@@ -6,9 +6,9 @@ namespace PathFinder
 {
 
     ResourceDescriptorStorage::ResourceDescriptorStorage(HAL::Device* device)
-        : mRTDescriptorHeap{ device, mDescriptorHeapCapacity },
-        mDSDescriptorHeap{ device, mDescriptorHeapCapacity },
-        mCBSRUADescriptorHeap{ device, mDescriptorHeapCapacity } {}
+        : mRTDescriptorHeap{ device, mDescriptorHeapRangeCapacity },
+        mDSDescriptorHeap{ device, mDescriptorHeapRangeCapacity },
+        mCBSRUADescriptorHeap{ device, mDescriptorHeapRangeCapacity } {}
 
     const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
     {

@@ -55,7 +55,9 @@ namespace PathFinder
 
         CopyDevice mCopyDevice;
         VertexStorage mVertexStorage;
+        ResourceDescriptorStorage mDescriptorStorage;
         PipelineResourceStorage mPipelineResourceStorage;
+        AssetResourceStorage mAssetResourceStorage;
         ResourceScheduler mResourceScheduler;
         ResourceProvider mResourceProvider;
         RootConstantsUpdater mRootConstantsUpdater;

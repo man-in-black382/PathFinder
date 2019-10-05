@@ -7,6 +7,7 @@ namespace PathFinder
 
     GraphicsDevice::GraphicsDevice(
         const HAL::Device& device,
+        const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
         PipelineResourceStorage* resourceManager,
         PipelineStateManager* pipelineStateManager,
         VertexStorage* vertexStorage,
@@ -14,6 +15,7 @@ namespace PathFinder
         uint8_t simultaneousFramesInFlight)
         :
         mCommandQueue{ device },
+        mUniversalGPUDescriptorHeap{ universalGPUDescriptorHeap },
         mRingCommandList{ device, simultaneousFramesInFlight },
         mResourceStorage{ resourceManager },
         mPipelineStateManager{ pipelineStateManager },
@@ -159,10 +161,8 @@ namespace PathFinder
     }
 
     void GraphicsDevice::ReapplyCommonGraphicsResourceBindings()
-    {
-        const HAL::CBSRUADescriptorHeap& heap = mResourceStorage->DescriptorStorage().CBSRUADescriptorHeap();
-        
-        CommandList().SetDescriptorHeap(heap);
+    {   
+        CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
         // Look at PipelineStateManager for base root signature parameter ordering
         CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
@@ -170,19 +170,17 @@ namespace PathFinder
 
         if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass()) CommandList().SetGraphicsRootConstantBuffer(*buffer, 2);
 
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 3);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 4);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 5);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 6);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 7);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 8);     
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 3);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 4);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 5);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 6);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 7);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 8);
     }
 
     void GraphicsDevice::ReapplyCommonComputeResourceBindings()
     {
-        const HAL::CBSRUADescriptorHeap& heap = mResourceStorage->DescriptorStorage().CBSRUADescriptorHeap();
-
-        CommandList().SetDescriptorHeap(heap);
+        CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
         // Look at PipelineStateManager for base root signature parameter ordering
         CommandList().SetComputeRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
@@ -190,12 +188,12 @@ namespace PathFinder
 
         if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass()) CommandList().SetComputeRootConstantBuffer(*buffer, 2);
 
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 3);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 4);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 5);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 6);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 7);
-        if (auto baseDescriptor = heap.GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 8);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 3);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 4);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 5);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 6);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 7);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0)) CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 8);
     }
 
     void GraphicsDevice::ApplyDefaultViewportIfNeeded()

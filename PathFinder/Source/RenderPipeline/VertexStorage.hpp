@@ -33,7 +33,7 @@ namespace PathFinder
         const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const;
         const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const;
 
-        void TransferDataToGPU();
+        void FinilazeVertexBuffers();
 
     private:
 

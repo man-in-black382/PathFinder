@@ -98,7 +98,10 @@ namespace PathFinder
         friend class ResourceProvider;
         friend class RootConstantsUpdater;
 
-        PipelineResourceStorage(HAL::Device* device, const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight);
+        PipelineResourceStorage(
+            HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, 
+            const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight
+        );
 
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
@@ -110,9 +113,8 @@ namespace PathFinder
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(PassName passName);
         void AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph);
-        void UseSwapChain(HAL::SwapChain& swapChain);
+        void CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain);
 
-        const ResourceDescriptorStorage& DescriptorStorage() const;
         GlobalRootConstants* GlobalRootConstantData();
         PerFrameRootConstants* PerFrameRootConstantData();
         template <class RootConstants> RootConstants* RootConstantDataForCurrentPass() const;
@@ -123,9 +125,6 @@ namespace PathFinder
         PipelineResource* GetPipelineResource(ResourceName resourceName);
         const HAL::ResourceBarrierCollection& OneTimeResourceBarriers() const;
         const HAL::ResourceBarrierCollection& ResourceBarriersForCurrentPass();
-
-    private:
-        const std::vector<Foundation::Name> BackBufferNames{ "BackBuffer1", "BackBuffer2", "BackBuffer3" };
 
     private:
         bool IsResourceAllocationScheduled(ResourceName name) const;
@@ -164,7 +163,7 @@ namespace PathFinder
         uint8_t mSimultaneousFramesInFlight;
 
         // Manages descriptor heaps
-        ResourceDescriptorStorage mDescriptorStorage;
+        ResourceDescriptorStorage* mDescriptorStorage;
 
         // Dedicated storage for back buffer descriptors.
         // No fancy management is required.

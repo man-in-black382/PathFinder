@@ -509,10 +509,10 @@ int main(int argc, char** argv)
     PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };    
 
     const PathFinder::Mesh& deer = scene.AddMesh(meshLoader.Load("deer.obj"));
-    PathFinder::MeshInstance deerInstance{ &deer };
+    PathFinder::MeshInstance deerInstance{ &deer, nullptr };
     scene.AddMeshInstance(deerInstance);
 
-    engine.VertexGPUStorage().TransferDataToGPU();
+    engine.VertexGPUStorage().FinilazeVertexBuffers();
     engine.AddRenderPass(std::make_unique<PathFinder::GBufferRenderPass>());  
     engine.AddRenderPass(std::make_unique<PathFinder::BlurRenderPass>());
     engine.AddRenderPass(std::make_unique<PathFinder::BackBufferOutputPass>());
@@ -538,9 +538,6 @@ int main(int argc, char** argv)
         }
 
         engine.Render();
-
-        //g_pSwapChain->Present(1, 0); // Present with vsync
-        ////g_pSwapChain->Present(0, 0); // Present without vsync
     }
 
     ::DestroyWindow(hwnd);
