@@ -195,6 +195,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\DXILLibrary.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Fence.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\GraphicAPIObject.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\Heap.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PipelineState.cpp" />
@@ -312,6 +313,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\DXILLibrary.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Fence.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\GraphicAPIObject.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\Heap.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PipelineState.hpp" />

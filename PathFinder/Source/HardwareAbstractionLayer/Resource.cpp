@@ -22,7 +22,9 @@ namespace HAL
 
         SetExpectedUsageFlags(expectedStateMask);
 
-        bool isSubjectForClearing = EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) || EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
+        bool isSubjectForClearing = 
+            EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) || 
+            EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
 
         ThrowIfFailed(device.D3DDevice()->CreateCommittedResource(
             &heapProperties,
@@ -33,11 +35,7 @@ namespace HAL
             IID_PPV_ARGS(&mResource)
         ));
 
-        UINT GPUMask = 0;
-        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
-
-        mResourceAlignment = allocInfo.Alignment;
-        mTotalMemory = allocInfo.SizeInBytes;
+        QueryAllocationInfo(device);
     }
 
     Resource::Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType)
@@ -72,11 +70,27 @@ namespace HAL
             IID_PPV_ARGS(&mResource)
         ));
 
-        UINT GPUMask = 0;
-        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
+        QueryAllocationInfo(device);
+    }
 
-        mResourceAlignment = allocInfo.Alignment;
-        mTotalMemory = allocInfo.SizeInBytes;
+    Resource::Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
+        : mDescription{ format.D3DResourceDescription() }, mInitialStates{ initialStateMask }, mExpectedStates{ expectedStateMask }, mHeapOffset{ heapOffset }
+    {
+        SetExpectedUsageFlags(expectedStateMask);
+
+        bool isSubjectForClearing =
+            EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) ||
+            EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
+
+        device.D3DDevice()->CreatePlacedResource(
+            heap.D3DHeap(),
+            heapOffset,
+            &mDescription,
+            D3DResourceState(initialStateMask),
+            isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
+            IID_PPV_ARGS(mResource.GetAddressOf()));
+
+        QueryAllocationInfo(device);
     }
 
     Resource::~Resource() {}
@@ -131,6 +145,15 @@ namespace HAL
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
         }
+    }
+
+    void Resource::QueryAllocationInfo(const Device& device)
+    {
+        UINT GPUMask = 0;
+        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
+
+        mResourceAlignment = allocInfo.Alignment;
+        mTotalMemory = allocInfo.SizeInBytes;
     }
 
 }

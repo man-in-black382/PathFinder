@@ -8,6 +8,7 @@
 #include <d3d12.h>
 
 #include "Device.hpp"
+#include "Heap.hpp"
 #include "ResourceFormat.hpp"
 #include "ResourceState.hpp"
 #include "Utils.h"
@@ -19,11 +20,6 @@
 
 namespace HAL
 {
-
-    enum class CPUAccessibleHeapType 
-    {
-        Upload, Readback 
-    };
     
     class Resource : public GraphicAPIObject
     {
@@ -42,26 +38,30 @@ namespace HAL
     protected:
         Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask);
         Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType);
+        Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask);
 
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
-        ResourceState mInitialStates;
-        ResourceState mExpectedStates;
+        ResourceState mInitialStates = ResourceState::Common;
+        ResourceState mExpectedStates = ResourceState::Common;
 
     private:
-        size_t mTotalMemory;
-        size_t mResourceAlignment;
-        size_t mSubresourceCount;
+        uint64_t mTotalMemory = 0;
+        uint64_t mResourceAlignment = 0;
+        uint64_t mSubresourceCount = 0;
+        uint64_t mHeapOffset = 0;
         D3D12_RESOURCE_DESC mDescription{};
 
         void SetExpectedUsageFlags(ResourceState stateMask);
+        void QueryAllocationInfo(const Device& device);
 
     public:
         inline ID3D12Resource* D3DResource() const { return mResource.Get(); }
         inline const D3D12_RESOURCE_DESC& D3DDescription() const { return mDescription; };
         inline ResourceState InitialStates() const { return mInitialStates; };
         inline ResourceState ExpectedStates() const { return mExpectedStates; };
-        inline size_t TotalMemory() const { return mTotalMemory; }
-        inline size_t ResourceAlignment() const { return mResourceAlignment; }
+        inline auto TotalMemory() const { return mTotalMemory; }
+        inline auto ResourceAlignment() const { return mResourceAlignment; }
+        inline auto HeapOffset() const { return mHeapOffset; }
     };
 
 }

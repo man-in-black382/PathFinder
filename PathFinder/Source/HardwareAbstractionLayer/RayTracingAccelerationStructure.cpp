@@ -38,7 +38,7 @@ namespace HAL
         mD3DInputs.NumDescs = (UINT)mD3DGeometries.size();
         mD3DInputs.pGeometryDescs = mD3DGeometries.data();
 
-        RayTracingBottomAccelerationStructure::AllocateBuffers();
+        RayTracingAccelerationStructure::AllocateBuffers();
     }
 
     void RayTracingTopAccelerationStructure::AddInstance(const RayTracingBottomAccelerationStructure& blas)
