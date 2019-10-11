@@ -1,11 +1,13 @@
 #pragma once
 
 #include "PipelineResourceStorage.hpp"
-#include "RenderSurface.hpp"
+#include "RenderSurfaceDescription.hpp"
 #include "ResourceDescriptorStorage.hpp"
 #include "HashSpecializations.hpp"
 #include "GlobalRootConstants.hpp"
 #include "PerFrameRootConstants.hpp"
+#include "PipelineResource.hpp"
+#include "PipelineResourceAllocation.hpp"
 
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
@@ -28,67 +30,6 @@ namespace PathFinder
     using ResourceName = Foundation::Name;
     using PassName = Foundation::Name;
 
-    class PipelineResourceAllocator
-    {
-    public:
-        friend class PipelineResourceStorage;
-        friend class ResourceScheduler;
-
-        using TextureRTDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded);
-        using TextureDSDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded);
-        using TextureSRDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded);
-        using TextureUADescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded);
-
-        struct PerPassEntities
-        {
-            HAL::ResourceState RequestedState;
-            std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
-            TextureRTDescriptorInserterPtr RTInserter = nullptr;
-            TextureDSDescriptorInserterPtr DSInserter = nullptr;
-            TextureSRDescriptorInserterPtr SRInserter = nullptr;
-            TextureUADescriptorInserterPtr UAInserter = nullptr;
-        };
-
-        HAL::ResourceState GatherExpectedStates() const;
-        std::optional<PerPassEntities> GetPerPassData(PassName passName) const;
-
-    private:
-        HAL::ResourceFormat::FormatVariant mFormat;
-        std::function<void()> mAllocationAction;
-        std::unordered_map<PassName, PerPassEntities> mPerPassData;
-    };
-
-
-
-    class PipelineResource
-    {
-    public:
-        friend class PipelineResourceStorage;
-        friend class ResoruceScheduler;
-
-        struct PerPassEntities
-        {
-            std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
-            bool IsRTDescriptorRequested = false;
-            bool IsDSDescriptorRequested = false;
-            bool IsSRDescriptorRequested = false;
-            bool IsUADescriptorRequested = false;
-        };
-
-        std::optional<PerPassEntities> GetPerPassData(PassName passName) const;
-        std::optional<HAL::ResourceTransitionBarrier> GetStateTransition() const;
-
-    private:
-        std::unique_ptr<HAL::Resource> mResource;
-        std::unordered_map<PassName, PerPassEntities> mPerPassData;
-        std::optional<HAL::ResourceTransitionBarrier> mOneTimeStateTransition;
-
-    public:
-        const HAL::Resource* Resource() const { return mResource.get(); }
-    };
-
-
-
     class PipelineResourceStorage
     {
     public:
@@ -100,7 +41,7 @@ namespace PathFinder
 
         PipelineResourceStorage(
             HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, 
-            const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight
+            const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight
         );
 
         void BeginFrame(uint64_t frameFenceValue);
@@ -131,18 +72,18 @@ namespace PathFinder
 
         void RegisterResourceNameForCurrentPass(ResourceName name);
 
-        PipelineResourceAllocator* GetResourceAllocator(ResourceName name);
+        PipelineResourceAllocation* GetResourceAllocator(ResourceName name);
 
-        void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture);
+        void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture);
 
         void OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph);
 
-        std::vector<std::pair<PassName, HAL::ResourceState>> CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocator& allocator);
+        std::vector<std::pair<PassName, HAL::ResourceState>> CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocation& allocator);
         
         template <class BufferDataT> 
         void AllocateRootConstantBufferIfNeeded();
 
-        PipelineResourceAllocator* QueueTextureAllocationIfNeeded(
+        PipelineResourceAllocation* QueueTextureAllocationIfNeeded(
             ResourceName resourceName,
             HAL::ResourceFormat::FormatVariant format,
             HAL::ResourceFormat::TextureKind kind,
@@ -152,7 +93,7 @@ namespace PathFinder
 
         HAL::Device* mDevice;
 
-        RenderSurface mDefaultRenderSurface;
+        RenderSurfaceDescription mDefaultRenderSurface;
 
         // This class's logic works with 'the current' render pass.
         // Saves the user from passing current pass name in every possible API.
@@ -176,7 +117,7 @@ namespace PathFinder
         std::unordered_map<PassName, std::unordered_set<ResourceName>> mPerPassResourceNames;
 
         // Allocations info for each resource
-        std::unordered_map<ResourceName, PipelineResourceAllocator> mPipelineResourceAllocators;
+        std::unordered_map<ResourceName, PipelineResourceAllocation> mPipelineResourceAllocators;
 
         // Allocated pipeline resources
         std::unordered_map<ResourceName, PipelineResource> mPipelineResources;

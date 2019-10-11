@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GraphicCommandRecorder.hpp"
-#include "RenderSurface.hpp"
+#include "RenderSurfaceDescription.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
 #include "VertexStorage.hpp"
@@ -20,7 +20,7 @@ namespace PathFinder
             PipelineResourceStorage* resourceStorage, 
             PipelineStateManager* pipelineStateManager,
             VertexStorage* vertexStorage, 
-            RenderSurface defaultRenderSurface,
+            RenderSurfaceDescription defaultRenderSurface,
             uint8_t simultaneousFramesInFlight
         );
 
@@ -62,7 +62,7 @@ namespace PathFinder
         VertexStorage* mVertexStorage;
 
         const RenderPass* mCurrentRenderPass;
-        RenderSurface mDefaultRenderSurface;
+        RenderSurfaceDescription mDefaultRenderSurface;
         std::optional<HAL::Viewport> mCurrentPassViewport;
 
     public:

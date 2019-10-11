@@ -11,7 +11,7 @@ namespace PathFinder
         PipelineResourceStorage* resourceManager,
         PipelineStateManager* pipelineStateManager,
         VertexStorage* vertexStorage,
-        RenderSurface defaultRenderSurface,
+        RenderSurfaceDescription defaultRenderSurface,
         uint8_t simultaneousFramesInFlight)
         :
         mCommandQueue{ device },

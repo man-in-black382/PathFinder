@@ -5,7 +5,7 @@
 namespace PathFinder
 {
 
-    PipelineStateManager::PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurface& defaultRenderSurface)
+    PipelineStateManager::PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurfaceDescription& defaultRenderSurface)
         : mDevice{ device }, 
         mShaderManager{ shaderManager },
         mDefaultRenderSurface{ defaultRenderSurface }, 

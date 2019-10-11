@@ -4,7 +4,7 @@
 #include "../HardwareAbstractionLayer/PipelineState.hpp"
 
 #include "ShaderManager.hpp"
-#include "RenderSurface.hpp"
+#include "RenderSurfaceDescription.hpp"
 
 #include <unordered_map>
 
@@ -18,7 +18,7 @@ namespace PathFinder
         friend class PipelineStateCreator;
 
     public:
-        PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurface& defaultRenderSurface);
+        PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurfaceDescription& defaultRenderSurface);
 
         const HAL::RootSignature* GetRootSignature(RootSignatureName name) const;
         const HAL::GraphicsPipelineState* GetGraphicsPipelineState(PSOName name) const;
@@ -35,7 +35,7 @@ namespace PathFinder
         void BuildBaseRootSignature(); 
 
         ShaderManager* mShaderManager;
-        RenderSurface mDefaultRenderSurface;
+        RenderSurfaceDescription mDefaultRenderSurface;
         
         HAL::Device* mDevice;
         HAL::RootSignature mBaseRootSignature;

@@ -10,7 +10,7 @@ namespace PathFinder
 
     PipelineResourceStorage::PipelineResourceStorage(
         HAL::Device* device, ResourceDescriptorStorage* descriptorStorage,
-        const RenderSurface& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
+        const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
         : 
         mDevice{ device },
         mDefaultRenderSurface{ defaultRenderSurface },
@@ -86,7 +86,7 @@ namespace PathFinder
     {
         for (auto& pair : mPipelineResourceAllocators)
         {
-            PipelineResourceAllocator& allocator = pair.second;
+            PipelineResourceAllocation& allocator = pair.second;
             allocator.mAllocationAction();
         }
 
@@ -121,13 +121,13 @@ namespace PathFinder
         mPerPassResourceNames[mCurrentPassName].insert(name);
     }
 
-    PipelineResourceAllocator* PipelineResourceStorage::GetResourceAllocator(ResourceName name)
+    PipelineResourceAllocation* PipelineResourceStorage::GetResourceAllocator(ResourceName name)
     {
         return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end()
             ? &mPipelineResourceAllocators.at(name) : nullptr;
     }
 
-    PipelineResourceAllocator* PipelineResourceStorage::QueueTextureAllocationIfNeeded(
+    PipelineResourceAllocation* PipelineResourceStorage::QueueTextureAllocationIfNeeded(
         ResourceName resourceName,
         HAL::ResourceFormat::FormatVariant format,
         HAL::ResourceFormat::TextureKind kind,
@@ -143,7 +143,7 @@ namespace PathFinder
 
         PassName passThatRequestedAllocation = mCurrentPassName;
 
-        PipelineResourceAllocator& allocator = mPipelineResourceAllocators[resourceName];
+        PipelineResourceAllocation& allocator = mPipelineResourceAllocators[resourceName];
 
         allocator.mAllocationAction = [=, &allocator]()
         {
@@ -160,7 +160,7 @@ namespace PathFinder
             for (auto& pair : allocator.mPerPassData)
             {
                 PassName passName = pair.first;
-                PipelineResourceAllocator::PerPassEntities& allocatorPerPassData = pair.second;
+                PipelineResourceAllocation::PerPassEntities& allocatorPerPassData = pair.second;
                 PipelineResource::PerPassEntities& newResourcePerPassData = newResource.mPerPassData[passName];
 
                 newResourcePerPassData.IsRTDescriptorRequested = allocatorPerPassData.RTInserter != nullptr;
@@ -178,11 +178,11 @@ namespace PathFinder
         return &allocator;
     }
 
-    void PipelineResourceStorage::CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocator& allocator, const HAL::TextureResource& texture)
+    void PipelineResourceStorage::CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture)
     {
         for (const auto& pair : allocator.mPerPassData)
         {
-            const PipelineResourceAllocator::PerPassEntities& perPassData = pair.second;
+            const PipelineResourceAllocation::PerPassEntities& perPassData = pair.second;
 
             if (perPassData.RTInserter) (mDescriptorStorage->*perPassData.RTInserter)(&texture, perPassData.ShaderVisibleFormat);
             if (perPassData.DSInserter) (mDescriptorStorage->*perPassData.DSInserter)(&texture);
@@ -196,7 +196,7 @@ namespace PathFinder
         for (auto& pair : mPipelineResourceAllocators)
         {
             ResourceName resourceName = pair.first;
-            PipelineResourceAllocator& allocator = pair.second;
+            PipelineResourceAllocation& allocator = pair.second;
             PipelineResource& resource = mPipelineResources.at(resourceName);
 
             auto optimizedStateChain = CollapseStateSequences(executionGraph, allocator);
@@ -250,7 +250,7 @@ namespace PathFinder
         }
     }
 
-    std::vector<std::pair<PassName, HAL::ResourceState>> PipelineResourceStorage::CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocator& allocator)
+    std::vector<std::pair<PassName, HAL::ResourceState>> PipelineResourceStorage::CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocation& allocator)
     {
         std::vector<PassName> relevantPassNames;
         std::vector<std::pair<PassName, HAL::ResourceState>> optimizedStateChain;
@@ -357,38 +357,6 @@ namespace PathFinder
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::ResourceBarriersForCurrentPass()
     {
         return mPerPassResourceBarriers[mCurrentPassName];
-    }
-
-    HAL::ResourceState PipelineResourceAllocator::GatherExpectedStates() const
-    {
-        HAL::ResourceState expectedStates = HAL::ResourceState::Common;
-
-        for (const auto& pair : mPerPassData)
-        {
-            const PerPassEntities& perPassData = pair.second;
-            expectedStates |= perPassData.RequestedState;
-        }
-
-        return expectedStates;
-    }
-
-    std::optional<PipelineResourceAllocator::PerPassEntities> PipelineResourceAllocator::GetPerPassData(PassName passName) const
-    {
-        auto it = mPerPassData.find(passName);
-        if (it == mPerPassData.end()) return std::nullopt;
-        return it->second;
-    }
-
-    std::optional<PipelineResource::PerPassEntities> PipelineResource::GetPerPassData(PassName passName) const
-    {
-        auto it = mPerPassData.find(passName);
-        if (it == mPerPassData.end()) return std::nullopt;
-        return it->second;
-    }
-
-    std::optional<HAL::ResourceTransitionBarrier> PipelineResource::GetStateTransition() const
-    {
-        return mOneTimeStateTransition;
     }
 
 }

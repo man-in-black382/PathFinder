@@ -219,9 +219,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderSurface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\ResourceDescriptorStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -331,6 +328,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\Heap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderSurfaceDescription.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceAllocation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PipelineResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1742,9 +1751,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderContext.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderSurface.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\ResourceDescriptorStorage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1917,6 +1923,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\Heap.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderSurfaceDescription.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceAllocation.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineResource.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

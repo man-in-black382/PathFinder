@@ -7,10 +7,10 @@
 namespace PathFinder
 {
 
-    class RenderSurface
+    class RenderSurfaceDescription
     {
     public:
-        RenderSurface(
+        RenderSurfaceDescription(
             const Geometry::Dimensions& dimensions,
             HAL::ResourceFormat::Color rtFormat,
             HAL::ResourceFormat::DepthStencil dsFormat

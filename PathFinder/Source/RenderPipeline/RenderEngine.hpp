@@ -47,7 +47,7 @@ namespace PathFinder
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 3;
 
-        RenderSurface mDefaultRenderSurface;
+        RenderSurfaceDescription mDefaultRenderSurface;
         std::filesystem::path mExecutablePath;
 
         HAL::Device mDevice;

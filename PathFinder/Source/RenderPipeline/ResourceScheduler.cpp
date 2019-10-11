@@ -24,7 +24,7 @@ namespace PathFinder
             format = *props.TypelessFormat;
         }
 
-        PipelineResourceAllocator* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
+        PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, format, *props.Kind, *props.Dimensions, clearValue
         );
 
@@ -51,7 +51,7 @@ namespace PathFinder
         HAL::ResourceFormat::DepthStencilClearValue clearValue{ 1.0, 0 };
         NewDepthStencilProperties props = FillMissingFields(properties);
 
-        PipelineResourceAllocator* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
+        PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, *props.Format, HAL::ResourceFormat::TextureKind::Texture2D, *props.Dimensions, clearValue
         );
 
@@ -80,7 +80,7 @@ namespace PathFinder
             format = *props.TypelessFormat;
         }
 
-        PipelineResourceAllocator* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
+        PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, format, *props.Kind, *props.Dimensions, clearValue
         );
 
@@ -109,7 +109,7 @@ namespace PathFinder
 
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot use non-scheduled render target");
 
-        PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
+        PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
         bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
@@ -130,7 +130,7 @@ namespace PathFinder
 
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot reuse non-scheduled depth-stencil texture");
 
-        PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
+        PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
         assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->mFormat), "Cannot reuse non-depth-stencil texture");
 
@@ -147,7 +147,7 @@ namespace PathFinder
 
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot read non-scheduled texture");
 
-        PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
+        PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
         bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
 
@@ -180,7 +180,7 @@ namespace PathFinder
 
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot read/write non-scheduled texture");
 
-        PipelineResourceAllocator* allocator = mResourceStorage->GetResourceAllocator(resourceName);
+        PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
         bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
