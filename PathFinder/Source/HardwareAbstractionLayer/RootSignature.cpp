@@ -1,6 +1,8 @@
 #include "RootSignature.hpp"
 #include "Utils.h"
 
+#include "../Foundation/StringUtils.hpp"
+
 namespace HAL
 {
 
@@ -68,6 +70,11 @@ namespace HAL
     uint16_t RootSignature::ParameterCount() const
     {
         return mDescriptorTableParameters.size() + mDescriptorParameters.size() + mConstantParameters.size();
+    }
+
+    void RootSignature::SetDebugName(const std::string& name)
+    {
+        mSignature->SetName(StringToWString(name).c_str());
     }
 
     RootSignature::ParameterKey RootSignature::GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace)

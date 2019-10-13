@@ -5,8 +5,8 @@
 namespace PathFinder
 {
 
-    ResourceScheduler::ResourceScheduler(PipelineResourceStorage* manager)
-        : mResourceStorage{ manager } {}
+    ResourceScheduler::ResourceScheduler(PipelineResourceStorage* manager, const RenderSurfaceDescription& defaultRenderSurface)
+        : mResourceStorage{ manager }, mDefaultRenderSurfaceDesc{ defaultRenderSurface } {}
 
     void ResourceScheduler::NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
     {
@@ -28,7 +28,7 @@ namespace PathFinder
             resourceName, format, *props.Kind, *props.Dimensions, clearValue
         );
 
-        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
 
@@ -37,7 +37,7 @@ namespace PathFinder
             passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
         }
 
-        allocator->mFormat = format;
+        allocator->Format = format;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -55,11 +55,11 @@ namespace PathFinder
             resourceName, *props.Format, HAL::ResourceFormat::TextureKind::Texture2D, *props.Dimensions, clearValue
         );
 
-        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
 
-        allocator->mFormat = *props.Format;
+        allocator->Format = *props.Format;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -84,7 +84,7 @@ namespace PathFinder
             resourceName, format, *props.Kind, *props.Dimensions, clearValue
         );
 
-        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
 
@@ -93,7 +93,7 @@ namespace PathFinder
             passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
         }
 
-        allocator->mFormat = format;
+        allocator->Format = format;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -110,12 +110,12 @@ namespace PathFinder
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot use non-scheduled render target");
 
         PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
 
@@ -132,9 +132,9 @@ namespace PathFinder
 
         PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->mFormat), "Cannot reuse non-depth-stencil texture");
+        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->Format), "Cannot reuse non-depth-stencil texture");
 
-        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
 
@@ -149,15 +149,15 @@ namespace PathFinder
 
         PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
-        if (std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->mFormat))
+        if (std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->Format))
         {
             passData.RequestedState |= HAL::ResourceState::DepthRead;
         } 
@@ -181,12 +181,12 @@ namespace PathFinder
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot read/write non-scheduled texture");
 
         PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->mFormat);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->mPerPassData[mResourceStorage->mCurrentPassName];
+        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
 
@@ -204,8 +204,8 @@ namespace PathFinder
     {
         NewTextureProperties filledProperties{
             HAL::ResourceFormat::TextureKind::Texture2D,
-            mResourceStorage->mDefaultRenderSurface.Dimensions(),
-            mResourceStorage->mDefaultRenderSurface.RenderTargetFormat(),
+            mDefaultRenderSurfaceDesc.Dimensions(),
+            mDefaultRenderSurfaceDesc.RenderTargetFormat(),
             std::nullopt,
             0
         };
@@ -225,8 +225,8 @@ namespace PathFinder
     ResourceScheduler::NewDepthStencilProperties ResourceScheduler::FillMissingFields(std::optional<NewDepthStencilProperties> properties)
     {
         NewDepthStencilProperties filledProperties{
-            mResourceStorage->mDefaultRenderSurface.DepthStencilFormat(),
-            mResourceStorage->mDefaultRenderSurface.Dimensions()
+            mDefaultRenderSurfaceDesc.DepthStencilFormat(),
+            mDefaultRenderSurfaceDesc.Dimensions()
         };
 
         if (properties)
@@ -242,7 +242,7 @@ namespace PathFinder
     {
         const auto& names = mResourceStorage->ScheduledResourceNamesForCurrentPass();
         bool isResourceScheduledInCurrentPass = names.find(resourceName) != names.end();
-        assert_format(!isResourceScheduledInCurrentPass, "Resource ", resourceName.ToSring(), " is already scheduled for this pass. Resources can only be scheduled once per pass");
+        assert_format(!isResourceScheduledInCurrentPass, "Resource ", resourceName.ToString(), " is already scheduled for this pass. Resources can only be scheduled once per pass");
     }
 
 }

@@ -27,7 +27,7 @@ namespace HAL
             &resource.D3DDescription(), 0, subresourceCount, baseOffset,
             &d3dFootprints[0], &rowCounts[0], &rowSizes[0], &mTotalSize);
 
-        for (auto i = 0; i < subresourceCount; ++i)
+        for (auto i = 0u; i < subresourceCount; ++i)
         {
             mSubresourceFootprints.emplace_back(d3dFootprints[i], rowCounts[i], rowSizes[i]);
         }

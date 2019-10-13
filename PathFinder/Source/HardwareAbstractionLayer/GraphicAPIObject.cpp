@@ -3,9 +3,8 @@
 namespace HAL
 {
 
-    void GraphicAPIObject::SetName(const std::string& name)
-    {
+    void GraphicAPIObject::SetDebugName(const std::string& name) {}
 
-    }
+    GraphicAPIObject::~GraphicAPIObject() {}
 
 }

@@ -23,10 +23,10 @@ namespace HAL
         void AddConstantsParameter(const RootConstantsParameter& constants);
 
         RootSignature Clone();
-
         void Compile();
-
         uint16_t ParameterCount() const;
+
+        virtual void SetDebugName(const std::string& name) override;
 
     private:
         using ParameterKey = uint64_t;

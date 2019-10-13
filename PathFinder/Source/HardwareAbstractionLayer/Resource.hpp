@@ -35,6 +35,8 @@ namespace HAL
         virtual bool CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const;
         virtual uint32_t SubresourceCount() const;
 
+        virtual void SetDebugName(const std::string& name) override;
+
     protected:
         Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask);
         Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType);

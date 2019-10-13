@@ -3,6 +3,7 @@
 #include "ResourceFootprint.hpp"
 
 #include "../Foundation/STDHelpers.hpp"
+#include "../Foundation/StringUtils.hpp"
 
 #include <vector>
 
@@ -113,6 +114,11 @@ namespace HAL
     uint32_t Resource::SubresourceCount() const
     {
         return 1;
+    }
+
+    void Resource::SetDebugName(const std::string& name)
+    {
+        mResource->SetName(StringToWString(name).c_str());
     }
 
     void Resource::SetExpectedUsageFlags(ResourceState stateMask)

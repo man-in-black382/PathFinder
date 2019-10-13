@@ -10,29 +10,34 @@ namespace PathFinder
         mDSDescriptorHeap{ device, mDescriptorHeapRangeCapacity },
         mCBSRUADescriptorHeap{ device, mDescriptorHeapRangeCapacity } {}
 
-    const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
+    const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
     {
-        return GetRTSRUASet(resource, format).rtDescriptor;
+        auto descriptorSet = GetRTSRUASet(resource, format);
+        return descriptorSet ? descriptorSet->rtDescriptor : nullptr;
     }
 
-    const HAL::DSDescriptor* ResourceDescriptorStorage::GetDSDescriptor(const HAL::Resource* resource)
+    const HAL::DSDescriptor* ResourceDescriptorStorage::GetDSDescriptor(const HAL::Resource* resource) const
     {
-        return GetDSCBSet(resource).dsDescriptor;
+        auto descriptorSet = GetDSCBSet(resource);
+        return descriptorSet ? descriptorSet->dsDescriptor : nullptr;
     }
 
-    const HAL::SRDescriptor* ResourceDescriptorStorage::GetSRDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
+    const HAL::SRDescriptor* ResourceDescriptorStorage::GetSRDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
     {
-        return GetRTSRUASet(resource, format).srDescriptor;
+        auto descriptorSet = GetRTSRUASet(resource, format);
+        return descriptorSet ? descriptorSet->srDescriptor : nullptr;
     }
 
-    const HAL::UADescriptor* ResourceDescriptorStorage::GetUADescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
+    const HAL::UADescriptor* ResourceDescriptorStorage::GetUADescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
     {
-        return GetRTSRUASet(resource, format).uaDescriptor;
+        auto descriptorSet = GetRTSRUASet(resource, format);
+        return descriptorSet ? descriptorSet->uaDescriptor : nullptr;
     }
 
-    const HAL::CBDescriptor* ResourceDescriptorStorage::GetCBDescriptor(const HAL::Resource* resource)
+    const HAL::CBDescriptor* ResourceDescriptorStorage::GetCBDescriptor(const HAL::Resource* resource) const
     {
-        return GetDSCBSet(resource).cbDescriptor;
+        auto descriptorSet = GetDSCBSet(resource);
+        return descriptorSet ? descriptorSet->cbDescriptor : nullptr;
     }
 
     const HAL::RTDescriptor& ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
@@ -122,20 +127,29 @@ namespace PathFinder
         assert_format(!shaderVisibleFormat || std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for typed texture");
     }
 
-    const PathFinder::ResourceDescriptorStorage::DSCBSet& ResourceDescriptorStorage::GetDSCBSet(const HAL::Resource* resource)
+    const ResourceDescriptorStorage::DSCBSet* ResourceDescriptorStorage::GetDSCBSet(const HAL::Resource* resource) const
     {
-        return mDescriptors[resource].DSCB;
+        auto it = mDescriptors.find(resource);
+        return it != mDescriptors.end() ? &it->second.DSCB : nullptr;
     }
 
-    const ResourceDescriptorStorage::RTSRUASet& ResourceDescriptorStorage::GetRTSRUASet(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format)
+    const ResourceDescriptorStorage::RTSRUASet* ResourceDescriptorStorage::GetRTSRUASet(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
     {
+        auto it = mDescriptors.find(resource);
+
         if (format)
         {
-            return mDescriptors[resource].ExplicitlyTypedRTSRUA[*format];
+            return it != mDescriptors.end() ? it->second.GetExplicitlyTypedRTSRUA(*format) : nullptr;
         } 
         else {
-            return mDescriptors[resource].ImplicitlyTypedRTSRUA;
+            return it != mDescriptors.end() ? &it->second.ImplicitlyTypedRTSRUA : nullptr;
         }
+    }
+
+    const ResourceDescriptorStorage::RTSRUASet* ResourceDescriptorStorage::DescriptorSet::GetExplicitlyTypedRTSRUA(HAL::ResourceFormat::Color format) const
+    {
+        auto it = ExplicitlyTypedRTSRUA.find(format);
+        return it != ExplicitlyTypedRTSRUA.end() ? &it->second : nullptr;
     }
 
 }

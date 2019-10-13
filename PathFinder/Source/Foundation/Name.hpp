@@ -25,7 +25,7 @@ namespace Foundation
         bool operator==(const Name& other) const;
         bool operator<(const Name& other) const;
 
-        const std::string& ToSring() const;
+        const std::string& ToString() const;
         ID ToId() const;
 
         bool IsValid() const;

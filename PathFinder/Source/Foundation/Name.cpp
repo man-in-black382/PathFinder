@@ -69,7 +69,7 @@ namespace Foundation
         return m_Id != NameRegistry::INVALID_ID;
     }
 
-    const std::string& Name::ToSring() const
+    const std::string& Name::ToString() const
     {
         assert(m_Id != NameRegistry::INVALID_ID);
         return NameRegistry::SharedInstance().ToString(m_Id);

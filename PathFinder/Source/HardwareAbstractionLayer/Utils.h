@@ -2,7 +2,8 @@
 
 #include <string>
 
-namespace HAL {
+namespace HAL 
+{
 
     class DxException
     {

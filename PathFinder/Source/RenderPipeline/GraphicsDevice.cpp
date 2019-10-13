@@ -79,7 +79,7 @@ namespace PathFinder
             ReapplyCommonComputeResourceBindings();
         }
         else {
-            assert_format(false, "Pipeline state ", psoName.ToSring(), " does not exist.");
+            assert_format(false, "Pipeline state ", psoName.ToString(), " does not exist.");
         }
     }
 

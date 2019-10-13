@@ -3,16 +3,18 @@
 namespace PathFinder
 {
 
-    std::optional<PipelineResource::PerPassEntities> PipelineResource::GetPerPassData(Foundation::Name passName) const
+    PipelineResource::PipelineResource() {}
+
+    PipelineResource::PassMetadata& PipelineResource::AllocateMetadateForPass(Foundation::Name passName)
     {
-        auto it = mPerPassData.find(passName);
-        if (it == mPerPassData.end()) return std::nullopt;
-        return it->second;
+        auto [iter, success] = mPerPassData.emplace(passName, PassMetadata{});
+        return iter->second;
     }
 
-    std::optional<HAL::ResourceTransitionBarrier> PipelineResource::GetStateTransition() const
+    const PipelineResource::PassMetadata* PipelineResource::GetMetadataForPass(Foundation::Name passName) const
     {
-        return mOneTimeStateTransition;
+        auto it = mPerPassData.find(passName);
+        return it == mPerPassData.end() ? nullptr : &it->second;
     }
 
 }

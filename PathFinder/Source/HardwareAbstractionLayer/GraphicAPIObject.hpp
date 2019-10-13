@@ -8,13 +8,13 @@ namespace HAL
     class GraphicAPIObject
     {
     public:
-        void SetName(const std::string& name);
+        virtual void SetDebugName(const std::string& name);
 
         GraphicAPIObject() = default;
         GraphicAPIObject(GraphicAPIObject&& that) = default;
         GraphicAPIObject& operator=(GraphicAPIObject&& that) = default;
 
-        ~GraphicAPIObject() = default;
+        virtual ~GraphicAPIObject() = 0;
 
     protected:
         GraphicAPIObject(const GraphicAPIObject& that) = default;

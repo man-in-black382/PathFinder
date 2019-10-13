@@ -28,7 +28,7 @@ namespace PathFinder
         if (!name) return &mBaseRootSignature;
 
         const HAL::RootSignature* signature = GetRootSignature(*name);
-        assert_format(signature, "Root signature ", name->ToSring(), " doesn't exist");
+        assert_format(signature, "Root signature ", name->ToString(), " doesn't exist");
         return signature;
     }
 
@@ -37,7 +37,7 @@ namespace PathFinder
         if (!name) return nullptr;
 
         const HAL::RootSignature* signature = GetRootSignature(*name);
-        assert_format(signature, "Root signature ", name->ToSring(), " doesn't exist");
+        assert_format(signature, "Root signature ", name->ToString(), " doesn't exist");
         return signature;
     }
 

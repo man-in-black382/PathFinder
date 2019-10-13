@@ -14,10 +14,7 @@ namespace PathFinder
     class PipelineResource
     {
     public:
-        friend class PipelineResourceStorage;
-        friend class ResoruceScheduler;
-
-        struct PerPassEntities
+        struct PassMetadata
         {
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
             bool IsRTDescriptorRequested = false;
@@ -26,16 +23,15 @@ namespace PathFinder
             bool IsUADescriptorRequested = false;
         };
 
-        std::optional<PerPassEntities> GetPerPassData(Foundation::Name passName) const;
-        std::optional<HAL::ResourceTransitionBarrier> GetStateTransition() const;
+        PipelineResource();
+
+        PassMetadata& AllocateMetadateForPass(Foundation::Name passName);
+        const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;
+
+        std::unique_ptr<HAL::Resource> Resource;
 
     private:
-        std::unique_ptr<HAL::Resource> mResource;
-        std::unordered_map<Foundation::Name, PerPassEntities> mPerPassData;
-        std::optional<HAL::ResourceTransitionBarrier> mOneTimeStateTransition;
-
-    public:
-        const HAL::Resource* Resource() const { return mResource.get(); }
+        std::unordered_map<Foundation::Name, PassMetadata> mPerPassData;
     };
 
 }

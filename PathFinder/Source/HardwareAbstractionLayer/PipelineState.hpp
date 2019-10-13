@@ -30,6 +30,7 @@ namespace HAL
         virtual ~PipelineState() = 0;
 
         virtual void Compile() = 0;
+        virtual void SetDebugName(const std::string& name) override;
 
     protected:
         Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
@@ -153,6 +154,8 @@ namespace HAL
         void SetConfig(const RayTracingPipelineConfig& config);
         void SetGlobalRootSignature(const RootSignature* signature);
         void Compile();
+
+        virtual void SetDebugName(const std::string& name) override;
 
     private:
         struct ShaderAssociations

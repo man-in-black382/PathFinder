@@ -2,6 +2,7 @@
 #include "Utils.h"
 
 #include "../Foundation/STDHelpers.hpp"
+#include "../Foundation/StringUtils.hpp"
 
 #include <d3d12.h>
 
@@ -57,12 +58,20 @@ namespace HAL
         ThrowIfFailed(mDevice->D3DDevice()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
     }
 
+    void PipelineState::SetDebugName(const std::string& name)
+    {
+        mState->SetName(StringToWString(name).c_str());
+    }
+
+
+
     GraphicsPipelineState GraphicsPipelineState::Clone() const
     {
         GraphicsPipelineState newState = *this;
         newState.mState = nullptr;
         return newState;
     }
+
 
 
     void ComputePipelineState::Compile()
@@ -148,6 +157,11 @@ namespace HAL
         mState->QueryInterface(IID_PPV_ARGS(mProperties.GetAddressOf()));
 
         BuildShaderTable();
+    }
+
+    void RayTracingPipelineState::SetDebugName(const std::string& name)
+    {
+        mState->SetName(StringToWString(name).c_str());
     }
 
     std::wstring RayTracingPipelineState::GenerateUniqueExportName(const Shader& shader)

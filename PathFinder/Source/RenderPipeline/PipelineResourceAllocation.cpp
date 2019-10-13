@@ -16,11 +16,16 @@ namespace PathFinder
         return expectedStates;
     }
 
-    std::optional<PipelineResourceAllocation::PerPassEntities> PipelineResourceAllocation::GetPerPassData(Foundation::Name passName) const
+    const PipelineResourceAllocation::PerPassEntities* PipelineResourceAllocation::GetMetadataForPass(Foundation::Name passName) const
     {
         auto it = mPerPassData.find(passName);
-        if (it == mPerPassData.end()) return std::nullopt;
-        return it->second;
+        return it != mPerPassData.end() ? &it->second : nullptr;
+    }
+
+    PipelineResourceAllocation::PerPassEntities& PipelineResourceAllocation::AllocateMetadataForPass(Foundation::Name passName)
+    {
+        auto [iter, success] = mPerPassData.emplace(passName, PerPassEntities{});
+        return iter->second;
     }
 
 }

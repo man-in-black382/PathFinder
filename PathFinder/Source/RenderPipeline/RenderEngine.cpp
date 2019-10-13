@@ -16,7 +16,7 @@ namespace PathFinder
         mDescriptorStorage{ &mDevice },
         mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mAssetResourceStorage{ &mDescriptorStorage },
-        mResourceScheduler{ &mPipelineResourceStorage },
+        mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
         mShaderManager{ mExecutablePath / "Shaders/" },

@@ -15,7 +15,7 @@ namespace PathFinder
 
     void PipelineStateCreator::CreateGraphicsState(PSOName name, const GraphicsStateConfigurator& configurator)
     {
-        assert_format(mPipelineStateManager->GetGraphicsPipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToSring(), " already exists.");
+        assert_format(mPipelineStateManager->GetGraphicsPipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToString(), " already exists.");
 
         GraphicsStateProxy proxy{};
 
@@ -62,7 +62,7 @@ namespace PathFinder
 
     void PipelineStateCreator::CreateComputeState(PSOName name, const ComputeStateConfigurator& configurator)
     {
-        assert_format(mPipelineStateManager->GetComputePipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToSring(), " already exists.");
+        assert_format(mPipelineStateManager->GetComputePipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToString(), " already exists.");
 
         ComputeStateProxy proxy{};
         configurator(proxy);
@@ -77,7 +77,7 @@ namespace PathFinder
 
     void PipelineStateCreator::CreateRayTracingState(PSOName name, const RayTracingStateConfigurator& configurator)
     {
-        assert_format(mPipelineStateManager->GetRayTracingPipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToSring(), " already exists.");
+        assert_format(mPipelineStateManager->GetRayTracingPipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToString(), " already exists.");
 
         RayTracingStateProxy proxy{};
         configurator(proxy);

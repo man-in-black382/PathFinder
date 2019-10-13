@@ -4,30 +4,30 @@
 namespace PathFinder
 {
 
-    ResourceProvider::ResourceProvider(PipelineResourceStorage* storage)
+    ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage)
         : mResourceStorage{ storage } {}
 
-    uint32_t ResourceProvider::GetTextureDescriptorTableIndex(Foundation::Name resourceName)
+    uint32_t ResourceProvider::GetTextureDescriptorTableIndex(Foundation::Name resourceName) const
     {
         const PipelineResource* resource = mResourceStorage->GetPipelineResource(resourceName);
-        assert_format(resource != nullptr, "Resource ", resourceName.ToSring(), " does not exist");
+        assert_format(resource != nullptr, "Resource ", resourceName.ToString(), " does not exist");
 
-        auto perPassData = resource->GetPerPassData(mResourceStorage->mCurrentPassName);
-        assert_format(perPassData, "Resource ", resourceName.ToSring(), " was not scheduled to be used in this pass");
+        auto perPassData = resource->GetMetadataForPass(mResourceStorage->CurrentPassName());
+        assert_format(perPassData, "Resource ", resourceName.ToString(), " was not scheduled to be used in this pass");
 
         if (perPassData->IsSRDescriptorRequested)
         {
-            const HAL::SRDescriptor* srDescriptor = mResourceStorage->mDescriptorStorage->GetSRDescriptor(resource->Resource(), perPassData->ShaderVisibleFormat);
+            auto srDescriptor = mResourceStorage->DescriptorStorage()->GetSRDescriptor(resource->Resource.get(), perPassData->ShaderVisibleFormat);
             return srDescriptor->IndexInHeapRange();
         } 
 
         if (perPassData->IsUADescriptorRequested)
         {
-            const HAL::UADescriptor* uaDescriptor = mResourceStorage->mDescriptorStorage->GetUADescriptor(resource->Resource(), perPassData->ShaderVisibleFormat);
+            auto uaDescriptor = mResourceStorage->DescriptorStorage()->GetUADescriptor(resource->Resource.get(), perPassData->ShaderVisibleFormat);
             return uaDescriptor->IndexInHeapRange();
         }
 
-        assert_format(perPassData, "Resource ", resourceName.ToSring(), " was not scheduled for reading in this pass");
+        assert_format(perPassData, "Resource ", resourceName.ToString(), " was not scheduled for reading in this pass");
 
         return 0;
     }

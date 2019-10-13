@@ -36,7 +36,7 @@ namespace PathFinder
             std::optional<Geometry::Dimensions> Dimensions;
         };
 
-        ResourceScheduler(PipelineResourceStorage* manager);
+        ResourceScheduler(PipelineResourceStorage* manager, const RenderSurfaceDescription& defaultRenderSurface);
 
         template <class BufferDataT>
         void WillUseRootConstantBuffer();
@@ -59,6 +59,7 @@ namespace PathFinder
         void EnsureSingleSchedulingRequestForCurrentPass(ResourceName resourceName);
 
         PipelineResourceStorage* mResourceStorage;
+        RenderSurfaceDescription mDefaultRenderSurfaceDesc;
     };
 
     template <class BufferDataT>

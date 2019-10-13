@@ -10,12 +10,12 @@ namespace PathFinder
     class ResourceProvider
     {
     public:
-        ResourceProvider(PipelineResourceStorage* storage);
+        ResourceProvider(const PipelineResourceStorage* storage);
        
-        uint32_t GetTextureDescriptorTableIndex(Foundation::Name resourceName);
+        uint32_t GetTextureDescriptorTableIndex(Foundation::Name resourceName) const;
 
     private:
-        PipelineResourceStorage* mResourceStorage;
+        const PipelineResourceStorage* mResourceStorage;
     };
 
 }

@@ -35,10 +35,6 @@ namespace PathFinder
     public:
         using PassNameResourceName = NameNameTuple;
 
-        friend class ResourceScheduler;
-        friend class ResourceProvider;
-        friend class RootConstantsUpdater;
-
         PipelineResourceStorage(
             HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, 
             const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight
@@ -47,9 +43,9 @@ namespace PathFinder
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
 
-        const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName);
-        const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName);
-        const HAL::RTDescriptor& GetCurrentBackBufferDescriptor();
+        const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName) const;
+        const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName) const;
+        const HAL::RTDescriptor& GetCurrentBackBufferDescriptor() const;
         
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(PassName passName);
@@ -63,24 +59,17 @@ namespace PathFinder
         const HAL::BufferResource<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
         const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
-        PipelineResource* GetPipelineResource(ResourceName resourceName);
+        const PipelineResource* GetPipelineResource(ResourceName resourceName) const;
         const HAL::ResourceBarrierCollection& OneTimeResourceBarriers() const;
         const HAL::ResourceBarrierCollection& ResourceBarriersForCurrentPass();
+        const Foundation::Name CurrentPassName() const;
+        const ResourceDescriptorStorage* DescriptorStorage() const;
 
-    private:
         bool IsResourceAllocationScheduled(ResourceName name) const;
-
         void RegisterResourceNameForCurrentPass(ResourceName name);
-
         PipelineResourceAllocation* GetResourceAllocator(ResourceName name);
 
-        void CreateDescriptors(ResourceName resourceName, const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture);
-
-        void OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph);
-
-        std::vector<std::pair<PassName, HAL::ResourceState>> CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocation& allocator);
-        
-        template <class BufferDataT> 
+        template <class BufferDataT>
         void AllocateRootConstantBufferIfNeeded();
 
         PipelineResourceAllocation* QueueTextureAllocationIfNeeded(
@@ -90,6 +79,11 @@ namespace PathFinder
             const Geometry::Dimensions& dimensions,
             const HAL::ResourceFormat::ClearValue& optimizedClearValue
         );
+
+    private:
+        void CreateDescriptors(ResourceName resourceName, PipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture);
+        void OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph);
+        std::vector<std::pair<PassName, HAL::ResourceState>> CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocation& allocator);
 
         HAL::Device* mDevice;
 

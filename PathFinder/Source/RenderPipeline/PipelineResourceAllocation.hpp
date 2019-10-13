@@ -14,9 +14,6 @@ namespace PathFinder
     class PipelineResourceAllocation
     {
     public:
-        friend class PipelineResourceStorage;
-        friend class ResourceScheduler;
-
         using TextureRTDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded);
         using TextureDSDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded);
         using TextureSRDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded);
@@ -33,12 +30,17 @@ namespace PathFinder
         };
 
         HAL::ResourceState GatherExpectedStates() const;
-        std::optional<PerPassEntities> GetPerPassData(Foundation::Name passName) const;
+        const PerPassEntities* GetMetadataForPass(Foundation::Name passName) const;
+        PerPassEntities& AllocateMetadataForPass(Foundation::Name passName);
+
+        HAL::ResourceFormat::FormatVariant Format;
+        std::function<void()> AllocationAction;
 
     private:
-        HAL::ResourceFormat::FormatVariant mFormat;
-        std::function<void()> mAllocationAction;
         std::unordered_map<Foundation::Name, PerPassEntities> mPerPassData;
+
+    public:
+        inline const auto& AllPassesMetadata() const { return mPerPassData; }
     };
 
 }
