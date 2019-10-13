@@ -14,7 +14,9 @@ namespace HAL
         : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) {}
 
     Resource::Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
-        : mDescription{ format.D3DResourceDescription() }, mInitialStates{ initialStateMask }, mExpectedStates{ expectedStateMask }
+        : mDescription{ format.D3DResourceDescription() }, 
+        mInitialStates{ initialStateMask }, mExpectedStates{ expectedStateMask }, 
+        mResourceAlignment{ format.ResourceAlighnment() }, mTotalMemory{ format.ResourceSizeInBytes() }
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
         heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -35,12 +37,12 @@ namespace HAL
             isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
             IID_PPV_ARGS(&mResource)
         ));
-
-        QueryAllocationInfo(device);
     }
 
     Resource::Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType)
-        : mDescription{ format.D3DResourceDescription() }
+        : mDescription{ format.D3DResourceDescription() },
+        mResourceAlignment { format.ResourceAlighnment() },
+        mTotalMemory{ format.ResourceSizeInBytes() }
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
         ResourceState initialState = ResourceState::Common;
@@ -70,12 +72,12 @@ namespace HAL
             nullptr,
             IID_PPV_ARGS(&mResource)
         ));
-
-        QueryAllocationInfo(device);
     }
 
     Resource::Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
-        : mDescription{ format.D3DResourceDescription() }, mInitialStates{ initialStateMask }, mExpectedStates{ expectedStateMask }, mHeapOffset{ heapOffset }
+        : mDescription{ format.D3DResourceDescription() }, mInitialStates{ initialStateMask },
+        mExpectedStates{ expectedStateMask }, mHeapOffset{ heapOffset },
+        mResourceAlignment{ format.ResourceAlighnment() }, mTotalMemory{ format.ResourceSizeInBytes() }
     {
         SetExpectedUsageFlags(expectedStateMask);
 
@@ -90,8 +92,6 @@ namespace HAL
             D3DResourceState(initialStateMask),
             isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
             IID_PPV_ARGS(mResource.GetAddressOf()));
-
-        QueryAllocationInfo(device);
     }
 
     Resource::~Resource() {}
@@ -151,15 +151,6 @@ namespace HAL
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
         }
-    }
-
-    void Resource::QueryAllocationInfo(const Device& device)
-    {
-        UINT GPUMask = 0;
-        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
-
-        mResourceAlignment = allocInfo.Alignment;
-        mTotalMemory = allocInfo.SizeInBytes;
     }
 
 }

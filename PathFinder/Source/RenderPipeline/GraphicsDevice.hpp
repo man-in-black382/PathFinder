@@ -61,7 +61,7 @@ namespace PathFinder
         PipelineStateManager* mPipelineStateManager;
         VertexStorage* mVertexStorage;
 
-        const RenderPass* mCurrentRenderPass;
+        const RenderPass* mCurrentRenderPass = nullptr;
         RenderSurfaceDescription mDefaultRenderSurface;
         std::optional<HAL::Viewport> mCurrentPassViewport;
 

@@ -6,11 +6,10 @@ namespace HAL
     BufferResource<T>::BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType)
         : Resource(
             device,
-            ResourceFormat(
-                std::nullopt,
-                ResourceFormat::BufferKind::Buffer,
+            ResourceFormat{
+                device, std::nullopt, ResourceFormat::BufferKind::Buffer,
                 Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
-            ),
+            },
             heapType
         ),
         mNonPaddedElementSize{ sizeof(T) },
@@ -25,11 +24,10 @@ namespace HAL
     BufferResource<T>::BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates)
         : Resource(
             device,
-            ResourceFormat(
-                std::nullopt,
-                ResourceFormat::BufferKind::Buffer,
+            ResourceFormat{
+                device, std::nullopt, ResourceFormat::BufferKind::Buffer,
                 Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
-            ),
+            },
             initialState,
             expectedStates
         ),

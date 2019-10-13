@@ -6,7 +6,9 @@
 namespace HAL
 {
 
-    ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue)
+    ResourceFormat::ResourceFormat(
+        const Device& device, std::optional<FormatVariant> dataType, TextureKind kind, 
+        const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue)
     {
         if (dataType) 
         {
@@ -34,9 +36,11 @@ namespace HAL
             optimizedClearValue);
 
         mDesc.MipLevels = mipCount;
+
+        QueryAllocationInfo(device);
     }
 
-    ResourceFormat::ResourceFormat(std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
+    ResourceFormat::ResourceFormat(const Device& device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
     {
         if (dataType)
         {
@@ -44,6 +48,7 @@ namespace HAL
         }
 
         ResolveDemensionData(kind, dimensions);
+        QueryAllocationInfo(device);
     }
 
     void ResourceFormat::ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions)
@@ -72,6 +77,15 @@ namespace HAL
         mDesc.DepthOrArraySize = (UINT16)dimensions.Depth;
         mDesc.SampleDesc.Count = 1;
         mDesc.SampleDesc.Quality = 0;
+    }
+
+    void ResourceFormat::QueryAllocationInfo(const Device& device)
+    {
+        UINT GPUMask = 0;
+        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDesc);
+
+        mResourceAlignment = allocInfo.Alignment;
+        mResourceSizeInBytes = allocInfo.SizeInBytes;
     }
 
     DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColor type)

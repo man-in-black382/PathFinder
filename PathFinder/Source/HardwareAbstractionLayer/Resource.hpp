@@ -54,7 +54,6 @@ namespace HAL
         D3D12_RESOURCE_DESC mDescription{};
 
         void SetExpectedUsageFlags(ResourceState stateMask);
-        void QueryAllocationInfo(const Device& device);
 
     public:
         inline ID3D12Resource* D3DResource() const { return mResource.Get(); }

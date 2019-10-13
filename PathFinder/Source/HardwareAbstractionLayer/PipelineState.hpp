@@ -34,7 +34,7 @@ namespace HAL
 
     protected:
         Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
-        const RootSignature* mRootSignature;
+        const RootSignature* mRootSignature = nullptr;
         const Device* mDevice;
 
     public:

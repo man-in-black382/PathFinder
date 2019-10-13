@@ -25,7 +25,7 @@ namespace HAL
         const Geometry::Dimensions& dimensions, const ResourceFormat::ClearValue& optimizedClearValue, 
         ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount)
         :
-        Resource(device, ResourceFormat(format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
+        Resource(device, ResourceFormat(device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
         mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
 
     bool TextureResource::IsArray() const
