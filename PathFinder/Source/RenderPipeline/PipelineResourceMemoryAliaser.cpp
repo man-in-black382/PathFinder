@@ -30,7 +30,7 @@ namespace PathFinder
 
             for (auto allocationIt = largestAllocationIt; allocationIt != mAllocations.end(); ++allocationIt)
             {
-                AliasWithAlreadyAliasedAllocations(*allocationIt.);
+                AliasWithAlreadyAliasedAllocations(allocationIt);
             }
 
             RemoveAliasedAllocationsFromOriginalList();
@@ -49,7 +49,7 @@ namespace PathFinder
         return { mRenderPassGraph->IndexOfPass(allocation->FirstPassName()), mRenderPassGraph->IndexOfPass(allocation->LastPassName()) };
     }
 
-    void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadata& nextAllocation)
+    void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt)
     {
         mIndependentMemoryRegions.clear();
 

@@ -52,7 +52,7 @@ namespace PathFinder
         bool TimelinesIntersect(const Timeline& first, const Timeline& second) const;
         Timeline GetTimeline(const PipelineResourceAllocation* allocation) const;
 
-        void AliasWithAlreadyAliasedAllocations(AliasingMetadata& nextAllocation);
+        void AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt);
         void RemoveAliasedAllocationsFromOriginalList();
 
         // Containers to be used between function calls to avoid redundant memory allocations
