@@ -11,6 +11,8 @@ namespace PathFinder
     {
     public:
         void AddPass(const RenderPass* pass);
+        uint32_t IndexOfPass(const RenderPass* pass) const;
+        uint32_t IndexOfPass(Foundation::Name passName) const;
 
     private:
         std::list<const RenderPass *> mExecutionOrder;

@@ -82,7 +82,7 @@ namespace PathFinder
 
     private:
         void CreateDescriptors(ResourceName resourceName, PipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture);
-        void OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph);
+        void CreateStateTransitionBarriers(const RenderPassExecutionGraph& executionGraph);
         std::vector<std::pair<PassName, HAL::ResourceState>> CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocation& allocator);
 
         HAL::Device* mDevice;
@@ -111,7 +111,7 @@ namespace PathFinder
         std::unordered_map<PassName, std::unordered_set<ResourceName>> mPerPassResourceNames;
 
         // Allocations info for each resource
-        std::unordered_map<ResourceName, PipelineResourceAllocation> mPipelineResourceAllocators;
+        std::unordered_map<ResourceName, PipelineResourceAllocation> mPipelineResourceAllocations;
 
         // Allocated pipeline resources
         std::unordered_map<ResourceName, PipelineResource> mPipelineResources;

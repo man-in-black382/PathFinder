@@ -3,6 +3,9 @@
 namespace PathFinder
 {
 
+    PipelineResourceAllocation::PipelineResourceAllocation(const HAL::ResourceFormat& format)
+        : Format{ format } {}
+
     HAL::ResourceState PipelineResourceAllocation::GatherExpectedStates() const
     {
         HAL::ResourceState expectedStates = HAL::ResourceState::Common;
@@ -24,6 +27,13 @@ namespace PathFinder
 
     PipelineResourceAllocation::PerPassEntities& PipelineResourceAllocation::AllocateMetadataForPass(Foundation::Name passName)
     {
+        if (!mFirstPassName.IsValid())
+        {
+            mFirstPassName = passName;
+        }
+
+        mLastPassName = passName;
+
         auto [iter, success] = mPerPassData.emplace(passName, PerPassEntities{});
         return iter->second;
     }

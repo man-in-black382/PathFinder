@@ -57,7 +57,7 @@ namespace HAL
 
         using FormatVariant = std::variant<TypelessColor, Color, DepthStencil>;
 
-        ResourceFormat(const Device& device, std::optional<FormatVariant> dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue);
+        ResourceFormat(const Device& device, FormatVariant dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue);
         ResourceFormat(const Device& device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
 
         static DXGI_FORMAT D3DFormat(TypelessColor type);
@@ -72,6 +72,7 @@ namespace HAL
         void QueryAllocationInfo(const Device& device);
 
         D3D12_RESOURCE_DESC mDesc{};
+        std::optional<FormatVariant> mDataType;
         std::optional<D3D12_CLEAR_VALUE> mClearValue;
         uint64_t mResourceAlignment = 0;
         uint64_t mResourceSizeInBytes = 0;
@@ -81,6 +82,7 @@ namespace HAL
         inline const D3D12_CLEAR_VALUE* D3DOptimizedClearValue() const { return mClearValue ? &(*mClearValue) : nullptr; }
         inline auto ResourceAlighnment() const { return mResourceAlignment; }
         inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }
+        inline auto DataType() const { return mDataType; }
     };
 
 }

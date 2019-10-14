@@ -29,18 +29,25 @@ namespace PathFinder
             TextureUADescriptorInserterPtr UAInserter = nullptr;
         };
 
+        PipelineResourceAllocation(const HAL::ResourceFormat& format);
+
         HAL::ResourceState GatherExpectedStates() const;
         const PerPassEntities* GetMetadataForPass(Foundation::Name passName) const;
         PerPassEntities& AllocateMetadataForPass(Foundation::Name passName);
 
-        HAL::ResourceFormat::FormatVariant Format;
+        HAL::ResourceFormat Format;
         std::function<void()> AllocationAction;
+        uint64_t HeapOffset = 0;
 
     private:
         std::unordered_map<Foundation::Name, PerPassEntities> mPerPassData;
+        Foundation::Name mFirstPassName;
+        Foundation::Name mLastPassName;
 
     public:
         inline const auto& AllPassesMetadata() const { return mPerPassData; }
+        inline Foundation::Name FirstPassName() const { return mFirstPassName; }
+        inline Foundation::Name LastPassName() const { return mLastPassName; }
     };
 
 }

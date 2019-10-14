@@ -37,8 +37,6 @@ namespace PathFinder
             passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
         }
 
-        allocator->Format = format;
-
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
@@ -58,8 +56,6 @@ namespace PathFinder
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
-
-        allocator->Format = *props.Format;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -93,8 +89,6 @@ namespace PathFinder
             passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
         }
 
-        allocator->Format = format;
-
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
@@ -110,7 +104,7 @@ namespace PathFinder
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot use non-scheduled render target");
 
         PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(*allocator->Format.DataType());
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
@@ -132,7 +126,7 @@ namespace PathFinder
 
         PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->Format), "Cannot reuse non-depth-stencil texture");
+        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(*allocator->Format.DataType()), "Cannot reuse non-depth-stencil texture");
 
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
@@ -149,7 +143,7 @@ namespace PathFinder
 
         PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
 
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(*allocator->Format.DataType());
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
@@ -157,7 +151,7 @@ namespace PathFinder
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
-        if (std::holds_alternative<HAL::ResourceFormat::DepthStencil>(allocator->Format))
+        if (std::holds_alternative<HAL::ResourceFormat::DepthStencil>(*allocator->Format.DataType()))
         {
             passData.RequestedState |= HAL::ResourceState::DepthRead;
         } 
@@ -181,7 +175,7 @@ namespace PathFinder
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot read/write non-scheduled texture");
 
         PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(allocator->Format);
+        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(*allocator->Format.DataType());
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
@@ -192,7 +186,7 @@ namespace PathFinder
 
         if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
 
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);........
     }
 
     void ResourceScheduler::ReadWriteBuffer()

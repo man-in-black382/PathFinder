@@ -7,13 +7,12 @@ namespace HAL
 {
 
     ResourceFormat::ResourceFormat(
-        const Device& device, std::optional<FormatVariant> dataType, TextureKind kind, 
+        const Device& device, FormatVariant dataType, TextureKind kind, 
         const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue)
+        :
+        mDataType{ dataType }
     {
-        if (dataType) 
-        {
-            std::visit([this](auto&& t) { mDesc.Format = D3DFormat(t); }, dataType.value());
-        }
+        std::visit([this](auto&& t) { mDesc.Format = D3DFormat(t); }, dataType);
         
         ResolveDemensionData(kind, dimensions);
 
@@ -41,6 +40,7 @@ namespace HAL
     }
 
     ResourceFormat::ResourceFormat(const Device& device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
+        : mDataType{ dataType }
     {
         if (dataType)
         {

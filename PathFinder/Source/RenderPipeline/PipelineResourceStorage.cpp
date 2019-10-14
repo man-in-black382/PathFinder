@@ -84,13 +84,14 @@ namespace PathFinder
 
     void PipelineResourceStorage::AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph)
     {
-        for (auto& pair : mPipelineResourceAllocators)
+        for (auto& pair : mPipelineResourceAllocations)
         {
-            PipelineResourceAllocation& allocator = pair.second;
-            allocator.AllocationAction();
+            PipelineResourceAllocation& 
+                allocation = pair.second;
+            allocation.AllocationAction();
         }
 
-        OptimizeResourceStates(executionGraph);
+        CreateStateTransitionBarriers(executionGraph);
     }
 
     void PipelineResourceStorage::CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain)
@@ -113,7 +114,7 @@ namespace PathFinder
 
     bool PipelineResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
     {
-        return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end();
+        return mPipelineResourceAllocations.find(name) != mPipelineResourceAllocations.end();
     }
 
     void PipelineResourceStorage::RegisterResourceNameForCurrentPass(ResourceName name)
@@ -123,8 +124,8 @@ namespace PathFinder
 
     PipelineResourceAllocation* PipelineResourceStorage::GetResourceAllocator(ResourceName name)
     {
-        return mPipelineResourceAllocators.find(name) != mPipelineResourceAllocators.end()
-            ? &mPipelineResourceAllocators.at(name) : nullptr;
+        return mPipelineResourceAllocations.find(name) != mPipelineResourceAllocations.end()
+            ? &mPipelineResourceAllocations.at(name) : nullptr;
     }
 
     PipelineResourceAllocation* PipelineResourceStorage::QueueTextureAllocationIfNeeded(
@@ -134,20 +135,21 @@ namespace PathFinder
         const Geometry::Dimensions& dimensions,
         const HAL::ResourceFormat::ClearValue& optimizedClearValue)
     {
-        auto it = mPipelineResourceAllocators.find(resourceName);
+        auto it = mPipelineResourceAllocations.find(resourceName);
 
-        if (it != mPipelineResourceAllocators.end())
+        if (it != mPipelineResourceAllocations.end())
         {
             return &it->second;
         }
 
         PassName passThatRequestedAllocation = mCurrentPassName;
 
-        PipelineResourceAllocation& allocator = mPipelineResourceAllocators[resourceName];
+        auto [iter, success] = mPipelineResourceAllocations.emplace(resourceName, HAL::ResourceFormat{ *mDevice, format, kind, dimensions, 1, optimizedClearValue });
+        PipelineResourceAllocation& allocation = iter->second;
 
-        allocator.AllocationAction = [=, &allocator]()
+        allocation.AllocationAction = [=, &allocation]()
         {
-            HAL::ResourceState expectedStates = allocator.GatherExpectedStates();
+            HAL::ResourceState expectedStates = allocation.GatherExpectedStates();
             HAL::ResourceState initialState = HAL::ResourceState::Common;
             
             auto texture = std::make_unique<HAL::TextureResource>(
@@ -156,13 +158,13 @@ namespace PathFinder
             texture->SetDebugName(resourceName.ToString());
 
             PipelineResource newResource;
-            CreateDescriptors(resourceName, newResource, allocator, *texture);
+            CreateDescriptors(resourceName, newResource, allocation, *texture);
 
             newResource.Resource = std::move(texture);
             mPipelineResources[resourceName] = std::move(newResource);
         };
 
-        return &allocator;
+        return &allocation;
     }
 
     void PipelineResourceStorage::CreateDescriptors(ResourceName resourceName, PipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture)
@@ -197,15 +199,13 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::OptimizeResourceStates(const RenderPassExecutionGraph& executionGraph)
+    void PipelineResourceStorage::CreateStateTransitionBarriers(const RenderPassExecutionGraph& executionGraph)
     {
-        for (auto& pair : mPipelineResourceAllocators)
+        for (auto& [resourceName, allocation] : mPipelineResourceAllocations)
         {
-            ResourceName resourceName = pair.first;
-            PipelineResourceAllocation& allocator = pair.second;
             PipelineResource& resource = mPipelineResources.at(resourceName);
 
-            auto optimizedStateChain = CollapseStateSequences(executionGraph, allocator);
+            auto optimizedStateChain = CollapseStateSequences(executionGraph, allocation);
 
             assert_format(!optimizedStateChain.empty(), "Resource mush have at least one state");
           
