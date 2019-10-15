@@ -1,12 +1,14 @@
 #pragma once
 
-#include "RenderPass.hpp"
+//#include "RenderPass.hpp"
+#include "../Foundation/Name.hpp"
 
 #include <list>
 
 namespace PathFinder
 {
-
+    class RenderPass;
+    
     class RenderPassExecutionGraph
     {
     public:

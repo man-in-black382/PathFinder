@@ -8,6 +8,7 @@
 #include "PerFrameRootConstants.hpp"
 #include "PipelineResource.hpp"
 #include "PipelineResourceAllocation.hpp"
+#include "PipelineResourceMemoryAliaser.hpp"
 
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"

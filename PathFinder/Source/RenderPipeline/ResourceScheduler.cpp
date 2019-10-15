@@ -186,7 +186,7 @@ namespace PathFinder
 
         if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
 
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);........
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
     void ResourceScheduler::ReadWriteBuffer()

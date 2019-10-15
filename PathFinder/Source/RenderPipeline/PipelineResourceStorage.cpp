@@ -84,12 +84,16 @@ namespace PathFinder
 
     void PipelineResourceStorage::AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph)
     {
+        PipelineResourceMemoryAliaser memoryAliaser{ &executionGraph };
+
         for (auto& pair : mPipelineResourceAllocations)
         {
-            PipelineResourceAllocation& 
-                allocation = pair.second;
-            allocation.AllocationAction();
+            PipelineResourceAllocation& allocation = pair.second;
+            memoryAliaser.AddAllocation(&allocation);
+            //allocation.AllocationAction();
         }
+
+        memoryAliaser.Alias();
 
         CreateStateTransitionBarriers(executionGraph);
     }
@@ -163,6 +167,8 @@ namespace PathFinder
             newResource.Resource = std::move(texture);
             mPipelineResources[resourceName] = std::move(newResource);
         };
+
+        
 
         return &allocation;
     }

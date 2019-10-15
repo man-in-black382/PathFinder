@@ -93,8 +93,7 @@ namespace PathFinder
             uint64_t nextStartOffset = *startIt;
             uint64_t nextEndOffset = *endIt;
 
-            bool isRegionEmptyBetweenNextTwoOffsets =
-                (nextStartOffset > nextEndOffset && currentOffset <= nextStartOffset && currentOffsetIsEndpoint);
+            bool isRegionEmptyBetweenNextTwoOffsets = nextStartOffset > nextEndOffset && currentOffset <= nextStartOffset && currentOffsetIsEndpoint;
 
             if (isRegionEmptyBetweenNextTwoOffsets)
             {

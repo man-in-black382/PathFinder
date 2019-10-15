@@ -1,5 +1,7 @@
 #include "RenderPassExecutionGraph.hpp"
 
+#include "RenderPass.hpp"
+
 namespace PathFinder
 {
 
@@ -16,7 +18,7 @@ namespace PathFinder
 
     uint32_t RenderPassExecutionGraph::IndexOfPass(Foundation::Name passName) const
     {
-        auto it = std::find_if(mExecutionOrder.cbegin(), mExecutionOrder.cend(), [&passName](const RenderPass& pass) { return pass.Name() == passName; });
+        auto it = std::find_if(mExecutionOrder.cbegin(), mExecutionOrder.cend(), [&passName](auto pass) { return pass->Name() == passName; });
         return std::distance(mExecutionOrder.cbegin(), it);
     }
 

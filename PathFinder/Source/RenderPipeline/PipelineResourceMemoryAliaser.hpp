@@ -25,9 +25,6 @@ namespace PathFinder
         {
             uint64_t Offset;
             uint64_t Size;
-
-            bool SortAscending(const MemoryRegion& first, const MemoryRegion& second);
-            bool SortDescending(const MemoryRegion& first, const MemoryRegion& second);
         };
 
         struct Timeline
@@ -40,13 +37,14 @@ namespace PathFinder
         {
             Timeline ResourceTimeline;
             PipelineResourceAllocation* Allocation;
+
+            AliasingMetadata(const Timeline& timeline, PipelineResourceAllocation* allocation);
     
-            bool SortAscending(const AliasingMetadata& first, const AliasingMetadata& second);
-            bool SortDescending(const AliasingMetadata& first, const AliasingMetadata& second);
+            static bool SortAscending(const AliasingMetadata& first, const AliasingMetadata& second);
+            static bool SortDescending(const AliasingMetadata& first, const AliasingMetadata& second);
         };
 
-        using MemoryRegionSet = std::set<AliasingMetadata, decltype(&AliasingMetadata::SortDescending)>;
-        using AliasingMetadataSet = std::set<AliasingMetadata, decltype(&AliasingMetadata::SortDescending)>;
+        using AliasingMetadataSet = std::multiset<AliasingMetadata, decltype(&AliasingMetadata::SortDescending)>;
         using AliasingMetadataIterator = AliasingMetadataSet::iterator;
 
         bool TimelinesIntersect(const Timeline& first, const Timeline& second) const;
@@ -56,9 +54,10 @@ namespace PathFinder
         void RemoveAliasedAllocationsFromOriginalList();
 
         // Containers to be used between function calls to avoid redundant memory allocations
-        MemoryRegionSet mIndependentMemoryRegions;
+        std::set<uint32_t, std::less<uint32_t>> mNonAliasableMemoryRegionStarts;
+        std::set<uint32_t, std::less<uint32_t>> mNonAliasableMemoryRegionEnds;
         std::vector<AliasingMetadataIterator> mAlreadyAliasedAllocations;
-        uint64_t mCurrentBucketAvailableMemory = 0;
+        uint64_t mAvailableMemory = 0;
 
         AliasingMetadataSet mAllocations;
         
