@@ -10,7 +10,7 @@ namespace HAL
         const Device& device, FormatVariant dataType, TextureKind kind, 
         const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue)
         :
-        mDataType{ dataType }
+        mDataType{ dataType }, mKind{ kind }
     {
         std::visit([this](auto&& t) { mDesc.Format = D3DFormat(t); }, dataType);
         
@@ -40,7 +40,7 @@ namespace HAL
     }
 
     ResourceFormat::ResourceFormat(const Device& device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
-        : mDataType{ dataType }
+        : mDataType{ dataType }, mKind{ kind }
     {
         if (dataType)
         {
@@ -224,6 +224,61 @@ namespace HAL
             assert_format(false, "Unsupported D3D format");
             return TypelessColor::R8;
         }
+    }
+
+    bool ResourceFormat::CanResourceImplicitlyPromoteFromCommonStateToState(ResourceState state) const
+    {
+        bool can = false;
+
+        std::visit(Foundation::MakeVisitor(
+            [&can](const BufferKind& kind)
+            {
+                can = true;
+            },
+            [&can, state](const TextureKind& kind)
+            {
+                // Simultaneous-Access Textures are not considered at the moment.
+                // Simultaneous-Access Textures are able to be explicitly promoted 
+                // to a larger number of states.
+                // Promotes from common to these states:
+                //
+                ResourceState compatibleStatesMask =
+                    ResourceState::NonPixelShaderAccess |
+                    ResourceState::PixelShaderAccess |
+                    ResourceState::CopyDestination |
+                    ResourceState::CopySource;
+
+                can = EnumMaskBitSet(compatibleStatesMask, state);
+            }),
+            mKind);
+
+        return can;
+    }
+
+    bool ResourceFormat::CanResourceImplicitlyDecayToCommonStateFromState(ResourceState state) const
+    {
+        bool can = false;
+
+        std::visit(Foundation::MakeVisitor(
+            [&can](const BufferKind& kind)
+            {
+                can = true;
+            },
+            [&can, state](const TextureKind& kind)
+            {
+                // Decay rules for Simultaneous-Access Textures are not considered at the moment.
+                // Decays to common from any read-only state
+                //
+                ResourceState compatibleStatesMask =
+                    ResourceState::NonPixelShaderAccess |
+                    ResourceState::PixelShaderAccess |
+                    ResourceState::CopySource;
+
+                can = EnumMaskBitSet(compatibleStatesMask, state);
+            }),
+            mKind);
+
+        return can;
     }
 
 }

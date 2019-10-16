@@ -31,8 +31,6 @@ namespace HAL
         virtual ~Resource() = 0;
 
         virtual D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress() const;
-        virtual bool CanImplicitlyPromoteFromCommonStateToState(HAL::ResourceState state) const;
-        virtual bool CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const;
         virtual uint32_t SubresourceCount() const;
 
         virtual void SetDebugName(const std::string& name) override;

@@ -342,6 +342,9 @@
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceStateOptimizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1935,6 +1938,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceStateOptimizer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

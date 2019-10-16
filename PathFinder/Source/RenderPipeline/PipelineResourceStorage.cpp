@@ -10,9 +10,12 @@ namespace PathFinder
 
     PipelineResourceStorage::PipelineResourceStorage(
         HAL::Device* device, ResourceDescriptorStorage* descriptorStorage,
-        const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
-        : 
+        const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight,
+        const RenderPassExecutionGraph* passExecutionGraph)
+        :
         mDevice{ device },
+        mStateOptimizer{ passExecutionGraph },
+        mMemoryAliaser{ passExecutionGraph },
         mDefaultRenderSurface{ defaultRenderSurface },
         mDescriptorStorage{ descriptorStorage },
         mSimultaneousFramesInFlight{ simultaneousFramesInFlight },
@@ -47,6 +50,7 @@ namespace PathFinder
     const HAL::RTDescriptor& PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName) const
     {
         const PipelineResource* pipelineResource = GetPipelineResource(resourceName);
+        assert_format(pipelineResource, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
 
         std::optional<HAL::ResourceFormat::Color> format = std::nullopt;
 
@@ -54,7 +58,6 @@ namespace PathFinder
         if (perPassData) format = perPassData->ShaderVisibleFormat;
 
         auto descriptor = mDescriptorStorage->GetRTDescriptor(pipelineResource->Resource.get(), format);
-        assert_format(descriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
 
         return *descriptor;
     }
@@ -62,8 +65,8 @@ namespace PathFinder
     const HAL::DSDescriptor& PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName) const
     {
         const PipelineResource* pipelineResource = GetPipelineResource(resourceName);
+        assert_format(pipelineResource, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
         auto descriptor = mDescriptorStorage->GetDSDescriptor(pipelineResource->Resource.get());
-        assert_format(descriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
         return *descriptor;
     }
 
@@ -82,20 +85,18 @@ namespace PathFinder
         mCurrentPassName = passName;
     }
 
-    void PipelineResourceStorage::AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph)
+    void PipelineResourceStorage::AllocateScheduledResources()
     {
-        PipelineResourceMemoryAliaser memoryAliaser{ &executionGraph };
+        mStateOptimizer.Optimize();
+        auto optimalHeapSize = mMemoryAliaser.Alias();
 
         for (auto& pair : mPipelineResourceAllocations)
         {
             PipelineResourceAllocation& allocation = pair.second;
-            memoryAliaser.AddAllocation(&allocation);
-            //allocation.AllocationAction();
+            allocation.AllocationAction();
         }
 
-        memoryAliaser.Alias();
-
-        CreateStateTransitionBarriers(executionGraph);
+        CreateResourceBarriers();
     }
 
     void PipelineResourceStorage::CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain)
@@ -168,7 +169,8 @@ namespace PathFinder
             mPipelineResources[resourceName] = std::move(newResource);
         };
 
-        
+        mStateOptimizer.AddAllocation(&allocation);
+        mMemoryAliaser.AddAllocation(&allocation);
 
         return &allocation;
     }
@@ -205,131 +207,28 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::CreateStateTransitionBarriers(const RenderPassExecutionGraph& executionGraph)
+    void PipelineResourceStorage::CreateResourceBarriers()
     {
         for (auto& [resourceName, allocation] : mPipelineResourceAllocations)
         {
-            PipelineResource& resource = mPipelineResources.at(resourceName);
+            const PipelineResource* pipelineResource = GetPipelineResource(resourceName);
+            assert_format(pipelineResource, "Resource must be allocated before creating any transitions");
 
-            auto optimizedStateChain = CollapseStateSequences(executionGraph, allocation);
-
-            assert_format(!optimizedStateChain.empty(), "Resource mush have at least one state");
-          
-            // If resource will have only one state then it's sufficient 
-            // to make a single transition in the first rendering loop
-            //
-            if (optimizedStateChain.size() == 1)
+            if (allocation.OneTimeTransitionStates)
             {
-                mOneTimeResourceBarriers.AddBarrier(HAL::ResourceTransitionBarrier{ HAL::ResourceState::Common, optimizedStateChain.back().second, resource.Resource.get() });
-                continue;
+                mOneTimeResourceBarriers.AddBarrier(HAL::ResourceTransitionBarrier{
+                        allocation.OneTimeTransitionStates->first, allocation.OneTimeTransitionStates->second, pipelineResource->Resource.get() });
             }
 
-            // See whether automatic state transitions are possible
-            bool canImplicitlyPromoteToFirstState = resource.Resource->CanImplicitlyPromoteFromCommonStateToState(optimizedStateChain.front().second);
-            bool canImplicitlyDecayFromLastState = resource.Resource->CanImplicitlyDecayToCommonStateFromState(optimizedStateChain.back().second);
-            bool canSkipFirstTransition = canImplicitlyPromoteToFirstState && canImplicitlyDecayFromLastState;
-
-            uint32_t firstExplicitTransitionIndex = 0;
-
-            if (canSkipFirstTransition)
+            for (auto& [passName, passData] : allocation.AllPassesMetadata())
             {
-                // Skip first transition if possible
-                //
-                PassName secondPassName = optimizedStateChain[1].first;
-                HAL::ResourceState implicitFirstState = optimizedStateChain[0].second;
-                HAL::ResourceState explicitSecondState = optimizedStateChain[1].second;
-
-                mPerPassResourceBarriers[secondPassName].AddBarrier(HAL::ResourceTransitionBarrier{ implicitFirstState, explicitSecondState, resource.Resource.get() });
-
-                firstExplicitTransitionIndex = 1;
-            }
-            else {
-                // No way to skip first transition, loop last transition to first
-                //
-                PassName firstPassName = optimizedStateChain[0].first;
-                HAL::ResourceState explicitLastState = optimizedStateChain[optimizedStateChain.size() - 1].second;
-                HAL::ResourceState explicitFirstState = optimizedStateChain[0].second;
-
-                mPerPassResourceBarriers[firstPassName].AddBarrier(HAL::ResourceTransitionBarrier{ explicitLastState, explicitFirstState, resource.Resource.get() });
-            }
-
-            // Create the rest of the transitions
-            for (auto i = firstExplicitTransitionIndex + 1; i < optimizedStateChain.size(); ++i)
-            {
-                PassName currentPassName = optimizedStateChain[i].first;
-                mPerPassResourceBarriers[currentPassName].AddBarrier(HAL::ResourceTransitionBarrier{ optimizedStateChain[i - 1].second, optimizedStateChain[i].second, resource.Resource.get() });
-            }
-        }
-    }
-
-    std::vector<std::pair<PassName, HAL::ResourceState>> PipelineResourceStorage::CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocation& allocator)
-    {
-        std::vector<PassName> relevantPassNames;
-        std::vector<std::pair<PassName, HAL::ResourceState>> optimizedStateChain;
-        HAL::ResourceState stateSequence = HAL::ResourceState::Common;
-        PassName stateTransitionPassName;
-
-        // Build a list of passes this resource is scheduled for
-        for (const RenderPass* pass : executionGraph.ExecutionOrder())
-        {
-            if (allocator.GetMetadataForPass(pass->Name()))
-            {
-                relevantPassNames.push_back(pass->Name());
-            }
-        }
-
-        if (relevantPassNames.empty())
-        {
-            return {};
-        }
-
-        // Gather first state sequence
-        for (auto relevantPassIdx = 0u; relevantPassIdx < relevantPassNames.size(); ++relevantPassIdx)
-        {
-            PassName currentPassName = relevantPassNames[relevantPassIdx];
-            auto perPassData = allocator.GetMetadataForPass(currentPassName);
-
-            bool isLastPass = relevantPassIdx == relevantPassNames.size() - 1;
-
-            // Is state read-only
-            if (HAL::IsResourceStateReadOnly(perPassData->RequestedState))
-            {
-                if (HAL::IsResourceStateReadOnly(stateSequence))
+                if (passData.OptimizedTransitionStates)
                 {
-                    // If previous state was read-only, then combine next with previous
-                    stateSequence |= perPassData->RequestedState;
+                    mPerPassResourceBarriers[passName].AddBarrier(HAL::ResourceTransitionBarrier{
+                        passData.OptimizedTransitionStates->first, passData.OptimizedTransitionStates->second, pipelineResource->Resource.get() });
                 }
-                else {
-                    // This is a first read-only state in a possible read-only sequence
-                    stateSequence = perPassData->RequestedState;
-                    stateTransitionPassName = currentPassName;
-                }
-
-                if (!isLastPass)
-                {
-                    // If next state is not read-only then this sequence should be dumped
-                    PassName nextPassName = relevantPassNames[relevantPassIdx + 1];
-                    auto nextPerPassData = allocator.GetMetadataForPass(nextPassName);
-
-                    if (!HAL::IsResourceStateReadOnly(nextPerPassData->RequestedState))
-                    {
-                        optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
-                    }
-                }
-                else {
-                    // If there is no next state then this sequence definitely should be dumped
-                    optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
-                }
-            }
-            else {
-                stateSequence = perPassData->RequestedState;
-                stateTransitionPassName = currentPassName;
-
-                optimizedStateChain.push_back({ stateTransitionPassName, stateSequence });
             }
         }
-
-        return optimizedStateChain;
     }
 
     HAL::BufferResource<uint8_t>* PipelineResourceStorage::RootConstantBufferForCurrentPass() const

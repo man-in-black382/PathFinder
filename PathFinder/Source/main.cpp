@@ -504,8 +504,17 @@ int main(int argc, char** argv)
     std::filesystem::path executablePath{ argv[0] };
     std::filesystem::path executableFolder = executablePath.parent_path();
 
+    auto gBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
+    auto blurPass = std::make_unique<PathFinder::BlurRenderPass>();
+    auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
+
+    PathFinder::RenderPassExecutionGraph renderPassGraph;
+    renderPassGraph.AddPass(gBufferPass.get());
+    renderPassGraph.AddPass(blurPass.get());
+    renderPassGraph.AddPass(backBufferOutputPass.get());
+
     PathFinder::Scene scene;
-    PathFinder::RenderEngine engine{ hwnd, executableFolder, &scene };
+    PathFinder::RenderEngine engine{ hwnd, executableFolder, &scene, &renderPassGraph };
     PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };    
 
     const PathFinder::Mesh& deer = scene.AddMesh(meshLoader.Load("deer.obj"));
@@ -513,9 +522,6 @@ int main(int argc, char** argv)
     scene.AddMeshInstance(deerInstance);
 
     engine.VertexGPUStorage().FinilazeVertexBuffers();
-    engine.AddRenderPass(std::make_unique<PathFinder::GBufferRenderPass>());  
-    engine.AddRenderPass(std::make_unique<PathFinder::BlurRenderPass>());
-    engine.AddRenderPass(std::make_unique<PathFinder::BackBufferOutputPass>());
     engine.PreRender();
 
     PathFinder::Camera& camera = scene.MainCamera();

@@ -5,7 +5,7 @@
 namespace PathFinder
 {
 
-    void RenderPassExecutionGraph::AddPass(const RenderPass* pass)
+    void RenderPassExecutionGraph::AddPass(RenderPass* pass)
     {
         mExecutionOrder.push_back(pass);
     }

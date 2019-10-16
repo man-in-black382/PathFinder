@@ -32,7 +32,8 @@ namespace PathFinder
     class RenderEngine
     {
     public:
-        RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath, const Scene* scene);
+        RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath,
+            const Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
 
         void AddRenderPass(std::unique_ptr<RenderPass>&& pass);
 
@@ -43,6 +44,8 @@ namespace PathFinder
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
         void MoveToNextBackBuffer();
         void UpdateCommonRootConstants();
+
+        const RenderPassExecutionGraph* mPassExecutionGraph;
 
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 3;
@@ -66,11 +69,8 @@ namespace PathFinder
         PipelineStateCreator mPipelineStateCreator;
         GraphicsDevice mGraphicsDevice;
         RenderContext mContext;  
-        RenderPassExecutionGraph mPassExecutionGraph;
 
         HAL::SwapChain mSwapChain;
-
-        std::vector<std::unique_ptr<RenderPass>> mRenderPasses;
 
         const Scene* mScene;
 

@@ -6,15 +6,19 @@
 namespace PathFinder
 {
 
-    RenderEngine::RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath, const Scene* scene)
-        : mExecutablePath{ executablePath },
+    RenderEngine::RenderEngine(
+        HWND windowHandle, const std::filesystem::path& executablePath, 
+        const Scene* scene, const RenderPassExecutionGraph* passExecutionGraph)
+        : 
+        mPassExecutionGraph{ passExecutionGraph },
+        mExecutablePath{ executablePath },
         mDefaultRenderSurface{ { 1280, 720 }, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
         mDevice{ FetchDefaultDisplayAdapter() },
         mFrameFence{ mDevice },
         mCopyDevice{ &mDevice },
         mVertexStorage{ &mDevice, &mCopyDevice },
         mDescriptorStorage{ &mDevice },
-        mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight, mPassExecutionGraph },
         mAssetResourceStorage{ &mDescriptorStorage },
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage },
@@ -30,22 +34,16 @@ namespace PathFinder
         mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);
     }
 
-    void RenderEngine::AddRenderPass(std::unique_ptr<RenderPass>&& pass)
-    {
-        mRenderPasses.push_back(std::move(pass));
-        mPassExecutionGraph.AddPass(mRenderPasses.back().get());
-    }
-
     void RenderEngine::PreRender()
     {
-        for (auto& passPtr : mRenderPasses)
+        for (auto passPtr : mPassExecutionGraph->ExecutionOrder())
         {
             mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
             passPtr->SetupPipelineStates(&mPipelineStateCreator);
             passPtr->ScheduleResources(&mResourceScheduler);
         }
 
-        mPipelineResourceStorage.AllocateScheduledResources(mPassExecutionGraph);
+        mPipelineResourceStorage.AllocateScheduledResources();
         mPipelineStateManager.CompileStates();
         mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.OneTimeResourceBarriers());
         mCopyDevice.CopyResources();
@@ -53,7 +51,7 @@ namespace PathFinder
 
     void RenderEngine::Render()
     {
-        if (mRenderPasses.empty()) return;
+        if (mPassExecutionGraph->ExecutionOrder().empty()) return;
 
         mFrameFence.IncreaseExpectedValue();
         mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
@@ -67,9 +65,9 @@ namespace PathFinder
             HAL::ResourceTransitionBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer }
         );
 
-        for (auto& passPtr : mRenderPasses)
+        for (auto passPtr : mPassExecutionGraph->ExecutionOrder())
         {
-            mGraphicsDevice.SetCurrentRenderPass(passPtr.get());
+            mGraphicsDevice.SetCurrentRenderPass(passPtr);
             mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
             mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.ResourceBarriersForCurrentPass());
             passPtr->Render(&mContext);

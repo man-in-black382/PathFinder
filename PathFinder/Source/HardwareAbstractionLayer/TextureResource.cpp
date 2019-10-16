@@ -41,35 +41,6 @@ namespace HAL
         }
     }
 
-    bool TextureResource::CanImplicitlyPromoteFromCommonStateToState(HAL::ResourceState state) const
-    {
-        // Simultaneous-Access Textures are not considered at the moment.
-        // Simultaneous-Access Textures are able to be explicitly promoted 
-        // to a larger number of states.
-        // Promotes from common to these states:
-        //
-        ResourceState compatibleStatesMask =
-            ResourceState::NonPixelShaderAccess |
-            ResourceState::PixelShaderAccess |
-            ResourceState::CopyDestination |
-            ResourceState::CopySource;
-
-        return EnumMaskBitSet(compatibleStatesMask, state);
-    }
-
-    bool TextureResource::CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const
-    {
-        // Decay rules for Simultaneous-Access Textures are not considered at the moment.
-        // Decays to common from any read-only state
-        //
-        ResourceState compatibleStatesMask =
-            ResourceState::NonPixelShaderAccess |
-            ResourceState::PixelShaderAccess |
-            ResourceState::CopySource;
-
-        return EnumMaskBitSet(compatibleStatesMask, state);
-    }
-
     uint32_t TextureResource::SubresourceCount() const
     {
         return IsArray() ? mDimensions.Depth * mMipCount : mMipCount;

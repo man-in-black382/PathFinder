@@ -18,7 +18,7 @@ namespace PathFinder
         PipelineResourceMemoryAliaser(const RenderPassExecutionGraph* renderPassGraph);
 
         void AddAllocation(PipelineResourceAllocation* allocation);
-        void Alias();
+        uint64_t Alias();
 
     private:
         struct MemoryRegion
@@ -49,15 +49,20 @@ namespace PathFinder
 
         bool TimelinesIntersect(const Timeline& first, const Timeline& second) const;
         Timeline GetTimeline(const PipelineResourceAllocation* allocation) const;
-
+        void FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const;
+        void FindNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt);
+        bool AliasAsFirstAllocation(AliasingMetadataIterator nextAllocationIt);
+        bool AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextAllocationIt);
         void AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt);
         void RemoveAliasedAllocationsFromOriginalList();
+
 
         // Containers to be used between function calls to avoid redundant memory allocations
         std::set<uint32_t, std::less<uint32_t>> mNonAliasableMemoryRegionStarts;
         std::set<uint32_t, std::less<uint32_t>> mNonAliasableMemoryRegionEnds;
         std::vector<AliasingMetadataIterator> mAlreadyAliasedAllocations;
         uint64_t mAvailableMemory = 0;
+        uint64_t mOptimalHeapSize = 0;
 
         AliasingMetadataSet mAllocations;
         

@@ -19,10 +19,14 @@ namespace PathFinder
         using TextureSRDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded);
         using TextureUADescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded);
 
-        struct PerPassEntities
+        using StatePair = std::pair<HAL::ResourceState, HAL::ResourceState>;
+
+        struct PassMetadata
         {
             HAL::ResourceState RequestedState;
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
+            std::optional<StatePair> OptimizedTransitionStates;
+            PipelineResourceAllocation* AliasingSourceAllocation;
             TextureRTDescriptorInserterPtr RTInserter = nullptr;
             TextureDSDescriptorInserterPtr DSInserter = nullptr;
             TextureSRDescriptorInserterPtr SRInserter = nullptr;
@@ -32,22 +36,26 @@ namespace PathFinder
         PipelineResourceAllocation(const HAL::ResourceFormat& format);
 
         HAL::ResourceState GatherExpectedStates() const;
-        const PerPassEntities* GetMetadataForPass(Foundation::Name passName) const;
-        PerPassEntities& AllocateMetadataForPass(Foundation::Name passName);
+        const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;
+        PassMetadata* GetMetadataForPass(Foundation::Name passName);
+        PassMetadata& AllocateMetadataForPass(Foundation::Name passName);
 
-        HAL::ResourceFormat Format;
         std::function<void()> AllocationAction;
         uint64_t HeapOffset = 0;
+        const PipelineResourceAllocation* AliasingSource;
+        std::optional<StatePair> OneTimeTransitionStates;
 
     private:
-        std::unordered_map<Foundation::Name, PerPassEntities> mPerPassData;
+        std::unordered_map<Foundation::Name, PassMetadata> mPerPassData;
         Foundation::Name mFirstPassName;
         Foundation::Name mLastPassName;
+        HAL::ResourceFormat mResourceFormat;
 
     public:
         inline const auto& AllPassesMetadata() const { return mPerPassData; }
         inline Foundation::Name FirstPassName() const { return mFirstPassName; }
         inline Foundation::Name LastPassName() const { return mLastPassName; }
+        inline const HAL::ResourceFormat& ResourceFormat() const { return mResourceFormat; }
     };
 
 }

@@ -9,6 +9,7 @@
 #include "PipelineResource.hpp"
 #include "PipelineResourceAllocation.hpp"
 #include "PipelineResourceMemoryAliaser.hpp"
+#include "PipelineResourceStateOptimizer.hpp"
 
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
@@ -38,7 +39,8 @@ namespace PathFinder
 
         PipelineResourceStorage(
             HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, 
-            const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight
+            const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight,
+            const RenderPassExecutionGraph* passExecutionGraph
         );
 
         void BeginFrame(uint64_t frameFenceValue);
@@ -50,7 +52,7 @@ namespace PathFinder
         
         void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentPassName(PassName passName);
-        void AllocateScheduledResources(const RenderPassExecutionGraph& executionGraph);
+        void AllocateScheduledResources();
         void CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain);
 
         GlobalRootConstants* GlobalRootConstantData();
@@ -82,13 +84,19 @@ namespace PathFinder
         );
 
     private:
-        void CreateDescriptors(ResourceName resourceName, PipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture);
-        void CreateStateTransitionBarriers(const RenderPassExecutionGraph& executionGraph);
-        std::vector<std::pair<PassName, HAL::ResourceState>> CollapseStateSequences(const RenderPassExecutionGraph& executionGraph, const PipelineResourceAllocation& allocator);
+        void CreateDescriptors(
+            ResourceName resourceName, PipelineResource& resource, 
+            const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture);
+
+        void CreateResourceBarriers();
 
         HAL::Device* mDevice;
 
         RenderSurfaceDescription mDefaultRenderSurface;
+
+        PipelineResourceStateOptimizer mStateOptimizer;
+
+        PipelineResourceMemoryAliaser mMemoryAliaser;
 
         // This class's logic works with 'the current' render pass.
         // Saves the user from passing current pass name in every possible API.

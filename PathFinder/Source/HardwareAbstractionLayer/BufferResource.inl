@@ -97,20 +97,6 @@ namespace HAL
     }
 
     template <class T>
-    bool BufferResource<T>::CanImplicitlyPromoteFromCommonStateToState(HAL::ResourceState state) const
-    {
-        // Buffers can be promoted from Common to all states except depth ones
-        return !EnumMaskBitSet(state, ResourceState::DepthRead) && !EnumMaskBitSet(state, ResourceState::DepthWrite);
-    }
-
-    template <class T>
-    bool BufferResource<T>::CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const
-    {
-        // Buffers will decay to Common from any state on any command queue 
-        return true;
-    }
-
-    template <class T>
     uint32_t BufferResource<T>::SubresourceCount() const
     {
         return 1;

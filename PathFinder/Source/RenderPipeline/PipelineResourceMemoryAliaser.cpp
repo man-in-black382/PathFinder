@@ -14,20 +14,24 @@ namespace PathFinder
         mAllocations.emplace(GetTimeline(allocation), allocation);
     }
 
-    void PipelineResourceMemoryAliaser::Alias()
+    uint64_t PipelineResourceMemoryAliaser::Alias()
     {
-        if (mAllocations.size() == 0) return;
+        if (mAllocations.size() == 0) return 0;
 
         if (mAllocations.size() == 1)
         {
             mAllocations.begin()->Allocation->HeapOffset = 0;
-            return;
+            mOptimalHeapSize = mAllocations.begin()->Allocation->ResourceFormat().ResourceSizeInBytes();
+            return mOptimalHeapSize;
         }
         
+        mOptimalHeapSize = 0;
+
         while (!mAllocations.empty())
         {
             auto largestAllocationIt = mAllocations.begin();
-            mAvailableMemory = largestAllocationIt->Allocation->Format.ResourceSizeInBytes();
+            mAvailableMemory = largestAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes();
+            mOptimalHeapSize += mAvailableMemory;
 
             for (auto allocationIt = largestAllocationIt; allocationIt != mAllocations.end(); ++allocationIt)
             {
@@ -36,6 +40,8 @@ namespace PathFinder
 
             RemoveAliasedAllocationsFromOriginalList();
         }
+
+        return mOptimalHeapSize;
     }
 
     bool PipelineResourceMemoryAliaser::TimelinesIntersect(const PipelineResourceMemoryAliaser::Timeline& first, const PipelineResourceMemoryAliaser::Timeline& second) const
@@ -47,26 +53,27 @@ namespace PathFinder
 
     PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceAllocation* allocation) const
     {
-        auto firstName = allocation->FirstPassName().ToString();
-        auto lastPassName = allocation->LastPassName().ToString();
         return { mRenderPassGraph->IndexOfPass(allocation->FirstPassName()), mRenderPassGraph->IndexOfPass(allocation->LastPassName()) };
     }
 
-    void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt)
+    void PipelineResourceMemoryAliaser::FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const
+    {
+        bool nextRegionValid = nextAliasableRegion.Size > 0;
+        bool optimalRegionValid = optimalRegion.Size > 0;
+        bool nextRegionIsMoreOptimal = nextAliasableRegion.Size <= optimalRegion.Size || !nextRegionValid || !optimalRegionValid;
+        bool allocationFits = nextAllocationSize <= nextAliasableRegion.Size;
+
+        if (allocationFits && nextRegionIsMoreOptimal)
+        {
+            optimalRegion.Offset = nextAliasableRegion.Offset;
+            optimalRegion.Size = nextAllocationSize;
+        }
+    }
+
+    void PipelineResourceMemoryAliaser::FindNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt)
     {
         mNonAliasableMemoryRegionStarts.clear();
         mNonAliasableMemoryRegionEnds.clear();
-
-        uint64_t nextAllocationSize = nextAllocationIt->Allocation->Format.ResourceSizeInBytes();
-
-        if (mAlreadyAliasedAllocations.empty() && nextAllocationSize <= mAvailableMemory)
-        {
-            nextAllocationIt->Allocation->HeapOffset = 0;
-            mAlreadyAliasedAllocations.push_back(nextAllocationIt);
-            return;
-        }
-
-        MemoryRegion mostFittingMemoryRegion{ 0, -1 };
 
         // Find memory regions in which we can't place the next allocation, because their allocations
         // are used simultaneously with the next one by some render passed (timelines)
@@ -74,63 +81,117 @@ namespace PathFinder
         {
             if (TimelinesIntersect(alreadyAliasedAllocationIt->ResourceTimeline, nextAllocationIt->ResourceTimeline))
             {
-                mNonAliasableMemoryRegionStarts.insert(alreadyAliasedAllocationIt->Allocation->HeapOffset);
-                mNonAliasableMemoryRegionEnds.insert(alreadyAliasedAllocationIt->Allocation->Format.ResourceSizeInBytes() - 1);
+                uint64_t startByteIndex = alreadyAliasedAllocationIt->Allocation->HeapOffset;
+                uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() - 1;
+
+                mNonAliasableMemoryRegionStarts.insert(startByteIndex);
+                mNonAliasableMemoryRegionEnds.insert(endByteIndex);
             }
         }
+    }
+
+    bool PipelineResourceMemoryAliaser::AliasAsFirstAllocation(AliasingMetadataIterator nextAllocationIt)
+    {
+        if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() <= mAvailableMemory)
+        {
+            nextAllocationIt->Allocation->HeapOffset = 0;
+            mAlreadyAliasedAllocations.push_back(nextAllocationIt);
+            return true;
+        }
+
+        return false;
+    }
+
+    bool PipelineResourceMemoryAliaser::AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextAllocationIt)
+    {
+        if (mNonAliasableMemoryRegionStarts.empty())
+        {
+            nextAllocationIt->Allocation->HeapOffset = 0;
+            mAlreadyAliasedAllocations.push_back(nextAllocationIt);
+            return true;
+        }
+
+        return false;
+    }
+
+    void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt)
+    {
+        // Bail out if there is nothing to alias with
+        if (AliasAsFirstAllocation(nextAllocationIt)) return;
+
+        FindNonAliasableMemoryRegions(nextAllocationIt);
+
+        // Bail out if there is no timeline conflicts with already aliased resources
+        if (AliasAsNonTimelineConflictingAllocation(nextAllocationIt)) return;
 
         // Find memory regions in which we can place the next allocation based on previously found unavailable regions.
         // Pick the most fitting region. If next allocation cannot be fit in any free region, skip it.
 
-        bool currentOffsetIsEndpoint = true;
         uint64_t currentOffset = 0;
+        uint16_t overlappingMemoryRegionsCount = 0;
+        uint64_t nextAllocationSize = nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes();
 
         auto startIt = mNonAliasableMemoryRegionStarts.begin();
         auto endIt = mNonAliasableMemoryRegionEnds.begin();
 
+        MemoryRegion mostFittingMemoryRegion{ 0, 0 };
+
+        // Handle first free region from start of the bucket to first non-aliasable region if it exists
+        if (!mNonAliasableMemoryRegionStarts.empty())
+        {
+            uint64_t regionSize = *startIt;
+            MemoryRegion nextAliasableMemoryRegion{ 0, regionSize };
+            FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
+
+            currentOffset = *startIt;
+            ++startIt;
+            ++overlappingMemoryRegionsCount;
+        }
+
+        // Search for free aliasable memory regions between non-aliasable regions
         for (; startIt != mNonAliasableMemoryRegionStarts.end() && endIt != mNonAliasableMemoryRegionEnds.end();)
         {
             uint64_t nextStartOffset = *startIt;
             uint64_t nextEndOffset = *endIt;
 
-            bool isRegionEmptyBetweenNextTwoOffsets =
-                (nextStartOffset > nextEndOffset && currentOffset <= nextStartOffset && currentOffsetIsEndpoint);
+            bool nextRegionIsEmpty = overlappingMemoryRegionsCount == 0;
+            bool nextPointIsStartPoint = nextStartOffset < nextEndOffset;
 
-            if (isRegionEmptyBetweenNextTwoOffsets)
+            if (nextPointIsStartPoint)
             {
-                MemoryRegion aliasableMemoryRegion{ currentOffset, nextStartOffset - currentOffset };
-
-                if (aliasableMemoryRegion.Size <= mostFittingMemoryRegion.Size &&
-                    nextAllocationSize <= aliasableMemoryRegion.Size)
-                {
-                    mostFittingMemoryRegion.Offset = currentOffset;
-                    mostFittingMemoryRegion.Size = nextAllocationSize;
-                }
-            }
-
-            if (nextStartOffset < nextEndOffset)
-            {
-                // Advance to next start offset
-                currentOffset = nextStartOffset;
-                currentOffsetIsEndpoint = false;
                 ++startIt;
-            } 
-            else {
-                // Advance to next end offset
-                currentOffset = nextEndOffset;
-                currentOffsetIsEndpoint = true;
-                ++endIt;
+                ++overlappingMemoryRegionsCount;
             }
+            else {
+                ++endIt;
+                --overlappingMemoryRegionsCount;
+            }
+
+            if (nextRegionIsEmpty && nextPointIsStartPoint)
+            {
+                MemoryRegion nextAliasableMemoryRegion{ currentOffset, nextStartOffset - currentOffset };
+                FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
+            }
+
+            currentOffset = nextPointIsStartPoint ? nextStartOffset : nextEndOffset;
         }
 
-        if (mostFittingMemoryRegion.Size != -1)
+        // Handle last free region from end of last non-aliasable region to bucket end
+        if (!mNonAliasableMemoryRegionEnds.empty())
+        {
+            auto lastNonAliasableRegionEndIt = --mNonAliasableMemoryRegionEnds.end();
+
+            uint64_t lastEmptyRegionOffset = *lastNonAliasableRegionEndIt + 1; // One past the end offset of non-aliasable region
+            uint64_t lastEmptyRegionSize = mAvailableMemory - lastEmptyRegionOffset;
+            MemoryRegion nextAliasableMemoryRegion{ lastEmptyRegionOffset, lastEmptyRegionSize };
+
+            FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
+        }
+
+        // If we found a fitting aliasable memory region update allocation with an offset
+        if (mostFittingMemoryRegion.Size > 0)
         {
             nextAllocationIt->Allocation->HeapOffset = mostFittingMemoryRegion.Offset;
-            mAlreadyAliasedAllocations.push_back(nextAllocationIt);
-        }
-        else if (mNonAliasableMemoryRegionStarts.empty())
-        {
-            nextAllocationIt->Allocation->HeapOffset = 0;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
         }
     }
@@ -150,12 +211,12 @@ namespace PathFinder
 
     bool PipelineResourceMemoryAliaser::AliasingMetadata::SortAscending(const AliasingMetadata& first, const AliasingMetadata& second)
     {
-        return first.Allocation->Format.ResourceSizeInBytes() < second.Allocation->Format.ResourceSizeInBytes();
+        return first.Allocation->ResourceFormat().ResourceSizeInBytes() < second.Allocation->ResourceFormat().ResourceSizeInBytes();
     }
 
     bool PipelineResourceMemoryAliaser::AliasingMetadata::SortDescending(const AliasingMetadata& first, const AliasingMetadata& second)
     {
-        return first.Allocation->Format.ResourceSizeInBytes() > second.Allocation->Format.ResourceSizeInBytes();
+        return first.Allocation->ResourceFormat().ResourceSizeInBytes() > second.Allocation->ResourceFormat().ResourceSizeInBytes();
     }
 
 }

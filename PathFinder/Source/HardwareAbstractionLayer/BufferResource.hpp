@@ -18,9 +18,6 @@ namespace HAL
 
         virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
         virtual T* At(uint64_t index);
-
-        virtual bool CanImplicitlyPromoteFromCommonStateToState(HAL::ResourceState state) const override;
-        virtual bool CanImplicitlyDecayToCommonStateFromState(HAL::ResourceState state) const override;
         virtual uint32_t SubresourceCount() const override;
 
     private:

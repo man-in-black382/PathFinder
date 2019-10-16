@@ -4,7 +4,7 @@ namespace PathFinder
 {
 
     PipelineResourceAllocation::PipelineResourceAllocation(const HAL::ResourceFormat& format)
-        : Format{ format } {}
+        : mResourceFormat{ format } {}
 
     HAL::ResourceState PipelineResourceAllocation::GatherExpectedStates() const
     {
@@ -12,20 +12,26 @@ namespace PathFinder
 
         for (const auto& pair : mPerPassData)
         {
-            const PerPassEntities& perPassData = pair.second;
+            const PassMetadata& perPassData = pair.second;
             expectedStates |= perPassData.RequestedState;
         }
 
         return expectedStates;
     }
 
-    const PipelineResourceAllocation::PerPassEntities* PipelineResourceAllocation::GetMetadataForPass(Foundation::Name passName) const
+    const PipelineResourceAllocation::PassMetadata* PipelineResourceAllocation::GetMetadataForPass(Foundation::Name passName) const
     {
         auto it = mPerPassData.find(passName);
         return it != mPerPassData.end() ? &it->second : nullptr;
     }
 
-    PipelineResourceAllocation::PerPassEntities& PipelineResourceAllocation::AllocateMetadataForPass(Foundation::Name passName)
+    PipelineResourceAllocation::PassMetadata* PipelineResourceAllocation::GetMetadataForPass(Foundation::Name passName)
+    {
+        auto it = mPerPassData.find(passName);
+        return it != mPerPassData.end() ? &it->second : nullptr;
+    }
+
+    PipelineResourceAllocation::PassMetadata& PipelineResourceAllocation::AllocateMetadataForPass(Foundation::Name passName)
     {
         if (!mFirstPassName.IsValid())
         {
@@ -34,7 +40,7 @@ namespace PathFinder
 
         mLastPassName = passName;
 
-        auto [iter, success] = mPerPassData.emplace(passName, PerPassEntities{});
+        auto [iter, success] = mPerPassData.emplace(passName, PassMetadata{});
         return iter->second;
     }
 

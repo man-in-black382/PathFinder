@@ -20,6 +20,8 @@ namespace HAL
         inline const auto& D3DBarrier() const { return mDesc; }
     };
 
+
+
     class ResourceTransitionBarrier : public ResourceBarrier
     {
     public:
@@ -27,14 +29,31 @@ namespace HAL
         ~ResourceTransitionBarrier() = default;
 
     private:
-        const Resource* mResource;
-        ResourceState mBeforeStates;
-        ResourceState mAfterStates;
+        const Resource* mResource = nullptr;
+        ResourceState mBeforeStates = ResourceState::Common;
+        ResourceState mAfterStates = ResourceState::Common;
 
     public:
         inline const auto AssosiatedResource() const { return mResource; }
         inline const auto BeforeStates() const { return mBeforeStates; }
         inline const auto AfterStates() const { return mAfterStates; }
+    };
+
+
+
+    class ResourceAliasingBarrier : public ResourceBarrier
+    {
+    public:
+        ResourceAliasingBarrier(const Resource* source, const Resource* destination);
+        ~ResourceAliasingBarrier() = default;
+
+    private:
+        const Resource* mSource;
+        const Resource* mDestination;
+
+    public:
+        inline const auto SourceResource() const { return mSource; }
+        inline const auto DestinationResource() const { return mDestination; }
     };
 
 

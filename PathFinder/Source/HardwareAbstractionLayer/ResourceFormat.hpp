@@ -6,6 +6,7 @@
 #include <array>
 
 #include "Device.hpp"
+#include "ResourceState.hpp"
 
 #include "../Geometry/Dimensions.hpp"
 
@@ -66,7 +67,12 @@ namespace HAL
 
         static FormatVariant FormatFromD3DFormat(DXGI_FORMAT format);
 
+        bool CanResourceImplicitlyPromoteFromCommonStateToState(ResourceState state) const;
+        bool CanResourceImplicitlyDecayToCommonStateFromState(ResourceState state) const;
+
     private:
+        using KindVariant = std::variant<BufferKind, TextureKind>;
+
         void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);
         void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions);
         void QueryAllocationInfo(const Device& device);
@@ -76,6 +82,7 @@ namespace HAL
         std::optional<D3D12_CLEAR_VALUE> mClearValue;
         uint64_t mResourceAlignment = 0;
         uint64_t mResourceSizeInBytes = 0;
+        KindVariant mKind;
 
     public:
         inline const D3D12_RESOURCE_DESC& D3DResourceDescription() const { return mDesc; }

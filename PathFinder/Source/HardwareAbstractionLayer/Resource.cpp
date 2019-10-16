@@ -101,16 +101,6 @@ namespace HAL
         return mResource->GetGPUVirtualAddress();
     }
 
-    bool Resource::CanImplicitlyPromoteFromCommonStateToState(ResourceState state) const
-    {
-        return false;
-    }
-
-    bool Resource::CanImplicitlyDecayToCommonStateFromState(ResourceState state) const
-    {
-        return false;
-    }
-
     uint32_t Resource::SubresourceCount() const
     {
         return 1;
