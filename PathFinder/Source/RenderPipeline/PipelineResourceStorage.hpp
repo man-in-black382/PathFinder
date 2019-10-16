@@ -88,15 +88,22 @@ namespace PathFinder
             ResourceName resourceName, PipelineResource& resource, 
             const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture);
 
+        void PrepareAllocationsForOptimization();
         void CreateResourceBarriers();
 
         HAL::Device* mDevice;
+
+        std::unique_ptr<HAL::Heap> mRTDSHeap;
+        std::unique_ptr<HAL::Heap> mNonRTDSHeap;
+        std::unique_ptr<HAL::Heap> mBufferHeap;
 
         RenderSurfaceDescription mDefaultRenderSurface;
 
         PipelineResourceStateOptimizer mStateOptimizer;
 
-        PipelineResourceMemoryAliaser mMemoryAliaser;
+        PipelineResourceMemoryAliaser mRTDSMemoryAliaser;
+        PipelineResourceMemoryAliaser mNonRTDSMemoryAliaser;
+        PipelineResourceMemoryAliaser mBufferMemoryAliaser;
 
         // This class's logic works with 'the current' render pass.
         // Saves the user from passing current pass name in every possible API.

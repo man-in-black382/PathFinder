@@ -90,6 +90,7 @@ namespace HAL
         inline auto ResourceAlighnment() const { return mResourceAlignment; }
         inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }
         inline auto DataType() const { return mDataType; }
+        inline auto Kind() const { return mKind; }
     };
 
 }

@@ -21,8 +21,8 @@ namespace HAL
     {
         mDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_ALIASING;
         mDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        mDesc.Aliasing.pResourceBefore = source->D3DResource();
-        mDesc.Aliasing.pResourceAfter = destination->D3DResource();
+        mDesc.Aliasing.pResourceBefore = source ? source->D3DResource() : nullptr;
+        mDesc.Aliasing.pResourceAfter = destination ? destination->D3DResource() : nullptr;
     }
 
     void ResourceBarrierCollection::AddBarrier(const ResourceBarrier& barrier)

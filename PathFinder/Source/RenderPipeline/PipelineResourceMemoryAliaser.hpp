@@ -61,8 +61,8 @@ namespace PathFinder
         std::set<uint32_t, std::less<uint32_t>> mNonAliasableMemoryRegionStarts;
         std::set<uint32_t, std::less<uint32_t>> mNonAliasableMemoryRegionEnds;
         std::vector<AliasingMetadataIterator> mAlreadyAliasedAllocations;
+        uint64_t mGlobalStartOffset = 0;
         uint64_t mAvailableMemory = 0;
-        uint64_t mOptimalHeapSize = 0;
 
         AliasingMetadataSet mAllocations;
         

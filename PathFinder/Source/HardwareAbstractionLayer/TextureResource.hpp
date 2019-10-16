@@ -21,6 +21,19 @@ namespace HAL
             uint16_t mipCount = 1
         );
 
+        TextureResource(
+            const Device& device,
+            const Heap& heap, 
+            uint64_t heapOffset,
+            ResourceFormat::FormatVariant format,
+            ResourceFormat::TextureKind kind,
+            const Geometry::Dimensions& dimensions,
+            const ResourceFormat::ClearValue& optimizedClearValue,
+            ResourceState initialStateMask,
+            ResourceState expectedStateMask,
+            uint16_t mipCount = 1
+        );
+
         bool IsArray() const;
         virtual uint32_t SubresourceCount() const override;
 

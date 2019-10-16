@@ -26,7 +26,6 @@ namespace PathFinder
             HAL::ResourceState RequestedState;
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
             std::optional<StatePair> OptimizedTransitionStates;
-            PipelineResourceAllocation* AliasingSourceAllocation;
             TextureRTDescriptorInserterPtr RTInserter = nullptr;
             TextureDSDescriptorInserterPtr DSInserter = nullptr;
             TextureSRDescriptorInserterPtr SRInserter = nullptr;
@@ -42,8 +41,9 @@ namespace PathFinder
 
         std::function<void()> AllocationAction;
         uint64_t HeapOffset = 0;
-        const PipelineResourceAllocation* AliasingSource;
+        const PipelineResourceAllocation* AliasingSource = nullptr;
         std::optional<StatePair> OneTimeTransitionStates;
+        HAL::HeapAliasingGroup HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
 
     private:
         std::unordered_map<Foundation::Name, PassMetadata> mPerPassData;

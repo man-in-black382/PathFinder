@@ -4,6 +4,7 @@
 
 #include "../Foundation/StringUtils.hpp"
 #include "../Foundation/Assert.hpp"
+#include "../Foundation/STDHelpers.hpp"
 
 namespace PathFinder
 {
@@ -15,7 +16,9 @@ namespace PathFinder
         :
         mDevice{ device },
         mStateOptimizer{ passExecutionGraph },
-        mMemoryAliaser{ passExecutionGraph },
+        mRTDSMemoryAliaser{ passExecutionGraph },
+        mNonRTDSMemoryAliaser{ passExecutionGraph },
+        mBufferMemoryAliaser{ passExecutionGraph },
         mDefaultRenderSurface{ defaultRenderSurface },
         mDescriptorStorage{ descriptorStorage },
         mSimultaneousFramesInFlight{ simultaneousFramesInFlight },
@@ -87,8 +90,17 @@ namespace PathFinder
 
     void PipelineResourceStorage::AllocateScheduledResources()
     {
+        PrepareAllocationsForOptimization();
+
         mStateOptimizer.Optimize();
-        auto optimalHeapSize = mMemoryAliaser.Alias();
+
+        auto RTDSHeapSize = mRTDSMemoryAliaser.Alias();
+        auto nonRTDSHeapSize = mNonRTDSMemoryAliaser.Alias();
+        auto bufferHeapSize = mBufferMemoryAliaser.Alias();
+
+        mRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, RTDSHeapSize, HAL::HeapAliasingGroup::RTDSTextures);
+        mNonRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, nonRTDSHeapSize, HAL::HeapAliasingGroup::NonRTDSTextures);
+        mBufferHeap = std::make_unique<HAL::Heap>(*mDevice, bufferHeapSize, HAL::HeapAliasingGroup::Buffers);
 
         for (auto& pair : mPipelineResourceAllocations)
         {
@@ -157,8 +169,18 @@ namespace PathFinder
             HAL::ResourceState expectedStates = allocation.GatherExpectedStates();
             HAL::ResourceState initialState = HAL::ResourceState::Common;
             
+            HAL::Heap* heap = nullptr;
+
+            switch (allocation.HeapAliasingGroup)
+            {
+            case HAL::HeapAliasingGroup::RTDSTextures: heap = mRTDSHeap.get(); break;
+            case HAL::HeapAliasingGroup::NonRTDSTextures: heap = mNonRTDSHeap.get(); break;
+            case HAL::HeapAliasingGroup::Buffers: heap = mBufferHeap.get(); break;
+            }
+
             auto texture = std::make_unique<HAL::TextureResource>(
-                *mDevice, format, kind, dimensions, optimizedClearValue, initialState, expectedStates);
+                *mDevice, *heap, allocation.HeapOffset, format, kind,
+                dimensions, optimizedClearValue, initialState, expectedStates);
 
             texture->SetDebugName(resourceName.ToString());
 
@@ -168,9 +190,6 @@ namespace PathFinder
             newResource.Resource = std::move(texture);
             mPipelineResources[resourceName] = std::move(newResource);
         };
-
-        mStateOptimizer.AddAllocation(&allocation);
-        mMemoryAliaser.AddAllocation(&allocation);
 
         return &allocation;
     }
@@ -207,12 +226,51 @@ namespace PathFinder
         }
     }
 
+    void PipelineResourceStorage::PrepareAllocationsForOptimization()
+    {
+        for (auto& [resourceName, allocation] : mPipelineResourceAllocations)
+        {
+            mStateOptimizer.AddAllocation(&allocation);
+
+            std::visit(Foundation::MakeVisitor(
+                [this, &allocation](const HAL::ResourceFormat::BufferKind& kind)
+                {
+                    allocation.HeapAliasingGroup = HAL::HeapAliasingGroup::Buffers;
+                    mBufferMemoryAliaser.AddAllocation(&allocation);
+                },
+                [this, &allocation](const HAL::ResourceFormat::TextureKind& kind)
+                {
+                    HAL::ResourceState expectedStates = allocation.GatherExpectedStates();
+
+                    if (EnumMaskBitSet(expectedStates, HAL::ResourceState::RenderTarget) ||
+                        EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthWrite) ||
+                        EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthRead))
+                    {
+                        allocation.HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
+                        mRTDSMemoryAliaser.AddAllocation(&allocation);
+                    } 
+                    else {
+                        allocation.HeapAliasingGroup = HAL::HeapAliasingGroup::NonRTDSTextures;
+                        mNonRTDSMemoryAliaser.AddAllocation(&allocation);
+                    }
+                }),
+                allocation.ResourceFormat().Kind());
+        }
+    }
+
     void PipelineResourceStorage::CreateResourceBarriers()
     {
         for (auto& [resourceName, allocation] : mPipelineResourceAllocations)
         {
             const PipelineResource* pipelineResource = GetPipelineResource(resourceName);
             assert_format(pipelineResource, "Resource must be allocated before creating any transitions");
+
+            if (allocation.AliasingSource)
+            {
+                //const PipelineResource* source = GetPipelineResource(resourceName);
+
+                //mPerPassResourceBarriers[passName].AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, pipelineResource->Resource.get() });
+            }
 
             if (allocation.OneTimeTransitionStates)
             {

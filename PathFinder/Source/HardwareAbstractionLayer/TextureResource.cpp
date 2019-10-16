@@ -28,6 +28,17 @@ namespace HAL
         Resource(device, ResourceFormat(device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
         mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
 
+    TextureResource::TextureResource(
+        const Device& device, const Heap& heap, uint64_t heapOffset, 
+        ResourceFormat::FormatVariant format, ResourceFormat::TextureKind kind, 
+        const Geometry::Dimensions& dimensions, 
+        const ResourceFormat::ClearValue& optimizedClearValue, 
+        ResourceState initialStateMask, ResourceState expectedStateMask, 
+        uint16_t mipCount)
+        :
+        Resource(device, heap, heapOffset, ResourceFormat(device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
+        mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
+
     bool TextureResource::IsArray() const
     {
         switch (mKind)

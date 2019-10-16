@@ -16,22 +16,22 @@ namespace PathFinder
 
     uint64_t PipelineResourceMemoryAliaser::Alias()
     {
-        if (mAllocations.size() == 0) return 0;
+        uint64_t optimalHeapSize = 1;
+
+        if (mAllocations.size() == 0) return optimalHeapSize;
 
         if (mAllocations.size() == 1)
         {
             mAllocations.begin()->Allocation->HeapOffset = 0;
-            mOptimalHeapSize = mAllocations.begin()->Allocation->ResourceFormat().ResourceSizeInBytes();
-            return mOptimalHeapSize;
+            optimalHeapSize = mAllocations.begin()->Allocation->ResourceFormat().ResourceSizeInBytes();
+            return optimalHeapSize;
         }
-        
-        mOptimalHeapSize = 0;
 
         while (!mAllocations.empty())
         {
             auto largestAllocationIt = mAllocations.begin();
             mAvailableMemory = largestAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes();
-            mOptimalHeapSize += mAvailableMemory;
+            optimalHeapSize += mAvailableMemory;
 
             for (auto allocationIt = largestAllocationIt; allocationIt != mAllocations.end(); ++allocationIt)
             {
@@ -39,9 +39,11 @@ namespace PathFinder
             }
 
             RemoveAliasedAllocationsFromOriginalList();
+
+            mGlobalStartOffset += mAvailableMemory;
         }
 
-        return mOptimalHeapSize;
+        return optimalHeapSize == 0 ? 1 : optimalHeapSize;
     }
 
     bool PipelineResourceMemoryAliaser::TimelinesIntersect(const PipelineResourceMemoryAliaser::Timeline& first, const PipelineResourceMemoryAliaser::Timeline& second) const
@@ -94,7 +96,7 @@ namespace PathFinder
     {
         if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() <= mAvailableMemory)
         {
-            nextAllocationIt->Allocation->HeapOffset = 0;
+            nextAllocationIt->Allocation->HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
             return true;
         }
@@ -106,7 +108,7 @@ namespace PathFinder
     {
         if (mNonAliasableMemoryRegionStarts.empty())
         {
-            nextAllocationIt->Allocation->HeapOffset = 0;
+            nextAllocationIt->Allocation->HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
             return true;
         }
@@ -127,7 +129,7 @@ namespace PathFinder
         // Find memory regions in which we can place the next allocation based on previously found unavailable regions.
         // Pick the most fitting region. If next allocation cannot be fit in any free region, skip it.
 
-        uint64_t currentOffset = 0;
+        uint64_t localOffset = mGlobalStartOffset;
         uint16_t overlappingMemoryRegionsCount = 0;
         uint64_t nextAllocationSize = nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes();
 
@@ -143,7 +145,7 @@ namespace PathFinder
             MemoryRegion nextAliasableMemoryRegion{ 0, regionSize };
             FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
 
-            currentOffset = *startIt;
+            localOffset = *startIt;
             ++startIt;
             ++overlappingMemoryRegionsCount;
         }
@@ -169,11 +171,11 @@ namespace PathFinder
 
             if (nextRegionIsEmpty && nextPointIsStartPoint)
             {
-                MemoryRegion nextAliasableMemoryRegion{ currentOffset, nextStartOffset - currentOffset };
+                MemoryRegion nextAliasableMemoryRegion{ localOffset, nextStartOffset - localOffset };
                 FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
             }
 
-            currentOffset = nextPointIsStartPoint ? nextStartOffset : nextEndOffset;
+            localOffset = nextPointIsStartPoint ? nextStartOffset : nextEndOffset;
         }
 
         // Handle last free region from end of last non-aliasable region to bucket end
@@ -191,6 +193,11 @@ namespace PathFinder
         // If we found a fitting aliasable memory region update allocation with an offset
         if (mostFittingMemoryRegion.Size > 0)
         {
+            // Let's pick largest resource as a source resource for aliasing.
+            // DirectX spec doesn't say anything on how to choose from several 
+            // available source resources
+
+            nextAllocationIt->Allocation->AliasingSource = mAllocations.begin()->Allocation;
             nextAllocationIt->Allocation->HeapOffset = mostFittingMemoryRegion.Offset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
         }
