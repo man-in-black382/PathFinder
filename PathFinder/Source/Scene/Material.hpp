@@ -5,7 +5,7 @@
 namespace PathFinder 
 {
 
-    class Material
+    struct Material
     {
         uint16_t AlbedoMapIndex = 0;
         uint16_t NormalMapIndex = 0;

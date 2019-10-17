@@ -22,7 +22,7 @@ namespace PathFinder
         HAL::ResourceFormat::FormatVariant ToResourceFormat(const ddsktx_format& parserFormat) const;
         std::unique_ptr<HAL::TextureResource> AllocateTexture(const ddsktx_texture_info& textureInfo) const;
 
-        const std::filesystem::path& mRootPath;
+        std::filesystem::path mRootPath;
         const HAL::Device* mDevice;
         CopyDevice* mCopyDevice;
     };

@@ -21,9 +21,6 @@ namespace PathFinder
         scheduler->WillUseRootConstantBuffer<BlurCBContent>();
         scheduler->ReadTexture(ResourceNames::PlaygroundRenderTarget);
         scheduler->NewTexture(ResourceNames::BlurResult);
-
-        //scheduler->NewTexture("3", ResourceScheduler::NewTextureProperties{ std::nullopt,  Geometry::Dimensions{300, 100}, std::nullopt, std::nullopt });
-        //scheduler->NewTexture("4", ResourceScheduler::NewTextureProperties{ std::nullopt,  Geometry::Dimensions{400, 100}, std::nullopt, std::nullopt });
     }
      
     void BlurRenderPass::Render(RenderContext* context)

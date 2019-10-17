@@ -7,22 +7,9 @@
 #include "ThirdParty/imgui/imgui_impl_win32.h"
 #include "ThirdParty/imgui/imgui_impl_dx12.h"
 
-#include "HardwareAbstractionLayer/DisplayAdapterFetcher.hpp"
-#include "HardwareAbstractionLayer/Device.hpp"
-#include "HardwareAbstractionLayer/DescriptorHeap.hpp"
-#include "HardwareAbstractionLayer/CommandAllocator.hpp"
-#include "HardwareAbstractionLayer/CommandList.hpp"
-#include "HardwareAbstractionLayer/CommandQueue.hpp"
-#include "HardwareAbstractionLayer/Resource.hpp"
-#include "HardwareAbstractionLayer/SwapChain.hpp"
-#include "HardwareAbstractionLayer/ResourceBarrier.hpp"
-#include "HardwareAbstractionLayer/TextureResource.hpp"
-#include "HardwareAbstractionLayer/BufferResource.hpp"
-#include "HardwareAbstractionLayer/Fence.hpp"
-#include "HardwareAbstractionLayer/RingBufferResource.hpp"
-
 #include "Scene/Scene.hpp"
 #include "Scene/MeshLoader.hpp"
+#include "Scene/MaterialLoader.hpp"
 #include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BlurRenderPass.hpp"
@@ -515,7 +502,10 @@ int main(int argc, char** argv)
 
     PathFinder::Scene scene;
     PathFinder::RenderEngine engine{ hwnd, executableFolder, &scene, &renderPassGraph };
-    PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };    
+    PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };  
+    PathFinder::MaterialLoader materialLoader{ executableFolder / "MediaResources/Textures/", &engine.Device(), &engine.AssetStorage(), &engine.ResourceCopyDevice() };
+
+    materialLoader.LoadMaterial("/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds", "/Metal07/Metal07_met.dds");
 
     const PathFinder::Mesh& deer = scene.AddMesh(meshLoader.Load("deer.obj"));
     PathFinder::MeshInstance deerInstance{ &deer, nullptr };

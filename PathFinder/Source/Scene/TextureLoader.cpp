@@ -16,14 +16,31 @@ namespace PathFinder
 
     std::unique_ptr<HAL::TextureResource> TextureLoader::Load(const std::string& relativeFilePath) const
     {
-        std::ifstream input{ mRootPath.string() + "/" + relativeFilePath, std::ios::binary };
-        assert_format(input.is_open(), "Couldn't read texture file");
+        std::filesystem::path fullPath = mRootPath;
+        fullPath += relativeFilePath;
+
+        std::ifstream input{ fullPath.string(), std::ios::binary };
+
+        if (!input.is_open())
+        {
+            return nullptr;
+        }
         
-        std::vector<uint8_t> bytes{ std::istream_iterator<uint8_t>(input), std::istream_iterator<uint8_t>() };
+        std::uintmax_t fileSize = std::filesystem::file_size(fullPath);
+
+        std::vector<uint8_t> bytes;
+        bytes.resize(fileSize);
+
+        input.read((char *)bytes.data(), bytes.size());
+
         ddsktx_texture_info textureInfo;
         ddsktx_error error;
 
-        assert_format(ddsktx_parse(&textureInfo, bytes.data(), (int)bytes.size(), &error), "Couldn't read texture file: ", error.msg);
+        if (!ddsktx_parse(&textureInfo, bytes.data(), (int)bytes.size(), &error))
+        {
+            return nullptr;
+        }
+
         assert_format(textureInfo.num_layers == 1, "Texture array are not supported yet");
 
         std::unique_ptr<HAL::TextureResource> texture = AllocateTexture(textureInfo);
@@ -31,6 +48,8 @@ namespace PathFinder
 
         auto uploadBuffer = std::make_shared<HAL::BufferResource<uint8_t>>(
             *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Upload);
+
+        uint64_t bufferMemoryOffset = 0;
 
         for (int mip = 0; mip < textureInfo.num_mips; mip++)
         {
@@ -41,13 +60,30 @@ namespace PathFinder
 
             bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes;
 
+            if (imageDataSatisfiesTextureRowAlignment)
+            {
+                // Copy whole subresource
+                uploadBuffer->Write(bufferMemoryOffset, (uint8_t*)subData.buff, subData.size_bytes);
+                bufferMemoryOffset += subData.size_bytes;
+            }
+            else {
+                // Have to copy row-by-row
+                uint8_t* rowData = (uint8_t*)subData.buff;
 
-            //uploadBuffer->Write(mip * mipFootprint.)
+                for (auto row = 0; row < subData.height; ++row)
+                {
+                    uploadBuffer->Write(bufferMemoryOffset, (uint8_t*)subData.buff, subData.row_pitch_bytes);
+                    bufferMemoryOffset += mipFootprint.RowPitch();
+                }
+            }  
         }
+
+        mCopyDevice->QueueBufferToTextureCopy(uploadBuffer, *texture, textureFootprint);
+        texture->SetDebugName(fullPath.filename().string());
 
         input.close();
         
-        return nullptr;
+        return std::move(texture);
     }
 
     HAL::ResourceFormat::TextureKind TextureLoader::ToKind(const ddsktx_texture_info& textureInfo) const
@@ -78,8 +114,8 @@ namespace PathFinder
         case DDSKTX_FORMAT_RGBA16:      return HAL::ResourceFormat::Color::RGBA16_Unsigned;
         case DDSKTX_FORMAT_RG8:         return HAL::ResourceFormat::Color::RG8_Usigned_Norm;
         case DDSKTX_FORMAT_RG8S:        return HAL::ResourceFormat::Color::RG8_Signed;
+        case DDSKTX_FORMAT_BGRA8:       return HAL::ResourceFormat::Color::BGRA8_Unsigned_Norm;
 
-        case DDSKTX_FORMAT_BGRA8:
         case DDSKTX_FORMAT_RGB10A2:
         case DDSKTX_FORMAT_RG11B10F:
         case DDSKTX_FORMAT_A8:
@@ -125,7 +161,6 @@ namespace PathFinder
         return std::make_unique<HAL::TextureResource>(
             *mDevice, format, kind, dimensions, clearValue,
             HAL::ResourceState::CopyDestination,
-            HAL::ResourceState::UnorderedAccess | 
             HAL::ResourceState::PixelShaderAccess | 
             HAL::ResourceState::NonPixelShaderAccess,
             textureInfo.num_mips);

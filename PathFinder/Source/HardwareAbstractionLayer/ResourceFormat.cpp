@@ -108,11 +108,15 @@ namespace HAL
 
     DXGI_FORMAT ResourceFormat::D3DFormat(Color type)
     {
+        //DXGI_FORMAT_B8G8R8A8_UNORM = 87,
+
         switch (type)
         {
         case Color::R8_Usigned_Norm:        return DXGI_FORMAT_R8_UNORM;
         case Color::RG8_Usigned_Norm:      return DXGI_FORMAT_R8G8_UNORM;
         case Color::RGBA8_Usigned_Norm:  return DXGI_FORMAT_R8G8B8A8_UNORM;
+
+        case Color::BGRA8_Unsigned_Norm: return DXGI_FORMAT_B8G8R8A8_UNORM;
 
         case Color::R8_Signed:         return DXGI_FORMAT_R8_SINT;
         case Color::RG8_Signed:        return DXGI_FORMAT_R8G8_SINT;
@@ -177,6 +181,8 @@ namespace HAL
         case DXGI_FORMAT_R32G32_TYPELESS: return TypelessColor::RG32;
         case DXGI_FORMAT_R32G32B32_TYPELESS: return TypelessColor::RGB32;
         case DXGI_FORMAT_R32G32B32A32_TYPELESS: return TypelessColor::RGBA32;
+
+        case DXGI_FORMAT_B8G8R8A8_UNORM: return Color::BGRA8_Unsigned_Norm;
 
         case DXGI_FORMAT_R8_UNORM: return Color::R8_Usigned_Norm;
         case DXGI_FORMAT_R8G8_UNORM: return Color::RG8_Usigned_Norm;

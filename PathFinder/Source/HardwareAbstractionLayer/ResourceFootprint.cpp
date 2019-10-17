@@ -3,8 +3,10 @@
 namespace HAL
 {
    
-    SubresourceFootprint::SubresourceFootprint(const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& d3dFootprint, uint32_t rowCount, uint64_t rowSize)
-        : mD3DFootprint{ d3dFootprint }, mRowCount{ rowCount }, mRowSizeInBytes{ rowSize }, mOffset{ d3dFootprint.Offset }, mRowPitch{ d3dFootprint.Footprint.RowPitch } {}
+    SubresourceFootprint::SubresourceFootprint(const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& d3dFootprint, uint32_t rowCount, uint64_t rowSize, uint16_t index)
+        : mD3DFootprint{ d3dFootprint }, mRowCount{ rowCount },
+        mRowSizeInBytes{ rowSize }, mOffset{ d3dFootprint.Offset }, 
+        mRowPitch{ d3dFootprint.Footprint.RowPitch }, mSubresourceIndex{ index } {}
 
     ResourceFootprint::ResourceFootprint(const Resource& resource)
     {
@@ -29,7 +31,7 @@ namespace HAL
 
         for (auto i = 0u; i < subresourceCount; ++i)
         {
-            mSubresourceFootprints.emplace_back(d3dFootprints[i], rowCounts[i], rowSizes[i]);
+            mSubresourceFootprints.emplace_back(d3dFootprints[i], rowCounts[i], rowSizes[i], i);
         }
     }
 

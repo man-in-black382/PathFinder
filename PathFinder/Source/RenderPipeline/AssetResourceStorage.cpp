@@ -9,7 +9,7 @@ namespace PathFinder
     uint64_t AssetResourceStorage::StoreAsset(std::unique_ptr<HAL::TextureResource> resource)
     {
         mAssets.push_back(std::move(resource));
-        return mDescriptorStorage->EmplaceSRDescriptorIfNeeded(resource.get()).IndexInHeapRange();
+        return mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mAssets.back().get()).IndexInHeapRange();
     }
 
 }

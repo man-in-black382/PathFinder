@@ -76,6 +76,9 @@ namespace PathFinder
 
     public:
         inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }
+        inline AssetResourceStorage& AssetStorage() { return mAssetResourceStorage; }
+        inline CopyDevice& ResourceCopyDevice() { return mCopyDevice; }
+        inline HAL::Device& Device() { return mDevice; }
     };
 
 }

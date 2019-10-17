@@ -10,7 +10,7 @@ namespace HAL
     class SubresourceFootprint
     {
     public:
-        SubresourceFootprint(const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& d3dFootprint, uint32_t rowCount, uint64_t rowSize);
+        SubresourceFootprint(const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& d3dFootprint, uint32_t rowCount, uint64_t rowSize, uint16_t index);
 
     private:
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT mD3DFootprint;
@@ -18,6 +18,7 @@ namespace HAL
         uint64_t mRowSizeInBytes;
         uint64_t mOffset;
         uint64_t mRowPitch;
+        uint16_t mSubresourceIndex;
 
     public:
         inline const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& D3DFootprint() const { return mD3DFootprint; }
@@ -25,6 +26,7 @@ namespace HAL
         inline auto RowSizeInBytes() const { return mRowSizeInBytes; }
         inline auto RowPitch() const { return mRowPitch; }
         inline auto Offset() const { return mOffset; }
+        inline auto IndexInResource() const { return mSubresourceIndex; }
     };
 
     class ResourceFootprint

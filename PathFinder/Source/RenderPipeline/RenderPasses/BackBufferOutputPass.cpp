@@ -21,9 +21,6 @@ namespace PathFinder
     { 
         scheduler->ReadTexture(ResourceNames::BlurResult);
         scheduler->WillUseRootConstantBuffer<BackBufferOutputPassData>();
-
-    /*    scheduler->NewTexture("5", ResourceScheduler::NewTextureProperties{ std::nullopt,  Geometry::Dimensions{500, 100}, std::nullopt, std::nullopt });
-        scheduler->NewTexture("6", ResourceScheduler::NewTextureProperties{ std::nullopt,  Geometry::Dimensions{600, 100}, std::nullopt, std::nullopt });*/
     } 
 
     void BackBufferOutputPass::Render(RenderContext* context)

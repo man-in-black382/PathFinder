@@ -25,31 +25,34 @@ namespace HAL
 
         using ClearValue = std::variant<ColorClearValue, DepthStencilClearValue>;
 
-        using UnderlyingType = uint8_t;
-
-        enum class TypelessColor : UnderlyingType {
-            R8 = 1, RG8 = 2, RGBA8 = 3,
-            R16 = 4, RG16 = 5, RGBA16 = 6,
-            R32 = 7, RG32 = 8, RGB32 = 9, RGBA32 = 10            
+        enum class TypelessColor 
+        {
+            R8, RG8, RGBA8,
+            R16, RG16, RGBA16,
+            R32, RG32, RGB32, RGBA32            
         };
 
-        enum class Color : UnderlyingType {
-            R8_Usigned_Norm = 11, RG8_Usigned_Norm = 12, RGBA8_Usigned_Norm = 13,
+        enum class Color 
+        {
+            R8_Usigned_Norm, RG8_Usigned_Norm, RGBA8_Usigned_Norm,
 
-            R8_Signed = 14, RG8_Signed = 15, RGBA8_Signed = 16,
-            R8_Unsigned = 17, RG8_Unsigned = 18, RGBA8_Unsigned = 19,
+            BGRA8_Unsigned_Norm,
 
-            R16_Float = 20, RG16_Float = 21, RGBA16_Float = 22,
-            R16_Signed = 23, RG16_Signed = 24, RGBA16_Signed = 25,
-            R16_Unsigned = 26, RG16_Unsigned = 27, RGBA16_Unsigned = 28,
+            R8_Signed, RG8_Signed, RGBA8_Signed,
+            R8_Unsigned, RG8_Unsigned, RGBA8_Unsigned,
 
-            R32_Float = 29, RG32_Float = 30, RGB32_Float = 31, RGBA32_Float = 32,
-            R32_Signed = 33, RG32_Signed = 34, RGB32_Signed = 35, RGBA32_Signed = 36,
-            R32_Unsigned = 37, RG32_Unsigned = 38, RGB32_Unsigned = 39, RGBA32_Unsigned = 40
+            R16_Float, RG16_Float, RGBA16_Float,
+            R16_Signed, RG16_Signed, RGBA16_Signed,
+            R16_Unsigned, RG16_Unsigned, RGBA16_Unsigned,
+
+            R32_Float, RG32_Float, RGB32_Float, RGBA32_Float,
+            R32_Signed, RG32_Signed, RGB32_Signed, RGBA32_Signed,
+            R32_Unsigned, RG32_Unsigned, RGB32_Unsigned, RGBA32_Unsigned
         };
 
-        enum DepthStencil : UnderlyingType {
-            Depth24_Float_Stencil8_Unsigned = 41, Depth32_Float = 42
+        enum DepthStencil
+        {
+            Depth24_Float_Stencil8_Unsigned, Depth32_Float
         };
 
         enum class BufferKind { Buffer };

@@ -30,8 +30,8 @@ namespace HAL
         srcLocation.PlacedFootprint = footprint.D3DFootprint();
 
         dstLocation.pResource = texture.D3DResource();
-        dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-        dstLocation.PlacedFootprint = footprint.D3DFootprint();
+        dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        dstLocation.SubresourceIndex = footprint.IndexInResource();
 
         mList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, nullptr);
     }
