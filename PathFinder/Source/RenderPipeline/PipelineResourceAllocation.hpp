@@ -32,6 +32,14 @@ namespace PathFinder
             TextureUADescriptorInserterPtr UAInserter = nullptr;
         };
 
+        struct AliasingMetadata
+        {
+            const PipelineResourceAllocation* AliasingSource = nullptr;
+            HAL::HeapAliasingGroup HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
+            uint64_t HeapOffset = 0;
+            bool NeedsAliasingBarrier = false;
+        };
+
         PipelineResourceAllocation(const HAL::ResourceFormat& format);
 
         HAL::ResourceState GatherExpectedStates() const;
@@ -40,10 +48,8 @@ namespace PathFinder
         PassMetadata& AllocateMetadataForPass(Foundation::Name passName);
 
         std::function<void()> AllocationAction;
-        uint64_t HeapOffset = 0;
-        const PipelineResourceAllocation* AliasingSource = nullptr;
         std::optional<StatePair> OneTimeTransitionStates;
-        HAL::HeapAliasingGroup HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
+        AliasingMetadata AliasingInfo;
 
     private:
         std::unordered_map<Foundation::Name, PassMetadata> mPerPassData;

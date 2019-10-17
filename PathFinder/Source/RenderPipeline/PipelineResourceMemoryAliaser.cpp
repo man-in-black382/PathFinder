@@ -22,7 +22,7 @@ namespace PathFinder
 
         if (mAllocations.size() == 1)
         {
-            mAllocations.begin()->Allocation->HeapOffset = 0;
+            mAllocations.begin()->Allocation->AliasingInfo.HeapOffset = 0;
             optimalHeapSize = mAllocations.begin()->Allocation->ResourceFormat().ResourceSizeInBytes();
             return optimalHeapSize;
         }
@@ -83,7 +83,7 @@ namespace PathFinder
         {
             if (TimelinesIntersect(alreadyAliasedAllocationIt->ResourceTimeline, nextAllocationIt->ResourceTimeline))
             {
-                uint64_t startByteIndex = alreadyAliasedAllocationIt->Allocation->HeapOffset;
+                uint64_t startByteIndex = alreadyAliasedAllocationIt->Allocation->AliasingInfo.HeapOffset;
                 uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() - 1;
 
                 mNonAliasableMemoryRegionStarts.insert(startByteIndex);
@@ -96,7 +96,7 @@ namespace PathFinder
     {
         if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() <= mAvailableMemory)
         {
-            nextAllocationIt->Allocation->HeapOffset = mGlobalStartOffset;
+            nextAllocationIt->Allocation->AliasingInfo.HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
             return true;
         }
@@ -108,7 +108,7 @@ namespace PathFinder
     {
         if (mNonAliasableMemoryRegionStarts.empty())
         {
-            nextAllocationIt->Allocation->HeapOffset = mGlobalStartOffset;
+            nextAllocationIt->Allocation->AliasingInfo.HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
             return true;
         }
@@ -193,12 +193,26 @@ namespace PathFinder
         // If we found a fitting aliasable memory region update allocation with an offset
         if (mostFittingMemoryRegion.Size > 0)
         {
-            // Let's pick largest resource as a source resource for aliasing.
-            // DirectX spec doesn't say anything on how to choose from several 
-            // available source resources
+            // ??? DirectX spec doesn't say anything on how to choose from several 
+            // available source resources for aliasing
+            // 
+            // Do not use any source in aliasing barriers for the moment. 
+            // Probably won't hurt on most hardware/drivers, but need to
+            // figure out a way to check the actual behavior
+            //
+            //nextAllocationIt->Allocation->AliasingSource = mAllocations.begin()->Allocation;
 
-            nextAllocationIt->Allocation->AliasingSource = mAllocations.begin()->Allocation;
-            nextAllocationIt->Allocation->HeapOffset = mostFittingMemoryRegion.Offset;
+            PipelineResourceAllocation::AliasingMetadata& aliasingInfo = nextAllocationIt->Allocation->AliasingInfo;
+
+            aliasingInfo.HeapOffset = mostFittingMemoryRegion.Offset;
+            aliasingInfo.NeedsAliasingBarrier = true;
+
+            // We aliased something with the first resource in the current memory bucket
+            // so it's no longer a single occupant of this memory region, therefore it now
+            // needs an aliasing barrier. If the first resource is a single resource on this
+            // memory region then this code branch will never be hit and we will avoid a barrier for it.
+            mAlreadyAliasedAllocations.front()->Allocation->AliasingInfo.NeedsAliasingBarrier = true;
+
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
         }
     }

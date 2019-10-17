@@ -171,7 +171,7 @@ namespace PathFinder
             
             HAL::Heap* heap = nullptr;
 
-            switch (allocation.HeapAliasingGroup)
+            switch (allocation.AliasingInfo.HeapAliasingGroup)
             {
             case HAL::HeapAliasingGroup::RTDSTextures: heap = mRTDSHeap.get(); break;
             case HAL::HeapAliasingGroup::NonRTDSTextures: heap = mNonRTDSHeap.get(); break;
@@ -179,7 +179,7 @@ namespace PathFinder
             }
 
             auto texture = std::make_unique<HAL::TextureResource>(
-                *mDevice, *heap, allocation.HeapOffset, format, kind,
+                *mDevice, *heap, allocation.AliasingInfo.HeapOffset, format, kind,
                 dimensions, optimizedClearValue, initialState, expectedStates);
 
             texture->SetDebugName(resourceName.ToString());
@@ -235,7 +235,7 @@ namespace PathFinder
             std::visit(Foundation::MakeVisitor(
                 [this, &allocation](const HAL::ResourceFormat::BufferKind& kind)
                 {
-                    allocation.HeapAliasingGroup = HAL::HeapAliasingGroup::Buffers;
+                    allocation.AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::Buffers;
                     mBufferMemoryAliaser.AddAllocation(&allocation);
                 },
                 [this, &allocation](const HAL::ResourceFormat::TextureKind& kind)
@@ -246,11 +246,11 @@ namespace PathFinder
                         EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthWrite) ||
                         EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthRead))
                     {
-                        allocation.HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
+                        allocation.AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
                         mRTDSMemoryAliaser.AddAllocation(&allocation);
                     } 
                     else {
-                        allocation.HeapAliasingGroup = HAL::HeapAliasingGroup::NonRTDSTextures;
+                        allocation.AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::NonRTDSTextures;
                         mNonRTDSMemoryAliaser.AddAllocation(&allocation);
                     }
                 }),
@@ -265,11 +265,9 @@ namespace PathFinder
             const PipelineResource* pipelineResource = GetPipelineResource(resourceName);
             assert_format(pipelineResource, "Resource must be allocated before creating any transitions");
 
-            if (allocation.AliasingSource)
+            if (allocation.AliasingInfo.NeedsAliasingBarrier)
             {
-                //const PipelineResource* source = GetPipelineResource(resourceName);
-
-                //mPerPassResourceBarriers[passName].AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, pipelineResource->Resource.get() });
+                mPerPassResourceBarriers[allocation.FirstPassName()].AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, pipelineResource->Resource.get() });
             }
 
             if (allocation.OneTimeTransitionStates)
