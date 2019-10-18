@@ -36,18 +36,6 @@ namespace HAL
         uint64_t PerFrameCapacity() const { return mPerFrameCapacity; }
     };
 
-    template <class T>
-    RingBufferResource<T>::RingBufferResource(
-        const Device& device,
-        uint64_t elementCapacity, 
-        uint8_t frameCapacity,
-        uint64_t perElementAlignment,
-        CPUAccessibleHeapType heapType)
-        :
-        BufferResource<T>(device, elementCapacity * frameCapacity, perElementAlignment, heapType),
-        mRingBuffer{ this->Capacity() },
-        mPerFrameCapacity{ elementCapacity } {}
-
 }
 
 #include "RingBufferResource.inl"

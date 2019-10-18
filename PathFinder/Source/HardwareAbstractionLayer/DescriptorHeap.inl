@@ -28,8 +28,8 @@ namespace HAL
         for (auto rangeIdx = 0u; rangeIdx < rangeCount; rangeIdx++)
         {
             mRanges.emplace_back(
-                D3D12_CPU_DESCRIPTOR_HANDLE{ CPUHandle.ptr + rangeIdx * mIncrementSize }, 
-                D3D12_GPU_DESCRIPTOR_HANDLE{ GPUHandle.ptr + rangeIdx * mIncrementSize }
+                D3D12_CPU_DESCRIPTOR_HANDLE{ CPUHandle.ptr + rangeIdx * mIncrementSize * mRangeCapacity }, 
+                D3D12_GPU_DESCRIPTOR_HANDLE{ GPUHandle.ptr + rangeIdx * mIncrementSize * mRangeCapacity }
             );
         }
     }

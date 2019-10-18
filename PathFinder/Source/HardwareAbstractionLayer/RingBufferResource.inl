@@ -2,6 +2,18 @@ namespace HAL
 {
 
     template <class T>
+    RingBufferResource<T>::RingBufferResource(
+        const Device& device,
+        uint64_t elementCapacity,
+        uint8_t frameCapacity,
+        uint64_t perElementAlignment,
+        CPUAccessibleHeapType heapType)
+        :
+        BufferResource<T>(device, elementCapacity* frameCapacity, perElementAlignment, heapType),
+        mRingBuffer{ this->Capacity() },
+        mPerFrameCapacity{ elementCapacity } {}
+
+    template <class T>
     D3D12_GPU_VIRTUAL_ADDRESS RingBufferResource<T>::GPUVirtualAddress() const
     {
         return BufferResource<T>::GPUVirtualAddress() + mCurrentRingOffset * this->PaddedElementSize();

@@ -2407,6 +2407,12 @@
     <None Include="Source\RenderPipeline\CopyDevice.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Source\HardwareAbstractionLayer\Descriptor.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\HardwareAbstractionLayer\RingCommandList.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
