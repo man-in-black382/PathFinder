@@ -10,8 +10,8 @@ namespace PathFinder
     {
         stateCreator->CreateGraphicsState(PSONames::GBuffer, [](GraphicsStateProxy& state)
         {
-            state.ShaderFileNames.VertexShaderFileName = L"Playground.hlsl";
-            state.ShaderFileNames.PixelShaderFileName = L"Playground.hlsl";
+            state.ShaderFileNames.VertexShaderFileName = L"GBuffer.hlsl";
+            state.ShaderFileNames.PixelShaderFileName = L"GBuffer.hlsl";
             state.InputLayout = InputAssemblerLayoutForVertexLayout(VertexLayout::Layout1P1N1UV1T1BT);
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
         });

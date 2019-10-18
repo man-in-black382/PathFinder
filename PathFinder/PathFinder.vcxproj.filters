@@ -2416,11 +2416,11 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
-    <Text Include="Source\RenderPipeline\Shaders\Playground.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\Blur.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\BaseRootSignature.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\BackBufferOutput.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\GBuffer.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />

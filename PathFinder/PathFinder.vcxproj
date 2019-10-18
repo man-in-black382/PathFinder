@@ -977,7 +977,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\ThirdParty\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Source\RenderPipeline\Shaders\Playground.hlsl">
+    <Text Include="Source\RenderPipeline\Shaders\GBuffer.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>

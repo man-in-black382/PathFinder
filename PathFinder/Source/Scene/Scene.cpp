@@ -3,28 +3,21 @@
 namespace PathFinder 
 {
 
-    const Mesh& Scene::AddMesh(const Mesh& mesh)
-    {
-        mMeshes.push_back(mesh);
-        return mMeshes.back();
-    }
-
-    const Mesh& Scene::AddMesh(Mesh&& mesh)
+    Mesh& Scene::AddMesh(Mesh&& mesh)
     {
         mMeshes.emplace_back(std::move(mesh));
         return mMeshes.back();
     }
 
-    const MeshInstance& Scene::AddMeshInstance(const MeshInstance& instance)
-    {
-        mMeshInstances.push_back(instance);
-        return mMeshInstances.back();
-    }
-
-    const MeshInstance& Scene::AddMeshInstance(MeshInstance&& instance)
+    MeshInstance& Scene::AddMeshInstance(MeshInstance&& instance)
     {
         mMeshInstances.emplace_back(std::move(instance));
         return mMeshInstances.back();
+    }
+
+    PathFinder::Material& Scene::AddMaterial(Material&& instance)
+    {
+
     }
 
     void Scene::IterateMeshInstances(const std::function<void(const MeshInstance& instance)>& functor) const

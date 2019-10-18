@@ -14,10 +14,18 @@
 namespace PathFinder
 {
 
+    struct GPUInstanceTableEntry
+    {
+        glm::mat4 InstanceWorldMatrix;
+        Material InstanceMaterial;
+    };
+
     class MeshInstance
     {
     public:
         MeshInstance(const Mesh* mesh, const Material* material);
+
+        GPUInstanceTableEntry CreateGPUInstancetableEntry() const;
 
     private:
         const Mesh* mMesh;
@@ -26,6 +34,7 @@ namespace PathFinder
         bool mIsHighlighted = false;
         Geometry::Transformation mTransformation;
         glm::mat4 mModelMatrix;
+        uint16_t mGPUInstanceTableIndex = 0;
 
     public:
         inline bool IsSelected() const { return mIsSelected; }
@@ -35,10 +44,12 @@ namespace PathFinder
         inline Geometry::Transformation& Transformation() { return mTransformation; }
         inline Geometry::AxisAlignedBox3D BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
         inline const Mesh* AssosiatedMesh() const { return mMesh; }
+        inline const Material* AssosiatedMaterial() const { return mMaterial; }
 
         inline void SetIsSelected(bool selected) { mIsSelected = selected; }
         inline void SetIsHighlighted(bool highlighted) { mIsHighlighted = highlighted; }
         inline void SetTransformation(const Geometry::Transformation &transform) { mTransformation = transform; }
+        inline void SetIndexInGPUInstanceTable(uint16_t index) { mGPUInstanceTableIndex = index; }
     };
 
 }

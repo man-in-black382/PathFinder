@@ -505,11 +505,11 @@ int main(int argc, char** argv)
     PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };  
     PathFinder::MaterialLoader materialLoader{ executableFolder / "MediaResources/Textures/", &engine.Device(), &engine.AssetStorage(), &engine.ResourceCopyDevice() };
 
-    materialLoader.LoadMaterial("/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds", "/Metal07/Metal07_met.dds");
+    PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds", "/Metal07/Metal07_met.dds"));
 
-    const PathFinder::Mesh& deer = scene.AddMesh(meshLoader.Load("deer.obj"));
-    PathFinder::MeshInstance deerInstance{ &deer, nullptr };
-    scene.AddMeshInstance(deerInstance);
+    PathFinder::Mesh& deer = scene.AddMesh(meshLoader.Load("deer.obj"));
+    PathFinder::MeshInstance& deerInstance = scene.AddMeshInstance({ &deer, &metalMaterial });
 
     engine.VertexGPUStorage().FinilazeVertexBuffers();
     engine.PreRender();
