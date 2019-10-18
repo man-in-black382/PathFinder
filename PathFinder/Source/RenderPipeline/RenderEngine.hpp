@@ -44,6 +44,7 @@ namespace PathFinder
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
         void MoveToNextBackBuffer();
         void UpdateCommonRootConstants();
+        void UpdateTransientResources();
 
         const RenderPassExecutionGraph* mPassExecutionGraph;
 

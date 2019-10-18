@@ -25,7 +25,7 @@ namespace PathFinder
     public:
         MeshInstance(const Mesh* mesh, const Material* material);
 
-        GPUInstanceTableEntry CreateGPUInstancetableEntry() const;
+        GPUInstanceTableEntry CreateGPUInstanceTableEntry() const;
 
     private:
         const Mesh* mMesh;

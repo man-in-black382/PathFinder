@@ -118,4 +118,12 @@ namespace PathFinder
         perFrameConstants->CameraInverseViewProjection = camera.InverseViewProjection();
     }
 
+    void RenderEngine::UpdateTransientResources()
+    {
+        mScene->IterateMeshInstances([&](const MeshInstance& instance)
+            {
+                mAssetResourceStorage.UpdateInstanceTable(instance.CreateGPUInstanceTableEntry());
+            });
+    }
+
 }
