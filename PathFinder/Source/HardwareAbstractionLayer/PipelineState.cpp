@@ -56,11 +56,18 @@ namespace HAL
         //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
         ThrowIfFailed(mDevice->D3DDevice()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&mState)));
+
+        mState->SetName(StringToWString(mDebugName).c_str());
     }
 
     void PipelineState::SetDebugName(const std::string& name)
     {
-        mState->SetName(StringToWString(name).c_str());
+        if (mState)
+        {
+            mState->SetName(StringToWString(name).c_str());
+        }
+        
+        mDebugName = name;
     }
 
 
@@ -156,12 +163,19 @@ namespace HAL
         mDevice->D3DDevice()->CreateStateObject(&mRTPSODesc, IID_PPV_ARGS(mState.GetAddressOf()));
         mState->QueryInterface(IID_PPV_ARGS(mProperties.GetAddressOf()));
 
+        mState->SetName(StringToWString(mDebugName).c_str());
+
         BuildShaderTable();
     }
 
     void RayTracingPipelineState::SetDebugName(const std::string& name)
     {
-        mState->SetName(StringToWString(name).c_str());
+        if (mState)
+        {
+            mState->SetName(StringToWString(name).c_str());
+        }
+
+        mDebugName = name;
     }
 
     std::wstring RayTracingPipelineState::GenerateUniqueExportName(const Shader& shader)

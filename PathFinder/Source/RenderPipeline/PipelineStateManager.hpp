@@ -15,22 +15,31 @@ namespace PathFinder
 
     class PipelineStateManager
     {
-        friend class PipelineStateCreator;
-
     public:
         PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurfaceDescription& defaultRenderSurface);
+
+        void StoreRootSignature(RootSignatureName name, HAL::RootSignature&& signature);
+        void StorePipelineState(PSOName name, HAL::GraphicsPipelineState&& state);
+        void StorePipelineState(PSOName name, HAL::ComputePipelineState&& state);
+        void StorePipelineState(PSOName name, HAL::RayTracingPipelineState&& state);
 
         const HAL::RootSignature* GetRootSignature(RootSignatureName name) const;
         const HAL::GraphicsPipelineState* GetGraphicsPipelineState(PSOName name) const;
         const HAL::ComputePipelineState* GetComputePipelineState(PSOName name) const;
         const HAL::RayTracingPipelineState* GetRayTracingPipelineState(PSOName name) const;
 
-        void CompileStates();
-
-    private:
         const HAL::RootSignature* GetNamedRootSignatureOrDefault(std::optional<RootSignatureName> name) const;
         const HAL::RootSignature* GetNamedRootSignatureOrNull(std::optional<RootSignatureName> name) const;
 
+        const HAL::RootSignature& BaseRootSignature() const;
+        const HAL::GraphicsPipelineState& DefaultGraphicsState() const;
+        
+        HAL::ComputePipelineState CreateComputeState() const;
+        HAL::RayTracingPipelineState CreateRayTracingState() const;
+
+        void CompileStates();
+
+    private:
         void ConfigureDefaultStates();
         void BuildBaseRootSignature(); 
 
@@ -45,6 +54,9 @@ namespace PathFinder
         std::unordered_map<PSOName, HAL::ComputePipelineState> mComputePSOs;
         std::unordered_map<PSOName, HAL::RayTracingPipelineState> mRayTracingPSOs;
         std::unordered_map<RootSignatureName, HAL::RootSignature> mRootSignatures;
+
+    public:
+        ShaderManager* GetShaderManager() const { return mShaderManager; }
     };
 
 }

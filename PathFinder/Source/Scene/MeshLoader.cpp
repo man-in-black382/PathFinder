@@ -33,6 +33,7 @@ namespace PathFinder
             vertex.Position.x = mesh->mVertices[i].x;
             vertex.Position.y = mesh->mVertices[i].y;
             vertex.Position.z = mesh->mVertices[i].z;
+            vertex.Position.w = 1.0; 
 
             if (mesh->HasTextureCoords(0))
             {

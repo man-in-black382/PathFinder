@@ -18,12 +18,12 @@ namespace Geometry {
     Transformation::Transformation(glm::vec3 scale, glm::vec3 translation, glm::quat rotation)
             : Scale(scale), Translation(translation), Rotation(rotation) {}
 
-    Transformation Transformation::CombinedWith(const Transformation &other) const 
-    {
-        return Transformation(other.ModelMatrix() * ModelMatrix());
+    Transformation Transformation::CombinedWith(const Transformation &other) const  
+    { 
+        return Transformation(other.ModelMatrix() * ModelMatrix()); 
     }
 
-    glm::mat4 Transformation::ModelMatrix() const
+    glm::mat4 Transformation::ModelMatrix() const 
     {
         return glm::translate(Translation) * glm::mat4_cast(Rotation) * glm::scale(Scale);
     }

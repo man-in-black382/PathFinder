@@ -35,6 +35,9 @@ namespace PathFinder
         virtual void Draw(const DrawablePrimitive& primitive) = 0;
 
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
+
+        // Asset-related commands
+        virtual void BindMeshInstanceTableConstantBuffer(uint32_t shaderRegister, uint32_t registerSpace = 0) = 0;
     };
 
 }

@@ -16,37 +16,44 @@ namespace HAL
     class RootSignature : public GraphicAPIObject
     {
     public:
+        using ParameterIndex = uint32_t;
+
         RootSignature(const Device* device);
 
         void AddDescriptorTableParameter(const RootDescriptorTableParameter& table);
         void AddDescriptorParameter(const RootDescriptorParameter& descriptor);
         void AddConstantsParameter(const RootConstantsParameter& constants);
 
-        RootSignature Clone();
+        RootSignature Clone() const;
         void Compile();
         uint16_t ParameterCount() const;
+
+        std::optional<ParameterIndex> GetParameterIndex(const RootParameter::LocationInSignature& location) const;
 
         virtual void SetDebugName(const std::string& name) override;
 
     private:
-        using ParameterKey = uint64_t;
-
-        ParameterKey GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace);
-
         std::vector<RootDescriptorTableParameter> mDescriptorTableParameters;
         std::vector<RootDescriptorParameter> mDescriptorParameters;
         std::vector<RootConstantsParameter> mConstantParameters;
         std::vector<D3D12_ROOT_PARAMETER> mD3DParameters;
 
-        std::unordered_map<ParameterKey, uint32_t> mParameterIndices;
+        std::unordered_map<
+            RootParameter::LocationInSignature,
+            ParameterIndex,
+            RootParameter::LocationHasher,
+            RootParameter::LocationEquality>
+            mParameterIndices;
 
         D3D12_ROOT_SIGNATURE_DESC mDesc{};
         Microsoft::WRL::ComPtr<ID3D12RootSignature> mSignature;
         const Device* mDevice;
+        std::string mDebugName;
 
     public:
         inline ID3D12RootSignature* D3DSignature() const { return mSignature.Get(); }
     };
 
 }
+
 

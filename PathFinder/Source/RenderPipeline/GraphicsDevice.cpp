@@ -11,6 +11,7 @@ namespace PathFinder
         PipelineResourceStorage* resourceManager,
         PipelineStateManager* pipelineStateManager,
         VertexStorage* vertexStorage,
+        AssetResourceStorage* assetStorage,
         RenderSurfaceDescription defaultRenderSurface,
         uint8_t simultaneousFramesInFlight)
         :
@@ -18,9 +19,10 @@ namespace PathFinder
         mUniversalGPUDescriptorHeap{ universalGPUDescriptorHeap },
         mRingCommandList{ device, simultaneousFramesInFlight },
         mResourceStorage{ resourceManager },
+        mVertexStorage{ vertexStorage },
+        mAssetStorage{ assetStorage },
         mPipelineStateManager{ pipelineStateManager },
-        mDefaultRenderSurface{ defaultRenderSurface },
-        mVertexStorage{ vertexStorage } {}
+        mDefaultRenderSurface{ defaultRenderSurface } {}
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
@@ -68,15 +70,31 @@ namespace PathFinder
     {
         if (const HAL::GraphicsPipelineState* pso = mPipelineStateManager->GetGraphicsPipelineState(psoName))
         {
-            CommandList().SetGraphicsRootSignature(*pso->GetRootSignature());
-            CommandList().SetPipelineState(*pso);
-            ReapplyCommonGraphicsResourceBindings();
+            if (mAppliedGraphicState != pso)
+            {
+                mAppliedGraphicState = pso;
+                mAppliedComputeState = nullptr;
+                mAppliedRayTracingState = nullptr;
+
+                const HAL::RootSignature* signature = pso->GetRootSignature();
+                CommandList().SetPipelineState(*pso);
+                CommandList().SetGraphicsRootSignature(*signature);
+                ReapplyCommonGraphicsResourceBindings();
+            }
         }
         else if (const HAL::ComputePipelineState* pso = mPipelineStateManager->GetComputePipelineState(psoName))
         {
-            CommandList().SetComputeRootSignature(*pso->GetRootSignature());
-            CommandList().SetPipelineState(*pso);
-            ReapplyCommonComputeResourceBindings();
+            if (mAppliedComputeState != pso)
+            {
+                mAppliedGraphicState = nullptr;
+                mAppliedComputeState = pso;
+                mAppliedRayTracingState = nullptr;
+
+                const HAL::RootSignature* signature = pso->GetRootSignature();
+                CommandList().SetPipelineState(*pso);
+                CommandList().SetComputeRootSignature(*signature);
+                ReapplyCommonComputeResourceBindings();
+            }
         }
         else {
             assert_format(false, "Pipeline state ", psoName.ToString(), " does not exist.");
@@ -135,6 +153,29 @@ namespace PathFinder
     void GraphicsDevice::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
         CommandList().Dispatch(groupCountX, groupCountY, groupCountZ);
+    }
+
+    void GraphicsDevice::BindMeshInstanceTableConstantBuffer(uint32_t shaderRegister, uint32_t registerSpace)
+    {
+        if (mAppliedGraphicState)
+        {
+            auto index = mAppliedGraphicState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace });
+            assert_format(index, "Root signature parameter doesn't exist");
+            CommandList().SetGraphicsRootConstantBuffer(mAssetStorage->InstanceTable(), *index);
+        }
+        else if (mAppliedComputeState)
+        {
+            auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace });
+            assert_format(index, "Root signature parameter doesn't exist");
+            CommandList().SetComputeRootConstantBuffer(mAssetStorage->InstanceTable(), *index);
+        }
+        else if (mAppliedRayTracingState)
+        {
+         
+        }
+        else {
+            assert_format("No PSO/Root Signature applied");
+        }        
     }
 
     void GraphicsDevice::BeginFrame(uint64_t frameFenceValue)

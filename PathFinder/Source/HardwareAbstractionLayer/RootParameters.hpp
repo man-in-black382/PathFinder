@@ -11,14 +11,29 @@ namespace HAL
 
     class RootParameter {
     public:
+        struct LocationInSignature
+        {
+            uint32_t BaseRegister = 0;
+            uint32_t RegisterSpace = 0;
+        };
+
+        struct LocationHasher { size_t operator()(const LocationInSignature& key) const; };
+        struct LocationEquality { size_t operator()(const LocationInSignature& left, const LocationInSignature& right) const; };
+
         RootParameter(D3D12_ROOT_PARAMETER_TYPE type);
         virtual ~RootParameter() = 0;
 
     protected:
         D3D12_ROOT_PARAMETER mParameter;
 
+        void AddSignatureLocation(const LocationInSignature& location);
+
+    private:
+        std::vector<LocationInSignature> mSignatureLocations;
+
     public:
         inline const D3D12_ROOT_PARAMETER& D3DParameter() const { return mParameter; }
+        inline const std::vector<LocationInSignature>& SignatureLocations() const { return mSignatureLocations; }
     };
 
     

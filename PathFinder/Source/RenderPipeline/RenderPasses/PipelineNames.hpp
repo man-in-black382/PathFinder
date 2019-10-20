@@ -7,7 +7,7 @@ namespace PathFinder
 
     namespace ResourceNames
     {
-        inline Foundation::Name PlaygroundRenderTarget{ "Resource_PlaygroundRT" };
+        inline Foundation::Name GBufferRenderTarget{ "Resource_GBuffer" };
         inline Foundation::Name BlurResult{ "Resource_BlurResult" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
     }
@@ -23,6 +23,7 @@ namespace PathFinder
     namespace RootSignatureNames
     {
         inline Foundation::Name Universal{ "Universal_Root_Sig" }; 
+        inline Foundation::Name GBuffer{ "GBuffer_Root_Sig" };
     }
 
 }

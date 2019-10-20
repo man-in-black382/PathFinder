@@ -8,7 +8,7 @@ namespace PathFinder
 
     RenderEngine::RenderEngine(
         HWND windowHandle, const std::filesystem::path& executablePath, 
-        const Scene* scene, const RenderPassExecutionGraph* passExecutionGraph)
+        Scene* scene, const RenderPassExecutionGraph* passExecutionGraph)
         : 
         mPassExecutionGraph{ passExecutionGraph },
         mExecutablePath{ executablePath },
@@ -19,14 +19,14 @@ namespace PathFinder
         mVertexStorage{ &mDevice, &mCopyDevice },
         mDescriptorStorage{ &mDevice },
         mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight, mPassExecutionGraph },
-        mAssetResourceStorage{ &mDescriptorStorage },
+        mAssetResourceStorage{ mDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
         mShaderManager{ mExecutablePath / "Shaders/" },
         mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
-        mPipelineStateCreator{ &mPipelineStateManager },
-        mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mPipelineStateCreator{ &mPipelineStateManager, mDefaultRenderSurface },
+        mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, &mAssetResourceStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
@@ -56,8 +56,10 @@ namespace PathFinder
         mFrameFence.IncreaseExpectedValue();
         mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
+        mAssetResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
 
         UpdateCommonRootConstants();
+        UpdateTransientResources();
 
         HAL::TextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
 
@@ -84,6 +86,7 @@ namespace PathFinder
 
         mPipelineResourceStorage.EndFrame(mFrameFence.CompletedValue());
         mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
+        mAssetResourceStorage.EndFrame(mFrameFence.CompletedValue());
 
         MoveToNextBackBuffer();
     }
@@ -120,10 +123,11 @@ namespace PathFinder
 
     void RenderEngine::UpdateTransientResources()
     {
-        mScene->IterateMeshInstances([&](const MeshInstance& instance)
-            {
-                mAssetResourceStorage.UpdateInstanceTable(instance.CreateGPUInstanceTableEntry());
-            });
+        mScene->IterateMeshInstances([&](MeshInstance& instance)
+        {
+             auto indexInTable = mAssetResourceStorage.UpdateInstanceTable(instance.CreateGPUInstanceTableEntry());
+             instance.SetIndexInGPUInstanceTable(indexInTable);
+        });
     }
 
 }

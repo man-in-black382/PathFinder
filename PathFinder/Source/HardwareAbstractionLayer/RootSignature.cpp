@@ -14,23 +14,38 @@ namespace HAL
 
     void RootSignature::AddDescriptorTableParameter(const RootDescriptorTableParameter& table)
     {
+        for (const RootParameter::LocationInSignature& location : table.SignatureLocations())
+        {
+            mParameterIndices[location] = mD3DParameters.size();
+        }
+
         mDescriptorTableParameters.push_back(table);
         mD3DParameters.push_back(table.D3DParameter());
     }
 
     void RootSignature::AddDescriptorParameter(const RootDescriptorParameter& descriptor)
     {
+        for (const RootParameter::LocationInSignature& location : descriptor.SignatureLocations())
+        {
+            mParameterIndices[location] = mD3DParameters.size();
+        }
+
         mDescriptorParameters.push_back(descriptor);
         mD3DParameters.push_back(descriptor.D3DParameter());
     }
 
     void RootSignature::AddConstantsParameter(const RootConstantsParameter& constants)
     {
+        for (const RootParameter::LocationInSignature& location : constants.SignatureLocations())
+        {
+            mParameterIndices[location] = mD3DParameters.size();
+        }
+
         mConstantParameters.push_back(constants);
         mD3DParameters.push_back(constants.D3DParameter());
     }
 
-    RootSignature RootSignature::Clone()
+    RootSignature RootSignature::Clone() const
     {
         RootSignature newSignature = *this;
         newSignature.mSignature = nullptr;
@@ -65,6 +80,8 @@ namespace HAL
         if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
 
         ThrowIfFailed(mDevice->D3DDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
+    
+        mSignature->SetName(StringToWString(mDebugName).c_str());
     }
 
     uint16_t RootSignature::ParameterCount() const
@@ -72,18 +89,20 @@ namespace HAL
         return mDescriptorTableParameters.size() + mDescriptorParameters.size() + mConstantParameters.size();
     }
 
-    void RootSignature::SetDebugName(const std::string& name)
+    std::optional<RootSignature::ParameterIndex> RootSignature::GetParameterIndex(const RootParameter::LocationInSignature& location) const
     {
-        mSignature->SetName(StringToWString(name).c_str());
+        auto it = mParameterIndices.find(location);
+        return it != mParameterIndices.end() ? std::optional(it->second) : std::nullopt;
     }
 
-    RootSignature::ParameterKey RootSignature::GenerateParameterKey(uint32_t shaderRegister, uint32_t registerSpace)
+    void RootSignature::SetDebugName(const std::string& name)
     {
-        uint64_t key = 0;
-        key |= shaderRegister;
-        key <<= 32;
-        key |= registerSpace;
-        return key;
+        if (mSignature)
+        {
+            mSignature->SetName(StringToWString(name).c_str());
+        }
+
+        mDebugName = name;
     }
 
 }

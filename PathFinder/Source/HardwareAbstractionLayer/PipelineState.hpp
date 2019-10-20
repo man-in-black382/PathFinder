@@ -36,6 +36,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12PipelineState> mState;
         const RootSignature* mRootSignature = nullptr;
         const Device* mDevice;
+        std::string mDebugName;
 
     public:
         inline ID3D12PipelineState* D3DCompiledState() const { return mState.Get(); }
@@ -102,6 +103,10 @@ namespace HAL
         inline BlendState& GetBlendState() { return mBlendState; }
         inline RasterizerState& GetRasterizerState() { return mRasterizerState; }
         inline DepthStencilState& GetDepthStencilState() { return mDepthStencilState; }
+
+        inline const BlendState& GetBlendState() const { return mBlendState; }
+        inline const RasterizerState& GetRasterizerState() const { return mRasterizerState; }
+        inline const DepthStencilState& GetDepthStencilState() const { return mDepthStencilState; }
 
     private:
         Shader* mVertexShader;
@@ -178,6 +183,7 @@ namespace HAL
         const Device* mDevice = nullptr;
         const RootSignature* mGlobalRootSignature = nullptr;
 
+        std::string mDebugName;
         uint32_t mUniqueShaderExportID = 0;
         RayTracingPipelineConfig mConfig;
         D3D12_STATE_OBJECT_DESC mRTPSODesc{};

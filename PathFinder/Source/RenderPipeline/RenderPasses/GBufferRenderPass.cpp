@@ -8,23 +8,23 @@ namespace PathFinder
 
     void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
+        HAL::RootSignature GBufferSinature = stateCreator->CloneBaseRootSignature();
+        GBufferSinature.AddDescriptorParameter({ 0, 0 });
+        stateCreator->StoreRootSignature(RootSignatureNames::GBuffer, std::move(GBufferSinature));
+
         stateCreator->CreateGraphicsState(PSONames::GBuffer, [](GraphicsStateProxy& state)
         {
             state.ShaderFileNames.VertexShaderFileName = L"GBuffer.hlsl";
             state.ShaderFileNames.PixelShaderFileName = L"GBuffer.hlsl";
             state.InputLayout = InputAssemblerLayoutForVertexLayout(VertexLayout::Layout1P1N1UV1T1BT);
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
+            state.RootSignatureName = RootSignatureNames::GBuffer;
         });
     }
       
     void GBufferRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        scheduler->NewRenderTarget(ResourceNames::PlaygroundRenderTarget);
-      /*  scheduler->NewTexture("1", ResourceScheduler::NewTextureProperties{ std::nullopt, Geometry::Dimensions{100, 100}, std::nullopt, std::nullopt });
-        scheduler->NewTexture("2", ResourceScheduler::NewTextureProperties{ std::nullopt,  Geometry::Dimensions{200, 100}, std::nullopt, std::nullopt });
-        scheduler->NewTexture("100", ResourceScheduler::NewTextureProperties{ std::nullopt, Geometry::Dimensions{100, 100}, std::nullopt, std::nullopt });
-        scheduler->NewTexture("101", ResourceScheduler::NewTextureProperties{ std::nullopt, Geometry::Dimensions{100, 100}, std::nullopt, std::nullopt });
-        scheduler->NewTexture("102", ResourceScheduler::NewTextureProperties{ std::nullopt, Geometry::Dimensions{100, 100}, std::nullopt, std::nullopt });*/
+        scheduler->NewRenderTarget(ResourceNames::GBufferRenderTarget);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<GBufferCBContent>();
     }  
@@ -32,10 +32,11 @@ namespace PathFinder
     void GBufferRenderPass::Render(RenderContext* context) 
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBuffer);
-        context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::PlaygroundRenderTarget, ResourceNames::GBufferDepthStencil);
+        context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::GBufferRenderTarget, ResourceNames::GBufferDepthStencil);
         context->GetCommandRecorder()->ClearBackBuffer(Foundation::Color::Gray());
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
         context->GetCommandRecorder()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
+        context->GetCommandRecorder()->BindMeshInstanceTableConstantBuffer(0);
 
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {

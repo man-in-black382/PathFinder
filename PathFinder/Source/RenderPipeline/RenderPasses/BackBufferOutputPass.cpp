@@ -20,6 +20,7 @@ namespace PathFinder
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         scheduler->ReadTexture(ResourceNames::BlurResult);
+        scheduler->ReadTexture(ResourceNames::GBufferRenderTarget);
         scheduler->WillUseRootConstantBuffer<BackBufferOutputPassData>();
     } 
 
@@ -29,7 +30,7 @@ namespace PathFinder
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
     
         auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<BackBufferOutputPassData>();
-        cbContent->SourceTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
+        cbContent->SourceTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRenderTarget);
 
         context->GetCommandRecorder()->Draw(DrawablePrimitive::Quad());
     }

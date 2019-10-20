@@ -7,7 +7,7 @@ namespace PathFinder
 
     AssetResourceStorage::AssetResourceStorage(const HAL::Device& device, ResourceDescriptorStorage* descriptorStorage, uint8_t simultaneousFramesInFlight)
         : mDescriptorStorage{ descriptorStorage }, 
-        mInstanceTable{ device, 256, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload } {}
+        mInstanceTable{ device, 1024, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload } {}
 
     uint64_t AssetResourceStorage::StoreAsset(std::unique_ptr<HAL::TextureResource> resource)
     {
@@ -33,6 +33,8 @@ namespace PathFinder
 
         mInstanceTable.Write(mCurrentFrameInsertedInstanceCount, &instanceData);
         ++mCurrentFrameInsertedInstanceCount;
+
+        return 0;
     }
 
 }

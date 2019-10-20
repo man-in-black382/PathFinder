@@ -14,9 +14,14 @@ namespace HAL
 
     RootParameter::~RootParameter() {}
 
+    void RootParameter::AddSignatureLocation(const LocationInSignature& location)
+    {
+        mSignatureLocations.push_back(location);
+    }
 
 
-    RootDescriptorTableParameter::RootDescriptorTableParameter() 
+
+    RootDescriptorTableParameter::RootDescriptorTableParameter()
         : RootParameter(D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {}
 
     RootDescriptorTableParameter::RootDescriptorTableParameter(const RootDescriptorTableParameter& that)
@@ -25,7 +30,7 @@ namespace HAL
         *this = that;
     }
 
-    RootDescriptorTableParameter::RootDescriptorTableParameter(RootDescriptorTableParameter&& that)
+    RootDescriptorTableParameter::RootDescriptorTableParameter(RootDescriptorTableParameter&& that) 
         : RootDescriptorTableParameter()
     {
         *this = std::move(that);
@@ -61,6 +66,8 @@ namespace HAL
         mRanges.push_back(range.D3DRange());
         mParameter.DescriptorTable.pDescriptorRanges = &mRanges[0];
         mParameter.DescriptorTable.NumDescriptorRanges = (UINT)mRanges.size();
+
+        AddSignatureLocation({ range.D3DRange().BaseShaderRegister, range.D3DRange().RegisterSpace });
     }
 
 
@@ -69,6 +76,21 @@ namespace HAL
         : RootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV)
     {
         mParameter.Descriptor = { shaderRegister, registerSpace };
+        AddSignatureLocation({ shaderRegister, registerSpace });
+    }
+
+    size_t RootParameter::LocationHasher::operator()(const LocationInSignature& key) const
+    {
+        size_t hashValue = 0;
+        hashValue |= key.BaseRegister;
+        hashValue <<= std::numeric_limits<decltype(key.BaseRegister)>::digits;
+        hashValue |= key.RegisterSpace;
+        return hashValue;
+    }
+
+    size_t RootParameter::LocationEquality::operator()(const LocationInSignature& left, const LocationInSignature& right) const
+    {
+        return left.BaseRegister == right.BaseRegister && left.RegisterSpace == right.RegisterSpace;
     }
 
 }

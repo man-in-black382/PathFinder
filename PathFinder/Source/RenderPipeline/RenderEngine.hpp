@@ -33,7 +33,7 @@ namespace PathFinder
     {
     public:
         RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath,
-            const Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
+            Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
 
         void AddRenderPass(std::unique_ptr<RenderPass>&& pass);
 
@@ -73,7 +73,7 @@ namespace PathFinder
 
         HAL::SwapChain mSwapChain;
 
-        const Scene* mScene;
+        Scene* mScene;
 
     public:
         inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }

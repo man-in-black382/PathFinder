@@ -56,7 +56,7 @@ namespace HAL
     ShaderCompiler::ShaderCompiler()
     {
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(mLibrary.GetAddressOf())));
-        ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(mCompiler.GetAddressOf())));
+        ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(mCompiler.GetAddressOf()))); 
     }
 
     Shader ShaderCompiler::Compile(const std::filesystem::path& path, Shader::Stage stage)
@@ -89,8 +89,8 @@ namespace HAL
         if (SUCCEEDED(hrCompilation))
         {
             Microsoft::WRL::ComPtr<IDxcBlob> resultingBlob;
-            result->GetResult(resultingBlob.GetAddressOf());
-            return Shader{ resultingBlob, inputs.EntryPoint, stage };
+            result->GetResult(resultingBlob.GetAddressOf()); 
+            return Shader{ resultingBlob, inputs.EntryPoint, stage }; 
         }
         else {
             Microsoft::WRL::ComPtr<IDxcBlobEncoding> printBlob;
@@ -100,7 +100,7 @@ namespace HAL
             // We can use the library to get our preferred encoding.
             mLibrary->GetBlobAsUtf16(printBlob.Get(), printBlob16.GetAddressOf());
             OutputDebugStringW((LPWSTR)printBlob16->GetBufferPointer());
-            return Shader{ nullptr, L"", stage };
+            return Shader{ nullptr, L"", stage }; 
         }
     }
 

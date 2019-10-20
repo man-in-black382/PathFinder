@@ -5,6 +5,7 @@
 #include "PipelineResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
 #include "VertexStorage.hpp"
+#include "AssetResourceStorage.hpp"
 
 #include <../HardwareAbstractionLayer/RingCommandList.hpp>
 
@@ -20,6 +21,7 @@ namespace PathFinder
             PipelineResourceStorage* resourceStorage, 
             PipelineStateManager* pipelineStateManager,
             VertexStorage* vertexStorage, 
+            AssetResourceStorage* assetStorage,
             RenderSurfaceDescription defaultRenderSurface,
             uint8_t simultaneousFramesInFlight
         );
@@ -41,6 +43,8 @@ namespace PathFinder
         virtual void Draw(const DrawablePrimitive& primitive) override;
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
+        virtual void BindMeshInstanceTableConstantBuffer(uint32_t shaderRegister, uint32_t registerSpace = 0) override;
+
         void BeginFrame(uint64_t frameFenceValue);
         void ExecuteCommandsThenSignalFence(HAL::Fence& fence);
         void EndFrame(uint64_t completedFrameFenceValue);
@@ -56,10 +60,14 @@ namespace PathFinder
         HAL::GraphicsRingCommandList mRingCommandList;
         
         const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap;
+        const HAL::GraphicsPipelineState* mAppliedGraphicState;
+        const HAL::ComputePipelineState* mAppliedComputeState;
+        const HAL::RayTracingPipelineState* mAppliedRayTracingState;
 
         PipelineResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
         VertexStorage* mVertexStorage;
+        AssetResourceStorage* mAssetStorage;
 
         const RenderPass* mCurrentRenderPass = nullptr;
         RenderSurfaceDescription mDefaultRenderSurface;

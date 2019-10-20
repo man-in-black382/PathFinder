@@ -517,7 +517,7 @@ int main(int argc, char** argv)
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(10000);
     camera.SetNearPlane(1);
-    camera.MoveTo({ 0.0f, 0.0f, -5000.f });
+    camera.MoveTo({ 0.0f, 0.0f, -4000.f });
     camera.LookAt({ 0.f, 0.f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
 
