@@ -93,7 +93,7 @@ namespace PathFinder
         }
     }
 
-    void VertexStorage::FinilazeVertexBuffers()
+    void VertexStorage::FinalizeGeometryBuffers()
     {
         CopyBuffersToDefaultHeap<Vertex1P1N1UV1T1BT>();
         CopyBuffersToDefaultHeap<Vertex1P1N1UV>();

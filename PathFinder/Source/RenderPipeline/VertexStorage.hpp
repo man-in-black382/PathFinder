@@ -3,6 +3,7 @@
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/BufferResource.hpp"
+#include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
 
 #include "../Scene/Mesh.hpp"
 #include "../Scene/MeshInstance.hpp"
@@ -32,8 +33,9 @@ namespace PathFinder
 
         const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const;
         const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const;
+        const HAL::RayTracingBottomAccelerationStructure* RayTracingBottomLevelAccelerationStructure(VertexLayout layout) const;
 
-        void FinilazeVertexBuffers();
+        void FinalizeGeometryBuffers();
 
     private:
 

@@ -17,28 +17,31 @@ namespace HAL
     struct RayTracingGeometry
     {
         template <class Vertex, class Index>
-        RayTracingGeometry(const BufferResource<Vertex>* vertexBuffer, uint32_t vertexOffset, uint32_t vertexCount, ResourceFormat::Color vertexFormat,
-            const BufferResource<Index>* indexBuffer, uint32_t indexOffset, uint32_t indexCount, ResourceFormat::Color indexFormat,
+        RayTracingGeometry(const BufferResource<Vertex>* vertexBuffer, uint32_t vertexOffset, uint32_t vertexCount, ResourceFormat::Color vertexPositionFormat,
+            const BufferResource<Index>* indexBuffer, uint32_t indexOffset, uint32_t indexCount, ResourceFormat::Color indexFormat, const glm::mat4x4& transform,
             bool isOpaque = true)
             :
             VertexBuffer{ vertexBuffer }, IndexBuffer{ indexBuffer }, VertexOffset{ vertexOffset }, VertexCount{ vertexCount },
-            IndexOffset{ indexOffset }, IndexCount{ indexCount }, VertexFormat{ vertexFormat }, IndexFormat{ indexFormat }, IsOpaque{ isOpaque } {}
+            IndexOffset{ indexOffset }, IndexCount{ indexCount }, VertexPositionFormat{ vertexPositionFormat }, IndexFormat{ indexFormat },
+            Transform{ transform }, IsOpaque{ isOpaque } {}
 
         template <class Vertex, class Index>
         RayTracingGeometry(const BufferResource<Vertex>* vertexBuffer, ResourceFormat::Color vertexFormat,
-            const BufferResource<Index>* indexBuffer, ResourceFormat::Color indexFormat,
-            bool isOpaque = true)
+            const BufferResource<Index>* indexBuffer, ResourceFormat::Color indexFormat)
             :
-            RayTracingGeometry(vertexBuffer, 0, vertexBuffer.Capacity(), vertexFormat, indexBuffer, 0, indexBuffer.Capacity(), indexFormat, isOpaque) {}
+            RayTracingGeometry(vertexBuffer, 0, vertexBuffer.Capacity(), vertexFormat, indexBuffer, 0, indexBuffer.Capacity(), indexFormat, glm::mat4x4(1.0), true) {}
 
+        // A format for 'Position' vertex structure field
+        // Implies that 'Position' must be placed first in vertex's memory
+        ResourceFormat::Color VertexPositionFormat;
+        ResourceFormat::Color IndexFormat;
         const BufferResource<Vertex>* VertexBuffer;
         const BufferResource<Vertex>* IndexBuffer;
         uint32_t VertexOffset;
         uint32_t VertexCount;
         uint32_t IndexOffset;
         uint32_t IndexCount;
-        ResourceFormat::Color VertexFormat;
-        ResourceFormat::Color IndexFormat;
+        glm::mat4x4 Transform;
         bool IsOpaque;
     };
 

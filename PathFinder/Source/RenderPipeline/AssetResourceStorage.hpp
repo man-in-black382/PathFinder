@@ -1,9 +1,11 @@
 #pragma once
 
 #include "ResourceDescriptorStorage.hpp"
+#include "VertexStorageLocation.hpp"
 
 #include "../Scene/MeshInstance.hpp"
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
+#include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
 
 #include <memory>
 #include <vector>
@@ -18,6 +20,8 @@ namespace PathFinder
 
         uint64_t StoreAsset(std::unique_ptr<HAL::TextureResource> resource);
         uint64_t UpdateInstanceTable(const GPUInstanceTableEntry& instanceData);
+
+        //void CreateRayTracingBottomAccelerationStructure()
 
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
