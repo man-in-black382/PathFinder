@@ -20,10 +20,7 @@ namespace PathFinder
         Material& AddMaterial(Material&& material);
 
         void IterateMeshInstances(const std::function<void(const MeshInstance& instance)>& functor) const;
-        void IterateSubMeshes(const Mesh& mesh, const std::function<void(const SubMesh& subMesh)>& functor) const;
-
         void IterateMeshInstances(const std::function<void(MeshInstance & instance)>& functor);
-        void IterateSubMeshes(Mesh& mesh, const std::function<void(SubMesh & subMesh)>& functor);
 
     private:
         std::list<Mesh> mMeshes;

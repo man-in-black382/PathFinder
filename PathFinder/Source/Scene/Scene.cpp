@@ -29,27 +29,11 @@ namespace PathFinder
         }
     }
 
-    void Scene::IterateSubMeshes(const Mesh& mesh, const std::function<void(const SubMesh& subMesh)>& functor) const
-    {
-        for (const SubMesh& subMesh : mesh.SubMeshes())
-        {
-            functor(subMesh);
-        }
-    }
-
     void Scene::IterateMeshInstances(const std::function<void(MeshInstance & instance)>& functor)
     {
         for (MeshInstance& instance : mMeshInstances)
         {
             functor(instance);
-        }
-    }
-
-    void Scene::IterateSubMeshes(Mesh& mesh, const std::function<void(SubMesh & subMesh)>& functor)
-    {
-        for (SubMesh& subMesh : mesh.SubMeshes())
-        {
-            functor(subMesh);
         }
     }
 

@@ -3,9 +3,9 @@
 #include <vector>
 #include <string>
 
+#include "Vertices/Vertex1P1N1UV1T1BT.hpp"
 #include "../Geometry/AxisAlignedBox3D.hpp"
-
-#include "SubMesh.hpp"
+#include "../RenderPipeline/VertexStorageLocation.hpp"
 
 namespace PathFinder
 {
@@ -13,22 +13,28 @@ namespace PathFinder
     class Mesh
     {
     public:
-        const std::string &Name() const;
+        const std::string& Name() const;
+        const std::string& MaterialName() const;
+        const std::vector<Vertex1P1N1UV1T1BT>& Vertices() const;
+        const std::vector<uint32_t>& Indices() const;
+        const Geometry::AxisAlignedBox3D& BoundingBox() const;
+        const VertexStorageLocation& LocationInVertexStorage() const;
+        float SurfaceArea() const;
 
-        const Geometry::AxisAlignedBox3D &BoundingBox() const;
-
-        const std::vector<SubMesh> &SubMeshes() const;
-
-        std::vector<SubMesh> &SubMeshes();
-
-        void SetName(const std::string &name);
-
-        void AddSubMesh(const SubMesh& subMesh);
+        void SetName(const std::string& name);
+        void SetMaterialName(const std::string& name);
+        void SetVertexStorageLocation(const VertexStorageLocation& location);
+        void AddVertex(const Vertex1P1N1UV1T1BT& vertex);
+        void AddIndex(uint32_t index);
 
     private:
         std::string mName;
-        Geometry::AxisAlignedBox3D mBoundingBox;
-        std::vector<SubMesh> mSubMeshes;
+        std::string mMaterialName;
+        std::vector<Vertex1P1N1UV1T1BT> mVertices;
+        std::vector<uint32_t> mIndices;
+        VertexStorageLocation mVertexStorageLocation;
+        Geometry::AxisAlignedBox3D mBoundingBox = Geometry::AxisAlignedBox3D::MaximumReversed();
+        float mArea = 0.0;
     };
 
 }

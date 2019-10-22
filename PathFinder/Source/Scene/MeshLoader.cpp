@@ -6,7 +6,7 @@ namespace PathFinder
     MeshLoader::MeshLoader(const std::filesystem::path& fileRoot, VertexStorage* gpuVertexStorage)
         : mRootPath{ fileRoot }, mVertexStorage{ gpuVertexStorage } {}
 
-    Mesh MeshLoader::Load(const std::string& fileName)
+    std::vector<Mesh> MeshLoader::Load(const std::string& fileName)
     {
         Assimp::Importer importer;
         std::string fullPath{ mRootPath.append(fileName).string() };
@@ -16,14 +16,16 @@ namespace PathFinder
 
         if (!pScene) throw std::invalid_argument("Unable to read mesh file");
 
-        Mesh mesh;
-        ProcessNode(pScene->mRootNode, pScene, mesh);
-        return mesh;
+        mLoadedMeshes.clear();
+
+        ProcessNode(pScene->mRootNode, pScene);
+
+        return mLoadedMeshes;
     }
 
-    SubMesh MeshLoader::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+    Mesh MeshLoader::ProcessMesh(aiMesh* mesh, const aiScene* scene)
     {
-        SubMesh subMesh;
+        Mesh subMesh;
 
         // Walk through each of the mesh's vertices
         for (auto i = 0u; i < mesh->mNumVertices; i++)
@@ -83,17 +85,17 @@ namespace PathFinder
         return subMesh;
     }
 
-    void MeshLoader::ProcessNode(aiNode* node, const aiScene* scene, Mesh& mesh)
+    void MeshLoader::ProcessNode(aiNode* node, const aiScene* scene)
     {
         for (auto i = 0u; i < node->mNumMeshes; i++)
         {
             aiMesh* assimpMesh = scene->mMeshes[node->mMeshes[i]];
-            mesh.AddSubMesh(ProcessMesh(assimpMesh, scene));
+            mLoadedMeshes.emplace_back(ProcessMesh(assimpMesh, scene));
         }
 
         for (auto i = 0u; i < node->mNumChildren; i++)
         {
-            ProcessNode(node->mChildren[i], scene, mesh);
+            ProcessNode(node->mChildren[i], scene);
         }
     }
 

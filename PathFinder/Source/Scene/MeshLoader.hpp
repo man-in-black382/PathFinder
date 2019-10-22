@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Vertices/Vertex1P1N1UV1T1BT.hpp"
 #include "../RenderPipeline/VertexStorage.hpp"
+
+#include "Vertices/Vertex1P1N1UV1T1BT.hpp"
 #include "Mesh.hpp"
 
 // Assimp is in conflict with windows.h definitions of min and max
@@ -17,6 +18,7 @@
 #undef max
 #endif
 
+#include <vector>
 #include <filesystem>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -30,12 +32,13 @@ namespace PathFinder
     public:
         MeshLoader(const std::filesystem::path& fileRoot, VertexStorage* gpuVertexStorage);
 
-        Mesh Load(const std::string& fileName);
+        std::vector<Mesh> Load(const std::string& fileName);
 
     private:
-        SubMesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
-        void ProcessNode(aiNode* node, const aiScene* scene, Mesh& mesh);
+        Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
+        void ProcessNode(aiNode* node, const aiScene* scene);
 
+        std::vector<Mesh> mLoadedMeshes;
         std::filesystem::path mRootPath;
         VertexStorage* mVertexStorage;
     };

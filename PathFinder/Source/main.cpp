@@ -508,7 +508,7 @@ int main(int argc, char** argv)
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds", "/Metal07/Metal07_met.dds"));
 
-    PathFinder::Mesh& deer = scene.AddMesh(meshLoader.Load("deer.obj"));
+    PathFinder::Mesh& deer = scene.AddMesh(std::move(meshLoader.Load("deer.obj").back()));
     PathFinder::MeshInstance& deerInstance = scene.AddMeshInstance({ &deer, &metalMaterial });
 
     engine.VertexGPUStorage().FinalizeGeometryBuffers();

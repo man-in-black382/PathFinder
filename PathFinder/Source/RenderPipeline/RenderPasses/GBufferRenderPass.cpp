@@ -40,10 +40,8 @@ namespace PathFinder
 
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
-            context->GetScene()->IterateSubMeshes(*instance.AssosiatedMesh(), [&](const SubMesh& subMesh)
-            {
-                context->GetCommandRecorder()->Draw(subMesh.LocationInVertexStorage());
-            });
+        
+                //context->GetCommandRecorder()->Draw(subMesh.LocationInVertexStorage());
         });
     }
 

@@ -258,7 +258,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Scene\MeshInstance.cpp" />
     <ClCompile Include="Source\Scene\MeshLoader.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
-    <ClCompile Include="Source\Scene\SubMesh.cpp" />
     <ClCompile Include="Source\Scene\TextureLoader.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.cpp" />
@@ -395,7 +394,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Scene\MeshInstance.hpp" />
     <ClInclude Include="Source\Scene\MeshLoader.hpp" />
     <ClInclude Include="Source\Scene\Scene.hpp" />
-    <ClInclude Include="Source\Scene\SubMesh.hpp" />
     <ClInclude Include="Source\Scene\TextureLoader.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.hpp" />
