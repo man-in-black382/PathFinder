@@ -225,6 +225,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\IO\Input.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp" />
+    <ClCompile Include="Source\RenderPipeline\AsyncComputeDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResource.cpp" />
@@ -348,6 +349,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
     <ClInclude Include="Source\IO\Input.hpp" />
     <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp" />
+    <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />

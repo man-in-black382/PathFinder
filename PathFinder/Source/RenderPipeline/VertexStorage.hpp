@@ -15,7 +15,7 @@
 #include "VertexLayouts.hpp"
 #include "CopyDevice.hpp"
 
-#include <unordered_map>
+#include <vector>
 #include <memory>
 #include <tuple>
 
@@ -34,7 +34,7 @@ namespace PathFinder
         const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const;
         const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const;
 
-        void FinalizeGeometryBuffers();
+        void AllocateAndQueueBuffersForCopy();
 
     private:
 
@@ -43,6 +43,7 @@ namespace PathFinder
         {
             std::vector<Vertex> Vertices;
             std::vector<uint32_t> Indices;
+            std::vector<VertexStorageLocation> Locations;
         };
 
         template <class Vertex>
@@ -63,10 +64,13 @@ namespace PathFinder
         std::tuple<UploadBufferPackage<Vertex1P1N1UV1T1BT>, UploadBufferPackage<Vertex1P1N1UV>, UploadBufferPackage<Vertex1P3>> mUploadBuffers;
         std::tuple<FinalBufferPackage<Vertex1P1N1UV1T1BT>, FinalBufferPackage<Vertex1P1N1UV>, FinalBufferPackage<Vertex1P3>> mFinalBuffers;
 
-        std::unordered_map<const Mesh*, HAL::RayTracingBottomAccelerationStructure> mBottomAccelerationStructures;
+        std::vector<HAL::RayTracingBottomAccelerationStructure> mBottomAccelerationStructures;
 
         HAL::Device* mDevice;
         CopyDevice* mCopyDevice;
+
+    public:
+        inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
     };
 
 }

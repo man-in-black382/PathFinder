@@ -195,7 +195,7 @@ namespace HAL
 
     void GraphicsCommandList::ExecuteBundle(const BundleCommandList& bundle)
     {
-
+        
     }
 
     void GraphicsCommandList::BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as)

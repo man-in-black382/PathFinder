@@ -201,6 +201,11 @@ namespace PathFinder
         mCommandQueue.SignalFence(fence);
     }
 
+    void GraphicsDevice::WaitFenceThenExecuteCommands(HAL::Fence& fence)
+    {
+        
+    }
+
     void GraphicsDevice::ReapplyCommonGraphicsResourceBindings()
     {   
         CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);

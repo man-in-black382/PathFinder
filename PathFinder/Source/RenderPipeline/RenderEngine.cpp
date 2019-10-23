@@ -125,7 +125,7 @@ namespace PathFinder
     {
         mScene->IterateMeshInstances([&](MeshInstance& instance)
         {
-             auto indexInTable = mAssetResourceStorage.UpdateInstanceTable(instance.CreateGPUInstanceTableEntry());
+             auto indexInTable = mAssetResourceStorage.StoreInstanceData(instance.CreateGPUInstanceTableEntry());
              instance.SetIndexInGPUInstanceTable(indexInTable);
         });
     }

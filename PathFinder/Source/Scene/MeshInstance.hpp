@@ -13,11 +13,14 @@
 
 namespace PathFinder
 {
-
+    
     struct GPUInstanceTableEntry
     {
         glm::mat4 InstanceWorldMatrix;
         Material InstanceMaterial;
+        uint32_t VertexBufferOffset;
+        uint32_t IndexBufferOffset;
+        uint32_t IndexCount;
     };
 
     class MeshInstance

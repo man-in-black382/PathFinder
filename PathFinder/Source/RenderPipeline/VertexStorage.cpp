@@ -31,13 +31,18 @@ namespace PathFinder
         auto vertexStartIndex = package.Vertices.size();
         auto indexStartIndex = package.Indices.size();
 
-        VertexStorageLocation location{ vertexStartIndex, vertexCount, indexStartIndex, indexCount };
+        auto blasIndex = mBottomAccelerationStructures.size();
+
+        VertexStorageLocation location{ vertexStartIndex, vertexCount, indexStartIndex, indexCount, blasIndex };
 
         package.Vertices.reserve(package.Vertices.size() + vertexCount);
         package.Indices.reserve(package.Indices.size() + indexCount);
+        package.Locations.push_back(location);
         
         std::copy(vertices, vertices + vertexCount, std::back_inserter(package.Vertices));
         std::copy(indices, indices + indexCount, std::back_inserter(package.Indices));
+
+        mBottomAccelerationStructures.emplace_back(mDevice);
 
         return location;
     }
@@ -69,6 +74,21 @@ namespace PathFinder
             finalBuffers.IndexBufferDescriptor = std::make_unique<HAL::IndexBufferDescriptor>(*finalBuffers.IndexBuffer, HAL::ResourceFormat::Color::R32_Unsigned);
             uploadBuffers.Indices.clear();
         }
+
+        // Allocate RT acceleration structures
+        for (const VertexStorageLocation& location : uploadBuffers.Locations)
+        {
+            HAL::RayTracingBottomAccelerationStructure& blas = mBottomAccelerationStructures[location.BottomAccelerationStructureIndex];
+
+            HAL::RayTracingGeometry<Vertex, uint32_t> blasGeometry{
+                finalBuffers.VertexBuffer.get(), location.VertexBufferOffset, location.VertexCount, HAL::ResourceFormat::Color::RGB32_Float,
+                finalBuffers.IndexBuffer.get(), location.IndexBufferOffset, location.IndexCount, HAL::ResourceFormat::Color::R32_Unsigned,
+                glm::mat4x4{}, true
+            };
+
+            blas.AddGeometry(blasGeometry);
+            blas.AllocateBuffers();
+        }
     }
 
     const HAL::VertexBufferDescriptor* VertexStorage::UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const
@@ -93,7 +113,7 @@ namespace PathFinder
         }
     }
 
-    void VertexStorage::FinalizeGeometryBuffers()
+    void VertexStorage::AllocateAndQueueBuffersForCopy()
     {
         CopyBuffersToDefaultHeap<Vertex1P1N1UV1T1BT>();
         CopyBuffersToDefaultHeap<Vertex1P1N1UV>();

@@ -8,7 +8,13 @@ namespace PathFinder
 
     GPUInstanceTableEntry MeshInstance::CreateGPUInstanceTableEntry() const
     {
-        return { mTransformation.ModelMatrix(), *mMaterial };
+        return {
+            mTransformation.ModelMatrix(),
+            *mMaterial,
+            mMesh->LocationInVertexStorage().VertexBufferOffset,
+            mMesh->LocationInVertexStorage().IndexBufferOffset,
+            mMesh->LocationInVertexStorage().IndexCount
+        };
     }
 
 }

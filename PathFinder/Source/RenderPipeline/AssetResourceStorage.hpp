@@ -19,9 +19,7 @@ namespace PathFinder
         AssetResourceStorage(const HAL::Device& device, ResourceDescriptorStorage* descriptorStorage, uint8_t simultaneousFramesInFlight);
 
         uint64_t StoreAsset(std::unique_ptr<HAL::TextureResource> resource);
-        uint64_t UpdateInstanceTable(const GPUInstanceTableEntry& instanceData);
-
-        //void CreateRayTracingBottomAccelerationStructure()
+        uint64_t StoreInstanceData(const GPUInstanceTableEntry& instanceData);
 
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
@@ -30,6 +28,7 @@ namespace PathFinder
         ResourceDescriptorStorage* mDescriptorStorage;
         std::vector<std::unique_ptr<HAL::TextureResource>> mAssets;
         HAL::RingBufferResource<GPUInstanceTableEntry> mInstanceTable;
+        HAL::RayTracingTopAccelerationStructure mTopAccelerationStructure;
         uint64_t mCurrentFrameInsertedInstanceCount = 0;
 
     public:

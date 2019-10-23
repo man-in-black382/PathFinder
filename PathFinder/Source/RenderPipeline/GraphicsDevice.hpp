@@ -45,8 +45,10 @@ namespace PathFinder
 
         virtual void BindMeshInstanceTableConstantBuffer(uint32_t shaderRegister, uint32_t registerSpace = 0) override;
 
-        void BeginFrame(uint64_t frameFenceValue);
         void ExecuteCommandsThenSignalFence(HAL::Fence& fence);
+        void WaitFenceThenExecuteCommands(HAL::Fence& fence);
+
+        void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
 
         void SetCurrentRenderPass(const RenderPass* pass);

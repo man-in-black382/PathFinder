@@ -34,6 +34,14 @@ namespace HAL
         void ExecuteCommandList(const GraphicsCommandList& list);
     };
 
+    class ComputeCommandQueue : public CommandQueue {
+    public:
+        ComputeCommandQueue(const Device& device);
+        ~ComputeCommandQueue() = default;
+
+        void ExecuteCommandList(const ComputeCommandList& list);
+    };
+
     class CopyCommandQueue : public CommandQueue {
     public:
         CopyCommandQueue(const Device& device);

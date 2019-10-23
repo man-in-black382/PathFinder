@@ -511,7 +511,7 @@ int main(int argc, char** argv)
     PathFinder::Mesh& deer = scene.AddMesh(std::move(meshLoader.Load("deer.obj").back()));
     PathFinder::MeshInstance& deerInstance = scene.AddMeshInstance({ &deer, &metalMaterial });
 
-    engine.VertexGPUStorage().FinalizeGeometryBuffers();
+    engine.VertexGPUStorage().AllocateAndQueueBuffersForCopy();
     engine.PreRender();
 
     PathFinder::Camera& camera = scene.MainCamera();

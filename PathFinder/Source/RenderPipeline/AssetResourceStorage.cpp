@@ -26,7 +26,7 @@ namespace PathFinder
         mInstanceTable.DiscardMemoryForCompletedFrames(completedFrameFenceValue);
     }
 
-    uint64_t AssetResourceStorage::UpdateInstanceTable(const GPUInstanceTableEntry& instanceData)
+    uint64_t AssetResourceStorage::StoreInstanceData(const GPUInstanceTableEntry& instanceData)
     {
         assert_format(mCurrentFrameInsertedInstanceCount < mInstanceTable.PerFrameCapacity(),
             "Buffer capacity is static in current implementation and you have reached a maximum amount of updates per frame");

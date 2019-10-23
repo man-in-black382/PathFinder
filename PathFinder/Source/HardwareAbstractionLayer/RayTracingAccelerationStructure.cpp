@@ -32,6 +32,8 @@ namespace HAL
         mD3DAccelerationStructure.Inputs = mD3DInputs;
     }
 
+
+
     void RayTracingBottomAccelerationStructure::AllocateBuffers()
     {
         mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
@@ -40,6 +42,8 @@ namespace HAL
 
         RayTracingAccelerationStructure::AllocateBuffers();
     }
+
+
 
     void RayTracingTopAccelerationStructure::AddInstance(const RayTracingBottomAccelerationStructure& blas)
     {

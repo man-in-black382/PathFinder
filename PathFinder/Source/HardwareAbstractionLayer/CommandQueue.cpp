@@ -34,6 +34,17 @@ namespace HAL
 
 
 
+    ComputeCommandQueue::ComputeCommandQueue(const Device& device)
+        : CommandQueue(device, D3D12_COMMAND_LIST_TYPE_COMPUTE) {}
+
+    void ComputeCommandQueue::ExecuteCommandList(const ComputeCommandList& list)
+    {
+        auto ptr = list.D3DList();
+        mQueue->ExecuteCommandLists(1, (ID3D12CommandList * const*)& ptr);
+    }
+
+
+
     CopyCommandQueue::CopyCommandQueue(const Device& device)
         : CommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY) {}
 
@@ -42,5 +53,7 @@ namespace HAL
         auto ptr = list.D3DList();
         mQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&ptr);
     }
+
+    
 
 }

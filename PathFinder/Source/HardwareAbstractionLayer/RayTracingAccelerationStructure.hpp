@@ -36,7 +36,7 @@ namespace HAL
         ResourceFormat::Color VertexPositionFormat;
         ResourceFormat::Color IndexFormat;
         const BufferResource<Vertex>* VertexBuffer;
-        const BufferResource<Vertex>* IndexBuffer;
+        const BufferResource<Index>* IndexBuffer;
         uint32_t VertexOffset;
         uint32_t VertexCount;
         uint32_t IndexOffset;
@@ -75,6 +75,8 @@ namespace HAL
     class RayTracingBottomAccelerationStructure : public RayTracingAccelerationStructure
     {
     public:
+        using RayTracingAccelerationStructure::RayTracingAccelerationStructure;
+
         template <class Vertex, class Index> 
         void AddGeometry(const RayTracingGeometry<Vertex, Index>& geometry);
         virtual void AllocateBuffers() override;
@@ -84,9 +86,12 @@ namespace HAL
     };
 
 
+
     class RayTracingTopAccelerationStructure : public RayTracingAccelerationStructure
     {
     public:
+        using RayTracingAccelerationStructure::RayTracingAccelerationStructure;
+
         void AddInstance(const RayTracingBottomAccelerationStructure& blas);
         virtual void AllocateBuffers() override;
 
