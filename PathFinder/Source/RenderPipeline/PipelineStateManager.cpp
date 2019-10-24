@@ -157,13 +157,13 @@ namespace PathFinder
         //
         
         // Global data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 0, 10 }); 
+        mBaseRootSignature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 0, 10 }); 
 
         // Frame-specific data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 1, 10 });  
+        mBaseRootSignature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 1, 10 });
 
         // Pass-specific data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootDescriptorParameter{ 2, 10 });
+        mBaseRootSignature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 2, 10 });
 
         // Unbounded Texture2D range
         HAL::RootDescriptorTableParameter textures2D;

@@ -58,6 +58,21 @@ namespace HAL
 
 
 
+    class UnorderedAccessResourceBarrier : public ResourceBarrier
+    {
+    public:
+        UnorderedAccessResourceBarrier(const Resource* resource);
+        ~UnorderedAccessResourceBarrier() = default;
+
+    private:
+        const Resource* mResource;
+
+    public:
+        inline const auto UAResource() const { return mResource; }
+    };
+
+
+
     class ResourceBarrierCollection
     {
     public:

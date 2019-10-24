@@ -87,7 +87,10 @@ namespace PathFinder
             };
 
             blas.AddGeometry(blasGeometry);
-            blas.AllocateBuffers();
+            blas.AllocateBuffersIfNeeded();
+            blas.SetDebugName("Bottom_Acceleration_Structure");
+
+            mAccelerationStructureBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ blas.FinalBuffer() });
         }
     }
 
@@ -111,6 +114,11 @@ namespace PathFinder
         case VertexLayout::Layout1P3: return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).IndexBufferDescriptor.get();
         default: return nullptr;
         }
+    }
+
+    const HAL::ResourceBarrierCollection& VertexStorage::AccelerationStructureUABarriers() const
+    {
+        return mAccelerationStructureBarriers;
     }
 
     void VertexStorage::AllocateAndQueueBuffersForCopy()

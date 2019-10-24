@@ -13,12 +13,12 @@ namespace HAL
 
     void CommandList::Reset(const CommandAllocator& allocator)
     {
-       ThrowIfFailed(mList->Reset(allocator.D3DPtr(), nullptr));
+        ThrowIfFailed(mList->Reset(allocator.D3DPtr(), nullptr));
     }
 
     void CommandList::Close()
     {
-       ThrowIfFailed(mList->Close());
+        ThrowIfFailed(mList->Close());
     }
 
 

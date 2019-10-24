@@ -43,10 +43,14 @@ namespace PathFinder
         virtual void Draw(const DrawablePrimitive& primitive) override;
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
-        virtual void BindMeshInstanceTableConstantBuffer(uint32_t shaderRegister, uint32_t registerSpace = 0) override;
+        virtual void BindMeshInstanceTableConstantBuffer(uint16_t shaderRegister, uint16_t registerSpace = 0) override;
+        virtual void BindSceneRayTracingAccelerationStructure(uint16_t shaderRegister, uint16_t registerSpace = 0) override;
+        virtual void BindUnifiedVertexBufferOfLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace = 0) override;
+        virtual void BindUnifiedIndexBufferForVertexLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace = 0) override;
 
-        void ExecuteCommandsThenSignalFence(HAL::Fence& fence);
-        void WaitFenceThenExecuteCommands(HAL::Fence& fence);
+        void WaitFence(HAL::Fence& fence);
+        void ExecuteCommands();
+        void SignalFence(HAL::Fence& fence);
 
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);

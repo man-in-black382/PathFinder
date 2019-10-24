@@ -33,6 +33,8 @@ namespace HAL
         virtual void SetDebugName(const std::string& name) override;
 
     private:
+        void ValidateThenAddParameterLocations(const RootParameter& parameter);
+
         std::vector<RootDescriptorTableParameter> mDescriptorTableParameters;
         std::vector<RootDescriptorParameter> mDescriptorParameters;
         std::vector<RootConstantsParameter> mConstantParameters;

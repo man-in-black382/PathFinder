@@ -12,8 +12,10 @@ namespace PathFinder
     public:
         AsyncComputeDevice(const HAL::Device* device, uint8_t simultaneousFramesInFlight);
 
-        void ExecuteCommandsThenSignalFence(HAL::Fence& fence);
-        void WaitFenceThenExecuteCommands(HAL::Fence& fence);
+        void WaitFence(HAL::Fence& fence);
+        void ExecuteCommands();
+        void ResetCommandList();
+        void SignalFence(HAL::Fence& fence);
 
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
@@ -28,5 +30,3 @@ namespace PathFinder
     };
 
 }
-
-#include "CopyDevice.inl"

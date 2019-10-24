@@ -19,6 +19,7 @@
 #include "ResourceDescriptorStorage.hpp"
 #include "RootConstantsUpdater.hpp"
 #include "GraphicsDevice.hpp"
+#include "AsyncComputeDevice.hpp"
 #include "ShaderManager.hpp"
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
@@ -35,16 +36,16 @@ namespace PathFinder
         RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath,
             Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
 
-        void AddRenderPass(std::unique_ptr<RenderPass>&& pass);
-
         void PreRender();
         void Render();
 
     private:
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
         void MoveToNextBackBuffer();
-        void UpdateCommonRootConstants();
-        void UpdateTransientResources();
+        void BuildBottomAccelerationStructures();
+        void BuildTopAccelerationStructures();
+        void UploadCommonRootConstants();
+        void UploadMeshInstanceData();
 
         const RenderPassExecutionGraph* mPassExecutionGraph;
 
@@ -56,6 +57,7 @@ namespace PathFinder
 
         HAL::Device mDevice;
         HAL::Fence mFrameFence;
+        HAL::Fence mAccelerationStructureFence;
 
         CopyDevice mCopyDevice;
         VertexStorage mVertexStorage;
@@ -69,6 +71,7 @@ namespace PathFinder
         PipelineStateManager mPipelineStateManager;
         PipelineStateCreator mPipelineStateCreator;
         GraphicsDevice mGraphicsDevice;
+        AsyncComputeDevice mAsyncComputeDevice;
         RenderContext mContext;  
 
         HAL::SwapChain mSwapChain;
@@ -77,7 +80,7 @@ namespace PathFinder
 
     public:
         inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }
-        inline AssetResourceStorage& AssetStorage() { return mAssetResourceStorage; }
+        inline AssetResourceStorage& AssetGPUStorage() { return mAssetResourceStorage; }
         inline CopyDevice& ResourceCopyDevice() { return mCopyDevice; }
         inline HAL::Device& Device() { return mDevice; }
     };

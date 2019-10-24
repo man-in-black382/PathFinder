@@ -1,6 +1,7 @@
 #include "Color.hpp"
 
-namespace Foundation {
+namespace Foundation 
+{
 
     const Color &Color::White()
     {
@@ -67,6 +68,8 @@ namespace Foundation {
             case Color::Space::Linear: {
                 return *this;
             }
+
+            default: return *this;
         }
     }
 
@@ -91,6 +94,8 @@ namespace Foundation {
                 float Y = t + Cg;
                 return {Y, Co, Cg, mA, Space::YCoCg};
             }
+
+            default: return *this;
         }
     }
 

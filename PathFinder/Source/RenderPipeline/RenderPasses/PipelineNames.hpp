@@ -24,6 +24,7 @@ namespace PathFinder
     {
         inline Foundation::Name Universal{ "Universal_Root_Sig" }; 
         inline Foundation::Name GBuffer{ "GBuffer_Root_Sig" };
+        inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
     }
 
 }

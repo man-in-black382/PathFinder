@@ -6,14 +6,25 @@ namespace PathFinder
     AsyncComputeDevice::AsyncComputeDevice(const HAL::Device* device, uint8_t simultaneousFramesInFlight)
         : mDevice{ device }, mRingCommandList{ *device, simultaneousFramesInFlight }, mCommandQueue{ *device } {}
 
-    void AsyncComputeDevice::ExecuteCommandsThenSignalFence(HAL::Fence& fence)
+    void AsyncComputeDevice::WaitFence(HAL::Fence& fence)
     {
-
+        mCommandQueue.WaitFence(fence);
     }
 
-    void AsyncComputeDevice::WaitFenceThenExecuteCommands(HAL::Fence& fence)
+    void AsyncComputeDevice::ExecuteCommands()
     {
+        CommandList().Close();
+        mCommandQueue.ExecuteCommandList(CommandList());
+    }
 
+    void AsyncComputeDevice::ResetCommandList()
+    {
+        mRingCommandList.CurrentCommandList().Reset(mRingCommandList.CurrentCommandAllocator());
+    }
+
+    void AsyncComputeDevice::SignalFence(HAL::Fence& fence)
+    {
+        mCommandQueue.SignalFence(fence);
     }
 
     void AsyncComputeDevice::BeginFrame(uint64_t frameFenceValue)
@@ -25,13 +36,5 @@ namespace PathFinder
     {
         mRingCommandList.ReleaseAndResetForCompletedFrames(completedFrameFenceValue);
     }
-
-   /* void AsyncComputeDevice::ExecuteCommandsThenSignalFence(HAL::Fence& fence)
-    {
-        CommandList().Close();
-        mCommandQueue.ExecuteCommandList(CommandList());
-        mCommandQueue.SignalFence(fence);
-    }*/
-
 
 }

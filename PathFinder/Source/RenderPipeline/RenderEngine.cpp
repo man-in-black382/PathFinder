@@ -15,11 +15,12 @@ namespace PathFinder
         mDefaultRenderSurface{ { 1280, 720 }, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
         mDevice{ FetchDefaultDisplayAdapter() },
         mFrameFence{ mDevice },
+        mAccelerationStructureFence{ mDevice },
         mCopyDevice{ &mDevice },
         mVertexStorage{ &mDevice, &mCopyDevice },
         mDescriptorStorage{ &mDevice },
         mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight, mPassExecutionGraph },
-        mAssetResourceStorage{ mDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
+        mAssetResourceStorage{ &mDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
@@ -27,6 +28,7 @@ namespace PathFinder
         mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
         mPipelineStateCreator{ &mPipelineStateManager, mDefaultRenderSurface },
         mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, &mAssetResourceStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mAsyncComputeDevice{ &mDevice, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
@@ -43,10 +45,13 @@ namespace PathFinder
             passPtr->ScheduleResources(&mResourceScheduler);
         }
 
+        mVertexStorage.AllocateAndQueueBuffersForCopy();
         mPipelineResourceStorage.AllocateScheduledResources();
         mPipelineStateManager.CompileStates();
         mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.OneTimeResourceBarriers());
         mCopyDevice.CopyResources();
+
+        BuildBottomAccelerationStructures();
     }
 
     void RenderEngine::Render()
@@ -54,12 +59,15 @@ namespace PathFinder
         if (mPassExecutionGraph->ExecutionOrder().empty()) return;
 
         mFrameFence.IncreaseExpectedValue();
+
         mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
+        mAsyncComputeDevice.BeginFrame(mFrameFence.ExpectedValue());
         mAssetResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
 
-        UpdateCommonRootConstants();
-        UpdateTransientResources();
+        UploadCommonRootConstants();
+        UploadMeshInstanceData();
+        BuildTopAccelerationStructures();
 
         HAL::TextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
 
@@ -79,13 +87,17 @@ namespace PathFinder
             HAL::ResourceTransitionBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer }
         );
 
-        mGraphicsDevice.ExecuteCommandsThenSignalFence(mFrameFence);
+        mGraphicsDevice.WaitFence(mAccelerationStructureFence);
+        mGraphicsDevice.ExecuteCommands();
+        mGraphicsDevice.SignalFence(mFrameFence);
+        
         mSwapChain.Present();
 
         mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
         mPipelineResourceStorage.EndFrame(mFrameFence.CompletedValue());
         mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
+        mAsyncComputeDevice.EndFrame(mFrameFence.CompletedValue());
         mAssetResourceStorage.EndFrame(mFrameFence.CompletedValue());
 
         MoveToNextBackBuffer();
@@ -103,7 +115,7 @@ namespace PathFinder
         mPipelineResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
     }
 
-    void RenderEngine::UpdateCommonRootConstants()
+    void RenderEngine::UploadCommonRootConstants()
     {
         GlobalRootConstants* globalConstants = mPipelineResourceStorage.GlobalRootConstantData();
         PerFrameRootConstants* perFrameConstants = mPipelineResourceStorage.PerFrameRootConstantData();
@@ -121,13 +133,51 @@ namespace PathFinder
         perFrameConstants->CameraInverseViewProjection = camera.InverseViewProjection();
     }
 
-    void RenderEngine::UpdateTransientResources()
+    void RenderEngine::BuildBottomAccelerationStructures()
     {
-        mScene->IterateMeshInstances([&](MeshInstance& instance)
+        mAccelerationStructureFence.IncreaseExpectedValue();
+
+        // Build BLASes once 
+        for (const HAL::RayTracingBottomAccelerationStructure& blas : mVertexStorage.BottomAccelerationStructures())
         {
-             auto indexInTable = mAssetResourceStorage.StoreInstanceData(instance.CreateGPUInstanceTableEntry());
-             instance.SetIndexInGPUInstanceTable(indexInTable);
-        });
+            mAsyncComputeDevice.CommandList().BuildRaytracingAccelerationStructure(blas);
+        }
+
+        mAsyncComputeDevice.CommandList().InsertBarriers(mVertexStorage.AccelerationStructureUABarriers());
+        mAsyncComputeDevice.ExecuteCommands();
+        mAsyncComputeDevice.SignalFence(mAccelerationStructureFence);
+
+        mAccelerationStructureFence.StallCurrentThreadUntilCompletion();
+
+        mAsyncComputeDevice.ResetCommandList();
+    }
+
+    void RenderEngine::BuildTopAccelerationStructures()
+    {
+        mAccelerationStructureFence.IncreaseExpectedValue();
+        mAsyncComputeDevice.CommandList().BuildRaytracingAccelerationStructure(mAssetResourceStorage.TopAccelerationStructure());
+        mAsyncComputeDevice.CommandList().InsertBarriers(mAssetResourceStorage.TopAccelerationStructureUABarriers());
+        mAsyncComputeDevice.ExecuteCommands();
+        mAsyncComputeDevice.SignalFence(mAccelerationStructureFence);
+    }
+
+    void RenderEngine::UploadMeshInstanceData()
+    {
+        mAssetResourceStorage.ResetInstanceStorages();
+
+        auto iterator = [&](MeshInstance& instance)
+        {
+            auto blasIndex = instance.AssosiatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex;
+            auto& blas = mVertexStorage.BottomAccelerationStructures()[blasIndex];
+
+            auto indexInTable = mAssetResourceStorage.StoreMeshInstance(instance, blas);
+
+            instance.SetGPUInstanceIndex(indexInTable);
+        };
+
+        mScene->IterateMeshInstances(iterator);
+
+        mAssetResourceStorage.AllocateTopAccelerationStructureIfNeeded();
     }
 
 }

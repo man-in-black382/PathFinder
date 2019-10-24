@@ -37,7 +37,10 @@ namespace PathFinder
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
 
         // Asset-related commands
-        virtual void BindMeshInstanceTableConstantBuffer(uint32_t shaderRegister, uint32_t registerSpace = 0) = 0;
+        virtual void BindMeshInstanceTableConstantBuffer(uint16_t shaderRegister, uint16_t registerSpace = 0) = 0;
+        virtual void BindSceneRayTracingAccelerationStructure(uint16_t shaderRegister, uint16_t registerSpace = 0) = 0;
+        virtual void BindUnifiedVertexBufferOfLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace = 0) = 0;
+        virtual void BindUnifiedIndexBufferForVertexLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace = 0) = 0;
     };
 
 }

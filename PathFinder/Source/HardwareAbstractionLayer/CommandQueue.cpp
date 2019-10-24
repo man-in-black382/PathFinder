@@ -21,6 +21,11 @@ namespace HAL
         mQueue->Signal(fence.D3DFence(), fence.ExpectedValue());
     }
 
+    void CommandQueue::WaitFence(const Fence& fence)
+    {
+        mQueue->Wait(fence.D3DFence(), fence.ExpectedValue());
+    }
+
 
 
     GraphicsCommandQueue::GraphicsCommandQueue(const Device& device)

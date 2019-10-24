@@ -155,27 +155,60 @@ namespace PathFinder
         CommandList().Dispatch(groupCountX, groupCountY, groupCountZ);
     }
 
-    void GraphicsDevice::BindMeshInstanceTableConstantBuffer(uint32_t shaderRegister, uint32_t registerSpace)
+    void GraphicsDevice::BindMeshInstanceTableConstantBuffer(uint16_t shaderRegister, uint16_t registerSpace)
     {
         if (mAppliedGraphicState)
         {
-            auto index = mAppliedGraphicState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace });
+            auto index = mAppliedGraphicState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
             assert_format(index, "Root signature parameter doesn't exist");
             CommandList().SetGraphicsRootConstantBuffer(mAssetStorage->InstanceTable(), *index);
         }
         else if (mAppliedComputeState)
         {
-            auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace });
+            auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
             assert_format(index, "Root signature parameter doesn't exist");
             CommandList().SetComputeRootConstantBuffer(mAssetStorage->InstanceTable(), *index);
         }
         else if (mAppliedRayTracingState)
         {
-         
+            auto index = mAppliedRayTracingState->GetGlobalRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
+            assert_format(index, "Root signature parameter doesn't exist");
+            CommandList().SetComputeRootConstantBuffer(mAssetStorage->InstanceTable(), *index);
         }
         else {
             assert_format("No PSO/Root Signature applied");
         }        
+    }
+
+    void GraphicsDevice::BindSceneRayTracingAccelerationStructure(uint16_t shaderRegister, uint16_t registerSpace)
+    {
+        
+    }
+
+    void GraphicsDevice::BindUnifiedVertexBufferOfLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace)
+    {
+        
+    }
+
+    void GraphicsDevice::BindUnifiedIndexBufferForVertexLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace)
+    {
+        
+    }
+
+    void GraphicsDevice::WaitFence(HAL::Fence& fence)
+    {
+        mCommandQueue.WaitFence(fence);
+    }
+
+    void GraphicsDevice::ExecuteCommands()
+    {
+        CommandList().Close();
+        mCommandQueue.ExecuteCommandList(CommandList());
+    }
+
+    void GraphicsDevice::SignalFence(HAL::Fence& fence)
+    {
+        mCommandQueue.SignalFence(fence);
     }
 
     void GraphicsDevice::BeginFrame(uint64_t frameFenceValue)
@@ -192,18 +225,6 @@ namespace PathFinder
     {
         mCurrentRenderPass = pass;
         mCurrentPassViewport = std::nullopt;
-    }
-
-    void GraphicsDevice::ExecuteCommandsThenSignalFence(HAL::Fence& fence)
-    {
-        CommandList().Close();
-        mCommandQueue.ExecuteCommandList(CommandList());
-        mCommandQueue.SignalFence(fence);
-    }
-
-    void GraphicsDevice::WaitFenceThenExecuteCommands(HAL::Fence& fence)
-    {
-        
     }
 
     void GraphicsDevice::ReapplyCommonGraphicsResourceBindings()

@@ -63,21 +63,32 @@ namespace HAL
         assert_format(mRanges.empty() || mRanges.back().NumDescriptors != RootDescriprorTableRange::UnboundedRangeSize,
             "Cannot insert any ranges in a table after an unbounded range");
 
+        AddSignatureLocation({ (uint16_t)range.D3DRange().BaseShaderRegister, (uint16_t)range.D3DRange().RegisterSpace, range.ShaderRegisterType() });
+
         mRanges.push_back(range.D3DRange());
         mParameter.DescriptorTable.pDescriptorRanges = &mRanges[0];
         mParameter.DescriptorTable.NumDescriptorRanges = (UINT)mRanges.size();
-
-        AddSignatureLocation({ range.D3DRange().BaseShaderRegister, range.D3DRange().RegisterSpace });
     }
 
 
 
-    RootDescriptorParameter::RootDescriptorParameter(uint32_t shaderRegister, uint32_t registerSpace)
-        : RootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV)
+    RootDescriptorParameter::RootDescriptorParameter(D3D12_ROOT_PARAMETER_TYPE type, uint16_t shaderRegister, uint16_t registerSpace, ShaderRegister registerType)
+        : RootParameter(type)
     {
+        AddSignatureLocation({ shaderRegister, registerSpace, registerType });
         mParameter.Descriptor = { shaderRegister, registerSpace };
-        AddSignatureLocation({ shaderRegister, registerSpace });
     }
+
+    RootConstantBufferParameter::RootConstantBufferParameter(uint16_t shaderRegister, uint16_t registerSpace)
+        : RootDescriptorParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, shaderRegister, registerSpace, ShaderRegister::ConstantBuffer) {}
+
+    RootShaderResourceParameter::RootShaderResourceParameter(uint16_t shaderRegister, uint16_t registerSpace)
+        : RootDescriptorParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, shaderRegister, registerSpace, ShaderRegister::ShaderResource) {}
+
+    RootUnorderedAccessParameter::RootUnorderedAccessParameter(uint16_t shaderRegister, uint16_t registerSpace)
+        : RootDescriptorParameter(D3D12_ROOT_PARAMETER_TYPE_UAV, shaderRegister, registerSpace, ShaderRegister::UnorderedAccess) {}
+
+
 
     size_t RootParameter::LocationHasher::operator()(const LocationInSignature& key) const
     {
@@ -85,12 +96,16 @@ namespace HAL
         hashValue |= key.BaseRegister;
         hashValue <<= std::numeric_limits<decltype(key.BaseRegister)>::digits;
         hashValue |= key.RegisterSpace;
+        hashValue <<= std::numeric_limits<decltype(key.RegisterSpace)>::digits;
+        hashValue |= std::underlying_type_t<ShaderRegister>(key.RegisterType);
         return hashValue;
     }
 
     size_t RootParameter::LocationEquality::operator()(const LocationInSignature& left, const LocationInSignature& right) const
     {
-        return left.BaseRegister == right.BaseRegister && left.RegisterSpace == right.RegisterSpace;
+        return left.BaseRegister == right.BaseRegister && 
+            left.RegisterSpace == right.RegisterSpace && 
+            left.RegisterType == right.RegisterType;
     }
 
 }

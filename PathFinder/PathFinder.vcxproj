@@ -89,6 +89,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
@@ -107,6 +108,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -127,6 +129,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -149,6 +152,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -235,6 +239,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
@@ -342,6 +347,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\Shader.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderCompiler.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderExport.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.h" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderTable.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\SwapChain.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\TextureResource.hpp" />
@@ -366,6 +373,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\PipelineStateProxy.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
@@ -1028,6 +1036,17 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.2</ShaderModel>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Source\RenderPipeline\Shaders\InstanceData.hlsl">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="Source\RenderPipeline\Shaders\Shadows.hlsl">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="Source\RenderPipeline\Shaders\Vertices.hlsl">
+      <FileType>Document</FileType>
     </Text>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

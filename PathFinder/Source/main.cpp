@@ -14,6 +14,7 @@
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
+#include "RenderPipeline/RenderPasses/ShadowsRenderPass.hpp"
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
@@ -492,18 +493,20 @@ int main(int argc, char** argv)
     std::filesystem::path executableFolder = executablePath.parent_path();
 
     auto gBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
+    auto shadowsPass = std::make_unique<PathFinder::ShadowsRenderPass>();
     auto blurPass = std::make_unique<PathFinder::BlurRenderPass>();
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
 
     PathFinder::RenderPassExecutionGraph renderPassGraph;
     renderPassGraph.AddPass(gBufferPass.get());
+    renderPassGraph.AddPass(shadowsPass.get());
     renderPassGraph.AddPass(blurPass.get());
     renderPassGraph.AddPass(backBufferOutputPass.get());
 
     PathFinder::Scene scene;
     PathFinder::RenderEngine engine{ hwnd, executableFolder, &scene, &renderPassGraph };
     PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };  
-    PathFinder::MaterialLoader materialLoader{ executableFolder / "MediaResources/Textures/", &engine.Device(), &engine.AssetStorage(), &engine.ResourceCopyDevice() };
+    PathFinder::MaterialLoader materialLoader{ executableFolder / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage(), &engine.ResourceCopyDevice() };
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds", "/Metal07/Metal07_met.dds"));
@@ -511,7 +514,6 @@ int main(int argc, char** argv)
     PathFinder::Mesh& deer = scene.AddMesh(std::move(meshLoader.Load("deer.obj").back()));
     PathFinder::MeshInstance& deerInstance = scene.AddMeshInstance({ &deer, &metalMaterial });
 
-    engine.VertexGPUStorage().AllocateAndQueueBuffersForCopy();
     engine.PreRender();
 
     PathFinder::Camera& camera = scene.MainCamera();

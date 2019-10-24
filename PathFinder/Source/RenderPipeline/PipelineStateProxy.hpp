@@ -38,7 +38,7 @@ namespace PathFinder
             HAL::RayTracingShaderConfig Config;
             std::optional<Foundation::Name> LocalRootSignatureName;
 
-            ShaderInfo(RayTracingShaderFileNames fileNames, HAL::RayTracingShaderConfig config, std::optional<Foundation::Name> localRootSig)
+            ShaderInfo(const RayTracingShaderFileNames& fileNames, const HAL::RayTracingShaderConfig& config, std::optional<Foundation::Name> localRootSig)
                 : ShaderFileNames{ fileNames }, Config{ config }, LocalRootSignatureName{ localRootSig } {}
         };
 

@@ -1,4 +1,5 @@
 #include "PrimitiveTopology.hpp"
+#include "../Foundation/Assert.hpp"
 
 #include <type_traits>
 
@@ -16,6 +17,8 @@ namespace HAL
         case PrimitiveTopology::TriangleStrip:
         case PrimitiveTopology::TriangleList: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         //case PrimitiveTopology::Patch: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+
+        default: assert_format(false, "Should never be hit"); return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         }
     }
 

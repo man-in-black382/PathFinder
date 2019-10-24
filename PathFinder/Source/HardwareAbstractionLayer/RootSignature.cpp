@@ -2,6 +2,7 @@
 #include "Utils.h"
 
 #include "../Foundation/StringUtils.hpp"
+#include "../Foundation/Assert.hpp"
 
 namespace HAL
 {
@@ -14,33 +15,21 @@ namespace HAL
 
     void RootSignature::AddDescriptorTableParameter(const RootDescriptorTableParameter& table)
     {
-        for (const RootParameter::LocationInSignature& location : table.SignatureLocations())
-        {
-            mParameterIndices[location] = mD3DParameters.size();
-        }
-
+        ValidateThenAddParameterLocations(table);
         mDescriptorTableParameters.push_back(table);
         mD3DParameters.push_back(table.D3DParameter());
     }
 
     void RootSignature::AddDescriptorParameter(const RootDescriptorParameter& descriptor)
     {
-        for (const RootParameter::LocationInSignature& location : descriptor.SignatureLocations())
-        {
-            mParameterIndices[location] = mD3DParameters.size();
-        }
-
+        ValidateThenAddParameterLocations(descriptor);
         mDescriptorParameters.push_back(descriptor);
         mD3DParameters.push_back(descriptor.D3DParameter());
     }
 
     void RootSignature::AddConstantsParameter(const RootConstantsParameter& constants)
     {
-        for (const RootParameter::LocationInSignature& location : constants.SignatureLocations())
-        {
-            mParameterIndices[location] = mD3DParameters.size();
-        }
-
+        ValidateThenAddParameterLocations(constants);
         mConstantParameters.push_back(constants);
         mD3DParameters.push_back(constants.D3DParameter());
     }
@@ -103,6 +92,16 @@ namespace HAL
         }
 
         mDebugName = name;
+    }
+
+    void RootSignature::ValidateThenAddParameterLocations(const RootParameter& parameter)
+    {
+        for (const RootParameter::LocationInSignature& location : parameter.SignatureLocations())
+        {
+            bool registerSpaceOccupied = mParameterIndices.find(location) != mParameterIndices.end();
+            assert_format(!registerSpaceOccupied, "Register of such slot, space and type is already occupied in this root signature");
+            mParameterIndices[location] = mD3DParameters.size();
+        }
     }
 
 }

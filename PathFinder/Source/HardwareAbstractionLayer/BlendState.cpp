@@ -1,4 +1,5 @@
 #include "BlendState.hpp"
+#include "../Foundation/Assert.hpp"
 
 #include <type_traits>
 
@@ -83,6 +84,7 @@ namespace HAL
         case Value::InverseDestinationAlpha: return D3D12_BLEND_INV_DEST_ALPHA;
         case Value::DestinationColor: return D3D12_BLEND_DEST_COLOR;
         case Value::InverseDestinationColor: return D3D12_BLEND_INV_DEST_COLOR;
+        default: assert_format(false, "Should never be hit"); return D3D12_BLEND_ONE;
         }
     }
 

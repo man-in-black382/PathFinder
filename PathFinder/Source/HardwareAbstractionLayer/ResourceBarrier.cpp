@@ -25,6 +25,14 @@ namespace HAL
         mDesc.Aliasing.pResourceAfter = destination ? destination->D3DResource() : nullptr;
     }
 
+    UnorderedAccessResourceBarrier::UnorderedAccessResourceBarrier(const Resource* resource)
+        : mResource{ resource }
+    {
+        mDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+        mDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        mDesc.UAV.pResource = resource->D3DResource();
+    }
+
     void ResourceBarrierCollection::AddBarrier(const ResourceBarrier& barrier)
     {
         mD3DBarriers.push_back(barrier.D3DBarrier());

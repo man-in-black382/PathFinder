@@ -21,8 +21,8 @@ namespace PathFinder
     struct RayTracingShaderFileNames
     {
         std::wstring RayGenShaderFileName;
-        std::wstring ClosestHitShaderFileName;
-        std::wstring MissShaderFileName;
+        std::optional<std::wstring> ClosestHitShaderFileName;
+        std::optional<std::wstring> MissShaderFileName;
         std::optional<std::wstring> AnyHitShaderFileName = std::nullopt;
         std::optional<std::wstring> IntersectionShaderFileName = std::nullopt;
     };

@@ -61,7 +61,7 @@ namespace HAL
 
     Shader ShaderCompiler::Compile(const std::filesystem::path& path, Shader::Stage stage)
     {
-        CompilerInputs inputs{ stage, Shader::Profile::P6_1 };
+        CompilerInputs inputs{ stage, Shader::Profile::P6_3 };
 
         LPCWSTR arguments[] = { L"/Zi" }; 
 
@@ -116,12 +116,20 @@ namespace HAL
         case Shader::Stage::Geometry:	EntryPoint = L"GSMain"; profilePrefix = L"gs_"; break;
         case Shader::Stage::Pixel:		EntryPoint = L"PSMain"; profilePrefix = L"ps_"; break;
         case Shader::Stage::Compute:	EntryPoint = L"CSMain"; profilePrefix = L"cs_"; break;
+
+        case Shader::Stage::RayGeneration:      EntryPoint = L"RayGeneration";   profilePrefix = L"lib_"; break;
+        case Shader::Stage::RayClosestHit:      EntryPoint = L"RayClosestHit";   profilePrefix = L"lib_"; break;
+        case Shader::Stage::RayAnyHit:          EntryPoint = L"RayAnyHit";       profilePrefix = L"lib_"; break;
+        case Shader::Stage::RayMiss:            EntryPoint = L"RayMiss";         profilePrefix = L"lib_"; break;
+        case Shader::Stage::RayIntersection:    EntryPoint = L"RayIntersection"; profilePrefix = L"lib_"; break;
+
+        default: break;
         }
 
         switch (profile)
         {
         case Shader::Profile::P5_1: Profile = profilePrefix + L"5_1"; break;
-        case Shader::Profile::P6_1: Profile = profilePrefix + L"6_1"; break;
+        case Shader::Profile::P6_3: Profile = profilePrefix + L"6_3"; break;
         }
     }
 

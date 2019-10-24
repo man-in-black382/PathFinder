@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GraphicAPIObject.hpp"
 #include "BufferResource.hpp"
 
 #include "../Foundation/Assert.hpp"
@@ -47,23 +48,26 @@ namespace HAL
 
 
 
-    class RayTracingAccelerationStructure
+    class RayTracingAccelerationStructure : public GraphicAPIObject
     {
     public:
         RayTracingAccelerationStructure(const Device* device);
 
-        virtual void AllocateBuffers() = 0;
+        virtual void AllocateBuffersIfNeeded() = 0;
+        virtual void ResetInputs() = 0;
+        virtual void SetDebugName(const std::string& name) override;
 
     protected:
         const Device* mDevice;
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS mD3DInputs{};
     
     private:
+        std::string mDebugName;
         std::unique_ptr<BufferResource<uint8_t>> mBuildScratchBuffer;
         std::unique_ptr<BufferResource<uint8_t>> mFinalBuffer;
         // There could also be an Update Scratch Buffer. Isn't needed right now.
 
-        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC mD3DAccelerationStructure;
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC mD3DAccelerationStructure{};
 
     public:
         inline const auto& D3DAccelerationStructure() const { return mD3DAccelerationStructure; }
@@ -79,7 +83,9 @@ namespace HAL
 
         template <class Vertex, class Index> 
         void AddGeometry(const RayTracingGeometry<Vertex, Index>& geometry);
-        virtual void AllocateBuffers() override;
+
+        virtual void AllocateBuffersIfNeeded() override;
+        virtual void ResetInputs() override;
 
     private:
         std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> mD3DGeometries;
@@ -92,8 +98,10 @@ namespace HAL
     public:
         using RayTracingAccelerationStructure::RayTracingAccelerationStructure;
 
-        void AddInstance(const RayTracingBottomAccelerationStructure& blas);
-        virtual void AllocateBuffers() override;
+        void AddInstance(const RayTracingBottomAccelerationStructure& blas, uint32_t instanceId, const glm::mat4& transform);
+
+        virtual void AllocateBuffersIfNeeded() override;
+        virtual void ResetInputs() override;
 
     private:
         std::unique_ptr<BufferResource<D3D12_RAYTRACING_INSTANCE_DESC>> mInstanceBuffer;

@@ -1,19 +1,10 @@
-struct InstanceData
-{
-    float4x4 ModelMatrix;
-    uint AlbedoMapIndex;
-    uint NormalMapIndex;
-    uint RoughnessMapIndex;
-    uint MetalnessMapIndex;
-    uint AOMapIndex;
-};
-
 struct DirectionalLight
 {
     float3 RadiantFlux; // a.k.a color
     float3 Direction;
 };
 
+#include "InstanceData.hlsl"
 #include "BaseRootSignature.hlsl"
 #include "CookTorrance.hlsl"
 

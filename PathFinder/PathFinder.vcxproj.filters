@@ -345,6 +345,9 @@
     <ClCompile Include="Source\RenderPipeline\AsyncComputeDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1943,6 +1946,15 @@
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2428,5 +2440,10 @@
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\InstanceData.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
   </ItemGroup>
 </Project>

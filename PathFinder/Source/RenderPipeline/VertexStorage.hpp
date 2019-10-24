@@ -4,6 +4,7 @@
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/BufferResource.hpp"
 #include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
+#include "../HardwareAbstractionLayer/ResourceBarrier.hpp"
 
 #include "../Scene/Mesh.hpp"
 #include "../Scene/MeshInstance.hpp"
@@ -33,6 +34,7 @@ namespace PathFinder
 
         const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const;
         const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const;
+        const HAL::ResourceBarrierCollection& AccelerationStructureUABarriers() const;
 
         void AllocateAndQueueBuffersForCopy();
 
@@ -65,6 +67,7 @@ namespace PathFinder
         std::tuple<FinalBufferPackage<Vertex1P1N1UV1T1BT>, FinalBufferPackage<Vertex1P1N1UV>, FinalBufferPackage<Vertex1P3>> mFinalBuffers;
 
         std::vector<HAL::RayTracingBottomAccelerationStructure> mBottomAccelerationStructures;
+        HAL::ResourceBarrierCollection mAccelerationStructureBarriers;
 
         HAL::Device* mDevice;
         CopyDevice* mCopyDevice;

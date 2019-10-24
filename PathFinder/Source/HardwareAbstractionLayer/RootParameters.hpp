@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "DescriptorTableRange.hpp"
+#include "ShaderRegister.hpp"
 
 namespace HAL
 {
@@ -13,8 +14,9 @@ namespace HAL
     public:
         struct LocationInSignature
         {
-            uint32_t BaseRegister = 0;
-            uint32_t RegisterSpace = 0;
+            uint16_t BaseRegister = 0;
+            uint16_t RegisterSpace = 0;
+            ShaderRegister RegisterType;
         };
 
         struct LocationHasher { size_t operator()(const LocationInSignature& key) const; };
@@ -58,6 +60,7 @@ namespace HAL
 
     class RootConstantsParameter : public RootParameter {
     public:
+        // TODO: Implement
         //RootConstantsParameter();
         ~RootConstantsParameter() = default;
     };
@@ -65,8 +68,25 @@ namespace HAL
 
     class RootDescriptorParameter : public RootParameter {
     public:
-        RootDescriptorParameter(uint32_t shaderRegister, uint32_t registerSpace);
-        ~RootDescriptorParameter() = default;
+        RootDescriptorParameter(D3D12_ROOT_PARAMETER_TYPE type, uint16_t shaderRegister, uint16_t registerSpace, ShaderRegister registerType);
+    };
+
+    class RootConstantBufferParameter : public RootDescriptorParameter {
+    public:
+        RootConstantBufferParameter(uint16_t shaderRegister, uint16_t registerSpace);
+        ~RootConstantBufferParameter() = default;
+    };
+
+    class RootShaderResourceParameter : public RootDescriptorParameter {
+    public:
+        RootShaderResourceParameter(uint16_t shaderRegister, uint16_t registerSpace);
+        ~RootShaderResourceParameter() = default;
+    };
+
+    class RootUnorderedAccessParameter : public RootDescriptorParameter {
+    public:
+        RootUnorderedAccessParameter(uint16_t shaderRegister, uint16_t registerSpace);
+        ~RootUnorderedAccessParameter() = default;
     };
 
 }

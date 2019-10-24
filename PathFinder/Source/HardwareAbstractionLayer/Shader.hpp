@@ -21,7 +21,7 @@ namespace HAL
             RayGeneration, RayClosestHit, RayAnyHit, RayMiss, RayIntersection
         };
 
-        enum class Profile { P5_1, P6_1 };
+        enum class Profile { P5_1, P6_3 };
 
         Shader(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const std::wstring& entryPoint, Stage stage);
 

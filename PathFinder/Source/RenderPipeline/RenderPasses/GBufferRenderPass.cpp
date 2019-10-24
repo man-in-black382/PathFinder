@@ -9,7 +9,7 @@ namespace PathFinder
     void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         HAL::RootSignature GBufferSinature = stateCreator->CloneBaseRootSignature();
-        GBufferSinature.AddDescriptorParameter({ 0, 0 });
+        GBufferSinature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 0, 0 });
         stateCreator->StoreRootSignature(RootSignatureNames::GBuffer, std::move(GBufferSinature));
 
         stateCreator->CreateGraphicsState(PSONames::GBuffer, [](GraphicsStateProxy& state)
@@ -40,8 +40,7 @@ namespace PathFinder
 
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
-        
-                //context->GetCommandRecorder()->Draw(subMesh.LocationInVertexStorage());
+            context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage());
         });
     }
 

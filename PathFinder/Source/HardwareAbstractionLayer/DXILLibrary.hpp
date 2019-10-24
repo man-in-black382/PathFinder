@@ -22,7 +22,7 @@ namespace HAL
     private:
         ShaderExport mExport;
         D3D12_DXIL_LIBRARY_DESC mLibrary{};
-        const RootSignature* mLocalRootSignature;
+        const RootSignature* mLocalRootSignature = nullptr;
 
     public:
         const D3D12_DXIL_LIBRARY_DESC& D3DLibrary() const { return mLibrary; }
