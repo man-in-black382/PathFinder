@@ -181,7 +181,9 @@ namespace HAL
         void BuildShaderTable();
 
         const Device* mDevice = nullptr;
+
         const RootSignature* mGlobalRootSignature = nullptr;
+        D3D12_GLOBAL_ROOT_SIGNATURE mD3DGlobalRootSignanture{};
 
         std::string mDebugName;
         uint32_t mUniqueShaderExportID = 0;
@@ -192,6 +194,7 @@ namespace HAL
 
         std::vector<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION> mAssociations;
         std::vector<D3D12_STATE_SUBOBJECT> mSubobjects;
+        std::vector<LPCWSTR> mExportNamePointerHolder;
 
         Microsoft::WRL::ComPtr<ID3D12StateObject> mState;
         Microsoft::WRL::ComPtr<ID3D12StateObjectProperties> mProperties;

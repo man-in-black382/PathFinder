@@ -146,15 +146,14 @@ namespace PathFinder
         mAsyncComputeDevice.CommandList().InsertBarriers(mVertexStorage.AccelerationStructureUABarriers());
         mAsyncComputeDevice.ExecuteCommands();
         mAsyncComputeDevice.SignalFence(mAccelerationStructureFence);
-
         mAccelerationStructureFence.StallCurrentThreadUntilCompletion();
-
         mAsyncComputeDevice.ResetCommandList();
     }
 
     void RenderEngine::BuildTopAccelerationStructures()
     {
         mAccelerationStructureFence.IncreaseExpectedValue();
+        mAssetResourceStorage.AllocateTopAccelerationStructureIfNeeded();
         mAsyncComputeDevice.CommandList().BuildRaytracingAccelerationStructure(mAssetResourceStorage.TopAccelerationStructure());
         mAsyncComputeDevice.CommandList().InsertBarriers(mAssetResourceStorage.TopAccelerationStructureUABarriers());
         mAsyncComputeDevice.ExecuteCommands();

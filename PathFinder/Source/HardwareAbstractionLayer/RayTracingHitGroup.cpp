@@ -8,6 +8,8 @@ namespace HAL
     RayTracingHitGroup::RayTracingHitGroup(const ShaderExport* closestHit, const ShaderExport* anyHit, const ShaderExport* intersection)
         : mClosestHitExport{ closestHit }, mAnyHitExport{ anyHit }, mIntersectionExport{ intersection }
     {
+        mName += L"HitGroup"; 
+
         if (closestHit)
         {
             mHitGroup.ClosestHitShaderImport = closestHit->ExportName().c_str();

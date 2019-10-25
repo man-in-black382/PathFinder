@@ -139,10 +139,24 @@ namespace HAL
     void RayTracingPipelineState::SetGlobalRootSignature(const RootSignature* signature)
     {
         mGlobalRootSignature = signature;
+        mD3DGlobalRootSignanture.pGlobalRootSignature = signature->D3DSignature();
     }
 
     void RayTracingPipelineState::Compile()
     {
+        uint32_t subobjectsToReserve = 
+            mShaderAssociations.size() * 5 + // Each Association can produce up to 5 subobjects
+            mHitGroups.size() + // Each hit group produces 1 subobject
+            2; // 1 global root sig subobject and 1 pipeline config subobject
+
+        uint32_t associationsToReserve =
+            mShaderAssociations.size() * 2; // Each Association can produce up to 2 association subobjects
+            
+        // Reserve vectors to avoid pointer invalidation on pushes and emplacements
+        mSubobjects.reserve(subobjectsToReserve);
+        mAssociations.reserve(associationsToReserve);
+        mExportNamePointerHolder.reserve(associationsToReserve);
+
         for (auto& pair : mShaderAssociations)
         {
             const ShaderAssociations& shaderAssociations = pair.second;
@@ -164,7 +178,7 @@ namespace HAL
             AddHitGroupSubobject(hitGroup);
         }
 
-        //AddGlobalRootSignatureSubobject();
+        AddGlobalRootSignatureSubobject();
         AddPipelineConfigSubobject();
 
         mRTPSODesc.Type = D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE;
@@ -208,45 +222,40 @@ namespace HAL
 
     void RayTracingPipelineState::AssociateLibraryWithItsExport(const DXILLibrary& library)
     {
-        LPCWSTR exportName = library.Export().ExportName().c_str();
+        mExportNamePointerHolder.emplace_back(library.Export().ExportName().c_str());
 
         // Hold in memory until compilation
         D3D12_STATE_SUBOBJECT& librarySubobject = 
             mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &library.D3DLibrary() });
-
-        D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION& libToExportAssociation =
-            mAssociations.emplace_back(D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION{ &librarySubobject, 1, &exportName });
-
-        mSubobjects.push_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &libToExportAssociation });
     }
 
     void RayTracingPipelineState::AssociateConfigWithExport(const RayTracingShaderConfig& config, const ShaderExport& shaderExport)
     {
-        LPCWSTR exportName = shaderExport.ExportName().c_str();
+        mExportNamePointerHolder.emplace_back(shaderExport.ExportName().c_str());
 
         // Associate shader exports with shader config
         D3D12_STATE_SUBOBJECT& configSubobject = 
             mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG, &config.D3DConfig() });
 
         D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION& configToExportAssociation = 
-            mAssociations.emplace_back(D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION{ &configSubobject, 1, &exportName });
+            mAssociations.emplace_back(D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION{ &configSubobject, 1, &mExportNamePointerHolder.back() });
 
         mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &configToExportAssociation });
     }
 
     void RayTracingPipelineState::AssociateRootSignatureWithExport(const RootSignature& signature, const ShaderExport& shaderExport)
     {
-        LPCWSTR exportName = shaderExport.ExportName().c_str();
+        mExportNamePointerHolder.emplace_back(shaderExport.ExportName().c_str());
 
         // Associate local root signatures with shader exports
-        D3D12_STATE_SUBOBJECT localRootSignatureSubobject{ D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE, signature.D3DSignature() };
-        D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION localRootSigToExportAssociation{ &localRootSignatureSubobject, 1, &exportName };
-        D3D12_STATE_SUBOBJECT localRootSigToExportAssociationSubobject{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &localRootSigToExportAssociation };
-
         // Hold in memory until compilation
-        mSubobjects.push_back(localRootSignatureSubobject);
-        mSubobjects.push_back(localRootSigToExportAssociationSubobject);
-        mAssociations.push_back(localRootSigToExportAssociation);
+        D3D12_STATE_SUBOBJECT& localRootSignatureSubobject = 
+            mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE, signature.D3DSignature() });
+
+        D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION& localRootSigToExportAssociation = 
+            mAssociations.emplace_back(D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION{ &localRootSignatureSubobject, 1, &mExportNamePointerHolder.back() });
+
+        mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &localRootSigToExportAssociation });
     }
 
     void RayTracingPipelineState::AddHitGroupSubobject(const RayTracingHitGroup& group)
@@ -259,7 +268,7 @@ namespace HAL
     {
         if (!mGlobalRootSignature) return;
 
-        D3D12_STATE_SUBOBJECT globalRootSignatureSubobject{ D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, mGlobalRootSignature->D3DSignature() };
+        D3D12_STATE_SUBOBJECT globalRootSignatureSubobject{ D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, &mD3DGlobalRootSignanture };
         mSubobjects.push_back(globalRootSignatureSubobject);
     }
 

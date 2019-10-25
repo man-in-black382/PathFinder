@@ -26,8 +26,8 @@ namespace PathFinder
         return {
             &GetShader(HAL::Shader::Stage::RayGeneration, fileNames.RayGenShaderFileName),
             fileNames.ClosestHitShaderFileName ? &GetShader(HAL::Shader::Stage::RayClosestHit, *fileNames.ClosestHitShaderFileName) : nullptr,
-            fileNames.MissShaderFileName ? &GetShader(HAL::Shader::Stage::RayMiss, *fileNames.MissShaderFileName) : nullptr,
             fileNames.AnyHitShaderFileName ? &GetShader(HAL::Shader::Stage::RayAnyHit, *fileNames.AnyHitShaderFileName) : nullptr,
+            fileNames.MissShaderFileName ? &GetShader(HAL::Shader::Stage::RayMiss, *fileNames.MissShaderFileName) : nullptr,
             fileNames.IntersectionShaderFileName ? &GetShader(HAL::Shader::Stage::RayIntersection, *fileNames.IntersectionShaderFileName) : nullptr
         };
     }
