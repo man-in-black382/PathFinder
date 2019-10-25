@@ -37,6 +37,7 @@ namespace PathFinder
         inline Geometry::AxisAlignedBox3D BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
         inline const Mesh* AssosiatedMesh() const { return mMesh; }
         inline const Material* AssosiatedMaterial() const { return mMaterial; }
+        inline auto GPUInstanceIndex() const { return mGPUInstanceIndex; }
 
         inline void SetIsSelected(bool selected) { mIsSelected = selected; }
         inline void SetIsHighlighted(bool highlighted) { mIsHighlighted = highlighted; }

@@ -7,7 +7,7 @@ namespace PathFinder
 
     namespace ResourceNames
     {
-        inline Foundation::Name GBufferRenderTarget{ "Resource_GBuffer" };
+        inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
         inline Foundation::Name BlurResult{ "Resource_BlurResult" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
     }

@@ -15,7 +15,7 @@ namespace PathFinder
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt,
                 std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt,
                 std::optional<HAL::ResourceFormat::TypelessColor> typelessFormat = std::nullopt,
-                uint8_t mipCount = 0)
+                uint8_t mipCount = 1)
                 : 
                 TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat }, 
                 Kind{ kind }, Dimensions{ dimensions }, MipCount{ mipCount } {}

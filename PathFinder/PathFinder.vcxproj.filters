@@ -2429,11 +2429,15 @@
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\GBuffer.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\BackBufferOutput.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\BaseRootSignature.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\Blur.hlsl" />
     <Text Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\InstanceData.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\RayTracingHelpers.hlsl" />
+    <Text Include="Source\RenderPipeline\Shaders\GBufferRenderPass.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />
@@ -2442,8 +2446,8 @@
     <CopyFileToFolders Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.dll" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\InstanceData.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GBuffer.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Packing.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ColorConversion.hlsl" />
   </ItemGroup>
 </Project>

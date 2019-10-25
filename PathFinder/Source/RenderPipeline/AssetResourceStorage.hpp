@@ -17,6 +17,7 @@ namespace PathFinder
     struct GPUInstanceTableEntry
     {
         glm::mat4 InstanceWorldMatrix;
+        glm::mat4 InstanceNormalMatrix;
         Material InstanceMaterial;
         uint32_t UnifiedVertexBufferOffset;
         uint32_t UnifiedIndexBufferOffset;

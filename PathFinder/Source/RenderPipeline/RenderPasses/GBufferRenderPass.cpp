@@ -24,7 +24,10 @@ namespace PathFinder
       
     void GBufferRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        scheduler->NewRenderTarget(ResourceNames::GBufferRenderTarget);
+        ResourceScheduler::NewTextureProperties RT0Properties{};
+        RT0Properties.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Unsigned;
+
+        scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<GBufferCBContent>();
     }  
@@ -32,14 +35,17 @@ namespace PathFinder
     void GBufferRenderPass::Render(RenderContext* context) 
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBuffer);
-        context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::GBufferRenderTarget, ResourceNames::GBufferDepthStencil);
+        context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::GBufferRT0, ResourceNames::GBufferDepthStencil);
         context->GetCommandRecorder()->ClearBackBuffer(Foundation::Color::Gray());
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
         context->GetCommandRecorder()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
         context->GetCommandRecorder()->BindMeshInstanceTableConstantBuffer(0);
 
+        GBufferCBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<GBufferCBContent>();
+
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
+            cbContent->InstanceTableIndex = instance.GPUInstanceIndex();
             context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage());
         });
     }

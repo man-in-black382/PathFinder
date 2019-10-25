@@ -139,7 +139,6 @@ namespace HAL
     void RayTracingPipelineState::SetGlobalRootSignature(const RootSignature* signature)
     {
         mGlobalRootSignature = signature;
-        mD3DGlobalRootSignanture.pGlobalRootSignature = signature->D3DSignature();
     }
 
     void RayTracingPipelineState::Compile()
@@ -267,6 +266,8 @@ namespace HAL
     void RayTracingPipelineState::AddGlobalRootSignatureSubobject()
     {
         if (!mGlobalRootSignature) return;
+
+        mD3DGlobalRootSignanture.pGlobalRootSignature = mGlobalRootSignature->D3DSignature();
 
         D3D12_STATE_SUBOBJECT globalRootSignatureSubobject{ D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE, &mD3DGlobalRootSignanture };
         mSubobjects.push_back(globalRootSignatureSubobject);

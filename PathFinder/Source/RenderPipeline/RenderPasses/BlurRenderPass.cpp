@@ -19,7 +19,7 @@ namespace PathFinder
     void BlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         scheduler->WillUseRootConstantBuffer<BlurCBContent>();
-        scheduler->ReadTexture(ResourceNames::GBufferRenderTarget);
+        scheduler->ReadTexture(ResourceNames::GBufferRT0);
         scheduler->NewTexture(ResourceNames::BlurResult);
     }
      
@@ -32,7 +32,7 @@ namespace PathFinder
         auto kernel = Foundation::GaussianFunction::Produce1DKernel(20);
         std::move(kernel.begin(), kernel.end(), cbContent->Weights.begin());
 
-        cbContent->InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRenderTarget);
+        cbContent->InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRT0);
         cbContent->OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
 
         context->GetCommandRecorder()->Dispatch(5, 720, 1);

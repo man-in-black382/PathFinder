@@ -9,7 +9,7 @@ namespace PathFinder
 
     struct GBufferCBContent
     {
-        
+        uint32_t InstanceTableIndex;
     };
 
     class GBufferRenderPass : public RenderPass  
