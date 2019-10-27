@@ -44,3 +44,7 @@ RWTexture2D<RWTexture2DType>            RWTextures2D[]        : register(u0, spa
 RWTexture3D<RWTexture3DType>            RWTextures3D[]        : register(u0, space11);
 RWTexture2DArray<RWTexture2DArrayType>  RWTexture2DArrays[]   : register(u0, space12);
 
+SamplerState AnisotropicClampSampler : register(s0);
+SamplerState LinearClampSampler : register(s1);
+SamplerState PointClampSampler : register(s2);
+

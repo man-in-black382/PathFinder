@@ -1,0 +1,4 @@
+struct T
+{
+    uint a;
+};

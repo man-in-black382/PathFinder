@@ -155,25 +155,25 @@ namespace PathFinder
         CommandList().Dispatch(groupCountX, groupCountY, groupCountZ);
     }
 
-    void GraphicsDevice::BindMeshInstanceTableConstantBuffer(uint16_t shaderRegister, uint16_t registerSpace)
+    void GraphicsDevice::BindMeshInstanceTableStructuredBuffer(uint16_t shaderRegister, uint16_t registerSpace)
     {
         if (mAppliedGraphicState)
         {
-            auto index = mAppliedGraphicState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
+            auto index = mAppliedGraphicState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ShaderResource });
             assert_format(index, "Root signature parameter doesn't exist");
-            CommandList().SetGraphicsRootConstantBuffer(mAssetStorage->InstanceTable(), *index);
+            CommandList().SetGraphicsRootShaderResource(mAssetStorage->InstanceTable(), *index);
         }
         else if (mAppliedComputeState)
         {
-            auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
+            auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ShaderResource });
             assert_format(index, "Root signature parameter doesn't exist");
-            CommandList().SetComputeRootConstantBuffer(mAssetStorage->InstanceTable(), *index);
+            CommandList().SetGraphicsRootShaderResource(mAssetStorage->InstanceTable(), *index);
         }
         else if (mAppliedRayTracingState)
         {
-            auto index = mAppliedRayTracingState->GetGlobalRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
+            auto index = mAppliedRayTracingState->GetGlobalRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ShaderResource });
             assert_format(index, "Root signature parameter doesn't exist");
-            CommandList().SetComputeRootConstantBuffer(mAssetStorage->InstanceTable(), *index);
+            CommandList().SetGraphicsRootShaderResource(mAssetStorage->InstanceTable(), *index);
         }
         else {
             assert_format("No PSO/Root Signature applied");

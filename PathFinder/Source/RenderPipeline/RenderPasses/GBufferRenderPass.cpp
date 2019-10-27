@@ -9,13 +9,14 @@ namespace PathFinder
     void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         HAL::RootSignature GBufferSinature = stateCreator->CloneBaseRootSignature();
-        GBufferSinature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 0, 0 });
+        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 });
         stateCreator->StoreRootSignature(RootSignatureNames::GBuffer, std::move(GBufferSinature));
 
         stateCreator->CreateGraphicsState(PSONames::GBuffer, [](GraphicsStateProxy& state)
         {
-            state.ShaderFileNames.VertexShaderFileName = L"GBuffer.hlsl";
-            state.ShaderFileNames.PixelShaderFileName = L"GBuffer.hlsl";
+            state.ShaderFileNames.VertexShaderFileName = L"GBufferRenderPass.hlsl";
+            state.ShaderFileNames.PixelShaderFileName = L"GBufferRenderPass.hlsl";
+            state.RenderTargetFormats = { HAL::ResourceFormat::Color::RGBA32_Unsigned };
             state.InputLayout = InputAssemblerLayoutForVertexLayout(VertexLayout::Layout1P1N1UV1T1BT);
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::GBuffer;
@@ -39,7 +40,7 @@ namespace PathFinder
         context->GetCommandRecorder()->ClearBackBuffer(Foundation::Color::Gray());
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
         context->GetCommandRecorder()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
-        context->GetCommandRecorder()->BindMeshInstanceTableConstantBuffer(0);
+        context->GetCommandRecorder()->BindMeshInstanceTableStructuredBuffer(0);
 
         GBufferCBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<GBufferCBContent>();
 

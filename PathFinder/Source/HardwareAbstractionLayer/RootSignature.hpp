@@ -9,6 +9,7 @@
 #include "GraphicAPIObject.hpp"
 #include "Device.hpp"
 #include "RootParameters.hpp"
+#include "StaticSampler.hpp"
 
 namespace HAL
 {
@@ -23,6 +24,7 @@ namespace HAL
         void AddDescriptorTableParameter(const RootDescriptorTableParameter& table);
         void AddDescriptorParameter(const RootDescriptorParameter& descriptor);
         void AddConstantsParameter(const RootConstantsParameter& constants);
+        void AddStaticSampler(const StaticSampler& sampler);
 
         RootSignature Clone() const;
         void Compile();
@@ -38,6 +40,7 @@ namespace HAL
         std::vector<RootDescriptorTableParameter> mDescriptorTableParameters;
         std::vector<RootDescriptorParameter> mDescriptorParameters;
         std::vector<RootConstantsParameter> mConstantParameters;
+        std::vector<D3D12_STATIC_SAMPLER_DESC> mD3DStaticSamplers;
         std::vector<D3D12_ROOT_PARAMETER> mD3DParameters;
 
         std::unordered_map<

@@ -15,6 +15,9 @@
 #include "RenderPipeline/RenderPasses/BlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadowsRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DeferredLightingRenderPass.hpp"
+
+#include "../resource.h"
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
@@ -479,9 +482,11 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int main(int argc, char** argv)
 {
     using namespace HAL;
+    
+    HICON iconHandle = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
 
     // Create application window
-    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("PathFinder"), NULL };
+    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), iconHandle, NULL, NULL, NULL, _T("PathFinder"), NULL };
     ::RegisterClassEx(&wc);
     HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("PathFinder"), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
@@ -493,12 +498,14 @@ int main(int argc, char** argv)
     std::filesystem::path executableFolder = executablePath.parent_path();
 
     auto gBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
+    auto deferredLightingPass = std::make_unique<PathFinder::DeferredLightingRenderPass>();
     auto shadowsPass = std::make_unique<PathFinder::ShadowsRenderPass>();
     auto blurPass = std::make_unique<PathFinder::BlurRenderPass>();
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
 
     PathFinder::RenderPassExecutionGraph renderPassGraph;
     renderPassGraph.AddPass(gBufferPass.get());
+    renderPassGraph.AddPass(deferredLightingPass.get());
     renderPassGraph.AddPass(shadowsPass.get());
     renderPassGraph.AddPass(blurPass.get());
     renderPassGraph.AddPass(backBufferOutputPass.get());

@@ -125,11 +125,6 @@ namespace HAL
         mList->ClearDepthStencilView(dsDescriptor.CPUHandle(), D3D12_CLEAR_FLAG_DEPTH, depthValue, 0, 0, nullptr);
     }
 
-    void GraphicsCommandListBase::SetFence(const Fence& fence)
-    {
-        
-    }
-
     void GraphicsCommandListBase::SetVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
         mList->IASetVertexBuffers(0, 1, &descriptor.D3DDescriptor());

@@ -31,8 +31,8 @@ struct GBufferCookTorrance
 
 GBufferEncoded EncodeCookTorranceMaterial(GBufferCookTorrance gBuffer)
 {
-    uint albedoRoughness = Encode8888(float4(albedo, roughness));
-    uint metalnessAO = Encode8888(float4(metallic, ao, 0.0, 0.0)); // Metalness and AO are packed to MSB
+    uint albedoRoughness = Encode8888(float4(gBuffer.Albedo, gBuffer.Roughness));
+    uint metalnessAO = Encode8888(float4(gBuffer.Metalness, gBuffer.AO, 0.0, 0.0)); // Metalness and AO are packed to MSB
 
     uint normalZ = PackSnorm2x16(0.0, gBuffer.Normal.z, 1.0); // Pack Z to LSB
     uint normalXY = PackSnorm2x16(gBuffer.Normal.x, gBuffer.Normal.y, 1.0);
@@ -40,7 +40,7 @@ GBufferEncoded EncodeCookTorranceMaterial(GBufferCookTorrance gBuffer)
     uint metalnessAONormalZ = metalnessAO | normalZ;
 
     GBufferEncoded encoded;
-    encoded.MaterialData = uint4(albedoRoughness, metalnessAONormalZ, normalXY, uint(MaterialTypeCookTorrance))
+    encoded.MaterialData = uint4(albedoRoughness, metalnessAONormalZ, normalXY, 0);
     return encoded;
 }
 

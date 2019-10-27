@@ -1,9 +1,3 @@
-struct DirectionalLight
-{
-    float3 RadiantFlux; // a.k.a color
-    float3 Direction;
-};
-
 struct PassData
 {
     uint InstanceTableIndex;
@@ -16,7 +10,7 @@ struct PassData
 #include "GBuffer.hlsl"
 #include "ColorConversion.hlsl"
 
-ConstantBuffer<InstanceData> InstanceTable : register(b0);
+StructuredBuffer<InstanceData> InstanceTable : register(t0);
 
 //------------------------  Vertex  ------------------------------//
 
@@ -33,6 +27,7 @@ struct VertexOut
 {
     float4 Position : SV_POSITION;
     float2 UV : TEXCOORD0;  
+    float3x3 TBN : TBN_MATRIX;
 };
 
 float3x3 BuildTBNMatrix(VertexIn vertex, InstanceData instanceData)
@@ -55,6 +50,7 @@ VertexOut VSMain(VertexIn vin)
 
     vout.Position = mul(MVP, vin.Position);
     vout.UV = vin.UV;
+    vout.TBN = BuildTBNMatrix(vin, instanceData);
 
     return vout;
 }
@@ -63,38 +59,41 @@ VertexOut VSMain(VertexIn vin)
 
 struct PixelOut
 {
-    uint4 MaterialData : COLOR0;
+    uint4 MaterialData : SV_Target0;
 };
 
 float3 FetchAlbedoMap(VertexOut vertex, InstanceData instanceData)
 {
     Texture2D albedoMap = Textures2D[instanceData.AlbedoMapIndex];
-    return LinearFromSRGB(texture(uMaterialCookTorrance.albedoMap, vertex.UV).rgb);
+    return LinearFromSRGB(albedoMap.Sample(AnisotropicClampSampler, vertex.UV).rgb);
 }
 
 float3 FetchNormalMap(VertexOut vertex, InstanceData instanceData)
 {
-    float3 normal = texture(uMaterialCookTorrance.normalMap, texCoords).xyz;
-    float3x3 TBN = BuildTBNMatrix(vertex, instanceData);
-    return normalize(mul(TBN, (normal * 2.0 - 1.0)));
+    Texture2D normalMap = Textures2D[instanceData.NormalMapIndex];
+    float3 normal = normalMap.Sample(AnisotropicClampSampler, vertex.UV).xyz;
+    return normalize(mul(vertex.TBN, (normal * 2.0 - 1.0)));
 }
 
 float FetchMetallnessMap(VertexOut vertex, InstanceData instanceData)
 {
-    return texture(uMaterialCookTorrance.metallicMap, texCoords).r;
+    Texture2D metalnessMap = Textures2D[instanceData.MetalnessMapIndex];
+    return metalnessMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
 float FetchRoughnessMap(VertexOut vertex, InstanceData instanceData)
 {
-    return texture(uMaterialCookTorrance.roughnessMap, texCoords).r;
+    Texture2D roughnessMap = Textures2D[instanceData.RoughnessMapIndex];
+    return roughnessMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
 float FetchAOMap(VertexOut vertex, InstanceData instanceData)
 {
-    return texture(uMaterialCookTorrance.AOMap, texCoords).r;
+    Texture2D aoMap = Textures2D[instanceData.AOMapIndex];
+    return aoMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
-PixelOut PSMain(VertexOut pin) : SV_Target
+PixelOut PSMain(VertexOut pin)
 {
     InstanceData instanceData = InstanceTable[PassDataCB.InstanceTableIndex];
 

@@ -194,6 +194,10 @@ namespace PathFinder
         HAL::RootDescriptorTableParameter RWTexture2DArrays;
         RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 12 });
         mBaseRootSignature.AddDescriptorTableParameter(RWTexture2DArrays);
+
+        mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::AnisotropicClamp(0));
+        mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::LinearClamp(1));
+        mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::PointClamp(2));
     }
 
 }

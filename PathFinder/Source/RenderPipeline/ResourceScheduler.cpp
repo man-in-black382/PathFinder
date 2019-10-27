@@ -201,7 +201,7 @@ namespace PathFinder
             mDefaultRenderSurfaceDesc.Dimensions(),
             mDefaultRenderSurfaceDesc.RenderTargetFormat(),
             std::nullopt,
-            0
+            1
         };
 
         if (properties)

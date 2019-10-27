@@ -34,6 +34,11 @@ namespace HAL
         mD3DParameters.push_back(constants.D3DParameter());
     }
 
+    void RootSignature::AddStaticSampler(const StaticSampler& sampler)
+    {
+        mD3DStaticSamplers.push_back(sampler.D3DStaticSampler());
+    }
+
     RootSignature RootSignature::Clone() const
     {
         RootSignature newSignature = *this;
@@ -61,6 +66,9 @@ namespace HAL
 
         mDesc.NumParameters = (UINT)mD3DParameters.size();
         mDesc.pParameters = &mD3DParameters[0];
+
+        mDesc.NumStaticSamplers = (UINT)mD3DStaticSamplers.size();
+        mDesc.pStaticSamplers = mD3DStaticSamplers.data();
 
         Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> errors;

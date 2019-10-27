@@ -43,7 +43,7 @@ namespace PathFinder
         virtual void Draw(const DrawablePrimitive& primitive) override;
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
-        virtual void BindMeshInstanceTableConstantBuffer(uint16_t shaderRegister, uint16_t registerSpace = 0) override;
+        virtual void BindMeshInstanceTableStructuredBuffer(uint16_t shaderRegister, uint16_t registerSpace = 0) override;
         virtual void BindSceneRayTracingAccelerationStructure(uint16_t shaderRegister, uint16_t registerSpace = 0) override;
         virtual void BindUnifiedVertexBufferOfLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace = 0) override;
         virtual void BindUnifiedIndexBufferForVertexLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace = 0) override;

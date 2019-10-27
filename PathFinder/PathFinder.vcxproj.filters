@@ -348,6 +348,12 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\StaticSampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1955,6 +1961,15 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\StaticSampler.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2429,15 +2444,6 @@
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\BackBufferOutput.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\BaseRootSignature.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\Blur.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\InstanceData.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\RayTracingHelpers.hlsl" />
-    <Text Include="Source\RenderPipeline\Shaders\GBufferRenderPass.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />
@@ -2449,5 +2455,35 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GBuffer.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Packing.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ColorConversion.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GBufferRenderPass.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BaseRootSignature.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BackBufferOutput.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\InstanceData.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\RayTracingHelpers.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BlurRenderPass.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLightingRenderPass.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\Downloads\rtx_on.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="MediaResources\Icons\rtx_on.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icon1.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="MediaResources\Icons\rtx_on.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

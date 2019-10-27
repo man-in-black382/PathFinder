@@ -98,7 +98,6 @@ namespace HAL
         void SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor = std::nullopt);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
         void CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue);
-        void SetFence(const Fence& fence);
         void SetVertexBuffer(const VertexBufferDescriptor& descriptor);
         void SetIndexBuffer(const IndexBufferDescriptor& descriptor);
         void SetPrimitiveTopology(PrimitiveTopology topology);

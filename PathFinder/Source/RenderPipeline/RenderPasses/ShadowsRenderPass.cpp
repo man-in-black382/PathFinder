@@ -11,9 +11,9 @@ namespace PathFinder
         HAL::RootSignature rayTracingSinature = stateCreator->CloneBaseRootSignature();
 
         rayTracingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 }); // Scene BVH | t0 - s0
-        rayTracingSinature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 0, 0 }); // Instance Table Constant Buffer | b0 - s0
-        rayTracingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 }); // Unified Vertex Buffer | t1 - s0
-        rayTracingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 2, 0 }); // Unified Index Buffer | t2 - s0
+        rayTracingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 }); // Instance Table Structured Buffer | t1 - s0
+        rayTracingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 2, 0 }); // Unified Vertex Buffer | t2 - s0
+        rayTracingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 3, 0 }); // Unified Index Buffer | t3 - s0
 
         stateCreator->StoreRootSignature(RootSignatureNames::RayTracing, std::move(rayTracingSinature));
 

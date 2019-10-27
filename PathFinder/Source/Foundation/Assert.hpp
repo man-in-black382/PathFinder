@@ -12,7 +12,7 @@ inline void print_assertion(Args&&... args)
     //{
     (ss << ... << args) << std::endl;
     //}
-    OutputDebugString(ss.str().c_str());
+    OutputDebugString(ss.str().c_str()); 
     abort();
 }
 
