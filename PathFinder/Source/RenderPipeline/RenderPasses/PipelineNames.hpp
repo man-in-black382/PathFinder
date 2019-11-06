@@ -10,7 +10,7 @@ namespace PathFinder
         inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
         inline Foundation::Name BlurResult{ "Resource_BlurResult" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
-        inline Foundation::Name DeferredLightingRT{ "Resource_DeferredLighting_RT" };
+        inline Foundation::Name DeferredLightingOutput{ "Resource_DeferredLighting_Output" };
     }
 
     namespace PSONames

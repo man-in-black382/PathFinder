@@ -24,27 +24,33 @@ ConstantBuffer<GlobalData>      GlobalDataCB    : register(b0, space10);
 ConstantBuffer<FrameData>       FrameDataCB     : register(b1, space10);
 ConstantBuffer<PassDataType>    PassDataCB      : register(b2, space10);
 
-Texture2D       Textures2D[]        : register(t0, space10);
-Texture3D       Textures3D[]        : register(t0, space11);
-Texture2DArray  Texture2DArrays[]   : register(t0, space12);
+// Discussion on texture/buffer casting to avoid occupying multiple registers 
+// by unbounded texture arrays when different types (raw, uint, int, float etc.) are required
+// https://github.com/microsoft/DirectXShaderCompiler/issues/1067
+//
+// For now we have to declare and bind each type separately
 
-#ifndef RWTexture2DType
-#define RWTexture2DType float4
-#endif
+// SRV Raw and Typed boundless descriptor ranges
+Texture2D        Textures2D[]       : register(t0, space10);
+Texture2D<uint4> UInt4_Textures2D[] : register(t0, space11);
 
-#ifndef RWTexture2DArrayType
-#define RWTexture2DArrayType float4
-#endif
+Texture3D        Textures3D[]       : register(t0, space12);
+Texture2DArray   Texture2DArrays[]  : register(t0, space13);
 
-#ifndef RWTexture3DType
-#define RWTexture3DType float4
-#endif
+// UAV Raw and Typed boundless descriptor ranges
+RWTexture2D<uint4>       RW_UInt4_Textures2D[]        : register(u0, space10);
+RWTexture2D<float4>      RW_Float4_Textures2D[]       : register(u0, space11);
 
-RWTexture2D<RWTexture2DType>            RWTextures2D[]        : register(u0, space10);
-RWTexture3D<RWTexture3DType>            RWTextures3D[]        : register(u0, space11);
-RWTexture2DArray<RWTexture2DArrayType>  RWTexture2DArrays[]   : register(u0, space12);
+RWTexture3D<float4>      RW_Float4_Textures3D[]       : register(u0, space12);
+RWTexture2DArray<float4> RW_Float4_Texture2DArrays[]  : register(u0, space13);
 
+// Static samplers
 SamplerState AnisotropicClampSampler : register(s0);
 SamplerState LinearClampSampler : register(s1);
 SamplerState PointClampSampler : register(s2);
 
+// The maximum size of a root signature is 64 DWORDs :
+// Descriptor tables cost 1 DWORD each.
+// Root constants cost 1 DWORD each, since they are 32 - bit values.
+// Root descriptors(64 - bit GPU virtual addresses) cost 2 DWORDs each.
+// Static samplers do not have any cost in the size of the root signature.

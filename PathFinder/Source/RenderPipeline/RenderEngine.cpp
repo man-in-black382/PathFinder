@@ -29,7 +29,7 @@ namespace PathFinder
         mPipelineStateCreator{ &mPipelineStateManager, mDefaultRenderSurface },
         mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, &mAssetResourceStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mAsyncComputeDevice{ &mDevice, mSimultaneousFramesInFlight },
-        mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider },
+        mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
     {

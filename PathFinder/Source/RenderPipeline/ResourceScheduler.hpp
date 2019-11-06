@@ -29,8 +29,11 @@ namespace PathFinder
 
         struct NewDepthStencilProperties
         {
-            NewDepthStencilProperties(HAL::ResourceFormat::DepthStencil format, const Geometry::Dimensions& dimensions)
-                : Format{ format }, Dimensions{ dimensions } {}
+            NewDepthStencilProperties(
+                std::optional<HAL::ResourceFormat::DepthStencil> format = std::nullopt,
+                std::optional<Geometry::Dimensions> dimensions = std::nullopt)
+                : 
+                Format{ format }, Dimensions{ dimensions } {}
 
             std::optional<HAL::ResourceFormat::DepthStencil> Format;
             std::optional<Geometry::Dimensions> Dimensions;

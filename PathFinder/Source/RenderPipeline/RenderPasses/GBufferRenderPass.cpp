@@ -28,6 +28,8 @@ namespace PathFinder
         ResourceScheduler::NewTextureProperties RT0Properties{};
         RT0Properties.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Unsigned;
 
+        ResourceScheduler::NewDepthStencilProperties DSProperties{};
+
         scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<GBufferCBContent>();

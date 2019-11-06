@@ -80,40 +80,11 @@ GBufferCookTorrance DecodeGBufferCookTorrance(GBufferEncoded encodedGBuffer)
      return gBuffer;
  }
 
-//float3 ReconstructWorldPosition(float hyperbolicDepth, // Depth value after viewport transformation in [0; 1] range
-//                              vloat2 normTexCoords, // Normalized texture coordinates [0; 1]
-//                              mat4 inverseView, // Inverse camera view matrix
-//                              mat4 inverseProjection) // Inverse camera projection matrix
-//{
-//    // Depth range in NDC is [-1; 1]
-//    // Default value for glDepthRange is [-1; 1]
-//    // OpenGL uses values from glDepthRange to transform depth to [0; 1] range during viewport transformation
-//    // To reconstruct world position using inverse camera matrices we need depth in [-1; 1] range again
-//    float z = hyperbolicDepth * 2.0 - 1.0;
-//    vec2 xy = normTexCoords * 2.0 - 1.0;
-//
-//    vec4 clipSpacePosition = vec4(xy, z, 1.0);
-//    vec4 viewSpacePosition = inverseProjection * clipSpacePosition;
-//
-//    // Perspective division
-//    viewSpacePosition /= viewSpacePosition.w;
-//
-//    vec4 worldSpacePosition = inverseView * viewSpacePosition;
-//
-//    return worldSpacePosition.xyz;
-//}
-
-//float3 ReconstructWorldPosition(sampler2D depthSampler, vec2 normTexCoords, mat4 inverseView, mat4 inverseProjection)
-//{
-//    float depth = texture(depthSampler, normTexCoords).r;
-//    return ReconstructWorldPosition(depth, normTexCoords, inverseView, inverseProjection);
-//}
-//
-//float3 DecodeGBufferCookTorranceNormal(uvec4 materialData)
-//{
-//    uint3 encoded = materialData.xyz;
-//    uint metalnessAONormalZ = encoded.y;
-//    float normalZ = UnpackSnorm2x16(metalnessAONormalZ, 1.0).y;
-//    float2 normalXY = UnpackSnorm2x16(encoded.z, 1.0);
-//    return float3(normalXY, normalZ);
-//}
+float3 DecodeGBufferCookTorranceNormal(GBufferEncoded encodedGBuffer)
+{
+    uint3 encoded = encodedGBuffer.MaterialData.xyz;
+    uint metalnessAONormalZ = encoded.y;
+    float normalZ = UnpackSnorm2x16(metalnessAONormalZ, 1.0).y;
+    float2 normalXY = UnpackSnorm2x16(encoded.z, 1.0);
+    return float3(normalXY, normalZ);
+}

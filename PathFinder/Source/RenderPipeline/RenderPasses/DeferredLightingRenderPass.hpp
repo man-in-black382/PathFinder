@@ -10,6 +10,8 @@ namespace PathFinder
     struct DeferredLightingCBContent
     {
         uint32_t GBufferMaterialDataTextureIndex;
+        uint32_t GBufferDepthTextureIndex;
+        uint32_t OutputTextureIndex;
     };
 
     class DeferredLightingRenderPass : public RenderPass  

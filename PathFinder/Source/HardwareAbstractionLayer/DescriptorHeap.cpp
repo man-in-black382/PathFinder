@@ -212,7 +212,22 @@ namespace HAL
             break;
         }
 
-        desc.Format = explicitFormat.has_value() ? ResourceFormat::D3DFormat(explicitFormat.value()) : resourceDesc.Format;
+        if (explicitFormat)
+        {
+            desc.Format = ResourceFormat::D3DFormat(*explicitFormat);
+            return desc;
+        }
+        
+        ResourceFormat::FormatVariant format = ResourceFormat::FormatFromD3DFormat(resourceDesc.Format);
+
+        if (std::holds_alternative<ResourceFormat::DepthStencil>(format))
+        {
+            auto d3dDepthStencilSRVFormats = ResourceFormat::D3DDepthStecilSRVFormats(std::get<ResourceFormat::DepthStencil>(format));
+            desc.Format = d3dDepthStencilSRVFormats.first;
+        }
+        else {
+            desc.Format = resourceDesc.Format;
+        }
 
         return desc;
     }

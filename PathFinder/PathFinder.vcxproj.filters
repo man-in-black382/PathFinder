@@ -2466,6 +2466,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BlurRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLightingRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\SpaceConversion.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

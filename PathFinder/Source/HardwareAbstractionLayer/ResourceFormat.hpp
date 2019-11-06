@@ -68,6 +68,8 @@ namespace HAL
         static DXGI_FORMAT D3DFormat(Color type);
         static DXGI_FORMAT D3DFormat(DepthStencil type);
 
+        static std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> D3DDepthStecilSRVFormats(DepthStencil type);
+
         static FormatVariant FormatFromD3DFormat(DXGI_FORMAT format);
 
         bool CanResourceImplicitlyPromoteFromCommonStateToState(ResourceState state) const;

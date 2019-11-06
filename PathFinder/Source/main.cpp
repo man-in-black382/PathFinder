@@ -506,8 +506,8 @@ int main(int argc, char** argv)
     PathFinder::RenderPassExecutionGraph renderPassGraph;
     renderPassGraph.AddPass(gBufferPass.get());
     renderPassGraph.AddPass(deferredLightingPass.get());
-    renderPassGraph.AddPass(shadowsPass.get());
-    renderPassGraph.AddPass(blurPass.get());
+    //renderPassGraph.AddPass(shadowsPass.get());
+    //renderPassGraph.AddPass(blurPass.get());
     renderPassGraph.AddPass(backBufferOutputPass.get());
 
     PathFinder::Scene scene;
@@ -518,17 +518,17 @@ int main(int argc, char** argv)
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds", "/Metal07/Metal07_met.dds"));
 
-    PathFinder::Mesh& deer = scene.AddMesh(std::move(meshLoader.Load("deer.obj").back()));
-    PathFinder::MeshInstance& deerInstance = scene.AddMeshInstance({ &deer, &metalMaterial });
-
-    engine.PreRender();
+    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("sphere.obj").back()));
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
 
     PathFinder::Camera& camera = scene.MainCamera();
-    camera.SetFarPlane(10000);
+    camera.SetFarPlane(1000);
     camera.SetNearPlane(1);
-    camera.MoveTo({ 0.0f, 0.0f, -4000.f });
+    camera.MoveTo({ 0.0f, 0.0f, -100.f });
     camera.LookAt({ 0.f, 0.f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
+
+    engine.PreRender();
 
     // Main loop
     MSG msg;

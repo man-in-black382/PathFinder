@@ -159,8 +159,6 @@ namespace PathFinder
             return &it->second;
         }
 
-        PassName passThatRequestedAllocation = mCurrentPassName;
-
         auto [iter, success] = mPipelineResourceAllocations.emplace(resourceName, HAL::ResourceFormat{ *mDevice, format, kind, dimensions, 1, optimizedClearValue });
         PipelineResourceAllocation& allocation = iter->second;
 
@@ -168,6 +166,13 @@ namespace PathFinder
         {
             HAL::ResourceState expectedStates = allocation.GatherExpectedStates();
             HAL::ResourceState initialState = HAL::ResourceState::Common;
+
+            auto firstPassMetadata = allocation.GetMetadataForPass(allocation.FirstPassName());
+
+            if (firstPassMetadata && firstPassMetadata->OptimizedTransitionStates)
+            {
+                initialState = firstPassMetadata->OptimizedTransitionStates->first;
+            }
             
             HAL::Heap* heap = nullptr;
 
@@ -278,6 +283,7 @@ namespace PathFinder
 
             for (auto& [passName, passData] : allocation.AllPassesMetadata())
             {
+                auto dName = passName.ToString();
                 if (passData.OptimizedTransitionStates)
                 {
                     mPerPassResourceBarriers[passName].AddBarrier(HAL::ResourceTransitionBarrier{

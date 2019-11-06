@@ -27,7 +27,7 @@ groupshared float3 gCache[GroupSharedBufferSize]; // Around 5KB
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
 {
     Texture2D source = Textures2D[PassDataCB.InputTextureIndex];
-    RWTexture2D<float4> destination = RWTextures2D[PassDataCB.OutputTextureIndex];
+    RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
 
     int radius = int(PassDataCB.BlurRadius);
     uint2 boundaries = GlobalDataCB.PipelineRTResolution;
