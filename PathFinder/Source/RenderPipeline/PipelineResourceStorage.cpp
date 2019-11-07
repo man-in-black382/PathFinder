@@ -253,7 +253,7 @@ namespace PathFinder
                     {
                         allocation.AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
                         mRTDSMemoryAliaser.AddAllocation(&allocation);
-                    } 
+                    }
                     else {
                         allocation.AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::NonRTDSTextures;
                         mNonRTDSMemoryAliaser.AddAllocation(&allocation);

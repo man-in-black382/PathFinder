@@ -43,6 +43,11 @@ namespace PathFinder
             mGlobalStartOffset += mAvailableMemory;
         }
 
+        if (optimalHeapSize == 41877504)
+        {
+            printf("");
+        }
+
         return optimalHeapSize == 0 ? 1 : optimalHeapSize;
     }
 
@@ -118,6 +123,11 @@ namespace PathFinder
 
     void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt)
     {
+        if (nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() == 8847360)
+        {
+            printf("");
+        }
+
         // Bail out if there is nothing to alias with
         if (AliasAsFirstAllocation(nextAllocationIt)) return;
 

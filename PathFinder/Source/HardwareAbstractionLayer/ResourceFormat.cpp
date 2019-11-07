@@ -112,8 +112,8 @@ namespace HAL
 
         switch (type)
         {
-        case Color::R8_Usigned_Norm:        return DXGI_FORMAT_R8_UNORM;
-        case Color::RG8_Usigned_Norm:      return DXGI_FORMAT_R8G8_UNORM;
+        case Color::R8_Usigned_Norm:     return DXGI_FORMAT_R8_UNORM;
+        case Color::RG8_Usigned_Norm:    return DXGI_FORMAT_R8G8_UNORM;
         case Color::RGBA8_Usigned_Norm:  return DXGI_FORMAT_R8G8B8A8_UNORM;
 
         case Color::BGRA8_Unsigned_Norm: return DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -172,7 +172,7 @@ namespace HAL
         switch (type)
         {
         case DepthStencil::Depth24_Float_Stencil8_Unsigned: return { DXGI_FORMAT_R24_UNORM_X8_TYPELESS, DXGI_FORMAT_X24_TYPELESS_G8_UINT };
-        case DepthStencil::Depth32_Float:                   return { DXGI_FORMAT_D32_FLOAT, std::nullopt };
+        case DepthStencil::Depth32_Float:                   return { DXGI_FORMAT_R32_FLOAT, std::nullopt };
         default: assert_format("Should never be hit"); return {};
         }
     }

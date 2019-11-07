@@ -12,7 +12,7 @@ namespace PathFinder
         : 
         mPassExecutionGraph{ passExecutionGraph },
         mExecutablePath{ executablePath },
-        mDefaultRenderSurface{ { 1280, 720 }, HAL::ResourceFormat::Color::RGBA16_Float, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
+        mDefaultRenderSurface{ { 1920, 1080 }, HAL::ResourceFormat::Color::RGBA16_Float, HAL::ResourceFormat::DepthStencil::Depth32_Float },
         mDevice{ FetchDefaultDisplayAdapter() },
         mFrameFence{ mDevice },
         mAccelerationStructureFence{ mDevice },

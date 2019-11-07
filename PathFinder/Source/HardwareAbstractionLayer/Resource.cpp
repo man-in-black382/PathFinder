@@ -85,13 +85,13 @@ namespace HAL
             EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) ||
             EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
 
-        device.D3DDevice()->CreatePlacedResource(
+        ThrowIfFailed(device.D3DDevice()->CreatePlacedResource(
             heap.D3DHeap(),
             heapOffset,
             &mDescription,
             D3DResourceState(initialStateMask),
             isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
-            IID_PPV_ARGS(mResource.GetAddressOf()));
+            IID_PPV_ARGS(mResource.GetAddressOf())));
     }
 
     Resource::~Resource() {}

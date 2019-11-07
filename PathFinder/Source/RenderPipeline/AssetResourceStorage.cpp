@@ -51,7 +51,11 @@ namespace PathFinder
         GPUInstanceTableEntry instanceEntry{
             instance.Transformation().ModelMatrix(),
             instance.Transformation().NormalMatrix(),
-            *instance.AssosiatedMaterial(),
+            instance.AssosiatedMaterial()->AlbedoMapSRVIndex,
+            instance.AssosiatedMaterial()->NormalMapSRVIndex,
+            instance.AssosiatedMaterial()->RoughnessMapSRVIndex,
+            instance.AssosiatedMaterial()->MetalnessMapSRVIndex,
+            instance.AssosiatedMaterial()->AOMapSRVIndex,
             instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
             instance.AssosiatedMesh()->LocationInVertexStorage().IndexBufferOffset,
             instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount

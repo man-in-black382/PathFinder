@@ -19,9 +19,9 @@ namespace HAL
 
         switch (aliasingGroup)
         {
-        case HeapAliasingGroup::RTDSTextures: desc.Flags = D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES; break;
-        case HeapAliasingGroup::NonRTDSTextures: desc.Flags = D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES; break;
-        case HeapAliasingGroup::Buffers: desc.Flags = D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES | D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES; break;
+        case HeapAliasingGroup::RTDSTextures: desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES; break;
+        case HeapAliasingGroup::NonRTDSTextures: desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES; break;
+        case HeapAliasingGroup::Buffers: desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS; break;
         }
 
         if (cpuAccessibleType)
