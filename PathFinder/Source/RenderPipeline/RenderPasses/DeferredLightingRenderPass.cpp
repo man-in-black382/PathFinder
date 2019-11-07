@@ -31,11 +31,8 @@ namespace PathFinder
         cbContent->GBufferDepthTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferDepthStencil);
         cbContent->OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingOutput);
 
-        auto dimensions = context->GetDefaultRenderSurfaceDesc().Dimensions();
-        float x = ceilf((float)dimensions.Width / 32);
-        float y = ceilf((float)dimensions.Height / 32);
-
-        context->GetCommandRecorder()->Dispatch(x, y, 1);
+        auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(32, 32);
+        context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);
     }
 
 }

@@ -4,6 +4,8 @@
 #include "../Geometry/Dimensions.hpp"
 #include "../HardwareAbstractionLayer/ResourceFormat.hpp"
 
+#include <glm/vec2.hpp>
+
 namespace PathFinder
 {
 
@@ -15,6 +17,8 @@ namespace PathFinder
             HAL::ResourceFormat::Color rtFormat,
             HAL::ResourceFormat::DepthStencil dsFormat
         );
+
+        glm::uvec2 DispatchDimensionsForGroupSize(uint32_t groupSizeX, uint32_t groupSizeY) const;
 
     private:
         Geometry::Dimensions mDimensions;

@@ -27,8 +27,8 @@ namespace PathFinder
             iaLayout.AddPerVertexLayoutElement("POSITION", 0, HAL::ResourceFormat::Color::RGBA32_Float, 0, 0);
             iaLayout.AddPerVertexLayoutElement("NORMAL", 0, HAL::ResourceFormat::Color::RGB32_Float, 0, 16);
             iaLayout.AddPerVertexLayoutElement("TEXCOORD", 0, HAL::ResourceFormat::Color::RG32_Float, 0, 28);  
-            iaLayout.AddPerVertexLayoutElement("TANGENT", 0, HAL::ResourceFormat::Color::RG32_Float, 0, 40);
-            iaLayout.AddPerVertexLayoutElement("BITANGENT", 0, HAL::ResourceFormat::Color::RG32_Float, 0, 52);
+            iaLayout.AddPerVertexLayoutElement("TANGENT", 0, HAL::ResourceFormat::Color::RGB32_Float, 0, 36);
+            iaLayout.AddPerVertexLayoutElement("BITANGENT", 0, HAL::ResourceFormat::Color::RGB32_Float, 0, 48);
         }
 
         return layouts[layout];

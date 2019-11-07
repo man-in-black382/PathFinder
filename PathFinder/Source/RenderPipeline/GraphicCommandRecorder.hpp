@@ -34,7 +34,7 @@ namespace PathFinder
         virtual void Draw(const VertexStorageLocation& vertexStorageLocation) = 0;
         virtual void Draw(const DrawablePrimitive& primitive) = 0;
 
-        virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) = 0;
+        virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) = 0;
 
         // Asset-related commands
         virtual void BindMeshInstanceTableStructuredBuffer(uint16_t shaderRegister, uint16_t registerSpace = 0) = 0;

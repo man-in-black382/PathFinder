@@ -14,13 +14,14 @@ namespace PathFinder
             state.ShaderFileNames.PixelShaderFileName = L"BackBufferOutput.hlsl";
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleStrip;
             state.DepthStencilState.SetDepthTestEnabled(false);
+            state.RenderTargetFormats = { HAL::ResourceFormat::Color::RGBA8_Usigned_Norm };
         });
     }
      
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         //scheduler->ReadTexture(ResourceNames::BlurResult);
-        scheduler->ReadTexture(ResourceNames::DeferredLightingOutput);
+        scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
         scheduler->WillUseRootConstantBuffer<BackBufferOutputPassData>();
     } 
 
@@ -30,7 +31,7 @@ namespace PathFinder
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
     
         auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<BackBufferOutputPassData>();
-        cbContent->SourceTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingOutput);
+        cbContent->SourceTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::ToneMappingOutput);
 
         context->GetCommandRecorder()->Draw(DrawablePrimitive::Quad());
     }

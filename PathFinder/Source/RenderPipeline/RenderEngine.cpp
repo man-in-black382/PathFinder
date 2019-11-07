@@ -12,7 +12,7 @@ namespace PathFinder
         : 
         mPassExecutionGraph{ passExecutionGraph },
         mExecutablePath{ executablePath },
-        mDefaultRenderSurface{ { 1280, 720 }, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
+        mDefaultRenderSurface{ { 1280, 720 }, HAL::ResourceFormat::Color::RGBA16_Float, HAL::ResourceFormat::DepthStencil::Depth24_Float_Stencil8_Unsigned },
         mDevice{ FetchDefaultDisplayAdapter() },
         mFrameFence{ mDevice },
         mAccelerationStructureFence{ mDevice },
@@ -30,7 +30,7 @@ namespace PathFinder
         mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, &mAssetResourceStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mAsyncComputeDevice{ &mDevice, mSimultaneousFramesInFlight },
         mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
-        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, mDefaultRenderSurface.RenderTargetFormat(), mDefaultRenderSurface.Dimensions() },
+        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
     {
         mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);

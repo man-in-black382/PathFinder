@@ -19,10 +19,8 @@ struct PassData
 #include "CookTorrance.hlsl"
 #include "SpaceConversion.hlsl"
 
-//------------------------  Pixel  ------------------------------//
-
 [numthreads(32, 32, 1)]
-void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
+void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
     Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
@@ -34,7 +32,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     encodedGBuffer.MaterialData = materialData.Load(loadCoords);
 
     GBufferCookTorrance gBufferCookTorrance = DecodeGBufferCookTorrance(encodedGBuffer);
-    DirectionalLight testLight = { float3(2.0, 2.0, 2.0), float3(-1.0, -1.0, -1.0) };
+    DirectionalLight testLight = { float3(2.0, 2.0, 2.0), float3(1.5, -1.0, 1.0) };
     float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0));
 
     float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
@@ -49,8 +47,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     float3 L = -normalize(testLight.Direction);
     float3 H = normalize(L + V);
 
-    float3 radiance = CookTorranceBRDF(N, V, H, L, roughness2, gBufferCookTorrance.Albedo, gBufferCookTorrance.Metalness, testLight.RadiantFlux);
+    float3 outgoingRadiance = CookTorranceBRDF(N, V, H, L, roughness2, gBufferCookTorrance.Albedo, gBufferCookTorrance.Metalness, testLight.RadiantFlux);
 
     RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
-    outputImage[dispatchThreadID.xy] = float4(N, 1.0);
+    outputImage[dispatchThreadID.xy] = float4(outgoingRadiance, 1.0);
 }

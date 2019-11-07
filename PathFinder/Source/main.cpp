@@ -16,6 +16,7 @@
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadowsRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DeferredLightingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 
 #include "../resource.h"
 
@@ -500,12 +501,14 @@ int main(int argc, char** argv)
     auto gBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
     auto deferredLightingPass = std::make_unique<PathFinder::DeferredLightingRenderPass>();
     auto shadowsPass = std::make_unique<PathFinder::ShadowsRenderPass>();
+    auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
     auto blurPass = std::make_unique<PathFinder::BlurRenderPass>();
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
 
     PathFinder::RenderPassExecutionGraph renderPassGraph;
     renderPassGraph.AddPass(gBufferPass.get());
     renderPassGraph.AddPass(deferredLightingPass.get());
+    renderPassGraph.AddPass(toneMappingPass.get());
     //renderPassGraph.AddPass(shadowsPass.get());
     //renderPassGraph.AddPass(blurPass.get());
     renderPassGraph.AddPass(backBufferOutputPass.get());

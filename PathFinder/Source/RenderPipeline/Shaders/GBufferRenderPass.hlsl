@@ -71,8 +71,11 @@ float3 FetchAlbedoMap(VertexOut vertex, InstanceData instanceData)
 float3 FetchNormalMap(VertexOut vertex, InstanceData instanceData)
 {
     Texture2D normalMap = Textures2D[instanceData.NormalMapIndex];
+    
     float3 normal = normalMap.Sample(AnisotropicClampSampler, vertex.UV).xyz;
-    return normalize(mul(vertex.TBN, (normal * 2.0 - 1.0)));
+    normal = normal * 2.0 - 1.0;
+    
+    return normalize(mul(vertex.TBN, normal));
 }
 
 float FetchMetallnessMap(VertexOut vertex, InstanceData instanceData)

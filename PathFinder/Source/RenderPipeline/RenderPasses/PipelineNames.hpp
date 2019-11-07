@@ -11,6 +11,7 @@ namespace PathFinder
         inline Foundation::Name BlurResult{ "Resource_BlurResult" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
         inline Foundation::Name DeferredLightingOutput{ "Resource_DeferredLighting_Output" };
+        inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
     }
 
     namespace PSONames
@@ -19,6 +20,7 @@ namespace PathFinder
         inline Foundation::Name GBuffer{ "PSO_GBuffer" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name Blur{ "PSO_Blur" };
+        inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
     }  
    

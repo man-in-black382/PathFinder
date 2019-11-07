@@ -354,6 +354,9 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1970,6 +1973,9 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2467,6 +2473,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLightingRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SpaceConversion.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ToneMappingRenderPass.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

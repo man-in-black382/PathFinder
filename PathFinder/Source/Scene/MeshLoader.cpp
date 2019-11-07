@@ -30,7 +30,7 @@ namespace PathFinder
         // Walk through each of the mesh's vertices
         for (auto i = 0u; i < mesh->mNumVertices; i++)
         {
-            Vertex1P1N1UV1T1BT vertex;
+            Vertex1P1N1UV1T1BT vertex{};
 
             vertex.Position.x = mesh->mVertices[i].x;
             vertex.Position.y = mesh->mVertices[i].y;
