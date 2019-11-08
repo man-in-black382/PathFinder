@@ -61,8 +61,10 @@ namespace HAL
 
         using FormatVariant = std::variant<TypelessColor, Color, DepthStencil>;
 
-        ResourceFormat(const Device& device, FormatVariant dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue);
-        ResourceFormat(const Device& device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
+        ResourceFormat(const Device* device, FormatVariant dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue);
+        ResourceFormat(const Device* device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
+
+        void UpdateExpectedUsageFlags(ResourceState expectedStates);
 
         static DXGI_FORMAT D3DFormat(TypelessColor type);
         static DXGI_FORMAT D3DFormat(Color type);
@@ -80,9 +82,10 @@ namespace HAL
 
         void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);
         void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions);
-        void QueryAllocationInfo(const Device& device);
+        void QueryAllocationInfo();
 
-        D3D12_RESOURCE_DESC mDesc{};
+        const Device* mDevice;
+        D3D12_RESOURCE_DESC mDescription{};
         std::optional<FormatVariant> mDataType;
         std::optional<D3D12_CLEAR_VALUE> mClearValue;
         uint64_t mResourceAlignment = 0;
@@ -90,7 +93,7 @@ namespace HAL
         KindVariant mKind;
 
     public:
-        inline const D3D12_RESOURCE_DESC& D3DResourceDescription() const { return mDesc; }
+        inline const D3D12_RESOURCE_DESC& D3DResourceDescription() const { return mDescription; }
         inline const D3D12_CLEAR_VALUE* D3DOptimizedClearValue() const { return mClearValue ? &(*mClearValue) : nullptr; }
         inline auto ResourceAlighnment() const { return mResourceAlignment; }
         inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }

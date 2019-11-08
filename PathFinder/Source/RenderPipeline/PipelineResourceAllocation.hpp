@@ -42,7 +42,7 @@ namespace PathFinder
 
         PipelineResourceAllocation(const HAL::ResourceFormat& format);
 
-        HAL::ResourceState GatherExpectedStates() const;
+        void GatherExpectedStates();
         const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;
         PassMetadata* GetMetadataForPass(Foundation::Name passName);
         PassMetadata& AllocateMetadataForPass(Foundation::Name passName);
@@ -56,12 +56,14 @@ namespace PathFinder
         Foundation::Name mFirstPassName;
         Foundation::Name mLastPassName;
         HAL::ResourceFormat mResourceFormat;
+        HAL::ResourceState mExpectedStates;
 
     public:
         inline const auto& AllPassesMetadata() const { return mPerPassData; }
         inline Foundation::Name FirstPassName() const { return mFirstPassName; }
         inline Foundation::Name LastPassName() const { return mLastPassName; }
         inline const HAL::ResourceFormat& ResourceFormat() const { return mResourceFormat; }
+        inline HAL::ResourceState ExpectedStates() const { return mExpectedStates; }
     };
 
 }

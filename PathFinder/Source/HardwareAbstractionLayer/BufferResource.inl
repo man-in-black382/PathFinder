@@ -7,7 +7,7 @@ namespace HAL
         : Resource(
             device,
             ResourceFormat{
-                device, std::nullopt, ResourceFormat::BufferKind::Buffer,
+                &device, std::nullopt, ResourceFormat::BufferKind::Buffer,
                 Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
             },
             heapType
@@ -25,7 +25,7 @@ namespace HAL
         : Resource(
             device,
             ResourceFormat{
-                device, std::nullopt, ResourceFormat::BufferKind::Buffer,
+                &device, std::nullopt, ResourceFormat::BufferKind::Buffer,
                 Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
             },
             initialState,

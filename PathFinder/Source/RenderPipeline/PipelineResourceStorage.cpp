@@ -159,12 +159,12 @@ namespace PathFinder
             return &it->second;
         }
 
-        auto [iter, success] = mPipelineResourceAllocations.emplace(resourceName, HAL::ResourceFormat{ *mDevice, format, kind, dimensions, 1, optimizedClearValue });
+        auto [iter, success] = mPipelineResourceAllocations.emplace(resourceName, HAL::ResourceFormat{ mDevice, format, kind, dimensions, 1, optimizedClearValue });
         PipelineResourceAllocation& allocation = iter->second;
 
         allocation.AllocationAction = [=, &allocation]()
         {
-            HAL::ResourceState expectedStates = allocation.GatherExpectedStates();
+            HAL::ResourceState expectedStates = allocation.ExpectedStates();
             HAL::ResourceState initialState = HAL::ResourceState::Common;
 
             auto firstPassMetadata = allocation.GetMetadataForPass(allocation.FirstPassName());
@@ -235,6 +235,8 @@ namespace PathFinder
     {
         for (auto& [resourceName, allocation] : mPipelineResourceAllocations)
         {
+            allocation.GatherExpectedStates();
+
             mStateOptimizer.AddAllocation(&allocation);
 
             std::visit(Foundation::MakeVisitor(
@@ -245,7 +247,7 @@ namespace PathFinder
                 },
                 [this, &allocation](const HAL::ResourceFormat::TextureKind& kind)
                 {
-                    HAL::ResourceState expectedStates = allocation.GatherExpectedStates();
+                    HAL::ResourceState expectedStates = allocation.ExpectedStates();
 
                     if (EnumMaskBitSet(expectedStates, HAL::ResourceState::RenderTarget) ||
                         EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthWrite) ||

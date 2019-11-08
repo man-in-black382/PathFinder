@@ -7,17 +7,16 @@ namespace HAL
 {
 
     ResourceFormat::ResourceFormat(
-        const Device& device, FormatVariant dataType, TextureKind kind, 
+        const Device* device, FormatVariant dataType, TextureKind kind, 
         const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue)
-        :
-        mDataType{ dataType }, mKind{ kind }
+        : mDevice{ device }, mDataType{ dataType }, mKind{ kind }
     {
-        std::visit([this](auto&& t) { mDesc.Format = D3DFormat(t); }, dataType);
+        std::visit([this](auto&& t) { mDescription.Format = D3DFormat(t); }, dataType);
         
         ResolveDemensionData(kind, dimensions);
 
         mClearValue = D3D12_CLEAR_VALUE{};
-        mClearValue->Format = mDesc.Format;
+        mClearValue->Format = mDescription.Format;
 
         std::visit(Foundation::MakeVisitor(
             [this](const ColorClearValue& value)
@@ -34,58 +33,92 @@ namespace HAL
         }),
             optimizedClearValue);
 
-        mDesc.MipLevels = mipCount;
+        mDescription.MipLevels = mipCount;
 
-        QueryAllocationInfo(device);
+        QueryAllocationInfo();
     }
 
-    ResourceFormat::ResourceFormat(const Device& device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
-        : mDataType{ dataType }, mKind{ kind }
+    ResourceFormat::ResourceFormat(const Device* device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
+        : mDevice{ device }, mDataType{ dataType }, mKind{ kind }
     {
         if (dataType)
         {
-            std::visit([this](auto&& t) { mDesc.Format = D3DFormat(t); }, dataType.value());
+            std::visit([this](auto&& t) { mDescription.Format = D3DFormat(t); }, dataType.value());
         }
 
         ResolveDemensionData(kind, dimensions);
-        QueryAllocationInfo(device);
+        QueryAllocationInfo();
     }
 
     void ResourceFormat::ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions)
     {
-        mDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-        mDesc.Width = dimensions.Width;
-        mDesc.Height = 1;
-        mDesc.DepthOrArraySize = 1;
-        mDesc.MipLevels = 1;
-        mDesc.SampleDesc.Count = 1;
-        mDesc.SampleDesc.Quality = 0;
-        mDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        mDescription.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        mDescription.Width = dimensions.Width;
+        mDescription.Height = 1;
+        mDescription.DepthOrArraySize = 1;
+        mDescription.MipLevels = 1;
+        mDescription.SampleDesc.Count = 1;
+        mDescription.SampleDesc.Quality = 0;
+        mDescription.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     }
 
     void ResourceFormat::ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions)
     {
         switch (kind)
         {
-        case TextureKind::Texture3D: mDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D; break;
-        case TextureKind::Texture2D: mDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; break;
-        case TextureKind::Texture1D: mDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D; break;
+        case TextureKind::Texture3D: mDescription.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D; break;
+        case TextureKind::Texture2D: mDescription.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; break;
+        case TextureKind::Texture1D: mDescription.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D; break;
         }
 
-        mDesc.Height = (UINT)dimensions.Height;
-        mDesc.Width = dimensions.Width;
-        mDesc.DepthOrArraySize = (UINT16)dimensions.Depth;
-        mDesc.SampleDesc.Count = 1;
-        mDesc.SampleDesc.Quality = 0;
+        mDescription.Height = (UINT)dimensions.Height;
+        mDescription.Width = dimensions.Width;
+        mDescription.DepthOrArraySize = (UINT16)dimensions.Depth;
+        mDescription.SampleDesc.Count = 1;
+        mDescription.SampleDesc.Quality = 0;
     }
 
-    void ResourceFormat::QueryAllocationInfo(const Device& device)
+    void ResourceFormat::QueryAllocationInfo()
     {
         UINT GPUMask = 0;
-        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = device.D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDesc);
+        D3D12_RESOURCE_ALLOCATION_INFO allocInfo = mDevice->D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
 
         mResourceAlignment = allocInfo.Alignment;
         mResourceSizeInBytes = allocInfo.SizeInBytes;
+    }
+
+    void ResourceFormat::UpdateExpectedUsageFlags(ResourceState expectedStates)
+    {
+        if (EnumMaskBitSet(expectedStates, ResourceState::RenderTarget))
+        {
+            mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+        }
+
+        if (EnumMaskBitSet(expectedStates, ResourceState::DepthRead) ||
+            EnumMaskBitSet(expectedStates, ResourceState::DepthWrite))
+        {
+            mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+        }
+
+        if (EnumMaskBitSet(expectedStates, ResourceState::UnorderedAccess))
+        {
+            mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+        }
+
+        if (!EnumMaskBitSet(expectedStates, ResourceState::PixelShaderAccess) &&
+            !EnumMaskBitSet(expectedStates, ResourceState::NonPixelShaderAccess) &&
+            !EnumMaskBitSet(expectedStates, ResourceState::RenderTarget) &&
+            !EnumMaskBitSet(expectedStates, ResourceState::GenericRead) &&
+            !EnumMaskBitSet(expectedStates, ResourceState::IndirectArgument) &&
+            !EnumMaskBitSet(expectedStates, ResourceState::CopySource) &&
+            !EnumMaskBitSet(expectedStates, ResourceState::DepthRead) &&
+            !EnumMaskBitSet(expectedStates, ResourceState::ConstantBuffer) &&
+            !EnumMaskBitSet(expectedStates, ResourceState::UnorderedAccess))
+        {
+            mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+        }
+
+        QueryAllocationInfo();
     }
 
     DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColor type)

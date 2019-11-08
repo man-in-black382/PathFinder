@@ -45,13 +45,13 @@ namespace HAL
         ResourceState mExpectedStates = ResourceState::Common;
 
     private:
+        ResourceFormat UpdateExpectedUsageFlags(const ResourceFormat& format, ResourceState expectedStates);
+
         uint64_t mTotalMemory = 0;
         uint64_t mResourceAlignment = 0;
         uint64_t mSubresourceCount = 0;
         uint64_t mHeapOffset = 0;
         D3D12_RESOURCE_DESC mDescription{};
-
-        void SetExpectedUsageFlags(ResourceState stateMask);
 
     public:
         inline ID3D12Resource* D3DResource() const { return mResource.Get(); }

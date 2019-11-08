@@ -14,7 +14,7 @@ namespace HAL
         : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) {}
 
     Resource::Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
-        : mDescription{ format.D3DResourceDescription() }, 
+        : mDescription{ UpdateExpectedUsageFlags(format, expectedStateMask).D3DResourceDescription() }, 
         mInitialStates{ initialStateMask }, mExpectedStates{ expectedStateMask }, 
         mResourceAlignment{ format.ResourceAlighnment() }, mTotalMemory{ format.ResourceSizeInBytes() }
     {
@@ -22,8 +22,6 @@ namespace HAL
         heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
         D3D12_RESOURCE_STATES initialStates = D3DResourceState(initialStateMask);
-
-        SetExpectedUsageFlags(expectedStateMask);
 
         bool isSubjectForClearing = 
             EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) || 
@@ -40,8 +38,7 @@ namespace HAL
     }
 
     Resource::Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType)
-        : mDescription{ format.D3DResourceDescription() },
-        mResourceAlignment { format.ResourceAlighnment() },
+        : mResourceAlignment { format.ResourceAlighnment() },
         mTotalMemory{ format.ResourceSizeInBytes() }
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
@@ -62,7 +59,9 @@ namespace HAL
 
         mExpectedStates = mInitialStates;
 
-        SetExpectedUsageFlags(mInitialStates);
+        ResourceFormat updatedFormat = format;
+        updatedFormat.UpdateExpectedUsageFlags(mExpectedStates);
+        mDescription = updatedFormat.D3DResourceDescription();
 
         ThrowIfFailed(device.D3DDevice()->CreateCommittedResource(
             &heapProperties,
@@ -75,12 +74,13 @@ namespace HAL
     }
 
     Resource::Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
-        : mDescription{ format.D3DResourceDescription() }, mInitialStates{ initialStateMask },
-        mExpectedStates{ expectedStateMask }, mHeapOffset{ heapOffset },
-        mResourceAlignment{ format.ResourceAlighnment() }, mTotalMemory{ format.ResourceSizeInBytes() }
+        : mDescription{ UpdateExpectedUsageFlags(format, expectedStateMask).D3DResourceDescription() },
+        mInitialStates{ initialStateMask },
+        mExpectedStates{ expectedStateMask },
+        mHeapOffset{ heapOffset },
+        mResourceAlignment{ format.ResourceAlighnment() },
+        mTotalMemory{ format.ResourceSizeInBytes() }
     {
-        SetExpectedUsageFlags(expectedStateMask);
-
         bool isSubjectForClearing =
             EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) ||
             EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
@@ -92,6 +92,13 @@ namespace HAL
             D3DResourceState(initialStateMask),
             isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
             IID_PPV_ARGS(mResource.GetAddressOf())));
+    }
+
+    ResourceFormat Resource::UpdateExpectedUsageFlags(const ResourceFormat& format, ResourceState expectedStates)
+    {
+        ResourceFormat updatedFormat = format;
+        updatedFormat.UpdateExpectedUsageFlags(expectedStates);
+        return updatedFormat;
     }
 
     Resource::~Resource() {}
@@ -109,38 +116,6 @@ namespace HAL
     void Resource::SetDebugName(const std::string& name)
     {
         mResource->SetName(StringToWString(name).c_str());
-    }
-
-    void Resource::SetExpectedUsageFlags(ResourceState stateMask)
-    {
-        if (EnumMaskBitSet(stateMask, ResourceState::RenderTarget))
-        {
-            mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-        }
-
-        if (EnumMaskBitSet(stateMask, ResourceState::DepthRead) ||
-            EnumMaskBitSet(stateMask, ResourceState::DepthWrite))
-        {
-            mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-        }
-
-        if (EnumMaskBitSet(stateMask, ResourceState::UnorderedAccess))
-        {
-            mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        }
-
-        if (!EnumMaskBitSet(stateMask, ResourceState::PixelShaderAccess) &&
-            !EnumMaskBitSet(stateMask, ResourceState::NonPixelShaderAccess) &&
-            !EnumMaskBitSet(stateMask, ResourceState::RenderTarget) &&
-            !EnumMaskBitSet(stateMask, ResourceState::GenericRead) &&
-            !EnumMaskBitSet(stateMask, ResourceState::IndirectArgument) &&
-            !EnumMaskBitSet(stateMask, ResourceState::CopySource) &&
-            !EnumMaskBitSet(stateMask, ResourceState::DepthRead) &&
-            !EnumMaskBitSet(stateMask, ResourceState::ConstantBuffer) &&
-            !EnumMaskBitSet(stateMask, ResourceState::UnorderedAccess))
-        {
-            mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
-        }
     }
 
 }

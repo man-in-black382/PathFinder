@@ -6,7 +6,7 @@ namespace PathFinder
     PipelineResourceAllocation::PipelineResourceAllocation(const HAL::ResourceFormat& format)
         : mResourceFormat{ format } {}
 
-    HAL::ResourceState PipelineResourceAllocation::GatherExpectedStates() const
+    void PipelineResourceAllocation::GatherExpectedStates()
     {
         HAL::ResourceState expectedStates = HAL::ResourceState::Common;
 
@@ -16,7 +16,9 @@ namespace PathFinder
             expectedStates |= perPassData.RequestedState;
         }
 
-        return expectedStates;
+        mExpectedStates = expectedStates;
+
+        mResourceFormat.UpdateExpectedUsageFlags(expectedStates);
     }
 
     const PipelineResourceAllocation::PassMetadata* PipelineResourceAllocation::GetMetadataForPass(Foundation::Name passName) const
