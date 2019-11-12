@@ -11,6 +11,7 @@ namespace PathFinder
     {
     public:
         ShadowsRenderPass();
+        ~ShadowsRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 

@@ -16,6 +16,7 @@ namespace PathFinder
     {
     public:
         GBufferRenderPass();
+        ~GBufferRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 

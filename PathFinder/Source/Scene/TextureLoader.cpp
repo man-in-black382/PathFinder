@@ -14,7 +14,7 @@ namespace PathFinder
     TextureLoader::TextureLoader(const std::filesystem::path& rootTexturePath, const HAL::Device* device, CopyDevice* copyDevice)
         : mRootPath{ rootTexturePath }, mDevice{ device }, mCopyDevice{ copyDevice } {}
 
-    std::unique_ptr<HAL::TextureResource> TextureLoader::Load(const std::string& relativeFilePath) const
+    std::shared_ptr<HAL::TextureResource> TextureLoader::Load(const std::string& relativeFilePath) const
     {
         std::filesystem::path fullPath = mRootPath;
         fullPath += relativeFilePath;
@@ -43,7 +43,7 @@ namespace PathFinder
 
         assert_format(textureInfo.num_layers == 1, "Texture array are not supported yet");
 
-        std::unique_ptr<HAL::TextureResource> texture = AllocateTexture(textureInfo);
+        std::shared_ptr<HAL::TextureResource> texture = AllocateTexture(textureInfo);
         HAL::ResourceFootprint textureFootprint{ *texture };
 
         auto uploadBuffer = std::make_shared<HAL::BufferResource<uint8_t>>(
@@ -78,7 +78,7 @@ namespace PathFinder
             }  
         }
 
-        mCopyDevice->QueueBufferToTextureCopy(uploadBuffer, *texture, textureFootprint);
+        mCopyDevice->QueueBufferToTextureCopy(uploadBuffer, texture, textureFootprint);
         texture->SetDebugName(fullPath.filename().string());
 
         input.close();
@@ -151,14 +151,14 @@ namespace PathFinder
         }
     }
 
-    std::unique_ptr<HAL::TextureResource> TextureLoader::AllocateTexture(const ddsktx_texture_info& textureInfo) const
+    std::shared_ptr<HAL::TextureResource> TextureLoader::AllocateTexture(const ddsktx_texture_info& textureInfo) const
     {
         HAL::ResourceFormat::FormatVariant format = ToResourceFormat(textureInfo.format);
         Geometry::Dimensions dimensions(textureInfo.width, textureInfo.height, textureInfo.depth);
         HAL::ResourceFormat::TextureKind kind = ToKind(textureInfo);
         HAL::ResourceFormat::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 0.0 };
 
-        return std::make_unique<HAL::TextureResource>(
+        return std::make_shared<HAL::TextureResource>(
             *mDevice, format, kind, dimensions, clearValue,
             HAL::ResourceState::CopyDestination,
             HAL::ResourceState::PixelShaderAccess | 

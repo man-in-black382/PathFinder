@@ -78,7 +78,7 @@ namespace PathFinder
         Foundation::Name stateTransitionPassName;
 
         // Build a list of passes this resource is scheduled for
-        for (const RenderPass* pass : mRenderPassGraph->ExecutionOrder())
+        for (const RenderPass* pass : mRenderPassGraph->DefaultPasses())
         {
             if (allocation->GetMetadataForPass(pass->Name()))
             {

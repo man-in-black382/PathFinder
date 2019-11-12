@@ -17,6 +17,7 @@ namespace PathFinder
     { 
     public: 
         ToneMappingRenderPass();
+        ~ToneMappingRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;

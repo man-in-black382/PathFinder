@@ -45,8 +45,6 @@ namespace HAL
         ResourceState mExpectedStates = ResourceState::Common;
 
     private:
-        ResourceFormat UpdateExpectedUsageFlags(const ResourceFormat& format, ResourceState expectedStates);
-
         uint64_t mTotalMemory = 0;
         uint64_t mResourceAlignment = 0;
         uint64_t mSubresourceCount = 0;

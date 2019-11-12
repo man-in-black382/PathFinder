@@ -81,7 +81,7 @@ namespace HAL
             _countof(arguments),                // number of compilation arguments
             nullptr, 0,                         // name/value defines and their count
             &reader,                            // handler for #include directives
-            result.GetAddressOf());
+            result.GetAddressOf()); 
 
         HRESULT hrCompilation;
         result->GetStatus(&hrCompilation);

@@ -16,11 +16,17 @@ namespace PathFinder
         uint32_t IndexOfPass(Foundation::Name passName) const;
 
     private:
-        std::list<RenderPass *> mExecutionOrder;
+        std::list<RenderPass*> mDefaultPasses;
+        std::list<RenderPass*> mOneTimePasses;
+        std::list<RenderPass*> mAllPasses;
 
     public:
-        inline const auto& ExecutionOrder() const { return mExecutionOrder; }
-        inline auto& ExecutionOrder() { return mExecutionOrder; }
+        inline const auto& DefaultPasses() const { return mDefaultPasses; }
+        inline auto& DefaultPasses() { return mDefaultPasses; }
+        inline const auto& OneTimePasses() const { return mOneTimePasses; }
+        inline auto& OneTimePasses() { return mOneTimePasses; }
+        inline const auto& AllPasses() const { return mAllPasses; }
+        inline auto& AllPasses() { return mAllPasses; }
     };
 
 }

@@ -23,6 +23,7 @@ namespace PathFinder
     { 
     public: 
         BlurRenderPass();
+        ~BlurRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;

@@ -17,7 +17,11 @@ namespace HAL
         mCapacity{ capacity },
         mPerElementAlignment{ perElementAlignment }
     {
-        ThrowIfFailed(mResource->Map(0, nullptr, (void**)& mMappedMemory));
+        // Upload heaps can be mapped persistently
+        if (heapType == CPUAccessibleHeapType::Upload)
+        {
+            ThrowIfFailed(mResource->Map(0, nullptr, (void**)& mMappedMemory));
+        }
     }
 
     template <class T>
@@ -68,6 +72,15 @@ namespace HAL
     uint64_t BufferResource<T>::PaddedElementSize(uint64_t alignment)
     {
         return (sizeof(T) + alignment - 1) & ~(alignment - 1);
+    }
+
+    template <class T>
+    void BufferResource<T>::Read(const ReadbackSession& session) const
+    {
+        const T* mappedMemory = nullptr;
+        ThrowIfFailed(mResource->Map(0, nullptr, (void**)& mappedMemory));
+        session(mappedMemory);
+        mResource->Unmap(0, nullptr);
     }
 
     template <class T>

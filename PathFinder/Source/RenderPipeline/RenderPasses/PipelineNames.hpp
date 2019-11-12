@@ -16,6 +16,7 @@ namespace PathFinder
 
     namespace PSONames
     {
+        inline Foundation::Name DisplacementDistanceMapGeneration{ "PSO_DistanceMapGeneration" };
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
         inline Foundation::Name GBuffer{ "PSO_GBuffer" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };

@@ -16,11 +16,12 @@ namespace PathFinder
         mDevice{ FetchDefaultDisplayAdapter() },
         mFrameFence{ mDevice },
         mAccelerationStructureFence{ mDevice },
-        mCopyDevice{ &mDevice },
-        mVertexStorage{ &mDevice, &mCopyDevice },
+        mStandardCopyDevice{ &mDevice },
+        mAssetPostprocessCopyDevice{ &mDevice },
+        mVertexStorage{ &mDevice, &mStandardCopyDevice },
         mDescriptorStorage{ &mDevice },
         mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight, mPassExecutionGraph },
-        mAssetResourceStorage{ &mDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
+        mAssetResourceStorage{ &mDevice, &mAssetPostprocessCopyDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
@@ -36,27 +37,49 @@ namespace PathFinder
         mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);
     }
 
-    void RenderEngine::PreRender()
+    void RenderEngine::ScheduleAndAllocatePipelineResources()
     {
-        for (auto passPtr : mPassExecutionGraph->ExecutionOrder())
+        // Schedule resources and states
+        for (auto passPtr : mPassExecutionGraph->AllPasses())
         {
             mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
             passPtr->SetupPipelineStates(&mPipelineStateCreator);
             passPtr->ScheduleResources(&mResourceScheduler);
         }
-
-        mVertexStorage.AllocateAndQueueBuffersForCopy();
+ 
         mPipelineResourceStorage.AllocateScheduledResources();
         mPipelineStateManager.CompileStates();
         mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.OneTimeResourceBarriers());
-        mCopyDevice.CopyResources();
+    }
+
+    void RenderEngine::ProcessAndTransferAssets()
+    {
+        // Allocate and transfer GPU memory, compile states, perform initial resource transitions
+        mVertexStorage.AllocateAndQueueBuffersForCopy();
+        mStandardCopyDevice.CopyResources();
+
+        // Run setup and asset-processing passes
+        RunRenderPasses(mPassExecutionGraph->OneTimePasses());
+
+        // Transition resources after asset-processing passes completed their work
+        mGraphicsDevice.CommandList().InsertBarriers(mAssetResourceStorage.AssetPostProcessingBarriers());
+        mGraphicsDevice.ExecuteCommands();
+        mFrameFence.IncreaseExpectedValue();
+        mGraphicsDevice.SignalFence(mFrameFence);
+
+        // Copy processed assets if needed
+        mAssetPostprocessCopyDevice.WaitFence(mFrameFence);
+        mAssetPostprocessCopyDevice.CopyResources();
+
+        // Unlock device before rendering starts
+        mGraphicsDevice.ResetCommandList();
 
         BuildBottomAccelerationStructures();
     }
 
     void RenderEngine::Render()
     {
-        if (mPassExecutionGraph->ExecutionOrder().empty()) return;
+        if (mPassExecutionGraph->DefaultPasses().empty()) return;
 
         mFrameFence.IncreaseExpectedValue();
 
@@ -75,13 +98,7 @@ namespace PathFinder
             HAL::ResourceTransitionBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer }
         );
 
-        for (auto passPtr : mPassExecutionGraph->ExecutionOrder())
-        {
-            mGraphicsDevice.SetCurrentRenderPass(passPtr);
-            mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
-            mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.ResourceBarriersForCurrentPass());
-            passPtr->Render(&mContext);
-        }
+        RunRenderPasses(mPassExecutionGraph->DefaultPasses());
 
         mGraphicsDevice.CommandList().InsertBarrier(
             HAL::ResourceTransitionBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer }
@@ -143,7 +160,7 @@ namespace PathFinder
             mAsyncComputeDevice.CommandList().BuildRaytracingAccelerationStructure(blas);
         }
 
-        mAsyncComputeDevice.CommandList().InsertBarriers(mVertexStorage.AccelerationStructureUABarriers());
+        mAsyncComputeDevice.CommandList().InsertBarriers(mVertexStorage.AccelerationStructureBarriers()); 
         mAsyncComputeDevice.ExecuteCommands();
         mAsyncComputeDevice.SignalFence(mAccelerationStructureFence);
         mAccelerationStructureFence.StallCurrentThreadUntilCompletion();
@@ -155,7 +172,7 @@ namespace PathFinder
         mAccelerationStructureFence.IncreaseExpectedValue();
         mAssetResourceStorage.AllocateTopAccelerationStructureIfNeeded();
         mAsyncComputeDevice.CommandList().BuildRaytracingAccelerationStructure(mAssetResourceStorage.TopAccelerationStructure());
-        mAsyncComputeDevice.CommandList().InsertBarriers(mAssetResourceStorage.TopAccelerationStructureUABarriers());
+        mAsyncComputeDevice.CommandList().InsertBarriers(mAssetResourceStorage.TopAccelerationStructureBarriers());
         mAsyncComputeDevice.ExecuteCommands();
         mAsyncComputeDevice.SignalFence(mAccelerationStructureFence);
     }
@@ -177,6 +194,18 @@ namespace PathFinder
         mScene->IterateMeshInstances(iterator);
 
         mAssetResourceStorage.AllocateTopAccelerationStructureIfNeeded();
+    }
+
+    void RenderEngine::RunRenderPasses(const std::list<RenderPass*>& passes)
+    {
+        for (auto passPtr : passes)
+        {
+            mGraphicsDevice.SetCurrentRenderPass(passPtr);
+            mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
+            mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.ResourceBarriersForCurrentPass());
+
+            passPtr->Render(&mContext);
+        }
     }
 
 }

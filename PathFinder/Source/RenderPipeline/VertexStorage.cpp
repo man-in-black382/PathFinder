@@ -59,7 +59,7 @@ namespace PathFinder
                 *mDevice, uploadBuffers.Vertices.size(), 1, HAL::CPUAccessibleHeapType::Upload);
 
             uploadVertexBuffer->Write(0, uploadBuffers.Vertices.data(), uploadBuffers.Vertices.size());
-            finalBuffers.VertexBuffer = mCopyDevice->QueueResourceCopyToDefaultHeap(uploadVertexBuffer);
+            finalBuffers.VertexBuffer = mCopyDevice->QueueResourceCopyToSystemMemory(uploadVertexBuffer);
             finalBuffers.VertexBufferDescriptor = std::make_unique<HAL::VertexBufferDescriptor>(*finalBuffers.VertexBuffer);
             uploadBuffers.Vertices.clear();
         }
@@ -70,7 +70,7 @@ namespace PathFinder
                 *mDevice, uploadBuffers.Indices.size(), 1, HAL::CPUAccessibleHeapType::Upload);
 
             uploadIndexBuffer->Write(0, uploadBuffers.Indices.data(), uploadBuffers.Indices.size());
-            finalBuffers.IndexBuffer = mCopyDevice->QueueResourceCopyToDefaultHeap(uploadIndexBuffer);
+            finalBuffers.IndexBuffer = mCopyDevice->QueueResourceCopyToSystemMemory(uploadIndexBuffer);
             finalBuffers.IndexBufferDescriptor = std::make_unique<HAL::IndexBufferDescriptor>(*finalBuffers.IndexBuffer, HAL::ResourceFormat::Color::R32_Unsigned);
             uploadBuffers.Indices.clear();
         }
@@ -116,7 +116,7 @@ namespace PathFinder
         }
     }
 
-    const HAL::ResourceBarrierCollection& VertexStorage::AccelerationStructureUABarriers() const
+    const HAL::ResourceBarrierCollection& VertexStorage::AccelerationStructureBarriers() const
     {
         return mAccelerationStructureBarriers;
     }

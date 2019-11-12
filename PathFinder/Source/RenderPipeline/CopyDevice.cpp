@@ -10,11 +10,9 @@ namespace PathFinder
         mCommandQueue{ *device },
         mFence{ *mDevice } {}
  
-    std::unique_ptr<HAL::TextureResource> CopyDevice::QueueResourceCopyToDefaultHeap(std::shared_ptr<HAL::TextureResource> texture)
+    std::shared_ptr<HAL::TextureResource> CopyDevice::QueueResourceCopyToSystemMemory(std::shared_ptr<HAL::TextureResource> texture)
     {
-        assert_format(IsCopyableState(texture->InitialStates()), "Resource must be in a copyable state");
-
-        auto emptyClone = std::make_unique<HAL::TextureResource>(
+        auto emptyClone = std::make_shared<HAL::TextureResource>(
             *mDevice, texture->Format(), texture->Kind(), texture->Dimensions(),
             texture->OptimizedClearValue(), HAL::ResourceState::CopyDestination, texture->ExpectedStates()
         );
@@ -23,8 +21,28 @@ namespace PathFinder
 
         // Hold in RAM until actual copy is performed
         mResourcesToCopy.push_back(texture);
+        mResourcesToCopy.push_back(emptyClone);
 
-        return std::move(emptyClone);
+        return emptyClone;
+    }
+
+    std::shared_ptr<HAL::BufferResource<uint8_t>> CopyDevice::QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::TextureResource> texture)
+    {
+        HAL::ResourceFootprint textureFootprint{ *texture };
+
+        auto emptyClone = std::make_shared<HAL::BufferResource<uint8_t>>(
+            *mDevice, texture->TotalMemory(), 1, HAL::CPUAccessibleHeapType::Readback);
+
+        for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())
+        {
+            mCommandList.CopyTextureToBuffer(*texture, *emptyClone, subresourceFootprint);
+        }
+
+        // Hold in RAM until actual copy is performed
+        mResourcesToCopy.push_back(texture);
+        mResourcesToCopy.push_back(emptyClone);
+
+        return emptyClone;
     }
 
     void CopyDevice::CopyResources()
@@ -40,11 +58,14 @@ namespace PathFinder
         mResourcesToCopy.clear();
     }
 
-    bool CopyDevice::IsCopyableState(HAL::ResourceState state)
+    void CopyDevice::WaitFence(HAL::Fence& fence)
     {
-        return EnumMaskBitSet(state, HAL::ResourceState::Common) ||
-            EnumMaskBitSet(state, HAL::ResourceState::GenericRead) ||
-            EnumMaskBitSet(state, HAL::ResourceState::CopySource);
+        mCommandQueue.WaitFence(fence);
+    }
+
+    void CopyDevice::SignalFence(HAL::Fence& fence)
+    {
+        mCommandQueue.SignalFence(fence);
     }
 
 }

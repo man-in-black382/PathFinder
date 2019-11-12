@@ -7,19 +7,31 @@ namespace PathFinder
 
     void RenderPassExecutionGraph::AddPass(RenderPass* pass)
     {
-        mExecutionOrder.push_back(pass);
+        switch (pass->PurposeInPipeline())
+        {
+        case RenderPass::Purpose::Default:
+            mDefaultPasses.push_back(pass); 
+            break;
+
+        case RenderPass::Purpose::Setup:
+        case RenderPass::Purpose::AssetProcessing:
+            mOneTimePasses.push_back(pass);
+            break;
+        }     
+
+        mAllPasses.push_back(pass);
     }
 
     uint32_t RenderPassExecutionGraph::IndexOfPass(const RenderPass* pass) const
     {
-        auto it = std::find(mExecutionOrder.cbegin(), mExecutionOrder.cend(), pass);
-        return std::distance(mExecutionOrder.cbegin(), it);
+        auto it = std::find(mDefaultPasses.cbegin(), mDefaultPasses.cend(), pass);
+        return std::distance(mDefaultPasses.cbegin(), it);
     }
 
     uint32_t RenderPassExecutionGraph::IndexOfPass(Foundation::Name passName) const
     {
-        auto it = std::find_if(mExecutionOrder.cbegin(), mExecutionOrder.cend(), [&passName](auto pass) { return pass->Name() == passName; });
-        return std::distance(mExecutionOrder.cbegin(), it);
+        auto it = std::find_if(mDefaultPasses.cbegin(), mDefaultPasses.cend(), [&passName](auto pass) { return pass->Name() == passName; });
+        return std::distance(mDefaultPasses.cbegin(), it);
     }
 
 }

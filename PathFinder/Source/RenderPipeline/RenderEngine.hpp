@@ -36,7 +36,8 @@ namespace PathFinder
         RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath,
             Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
 
-        void PreRender();
+        void ScheduleAndAllocatePipelineResources();
+        void ProcessAndTransferAssets();
         void Render();
 
     private:
@@ -46,6 +47,8 @@ namespace PathFinder
         void BuildTopAccelerationStructures();
         void UploadCommonRootConstants();
         void UploadMeshInstanceData();
+
+        void RunRenderPasses(const std::list<RenderPass*>& passes);
 
         const RenderPassExecutionGraph* mPassExecutionGraph;
 
@@ -59,7 +62,13 @@ namespace PathFinder
         HAL::Fence mFrameFence;
         HAL::Fence mAccelerationStructureFence;
 
-        CopyDevice mCopyDevice;
+        // Device to copy everything non-processable at the beginning of the frame
+        CopyDevice mStandardCopyDevice;
+
+        // Device to copy resources that first need to be preprocessed
+        // by asset-preprocessing render passes
+        CopyDevice mAssetPostprocessCopyDevice;
+
         VertexStorage mVertexStorage;
         ResourceDescriptorStorage mDescriptorStorage;
         PipelineResourceStorage mPipelineResourceStorage;
@@ -81,7 +90,7 @@ namespace PathFinder
     public:
         inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }
         inline AssetResourceStorage& AssetGPUStorage() { return mAssetResourceStorage; }
-        inline CopyDevice& ResourceCopyDevice() { return mCopyDevice; }
+        inline CopyDevice& StandardCopyDevice() { return mStandardCopyDevice; }
         inline HAL::Device& Device() { return mDevice; }
     };
 

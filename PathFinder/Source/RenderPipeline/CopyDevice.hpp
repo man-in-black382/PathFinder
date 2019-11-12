@@ -13,15 +13,19 @@ namespace PathFinder
     public:
         CopyDevice(const HAL::Device* device);
 
-        template <class T> void QueueBufferToTextureCopy(std::shared_ptr<HAL::BufferResource<T>> buffer, const HAL::TextureResource& texture, const HAL::ResourceFootprint& footprint);
-        template <class T> std::unique_ptr<HAL::BufferResource<T>> QueueResourceCopyToDefaultHeap(std::shared_ptr<HAL::BufferResource<T>> buffer);
-        std::unique_ptr<HAL::TextureResource> QueueResourceCopyToDefaultHeap(std::shared_ptr<HAL::TextureResource> texture);
+        template <class T> void QueueBufferToTextureCopy(std::shared_ptr<HAL::BufferResource<T>> buffer, std::shared_ptr<HAL::TextureResource> texture, const HAL::ResourceFootprint& footprint);
+        
+        template <class T> std::shared_ptr<HAL::BufferResource<T>> QueueResourceCopyToSystemMemory(std::shared_ptr<HAL::BufferResource<T>> buffer);
+        std::shared_ptr<HAL::TextureResource> QueueResourceCopyToSystemMemory(std::shared_ptr<HAL::TextureResource> texture);
+
+        template <class T> std::shared_ptr<HAL::BufferResource<T>> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::BufferResource<T>> buffer);
+        std::shared_ptr<HAL::BufferResource<uint8_t>> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::TextureResource> texture);
         
         void CopyResources();
+        void WaitFence(HAL::Fence& fence);
+        void SignalFence(HAL::Fence& fence);
 
     private:
-        bool IsCopyableState(HAL::ResourceState state);
-
         const HAL::Device* mDevice;
         HAL::CopyCommandAllocator mCommandAllocator;
         HAL::CopyCommandList mCommandList;

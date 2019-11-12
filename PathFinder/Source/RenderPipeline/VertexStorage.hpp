@@ -34,7 +34,9 @@ namespace PathFinder
 
         const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const;
         const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const;
-        const HAL::ResourceBarrierCollection& AccelerationStructureUABarriers() const;
+
+        // Barriers to wait for AS build completion
+        const HAL::ResourceBarrierCollection& AccelerationStructureBarriers() const;
 
         void AllocateAndQueueBuffersForCopy();
 
@@ -51,8 +53,8 @@ namespace PathFinder
         template <class Vertex>
         struct FinalBufferPackage
         {
-            std::unique_ptr<HAL::BufferResource<Vertex>> VertexBuffer;
-            std::unique_ptr<HAL::BufferResource<uint32_t>> IndexBuffer;
+            std::shared_ptr<HAL::BufferResource<Vertex>> VertexBuffer;
+            std::shared_ptr<HAL::BufferResource<uint32_t>> IndexBuffer;
             std::unique_ptr<HAL::VertexBufferDescriptor> VertexBufferDescriptor;
             std::unique_ptr<HAL::IndexBufferDescriptor> IndexBufferDescriptor;
         };

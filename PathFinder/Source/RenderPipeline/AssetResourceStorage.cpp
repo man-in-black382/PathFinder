@@ -1,12 +1,15 @@
 #include "AssetResourceStorage.hpp"
 
 #include "../Foundation/Assert.hpp"
+#include "../HardwareAbstractionLayer/ResourceFootprint.hpp"
 
 namespace PathFinder
 {
 
-    AssetResourceStorage::AssetResourceStorage(const HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, uint8_t simultaneousFramesInFlight)
-        : mDescriptorStorage{ descriptorStorage }, 
+    AssetResourceStorage::AssetResourceStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage, uint8_t simultaneousFramesInFlight)
+        : mDevice{ device },
+        mCopyDevice{ copyDevice },
+        mDescriptorStorage{ descriptorStorage }, 
         mInstanceTable{ *device, 1024, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
         mTopAccelerationStructure{ device } {}
 
@@ -37,10 +40,37 @@ namespace PathFinder
         mTopAccelerationStructureBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ mTopAccelerationStructure.FinalBuffer() });
     }
 
-    GPUDescriptorIndex AssetResourceStorage::StoreAsset(std::unique_ptr<HAL::TextureResource> resource)
+    GPUDescriptorIndex AssetResourceStorage::StoreAsset(std::shared_ptr<HAL::TextureResource> resource)
     {
-        mAssets.push_back(std::move(resource));
+        mAssets.push_back(resource);
         return mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mAssets.back().get()).IndexInHeapRange();
+    }
+
+    PreprocessableAsset AssetResourceStorage::StoreAndPreprocessAsset(std::unique_ptr<HAL::TextureResource> asset, bool queueContentReadback)
+    {
+        std::shared_ptr<HAL::TextureResource> sharedAsset = std::move(asset);
+        
+        mAssets.push_back(sharedAsset);
+        
+        auto srIndex = mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mAssets.back().get()).IndexInHeapRange();
+        auto uaIndex = mDescriptorStorage->EmplaceUADescriptorIfNeeded(mAssets.back().get()).IndexInHeapRange();
+
+        std::shared_ptr<HAL::BufferResource<uint8_t>> readBackBuffer = nullptr;
+
+        if (queueContentReadback)
+        {
+            readBackBuffer = mCopyDevice->QueueResourceCopyToReadbackMemory(sharedAsset);
+        }
+
+        mAssetPostProcessingBarriers.AddBarrier(
+            HAL::ResourceTransitionBarrier{
+                sharedAsset->InitialStates(),
+                HAL::ResourceState::Common, // Prepare to be used on copy queue
+                sharedAsset.get()
+            }
+        );
+
+        return { srIndex, uaIndex, std::move(readBackBuffer) };
     }
 
     GPUInstanceIndex AssetResourceStorage::StoreMeshInstance(const MeshInstance& instance, const HAL::RayTracingBottomAccelerationStructure& blas)

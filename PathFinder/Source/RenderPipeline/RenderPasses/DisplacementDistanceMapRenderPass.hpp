@@ -6,17 +6,17 @@
 
 namespace PathFinder
 {
-
-    struct BackBufferOutputPassData
-    {
-        uint32_t SourceTextureIndex;
-    };
      
-    class BackBufferOutputPass : public RenderPass 
+    struct DisplacementDistanceMapGenerationCBContent
+    {
+
+    };
+
+    class DisplacementDistanceMapRenderPass : public RenderPass 
     {
     public:
-        BackBufferOutputPass();
-        ~BackBufferOutputPass() = default;
+        DisplacementDistanceMapRenderPass();
+        ~DisplacementDistanceMapRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 

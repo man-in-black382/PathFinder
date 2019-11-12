@@ -211,6 +211,11 @@ namespace PathFinder
         mCommandQueue.SignalFence(fence);
     }
 
+    void GraphicsDevice::ResetCommandList()
+    {
+        mRingCommandList.CurrentCommandList().Reset(mRingCommandList.CurrentCommandAllocator());
+    }
+
     void GraphicsDevice::BeginFrame(uint64_t frameFenceValue)
     {
         mRingCommandList.PrepareCommandListForNewFrame(frameFenceValue);

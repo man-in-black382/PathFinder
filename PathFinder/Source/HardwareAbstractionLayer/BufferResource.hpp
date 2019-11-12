@@ -2,6 +2,8 @@
 
 #include "Resource.hpp"
 
+#include <functional>
+
 namespace HAL
 {
 
@@ -10,11 +12,14 @@ namespace HAL
     {
     public:
         using Resource::Resource;
+        using ReadbackSession = std::function<void(const T*)>;
 
         BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
         BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType);
 
         ~BufferResource();
+
+        void Read(const ReadbackSession& session) const;
 
         virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
         virtual T* At(uint64_t index);

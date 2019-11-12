@@ -66,6 +66,9 @@ namespace HAL
 
         template <class T>
         void CopyBufferToTexture(const BufferResource<T>& buffer, const TextureResource& texture, const SubresourceFootprint& footprint);
+
+        template <class T>
+        void CopyTextureToBuffer(const TextureResource& texture, const BufferResource<T>& buffer, const SubresourceFootprint& footprint);
     };
 
 

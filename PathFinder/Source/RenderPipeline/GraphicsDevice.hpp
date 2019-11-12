@@ -51,7 +51,7 @@ namespace PathFinder
         void WaitFence(HAL::Fence& fence);
         void ExecuteCommands();
         void SignalFence(HAL::Fence& fence);
-
+        void ResetCommandList();
         void BeginFrame(uint64_t frameFenceValue);
         void EndFrame(uint64_t completedFrameFenceValue);
 

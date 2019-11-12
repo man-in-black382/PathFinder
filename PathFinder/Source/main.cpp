@@ -17,6 +17,7 @@
 #include "RenderPipeline/RenderPasses/ShadowsRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DeferredLightingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 
 #include "../resource.h"
 
@@ -498,6 +499,7 @@ int main(int argc, char** argv)
     std::filesystem::path executablePath{ argv[0] };
     std::filesystem::path executableFolder = executablePath.parent_path();
 
+    auto displacementDistanceMapGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
     auto gBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
     auto deferredLightingPass = std::make_unique<PathFinder::DeferredLightingRenderPass>();
     auto shadowsPass = std::make_unique<PathFinder::ShadowsRenderPass>();
@@ -506,6 +508,7 @@ int main(int argc, char** argv)
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
 
     PathFinder::RenderPassExecutionGraph renderPassGraph;
+    renderPassGraph.AddPass(displacementDistanceMapGenerationPass.get());
     renderPassGraph.AddPass(gBufferPass.get());
     renderPassGraph.AddPass(deferredLightingPass.get());
     renderPassGraph.AddPass(toneMappingPass.get());
@@ -516,10 +519,11 @@ int main(int argc, char** argv)
     PathFinder::Scene scene;
     PathFinder::RenderEngine engine{ hwnd, executableFolder, &scene, &renderPassGraph };
     PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };  
-    PathFinder::MaterialLoader materialLoader{ executableFolder / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage(), &engine.ResourceCopyDevice() };
+    PathFinder::MaterialLoader materialLoader{ executableFolder / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage(), &engine.StandardCopyDevice() };
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
-        "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds", "/Metal07/Metal07_met.dds"));
+        "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
+        "/Metal07/Metal07_met.dds", "/Metal07/Metal07_disp.dds"));
 
     PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("sphere.obj").back()));
     PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
@@ -531,7 +535,10 @@ int main(int argc, char** argv)
     camera.LookAt({ 0.f, 0.f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
 
-    engine.PreRender();
+    engine.ScheduleAndAllocatePipelineResources();
+    engine.ProcessAndTransferAssets();
+
+    materialLoader.SerializePostprocessedTextures();
 
     // Main loop
     MSG msg;
