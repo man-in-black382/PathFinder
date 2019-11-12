@@ -46,7 +46,7 @@ namespace PathFinder
         return mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mAssets.back().get()).IndexInHeapRange();
     }
 
-    PreprocessableAsset AssetResourceStorage::StoreAndPreprocessAsset(std::unique_ptr<HAL::TextureResource> asset, bool queueContentReadback)
+    PreprocessableAsset AssetResourceStorage::StorePreprocessableAsset(std::unique_ptr<HAL::TextureResource> asset, bool queueContentReadback)
     {
         std::shared_ptr<HAL::TextureResource> sharedAsset = std::move(asset);
         

@@ -49,7 +49,7 @@ namespace PathFinder
 
         // Store asset that is required to be processed by an asset-processing render pass.
         // When processing is done an optional transfer to a read-back buffer can be performed
-        PreprocessableAsset StoreAndPreprocessAsset(std::unique_ptr<HAL::TextureResource> resource, bool queueContentReadback);
+        PreprocessableAsset StorePreprocessableAsset(std::unique_ptr<HAL::TextureResource> resource, bool queueContentReadback);
 
         GPUInstanceIndex StoreMeshInstance(const MeshInstance& instance, const HAL::RayTracingBottomAccelerationStructure& blas);
 

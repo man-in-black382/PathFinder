@@ -360,6 +360,9 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1982,6 +1985,9 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2450,6 +2456,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\HardwareAbstractionLayer\RingCommandList.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\ResourceScheduler.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

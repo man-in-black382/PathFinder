@@ -37,16 +37,28 @@ namespace PathFinder
         {
             material.DisplacementMapSRVIndex = mAssetStorage->StoreAsset(texture);
 
-            auto distanceMap = std::make_unique<HAL::TextureResource>(
-                *mDevice, HAL::ResourceFormat::Color::RGBA16_Float, HAL::ResourceFormat::TextureKind::Texture3D,
-                Geometry::Dimensions{ 128, 128, 8 }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 },
-                HAL::ResourceState::UnorderedAccess,
-                HAL::ResourceState::CopySource | HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess);
+            if (distanceMapRelativePath; auto texture = mTextureLoader.Load(*distanceMapRelativePath))
+            {
+                // Load from file
+            }
+            else {
+                auto iStates = HAL::ResourceState::UnorderedAccess;
+                auto eStates = HAL::ResourceState::CopySource | HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
-            auto distanceMapPreprocessableAsset = mAssetStorage->StoreAndPreprocessAsset(std::move(distanceMap), true);
+                auto distanceIndirectionMap = std::make_unique<HAL::TextureResource>(
+                    *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture2D,
+                    Geometry::Dimensions{ 128, 128 }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
 
-            material.DistanceMapSRVIndex = distanceMapPreprocessableAsset.SRIndex;
-            material.DistanceMapUAVIndex = distanceMapPreprocessableAsset.UAIndex;
+                auto distanceAtlas = std::make_unique<HAL::TextureResource>(
+                    *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture3D,
+                    Geometry::Dimensions{ 128, 128, 8 }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
+
+                auto distanceIndirectionAsset = mAssetStorage->StorePreprocessableAsset(std::move(distanceIndirectionMap), true);
+                auto distanceAtlasAsset = mAssetStorage->StorePreprocessableAsset(std::move(distanceAtlas), true);
+
+           /*     material.DistanceMapSRVIndex = indirectionMapAsset.SRIndex;
+                material.DistanceMapUAVIndex = indirectionMapAsset.UAIndex;*/
+            }
         }
 
         if (AOMapRelativePath; auto texture = mTextureLoader.Load(*AOMapRelativePath)) {

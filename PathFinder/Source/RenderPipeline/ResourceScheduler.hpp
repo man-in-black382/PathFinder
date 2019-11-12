@@ -8,6 +8,11 @@ namespace PathFinder
     class ResourceScheduler
     {
     public:
+        enum class BufferReadContext
+        {
+            Constant, ShaderResource
+        };
+
         struct NewTextureProperties
         {
             NewTextureProperties(
@@ -39,21 +44,53 @@ namespace PathFinder
             std::optional<Geometry::Dimensions> Dimensions;
         };
 
+        template <class T>
+        struct NewBufferProperties
+        {
+            NewBufferProperties(uint64_t capacity = 1, uint64_t perElementAlignment = 256)
+                : Capacity{ capacity }, PerElementAlignment{ perElementAlignment } {}
+
+            uint64_t Capacity;
+            uint64_t PerElementAlignment;
+        };
+
+        struct NewByteBufferProperties : public NewBufferProperties<uint8_t> {};
+
         ResourceScheduler(PipelineResourceStorage* manager, const RenderSurfaceDescription& defaultRenderSurface);
 
         template <class BufferDataT>
         void WillUseRootConstantBuffer();
 
+        // Allocates new render target texture (Write Only)
         void NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt);
+
+        // Allocates new depth-stencil texture (Write Only)
         void NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties = std::nullopt); 
+
+        // Allocates new texture to be accessed as Unordered Access resource (Read/Write)
         void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 
-        void NewBuffer(); // TODO: Implement buffer API (RWStructuredBuffer)
+
+        // Indicates that a previously created render target will be used as a render target in the scheduling pass (Write Only)
         void UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt);
+
+        // Indicates that a previously created depth-stencil texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
         void UseDepthStencil(Foundation::Name resourceName); 
+
+        // Read any previously created texture as a Shader Resource (Read Only)
         void ReadTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt); 
-        void ReadBuffer(); // TODO: Implement buffer API (StructuredBuffer)
+
+        // Access a previously created texture as an Unordered Access resource (Read/Write)
         void ReadWriteTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt);
-        void ReadWriteBuffer(); // TODO: Implement buffer API (RWStructuredBuffer)
+
+        // Allocates new buffer to be accessed as Unordered Access resource (Read/Write)
+        template <class T> 
+        void NewBuffer(Foundation::Name resourceName, const NewBufferProperties<T>& bufferProperties = NewByteBufferProperties{ 1, 1 });
+
+        // Read any previously created buffer either as Constant or Structured buffer (Read Only)
+        void ReadBuffer(Foundation::Name resourceName, BufferReadContext readContext); 
+
+        // Access a previously created buffer as an Unordered Access Structured buffer (Read/Write)
+        void ReadWriteBuffer(Foundation::Name resourceName);
 
     private:
         NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties);
@@ -65,10 +102,6 @@ namespace PathFinder
         RenderSurfaceDescription mDefaultRenderSurfaceDesc;
     };
 
-    template <class BufferDataT>
-    void ResourceScheduler::WillUseRootConstantBuffer()
-    {
-        mResourceStorage->AllocateRootConstantBufferIfNeeded<BufferDataT>();
-    }
-
 }
+
+#include "ResourceScheduler.inl"

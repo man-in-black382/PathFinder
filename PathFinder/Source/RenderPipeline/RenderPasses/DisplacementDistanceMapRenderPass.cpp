@@ -8,9 +8,15 @@ namespace PathFinder
 
     void DisplacementDistanceMapRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
+        HAL::RootSignature signature = stateCreator->CloneBaseRootSignature();
+        signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 0, 0 }); // UAV Counter | u0 - s0
+
+        stateCreator->StoreRootSignature(RootSignatureNames::DisplacementDistanceMapGeneration, std::move(signature));
+
         stateCreator->CreateComputeState(PSONames::DisplacementDistanceMapGeneration, [](ComputeStateProxy& state)
         {
             state.ShaderFileNames.ComputeShaderFileName = L"DisplacementDistanceMapGenerationRenderPass.hlsl";
+            state.RootSignatureName = RootSignatureNames::DisplacementDistanceMapGeneration;
         });
     }
      

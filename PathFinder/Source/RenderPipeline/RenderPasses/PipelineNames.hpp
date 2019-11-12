@@ -7,6 +7,7 @@ namespace PathFinder
 
     namespace ResourceNames
     {
+        inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
         inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
         inline Foundation::Name BlurResult{ "Resource_BlurResult" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
@@ -27,9 +28,9 @@ namespace PathFinder
    
     namespace RootSignatureNames
     {
-        inline Foundation::Name Universal{ "Universal_Root_Sig" }; 
         inline Foundation::Name GBuffer{ "GBuffer_Root_Sig" };
         inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
+        inline Foundation::Name DisplacementDistanceMapGeneration{ "Distance_Map_Generation_Root_Sig" };
     }
 
 }

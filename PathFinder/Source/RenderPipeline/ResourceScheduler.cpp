@@ -92,11 +92,6 @@ namespace PathFinder
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
-    void ResourceScheduler::NewBuffer()
-    {
-
-    }
-
     void ResourceScheduler::UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)
     {
         EnsureSingleSchedulingRequestForCurrentPass(resourceName);
@@ -163,11 +158,6 @@ namespace PathFinder
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
-    void ResourceScheduler::ReadBuffer()
-    {
-
-    }
-
     void ResourceScheduler::ReadWriteTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)
     {
         EnsureSingleSchedulingRequestForCurrentPass(resourceName);
@@ -189,7 +179,12 @@ namespace PathFinder
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
-    void ResourceScheduler::ReadWriteBuffer()
+    void ResourceScheduler::ReadBuffer(Foundation::Name resourceName, BufferReadContext readContext)
+    {
+
+    }
+
+    void ResourceScheduler::ReadWriteBuffer(Foundation::Name resourceName)
     {
 
     }

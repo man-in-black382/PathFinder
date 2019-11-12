@@ -14,6 +14,9 @@ namespace PathFinder
             break;
 
         case RenderPass::Purpose::Setup:
+            mOneTimePasses.push_front(pass);
+            break;
+
         case RenderPass::Purpose::AssetProcessing:
             mOneTimePasses.push_back(pass);
             break;
