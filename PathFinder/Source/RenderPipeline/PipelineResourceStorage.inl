@@ -49,48 +49,25 @@ namespace PathFinder
         {
             HAL::Heap* heap = mBufferHeap.get();
 
-            auto buffer = std::make_unique<HAL::BufferResource<BufferDataT>>(
-                *mDevice, *heap, allocation.AliasingInfo.HeapOffset, capacity, 
-                perElementAlignment, allocation.InitialStates(), allocation.ExpectedStates()
+            // Store as byte buffer and alight manually
+            auto stride = Foundation::MemoryUtils::Align(sizeof(BufferDataT), 256);
+            auto bufferSize = stride * capacity;
+
+            auto buffer = std::make_unique<HAL::BufferResource<uint8_t>>(
+                *mDevice, *heap, allocation.AliasingInfo.HeapOffset, bufferSize, 1,
+                allocation.InitialStates(), allocation.ExpectedStates()
             );
 
             buffer->SetDebugName(resourceName.ToString());
 
-            PipelineResource newResource;
-            CreateDescriptors(resourceName, newResource, allocation, buffer.get());
+            BufferPipelineResource newResource;
+            CreateDescriptors(newResource, allocation, buffer.get(), stride);
 
             newResource.Resource = std::move(buffer);
-            mPipelineResources[resourceName] = std::move(newResource);
+            mPipelineBufferResources[resourceName] = std::move(newResource);
         };
 
         return &allocation;
-    }
-
-    template <class BufferDataT>
-    void PathFinder::PipelineResourceStorage::CreateDescriptors(ResourceName resourceName, PipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::BufferResource<BufferDataT>* buffer)
-    {
-        for (const auto& [passName, passMetadata] : allocator.AllPassesMetadata())
-        {
-            PipelineResource::PassMetadata& newResourcePerPassData = resource.AllocateMetadateForPass(passName);
-
-            if (passMetadata.CreateBufferCBDescriptor)
-            {
-                newResourcePerPassData.IsCBDescriptorRequested = true;
-                mDescriptorStorage->EmplaceCBDescriptorIfNeeded(buffer);
-            }
-
-            if (passMetadata.CreateBufferSRDescriptor)
-            {
-                newResourcePerPassData.IsSRDescriptorRequested = true;
-                mDescriptorStorage->EmplaceSRDescriptorIfNeeded(buffer);
-            }
-
-            if (passMetadata.CreateBufferUADescriptor)
-            {
-                newResourcePerPassData.IsUADescriptorRequested = true;
-                mDescriptorStorage->EmplaceUADescriptorIfNeeded(buffer);
-            }
-        }
     }
 
 }

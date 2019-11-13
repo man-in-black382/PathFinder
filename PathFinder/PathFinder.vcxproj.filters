@@ -333,9 +333,6 @@
     <ClCompile Include="Source\RenderPipeline\PipelineResourceAllocation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\PipelineResource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -361,6 +358,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1907,9 +1907,6 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\GraphicAPIObject.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\GraphicCommandRecorder.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1986,6 +1983,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\GPUCommandRecorder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2462,6 +2462,15 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\ResourceDescriptorStorage.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\PipelineResource.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\GPUCommandRecorder.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\GraphicsDevice.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -1,18 +1,27 @@
 #pragma once
 
-#include "GraphicCommandRecorder.hpp"
 #include "RenderSurfaceDescription.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
 #include "VertexStorage.hpp"
 #include "AssetResourceStorage.hpp"
+#include "VertexLayouts.hpp"
+#include "VertexStorageLocation.hpp"
+#include "DrawablePrimitive.hpp"
 
-#include <../HardwareAbstractionLayer/RingCommandList.hpp>
+#include "../Foundation/Name.hpp"
+#include "../Foundation/Color.hpp"
+#include "../Geometry/Dimensions.hpp"
+#include "../HardwareAbstractionLayer/Viewport.hpp"
+#include "../HardwareAbstractionLayer/ShaderRegister.hpp"
+#include "../HardwareAbstractionLayer/Resource.hpp"
+#include "../HardwareAbstractionLayer/RingCommandList.hpp"
+#include "../HardwareAbstractionLayer/RenderTarget.hpp"
 
 namespace PathFinder
 {
 
-    class GraphicsDevice : public GraphicCommandRecorder
+    class GraphicsDevice
     {
     public:
         GraphicsDevice(
@@ -26,27 +35,26 @@ namespace PathFinder
             uint8_t simultaneousFramesInFlight
         );
 
-        virtual void SetRenderTarget(Foundation::Name resourceName) override;
-        virtual void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName = std::nullopt) override;
-        virtual void SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName) override;
-        virtual void ClearBackBuffer(const Foundation::Color& color) override;
-        virtual void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color) override;
-        virtual void ClearDepth(Foundation::Name resourceName, float depthValue) override;
-        virtual void ApplyPipelineState(Foundation::Name psoName) override;
-        virtual void UseVertexBufferOfLayout(VertexLayout layout) override;
-        virtual void SetViewport(const HAL::Viewport& viewport) override;
-        virtual void Draw(uint32_t vertexCount, uint32_t vertexStart) override;
-        virtual void DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount) override;
-        virtual void DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart) override;
-        virtual void DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount) override;
-        virtual void Draw(const VertexStorageLocation& vertexStorageLocation) override;
-        virtual void Draw(const DrawablePrimitive& primitive) override;
-        virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) override;
+        void SetRenderTarget(Foundation::Name resourceName);
+        void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName = std::nullopt);
+        void SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName);
+        void ClearBackBuffer(const Foundation::Color& color);
+        void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color);
+        void ClearDepth(Foundation::Name resourceName, float depthValue);
+        void ApplyPipelineState(Foundation::Name psoName);
+        void SetViewport(const HAL::Viewport& viewport);
+        void Draw(uint32_t vertexCount, uint32_t vertexStart);
+        void DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount);
+        void DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart);
+        void DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount);
+        void Draw(const VertexStorageLocation& vertexStorageLocation);
+        void Draw(const DrawablePrimitive& primitive);
+        void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
 
-        virtual void BindMeshInstanceTableStructuredBuffer(uint16_t shaderRegister, uint16_t registerSpace = 0) override;
-        virtual void BindSceneRayTracingAccelerationStructure(uint16_t shaderRegister, uint16_t registerSpace = 0) override;
-        virtual void BindUnifiedVertexBufferOfLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace = 0) override;
-        virtual void BindUnifiedIndexBufferForVertexLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace = 0) override;
+        void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        
+        template <class T>
+        void BindExternalBuffer(const HAL::BufferResource<T>& resource, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         void WaitFence(HAL::Fence& fence);
         void ExecuteCommands();
@@ -85,3 +93,5 @@ namespace PathFinder
     };
 
 }
+
+#include "GraphicsDevice.inl"

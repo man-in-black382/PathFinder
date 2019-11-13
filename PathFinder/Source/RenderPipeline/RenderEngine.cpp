@@ -30,7 +30,8 @@ namespace PathFinder
         mPipelineStateCreator{ &mPipelineStateManager, mDefaultRenderSurface },
         mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, &mAssetResourceStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mAsyncComputeDevice{ &mDevice, mSimultaneousFramesInFlight },
-        mContext{ scene, &mGraphicsDevice, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
+        mCommandRecorder{ &mGraphicsDevice },
+        mContext{ scene, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
     {

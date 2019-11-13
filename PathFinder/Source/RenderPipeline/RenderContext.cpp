@@ -3,7 +3,7 @@
 namespace PathFinder
 {
 
-    RenderContext::RenderContext(const Scene* scene, GraphicCommandRecorder* graphicCommandRecorder, 
+    RenderContext::RenderContext(const Scene* scene, GPUCommandRecorder* graphicCommandRecorder, 
         RootConstantsUpdater* rootConstantsUpdater, ResourceProvider* resourceProvider,
         const RenderSurfaceDescription& defaultRenderSurface)
         : 

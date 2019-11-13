@@ -40,8 +40,8 @@ namespace PathFinder
         context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::GBufferRT0, ResourceNames::GBufferDepthStencil);
         context->GetCommandRecorder()->ClearBackBuffer(Foundation::Color::Gray());
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
-        context->GetCommandRecorder()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
-        context->GetCommandRecorder()->BindMeshInstanceTableStructuredBuffer(0);
+        //context->GetCommandRecorder()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
+        //context->GetCommandRecorder()->BindMeshInstanceTableStructuredBuffer(0);
 
         GBufferCBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<GBufferCBContent>();
 

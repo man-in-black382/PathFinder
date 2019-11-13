@@ -26,6 +26,7 @@
 #include "PipelineStateCreator.hpp"
 #include "RenderPassExecutionGraph.hpp"
 #include "CopyDevice.hpp"
+#include "GPUCommandRecorder.hpp"
 
 namespace PathFinder
 {
@@ -81,6 +82,7 @@ namespace PathFinder
         PipelineStateCreator mPipelineStateCreator;
         GraphicsDevice mGraphicsDevice;
         AsyncComputeDevice mAsyncComputeDevice;
+        GPUCommandRecorder mCommandRecorder;
         RenderContext mContext;  
 
         HAL::SwapChain mSwapChain;

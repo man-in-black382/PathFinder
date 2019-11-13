@@ -17,7 +17,11 @@ namespace HAL
     class RootSignature : public GraphicAPIObject
     {
     public:
-        using ParameterIndex = uint32_t;
+        struct ParameterIndex
+        {
+            uint32_t IndexInSignature = 0;
+            bool IsIndirect = false; // Descriptor table parameter
+        };
 
         RootSignature(const Device* device);
 
@@ -35,7 +39,7 @@ namespace HAL
         virtual void SetDebugName(const std::string& name) override;
 
     private:
-        void ValidateThenAddParameterLocations(const RootParameter& parameter);
+        void ValidateThenAddParameterLocations(const RootParameter& parameter, bool indirectParameter);
 
         std::vector<RootDescriptorTableParameter> mDescriptorTableParameters;
         std::vector<RootDescriptorParameter> mDescriptorParameters;

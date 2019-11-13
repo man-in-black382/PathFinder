@@ -16,6 +16,7 @@
 #include "BufferResource.hpp"
 #include "RayTracingAccelerationStructure.hpp"
 #include "ResourceFootprint.hpp"
+#include "ShaderRegister.hpp"
 
 #include "../Foundation/Color.hpp"
 #include "../Geometry/Rect2D.hpp"
@@ -80,7 +81,6 @@ namespace HAL
         void SetPipelineState(const ComputePipelineState& state);
         void SetComputeRootSignature(const RootSignature& signature);
 
-        template <class... Descriptors> void SetDescriptorHeap(const DescriptorHeap<Descriptors...>& heap);
         template <class T> void SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex);
 
         void SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);

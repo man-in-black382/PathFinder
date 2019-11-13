@@ -101,12 +101,13 @@ namespace PathFinder
         }
     }
 
-    void GraphicsDevice::UseVertexBufferOfLayout(VertexLayout layout)
-    {
-        CommandList().SetVertexBuffer(*mVertexStorage->UnifiedVertexBufferDescriptorForLayout(layout));
-        CommandList().SetIndexBuffer(*mVertexStorage->UnifiedIndexBufferDescriptorForLayout(layout));
-        CommandList().SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
-    }
+    /* void GraphicsDevice::UseVertexBufferOfLayout(VertexLayout layout)
+     {
+         CommandList().SetVertexBuffer(*mVertexStorage->UnifiedVertexBufferDescriptorForLayout(layout));
+         CommandList().SetIndexBuffer(*mVertexStorage->UnifiedIndexBufferDescriptorForLayout(layout));
+         CommandList().SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
+     }*/
+
     void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)
     {
         mCurrentPassViewport = viewport;
@@ -155,44 +156,12 @@ namespace PathFinder
         CommandList().Dispatch(groupCountX, groupCountY, groupCountZ);
     }
 
-    void GraphicsDevice::BindMeshInstanceTableStructuredBuffer(uint16_t shaderRegister, uint16_t registerSpace)
+    void GraphicsDevice::BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
-        if (mAppliedGraphicState)
-        {
-            auto index = mAppliedGraphicState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ShaderResource });
-            assert_format(index, "Root signature parameter doesn't exist");
-            CommandList().SetGraphicsRootShaderResource(mAssetStorage->InstanceTable(), *index);
-        }
-        else if (mAppliedComputeState)
-        {
-            auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ShaderResource });
-            assert_format(index, "Root signature parameter doesn't exist");
-            CommandList().SetGraphicsRootShaderResource(mAssetStorage->InstanceTable(), *index);
-        }
-        else if (mAppliedRayTracingState)
-        {
-            auto index = mAppliedRayTracingState->GetGlobalRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, HAL::ShaderRegister::ShaderResource });
-            assert_format(index, "Root signature parameter doesn't exist");
-            CommandList().SetGraphicsRootShaderResource(mAssetStorage->InstanceTable(), *index);
-        }
-        else {
-            assert_format("No PSO/Root Signature applied");
-        }        
-    }
+        const BufferPipelineResource* resource = mResourceStorage->GetPipelineBufferResource(resourceName);
+        assert_format(resource, "Buffer ' ", resourceName.ToString(), "' doesn't exist");
 
-    void GraphicsDevice::BindSceneRayTracingAccelerationStructure(uint16_t shaderRegister, uint16_t registerSpace)
-    {
-        
-    }
-
-    void GraphicsDevice::BindUnifiedVertexBufferOfLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace)
-    {
-        
-    }
-
-    void GraphicsDevice::BindUnifiedIndexBufferForVertexLayout(VertexLayout layout, uint16_t shaderRegister, uint16_t registerSpace)
-    {
-        
+        BindExternalBuffer(*resource->Resource, shaderRegister, registerSpace, registerType);
     }
 
     void GraphicsDevice::WaitFence(HAL::Fence& fence)

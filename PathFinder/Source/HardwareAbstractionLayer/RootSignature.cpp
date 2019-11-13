@@ -15,21 +15,21 @@ namespace HAL
 
     void RootSignature::AddDescriptorTableParameter(const RootDescriptorTableParameter& table)
     {
-        ValidateThenAddParameterLocations(table);
+        ValidateThenAddParameterLocations(table, true);
         mDescriptorTableParameters.push_back(table);
         mD3DParameters.push_back(table.D3DParameter());
     }
 
     void RootSignature::AddDescriptorParameter(const RootDescriptorParameter& descriptor)
     {
-        ValidateThenAddParameterLocations(descriptor);
+        ValidateThenAddParameterLocations(descriptor, false);
         mDescriptorParameters.push_back(descriptor);
         mD3DParameters.push_back(descriptor.D3DParameter());
     }
 
     void RootSignature::AddConstantsParameter(const RootConstantsParameter& constants)
     {
-        ValidateThenAddParameterLocations(constants);
+        ValidateThenAddParameterLocations(constants, false);
         mConstantParameters.push_back(constants);
         mD3DParameters.push_back(constants.D3DParameter());
     }
@@ -102,13 +102,13 @@ namespace HAL
         mDebugName = name;
     }
 
-    void RootSignature::ValidateThenAddParameterLocations(const RootParameter& parameter)
+    void RootSignature::ValidateThenAddParameterLocations(const RootParameter& parameter, bool indirectParameter)
     {
         for (const RootParameter::LocationInSignature& location : parameter.SignatureLocations())
         {
             bool registerSpaceOccupied = mParameterIndices.find(location) != mParameterIndices.end();
             assert_format(!registerSpaceOccupied, "Register of such slot, space and type is already occupied in this root signature");
-            mParameterIndices[location] = mD3DParameters.size();
+            mParameterIndices[location] = { (uint32_t)mD3DParameters.size(), indirectParameter };
         }
     }
 

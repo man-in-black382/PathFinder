@@ -62,7 +62,8 @@ namespace PathFinder
         const HAL::BufferResource<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
         const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
-        const PipelineResource* GetPipelineResource(ResourceName resourceName) const;
+        const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
+        const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
         const HAL::ResourceBarrierCollection& OneTimeResourceBarriers() const;
         const HAL::ResourceBarrierCollection& ResourceBarriersForCurrentPass();
         const Foundation::Name CurrentPassName() const;
@@ -92,14 +93,8 @@ namespace PathFinder
         );
 
     private:
-        void CreateDescriptors(
-            ResourceName resourceName, PipelineResource& resource, 
-            const PipelineResourceAllocation& allocator, const HAL::TextureResource* texture);
-
-        template <class BufferDataT>
-        void CreateDescriptors(
-            ResourceName resourceName, PipelineResource& resource,
-            const PipelineResourceAllocation& allocator, const HAL::BufferResource<BufferDataT>* buffer);
+        void CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::TextureResource* texture);
+        void CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::BufferResource<uint8_t>* buffer, uint64_t explicitStride);
 
         void PrepareAllocationsForOptimization();
         void CreateResourceBarriers();
@@ -142,8 +137,11 @@ namespace PathFinder
         // Allocations info for each resource
         std::unordered_map<ResourceName, PipelineResourceAllocation> mPipelineResourceAllocations;
 
-        // Allocated pipeline resources
-        std::unordered_map<ResourceName, PipelineResource> mPipelineResources;
+        // Allocated pipeline textures
+        std::unordered_map<ResourceName, TexturePipelineResource> mPipelineTextureResources;
+
+        // Allocated pipeline buffers
+        std::unordered_map<ResourceName, BufferPipelineResource> mPipelineBufferResources;
 
         // Resource barriers for each pass
         std::unordered_map<PassName, HAL::ResourceBarrierCollection> mPerPassResourceBarriers;

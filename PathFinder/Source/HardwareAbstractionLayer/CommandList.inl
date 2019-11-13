@@ -55,13 +55,6 @@ namespace HAL
 
 
 
-    template <class... Descriptors>
-    void ComputeCommandListBase::SetDescriptorHeap(const DescriptorHeap<Descriptors...>& heap)
-    {
-        auto ptr = heap.D3DHeap();
-        mList->SetDescriptorHeaps(1, (ID3D12DescriptorHeap * const*)& ptr);
-    }
-
     template <class T>
     void ComputeCommandListBase::SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex)
     {
