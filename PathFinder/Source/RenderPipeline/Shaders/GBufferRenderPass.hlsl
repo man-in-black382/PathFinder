@@ -9,19 +9,13 @@ struct PassData
 #include "BaseRootSignature.hlsl"
 #include "GBuffer.hlsl"
 #include "ColorConversion.hlsl"
+#include "Vertices.hlsl"
 
-StructuredBuffer<InstanceData> InstanceTable : register(t0);
+StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t0);
+StructuredBuffer<IndexU32> UnifiedIndexBuffer : register(t1);
+StructuredBuffer<InstanceData> InstanceTable : register(t2);
 
 //------------------------  Vertex  ------------------------------//
-
-struct VertexIn
-{
-    float4 Position : POSITION0;
-    float3 Normal : NORMAL0;
-    float2 UV : TEXCOORD0;
-    float3 Tangent : TANGENT0;
-    float3 Bitangent : BITANGENT0;
-};
 
 struct VertexOut
 {
@@ -30,7 +24,7 @@ struct VertexOut
     float3x3 TBN : TBN_MATRIX;
 };
 
-float3x3 BuildTBNMatrix(VertexIn vertex, InstanceData instanceData)
+float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, InstanceData instanceData)
 {
     float4x4 normalMatrix = instanceData.NormalMatrix;
 
@@ -41,16 +35,20 @@ float3x3 BuildTBNMatrix(VertexIn vertex, InstanceData instanceData)
     return float3x3(T, B, N);
 }
 
-VertexOut VSMain(VertexIn vin)
+VertexOut VSMain(uint indexId : SV_VertexID)
 {
     VertexOut vout;
     
     InstanceData instanceData = InstanceTable[PassDataCB.InstanceTableIndex];
     float4x4 MVP = mul(FrameDataCB.CameraViewProjection, instanceData.ModelMatrix);
 
-    vout.Position = mul(MVP, vin.Position);
-    vout.UV = vin.UV;
-    vout.TBN = BuildTBNMatrix(vin, instanceData);
+    // Load index and vertex
+    IndexU32 index = UnifiedIndexBuffer[instanceData.UnifiedIndexBufferOffset + indexId];
+    Vertex1P1N1UV1T1BT vertex = UnifiedVertexBuffer[instanceData.UnifiedVertexBufferOffset + index.Index];
+
+    vout.Position = mul(MVP, vertex.Position);
+    vout.UV = vertex.UV;
+    vout.TBN = BuildTBNMatrix(vertex, instanceData);
 
     return vout;
 }

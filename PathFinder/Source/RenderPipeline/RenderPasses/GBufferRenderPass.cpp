@@ -10,6 +10,8 @@ namespace PathFinder
     {
         HAL::RootSignature GBufferSinature = stateCreator->CloneBaseRootSignature();
         GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 });
+        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 });
+        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 2, 0 });
         stateCreator->StoreRootSignature(RootSignatureNames::GBuffer, std::move(GBufferSinature));
 
         stateCreator->CreateGraphicsState(PSONames::GBuffer, [](GraphicsStateProxy& state)
@@ -17,7 +19,6 @@ namespace PathFinder
             state.ShaderFileNames.VertexShaderFileName = L"GBufferRenderPass.hlsl";
             state.ShaderFileNames.PixelShaderFileName = L"GBufferRenderPass.hlsl";
             state.RenderTargetFormats = { HAL::ResourceFormat::Color::RGBA32_Unsigned };
-            state.InputLayout = InputAssemblerLayoutForVertexLayout(VertexLayout::Layout1P1N1UV1T1BT);
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::GBuffer;
             state.DepthStencilState.SetDepthTestEnabled(true);
@@ -40,15 +41,18 @@ namespace PathFinder
         context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::GBufferRT0, ResourceNames::GBufferDepthStencil);
         context->GetCommandRecorder()->ClearBackBuffer(Foundation::Color::Gray());
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
-        //context->GetCommandRecorder()->UseVertexBufferOfLayout(VertexLayout::Layout1P1N1UV1T1BT);
-        //context->GetCommandRecorder()->BindMeshInstanceTableStructuredBuffer(0);
+
+        // Use vertex and index buffers as normal structured buffers
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetVertexStorage()->UnifiedVertexBuffer_1P1N1UV1T1BT(), 0, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetVertexStorage()->UnifiedIndexBuffer_1P1N1UV1T1BT(), 1, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(context->GetAssetStorage()->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
 
         GBufferCBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<GBufferCBContent>();
 
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
             cbContent->InstanceTableIndex = instance.GPUInstanceIndex();
-            context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage());
+            context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount, 0);
         });
     }
 

@@ -20,11 +20,12 @@ namespace PathFinder
     {
         glm::mat4 InstanceWorldMatrix;
         glm::mat4 InstanceNormalMatrix;
-        uint32_t AlbedoMapSRVIndex;
-        uint32_t NormalMapSRVIndex;
-        uint32_t RoughnessMapSRVIndex;
-        uint32_t MetalnessMapSRVIndex;
-        uint32_t AOMapSRVIndex;
+        uint32_t AlbedoMapIndex;
+        uint32_t NormalMapIndex;
+        uint32_t RoughnessMapIndex;
+        uint32_t MetalnessMapIndex;
+        uint32_t AOMapIndex;
+        uint32_t DisplacementMapIndex;
         uint32_t UnifiedVertexBufferOffset;
         uint32_t UnifiedIndexBufferOffset;
         uint32_t IndexCount;

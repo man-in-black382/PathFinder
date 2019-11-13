@@ -10,7 +10,7 @@ namespace PathFinder
         mCommandQueue{ *device },
         mFence{ *mDevice } {}
  
-    std::shared_ptr<HAL::TextureResource> CopyDevice::QueueResourceCopyToSystemMemory(std::shared_ptr<HAL::TextureResource> texture)
+    std::shared_ptr<HAL::TextureResource> CopyDevice::QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::TextureResource> texture)
     {
         auto emptyClone = std::make_shared<HAL::TextureResource>(
             *mDevice, texture->Format(), texture->Kind(), texture->Dimensions(),

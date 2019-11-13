@@ -15,8 +15,8 @@ namespace PathFinder
 
         template <class T> void QueueBufferToTextureCopy(std::shared_ptr<HAL::BufferResource<T>> buffer, std::shared_ptr<HAL::TextureResource> texture, const HAL::ResourceFootprint& footprint);
         
-        template <class T> std::shared_ptr<HAL::BufferResource<T>> QueueResourceCopyToSystemMemory(std::shared_ptr<HAL::BufferResource<T>> buffer);
-        std::shared_ptr<HAL::TextureResource> QueueResourceCopyToSystemMemory(std::shared_ptr<HAL::TextureResource> texture);
+        template <class T> std::shared_ptr<HAL::BufferResource<T>> QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::BufferResource<T>> buffer);
+        std::shared_ptr<HAL::TextureResource> QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::TextureResource> texture);
 
         template <class T> std::shared_ptr<HAL::BufferResource<T>> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::BufferResource<T>> buffer);
         std::shared_ptr<HAL::BufferResource<uint8_t>> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::TextureResource> texture);

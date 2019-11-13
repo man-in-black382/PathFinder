@@ -14,7 +14,7 @@ namespace PathFinder
     }
 
     template <class T>
-    std::shared_ptr<HAL::BufferResource<T>> CopyDevice::QueueResourceCopyToSystemMemory(std::shared_ptr<HAL::BufferResource<T>> buffer)
+    std::shared_ptr<HAL::BufferResource<T>> CopyDevice::QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::BufferResource<T>> buffer)
     {
         auto emptyClone = std::make_shared<HAL::BufferResource<T>>(
             *mDevice, buffer->Capacity(), buffer->PerElementAlignment(), HAL::ResourceState::CopyDestination, buffer->ExpectedStates());

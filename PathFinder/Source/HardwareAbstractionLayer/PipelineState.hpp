@@ -107,6 +107,7 @@ namespace HAL
         inline const BlendState& GetBlendState() const { return mBlendState; }
         inline const RasterizerState& GetRasterizerState() const { return mRasterizerState; }
         inline const DepthStencilState& GetDepthStencilState() const { return mDepthStencilState; }
+        inline const PrimitiveTopology& GetPrimitiveTopology() const { return mPrimitiveTopology; }
 
     private:
         Shader* mVertexShader;

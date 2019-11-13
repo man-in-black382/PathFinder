@@ -86,6 +86,7 @@ namespace PathFinder
             instance.AssosiatedMaterial()->RoughnessMapSRVIndex,
             instance.AssosiatedMaterial()->MetalnessMapSRVIndex,
             instance.AssosiatedMaterial()->AOMapSRVIndex,
+            instance.AssosiatedMaterial()->DisplacementMapSRVIndex,
             instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
             instance.AssosiatedMesh()->LocationInVertexStorage().IndexBufferOffset,
             instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount

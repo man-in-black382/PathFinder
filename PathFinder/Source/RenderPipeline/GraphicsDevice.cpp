@@ -79,6 +79,7 @@ namespace PathFinder
                 const HAL::RootSignature* signature = pso->GetRootSignature();
                 CommandList().SetPipelineState(*pso);
                 CommandList().SetGraphicsRootSignature(*signature);
+                CommandList().SetPrimitiveTopology(pso->GetPrimitiveTopology());
                 ReapplyCommonGraphicsResourceBindings();
             }
         }
@@ -100,13 +101,6 @@ namespace PathFinder
             assert_format(false, "Pipeline state ", psoName.ToString(), " does not exist.");
         }
     }
-
-    /* void GraphicsDevice::UseVertexBufferOfLayout(VertexLayout layout)
-     {
-         CommandList().SetVertexBuffer(*mVertexStorage->UnifiedVertexBufferDescriptorForLayout(layout));
-         CommandList().SetIndexBuffer(*mVertexStorage->UnifiedIndexBufferDescriptorForLayout(layout));
-         CommandList().SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
-     }*/
 
     void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)
     {

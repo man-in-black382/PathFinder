@@ -7,4 +7,8 @@ struct InstanceData
     uint RoughnessMapIndex;
     uint MetalnessMapIndex;
     uint AOMapIndex;
+    uint DisplacementMapIndex;
+    uint UnifiedVertexBufferOffset;
+    uint UnifiedIndexBufferOffset;
+    uint IndexCount;
 };

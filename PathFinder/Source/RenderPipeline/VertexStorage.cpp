@@ -24,6 +24,36 @@ namespace PathFinder
         return WriteToUploadBuffers(vertices, vertexCount, indices, indexCount);
     }
 
+    const HAL::BufferResource<Vertex1P1N1UV1T1BT>* VertexStorage::UnifiedVertexBuffer_1P1N1UV1T1BT() const
+    {
+        return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get();
+    }
+
+    const HAL::BufferResource<Vertex1P1N1UV>* VertexStorage::UnifiedVertexBuffer_1P1N1UV() const
+    {
+        return std::get<FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).VertexBuffer.get();
+    }
+
+    const HAL::BufferResource<PathFinder::Vertex1P3>* VertexStorage::UnifiedVertexBuffer_1P() const
+    {
+        return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).VertexBuffer.get();
+    }
+
+    const HAL::BufferResource<uint32_t>* VertexStorage::UnifiedIndexBuffer_1P1N1UV1T1BT() const
+    {
+        return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBuffer.get();
+    }
+
+    const HAL::BufferResource<uint32_t>* VertexStorage::UnifiedIndexBuffer_1P1N1UV() const
+    {
+        return std::get<FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).IndexBuffer.get();
+    }
+
+    const HAL::BufferResource<uint32_t>* VertexStorage::UnifiedIndexBuffer_1P() const
+    {
+        return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).IndexBuffer.get();
+    }
+
     template <class Vertex>
     VertexStorageLocation PathFinder::VertexStorage::WriteToUploadBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
@@ -59,8 +89,7 @@ namespace PathFinder
                 *mDevice, uploadBuffers.Vertices.size(), 1, HAL::CPUAccessibleHeapType::Upload);
 
             uploadVertexBuffer->Write(0, uploadBuffers.Vertices.data(), uploadBuffers.Vertices.size());
-            finalBuffers.VertexBuffer = mCopyDevice->QueueResourceCopyToSystemMemory(uploadVertexBuffer);
-            finalBuffers.VertexBufferDescriptor = std::make_unique<HAL::VertexBufferDescriptor>(*finalBuffers.VertexBuffer);
+            finalBuffers.VertexBuffer = mCopyDevice->QueueResourceCopyToDefaultMemory(uploadVertexBuffer);
             uploadBuffers.Vertices.clear();
         }
 
@@ -70,8 +99,7 @@ namespace PathFinder
                 *mDevice, uploadBuffers.Indices.size(), 1, HAL::CPUAccessibleHeapType::Upload);
 
             uploadIndexBuffer->Write(0, uploadBuffers.Indices.data(), uploadBuffers.Indices.size());
-            finalBuffers.IndexBuffer = mCopyDevice->QueueResourceCopyToSystemMemory(uploadIndexBuffer);
-            finalBuffers.IndexBufferDescriptor = std::make_unique<HAL::IndexBufferDescriptor>(*finalBuffers.IndexBuffer, HAL::ResourceFormat::Color::R32_Unsigned);
+            finalBuffers.IndexBuffer = mCopyDevice->QueueResourceCopyToDefaultMemory(uploadIndexBuffer);
             uploadBuffers.Indices.clear();
         }
 
@@ -91,28 +119,6 @@ namespace PathFinder
             blas.SetDebugName("Bottom_Acceleration_Structure");
 
             mAccelerationStructureBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ blas.FinalBuffer() });
-        }
-    }
-
-    const HAL::VertexBufferDescriptor* VertexStorage::UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const
-    {
-        switch (layout)
-        {
-        case VertexLayout::Layout1P1N1UV1T1BT: return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBufferDescriptor.get();
-        case VertexLayout::Layout1P1N1UV: return std::get<FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).VertexBufferDescriptor.get();
-        case VertexLayout::Layout1P3: return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).VertexBufferDescriptor.get();
-        default: return nullptr;
-        }
-    }
-
-    const HAL::IndexBufferDescriptor* VertexStorage::UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const
-    {
-        switch (layout)
-        {
-        case VertexLayout::Layout1P1N1UV1T1BT: return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBufferDescriptor.get();
-        case VertexLayout::Layout1P1N1UV: return std::get<FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).IndexBufferDescriptor.get();
-        case VertexLayout::Layout1P3: return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).IndexBufferDescriptor.get();
-        default: return nullptr;
         }
     }
 

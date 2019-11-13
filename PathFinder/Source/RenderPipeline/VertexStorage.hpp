@@ -32,8 +32,13 @@ namespace PathFinder
         VertexStorageLocation AddVertices(const Vertex1P1N1UV* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
         VertexStorageLocation AddVertices(const Vertex1P3* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
 
-        const HAL::VertexBufferDescriptor* UnifiedVertexBufferDescriptorForLayout(VertexLayout layout) const;
-        const HAL::IndexBufferDescriptor* UnifiedIndexBufferDescriptorForLayout(VertexLayout layout) const;
+        const HAL::BufferResource<Vertex1P1N1UV1T1BT>* UnifiedVertexBuffer_1P1N1UV1T1BT() const;
+        const HAL::BufferResource<Vertex1P1N1UV>* UnifiedVertexBuffer_1P1N1UV() const;
+        const HAL::BufferResource<Vertex1P3>* UnifiedVertexBuffer_1P() const;
+
+        const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer_1P1N1UV1T1BT() const;
+        const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer_1P1N1UV() const;
+        const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer_1P() const;
 
         // Barriers to wait for AS build completion
         const HAL::ResourceBarrierCollection& AccelerationStructureBarriers() const;
@@ -55,8 +60,6 @@ namespace PathFinder
         {
             std::shared_ptr<HAL::BufferResource<Vertex>> VertexBuffer;
             std::shared_ptr<HAL::BufferResource<uint32_t>> IndexBuffer;
-            std::unique_ptr<HAL::VertexBufferDescriptor> VertexBufferDescriptor;
-            std::unique_ptr<HAL::IndexBufferDescriptor> IndexBufferDescriptor;
         };
 
         template <class Vertex>
