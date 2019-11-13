@@ -30,28 +30,32 @@ namespace PathFinder
         const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt);
         const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt);
 
+        template <class T> const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(const HAL::BufferResource<T>* buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        template <class T> const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(const HAL::BufferResource<T>* buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        template <class T> const HAL::CBDescriptor& EmplaceCBDescriptorIfNeeded(const HAL::BufferResource<T>* buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+
     private:
         struct DSCBSet
         {
-            const HAL::DSDescriptor* dsDescriptor = nullptr;
-            const HAL::CBDescriptor* cbDescriptor = nullptr;
+            const HAL::DSDescriptor* DSDescriptor = nullptr;
+            const HAL::CBDescriptor* CBDescriptor = nullptr;
         };
 
         struct SRUASet
         {
-            const HAL::SRDescriptor* srDescriptor = nullptr;
-            const HAL::UADescriptor* uaDescriptor = nullptr;
+            const HAL::SRDescriptor* SRDescriptor = nullptr;
+            const HAL::UADescriptor* UADescriptor = nullptr;
         };
 
         struct RTSRUASet : SRUASet
         {
-            const HAL::RTDescriptor* rtDescriptor = nullptr;
+            const HAL::RTDescriptor* RTDescriptor = nullptr;
         };
         
         struct DescriptorSet
         {
             DSCBSet DSCB;
-            RTSRUASet ImplicitlyTypedRTSRUA; // For typeless buffers (StructuredBuffer for example)
+            RTSRUASet ImplicitlyTypedRTSRUA; // For typeless buffers (StructuredBuffer, ByteBuffer for example)
             std::unordered_map<HAL::ResourceFormat::Color, RTSRUASet> ExplicitlyTypedRTSRUA; // For typed resources, such as textures and typed buffers
 
             const RTSRUASet* GetExplicitlyTypedRTSRUA(HAL::ResourceFormat::Color format) const;
@@ -78,3 +82,5 @@ namespace PathFinder
     };
 
 }
+
+#include "ResourceDescriptorStorage.inl"

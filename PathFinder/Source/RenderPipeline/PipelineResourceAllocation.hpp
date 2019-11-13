@@ -14,22 +14,20 @@ namespace PathFinder
     class PipelineResourceAllocation
     {
     public:
-        using TextureRTDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded);
-        using TextureDSDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded);
-        using TextureSRDescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded);
-        using TextureUADescriptorInserterPtr = decltype(&ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded);
-
         using StatePair = std::pair<HAL::ResourceState, HAL::ResourceState>;
 
         struct PassMetadata
         {
-            HAL::ResourceState RequestedState;
+            HAL::ResourceState RequestedState = HAL::ResourceState::Common;
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
             std::optional<StatePair> OptimizedTransitionStates;
-            TextureRTDescriptorInserterPtr RTInserter = nullptr;
-            TextureDSDescriptorInserterPtr DSInserter = nullptr;
-            TextureSRDescriptorInserterPtr SRInserter = nullptr;
-            TextureUADescriptorInserterPtr UAInserter = nullptr;
+            bool CreateTextureRTDescriptor = false;
+            bool CreateTextureDSDescriptor = false;
+            bool CreateTextureSRDescriptor = false;
+            bool CreateTextureUADescriptor = false;
+            bool CreateBufferCBDescriptor = false;
+            bool CreateBufferSRDescriptor = false;
+            bool CreateBufferUADescriptor = false;
         };
 
         struct AliasingMetadata
@@ -46,6 +44,7 @@ namespace PathFinder
         const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;
         PassMetadata* GetMetadataForPass(Foundation::Name passName);
         PassMetadata& AllocateMetadataForPass(Foundation::Name passName);
+        HAL::ResourceState InitialStates() const;
 
         std::function<void()> AllocationAction;
         std::optional<StatePair> OneTimeTransitionStates;

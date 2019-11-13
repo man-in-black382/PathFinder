@@ -21,6 +21,7 @@ namespace PathFinder
             bool IsDSDescriptorRequested = false;
             bool IsSRDescriptorRequested = false;
             bool IsUADescriptorRequested = false;
+            bool IsCBDescriptorRequested = false;
         };
 
         PipelineResource();

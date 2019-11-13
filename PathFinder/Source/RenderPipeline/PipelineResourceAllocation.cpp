@@ -46,4 +46,17 @@ namespace PathFinder
         return iter->second;
     }
 
+    HAL::ResourceState PipelineResourceAllocation::InitialStates() const
+    {
+        auto firstPassMetadata = GetMetadataForPass(mFirstPassName);
+
+        if (firstPassMetadata && firstPassMetadata->OptimizedTransitionStates)
+        {
+            return firstPassMetadata->OptimizedTransitionStates->first;
+        } 
+        else {
+            return HAL::ResourceState::Common;
+        }
+    }
+
 }

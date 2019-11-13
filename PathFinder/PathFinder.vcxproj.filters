@@ -2461,6 +2461,9 @@
     <None Include="Source\RenderPipeline\ResourceScheduler.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Source\RenderPipeline\ResourceDescriptorStorage.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />

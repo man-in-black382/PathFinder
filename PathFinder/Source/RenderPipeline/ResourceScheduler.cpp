@@ -25,12 +25,12 @@ namespace PathFinder
         }
 
         PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, clearValue
+            resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount
         );
 
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::RenderTarget;
-        passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
+        passData.CreateTextureRTDescriptor = true;
 
         if (props.TypelessFormat)
         {
@@ -50,12 +50,12 @@ namespace PathFinder
         NewDepthStencilProperties props = FillMissingFields(properties);
 
         PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, *props.Format, HAL::ResourceFormat::TextureKind::Texture2D, *props.Dimensions, clearValue
+            resourceName, *props.Format, HAL::ResourceFormat::TextureKind::Texture2D, *props.Dimensions, clearValue, 1
         );
 
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
-        passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
+        passData.CreateTextureDSDescriptor = true;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -77,12 +77,12 @@ namespace PathFinder
         }
 
         PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, clearValue
+            resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount
         );
 
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
-        passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
+        passData.CreateTextureUADescriptor = true;
 
         if (props.TypelessFormat) 
         {
@@ -106,7 +106,7 @@ namespace PathFinder
 
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::RenderTarget;
-        passData.RTInserter = &ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded;
+        passData.CreateTextureRTDescriptor = true;
 
         if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
 
@@ -125,7 +125,7 @@ namespace PathFinder
 
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
-        passData.DSInserter = &ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded;
+        passData.CreateTextureDSDescriptor = true;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -153,7 +153,7 @@ namespace PathFinder
 
         if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
 
-        passData.SRInserter = &ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded;
+        passData.CreateTextureSRDescriptor = true;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
@@ -172,7 +172,7 @@ namespace PathFinder
 
         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
-        passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
+        passData.CreateTextureUADescriptor = true;
 
         if (isTypeless) passData.ShaderVisibleFormat = concreteFormat;
 

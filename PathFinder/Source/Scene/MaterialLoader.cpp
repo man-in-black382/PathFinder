@@ -53,11 +53,18 @@ namespace PathFinder
                     *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture3D,
                     Geometry::Dimensions{ 128, 128, 8 }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
 
+                auto atlasEntryCounter = std::make_unique<HAL::BufferResource<uint32_t>>(
+                    *mDevice, 1, 1, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::CopySource);
+
                 auto distanceIndirectionAsset = mAssetStorage->StorePreprocessableAsset(std::move(distanceIndirectionMap), true);
                 auto distanceAtlasAsset = mAssetStorage->StorePreprocessableAsset(std::move(distanceAtlas), true);
+                //auto atlasCounterAsset = mAssetStorage->StorePreprocessableAsset(std::move(atlasEntryCounter), true);
 
-           /*     material.DistanceMapSRVIndex = indirectionMapAsset.SRIndex;
-                material.DistanceMapUAVIndex = indirectionMapAsset.UAIndex;*/
+                material.DistanceAtlasIndirectionMapSRVIndex = distanceIndirectionAsset.SRIndex;
+                material.DistanceAtlasIndirectionMapUAVIndex = distanceIndirectionAsset.UAIndex;
+
+                material.DistanceAtlasSRVIndex = distanceAtlasAsset.SRIndex;
+                material.DistanceAtlasUAVIndex = distanceAtlasAsset.UAIndex;
             }
         }
 

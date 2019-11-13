@@ -15,6 +15,7 @@ namespace HAL
         using ReadbackSession = std::function<void(const T*)>;
 
         BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
+        BufferResource(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
         BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType);
 
         ~BufferResource();
@@ -24,6 +25,8 @@ namespace HAL
         virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
         virtual T* At(uint64_t index);
         virtual uint32_t SubresourceCount() const override;
+
+        static ResourceFormat ConstructResourceFormat(const Device* device, uint64_t capacity, uint64_t perElementAlignment);
 
     private:
         void ValidateMappedMemory() const;

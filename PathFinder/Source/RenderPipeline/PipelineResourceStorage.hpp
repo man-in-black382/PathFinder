@@ -80,13 +80,26 @@ namespace PathFinder
             HAL::ResourceFormat::FormatVariant format,
             HAL::ResourceFormat::TextureKind kind,
             const Geometry::Dimensions& dimensions,
-            const HAL::ResourceFormat::ClearValue& optimizedClearValue
+            const HAL::ResourceFormat::ClearValue& optimizedClearValue,
+            uint16_t mipCount
+        );
+
+        template <class BufferDataT>
+        PipelineResourceAllocation* QueueBufferAllocationIfNeeded(
+            ResourceName resourceName,
+            uint64_t capacity,
+            uint64_t perElementAlignment
         );
 
     private:
         void CreateDescriptors(
             ResourceName resourceName, PipelineResource& resource, 
-            const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture);
+            const PipelineResourceAllocation& allocator, const HAL::TextureResource* texture);
+
+        template <class BufferDataT>
+        void CreateDescriptors(
+            ResourceName resourceName, PipelineResource& resource,
+            const PipelineResourceAllocation& allocator, const HAL::BufferResource<BufferDataT>* buffer);
 
         void PrepareAllocationsForOptimization();
         void CreateResourceBarriers();

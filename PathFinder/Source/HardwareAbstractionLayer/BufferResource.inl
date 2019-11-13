@@ -1,17 +1,13 @@
 #pragma once
 
+#include "../Foundation/MemoryUtils.hpp"
+
 namespace HAL
 {
     template <class T>
     BufferResource<T>::BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType)
-        : Resource(
-            device,
-            ResourceFormat{
-                &device, std::nullopt, ResourceFormat::BufferKind::Buffer,
-                Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
-            },
-            heapType
-        ),
+        :
+        Resource(device, ConstructResourceFormat(&device, capacity, perElementAlignment), heapType),
         mNonPaddedElementSize{ sizeof(T) },
         mPaddedElementSize{ PaddedElementSize(perElementAlignment) },
         mCapacity{ capacity },
@@ -25,21 +21,28 @@ namespace HAL
     }
 
     template <class T>
-    BufferResource<T>::BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates)
-        : Resource(
-            device,
-            ResourceFormat{
-                &device, std::nullopt, ResourceFormat::BufferKind::Buffer,
-                Geometry::Dimensions{ PaddedElementSize(perElementAlignment) * capacity }
-            },
-            initialState,
-            expectedStates
-        ),
+    BufferResource<T>::BufferResource(
+        const Device& device, uint64_t capacity, uint64_t perElementAlignment, 
+        ResourceState initialState, ResourceState expectedStates)
+        : 
+        Resource(device, ConstructResourceFormat(&device, capacity, perElementAlignment), initialState, expectedStates),
         mNonPaddedElementSize{ sizeof(T) },
         mPaddedElementSize{ PaddedElementSize(perElementAlignment) },
         mCapacity{ capacity },
         mPerElementAlignment{ perElementAlignment }
     { }
+
+    template <class T>
+    HAL::BufferResource<T>::BufferResource(
+        const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t capacity,
+        uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates)
+        :
+        Resource(device, heap, heapOffset, ConstructResourceFormat(&device, capacity, perElementAlignment), initialState, expectedStates),
+        mNonPaddedElementSize{ sizeof(T) },
+        mPaddedElementSize{ PaddedElementSize(perElementAlignment) },
+        mCapacity{ capacity },
+        mPerElementAlignment{ perElementAlignment }
+    {}
 
     template <class T>
     BufferResource<T>::~BufferResource()
@@ -113,6 +116,15 @@ namespace HAL
     uint32_t BufferResource<T>::SubresourceCount() const
     {
         return 1;
+    }
+
+    template <class T>
+    ResourceFormat BufferResource<T>::ConstructResourceFormat(const Device* device, uint64_t capacity, uint64_t perElementAlignment)
+    {
+        return { 
+            device, std::nullopt, ResourceFormat::BufferKind::Buffer, 
+            Geometry::Dimensions{ Foundation::MemoryUtils::Align(sizeof(T), perElementAlignment) * capacity }
+        };
     }
 
 }

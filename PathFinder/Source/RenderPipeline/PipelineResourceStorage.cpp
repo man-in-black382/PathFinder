@@ -150,7 +150,8 @@ namespace PathFinder
         HAL::ResourceFormat::FormatVariant format,
         HAL::ResourceFormat::TextureKind kind,
         const Geometry::Dimensions& dimensions,
-        const HAL::ResourceFormat::ClearValue& optimizedClearValue)
+        const HAL::ResourceFormat::ClearValue& optimizedClearValue,
+        uint16_t mipCount)
     {
         auto it = mPipelineResourceAllocations.find(resourceName);
 
@@ -159,21 +160,14 @@ namespace PathFinder
             return &it->second;
         }
 
-        auto [iter, success] = mPipelineResourceAllocations.emplace(resourceName, HAL::ResourceFormat{ mDevice, format, kind, dimensions, 1, optimizedClearValue });
+        auto [iter, success] = mPipelineResourceAllocations.emplace(
+            resourceName, HAL::TextureResource::ConstructResourceFormat(mDevice, format, kind, dimensions, 1, optimizedClearValue)
+        );
+
         PipelineResourceAllocation& allocation = iter->second;
 
         allocation.AllocationAction = [=, &allocation]()
         {
-            HAL::ResourceState expectedStates = allocation.ExpectedStates();
-            HAL::ResourceState initialState = HAL::ResourceState::Common;
-
-            auto firstPassMetadata = allocation.GetMetadataForPass(allocation.FirstPassName());
-
-            if (firstPassMetadata && firstPassMetadata->OptimizedTransitionStates)
-            {
-                initialState = firstPassMetadata->OptimizedTransitionStates->first;
-            }
-            
             HAL::Heap* heap = nullptr;
 
             switch (allocation.AliasingInfo.HeapAliasingGroup)
@@ -185,12 +179,12 @@ namespace PathFinder
 
             auto texture = std::make_unique<HAL::TextureResource>(
                 *mDevice, *heap, allocation.AliasingInfo.HeapOffset, format, kind,
-                dimensions, optimizedClearValue, initialState, expectedStates);
+                dimensions, optimizedClearValue, allocation.InitialStates(), allocation.ExpectedStates(), mipCount);
 
             texture->SetDebugName(resourceName.ToString());
 
             PipelineResource newResource;
-            CreateDescriptors(resourceName, newResource, allocation, *texture);
+            CreateDescriptors(resourceName, newResource, allocation, texture.get());
 
             newResource.Resource = std::move(texture);
             mPipelineResources[resourceName] = std::move(newResource);
@@ -199,34 +193,34 @@ namespace PathFinder
         return &allocation;
     }
 
-    void PipelineResourceStorage::CreateDescriptors(ResourceName resourceName, PipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::TextureResource& texture)
+    void PipelineResourceStorage::CreateDescriptors(ResourceName resourceName, PipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::TextureResource* texture)
     {
         for (const auto& [passName, passMetadata] : allocator.AllPassesMetadata())
         {
             PipelineResource::PassMetadata& newResourcePerPassData = resource.AllocateMetadateForPass(passName);
 
-            if (passMetadata.RTInserter)
+            if (passMetadata.CreateTextureRTDescriptor)
             {
                 newResourcePerPassData.IsRTDescriptorRequested = true;
-                (mDescriptorStorage->*passMetadata.RTInserter)(&texture, passMetadata.ShaderVisibleFormat);
+                mDescriptorStorage->EmplaceRTDescriptorIfNeeded(texture, passMetadata.ShaderVisibleFormat);
             }
 
-            if (passMetadata.DSInserter)
+            if (passMetadata.CreateTextureDSDescriptor)
             {
                 newResourcePerPassData.IsDSDescriptorRequested = true;
-                (mDescriptorStorage->*passMetadata.DSInserter)(&texture);
+                mDescriptorStorage->EmplaceDSDescriptorIfNeeded(texture);
             }
 
-            if (passMetadata.SRInserter)
+            if (passMetadata.CreateTextureSRDescriptor)
             {
                 newResourcePerPassData.IsSRDescriptorRequested = true;
-                (mDescriptorStorage->*passMetadata.SRInserter)(&texture, passMetadata.ShaderVisibleFormat);
+                mDescriptorStorage->EmplaceSRDescriptorIfNeeded(texture, passMetadata.ShaderVisibleFormat);
             }
 
-            if (passMetadata.UAInserter)
+            if (passMetadata.CreateTextureUADescriptor)
             {
                 newResourcePerPassData.IsUADescriptorRequested = true;
-                (mDescriptorStorage->*passMetadata.UAInserter)(&texture, passMetadata.ShaderVisibleFormat);
+                mDescriptorStorage->EmplaceUADescriptorIfNeeded(texture, passMetadata.ShaderVisibleFormat);
             }
         }
     }

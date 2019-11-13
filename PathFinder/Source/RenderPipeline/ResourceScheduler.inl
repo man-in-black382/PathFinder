@@ -12,32 +12,17 @@ namespace PathFinder
     {
         EnsureSingleSchedulingRequestForCurrentPass(resourceName);
 
-        /* assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "Texture creation has already been scheduled");
+        assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "Buffer creation has already been scheduled");
 
-         HAL::ResourceFormat::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
-         NewTextureProperties props = FillMissingFields(properties);
+        PipelineResourceAllocation* allocator = mResourceStorage->QueueBufferAllocationIfNeeded<T>(
+            resourceName, bufferProperties.Capacity, bufferProperties.PerElementAlignment
+        );
 
-         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
+        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        passData.RequestedState = HAL::ResourceState::UnorderedAccess;
+        passData.CreateBufferUADescriptor = true;
 
-         if (props.TypelessFormat)
-         {
-             format = *props.TypelessFormat;
-         }
-
-         PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
-             resourceName, format, *props.Kind, *props.Dimensions, clearValue
-         );
-
-         auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
-         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
-         passData.UAInserter = &ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded;
-
-         if (props.TypelessFormat)
-         {
-             passData.ShaderVisibleFormat = props.ShaderVisibleFormat;
-         }
-
-         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);*/
+        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
 }

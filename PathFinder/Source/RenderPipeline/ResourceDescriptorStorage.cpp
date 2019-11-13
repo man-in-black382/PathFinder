@@ -13,31 +13,31 @@ namespace PathFinder
     const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
     {
         auto descriptorSet = GetRTSRUASet(resource, format);
-        return descriptorSet ? descriptorSet->rtDescriptor : nullptr;
+        return descriptorSet ? descriptorSet->RTDescriptor : nullptr;
     }
 
     const HAL::DSDescriptor* ResourceDescriptorStorage::GetDSDescriptor(const HAL::Resource* resource) const
     {
         auto descriptorSet = GetDSCBSet(resource);
-        return descriptorSet ? descriptorSet->dsDescriptor : nullptr;
+        return descriptorSet ? descriptorSet->DSDescriptor : nullptr;
     }
 
     const HAL::SRDescriptor* ResourceDescriptorStorage::GetSRDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
     {
         auto descriptorSet = GetRTSRUASet(resource, format);
-        return descriptorSet ? descriptorSet->srDescriptor : nullptr;
+        return descriptorSet ? descriptorSet->SRDescriptor : nullptr;
     }
 
     const HAL::UADescriptor* ResourceDescriptorStorage::GetUADescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
     {
         auto descriptorSet = GetRTSRUASet(resource, format);
-        return descriptorSet ? descriptorSet->uaDescriptor : nullptr;
+        return descriptorSet ? descriptorSet->UADescriptor : nullptr;
     }
 
     const HAL::CBDescriptor* ResourceDescriptorStorage::GetCBDescriptor(const HAL::Resource* resource) const
     {
         auto descriptorSet = GetDSCBSet(resource);
-        return descriptorSet ? descriptorSet->cbDescriptor : nullptr;
+        return descriptorSet ? descriptorSet->CBDescriptor : nullptr;
     }
 
     const HAL::RTDescriptor& ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
@@ -50,10 +50,10 @@ namespace PathFinder
 
         if (shaderVisibleFormat)
         {
-            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].rtDescriptor = &descriptor;
+            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].RTDescriptor = &descriptor;
         }
         else {
-            mDescriptors[texture].ImplicitlyTypedRTSRUA.rtDescriptor = &descriptor;
+            mDescriptors[texture].ImplicitlyTypedRTSRUA.RTDescriptor = &descriptor;
         }
 
         return descriptor;
@@ -66,7 +66,7 @@ namespace PathFinder
         if (auto descriptor = GetDSDescriptor(texture)) return *descriptor;
 
         const HAL::DSDescriptor& descriptor = mDSDescriptorHeap.EmplaceDSDescriptor(*texture);
-        mDescriptors[texture].DSCB.dsDescriptor = &descriptor;
+        mDescriptors[texture].DSCB.DSDescriptor = &descriptor;
         return descriptor;
     }
 
@@ -80,12 +80,12 @@ namespace PathFinder
 
         if (shaderVisibleFormat)
         {
-            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].srDescriptor = &descriptor;
-        } 
-        else {
-            mDescriptors[texture].ImplicitlyTypedRTSRUA.srDescriptor = &descriptor;
+            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].SRDescriptor = &descriptor;
         }
-        
+        else {
+            mDescriptors[texture].ImplicitlyTypedRTSRUA.SRDescriptor = &descriptor;
+        }
+
         return descriptor;
     }
 
@@ -100,10 +100,10 @@ namespace PathFinder
 
         if (shaderVisibleFormat)
         {
-            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].uaDescriptor = &descriptor;
+            mDescriptors[texture].ExplicitlyTypedRTSRUA[*shaderVisibleFormat].UADescriptor = &descriptor;
         }
         else {
-            mDescriptors[texture].ImplicitlyTypedRTSRUA.uaDescriptor = &descriptor;
+            mDescriptors[texture].ImplicitlyTypedRTSRUA.UADescriptor = &descriptor;
         }
 
         return descriptor;
@@ -140,7 +140,7 @@ namespace PathFinder
         if (format)
         {
             return it != mDescriptors.end() ? it->second.GetExplicitlyTypedRTSRUA(*format) : nullptr;
-        } 
+        }
         else {
             return it != mDescriptors.end() ? &it->second.ImplicitlyTypedRTSRUA : nullptr;
         }

@@ -25,7 +25,7 @@ namespace HAL
         const Geometry::Dimensions& dimensions, const ResourceFormat::ClearValue& optimizedClearValue, 
         ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount)
         :
-        Resource(device, ResourceFormat(&device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
+        Resource(device, ConstructResourceFormat(&device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
         mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
 
     TextureResource::TextureResource(
@@ -36,7 +36,7 @@ namespace HAL
         ResourceState initialStateMask, ResourceState expectedStateMask, 
         uint16_t mipCount)
         :
-        Resource(device, heap, heapOffset, ResourceFormat(&device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
+        Resource(device, heap, heapOffset, ConstructResourceFormat(&device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
         mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
 
     bool TextureResource::IsArray() const
@@ -55,6 +55,14 @@ namespace HAL
     uint32_t TextureResource::SubresourceCount() const
     {
         return IsArray() ? mDimensions.Depth * mMipCount : mMipCount;
+    }
+
+    ResourceFormat TextureResource::ConstructResourceFormat(
+        const Device* device, ResourceFormat::FormatVariant format, 
+        ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions, 
+        uint16_t mipCount, const ResourceFormat::ClearValue& optimizedClearValue)
+    {
+        return { device, format, kind, dimensions, mipCount, optimizedClearValue };
     }
 
 }
