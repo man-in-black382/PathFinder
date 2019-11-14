@@ -30,6 +30,8 @@ namespace PathFinder
         ResourceScheduler::NewTextureProperties RT0Properties{};
         RT0Properties.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Unsigned;
 
+        scheduler->NewTexture("test");
+
         scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<GBufferCBContent>();
@@ -52,7 +54,7 @@ namespace PathFinder
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
             cbContent->InstanceTableIndex = instance.GPUInstanceIndex();
-            context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount, 0);
+            context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount);
         });
     }
 

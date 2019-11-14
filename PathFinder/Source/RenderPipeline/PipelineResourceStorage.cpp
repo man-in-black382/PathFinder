@@ -308,12 +308,6 @@ namespace PathFinder
                 mPerPassResourceBarriers[allocation.FirstPassName()].AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource });
             }
 
-            if (allocation.OneTimeTransitionStates)
-            {
-                mOneTimeResourceBarriers.AddBarrier(HAL::ResourceTransitionBarrier{
-                        allocation.OneTimeTransitionStates->first, allocation.OneTimeTransitionStates->second, resource });
-            }
-
             for (auto& [passName, passData] : allocation.AllPassesMetadata())
             {
                 auto dName = passName.ToString();
@@ -360,11 +354,6 @@ namespace PathFinder
         auto it = mPipelineBufferResources.find(resourceName);
         if (it == mPipelineBufferResources.end()) return nullptr;
         return &it->second;
-    }
-
-    const HAL::ResourceBarrierCollection& PipelineResourceStorage::OneTimeResourceBarriers() const
-    {
-        return mOneTimeResourceBarriers;
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::ResourceBarriersForCurrentPass()

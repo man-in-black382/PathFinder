@@ -81,7 +81,7 @@ namespace PathFinder
         PipelineStateManager mPipelineStateManager;
         PipelineStateCreator mPipelineStateCreator;
         GraphicsDevice mGraphicsDevice;
-        AsyncComputeDevice mAsyncComputeDevice;
+        AsyncComputeDevice<> mAsyncComputeDevice;
         GPUCommandRecorder mCommandRecorder;
         RenderContext mContext;  
 

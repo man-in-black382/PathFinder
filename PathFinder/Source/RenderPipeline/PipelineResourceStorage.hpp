@@ -64,7 +64,6 @@ namespace PathFinder
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
         const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
-        const HAL::ResourceBarrierCollection& OneTimeResourceBarriers() const;
         const HAL::ResourceBarrierCollection& ResourceBarriersForCurrentPass();
         const Foundation::Name CurrentPassName() const;
         const ResourceDescriptorStorage* DescriptorStorage() const;
@@ -151,9 +150,6 @@ namespace PathFinder
 
         // Constant buffer for data that changes every frame
         HAL::RingBufferResource<PerFrameRootConstants> mPerFrameRootConstantsBuffer;
-
-        // Resource barriers to be performed once as initial state setup
-        HAL::ResourceBarrierCollection mOneTimeResourceBarriers;
 
         // 
         uint8_t mCurrentBackBufferIndex = 0;

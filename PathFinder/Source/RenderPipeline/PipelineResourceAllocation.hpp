@@ -47,7 +47,7 @@ namespace PathFinder
         HAL::ResourceState InitialStates() const;
 
         std::function<void()> AllocationAction;
-        std::optional<StatePair> OneTimeTransitionStates;
+        std::optional<HAL::ResourceState> OneAndOnlyState;
         AliasingMetadata AliasingInfo;
 
     private:

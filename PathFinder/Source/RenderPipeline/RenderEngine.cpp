@@ -28,8 +28,8 @@ namespace PathFinder
         mShaderManager{ mExecutablePath / "Shaders/" },
         mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
         mPipelineStateCreator{ &mPipelineStateManager, mDefaultRenderSurface },
-        mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, &mVertexStorage, &mAssetResourceStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight },
-        mAsyncComputeDevice{ &mDevice, mSimultaneousFramesInFlight },
+        mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
+        mAsyncComputeDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mCommandRecorder{ &mGraphicsDevice },
         mContext{ scene, &mAssetResourceStorage, &mVertexStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
@@ -50,7 +50,6 @@ namespace PathFinder
  
         mPipelineResourceStorage.AllocateScheduledResources();
         mPipelineStateManager.CompileStates();
-        mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.OneTimeResourceBarriers());
     }
 
     void RenderEngine::ProcessAndTransferAssets()
@@ -201,7 +200,7 @@ namespace PathFinder
     {
         for (auto passPtr : passes)
         {
-            mGraphicsDevice.SetCurrentRenderPass(passPtr);
+            mGraphicsDevice.ResetViewportToDefault();
             mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
             mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.ResourceBarriersForCurrentPass());
 

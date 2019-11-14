@@ -2473,6 +2473,9 @@
     <None Include="Source\RenderPipeline\GraphicsDevice.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Source\RenderPipeline\AsyncComputeDevice.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />

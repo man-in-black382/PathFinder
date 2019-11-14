@@ -5,25 +5,6 @@
 namespace PathFinder
 {
 
-    GraphicsDevice::GraphicsDevice(
-        const HAL::Device& device,
-        const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
-        PipelineResourceStorage* resourceManager,
-        PipelineStateManager* pipelineStateManager,
-        VertexStorage* vertexStorage,
-        AssetResourceStorage* assetStorage,
-        RenderSurfaceDescription defaultRenderSurface,
-        uint8_t simultaneousFramesInFlight)
-        :
-        mCommandQueue{ device },
-        mUniversalGPUDescriptorHeap{ universalGPUDescriptorHeap },
-        mRingCommandList{ device, simultaneousFramesInFlight },
-        mResourceStorage{ resourceManager },
-        mVertexStorage{ vertexStorage },
-        mAssetStorage{ assetStorage },
-        mPipelineStateManager{ pipelineStateManager },
-        mDefaultRenderSurface{ defaultRenderSurface } {}
-
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
         CommandList().SetRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName));
@@ -66,76 +47,16 @@ namespace PathFinder
         CommandList().CleadDepthStencil(mResourceStorage->GetDepthStencilDescriptor(resourceName), depthValue);
     }
 
-    void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)
-    {
-        if (const HAL::GraphicsPipelineState* pso = mPipelineStateManager->GetGraphicsPipelineState(psoName))
-        {
-            if (mAppliedGraphicState != pso)
-            {
-                mAppliedGraphicState = pso;
-                mAppliedComputeState = nullptr;
-                mAppliedRayTracingState = nullptr;
-
-                const HAL::RootSignature* signature = pso->GetRootSignature();
-                CommandList().SetPipelineState(*pso);
-                CommandList().SetGraphicsRootSignature(*signature);
-                CommandList().SetPrimitiveTopology(pso->GetPrimitiveTopology());
-                ReapplyCommonGraphicsResourceBindings();
-            }
-        }
-        else if (const HAL::ComputePipelineState* pso = mPipelineStateManager->GetComputePipelineState(psoName))
-        {
-            if (mAppliedComputeState != pso)
-            {
-                mAppliedGraphicState = nullptr;
-                mAppliedComputeState = pso;
-                mAppliedRayTracingState = nullptr;
-
-                const HAL::RootSignature* signature = pso->GetRootSignature();
-                CommandList().SetPipelineState(*pso);
-                CommandList().SetComputeRootSignature(*signature);
-                ReapplyCommonComputeResourceBindings();
-            }
-        }
-        else {
-            assert_format(false, "Pipeline state ", psoName.ToString(), " does not exist.");
-        }
-    }
-
     void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)
     {
         mCurrentPassViewport = viewport;
         CommandList().SetViewport(viewport);
     }
 
-    void GraphicsDevice::Draw(uint32_t vertexCount, uint32_t vertexStart)
+    void GraphicsDevice::Draw(uint32_t vertexCount, uint32_t instanceCount)
     {
         ApplyDefaultViewportIfNeeded();
-        CommandList().Draw(vertexCount, vertexStart);
-    }
-
-    void GraphicsDevice::DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount)
-    {
-        ApplyDefaultViewportIfNeeded();
-        CommandList().DrawInstanced(vertexCount, vertexStart, instanceCount);
-    }
-
-    void GraphicsDevice::DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart)
-    {
-        ApplyDefaultViewportIfNeeded();
-        CommandList().DrawIndexed(vertexStart, indexCount, indexStart);
-    }
-
-    void GraphicsDevice::DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount)
-    {
-        ApplyDefaultViewportIfNeeded();
-        CommandList().DrawIndexedInstanced(vertexStart, indexCount, indexStart, instanceCount);
-    }
-
-    void GraphicsDevice::Draw(const VertexStorageLocation& vertexStorageLocation)
-    {
-        ApplyDefaultViewportIfNeeded();
-        CommandList().DrawIndexed(vertexStorageLocation.VertexBufferOffset, vertexStorageLocation.IndexCount, vertexStorageLocation.IndexBufferOffset);
+        CommandList().Draw(vertexCount, 0);
     }
     
     void GraphicsDevice::Draw(const DrawablePrimitive& primitive)
@@ -145,65 +66,18 @@ namespace PathFinder
         CommandList().Draw(primitive.VertexCount(), 0);
     }
 
-    void GraphicsDevice::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+    void GraphicsDevice::ResetViewportToDefault()
     {
-        CommandList().Dispatch(groupCountX, groupCountY, groupCountZ);
-    }
-
-    void GraphicsDevice::BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
-    {
-        const BufferPipelineResource* resource = mResourceStorage->GetPipelineBufferResource(resourceName);
-        assert_format(resource, "Buffer ' ", resourceName.ToString(), "' doesn't exist");
-
-        BindExternalBuffer(*resource->Resource, shaderRegister, registerSpace, registerType);
-    }
-
-    void GraphicsDevice::WaitFence(HAL::Fence& fence)
-    {
-        mCommandQueue.WaitFence(fence);
-    }
-
-    void GraphicsDevice::ExecuteCommands()
-    {
-        CommandList().Close();
-        mCommandQueue.ExecuteCommandList(CommandList());
-    }
-
-    void GraphicsDevice::SignalFence(HAL::Fence& fence)
-    {
-        mCommandQueue.SignalFence(fence);
-    }
-
-    void GraphicsDevice::ResetCommandList()
-    {
-        mRingCommandList.CurrentCommandList().Reset(mRingCommandList.CurrentCommandAllocator());
-    }
-
-    void GraphicsDevice::BeginFrame(uint64_t frameFenceValue)
-    {
-        mRingCommandList.PrepareCommandListForNewFrame(frameFenceValue);
-    }
-
-    void GraphicsDevice::EndFrame(uint64_t completedFrameFenceValue)
-    {
-        mRingCommandList.ReleaseAndResetForCompletedFrames(completedFrameFenceValue);
-    }
-
-    void GraphicsDevice::SetCurrentRenderPass(const RenderPass* pass)
-    {
-        mCurrentRenderPass = pass;
         mCurrentPassViewport = std::nullopt;
     }
 
-    void GraphicsDevice::ReapplyCommonGraphicsResourceBindings()
+    void GraphicsDevice::ApplyCommonGraphicsResourceBindings()
     {   
         CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
         // Look at PipelineStateManager for base root signature parameter ordering
         CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
         CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);
-
-        if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass()) CommandList().SetGraphicsRootConstantBuffer(*buffer, 2);
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
         {
@@ -224,47 +98,120 @@ namespace PathFinder
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 10);
     }
 
-    void GraphicsDevice::ReapplyCommonComputeResourceBindings()
+    void GraphicsDevice::BindCurrentPassConstantBufferGraphics()
     {
-        CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
-
-        // Look at PipelineStateManager for base root signature parameter ordering
-        CommandList().SetComputeRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
-        CommandList().SetComputeRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);
-
-        if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass()) CommandList().SetComputeRootConstantBuffer(*buffer, 2);
-
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
+        if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
         {
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 3);
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 4);
+            CommandList().SetGraphicsRootConstantBuffer(*buffer, 2);
         }
-        
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 5);
-        
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 6);
-       
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0))
-        {
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 7);
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 8);
-        }
-
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 9);
-
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 10);
     }
 
     void GraphicsDevice::ApplyDefaultViewportIfNeeded()
     {
         if (mCurrentPassViewport) return;
-           
+
         mCurrentPassViewport = HAL::Viewport(mDefaultRenderSurface.Dimensions().Width, mDefaultRenderSurface.Dimensions().Height);
         CommandList().SetViewport(*mCurrentPassViewport);
+    }
+
+    void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)
+    {
+        if (const HAL::GraphicsPipelineState* pso = this->mPipelineStateManager->GetGraphicsPipelineState(psoName))
+        {
+            ApplyStateIfNeeded(pso);
+        }
+        else if (const HAL::ComputePipelineState* pso = this->mPipelineStateManager->GetComputePipelineState(psoName))
+        {
+            ApplyStateIfNeeded(pso);
+        }
+        else if (const HAL::RayTracingPipelineState* pso = this->mPipelineStateManager->GetRayTracingPipelineState(psoName))
+        {
+            ApplyStateIfNeeded(pso);
+        }
+        else {
+            assert_format(false, "Pipeline state doesn't exist");
+        }
+    }
+
+    void GraphicsDevice::ApplyStateIfNeeded(const HAL::GraphicsPipelineState* state)
+    {
+        bool graphicsStateApplied = mAppliedGraphicsState != nullptr;
+
+        // State is already applied
+        //
+        if (graphicsStateApplied && mAppliedGraphicsState == state) return;
+
+        // Set RT state
+        CommandList().SetPipelineState(*state);
+        CommandList().SetPrimitiveTopology(state->GetPrimitiveTopology());
+
+        // Same root signature is already applied as a graphics signature
+        //
+        if (graphicsStateApplied && state->GetRootSignature() == mAppliedGraphicsRootSignature)
+        {
+            BindCurrentPassConstantBufferGraphics();
+            return;
+        }
+
+        CommandList().SetGraphicsRootSignature(*state->GetRootSignature());
+        ApplyCommonGraphicsResourceBindings();
+        BindCurrentPassConstantBufferGraphics();
+
+        // Nullify cached states and signatures
+        mAppliedComputeState = nullptr;
+        mAppliedRayTracingState = nullptr;
+        mAppliedComputeRootSignature = nullptr;
+
+        // Cache graphics state and signature as graphics signature
+        mAppliedGraphicsState = state;
+        mAppliedGraphicsRootSignature = state->GetRootSignature();
+    }
+
+    void GraphicsDevice::ApplyStateIfNeeded(const HAL::ComputePipelineState* state)
+    {
+        // Since Graphics and Compute devices share compute functionality
+        // we can reuse base class implementation
+        GraphicsDeviceBase::ApplyStateIfNeeded(state);
+
+        // When compute state is applied we need to clear graphics state/signature cache
+        mAppliedGraphicsRootSignature = nullptr;
+        mAppliedGraphicsState = nullptr;
+    }
+
+    void GraphicsDevice::ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state)
+    {
+        // Ray tracing on graphics queue is a graphics workload, therefore we 
+        // need to override base functionality that sees RT work as compute work
+
+        bool rayTracingStateApplied = mAppliedRayTracingState != nullptr;
+
+        // State is already applied
+        //
+        if (rayTracingStateApplied && mAppliedRayTracingState == state) return;
+
+        // Set RT state
+        //CommandList().SetPipelineState(*pso);
+
+        // Same root signature is already applied as a graphics signature
+        //
+        if (rayTracingStateApplied && state->GetGlobalRootSignature() == mAppliedGraphicsRootSignature)
+        {
+            BindCurrentPassConstantBufferGraphics();
+            return;
+        }
+
+        CommandList().SetGraphicsRootSignature(*state->GetGlobalRootSignature());
+        ApplyCommonGraphicsResourceBindings();
+        BindCurrentPassConstantBufferGraphics();
+
+        // Nullify cached states and signatures
+        mAppliedGraphicsState = nullptr;
+        mAppliedComputeState = nullptr;
+        mAppliedComputeRootSignature = nullptr;
+        
+        // Cache RT state and signature as graphics signature
+        mAppliedRayTracingState = state;
+        mAppliedGraphicsRootSignature = state->GetGlobalRootSignature();
     }
 
 }

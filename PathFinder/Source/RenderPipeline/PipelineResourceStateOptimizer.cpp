@@ -28,7 +28,7 @@ namespace PathFinder
             if (mCollapsedStateSequences.size() == 1)
             {
                 HAL::ResourceState nextState = mCollapsedStateSequences.back().second;
-                allocation->OneTimeTransitionStates = std::make_pair(HAL::ResourceState::Common, nextState);
+                allocation->OneAndOnlyState = nextState;
                 continue;
             }
 

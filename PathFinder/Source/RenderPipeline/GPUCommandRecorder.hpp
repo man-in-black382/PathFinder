@@ -19,11 +19,7 @@ namespace PathFinder
         void ApplyPipelineState(Foundation::Name psoName);
         void SetViewport(const HAL::Viewport& viewport);
 
-        void Draw(uint32_t vertexCount, uint32_t vertexStart);
-        void DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount);
-        void DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart);
-        void DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount);
-        void Draw(const VertexStorageLocation& vertexStorageLocation);
+        void Draw(uint32_t vertexCount, uint32_t instanceCount = 1);
         void Draw(const DrawablePrimitive& primitive);
 
         void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);

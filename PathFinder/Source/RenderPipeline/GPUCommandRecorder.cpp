@@ -48,29 +48,9 @@ namespace PathFinder
         mGraphicsDevice->SetViewport(viewport);
     }
 
-    void GPUCommandRecorder::Draw(uint32_t vertexCount, uint32_t vertexStart)
+    void GPUCommandRecorder::Draw(uint32_t vertexCount, uint32_t instanceCount)
     {
-        mGraphicsDevice->Draw(vertexCount, vertexStart);
-    }
-
-    void GPUCommandRecorder::DrawInstanced(uint32_t vertexCount, uint32_t vertexStart, uint32_t instanceCount)
-    {
-        mGraphicsDevice->DrawInstanced(vertexCount, vertexStart, instanceCount);
-    }
-
-    void GPUCommandRecorder::DrawIndexed(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart)
-    {
-        mGraphicsDevice->DrawIndexed(vertexStart, indexCount, indexStart);
-    }
-
-    void GPUCommandRecorder::DrawIndexedInstanced(uint32_t vertexStart, uint32_t indexCount, uint32_t indexStart, uint32_t instanceCount)
-    {
-        mGraphicsDevice->DrawIndexedInstanced(vertexStart, indexCount, indexStart, instanceCount);
-    }
-
-    void GPUCommandRecorder::Draw(const VertexStorageLocation& vertexStorageLocation)
-    {
-        mGraphicsDevice->Draw(vertexStorageLocation);
+        mGraphicsDevice->Draw(vertexCount, instanceCount);
     }
     
     void GPUCommandRecorder::Draw(const DrawablePrimitive& primitive)
