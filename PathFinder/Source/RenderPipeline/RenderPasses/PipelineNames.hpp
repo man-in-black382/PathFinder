@@ -7,6 +7,9 @@ namespace PathFinder
 
     namespace ResourceNames
     {
+        inline Foundation::Name JumpFloodingAS0{ "Resource_JumpFloodingAS0" };
+        inline Foundation::Name JumpFloodingAS1{ "Resource_JumpFloodingAS1" };
+
         inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
         inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
         inline Foundation::Name BlurResult{ "Resource_BlurResult" };

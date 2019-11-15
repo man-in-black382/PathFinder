@@ -4,8 +4,8 @@
 namespace PathFinder
 {
 
-    ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage)
-        : mResourceStorage{ storage } {}
+    ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage, const ResourceDescriptorStorage* descriptorStorage)
+        : mResourceStorage{ storage }, mDescriptorStorage{ descriptorStorage } {}
 
     uint32_t ResourceProvider::GetTextureDescriptorTableIndex(Foundation::Name resourceName) const
     {
@@ -34,8 +34,26 @@ namespace PathFinder
 
     uint32_t ResourceProvider::GetExternalTextureDescriptorTableIndex(const HAL::TextureResource* texture, HAL::ShaderRegister registerType)
     {
-        assert_format(false, "not implemented");
-        return 0;
+        switch (registerType)
+        {
+        case HAL::ShaderRegister::ShaderResource:
+        {
+            auto descriptor = mDescriptorStorage->GetSRDescriptor(texture);
+            assert_format(descriptor, "Descriptor for texture does not exist");
+            return descriptor->IndexInHeapRange();
+        }
+            
+        case HAL::ShaderRegister::UnorderedAccess:
+        {
+            auto descriptor = mDescriptorStorage->GetUADescriptor(texture);
+            assert_format(descriptor, "Descriptor for texture does not exist");
+            return descriptor->IndexInHeapRange();
+        }
+
+        default:
+            assert_format(false, "Invalid register type");
+            return 0;
+        }
     }
 
 }

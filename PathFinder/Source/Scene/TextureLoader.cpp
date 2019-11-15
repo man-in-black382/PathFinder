@@ -160,9 +160,10 @@ namespace PathFinder
 
         return std::make_shared<HAL::TextureResource>(
             *mDevice, format, kind, dimensions, clearValue,
-            HAL::ResourceState::CopyDestination,
+            HAL::ResourceState::Common,
             HAL::ResourceState::PixelShaderAccess | 
-            HAL::ResourceState::NonPixelShaderAccess,
+            HAL::ResourceState::NonPixelShaderAccess |
+            HAL::ResourceState::CopyDestination,
             textureInfo.num_mips);
     }
 

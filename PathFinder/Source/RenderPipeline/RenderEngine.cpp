@@ -23,7 +23,7 @@ namespace PathFinder
         mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight, mPassExecutionGraph },
         mAssetResourceStorage{ &mDevice, &mAssetPostprocessCopyDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
-        mResourceProvider{ &mPipelineResourceStorage },
+        mResourceProvider{ &mPipelineResourceStorage, &mDescriptorStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
         mShaderManager{ mExecutablePath / "Shaders/" },
         mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },

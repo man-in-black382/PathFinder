@@ -4,7 +4,7 @@ namespace PathFinder
 {
 
     DisplacementDistanceMapRenderPass::DisplacementDistanceMapRenderPass()
-        : RenderPass("DisplaycmentDistanceMapGeneration", Purpose::Setup) {}
+        : RenderPass("DisplaycmentDistanceMapGeneration", Purpose::AssetProcessing) {}
 
     void DisplacementDistanceMapRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
@@ -30,9 +30,31 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DisplacementDistanceMapGeneration);
 
         auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<DisplacementDistanceMapGenerationCBContent>();
+        
+        context->GetScene()->IterateMaterials([&](const Material& material)
+        {
+            if (material.DistanceAtlasIndirectionMap && material.DistanceAtlas)
+            {
+                return;
+            }
 
-        auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(32, 32);
-        context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);
+            cbContent->DisplacementMapSRVIndex = 
+                context->GetResourceProvider()->GetExternalTextureDescriptorTableIndex(material.DisplacementMap, HAL::ShaderRegister::ShaderResource);
+
+            cbContent->DistanceAltasIndirectionMapUAVIndex = 
+                context->GetResourceProvider()->GetExternalTextureDescriptorTableIndex(material.DistanceAtlasIndirectionMap, HAL::ShaderRegister::UnorderedAccess);
+
+            cbContent->DistanceAltasUAVIndex =
+                context->GetResourceProvider()->GetExternalTextureDescriptorTableIndex(material.DistanceAtlas, HAL::ShaderRegister::UnorderedAccess);
+
+            auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(32, 32);
+            context->GetCommandRecorder()->Dispatch(
+                ceilf((float)material.DistanceAtlasIndirectionMap->Dimensions().Width / 8),
+                ceilf((float)material.DistanceAtlasIndirectionMap->Dimensions().Height / 8),
+                8);
+        });
+
+        
     }
 
 }

@@ -8,10 +8,7 @@ namespace HAL
 {
 
     RootSignature::RootSignature(const Device* device)
-        : mDevice{ device }
-    {
-        mDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-    }
+        : mDevice{ device } {}
 
     void RootSignature::AddDescriptorTableParameter(const RootDescriptorTableParameter& table)
     {

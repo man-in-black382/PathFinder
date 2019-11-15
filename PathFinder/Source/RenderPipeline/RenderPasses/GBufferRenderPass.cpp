@@ -30,8 +30,6 @@ namespace PathFinder
         ResourceScheduler::NewTextureProperties RT0Properties{};
         RT0Properties.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Unsigned;
 
-        scheduler->NewTexture("test");
-
         scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<GBufferCBContent>();
@@ -41,7 +39,7 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBuffer);
         context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::GBufferRT0, ResourceNames::GBufferDepthStencil);
-        context->GetCommandRecorder()->ClearBackBuffer(Foundation::Color::Gray());
+        context->GetCommandRecorder()->ClearBackBuffer(Foundation::Color::Black());
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
 
         // Use vertex and index buffers as normal structured buffers

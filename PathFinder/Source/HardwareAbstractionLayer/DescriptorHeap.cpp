@@ -161,7 +161,7 @@ namespace HAL
         case D3D12_RESOURCE_DIMENSION_BUFFER:
             desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
             desc.Buffer.FirstElement = 0;
-            desc.Buffer.NumElements = (UINT)resourceDesc.Width;
+            desc.Buffer.NumElements = (UINT)(resourceDesc.Width / bufferStride);
             desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
             desc.Buffer.StructureByteStride = (UINT)bufferStride;
             break;
@@ -211,13 +211,20 @@ namespace HAL
             desc.Texture3D.ResourceMinLODClamp = 0.0f;
             break;
         }
-
-        if (explicitFormat)
+        
+        if (explicitFormat) 
         {
             desc.Format = ResourceFormat::D3DFormat(*explicitFormat);
             return desc;
         }
         
+        if (resourceDesc.Dimension == D3D12_RESOURCE_DIMENSION_BUFFER && 
+            resourceDesc.Format == DXGI_FORMAT_UNKNOWN)
+        {
+            desc.Format = resourceDesc.Format;
+            return desc;
+        }
+
         ResourceFormat::FormatVariant format = ResourceFormat::FormatFromD3DFormat(resourceDesc.Format);
 
         if (std::holds_alternative<ResourceFormat::DepthStencil>(format))
@@ -243,7 +250,7 @@ namespace HAL
         case D3D12_RESOURCE_DIMENSION_BUFFER:
             desc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
             desc.Buffer.FirstElement = 0;
-            desc.Buffer.NumElements = (UINT)resourceDesc.Width;
+            desc.Buffer.NumElements = (UINT)(resourceDesc.Width / bufferStride);
             desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
             desc.Buffer.StructureByteStride = (UINT)bufferStride;
             break;

@@ -11,7 +11,7 @@ namespace Geometry {
 
     bool Dimensions::operator!=(const Dimensions &rhs)
     {
-        return !(*this == rhs);
+        return !(*this == rhs); 
     }
 
     bool Dimensions::operator==(const Dimensions &rhs)

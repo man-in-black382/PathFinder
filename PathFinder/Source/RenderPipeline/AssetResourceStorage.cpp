@@ -43,30 +43,28 @@ namespace PathFinder
     GPUDescriptorIndex AssetResourceStorage::StoreAsset(std::shared_ptr<HAL::TextureResource> resource)
     {
         mAssets.push_back(resource);
-        return mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mAssets.back().get()).IndexInHeapRange();
+        return mDescriptorStorage->EmplaceSRDescriptorIfNeeded(resource.get()).IndexInHeapRange();
     }
 
-    PreprocessableAsset AssetResourceStorage::StorePreprocessableAsset(std::unique_ptr<HAL::TextureResource> asset, bool queueContentReadback)
-    {
-        std::shared_ptr<HAL::TextureResource> sharedAsset = std::move(asset);
+    PreprocessableAsset<uint8_t> AssetResourceStorage::StorePreprocessableAsset(std::shared_ptr<HAL::TextureResource> asset, bool queueContentReadback)
+    {        
+        mAssets.push_back(asset);
         
-        mAssets.push_back(sharedAsset);
-        
-        auto srIndex = mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mAssets.back().get()).IndexInHeapRange();
-        auto uaIndex = mDescriptorStorage->EmplaceUADescriptorIfNeeded(mAssets.back().get()).IndexInHeapRange();
+        auto srIndex = mDescriptorStorage->EmplaceSRDescriptorIfNeeded(asset.get()).IndexInHeapRange();
+        auto uaIndex = mDescriptorStorage->EmplaceUADescriptorIfNeeded(asset.get()).IndexInHeapRange();
 
         std::shared_ptr<HAL::BufferResource<uint8_t>> readBackBuffer = nullptr;
 
         if (queueContentReadback)
         {
-            readBackBuffer = mCopyDevice->QueueResourceCopyToReadbackMemory(sharedAsset);
+            readBackBuffer = mCopyDevice->QueueResourceCopyToReadbackMemory(asset);
         }
 
         mAssetPostProcessingBarriers.AddBarrier(
             HAL::ResourceTransitionBarrier{
-                sharedAsset->InitialStates(),
-                HAL::ResourceState::Common, // Prepare to be used on copy queue
-                sharedAsset.get()
+                asset->InitialStates(),
+                HAL::ResourceState::Common, // Prepare to be used on copy queue 
+                asset.get()
             }
         );
 

@@ -22,6 +22,8 @@ namespace PathFinder
         void IterateMeshInstances(const std::function<void(const MeshInstance& instance)>& functor) const;
         void IterateMeshInstances(const std::function<void(MeshInstance & instance)>& functor);
 
+        void IterateMaterials(const std::function<void(const Material& material)>& functor) const;
+
     private:
         std::list<Mesh> mMeshes;
         std::list<MeshInstance> mMeshInstances;

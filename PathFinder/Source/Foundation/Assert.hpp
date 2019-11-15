@@ -8,6 +8,7 @@ inline void print_assertion(Args&&... args)
 {
     std::stringstream ss;
     ss.precision(10);
+    ss << std::endl;
     //if constexpr (debug_mode)
     //{
     (ss << ... << args) << std::endl;
@@ -26,6 +27,6 @@ inline void print_assertion(Args&&... args)
         __FILE__, \
         " in Line: ", \
         __LINE__, \
-        " ",\
+        " \n",\
         __VA_ARGS__))
 

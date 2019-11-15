@@ -339,9 +339,6 @@
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStateOptimizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\AsyncComputeDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2474,6 +2471,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\AsyncComputeDevice.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\AssetResourceStorage.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

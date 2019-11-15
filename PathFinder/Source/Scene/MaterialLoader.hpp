@@ -4,6 +4,7 @@
 #include "TextureLoader.hpp"
 
 #include "../RenderPipeline/AssetResourceStorage.hpp"
+#include "../HardwareAbstractionLayer/BufferResource.hpp"
 
 #include <filesystem>
 #include <string>
@@ -29,6 +30,14 @@ namespace PathFinder
         void SerializePostprocessedTextures();
 
     private:
+        struct SerializationData
+        {
+            std::string DistanceMapReltivePath;
+            const HAL::BufferResource<uint8_t>* DistanceAtlasIndirectionBuffer;
+            const HAL::BufferResource<uint8_t>* DistanceAtlasBuffer;
+            const HAL::BufferResource<uint8_t>* DistanceAtlasCounterBuffer;
+        };
+
         const HAL::Device* mDevice;
         AssetResourceStorage* mAssetStorage;
         TextureLoader mTextureLoader;

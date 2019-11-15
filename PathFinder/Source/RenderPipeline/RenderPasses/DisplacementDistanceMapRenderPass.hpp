@@ -9,7 +9,9 @@ namespace PathFinder
      
     struct DisplacementDistanceMapGenerationCBContent
     {
-
+        uint32_t DisplacementMapSRVIndex = 0;
+        uint32_t DistanceAltasIndirectionMapUAVIndex = 0;
+        uint32_t DistanceAltasUAVIndex = 0;
     };
 
     class DisplacementDistanceMapRenderPass : public RenderPass 

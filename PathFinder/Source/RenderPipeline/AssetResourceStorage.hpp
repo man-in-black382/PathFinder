@@ -34,11 +34,12 @@ namespace PathFinder
     using GPUInstanceIndex = uint64_t;
     using GPUDescriptorIndex = uint64_t;
 
+    template <class T>
     struct PreprocessableAsset
     {
         GPUDescriptorIndex SRIndex = 0;
         GPUDescriptorIndex UAIndex = 0;
-        std::shared_ptr<HAL::BufferResource<uint8_t>> AssetReadbackBuffer = nullptr;
+        std::shared_ptr<HAL::BufferResource<T>> AssetReadbackBuffer = nullptr;
     };
 
     class AssetResourceStorage
@@ -50,7 +51,8 @@ namespace PathFinder
 
         // Store asset that is required to be processed by an asset-processing render pass.
         // When processing is done an optional transfer to a read-back buffer can be performed
-        PreprocessableAsset StorePreprocessableAsset(std::unique_ptr<HAL::TextureResource> resource, bool queueContentReadback);
+        PreprocessableAsset<uint8_t> StorePreprocessableAsset(std::shared_ptr<HAL::TextureResource> asset, bool queueContentReadback);
+        template <class T> PreprocessableAsset<T> StorePreprocessableAsset(std::shared_ptr<HAL::BufferResource<T>> asset, bool queueContentReadback);
 
         GPUInstanceIndex StoreMeshInstance(const MeshInstance& instance, const HAL::RayTracingBottomAccelerationStructure& blas);
 
@@ -64,7 +66,7 @@ namespace PathFinder
         const HAL::Device* mDevice;
         CopyDevice* mCopyDevice;
         ResourceDescriptorStorage* mDescriptorStorage;
-        std::vector<std::shared_ptr<HAL::TextureResource>> mAssets;
+        std::vector<std::shared_ptr<HAL::Resource>> mAssets;
         HAL::RingBufferResource<GPUInstanceTableEntry> mInstanceTable;
         HAL::RayTracingTopAccelerationStructure mTopAccelerationStructure;
         uint64_t mCurrentFrameInsertedInstanceCount = 0;
@@ -84,3 +86,5 @@ namespace PathFinder
     };
 
 }
+
+#include "AssetResourceStorage.inl"

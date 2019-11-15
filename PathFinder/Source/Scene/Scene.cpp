@@ -37,4 +37,12 @@ namespace PathFinder
         }
     }
 
+    void Scene::IterateMaterials(const std::function<void(const Material& material)>& functor) const
+    {
+        for (const Material& material : mMaterials)
+        {
+            functor(material);
+        }
+    }
+
 }

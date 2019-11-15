@@ -63,7 +63,11 @@ namespace HAL
     {
         CompilerInputs inputs{ stage, Shader::Profile::P6_3 };
 
-        LPCWSTR arguments[] = { L"/Zi", L"/Od" }; // Provide debug info, disable optimization 
+#if defined(DEBUG) || defined(_DEBUG) 
+        LPCWSTR arguments[] = { L"/Zi", L"/Od", L"/all_resources_bound" }; // Provide debug info, disable optimization 
+#else
+        LPCWSTR arguments[] = { L"/all_resources_bound" };
+#endif
 
         ShaderFileReader reader{ path.parent_path(), mLibrary.Get() };
 
