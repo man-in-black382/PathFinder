@@ -55,8 +55,8 @@ namespace PathFinder
                 auto eStates = HAL::ResourceState::CopySource | HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
                 auto distanceIndirectionMap = std::make_shared<HAL::TextureResource>(
-                    *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture2D,
-                    Geometry::Dimensions{ 128, 128 }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
+                    *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture3D,
+                    Geometry::Dimensions{ 128, 128, 64 }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
 
                 auto distanceAtlas = std::make_shared<HAL::TextureResource>(
                     *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture3D,
@@ -64,6 +64,10 @@ namespace PathFinder
 
                 auto atlasEntryCounter = std::make_shared<HAL::BufferResource<uint32_t>>(
                     *mDevice, 1, 1, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::CopySource);
+
+                distanceIndirectionMap->SetDebugName("DistanceIndirectionMap");
+                distanceAtlas->SetDebugName("DistanceAtlas");
+                atlasEntryCounter->SetDebugName("DistanceAtlasCounter");
 
                 auto distanceIndirectionAsset = mAssetStorage->StorePreprocessableAsset(distanceIndirectionMap, true);
                 auto distanceAtlasAsset = mAssetStorage->StorePreprocessableAsset(distanceAtlas, true);

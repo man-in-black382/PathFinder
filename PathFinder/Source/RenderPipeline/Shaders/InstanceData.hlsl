@@ -8,6 +8,8 @@ struct InstanceData
     uint MetalnessMapIndex;
     uint AOMapIndex;
     uint DisplacementMapIndex;
+    uint DistanceAtlasIndirectionMapIndex;
+    uint DistanceAtlasIndex;
     uint UnifiedVertexBufferOffset;
     uint UnifiedIndexBufferOffset;
     uint IndexCount;

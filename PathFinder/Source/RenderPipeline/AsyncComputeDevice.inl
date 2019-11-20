@@ -16,7 +16,9 @@ namespace PathFinder
         mResourceStorage{ resourceStorage },
         mPipelineStateManager{ pipelineStateManager },
         mDefaultRenderSurface{ defaultRenderSurface }
-    {}
+    {
+        mCommandQueue.SetDebugName("Async_Compute_Device_Cmd_Queue");
+    }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BindBuffer(
@@ -56,6 +58,18 @@ namespace PathFinder
         else {
             assert_format(false, "No pipeline state applied");
         }
+    }
+
+    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::uvec4& clearValue)
+    {
+
+    }
+
+    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::vec4& clearValue)
+    {
+
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
@@ -136,6 +150,12 @@ namespace PathFinder
     void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::WaitFence(HAL::Fence& fence)
     {
         mCommandQueue.WaitFence(fence);
+    }
+
+    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::WaitUntilUnorderedAccessesComplete(Foundation::Name resourceName)
+    {
+        CommandList().InsertBarrier(HAL::UnorderedAccessResourceBarrier{ mResourceStorage->GetResource(resourceName) });
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>

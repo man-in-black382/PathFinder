@@ -3,6 +3,8 @@
 #include "../HardwareAbstractionLayer/DisplayAdapterFetcher.hpp"
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 
+#include <pix.h>
+
 namespace PathFinder
 {
 
@@ -61,10 +63,11 @@ namespace PathFinder
         // Run setup and asset-processing passes
         RunRenderPasses(mPassExecutionGraph->OneTimePasses());
 
+        mFrameFence.IncreaseExpectedValue();
+
         // Transition resources after asset-processing passes completed their work
         mGraphicsDevice.CommandList().InsertBarriers(mAssetResourceStorage.AssetPostProcessingBarriers());
         mGraphicsDevice.ExecuteCommands();
-        mFrameFence.IncreaseExpectedValue();
         mGraphicsDevice.SignalFence(mFrameFence);
 
         // Copy processed assets if needed

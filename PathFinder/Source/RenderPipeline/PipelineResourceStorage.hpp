@@ -48,6 +48,7 @@ namespace PathFinder
 
         const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName) const;
         const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName) const;
+        const HAL::UADescriptor& GetUnorderedAccessDescriptor(Foundation::Name resourceName) const;
         const HAL::RTDescriptor& GetCurrentBackBufferDescriptor() const;
         
         void SetCurrentBackBufferIndex(uint8_t index);
@@ -64,6 +65,7 @@ namespace PathFinder
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
         const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
+        const HAL::Resource* GetResource(ResourceName resourceName) const;
         const HAL::ResourceBarrierCollection& ResourceBarriersForCurrentPass();
         const Foundation::Name CurrentPassName() const;
         const ResourceDescriptorStorage* DescriptorStorage() const;

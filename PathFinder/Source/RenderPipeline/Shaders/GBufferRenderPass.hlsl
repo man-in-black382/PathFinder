@@ -94,16 +94,33 @@ float FetchAOMap(VertexOut vertex, InstanceData instanceData)
     return aoMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
+float FetchDisplacementMap(VertexOut vertex, InstanceData instanceData)
+{
+    Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
+    return displacementMap.Sample(AnisotropicClampSampler, vertex.UV).r;
+}
+
+VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData)
+{
+    Texture3D distanceField = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
+
+
+
+    return originalVertexData;
+}
+
 PixelOut PSMain(VertexOut pin)
 {
     InstanceData instanceData = InstanceTable[PassDataCB.InstanceTableIndex];
 
+    VertexOut displacedVertexData = DisplaceUV(pin, instanceData);
+
     GBufferCookTorrance gBufferData;
-    gBufferData.Albedo = FetchAlbedoMap(pin, instanceData);
-    gBufferData.Normal = FetchNormalMap(pin, instanceData);
-    gBufferData.Metalness = FetchMetallnessMap(pin, instanceData);
-    gBufferData.Roughness = FetchRoughnessMap(pin, instanceData);
-    gBufferData.AO = FetchAOMap(pin, instanceData);
+    gBufferData.Albedo = FetchAlbedoMap(displacedVertexData, instanceData);
+    gBufferData.Normal = FetchNormalMap(displacedVertexData, instanceData);
+    gBufferData.Metalness = FetchMetallnessMap(displacedVertexData, instanceData);
+    gBufferData.Roughness = FetchRoughnessMap(displacedVertexData, instanceData);
+    gBufferData.AO = FetchAOMap(displacedVertexData, instanceData);
 
     GBufferEncoded encoded = EncodeCookTorranceMaterial(gBufferData);
 

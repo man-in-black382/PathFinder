@@ -17,7 +17,14 @@ namespace PathFinder
     class GraphicsDevice : public GraphicsDeviceBase
     {
     public:
-        using GraphicsDeviceBase::AsyncComputeDevice;
+        GraphicsDevice(
+            const HAL::Device& device,
+            const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
+            PipelineResourceStorage* resourceStorage,
+            PipelineStateManager* pipelineStateManager,
+            const RenderSurfaceDescription& defaultRenderSurface,
+            uint8_t simultaneousFramesInFlight
+        );
 
         void ApplyPipelineState(Foundation::Name psoName) override;
 

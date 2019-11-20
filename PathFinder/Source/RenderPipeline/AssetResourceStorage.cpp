@@ -60,6 +60,8 @@ namespace PathFinder
             readBackBuffer = mCopyDevice->QueueResourceCopyToReadbackMemory(asset);
         }
 
+        mAssetPostProcessingBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ asset.get() });
+
         mAssetPostProcessingBarriers.AddBarrier(
             HAL::ResourceTransitionBarrier{
                 asset->InitialStates(),
@@ -85,6 +87,8 @@ namespace PathFinder
             instance.AssosiatedMaterial()->MetalnessMapSRVIndex,
             instance.AssosiatedMaterial()->AOMapSRVIndex,
             instance.AssosiatedMaterial()->DisplacementMapSRVIndex,
+            instance.AssosiatedMaterial()->DistanceAtlasIndirectionMapSRVIndex,
+            instance.AssosiatedMaterial()->DistanceAtlasSRVIndex,
             instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
             instance.AssosiatedMesh()->LocationInVertexStorage().IndexBufferOffset,
             instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount

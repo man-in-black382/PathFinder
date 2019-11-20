@@ -34,12 +34,15 @@ namespace PathFinder
         );
 
         virtual void ApplyPipelineState(Foundation::Name psoName);
+        virtual void WaitUntilUnorderedAccessesComplete(Foundation::Name resourceName);
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
 
         virtual void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         template <class T>
         void BindExternalBuffer(const HAL::BufferResource<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::vec4& clearValue);
+        void ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::uvec4& clearValue);
 
         void WaitFence(HAL::Fence& fence);
         void ExecuteCommands();
@@ -63,13 +66,14 @@ namespace PathFinder
         PipelineStateManager* mPipelineStateManager;
         RenderSurfaceDescription mDefaultRenderSurface;
 
+        CommandQueueT mCommandQueue;
+
     private:
         void ApplyCommonComputeResourceBindings();
         void BindCurrentPassConstantBufferCompute();
 
         const HAL::Device* mDevice;
         HAL::RingCommandList<CommandListT, CommandAllocatorT> mRingCommandList;
-        CommandQueueT mCommandQueue;
 
     public:
         inline CommandListT& CommandList() { return mRingCommandList.CurrentCommandList(); }

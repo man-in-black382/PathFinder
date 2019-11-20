@@ -38,6 +38,16 @@ namespace PathFinder
         mGraphicsDevice->ClearDepth(resourceName, depthValue);
     }
 
+    void GPUCommandRecorder::ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::vec4& clearValue)
+    {
+        mGraphicsDevice->ClearUnorderedAccessResource(resourceName, clearValue);
+    }
+
+    void GPUCommandRecorder::ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::uvec4& clearValue)
+    {
+        mGraphicsDevice->ClearUnorderedAccessResource(resourceName, clearValue);
+    }
+
     void GPUCommandRecorder::ApplyPipelineState(Foundation::Name psoName)
     {
         mGraphicsDevice->ApplyPipelineState(psoName);
@@ -46,6 +56,11 @@ namespace PathFinder
     void GPUCommandRecorder::SetViewport(const HAL::Viewport& viewport)
     {
         mGraphicsDevice->SetViewport(viewport);
+    }
+
+    void GPUCommandRecorder::WaitUntilUnorderedAccessesComplete(Foundation::Name resourceName)
+    {
+        mGraphicsDevice->WaitUntilUnorderedAccessesComplete(resourceName);
     }
 
     void GPUCommandRecorder::Draw(uint32_t vertexCount, uint32_t instanceCount)

@@ -73,6 +73,14 @@ namespace PathFinder
         return *descriptor;
     }
 
+    const HAL::UADescriptor& PipelineResourceStorage::GetUnorderedAccessDescriptor(Foundation::Name resourceName) const
+    {
+        const HAL::Resource* resource = GetResource(resourceName);
+        assert_format(resource, "Resource ", resourceName.ToString(), " was not scheduled to be used as unordered access resource");
+        auto descriptor = mDescriptorStorage->GetUADescriptor(resource);
+        return *descriptor;
+    }
+
     const HAL::RTDescriptor& PipelineResourceStorage::GetCurrentBackBufferDescriptor() const
     {
         return mBackBufferDescriptors[mCurrentBackBufferIndex];
@@ -354,6 +362,13 @@ namespace PathFinder
         auto it = mPipelineBufferResources.find(resourceName);
         if (it == mPipelineBufferResources.end()) return nullptr;
         return &it->second;
+    }
+
+    const HAL::Resource* PipelineResourceStorage::GetResource(ResourceName resourceName) const
+    {
+        if (const TexturePipelineResource* pipelineResource = GetPipelineTextureResource(resourceName)) return pipelineResource->Resource.get();
+        else if (const BufferPipelineResource* pipelineResource = GetPipelineBufferResource(resourceName)) return pipelineResource->Resource.get();
+        else return nullptr;
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::ResourceBarriersForCurrentPass()

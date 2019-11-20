@@ -5,6 +5,16 @@
 namespace PathFinder
 {
 
+    GraphicsDevice::GraphicsDevice(
+        const HAL::Device& device, const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
+        PipelineResourceStorage* resourceStorage, PipelineStateManager* pipelineStateManager,
+        const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
+        :
+        GraphicsDeviceBase(device, universalGPUDescriptorHeap, resourceStorage, pipelineStateManager, defaultRenderSurface, simultaneousFramesInFlight)
+    {
+        mCommandQueue.SetDebugName("Graphics_Device_Cmd_Queue");
+    }
+
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
         CommandList().SetRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName));

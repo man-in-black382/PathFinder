@@ -1,6 +1,8 @@
 #include "CommandQueue.hpp"
 #include "Utils.h"
 
+#include "../Foundation/StringUtils.hpp"
+
 namespace HAL
 {
 
@@ -24,6 +26,11 @@ namespace HAL
     void CommandQueue::WaitFence(const Fence& fence)
     {
         mQueue->Wait(fence.D3DFence(), fence.ExpectedValue());
+    }
+
+    void CommandQueue::SetDebugName(const std::string& name)
+    {
+        mQueue->SetName(StringToWString(name).c_str());
     }
 
 

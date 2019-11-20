@@ -11,6 +11,8 @@ namespace PathFinder
     class RenderPassExecutionGraph
     {
     public:
+        //struct RenderPass
+
         void AddPass(RenderPass* pass);
         uint32_t IndexOfPass(const RenderPass* pass) const;
         uint32_t IndexOfPass(Foundation::Name passName) const;

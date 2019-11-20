@@ -11,8 +11,9 @@ namespace Geometry {
         Dimensions(uint64_t w);
         Dimensions() = default;
 
-        bool operator==(const Dimensions &rhs);
+        uint64_t LargestDimension() const;
 
+        bool operator==(const Dimensions &rhs);
         bool operator!=(const Dimensions &rhs);
 
         uint64_t Width = 1;

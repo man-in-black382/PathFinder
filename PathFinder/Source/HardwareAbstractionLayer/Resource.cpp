@@ -14,8 +14,7 @@ namespace HAL
         : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) {}
 
     Resource::Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
-        : mInitialStates{ initialStateMask }, mExpectedStates{ expectedStateMask | initialStateMask }, 
-        mResourceAlignment{ format.ResourceAlighnment() }, mTotalMemory{ format.ResourceSizeInBytes() }
+        : mInitialStates{ initialStateMask }, mExpectedStates{ expectedStateMask | initialStateMask }
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
         heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -23,6 +22,8 @@ namespace HAL
         ResourceFormat updatedFormat = format;
         updatedFormat.UpdateExpectedUsageFlags(mExpectedStates);
         mDescription = updatedFormat.D3DResourceDescription();
+        mResourceAlignment = format.ResourceAlighnment();
+        mTotalMemory = format.ResourceSizeInBytes();
 
         bool isSubjectForClearing = 
             EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) || 
@@ -39,7 +40,6 @@ namespace HAL
     }
 
     Resource::Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType)
-        : mResourceAlignment { format.ResourceAlighnment() }, mTotalMemory{ format.ResourceSizeInBytes() }
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
         ResourceState initialState = ResourceState::Common;
@@ -62,6 +62,8 @@ namespace HAL
         ResourceFormat updatedFormat = format;
         updatedFormat.UpdateExpectedUsageFlags(mExpectedStates);
         mDescription = updatedFormat.D3DResourceDescription();
+        mResourceAlignment = format.ResourceAlighnment();
+        mTotalMemory = format.ResourceSizeInBytes();
 
         ThrowIfFailed(device.D3DDevice()->CreateCommittedResource(
             &heapProperties,
@@ -76,9 +78,7 @@ namespace HAL
     Resource::Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
         : mInitialStates{ initialStateMask },
         mExpectedStates{ expectedStateMask | initialStateMask },
-        mHeapOffset{ heapOffset },
-        mResourceAlignment{ format.ResourceAlighnment() },
-        mTotalMemory{ format.ResourceSizeInBytes() }
+        mHeapOffset{ heapOffset }
     {
         bool isSubjectForClearing =
             EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) ||
@@ -87,6 +87,8 @@ namespace HAL
         ResourceFormat updatedFormat = format;
         updatedFormat.UpdateExpectedUsageFlags(mExpectedStates);
         mDescription = updatedFormat.D3DResourceDescription();
+        mResourceAlignment = format.ResourceAlighnment();
+        mTotalMemory = format.ResourceSizeInBytes();
 
         ThrowIfFailed(device.D3DDevice()->CreatePlacedResource(
             heap.D3DHeap(),

@@ -19,6 +19,7 @@ namespace HAL
 
         void SignalFence(const Fence& fence);
         void WaitFence(const Fence& fence);
+        void SetDebugName(const std::string& name) override;
 
     protected:
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> mQueue;

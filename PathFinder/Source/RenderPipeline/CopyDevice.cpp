@@ -8,7 +8,10 @@ namespace PathFinder
         mCommandAllocator{ *mDevice },
         mCommandList{ *mDevice, mCommandAllocator },
         mCommandQueue{ *device },
-        mFence{ *mDevice } {}
+        mFence{ *mDevice } 
+    {
+        mCommandQueue.SetDebugName("Copy_Device_Cmd_Queue");
+    }
  
     std::shared_ptr<HAL::TextureResource> CopyDevice::QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::TextureResource> texture)
     {
@@ -31,7 +34,7 @@ namespace PathFinder
         HAL::ResourceFootprint textureFootprint{ *texture };
 
         auto emptyClone = std::make_shared<HAL::BufferResource<uint8_t>>(
-            *mDevice, texture->TotalMemory(), 1, HAL::CPUAccessibleHeapType::Readback);
+            *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Readback);
 
         for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())
         {
@@ -47,11 +50,14 @@ namespace PathFinder
 
     void CopyDevice::CopyResources()
     {
+        mFence.IncreaseExpectedValue();
+
         mCommandList.Close();
         mCommandQueue.ExecuteCommandList(mCommandList);
         mFence.IncreaseExpectedValue();
         mCommandQueue.SignalFence(mFence);
         mFence.StallCurrentThreadUntilCompletion();
+        
         mCommandAllocator.Reset();
         mCommandList.Reset(mCommandAllocator);
 

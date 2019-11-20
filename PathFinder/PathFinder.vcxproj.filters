@@ -360,6 +360,18 @@
     <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DebugRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PassConfigurator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPassConfigurator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPassConfiguration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -1985,6 +1997,18 @@
     <ClInclude Include="Source\RenderPipeline\GPUCommandRecorder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DebugRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PassConfigurator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPassConfigurator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPassConfiguration.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2476,6 +2500,7 @@
     <None Include="Source\RenderPipeline\AssetResourceStorage.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
@@ -2504,7 +2529,11 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SpaceConversion.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMappingRenderPass.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\DisplacementDistanceMapGenerationRenderPass.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DebugRenderPass.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapHelperCompression.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapHelperInitialization.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapGeneration.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapCommon.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

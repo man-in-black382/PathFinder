@@ -1,9 +1,9 @@
-#include "BackBufferOutputPass.hpp"
+#include "DebugRenderPass.hpp"
 
 namespace PathFinder
 {
 
-    BackBufferOutputPass::BackBufferOutputPass()
+   /* BackBufferOutputPass::BackBufferOutputPass()
         : RenderPass("BackBufferOutput") {}
 
     void BackBufferOutputPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
@@ -33,6 +33,6 @@ namespace PathFinder
         cbContent->SourceTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::ToneMappingOutput);
 
         context->GetCommandRecorder()->Draw(DrawablePrimitive::Quad());
-    }
+    }*/
 
 }

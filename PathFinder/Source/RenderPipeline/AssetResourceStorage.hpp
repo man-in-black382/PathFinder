@@ -26,6 +26,8 @@ namespace PathFinder
         uint32_t MetalnessMapIndex;
         uint32_t AOMapIndex;
         uint32_t DisplacementMapIndex;
+        uint32_t DistanceAtlasIndirectionMapIndex;
+        uint32_t DistanceAtlasIndex;
         uint32_t UnifiedVertexBufferOffset;
         uint32_t UnifiedIndexBufferOffset;
         uint32_t IndexCount;

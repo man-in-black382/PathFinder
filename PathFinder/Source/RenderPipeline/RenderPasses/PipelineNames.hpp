@@ -7,9 +7,8 @@ namespace PathFinder
 
     namespace ResourceNames
     {
-        inline Foundation::Name JumpFloodingAS0{ "Resource_JumpFloodingAS0" };
-        inline Foundation::Name JumpFloodingAS1{ "Resource_JumpFloodingAS1" };
-
+        inline Foundation::Name JumpFloodingHelper0{ "Resource_JumpFloodingHelper0" };
+        inline Foundation::Name JumpFloodingHelper1{ "Resource_JumpFloodingHelper1" };
         inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
         inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
         inline Foundation::Name BlurResult{ "Resource_BlurResult" };
@@ -20,7 +19,9 @@ namespace PathFinder
 
     namespace PSONames
     {
-        inline Foundation::Name DisplacementDistanceMapGeneration{ "PSO_DistanceMapGeneration" };
+        inline Foundation::Name DistanceMapHelperInitialization{ "PSO_DistanceMapHelperInitialization" };
+        inline Foundation::Name DistanceMapHelperCompression{ "PSO_DistanceMapHelperCompression" };
+        inline Foundation::Name DistanceMapGeneration{ "PSO_DistanceMapGeneration" };
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
         inline Foundation::Name GBuffer{ "PSO_GBuffer" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };

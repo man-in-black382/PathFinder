@@ -1,6 +1,10 @@
 #include "Fence.hpp"
 #include "Utils.h"
 
+#include <comdef.h>
+
+#include "../Foundation/Assert.hpp"
+
 namespace HAL
 {
   
@@ -26,7 +30,18 @@ namespace HAL
 
     void Fence::StallCurrentThreadUntilCompletion(uint8_t allowedSimultaneousFramesCount)
     {
-        uint8_t framesInFlight = ExpectedValue() - CompletedValue();
+        uint64_t completedValue = CompletedValue();
+
+        if (completedValue == UINT64_MAX)
+        {
+            Microsoft::WRL::ComPtr<ID3D12Device5> device;
+            mFence->GetDevice(IID_PPV_ARGS(device.GetAddressOf()));
+            HRESULT removeReason = device->GetDeviceRemovedReason();
+            _com_error error{ removeReason };
+            assert_format(false, "Fence Completed Value indicates Device Removal: ", error.ErrorMessage());
+        }
+
+        uint8_t framesInFlight = mExpectedValue - completedValue;
 
         if (framesInFlight < allowedSimultaneousFramesCount) return;
 
