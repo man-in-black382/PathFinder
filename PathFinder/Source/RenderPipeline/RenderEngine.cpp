@@ -145,7 +145,7 @@ namespace PathFinder
         const Camera& camera = mScene->MainCamera();
 
         perFrameConstants->CameraPosition = glm::vec4{ camera.Position(), 1.0 };
-        perFrameConstants->CameraInverseView = camera.View();
+        perFrameConstants->CameraView = camera.View();
         perFrameConstants->CameraProjection = camera.Projection();
         perFrameConstants->CameraViewProjection = camera.ViewProjection();
         perFrameConstants->CameraInverseView = camera.InverseView();

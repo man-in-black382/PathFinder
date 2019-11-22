@@ -37,6 +37,7 @@ namespace PathFinder
     private:
         Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
         void ProcessNode(aiNode* node, const aiScene* scene);
+        void CalculateTangentSpace(Mesh* mesh);
 
         std::vector<Mesh> mLoadedMeshes;
         std::filesystem::path mRootPath;

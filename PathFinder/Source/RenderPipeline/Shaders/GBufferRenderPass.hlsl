@@ -20,17 +20,20 @@ StructuredBuffer<InstanceData> InstanceTable : register(t2);
 struct VertexOut
 {
     float4 Position : SV_POSITION;
+    float3 ViewDirectionTS : VIEW_VECTOR_TS;
     float2 UV : TEXCOORD0;  
     float3x3 TBN : TBN_MATRIX;
+
+    float3 WSPosition : WS_POSITION;
 };
 
 float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, InstanceData instanceData)
 {
     float4x4 normalMatrix = instanceData.NormalMatrix;
 
-    float3 T = normalize(mul(normalMatrix, float4(vertex.Tangent, 0.0))).xyz;
-    float3 B = normalize(mul(normalMatrix, float4(vertex.Bitangent, 0.0))).xyz;
-    float3 N = normalize(mul(normalMatrix, float4(vertex.Normal, 0.0))).xyz;
+    float3 T = normalize(mul(normalMatrix, float4(normalize(vertex.Tangent), 0.0))).xyz;
+    float3 B = normalize(mul(normalMatrix, float4(normalize(vertex.Bitangent), 0.0))).xyz;
+    float3 N = normalize(mul(normalMatrix, float4(normalize(vertex.Normal), 0.0))).xyz;
 
     return float3x3(T, B, N);
 }
@@ -40,15 +43,26 @@ VertexOut VSMain(uint indexId : SV_VertexID)
     VertexOut vout;
     
     InstanceData instanceData = InstanceTable[PassDataCB.InstanceTableIndex];
-    float4x4 MVP = mul(FrameDataCB.CameraViewProjection, instanceData.ModelMatrix);
 
     // Load index and vertex
     IndexU32 index = UnifiedIndexBuffer[instanceData.UnifiedIndexBufferOffset + indexId];
     Vertex1P1N1UV1T1BT vertex = UnifiedVertexBuffer[instanceData.UnifiedVertexBufferOffset + index.Index];
 
-    vout.Position = mul(MVP, vertex.Position);
+    float3x3 TBN = BuildTBNMatrix(vertex, instanceData);
+    float3x3 TBNInverse = transpose(TBN);
+
+    float4 WSPosition = mul(instanceData.ModelMatrix, vertex.Position);
+    float3 viewVector = normalize(FrameDataCB.CameraPosition.xyz - WSPosition.xyz);
+
+
+
+    vout.WSPosition = WSPosition;
+
+
+    vout.Position = mul(FrameDataCB.CameraViewProjection, WSPosition);
     vout.UV = vertex.UV;
-    vout.TBN = BuildTBNMatrix(vertex, instanceData);
+    vout.TBN = TBN;
+    vout.ViewDirectionTS = mul(TBNInverse, viewVector);
 
     return vout;
 }
@@ -72,7 +86,7 @@ float3 FetchNormalMap(VertexOut vertex, InstanceData instanceData)
     
     float3 normal = normalMap.Sample(AnisotropicClampSampler, vertex.UV).xyz;
     normal = normal * 2.0 - 1.0;
-    
+
     return normalize(mul(vertex.TBN, normal));
 }
 
@@ -103,8 +117,57 @@ float FetchDisplacementMap(VertexOut vertex, InstanceData instanceData)
 VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData)
 {
     Texture3D distanceField = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
+    Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
 
+    float fParallaxLimit = -length(originalVertexData.ViewDirectionTS.xy) / originalVertexData.ViewDirectionTS.z;
+    fParallaxLimit *= 0.07;
 
+    float2 vOffsetDir = normalize(originalVertexData.ViewDirectionTS.xy);
+    float2 vMaxOffset = vOffsetDir * fParallaxLimit;
+
+    int nNumSamples = 128;
+    float fStepSize = 1.0 / (float)nNumSamples;
+
+    float2 dx = ddx(originalVertexData.UV);
+    float2 dy = ddy(originalVertexData.UV);
+
+    float fCurrRayHeight = 1.0;
+    float2 vCurrOffset = float2(0, 0);
+    float2 vLastOffset = float2(0, 0);
+
+    float fLastSampledHeight = 1;
+    float fCurrSampledHeight = 1;
+
+    int nCurrSample = 0;
+
+    while (nCurrSample < nNumSamples)
+    {
+        fCurrSampledHeight = displacementMap.SampleGrad(AnisotropicClampSampler, originalVertexData.UV + vCurrOffset, dx, dy).r;
+        if (fCurrSampledHeight > fCurrRayHeight)
+        {
+            float delta1 = fCurrSampledHeight - fCurrRayHeight;
+            float delta2 = (fCurrRayHeight + fStepSize) - fLastSampledHeight;
+
+            float ratio = delta1 / (delta1 + delta2);
+
+            vCurrOffset = (ratio)* vLastOffset + (1.0 - ratio) * vCurrOffset;
+
+            nCurrSample = nNumSamples + 1;
+        }
+        else
+        {
+            nCurrSample++;
+
+            fCurrRayHeight -= fStepSize;
+
+            vLastOffset = vCurrOffset;
+            vCurrOffset += fStepSize * vMaxOffset;
+
+            fLastSampledHeight = fCurrSampledHeight;
+        }
+    }
+
+    //originalVertexData.UV = originalVertexData.UV + vCurrOffset;
 
     return originalVertexData;
 }

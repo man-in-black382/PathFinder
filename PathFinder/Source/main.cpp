@@ -525,14 +525,22 @@ int main(int argc, char** argv)
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
         "/Metal07/Metal07_met.dds", "/Metal07/Metal07_disp.dds"));
 
-    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("sphere.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
+    PathFinder::Material& harshBricksMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/HarshBricks/harshbricks-albedo.dds", "/HarshBricks/harshbricks-normal.dds", "/HarshBricks/harshbricks-roughness.dds",
+        "/HarshBricks/harshbricks-metalness.dds", "/HarshBricks/harshbricks-height.dds"));
+
+    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &harshBricksMaterial });
+
+    //auto t = sphereInstance.Transformation();
+    //t.Rotation = glm::angleAxis(glm::radians(0.0f), glm::vec3(1.0, 0.0, 0.0));
+    //sphereInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);
     camera.SetNearPlane(1);
-    camera.MoveTo({ -10.0f, -10.0f, -100.f });
-    camera.LookAt({ 0.f, 0.f, 0.f });
+    camera.MoveTo({ 0.0, 0.0f, 15.f });
+    camera.LookAt({ 0.f, 5.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
 
     engine.ScheduleAndAllocatePipelineResources();

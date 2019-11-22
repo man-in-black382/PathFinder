@@ -32,7 +32,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     encodedGBuffer.MaterialData = materialData.Load(loadCoords);
 
     GBufferCookTorrance gBufferCookTorrance = DecodeGBufferCookTorrance(encodedGBuffer);
-    DirectionalLight testLight = { float3(2.0, 2.0, 2.0), float3(1.5, -1.0, 1.0) };
+    DirectionalLight testLight = { float3(2.0, 2.0, 2.0), float3(0, 0, -1) };
     float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0));
 
     float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
