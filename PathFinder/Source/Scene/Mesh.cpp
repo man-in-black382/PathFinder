@@ -15,7 +15,7 @@ namespace PathFinder
         return mMaterialName;
     }
 
-    const std::vector<Vertex1P1N1UV1T1BT>& Mesh::Vertices() const
+    std::vector<Vertex1P1N1UV1T1BT>& Mesh::Vertices()
     {
         return mVertices;
     }

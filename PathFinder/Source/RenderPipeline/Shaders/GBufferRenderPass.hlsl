@@ -24,7 +24,7 @@ struct VertexOut
     float2 UV : TEXCOORD0;  
     float3x3 TBN : TBN_MATRIX;
 
-    float3 WSPosition : WS_POSITION;
+    float3 Normal : NORMAL;
 };
 
 float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, InstanceData instanceData)
@@ -54,15 +54,13 @@ VertexOut VSMain(uint indexId : SV_VertexID)
     float4 WSPosition = mul(instanceData.ModelMatrix, vertex.Position);
     float3 viewVector = normalize(FrameDataCB.CameraPosition.xyz - WSPosition.xyz);
 
-
-
-    vout.WSPosition = WSPosition;
-
-
     vout.Position = mul(FrameDataCB.CameraViewProjection, WSPosition);
     vout.UV = vertex.UV;
     vout.TBN = TBN;
     vout.ViewDirectionTS = mul(TBNInverse, viewVector);
+
+
+    vout.Normal = mul(instanceData.NormalMatrix, vertex.Normal);
 
     return vout;
 }
@@ -120,7 +118,7 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData)
     Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
 
     float fParallaxLimit = -length(originalVertexData.ViewDirectionTS.xy) / originalVertexData.ViewDirectionTS.z;
-    fParallaxLimit *= 0.07;
+    fParallaxLimit *= 0.03;
 
     float2 vOffsetDir = normalize(originalVertexData.ViewDirectionTS.xy);
     float2 vMaxOffset = vOffsetDir * fParallaxLimit;
@@ -179,7 +177,7 @@ PixelOut PSMain(VertexOut pin)
     VertexOut displacedVertexData = DisplaceUV(pin, instanceData);
 
     GBufferCookTorrance gBufferData;
-    gBufferData.Albedo = FetchAlbedoMap(displacedVertexData, instanceData);
+    gBufferData.Albedo = pin.Normal;// mul(pin.TBN, float3(0.0, 0.0, 1.0));// FetchAlbedoMap(displacedVertexData, instanceData);
     gBufferData.Normal = FetchNormalMap(displacedVertexData, instanceData);
     gBufferData.Metalness = FetchMetallnessMap(displacedVertexData, instanceData);
     gBufferData.Roughness = FetchRoughnessMap(displacedVertexData, instanceData);

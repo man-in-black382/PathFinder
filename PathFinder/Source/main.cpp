@@ -532,15 +532,15 @@ int main(int argc, char** argv)
     PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
     PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &harshBricksMaterial });
 
-    //auto t = sphereInstance.Transformation();
-    //t.Rotation = glm::angleAxis(glm::radians(0.0f), glm::vec3(1.0, 0.0, 0.0));
-    //sphereInstance.SetTransformation(t);
+    auto t = sphereInstance.Transformation();
+    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 1.0, 1.0)));
+    sphereInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);
     camera.SetNearPlane(1);
-    camera.MoveTo({ 0.0, 0.0f, 15.f });
-    camera.LookAt({ 0.f, 5.0f, 0.f });
+    camera.MoveTo({ 0.0, 0.0f, 5.f });
+    camera.LookAt({ 0.f, 0.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
 
     engine.ScheduleAndAllocatePipelineResources();
