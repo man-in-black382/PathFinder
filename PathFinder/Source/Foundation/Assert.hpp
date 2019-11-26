@@ -3,6 +3,8 @@
 #include <sstream>
 #include <cassert>
 
+#include <windows.h>
+
 template< typename... Args >
 inline void print_assertion(Args&&... args)
 {

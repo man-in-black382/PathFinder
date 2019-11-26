@@ -9,11 +9,12 @@ namespace PathFinder
 {
 
     RenderEngine::RenderEngine(
-        HWND windowHandle, const std::filesystem::path& executablePath, 
-        Scene* scene, const RenderPassExecutionGraph* passExecutionGraph)
+        HWND windowHandle, 
+        const CommandLineParser& commandLineParser,
+        Scene* scene, 
+        const RenderPassExecutionGraph* passExecutionGraph)
         : 
         mPassExecutionGraph{ passExecutionGraph },
-        mExecutablePath{ executablePath },
         mDefaultRenderSurface{ { 1920, 1080 }, HAL::ResourceFormat::Color::RGBA16_Float, HAL::ResourceFormat::DepthStencil::Depth32_Float },
         mDevice{ FetchDefaultDisplayAdapter() },
         mFrameFence{ mDevice },
@@ -27,9 +28,9 @@ namespace PathFinder
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage, &mDescriptorStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
-        mShaderManager{ mExecutablePath / "Shaders/" },
+        mShaderManager{ commandLineParser },
         mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
-        mPipelineStateCreator{ &mPipelineStateManager, mDefaultRenderSurface },
+        mPipelineStateCreator{ &mPipelineStateManager },
         mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mAsyncComputeDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mCommandRecorder{ &mGraphicsDevice },
@@ -86,6 +87,7 @@ namespace PathFinder
 
         mFrameFence.IncreaseExpectedValue();
 
+        mShaderManager.BeginFrame();
         mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
         mAsyncComputeDevice.BeginFrame(mFrameFence.ExpectedValue());

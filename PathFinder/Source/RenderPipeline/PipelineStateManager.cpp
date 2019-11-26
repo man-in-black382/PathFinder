@@ -8,7 +8,7 @@ namespace PathFinder
     PipelineStateManager::PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurfaceDescription& defaultRenderSurface)
         : mDevice{ device }, 
         mShaderManager{ shaderManager },
-        mDefaultRenderSurface{ defaultRenderSurface }, 
+        mDefaultRenderSurfaceDesc{ defaultRenderSurface }, 
         mBaseRootSignature{ device },
         mDefaultGraphicsState{ device }
     {
@@ -21,19 +21,95 @@ namespace PathFinder
         mRootSignatures.emplace(name, std::move(signature));
     }
 
-    void PipelineStateManager::StorePipelineState(PSOName name, HAL::GraphicsPipelineState&& state)
+    void PipelineStateManager::CreateGraphicsState(PSOName name, const GraphicsStateConfigurator& configurator)
     {
-        mGraphicPSOs.emplace(name, std::move(state));
+        assert_format(GetGraphicsPipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToString(), " already exists.");
+
+        GraphicsStateProxy proxy{};
+
+        const HAL::GraphicsPipelineState* defaultGraphicsState = &DefaultGraphicsState();
+
+        proxy.BlendState = defaultGraphicsState->GetBlendState();
+        proxy.RasterizerState = defaultGraphicsState->GetRasterizerState();
+        proxy.DepthStencilState = defaultGraphicsState->GetDepthStencilState();
+        proxy.DepthStencilFormat = mDefaultRenderSurfaceDesc.DepthStencilFormat();
+        proxy.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
+
+        configurator(proxy);
+
+        if (proxy.RenderTargetFormats.empty())
+        {
+            proxy.RenderTargetFormats.push_back(mDefaultRenderSurfaceDesc.RenderTargetFormat());
+        }
+
+        HAL::GraphicsPipelineState newState = DefaultGraphicsState().Clone();
+
+        newState.SetBlendState(proxy.BlendState);
+        newState.SetRasterizerState(proxy.RasterizerState);
+        newState.SetDepthStencilState(proxy.DepthStencilState);
+        newState.SetDepthStencilFormat(proxy.DepthStencilFormat);
+        newState.SetPrimitiveTopology(proxy.PrimitiveTopology);
+        newState.SetInputAssemblerLayout(proxy.InputLayout);
+
+        newState.SetRenderTargetFormats(
+            proxy.RenderTargetFormats.size() > 0 ? std::optional(proxy.RenderTargetFormats[0]) : std::nullopt,
+            proxy.RenderTargetFormats.size() > 1 ? std::optional(proxy.RenderTargetFormats[1]) : std::nullopt,
+            proxy.RenderTargetFormats.size() > 2 ? std::optional(proxy.RenderTargetFormats[2]) : std::nullopt,
+            proxy.RenderTargetFormats.size() > 3 ? std::optional(proxy.RenderTargetFormats[3]) : std::nullopt,
+            proxy.RenderTargetFormats.size() > 4 ? std::optional(proxy.RenderTargetFormats[4]) : std::nullopt,
+            proxy.RenderTargetFormats.size() > 5 ? std::optional(proxy.RenderTargetFormats[5]) : std::nullopt,
+            proxy.RenderTargetFormats.size() > 6 ? std::optional(proxy.RenderTargetFormats[6]) : std::nullopt,
+            proxy.RenderTargetFormats.size() > 7 ? std::optional(proxy.RenderTargetFormats[7]) : std::nullopt
+        );
+
+        newState.SetRootSignature(GetNamedRootSignatureOrDefault(proxy.RootSignatureName));
+        newState.SetShaders(mShaderManager->LoadShaders(proxy.ShaderFileNames));
+
+        newState.SetDebugName(name.ToString());
+
+        mGraphicPSOs.emplace(name, std::move(newState));
     }
 
-    void PipelineStateManager::StorePipelineState(PSOName name, HAL::ComputePipelineState&& state)
+    void PipelineStateManager::CreateComputeState(PSOName name, const ComputeStateConfigurator& configurator)
     {
-        mComputePSOs.emplace(name, std::move(state));
+        assert_format(GetComputePipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToString(), " already exists.");
+
+        ComputeStateProxy proxy{};
+        configurator(proxy);
+
+        HAL::ComputePipelineState newState{ mDevice };
+
+        newState.SetRootSignature(GetNamedRootSignatureOrDefault(proxy.RootSignatureName));
+        newState.SetShaders(mShaderManager->LoadShaders(proxy.ShaderFileNames));
+
+        newState.SetDebugName(name.ToString());
+
+        mComputePSOs.emplace(name, std::move(newState));
     }
 
-    void PipelineStateManager::StorePipelineState(PSOName name, HAL::RayTracingPipelineState&& state)
+    void PipelineStateManager::CreateRayTracingState(PSOName name, const RayTracingStateConfigurator& configurator)
     {
-        mRayTracingPSOs.emplace(name, std::move(state));
+        assert_format(GetRayTracingPipelineState(name) == nullptr, "Redefinition of pipeline state. ", name.ToString(), " already exists.");
+
+        RayTracingStateProxy proxy{};
+        configurator(proxy);
+
+        HAL::RayTracingPipelineState newState{ mDevice };
+
+        for (const RayTracingStateProxy::ShaderInfo& shaderInfo : proxy.ShaderInfos())
+        {
+            HAL::RayTracingShaderBundle rtShaders = mShaderManager->LoadShaders(shaderInfo.ShaderFileNames);
+            const HAL::RootSignature* localRootSig = GetNamedRootSignatureOrNull(shaderInfo.LocalRootSignatureName);
+
+            newState.AddShaders(rtShaders, shaderInfo.Config, localRootSig);
+        }
+
+        newState.SetConfig(proxy.PipelineConfig);
+        newState.SetGlobalRootSignature(GetNamedRootSignatureOrDefault(proxy.GlobalRootSignatureName));
+
+        newState.SetDebugName(name.ToString());
+
+        mRayTracingPSOs.emplace(name, std::move(newState));
     }
 
     const HAL::RootSignature* PipelineStateManager::GetRootSignature(RootSignatureName name) const
@@ -92,16 +168,6 @@ namespace PathFinder
         return mDefaultGraphicsState;
     }
 
-    HAL::ComputePipelineState PipelineStateManager::CreateComputeState() const
-    {
-        return HAL::ComputePipelineState{ mDevice };
-    }
-
-    HAL::RayTracingPipelineState PipelineStateManager::CreateRayTracingState() const
-    {
-        return HAL::RayTracingPipelineState{ mDevice };
-    }
-
     void PipelineStateManager::CompileStates()
     {
         mBaseRootSignature.Compile();
@@ -139,7 +205,7 @@ namespace PathFinder
         mDefaultGraphicsState.SetPrimitiveTopology(HAL::PrimitiveTopology::TriangleList);
         mDefaultGraphicsState.GetRasterizerState().SetCullMode(HAL::RasterizerState::CullMode::Back);
         mDefaultGraphicsState.GetRasterizerState().SetFillMode(HAL::RasterizerState::FillMode::Solid);
-        mDefaultGraphicsState.SetDepthStencilFormat(mDefaultRenderSurface.DepthStencilFormat());
+        mDefaultGraphicsState.SetDepthStencilFormat(mDefaultRenderSurfaceDesc.DepthStencilFormat());
         mDefaultGraphicsState.SetRootSignature(&mBaseRootSignature);
     }
 

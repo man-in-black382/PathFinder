@@ -25,7 +25,16 @@ namespace HAL
 
         Shader(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const std::wstring& entryPoint, Stage stage);
 
+        Shader(Shader&& that);
+        Shader(const Shader& that) = delete;
+        ~Shader() = default;
+
+        Shader& operator=(Shader&& that);
+        Shader& operator=(const Shader& that) = delete;
+        
     private:
+        void RetargetPointers();
+
         std::wstring mEntryPoint;
         Stage mStage;
         Microsoft::WRL::ComPtr<IDxcBlob> mBlob;

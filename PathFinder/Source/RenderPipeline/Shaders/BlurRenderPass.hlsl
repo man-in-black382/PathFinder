@@ -14,7 +14,7 @@ struct BlurPassData
 
 #define PassDataType BlurPassData
 
-#include "BaseRootSignature.hlsl"
+#include "BaseRootSignature.hlsl" 
 
 // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-attributes-numthreads
 

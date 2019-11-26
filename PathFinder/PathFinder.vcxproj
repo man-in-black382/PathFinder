@@ -90,6 +90,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
@@ -109,6 +110,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -130,6 +132,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -153,6 +156,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -227,6 +231,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\SwapChain.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\TextureResource.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
+    <ClCompile Include="Source\IO\CommandLineParser.cpp" />
     <ClCompile Include="Source\IO\Input.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp" />
@@ -274,6 +279,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P3.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P4.cpp" />
+    <ClCompile Include="Source\ThirdParty\filewatch\FileWatcher.cpp" />
+    <ClCompile Include="Source\ThirdParty\filewatch\FileWatcherLinux.cpp" />
+    <ClCompile Include="Source\ThirdParty\filewatch\FileWatcherOSX.cpp" />
+    <ClCompile Include="Source\ThirdParty\filewatch\FileWatcherWin32.cpp" />
     <ClCompile Include="Source\ThirdParty\glm\detail\glm.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui_demo.cpp" />
@@ -289,6 +298,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Foundation\BitwiseEnum.hpp" />
     <ClInclude Include="Source\Foundation\Color.hpp" />
     <ClInclude Include="Source\Foundation\Event.hpp" />
+    <ClInclude Include="Source\Foundation\FileWatcher.hpp" />
     <ClInclude Include="Source\Foundation\GaussianFunction.hpp" />
     <ClInclude Include="Source\Foundation\MemoryUtils.hpp" />
     <ClInclude Include="Source\Foundation\Name.hpp" />
@@ -361,6 +371,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\TextureResource.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
+    <ClInclude Include="Source\IO\CommandLineParser.hpp" />
     <ClInclude Include="Source\IO\Input.hpp" />
     <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
@@ -573,6 +584,12 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\assimp\Vertex.h" />
     <ClInclude Include="Source\ThirdParty\assimp\XMLTools.h" />
     <ClInclude Include="Source\ThirdParty\dds\dds-ktx.h" />
+    <ClInclude Include="Source\ThirdParty\filewatch\FileWatch.hpp" />
+    <ClInclude Include="Source\ThirdParty\filewatch\FileWatcher.h" />
+    <ClInclude Include="Source\ThirdParty\filewatch\FileWatcherImpl.h" />
+    <ClInclude Include="Source\ThirdParty\filewatch\FileWatcherLinux.h" />
+    <ClInclude Include="Source\ThirdParty\filewatch\FileWatcherOSX.h" />
+    <ClInclude Include="Source\ThirdParty\filewatch\FileWatcherWin32.h" />
     <ClInclude Include="Source\ThirdParty\glm\common.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\detail\compute_common.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\detail\compute_vector_relational.hpp" />

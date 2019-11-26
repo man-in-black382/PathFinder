@@ -58,19 +58,19 @@ GBufferEncoded EncodeCookTorranceMaterial(GBufferCookTorrance gBuffer)
 // |        2 Bytes       |        2 Bytes       |
 // |______________________|______________________|
 // |________Third component of output UVEC3______|
-//
+// 
 
 GBufferCookTorrance DecodeGBufferCookTorrance(GBufferEncoded encodedGBuffer)
 {
-     GBufferCookTorrance gBuffer;
+     GBufferCookTorrance gBuffer;  
 
      uint3 encoded = encodedGBuffer.MaterialData.xyz;
      float4 albedoRoughness = Decode8888(encoded.x);
      uint metalnessAONormalZ = encoded.y;
      float2 metalnessAO = Decode8888(metalnessAONormalZ).xy;
      float normalZ = UnpackSnorm2x16(metalnessAONormalZ, 1.0).y;
-     float2 normalXY = UnpackSnorm2x16(encoded.z, 1.0);
-
+     float2 normalXY = UnpackSnorm2x16(encoded.z, 1.0);     
+        
      gBuffer.Albedo    = albedoRoughness.rgb;
      gBuffer.Normal    = float3(normalXY, normalZ);
      gBuffer.Roughness = albedoRoughness.a;

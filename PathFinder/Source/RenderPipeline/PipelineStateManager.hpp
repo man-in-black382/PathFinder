@@ -5,6 +5,8 @@
 
 #include "ShaderManager.hpp"
 #include "RenderSurfaceDescription.hpp"
+#include "PipelineStateProxy.hpp"
+#include "ShaderFileNames.hpp"
 
 #include <unordered_map>
 
@@ -16,12 +18,16 @@ namespace PathFinder
     class PipelineStateManager
     {
     public:
+        using GraphicsStateConfigurator = std::function<void(GraphicsStateProxy&)>;
+        using ComputeStateConfigurator = std::function<void(ComputeStateProxy&)>;
+        using RayTracingStateConfigurator = std::function<void(RayTracingStateProxy&)>;
+
         PipelineStateManager(HAL::Device* device, ShaderManager* shaderManager, const RenderSurfaceDescription& defaultRenderSurface);
 
         void StoreRootSignature(RootSignatureName name, HAL::RootSignature&& signature);
-        void StorePipelineState(PSOName name, HAL::GraphicsPipelineState&& state);
-        void StorePipelineState(PSOName name, HAL::ComputePipelineState&& state);
-        void StorePipelineState(PSOName name, HAL::RayTracingPipelineState&& state);
+        void CreateGraphicsState(PSOName name, const GraphicsStateConfigurator& configurator);
+        void CreateComputeState(PSOName name, const ComputeStateConfigurator& configurator);
+        void CreateRayTracingState(PSOName name, const RayTracingStateConfigurator& configurator);
 
         const HAL::RootSignature* GetRootSignature(RootSignatureName name) const;
         const HAL::GraphicsPipelineState* GetGraphicsPipelineState(PSOName name) const;
@@ -33,9 +39,6 @@ namespace PathFinder
 
         const HAL::RootSignature& BaseRootSignature() const;
         const HAL::GraphicsPipelineState& DefaultGraphicsState() const;
-        
-        HAL::ComputePipelineState CreateComputeState() const;
-        HAL::RayTracingPipelineState CreateRayTracingState() const;
 
         void CompileStates();
 
@@ -44,7 +47,7 @@ namespace PathFinder
         void BuildBaseRootSignature(); 
 
         ShaderManager* mShaderManager;
-        RenderSurfaceDescription mDefaultRenderSurface;
+        RenderSurfaceDescription mDefaultRenderSurfaceDesc;
         
         HAL::Device* mDevice;
         HAL::RootSignature mBaseRootSignature;
@@ -54,9 +57,6 @@ namespace PathFinder
         std::unordered_map<PSOName, HAL::ComputePipelineState> mComputePSOs;
         std::unordered_map<PSOName, HAL::RayTracingPipelineState> mRayTracingPSOs;
         std::unordered_map<RootSignatureName, HAL::RootSignature> mRootSignatures;
-
-    public:
-        ShaderManager* GetShaderManager() const { return mShaderManager; }
     };
 
 }

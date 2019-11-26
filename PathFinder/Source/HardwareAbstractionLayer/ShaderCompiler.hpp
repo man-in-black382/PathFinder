@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <filesystem>
+#include <vector>
 
 #include "Shader.hpp"
 
@@ -25,17 +26,27 @@ namespace HAL
         virtual ULONG Release() override;
 
     private:
+        std::vector<std::string> mReadFileList;
         std::filesystem::path mRootPath;
         IDxcLibrary *mLibrary;
         ULONG mRefCount;
+
+    public:
+        inline const auto& AllReadFileRelativePaths() const { return mReadFileList; }
     };
 
     class ShaderCompiler
     {
     public:
+        struct CompilationResult
+        {
+            Shader CompiledShader;
+            std::vector<std::string> CompiledFileRelativePaths;
+        };
+
         ShaderCompiler();
 
-        Shader Compile(const std::filesystem::path& path, Shader::Stage stage);
+        CompilationResult Compile(const std::filesystem::path& path, Shader::Stage stage, bool debugBuild);
 
     private:
         struct CompilerInputs

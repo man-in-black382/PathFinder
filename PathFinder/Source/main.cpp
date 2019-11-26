@@ -18,6 +18,7 @@
 #include "RenderPipeline/RenderPasses/DeferredLightingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
+#include "IO/CommandLineParser.hpp"
 
 #include "../resource.h"
 
@@ -496,8 +497,7 @@ int main(int argc, char** argv)
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
-    std::filesystem::path executablePath{ argv[0] };
-    std::filesystem::path executableFolder = executablePath.parent_path();
+    PathFinder::CommandLineParser cmdLineParser{ argc, argv };
 
     auto displacementDistanceMapGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
     auto gBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
@@ -517,9 +517,9 @@ int main(int argc, char** argv)
     renderPassGraph.AddPass(backBufferOutputPass.get());
 
     PathFinder::Scene scene;
-    PathFinder::RenderEngine engine{ hwnd, executableFolder, &scene, &renderPassGraph };
-    PathFinder::MeshLoader meshLoader{ executableFolder / "MediaResources/Models/", &engine.VertexGPUStorage() };  
-    PathFinder::MaterialLoader materialLoader{ executableFolder / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage(), &engine.StandardCopyDevice() };
+    PathFinder::RenderEngine engine{ hwnd, cmdLineParser, &scene, &renderPassGraph };
+    PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/", &engine.VertexGPUStorage() };
+    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage(), &engine.StandardCopyDevice() };
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
@@ -535,7 +535,10 @@ int main(int argc, char** argv)
     auto t = sphereInstance.Transformation();
     t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 1.0, 1.0)));
     sphereInstance.SetTransformation(t);
-
+    
+    OutputDebugString(PROJECT_DIR);
+    
+     
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);
     camera.SetNearPlane(1);

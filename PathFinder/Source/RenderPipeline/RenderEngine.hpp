@@ -11,6 +11,8 @@
 
 #include "../Scene/Scene.hpp"
 
+#include "../IO/CommandLineParser.hpp"
+
 #include "RenderPass.hpp"
 #include "VertexStorage.hpp"
 #include "PipelineResourceStorage.hpp"
@@ -34,8 +36,7 @@ namespace PathFinder
     class RenderEngine
     {
     public:
-        RenderEngine(HWND windowHandle, const std::filesystem::path& executablePath,
-            Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
+        RenderEngine(HWND windowHandle, const CommandLineParser& commandLineParser, Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
 
         void ScheduleAndAllocatePipelineResources();
         void ProcessAndTransferAssets();
@@ -57,7 +58,6 @@ namespace PathFinder
         uint8_t mSimultaneousFramesInFlight = 3;
 
         RenderSurfaceDescription mDefaultRenderSurface;
-        std::filesystem::path mExecutablePath;
 
         HAL::Device mDevice;
         HAL::Fence mFrameFence;

@@ -1,7 +1,10 @@
 #include "ShaderCompiler.hpp"
 #include "Utils.h"
 
+#include "../Foundation/StringUtils.hpp"
+
 #include <d3dcompiler.h>
+#include <filewatch/FileWatcher.h>
 
 namespace HAL
 {
@@ -11,6 +14,7 @@ namespace HAL
 
     HRESULT STDMETHODCALLTYPE ShaderFileReader::LoadSource(_In_ LPCWSTR pFilename, _COM_Outptr_result_maybenull_ IDxcBlob **ppIncludeSource)
     {
+        mReadFileList.emplace_back(ws2s(pFilename));
         auto includePath = mRootPath / pFilename;
         IDxcBlobEncoding* source;
         HRESULT result = mLibrary->CreateBlobFromFile(includePath.wstring().c_str(), nullptr, &source);
@@ -59,15 +63,25 @@ namespace HAL
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(mCompiler.GetAddressOf()))); 
     }
 
-    Shader ShaderCompiler::Compile(const std::filesystem::path& path, Shader::Stage stage)
+    ShaderCompiler::CompilationResult ShaderCompiler::Compile(const std::filesystem::path& path, Shader::Stage stage, bool debugBuild)
     {
         CompilerInputs inputs{ stage, Shader::Profile::P6_3 };
 
-#if defined(DEBUG) || defined(_DEBUG) 
-        LPCWSTR arguments[] = { L"/Zi", L"/Od", L"/all_resources_bound" }; // Provide debug info, disable optimization 
-#else
-        LPCWSTR arguments[] = { L"/all_resources_bound" };
-#endif
+        std::vector<std::wstring> arguments;
+        arguments.push_back(L"/all_resources_bound");
+        
+        if (debugBuild)
+        {
+            arguments.push_back(L"/Zi");
+            arguments.push_back(L"/Od");
+        }
+        
+        std::vector<LPCWSTR> argumentPtrs;
+
+        for (auto& argument : arguments)
+        {
+            argumentPtrs.push_back(argument.c_str());
+        }
 
         ShaderFileReader reader{ path.parent_path(), mLibrary.Get() };
 
@@ -75,17 +89,17 @@ namespace HAL
         Microsoft::WRL::ComPtr<IDxcOperationResult> result;
 
         reader.LoadSource(path.filename().wstring().c_str(), source.GetAddressOf());
-
-        mCompiler->Compile(
+  
+        ThrowIfFailed(mCompiler->Compile(
             source.Get(),                       // program text
             path.filename().wstring().c_str(),  // file name, mostly for error messages
             inputs.EntryPoint.c_str(),          // entry point function
             inputs.Profile.c_str(),             // target profile
-            arguments,                          // compilation arguments
-            _countof(arguments),                // number of compilation arguments
+            argumentPtrs.data(),                // compilation arguments
+            argumentPtrs.size(),                // number of compilation arguments
             nullptr, 0,                         // name/value defines and their count
             &reader,                            // handler for #include directives
-            result.GetAddressOf()); 
+            result.GetAddressOf())); 
 
         HRESULT hrCompilation;
         result->GetStatus(&hrCompilation);
@@ -94,7 +108,9 @@ namespace HAL
         {
             Microsoft::WRL::ComPtr<IDxcBlob> resultingBlob;
             result->GetResult(resultingBlob.GetAddressOf()); 
-            return Shader{ resultingBlob, inputs.EntryPoint, stage }; 
+
+            CompilationResult compilationResult{ Shader{ resultingBlob, inputs.EntryPoint, stage }, reader.AllReadFileRelativePaths() };
+            return compilationResult;
         }
         else {
             Microsoft::WRL::ComPtr<IDxcBlobEncoding> printBlob;
@@ -104,7 +120,9 @@ namespace HAL
             // We can use the library to get our preferred encoding.
             mLibrary->GetBlobAsUtf16(printBlob.Get(), printBlob16.GetAddressOf());
             OutputDebugStringW((LPWSTR)printBlob16->GetBufferPointer());
-            return Shader{ nullptr, L"", stage }; 
+
+            CompilationResult compilationResult{ Shader{ nullptr, L"", stage }, {} };
+            return compilationResult;
         }
     }
 
