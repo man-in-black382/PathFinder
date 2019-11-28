@@ -2,6 +2,7 @@
 
 #include "ShaderExport.hpp"
 #include "RootSignature.hpp"
+#include "RayTracingShaderConfig.hpp"
 
 namespace HAL
 {
@@ -18,16 +19,19 @@ namespace HAL
         DXILLibrary& operator=(DXILLibrary&& that);
 
         void SetLocalRootSignature(const RootSignature* signature);
+        void SetConfig(const RayTracingShaderConfig& config);
 
     private:
         ShaderExport mExport;
         D3D12_DXIL_LIBRARY_DESC mLibrary{};
+        RayTracingShaderConfig mConfig;
         const RootSignature* mLocalRootSignature = nullptr;
 
     public:
-        const D3D12_DXIL_LIBRARY_DESC& D3DLibrary() const { return mLibrary; }
-        const ShaderExport& Export() const { return mExport; }
-        const RootSignature* LocalRootSignature() const { return mLocalRootSignature; }
+        inline const D3D12_DXIL_LIBRARY_DESC& D3DLibrary() const { return mLibrary; }
+        inline const ShaderExport& Export() const { return mExport; }
+        inline const RootSignature* LocalRootSignature() const { return mLocalRootSignature; }
+        inline const RayTracingShaderConfig& Config() const { return mConfig; }
     };
 
 }

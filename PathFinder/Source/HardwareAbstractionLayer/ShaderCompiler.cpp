@@ -2,6 +2,7 @@
 #include "Utils.h"
 
 #include "../Foundation/StringUtils.hpp"
+#include "../Foundation/Assert.hpp"
 
 #include <d3dcompiler.h>
 #include <filewatch/FileWatcher.h>
@@ -14,8 +15,23 @@ namespace HAL
 
     HRESULT STDMETHODCALLTYPE ShaderFileReader::LoadSource(_In_ LPCWSTR pFilename, _COM_Outptr_result_maybenull_ IDxcBlob **ppIncludeSource)
     {
-        mReadFileList.emplace_back(ws2s(pFilename));
-        auto includePath = mRootPath / pFilename;
+        std::filesystem::path includePath{ pFilename };
+
+        std::string fileName = includePath.string();
+
+        // Search for the substring in string
+        size_t pos = fileName.find("./");
+
+        if (pos != std::string::npos)
+        {
+            // If found then erase it from string
+            fileName.erase(pos, 2);
+        }
+
+        mReadFileList.push_back(fileName);
+
+        includePath = mRootPath / pFilename;
+
         IDxcBlobEncoding* source;
         HRESULT result = mLibrary->CreateBlobFromFile(includePath.wstring().c_str(), nullptr, &source);
         *ppIncludeSource = source;
@@ -120,6 +136,8 @@ namespace HAL
             // We can use the library to get our preferred encoding.
             mLibrary->GetBlobAsUtf16(printBlob.Get(), printBlob16.GetAddressOf());
             OutputDebugStringW((LPWSTR)printBlob16->GetBufferPointer());
+
+            assert_format(false, "Failed to compile shader");
 
             CompilationResult compilationResult{ Shader{ nullptr, L"", stage }, {} };
             return compilationResult;

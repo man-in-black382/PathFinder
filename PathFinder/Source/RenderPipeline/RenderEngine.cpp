@@ -88,6 +88,7 @@ namespace PathFinder
         mFrameFence.IncreaseExpectedValue();
 
         mShaderManager.BeginFrame();
+        mPipelineStateManager.BeginFrame();
         mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
         mAsyncComputeDevice.BeginFrame(mFrameFence.ExpectedValue());
@@ -117,6 +118,8 @@ namespace PathFinder
 
         mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
+        mShaderManager.EndFrame();
+        mPipelineStateManager.EndFrame();
         mPipelineResourceStorage.EndFrame(mFrameFence.CompletedValue());
         mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
         mAsyncComputeDevice.EndFrame(mFrameFence.CompletedValue());

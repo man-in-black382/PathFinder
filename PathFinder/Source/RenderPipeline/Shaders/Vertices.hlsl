@@ -5,7 +5,7 @@ struct Vertex1P1N1UV
     float2 UV;
 };
 
-struct Vertex1P1N1UV1T1BT
+struct Vertex1P1N1UV1T1BT 
 {
     float4 Position;
     float3 Normal;

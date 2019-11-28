@@ -126,20 +126,20 @@ namespace PathFinder
 
     void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)
     {
-        if (const HAL::GraphicsPipelineState* pso = this->mPipelineStateManager->GetGraphicsPipelineState(psoName))
+        const PipelineStateManager::PipelineStateVariant* state = mPipelineStateManager->GetPipelineState(psoName);
+        assert_format(state, "Pipeline state doesn't exist");
+
+        if (std::holds_alternative<HAL::ComputePipelineState>(*state))
         {
-            ApplyStateIfNeeded(pso);
+            ApplyStateIfNeeded(&std::get<HAL::ComputePipelineState>(*state));
         }
-        else if (const HAL::ComputePipelineState* pso = this->mPipelineStateManager->GetComputePipelineState(psoName))
+        else if (std::holds_alternative<HAL::RayTracingPipelineState>(*state))
         {
-            ApplyStateIfNeeded(pso);
+            ApplyStateIfNeeded(&std::get<HAL::RayTracingPipelineState>(*state));
         }
-        else if (const HAL::RayTracingPipelineState* pso = this->mPipelineStateManager->GetRayTracingPipelineState(psoName))
+        else if (std::holds_alternative<HAL::GraphicsPipelineState>(*state))
         {
-            ApplyStateIfNeeded(pso);
-        }
-        else {
-            assert_format(false, "Pipeline state doesn't exist");
+            ApplyStateIfNeeded(&std::get<HAL::GraphicsPipelineState>(*state));
         }
     }
 

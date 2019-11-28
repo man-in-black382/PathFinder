@@ -22,6 +22,7 @@ namespace HAL
 
         void AddShader(const Shader& shader, ShaderID id, const RootSignature* localRootSignature = nullptr);
         void UploadToGPUMemory();
+        void Clear();
 
         RayDispatchInfo GenerateRayDispatchInfo() const;
 
@@ -40,7 +41,7 @@ namespace HAL
         };
 
         const Device* mDevice;
-        uint8_t mFrameCapacity = 0;
+        uint8_t mFrameCapacity = 1;
         uint32_t mTableSize = 0;
         std::unique_ptr<RingBufferResource<uint8_t>> mGPUTable;
         std::unordered_map<Shader::Stage, std::vector<Record>> mRecords;

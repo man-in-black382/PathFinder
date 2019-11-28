@@ -7,6 +7,7 @@
 
 #include "ShaderFileNames.hpp"
 
+#include <vector>
 #include <list>
 #include <unordered_map>
 #include <unordered_set>
@@ -34,17 +35,34 @@ namespace PathFinder
         void EndFrame();
 
     private:
-        struct ShaderPathAssociation
+        using ShaderListIterator = std::list<HAL::Shader>::iterator;
+
+        struct ShaderBundle
         {
-            std::unordered_map<HAL::Shader::Stage, HAL::Shader*> PrimaryShaders;
-            std::vector<HAL::Shader*> AffectedShaders;
+            ShaderListIterator ComputeShader;
+            ShaderListIterator VertexShader;
+            ShaderListIterator PixelShader;
+            ShaderListIterator HullShader;
+            ShaderListIterator DomainShader;
+            ShaderListIterator GeometryShader;
+            ShaderListIterator RayGenShader;
+            ShaderListIterator RayClosestHitShader;
+            ShaderListIterator RayAnyHitShader;
+            ShaderListIterator RayMissShader;
+            ShaderListIterator RayIntersectionShader;
+
+            void SetShader(ShaderListIterator it);
+            ShaderListIterator GetShader(HAL::Shader::Stage stage) const;
         };
 
         HAL::Shader* GetShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
         HAL::Shader* FindCachedShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
         HAL::Shader* LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
+        ShaderBundle& GetShaderBundle(const std::string& entryPointShaderFile);
 
         std::filesystem::path ConstructShaderRootPath(const CommandLineParser& commandLineParser) const;
+        void FindAndAddEntryPointShaderFileForRecompilation(const std::string& modifiedFile);
+        void RecompileShader(ShaderListIterator oldShaderIt, const std::string& shaderFile);
         void RecompileModifiedShaders();
         void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action) override;
 
@@ -53,8 +71,9 @@ namespace PathFinder
         HAL::ShaderCompiler mCompiler;
         std::filesystem::path mShaderRootPath;
         std::list<HAL::Shader> mShaders;
-        std::unordered_map<std::string, ShaderPathAssociation> mShaderPathAssociations;
-        std::unordered_set<std::string> mModifiedShaderFilePaths;
+        std::unordered_set<std::string> mEntryPointShaderFilesToRecompile;
+        std::unordered_map<std::string, ShaderBundle> mShaderEntryPointFilePathToShaderAssociations;
+        std::unordered_map<std::string, std::unordered_set<std::string>> mShaderAnyFilePathToEntryPointFilePathAssociations;
         ShaderRecompilationCallback mRecompilationCallback = [](const HAL::Shader* oldShader, const HAL::Shader* newShader){};
     };
 

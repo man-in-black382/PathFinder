@@ -57,6 +57,13 @@ namespace HAL
         }
     }
 
+    void ShaderTable::Clear()
+    {
+        mRecords.clear();
+        mPerStageStrides.clear();
+        mTableSize = 0;
+    }
+
     RayDispatchInfo ShaderTable::GenerateRayDispatchInfo() const
     {
         return {};

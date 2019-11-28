@@ -29,6 +29,7 @@ namespace HAL
         PipelineState(const Device* device);
         virtual ~PipelineState() = 0;
 
+        virtual void ReplaceShader(const Shader* oldShader, const Shader* newShader) = 0;
         virtual void Compile() = 0;
         virtual void SetDebugName(const std::string& name) override;
 
@@ -55,15 +56,16 @@ namespace HAL
 
         ~GraphicsPipelineState() = default;
 
-        virtual void Compile() override;
+        void Compile() override;
+        void ReplaceShader(const Shader* oldShader, const Shader* newShader) override;
 
         GraphicsPipelineState Clone() const;
 
-        inline void SetVertexShader(Shader* vertexShader) { mVertexShader = vertexShader; }
-        inline void SetPixelShader(Shader* pixelShader) { mPixelShader = pixelShader; }
-        inline void SetDomainShader(Shader* domainShader) { mDomainShader = domainShader; }
-        inline void SetHullShader(Shader* hullShader) { mHullShader = hullShader; }
-        inline void SetGeometryShader(Shader* geometryShader) { mGeometryShader = geometryShader; }
+        inline void SetVertexShader(const Shader* vertexShader) { mVertexShader = vertexShader; }
+        inline void SetPixelShader(const Shader* pixelShader) { mPixelShader = pixelShader; }
+        inline void SetDomainShader(const Shader* domainShader) { mDomainShader = domainShader; }
+        inline void SetHullShader(const Shader* hullShader) { mHullShader = hullShader; }
+        inline void SetGeometryShader(const Shader* geometryShader) { mGeometryShader = geometryShader; }
         inline void SetPrimitiveTopology(PrimitiveTopology topology) { mPrimitiveTopology = topology; }
         inline void SetDepthStencilFormat(ResourceFormat::DepthStencil format) { mDepthStencilFormat = format; }
         inline void SetInputAssemblerLayout(const InputAssemblerLayout& layout) { mInputLayout = layout; }
@@ -110,11 +112,11 @@ namespace HAL
         inline const PrimitiveTopology& GetPrimitiveTopology() const { return mPrimitiveTopology; }
 
     private:
-        Shader* mVertexShader;
-        Shader* mPixelShader;
-        Shader* mDomainShader;
-        Shader* mHullShader;
-        Shader* mGeometryShader;
+        const Shader* mVertexShader;
+        const Shader* mPixelShader;
+        const Shader* mDomainShader;
+        const Shader* mHullShader;
+        const Shader* mGeometryShader;
         BlendState mBlendState;
         RasterizerState mRasterizerState;
         DepthStencilState mDepthStencilState;
@@ -131,13 +133,14 @@ namespace HAL
         using PipelineState::PipelineState;
 
         virtual void Compile() override;
+        void ReplaceShader(const HAL::Shader* oldShader, const HAL::Shader* newShader) override;
 
         ComputePipelineState Clone() const;
 
         inline void SetShaders(const ComputeShaderBundle& bundle) { mComputeShader = bundle.ComputeShader(); }
 
     private:
-        Shader* mComputeShader;
+        const Shader* mComputeShader;
     };
 
 
@@ -159,26 +162,32 @@ namespace HAL
         void AddShaders(const RayTracingShaderBundle& bundle, const RayTracingShaderConfig& config, const RootSignature* localRootSignature = nullptr);
         void SetConfig(const RayTracingPipelineConfig& config);
         void SetGlobalRootSignature(const RootSignature* signature);
+        void ReplaceShader(const Shader* oldShader, const Shader* newShader);
         void Compile();
 
         virtual void SetDebugName(const std::string& name) override;
 
     private:
-        struct ShaderAssociations
+        struct ConfiguredShaderPackage
         {
-            DXILLibrary Library;
+            const Shader* RayGenerationShader = nullptr;
+            const Shader* ClosestHitShader = nullptr;
+            const Shader* AnyHitShader = nullptr;
+            const Shader* MissShader = nullptr;
+            const Shader* IntersectionShader = nullptr;
             RayTracingShaderConfig Config;
+            const RootSignature* LocalRootSignature = nullptr;
         };
 
         std::wstring GenerateUniqueExportName(const Shader& shader);
-        ShaderAssociations& AddShader(const Shader* shader, const RayTracingShaderConfig& config, const RootSignature* localRootSignature);
+        void GenerateLibrariesAndHitGroups();
+        DXILLibrary& GenerateLibrary(const Shader* shader, const RootSignature* localRootSignature);
         void AssociateLibraryWithItsExport(const DXILLibrary& library);
         void AssociateConfigWithExport(const RayTracingShaderConfig& config, const ShaderExport& shaderExport);
         void AssociateRootSignatureWithExport(const RootSignature& signature, const ShaderExport& shaderExport);
         void AddHitGroupSubobject(const RayTracingHitGroup& group);
         void AddGlobalRootSignatureSubobject();
         void AddPipelineConfigSubobject();
-        void ClearInternalContainers();
         void BuildShaderTable();
 
         const Device* mDevice = nullptr;
@@ -190,7 +199,10 @@ namespace HAL
         uint32_t mUniqueShaderExportID = 0;
         RayTracingPipelineConfig mConfig;
         D3D12_STATE_OBJECT_DESC mRTPSODesc{};
-        std::unordered_map<const Shader*, ShaderAssociations> mShaderAssociations;
+
+        std::vector<ConfiguredShaderPackage> mShaders;
+
+        std::vector<DXILLibrary> mLibraries;
         std::vector<RayTracingHitGroup> mHitGroups;
 
         std::vector<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION> mAssociations;

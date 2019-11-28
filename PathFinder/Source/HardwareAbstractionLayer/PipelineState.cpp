@@ -1,6 +1,7 @@
 #include "PipelineState.hpp"
 #include "Utils.h"
 
+#include "../Foundation/Assert.hpp"
 #include "../Foundation/STDHelpers.hpp"
 #include "../Foundation/StringUtils.hpp"
 
@@ -79,6 +80,16 @@ namespace HAL
         return newState;
     }
 
+    void GraphicsPipelineState::ReplaceShader(const Shader* oldShader, const Shader* newShader)
+    {
+        if (mVertexShader == oldShader && newShader->PipelineStage() == Shader::Stage::Vertex) mVertexShader = newShader;
+        else if (mPixelShader == oldShader && newShader->PipelineStage() == Shader::Stage::Pixel) mPixelShader = newShader;
+        else if (mHullShader == oldShader && newShader->PipelineStage() == Shader::Stage::Hull) mHullShader = newShader;
+        else if (mDomainShader == oldShader && newShader->PipelineStage() == Shader::Stage::Domain) mDomainShader = newShader;
+        else if (mGeometryShader == oldShader && newShader->PipelineStage() == Shader::Stage::Geometry) mGeometryShader = newShader;
+        else { assert_format(false, "Cannot find a shader to replace"); }
+    }
+
 
 
     void ComputePipelineState::Compile()
@@ -102,33 +113,32 @@ namespace HAL
         return newState;
     }
 
+    void ComputePipelineState::ReplaceShader(const Shader* oldShader, const Shader* newShader)
+    {
+        assert_format(
+            mComputeShader == oldShader && 
+            newShader->PipelineStage() == Shader::Stage::Compute, 
+            "Cannot find a shader to replace");
 
+        mComputeShader = newShader;
+    }
 
+  
+    
     RayTracingPipelineState::RayTracingPipelineState(const Device* device)
         : mDevice{ device }, mShaderTable{ device } {}
 
     void RayTracingPipelineState::AddShaders(const RayTracingShaderBundle& bundle, const RayTracingShaderConfig& config, const RootSignature* localRootSignature)
     {
-        AddShader(bundle.RayGenerationShader(), config, localRootSignature);
-
-        if (bundle.MissShader())
-        {
-            AddShader(bundle.MissShader(), config, localRootSignature);
-        }
-        
-        const ShaderExport* closestHitExport = bundle.ClosestHitShader() ?
-            &AddShader(bundle.ClosestHitShader(), config, localRootSignature).Library.Export() : nullptr;
-
-        const ShaderExport* anyHitExport = bundle.AnyHitShader() ?
-            &AddShader(bundle.AnyHitShader(), config, localRootSignature).Library.Export() : nullptr;
-
-        const ShaderExport* intersectionExport = bundle.IntersectionShader() ?
-            &AddShader(bundle.IntersectionShader(), config, localRootSignature).Library.Export() : nullptr;
-
-        if (closestHitExport || anyHitExport || intersectionExport)
-        {
-            mHitGroups.emplace_back(closestHitExport, anyHitExport, intersectionExport);
-        }
+        mShaders.emplace_back(ConfiguredShaderPackage{ 
+            bundle.RayGenerationShader(),
+            bundle.ClosestHitShader(),
+            bundle.AnyHitShader(),
+            bundle.MissShader(),
+            bundle.IntersectionShader(),
+            config,
+            localRootSignature 
+        });
     }
 
     void RayTracingPipelineState::SetConfig(const RayTracingPipelineConfig& config)
@@ -141,34 +151,73 @@ namespace HAL
         mGlobalRootSignature = signature;
     }
 
+    void RayTracingPipelineState::ReplaceShader(const Shader* oldShader, const Shader* newShader)
+    {
+        for (ConfiguredShaderPackage& shaders : mShaders)
+        {
+            if (shaders.RayGenerationShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayGeneration)
+            {
+                shaders.RayGenerationShader = newShader;
+                break;
+            }
+
+            if (shaders.ClosestHitShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayClosestHit)
+            {
+                shaders.ClosestHitShader = newShader;
+                break;
+            }
+
+            if (shaders.AnyHitShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayAnyHit)
+            {
+                shaders.AnyHitShader = newShader;
+                break;
+            }
+
+            if (shaders.MissShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayMiss)
+            {
+                shaders.MissShader = newShader;
+                break;
+            }
+
+            if (shaders.IntersectionShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayIntersection)
+            {
+                shaders.IntersectionShader = newShader;
+                break;
+            }
+        }
+    }
+
     void RayTracingPipelineState::Compile()
     {
+        mLibraries.clear();
+        mHitGroups.clear();
+        mSubobjects.clear();
+        mAssociations.clear();
+        mExportNamePointerHolder.clear();
+
+        GenerateLibrariesAndHitGroups();
+
         uint32_t subobjectsToReserve = 
-            mShaderAssociations.size() * 5 + // Each Association can produce up to 5 subobjects
+            mShaders.size() * 5 + // Each Association can produce up to 5 subobjects
             mHitGroups.size() + // Each hit group produces 1 subobject
             2; // 1 global root sig subobject and 1 pipeline config subobject
 
         uint32_t associationsToReserve =
-            mShaderAssociations.size() * 2; // Each Association can produce up to 2 association subobjects
+            mShaders.size() * 2; // Each Association can produce up to 2 association subobjects
             
         // Reserve vectors to avoid pointer invalidation on pushes and emplacements
         mSubobjects.reserve(subobjectsToReserve);
         mAssociations.reserve(associationsToReserve);
         mExportNamePointerHolder.reserve(associationsToReserve);
 
-        for (auto& pair : mShaderAssociations)
+        for (const DXILLibrary& library : mLibraries)
         {
-            const ShaderAssociations& shaderAssociations = pair.second;
-            const DXILLibrary& library = shaderAssociations.Library;
-            const ShaderExport& shaderExport = library.Export();
-            const RayTracingShaderConfig& shaderConfig = shaderAssociations.Config;
-
             AssociateLibraryWithItsExport(library);
-            AssociateConfigWithExport(shaderConfig, shaderExport);
+            AssociateConfigWithExport(library.Config(), library.Export());
 
             if (library.LocalRootSignature())
             {
-                AssociateRootSignatureWithExport(*library.LocalRootSignature(), shaderExport);
+                AssociateRootSignatureWithExport(*library.LocalRootSignature(), library.Export());
             }
         }
 
@@ -208,15 +257,38 @@ namespace HAL
         return std::to_wstring(mUniqueShaderExportID) + shader.EntryPoint();
     }
 
-    RayTracingPipelineState::ShaderAssociations& RayTracingPipelineState::AddShader(const Shader* shader, const RayTracingShaderConfig& config, const RootSignature* localRootSignature)
+    void RayTracingPipelineState::GenerateLibrariesAndHitGroups()
+    {
+        for (ConfiguredShaderPackage& package : mShaders)
+        {
+            DXILLibrary* closestHitLib = nullptr;
+            DXILLibrary* anyHitLib = nullptr;
+            DXILLibrary* intersectionLib = nullptr;
+            
+            if (package.RayGenerationShader) GenerateLibrary(package.RayGenerationShader, package.LocalRootSignature);
+            if (package.MissShader) GenerateLibrary(package.MissShader, package.LocalRootSignature);
+            if (package.ClosestHitShader) closestHitLib = &GenerateLibrary(package.ClosestHitShader, package.LocalRootSignature);
+            if (package.AnyHitShader) anyHitLib = &GenerateLibrary(package.AnyHitShader, package.LocalRootSignature);
+            if (package.IntersectionShader) intersectionLib = &GenerateLibrary(package.IntersectionShader, package.LocalRootSignature);
+
+            if (closestHitLib || anyHitLib || intersectionLib)
+            {
+                mHitGroups.emplace_back(
+                    closestHitLib ? &closestHitLib->Export() : nullptr,
+                    anyHitLib ? &anyHitLib->Export() : nullptr, 
+                    intersectionLib ? &intersectionLib->Export() : nullptr
+                );
+            }
+        }
+    }
+
+    DXILLibrary& RayTracingPipelineState::GenerateLibrary(const Shader* shader, const RootSignature* localRootSignature)
     {
         ShaderExport shaderExport{ shader };
         shaderExport.SetExportName(GenerateUniqueExportName(*shader));
         DXILLibrary lib{ shaderExport };
         lib.SetLocalRootSignature(localRootSignature);
-        ShaderAssociations associations{ lib, config };
-        mShaderAssociations.emplace(shader, associations);
-        return mShaderAssociations.at(shader);
+        return mLibraries.emplace_back(std::move(lib));
     }
 
     void RayTracingPipelineState::AssociateLibraryWithItsExport(const DXILLibrary& library)
@@ -279,21 +351,17 @@ namespace HAL
         mSubobjects.push_back(configSubobject);
     }
 
-    void RayTracingPipelineState::ClearInternalContainers()
-    {
-        mShaderAssociations.clear();
-        mHitGroups.clear();
-    }
-
     void RayTracingPipelineState::BuildShaderTable()
     {
-        for (auto& pair : mShaderAssociations)
+        mShaderTable.Clear();
+
+        for (const DXILLibrary& library : mLibraries)
         {
-            const ShaderAssociations& shaderAssociations = pair.second;
-            const DXILLibrary& library = shaderAssociations.Library;
             const ShaderExport& shaderExport = library.Export();
 
-            auto shaderId = reinterpret_cast<ShaderTable::ShaderID *>(mProperties->GetShaderIdentifier(shaderExport.ExportName().c_str()));
+            auto shaderId = reinterpret_cast<ShaderTable::ShaderID*>(
+                mProperties->GetShaderIdentifier(shaderExport.ExportName().c_str()));
+
             mShaderTable.AddShader(*shaderExport.AssosiatedShader(), *shaderId, library.LocalRootSignature());
         }
 

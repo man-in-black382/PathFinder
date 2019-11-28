@@ -167,21 +167,18 @@ namespace PathFinder
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ApplyPipelineState(Foundation::Name psoName)
     {
-        if (const HAL::ComputePipelineState* pso = mPipelineStateManager->GetComputePipelineState(psoName))
+        const PipelineStateManager::PipelineStateVariant* state = mPipelineStateManager->GetPipelineState(psoName);
+        assert_format(state, "Pipeline state doesn't exist");
+        assert_format(!std::holds_alternative<HAL::GraphicsPipelineState>(*state), "Trying to apply graphics pipeline state to compute device");
+
+        if (std::holds_alternative<HAL::ComputePipelineState>(*state))
         {
-            ApplyStateIfNeeded(pso);
+            ApplyStateIfNeeded(&std::get<HAL::ComputePipelineState>(*state));
         }
-        else if (const HAL::RayTracingPipelineState* pso = mPipelineStateManager->GetRayTracingPipelineState(psoName)) 
+        else if (std::holds_alternative<HAL::RayTracingPipelineState>(*state))
         {
-            ApplyStateIfNeeded(pso);
+            ApplyStateIfNeeded(&std::get<HAL::RayTracingPipelineState>(*state));
         } 
-        else if (mPipelineStateManager->GetGraphicsPipelineState(psoName))
-        {
-            assert_format(false, "Trying to apply graphics pipeline state to compute device");
-        } 
-        else {
-            assert_format(false, "Pipeline state doesn't exist");
-        }
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
