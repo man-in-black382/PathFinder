@@ -10,6 +10,7 @@ struct PassData
 #include "GBuffer.hlsl"
 #include "ColorConversion.hlsl"
 #include "Vertices.hlsl"
+#include "Utils.hlsl"
 
 StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t0);
 StructuredBuffer<IndexU32> UnifiedIndexBuffer : register(t1);
@@ -35,7 +36,7 @@ float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, InstanceData instanceData)
     float3 B = normalize(mul(normalMatrix, float4(normalize(vertex.Bitangent), 0.0))).xyz;
     float3 N = normalize(mul(normalMatrix, float4(normalize(vertex.Normal), 0.0))).xyz;
 
-    return float3x3(T, B, N);
+    return Matrix3x3ColumnMajor(T, B, N);
 }
 
 VertexOut VSMain(uint indexId : SV_VertexID)
@@ -165,7 +166,7 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData)
         }
     }
 
-    //originalVertexData.UV = originalVertexData.UV + vCurrOffset;
+    originalVertexData.UV = originalVertexData.UV + vCurrOffset;
 
     return originalVertexData;
 }
@@ -177,7 +178,7 @@ PixelOut PSMain(VertexOut pin)
     VertexOut displacedVertexData = DisplaceUV(pin, instanceData);
 
     GBufferCookTorrance gBufferData;
-    gBufferData.Albedo = pin.Normal;// mul(pin.TBN, float3(0.0, 0.0, 1.0));// FetchAlbedoMap(displacedVertexData, instanceData);
+    gBufferData.Albedo = FetchAlbedoMap(displacedVertexData, instanceData);
     gBufferData.Normal = FetchNormalMap(displacedVertexData, instanceData);
     gBufferData.Metalness = FetchMetallnessMap(displacedVertexData, instanceData);
     gBufferData.Roughness = FetchRoughnessMap(displacedVertexData, instanceData);

@@ -137,8 +137,6 @@ namespace HAL
             mLibrary->GetBlobAsUtf16(printBlob.Get(), printBlob16.GetAddressOf());
             OutputDebugStringW((LPWSTR)printBlob16->GetBufferPointer());
 
-            assert_format(false, "Failed to compile shader");
-
             CompilationResult compilationResult{ Shader{ nullptr, L"", stage }, {} };
             return compilationResult;
         }

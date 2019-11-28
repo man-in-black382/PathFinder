@@ -31,6 +31,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<IDxcBlob> mBlob;
 
     public:
+        inline const IDxcBlob* Blob() const { return mBlob.Get(); }
         inline D3D12_SHADER_BYTECODE D3DBytecode() const { return { mBlob->GetBufferPointer(), mBlob->GetBufferSize() }; }
         inline const std::wstring& EntryPoint() const { return mEntryPoint; }
         inline const Stage PipelineStage() const { return mStage; }

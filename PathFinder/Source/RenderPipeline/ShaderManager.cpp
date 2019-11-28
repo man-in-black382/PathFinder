@@ -1,6 +1,7 @@
 #include "ShaderManager.hpp"
 
 #include "../Foundation/StringUtils.hpp"
+#include "../Foundation/Assert.hpp"
 
 namespace PathFinder
 {
@@ -80,7 +81,14 @@ namespace PathFinder
     HAL::Shader* ShaderManager::GetShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath)
     {
         HAL::Shader* shader = FindCachedShader(pipelineStage, relativePath);
-        return shader ? shader : LoadAndCacheShader(pipelineStage, relativePath);
+
+        if (!shader)
+        {
+            shader = LoadAndCacheShader(pipelineStage, relativePath);
+            assert_format(shader, "Failed to compile shader");
+        }
+
+        return shader;
     }
 
     HAL::Shader* ShaderManager::FindCachedShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath)
@@ -108,6 +116,12 @@ namespace PathFinder
         auto fullPath = mShaderRootPath / relativePath;
 
         HAL::ShaderCompiler::CompilationResult compilationResult = mCompiler.Compile(fullPath, pipelineStage, mCommandLineParser.ShouldBuildDebugShaders());
+        
+        if (!compilationResult.CompiledShader.Blob())
+        {
+            return nullptr;
+        }
+
         mShaders.emplace_back(std::move(compilationResult.CompiledShader));
         
         ShaderListIterator shaderIt = std::prev(mShaders.end());
@@ -183,6 +197,12 @@ namespace PathFinder
 
         HAL::Shader* oldShader = &(*oldShaderIt);
         HAL::Shader* newShader = LoadAndCacheShader(oldShader->PipelineStage(), shaderFile);
+
+        // Failed recompilation is OK
+        if (!newShader)
+        {
+            return;
+        }
 
         // Notify anyone interested about the old-to-new swap operation
         mRecompilationCallback(oldShader, newShader);

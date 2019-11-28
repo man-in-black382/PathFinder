@@ -2561,6 +2561,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapHelperInitialization.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapGeneration.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapCommon.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Utils.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">
