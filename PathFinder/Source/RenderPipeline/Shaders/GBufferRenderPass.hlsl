@@ -1,6 +1,7 @@
 struct PassData
 {
     uint InstanceTableIndex;
+    uint ParallaxCounterTextureUAVIndex;
 };
 
 #define PassDataType PassData
@@ -24,18 +25,15 @@ struct VertexOut
     float3 ViewDirectionTS : VIEW_VECTOR_TS;
     float2 UV : TEXCOORD0;  
     float3x3 TBN : TBN_MATRIX;
-
-    float3 Normal : NORMAL;
 };
 
 float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, InstanceData instanceData)
 {
-    float4x4 normalMatrix = instanceData.NormalMatrix;
+    float3 N = mul(instanceData.ModelMatrix, float4(normalize(vertex.Normal), 0.0)).xyz;
+    float3 T = mul(instanceData.ModelMatrix, float4(normalize(vertex.Tangent), 0.0)).xyz;
+    float3 B = normalize(cross(N, T));
 
-    float3 T = normalize(mul(normalMatrix, float4(normalize(vertex.Tangent), 0.0))).xyz;
-    float3 B = normalize(mul(normalMatrix, float4(normalize(vertex.Bitangent), 0.0))).xyz;
-    float3 N = normalize(mul(normalMatrix, float4(normalize(vertex.Normal), 0.0))).xyz;
-
+    // Negate B to achieve correct behavior for SOME FUCKING REASON. Shouldn't be needed, but it is.
     return Matrix3x3ColumnMajor(T, B, N);
 }
 
@@ -59,9 +57,6 @@ VertexOut VSMain(uint indexId : SV_VertexID)
     vout.UV = vertex.UV;
     vout.TBN = TBN;
     vout.ViewDirectionTS = mul(TBNInverse, viewVector);
-
-
-    vout.Normal = mul(instanceData.NormalMatrix, vertex.Normal);
 
     return vout;
 }
@@ -118,56 +113,34 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData)
     Texture3D distanceField = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
     Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
 
-    float fParallaxLimit = -length(originalVertexData.ViewDirectionTS.xy) / originalVertexData.ViewDirectionTS.z;
-    fParallaxLimit *= 0.03;
+    RWTexture2D<uint4> counterTexture = RW_UInt4_Textures2D[PassDataCB.ParallaxCounterTextureUAVIndex];
 
-    float2 vOffsetDir = normalize(originalVertexData.ViewDirectionTS.xy);
-    float2 vMaxOffset = vOffsetDir * fParallaxLimit;
+    float3 samplingPosition = float3(originalVertexData.UV, 1.0);    
+    float3 viewDir = originalVertexData.ViewDirectionTS;
 
-    int nNumSamples = 128;
-    float fStepSize = 1.0 / (float)nNumSamples;
+    // Scaling Z will make surface look smaller. 
+    viewDir.z *= 8.0;
+    viewDir = normalize(viewDir);
 
-    float2 dx = ddx(originalVertexData.UV);
-    float2 dy = ddy(originalVertexData.UV);
+    float distance = distanceField.Sample(PointClampSampler, samplingPosition).r;
 
-    float fCurrRayHeight = 1.0;
-    float2 vCurrOffset = float2(0, 0);
-    float2 vLastOffset = float2(0, 0);
+    uint i = 0;
 
-    float fLastSampledHeight = 1;
-    float fCurrSampledHeight = 1;
-
-    int nCurrSample = 0;
-
-    while (nCurrSample < nNumSamples)
+    while (distance > 0.0)
     {
-        fCurrSampledHeight = displacementMap.SampleGrad(AnisotropicClampSampler, originalVertexData.UV + vCurrOffset, dx, dy).r;
-        if (fCurrSampledHeight > fCurrRayHeight)
+        samplingPosition -= viewDir * distance;
+        distance = distanceField.Sample(PointClampSampler, samplingPosition).r;
+
+        // Sanity check
+        if (++i > 16)
         {
-            float delta1 = fCurrSampledHeight - fCurrRayHeight;
-            float delta2 = (fCurrRayHeight + fStepSize) - fLastSampledHeight;
-
-            float ratio = delta1 / (delta1 + delta2);
-
-            vCurrOffset = (ratio)* vLastOffset + (1.0 - ratio) * vCurrOffset;
-
-            nCurrSample = nNumSamples + 1;
-        }
-        else
-        {
-            nCurrSample++;
-
-            fCurrRayHeight -= fStepSize;
-
-            vLastOffset = vCurrOffset;
-            vCurrOffset += fStepSize * vMaxOffset;
-
-            fLastSampledHeight = fCurrSampledHeight;
+            break;
         }
     }
 
-    originalVertexData.UV = originalVertexData.UV + vCurrOffset;
+    counterTexture[originalVertexData.Position.xy].r = i;
 
+    originalVertexData.UV = samplingPosition.xy;
     return originalVertexData;
 }
 
@@ -182,7 +155,7 @@ PixelOut PSMain(VertexOut pin)
     gBufferData.Normal = FetchNormalMap(displacedVertexData, instanceData);
     gBufferData.Metalness = FetchMetallnessMap(displacedVertexData, instanceData);
     gBufferData.Roughness = FetchRoughnessMap(displacedVertexData, instanceData);
-    gBufferData.AO = FetchAOMap(displacedVertexData, instanceData);
+    gBufferData.AO = FetchDisplacementMap(displacedVertexData, instanceData);//  FetchAOMap(displacedVertexData, instanceData);
 
     GBufferEncoded encoded = EncodeCookTorranceMaterial(gBufferData);
 

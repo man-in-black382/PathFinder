@@ -61,18 +61,6 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::uvec4& clearValue)
-    {
-
-    }
-
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::vec4& clearValue)
-    {
-
-    }
-
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ApplyCommonComputeResourceBindings()
     {
         CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);

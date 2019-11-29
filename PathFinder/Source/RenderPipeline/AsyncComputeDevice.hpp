@@ -41,8 +41,6 @@ namespace PathFinder
 
         template <class T>
         void BindExternalBuffer(const HAL::BufferResource<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
-        void ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::vec4& clearValue);
-        void ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::uvec4& clearValue);
 
         void WaitFence(HAL::Fence& fence);
         void ExecuteCommands();

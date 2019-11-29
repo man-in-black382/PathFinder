@@ -529,11 +529,11 @@ int main(int argc, char** argv)
         "/HarshBricks/harshbricks-albedo.dds", "/HarshBricks/harshbricks-normal.dds", "/HarshBricks/harshbricks-roughness.dds",
         "/HarshBricks/harshbricks-metalness.dds", "/HarshBricks/harshbricks-height.dds"));
 
-    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
+    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
     PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &harshBricksMaterial });
 
     auto t = sphereInstance.Transformation();
-    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 1.0, 1.0)));
+    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
     sphereInstance.SetTransformation(t);
     
     OutputDebugString(PROJECT_DIR);
@@ -542,7 +542,7 @@ int main(int argc, char** argv)
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);
     camera.SetNearPlane(1);
-    camera.MoveTo({ 0.0, 0.0f, 5.f });
+    camera.MoveTo({ 0.0, 0.0f, 50.f });
     camera.LookAt({ 0.f, 0.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
 

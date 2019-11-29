@@ -16,8 +16,6 @@ namespace PathFinder
         void ClearBackBuffer(const Foundation::Color& color);
         void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color);
         void ClearDepth(Foundation::Name resourceName, float depthValue);
-        void ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::vec4& clearValue);
-        void ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::uvec4& clearValue);
         void ApplyPipelineState(Foundation::Name psoName);
         void SetViewport(const HAL::Viewport& viewport);
         void WaitUntilUnorderedAccessesComplete(Foundation::Name resourceName);

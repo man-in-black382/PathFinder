@@ -13,7 +13,7 @@ namespace PathFinder
 
         auto postProcessSteps = (aiPostProcessSteps)(
             aiProcess_CalcTangentSpace | 
-            //aiProcess_FlipUVs | // Important for DirectX. Incorrect UV will also affect tangent/bitangent calculation.
+            aiProcess_FlipUVs |
             aiProcess_GenUVCoords | 
             aiProcess_GenNormals | 
             aiProcess_GenSmoothNormals |

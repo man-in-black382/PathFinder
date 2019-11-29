@@ -88,9 +88,6 @@ namespace HAL
         void SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetComputeRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex);
         void SetDescriptorHeap(const CBSRUADescriptorHeap& heap);
-
-        void ClearUnorderedAccessResourceFloat(const Resource& resource, const UADescriptor& uaDescriptor, const glm::vec4& clearValue);
-        void ClearUnorderedAccessResourceUInt(const Resource& resource, const UADescriptor& uaDescriptor, const glm::uvec4& clearValue);
         void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
     };
 

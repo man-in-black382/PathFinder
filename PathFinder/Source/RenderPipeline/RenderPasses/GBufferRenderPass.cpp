@@ -30,6 +30,10 @@ namespace PathFinder
         ResourceScheduler::NewTextureProperties RT0Properties{};
         RT0Properties.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Unsigned;
 
+        ResourceScheduler::NewTextureProperties parallaxCounterProperties{};
+        parallaxCounterProperties.ShaderVisibleFormat = HAL::ResourceFormat::Color::R16_Unsigned;
+
+        scheduler->NewTexture("POMCounter", parallaxCounterProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
         scheduler->WillUseRootConstantBuffer<GBufferCBContent>();
@@ -48,6 +52,7 @@ namespace PathFinder
         context->GetCommandRecorder()->BindExternalBuffer(context->GetAssetStorage()->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
 
         GBufferCBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<GBufferCBContent>();
+        cbContent->ParallaxCounterTextureUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex("POMCounter");
 
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {

@@ -57,10 +57,10 @@ namespace PathFinder
 
         context->GetScene()->IterateMaterials([&](const Material& material)
         {
-            if (material.DistanceAtlasIndirectionMap && material.DistanceAtlas)
+            /*if (material.DistanceAtlasIndirectionMap && material.DistanceAtlas)
             {
                 return;
-            }
+            }*/
 
             float dispatchX = ceilf((float)material.DistanceAtlasIndirectionMap->Dimensions().Width / 8);
             float dispatchY = ceilf((float)material.DistanceAtlasIndirectionMap->Dimensions().Height / 8);

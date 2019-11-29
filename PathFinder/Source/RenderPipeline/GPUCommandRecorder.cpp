@@ -38,16 +38,6 @@ namespace PathFinder
         mGraphicsDevice->ClearDepth(resourceName, depthValue);
     }
 
-    void GPUCommandRecorder::ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::vec4& clearValue)
-    {
-        mGraphicsDevice->ClearUnorderedAccessResource(resourceName, clearValue);
-    }
-
-    void GPUCommandRecorder::ClearUnorderedAccessResource(Foundation::Name resourceName, const glm::uvec4& clearValue)
-    {
-        mGraphicsDevice->ClearUnorderedAccessResource(resourceName, clearValue);
-    }
-
     void GPUCommandRecorder::ApplyPipelineState(Foundation::Name psoName)
     {
         mGraphicsDevice->ApplyPipelineState(psoName);

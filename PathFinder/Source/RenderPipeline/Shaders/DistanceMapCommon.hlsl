@@ -46,6 +46,7 @@ float FindClosestDisplacementMapPointDistance(Texture2D displacementMap, uint3 c
         for (uint y = samplingOrigin.y; y < samplingOrigin.y + texelCount.y; ++y)
         {
             float displacement = displacementMap.Load(uint3(x, y, 0)).r;
+
             float2 uv = float2(x / float(displacementMapSize.x), y / float(displacementMapSize.y));
             float3 sample3DPosition = float3(uv, displacement);
             float currentDistance = distance(sample3DPosition, currentVoxelCenterInTexSpace);
@@ -79,7 +80,7 @@ VoxelIntersectionInfo VoxelIntersectsDisplacementMap(Texture2D displacementMap, 
         for (uint y = samplingOrigin.y; y < yBoundary; ++y)
         {
             float displacement = displacementMap.Load(uint3(x, y, 0)).r;
-            
+
             if (displacement >= voxelBottom && displacement < voxelTop)
             {
                 intersectionInfo.VoxelIntersectsDisplacementMap = true;

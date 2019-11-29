@@ -46,7 +46,6 @@ namespace HAL
             }, keyValue.second);
         }
 
-        //desc.SampleDesc
         //desc.IBStripCutValue;
         //desc.SampleMask;
         //desc.StreamOutput;

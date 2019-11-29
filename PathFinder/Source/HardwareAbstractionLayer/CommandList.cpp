@@ -84,18 +84,6 @@ namespace HAL
         mList->SetDescriptorHeaps(1, &ptr);
     }
 
-    void ComputeCommandListBase::ClearUnorderedAccessResourceFloat(const Resource& resource, const UADescriptor& uaDescriptor, const glm::vec4& clearValue)
-    {
-        FLOAT values[4]; values[0] = clearValue.x; values[1] = clearValue.y; values[2] = clearValue.z; values[3] = clearValue.w;
-        mList->ClearUnorderedAccessViewFloat(uaDescriptor.GPUHandle(), uaDescriptor.CPUHandle(), resource.D3DResource(), values, 0, nullptr);
-    }
-
-    void ComputeCommandListBase::ClearUnorderedAccessResourceUInt(const Resource& resource, const UADescriptor& uaDescriptor, const glm::uvec4& clearValue)
-    {
-        UINT values[4]; values[0] = clearValue.x; values[1] = clearValue.y; values[2] = clearValue.z; values[3] = clearValue.w;
-        mList->ClearUnorderedAccessViewUint(uaDescriptor.GPUHandle(), uaDescriptor.CPUHandle(), resource.D3DResource(), values, 0, nullptr);
-    }
-
     void ComputeCommandListBase::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
         mList->Dispatch(groupCountX, groupCountY, groupCountZ);

@@ -61,6 +61,13 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     //    float exposure = texelFetch(uExposure, ivec2(0), 0).r;
 
     float3 color = inputImage.Load(loadCoords).rgb;
+
+
+    outputImage[dispatchThreadID.xy] = float4(color, 1.0);
+    return;
+
+
+
     color *= 0.003;//exposure;  // Exposure Adjustment
 
     float lum = Luminance(color);

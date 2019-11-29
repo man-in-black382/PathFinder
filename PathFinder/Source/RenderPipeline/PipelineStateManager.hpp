@@ -36,10 +36,9 @@ namespace PathFinder
         const HAL::RootSignature* GetRootSignature(RootSignatureName name) const;
         const HAL::RootSignature& BaseRootSignature() const;
 
-        void BeginFrame();
-        void EndFrame();
-
         void CompileStates();
+        void RecompileModifiedStates();
+        bool HasModifiedStates() const;
 
     private:
         const HAL::RootSignature* GetNamedRootSignatureOrDefault(std::optional<RootSignatureName> name) const;

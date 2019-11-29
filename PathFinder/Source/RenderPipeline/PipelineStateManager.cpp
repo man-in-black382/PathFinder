@@ -174,22 +174,6 @@ namespace PathFinder
         return mBaseRootSignature;
     }
 
-    void PipelineStateManager::BeginFrame()
-    {
-    }
-
-    void PipelineStateManager::EndFrame()
-    {
-        for (PipelineStateVariant* state : mStatesToRecompile)
-        {
-            if (auto pso = std::get_if<HAL::GraphicsPipelineState>(state)) pso->Compile();
-            else if (auto pso = std::get_if<HAL::ComputePipelineState>(state)) pso->Compile();
-            else if (auto pso = std::get_if<HAL::RayTracingPipelineState>(state)) pso->Compile();
-        }
-
-        mStatesToRecompile.clear();
-    }
-
     void PipelineStateManager::CompileStates()
     {
         mBaseRootSignature.Compile();
@@ -205,6 +189,23 @@ namespace PathFinder
             else if (auto pso = std::get_if<HAL::ComputePipelineState>(&state)) pso->Compile();
             else if (auto pso = std::get_if<HAL::RayTracingPipelineState>(&state)) pso->Compile();
         }
+    }
+
+    void PipelineStateManager::RecompileModifiedStates()
+    {
+        for (PipelineStateVariant* state : mStatesToRecompile)
+        {
+            if (auto pso = std::get_if<HAL::GraphicsPipelineState>(state)) pso->Compile();
+            else if (auto pso = std::get_if<HAL::ComputePipelineState>(state)) pso->Compile();
+            else if (auto pso = std::get_if<HAL::RayTracingPipelineState>(state)) pso->Compile();
+        }
+
+        mStatesToRecompile.clear();
+    }
+
+    bool PipelineStateManager::HasModifiedStates() const
+    {
+        return !mStatesToRecompile.empty();
     }
 
     void PipelineStateManager::AssociateStateWithShaders(PipelineStateVariant* state, const HAL::GraphicsShaderBundle& shaders)

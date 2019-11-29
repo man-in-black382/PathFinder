@@ -10,6 +10,7 @@ namespace PathFinder
     struct GBufferCBContent
     {
         uint32_t InstanceTableIndex;
+        uint32_t ParallaxCounterTextureUAVIndex;
     };
 
     class GBufferRenderPass : public RenderPass  
