@@ -34,26 +34,39 @@ namespace PathFinder
      
     void DisplacementDistanceMapRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        ResourceScheduler::NewTextureProperties JFATextureProperties{};
-        JFATextureProperties.Dimensions = { 128, 128, 64 };
-        JFATextureProperties.Kind = HAL::ResourceFormat::TextureKind::Texture3D;
-        JFATextureProperties.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Float;
+        ResourceScheduler::NewTextureProperties JFAConeIndirectionTextureProps{};
+        JFAConeIndirectionTextureProps.Dimensions = { 128, 128, 64 };
+        JFAConeIndirectionTextureProps.Kind = HAL::ResourceFormat::TextureKind::Texture3D;
+        JFAConeIndirectionTextureProps.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Float;
 
-        scheduler->NewTexture(ResourceNames::JumpFloodingHelper0, JFATextureProperties);
-        scheduler->NewTexture(ResourceNames::JumpFloodingHelper1, JFATextureProperties);
+        ResourceScheduler::NewTextureProperties JFAConesTextureProps{};
+        // Depth 8 for eight cones
+        JFAConesTextureProps.Dimensions = { 128, 128, 8 };
+        JFAConesTextureProps.Kind = HAL::ResourceFormat::TextureKind::Texture3D;
+        JFAConesTextureProps.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Float;
+
+        // Ping-pong textures
+        scheduler->NewTexture(ResourceNames::JumpFloodingConesIndirection0, JFAConeIndirectionTextureProps);
+        scheduler->NewTexture(ResourceNames::JumpFloodingConesIndirection1, JFAConeIndirectionTextureProps);
+        scheduler->NewTexture(ResourceNames::JumpFloodingCones0, JFAConesTextureProps);
+        scheduler->NewTexture(ResourceNames::JumpFloodingCones1, JFAConesTextureProps);
+
         scheduler->WillUseRootConstantBuffer<DisplacementDistanceMapGenerationCBContent>();
     } 
 
     void DisplacementDistanceMapRenderPass::Render(RenderContext* context)
     {
         auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<DisplacementDistanceMapGenerationCBContent>();
-        cbContent->ReadOnlyJFAHelperUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingHelper0);
-        cbContent->WriteOnlyJFAHelperUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingHelper1);
+
+        uint32_t conesIndirectionUAVIndex0 = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingConesIndirection0);
+        uint32_t conesIndirectionUAVIndex1 = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingConesIndirection1);
+        uint32_t conesUAVIndex0 = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingCones0);
+        uint32_t conesUAVIndex1 = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingCones1);
 
         auto commandRecorder = context->GetCommandRecorder();
 
-        ResourceName readOnlyJFAHelperName = ResourceNames::JumpFloodingHelper0;
-        ResourceName writeOnlyJFAHelperName = ResourceNames::JumpFloodingHelper1;
+        ResourceName readOnlyJFAHelperName = ResourceNames::JumpFloodingConesIndirection0;
+        ResourceName writeOnlyJFAHelperName = ResourceNames::JumpFloodingConesIndirection1;
 
         context->GetScene()->IterateMaterials([&](const Material& material)
         {
@@ -97,7 +110,6 @@ namespace PathFinder
 
             uint64_t largestDimension = material.DistanceAtlasIndirectionMap->Dimensions().LargestDimension();
             uint32_t jumpFloodingStepCount = log2(largestDimension);
-            uint32_t pingPongIndex = 0;
             uint32_t step = largestDimension / 2;
 
             // Perform jump flooding (distance field computation)
@@ -113,30 +125,19 @@ namespace PathFinder
 
                 cbContent->FloodStep = step;
 
-                if (pingPongIndex == 0)
-                {
-                    readOnlyJFAHelperName = ResourceNames::JumpFloodingHelper0;
-                    writeOnlyJFAHelperName = ResourceNames::JumpFloodingHelper1;
-                    cbContent->ReadOnlyJFAHelperUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingHelper0);
-                    cbContent->WriteOnlyJFAHelperUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingHelper1);
-                    pingPongIndex = 1;
-                }
-                else
-                {
-                    readOnlyJFAHelperName = ResourceNames::JumpFloodingHelper1;
-                    writeOnlyJFAHelperName = ResourceNames::JumpFloodingHelper0;
-                    cbContent->ReadOnlyJFAHelperUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingHelper1);
-                    cbContent->WriteOnlyJFAHelperUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingHelper0);
-                    pingPongIndex = 0;
-                }
+                cbContent->ReadOnlyJFAConesIndirectionUAVIndex = conesIndirectionUAVIndex0;
+                cbContent->WriteOnlyJFAConesIndirectionUAVIndex = conesIndirectionUAVIndex1;
 
                 commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);
                 commandRecorder->WaitUntilUnorderedAccessesComplete(readOnlyJFAHelperName);
                 commandRecorder->WaitUntilUnorderedAccessesComplete(writeOnlyJFAHelperName);
+
+                std::swap(conesIndirectionUAVIndex0, conesIndirectionUAVIndex1);
+                std::swap(readOnlyJFAHelperName, writeOnlyJFAHelperName);
             }
 
             // Transfer helper texture data to asset texture and compress it at the same time
-            cbContent->ReadOnlyJFAHelperUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingHelper0);;
+            cbContent->ReadOnlyJFAConesIndirectionUAVIndex = conesIndirectionUAVIndex0;
 
             commandRecorder->ApplyPipelineState(PSONames::DistanceMapHelperCompression);
             commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);

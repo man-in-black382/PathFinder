@@ -85,6 +85,7 @@ namespace HAL
 
         mResourceAlignment = allocInfo.Alignment;
         mResourceSizeInBytes = allocInfo.SizeInBytes;
+        mDescription.Alignment = mResourceAlignment;
     }
 
     void ResourceFormat::UpdateExpectedUsageFlags(ResourceState expectedStates)

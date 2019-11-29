@@ -16,9 +16,9 @@ namespace PathFinder
 
     uint64_t PipelineResourceMemoryAliaser::Alias()
     {
-        uint64_t optimalHeapSize = 1;
+        uint64_t optimalHeapSize = 0;
 
-        if (mAllocations.size() == 0) return optimalHeapSize;
+        if (mAllocations.size() == 0) return 1;
 
         if (mAllocations.size() == 1)
         {
@@ -41,11 +41,6 @@ namespace PathFinder
             RemoveAliasedAllocationsFromOriginalList();
 
             mGlobalStartOffset += mAvailableMemory;
-        }
-
-        if (optimalHeapSize == 41877504)
-        {
-            printf("");
         }
 
         return optimalHeapSize == 0 ? 1 : optimalHeapSize;
@@ -139,7 +134,7 @@ namespace PathFinder
         // Find memory regions in which we can place the next allocation based on previously found unavailable regions.
         // Pick the most fitting region. If next allocation cannot be fit in any free region, skip it.
 
-        uint64_t localOffset = mGlobalStartOffset;
+        uint64_t localOffset = 0;
         uint16_t overlappingMemoryRegionsCount = 0;
         uint64_t nextAllocationSize = nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes();
 
@@ -214,7 +209,7 @@ namespace PathFinder
 
             PipelineResourceAllocation::AliasingMetadata& aliasingInfo = nextAllocationIt->Allocation->AliasingInfo;
 
-            aliasingInfo.HeapOffset = mostFittingMemoryRegion.Offset;
+            aliasingInfo.HeapOffset = mGlobalStartOffset + mostFittingMemoryRegion.Offset;
             aliasingInfo.NeedsAliasingBarrier = true;
 
             // We aliased something with the first resource in the current memory bucket

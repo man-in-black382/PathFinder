@@ -18,13 +18,13 @@ static const int3 Offsets[26] = {
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D displacementMap = Textures2D[PassDataCB.DisplacementMapSRVIndex];
-    RWTexture3D<float4> ReadJFAHelperTexture = RW_Float4_Textures3D[PassDataCB.ReadOnlyJFAHelperUAVIndex];
-    RWTexture3D<float4> WriteJFAHelperTexture = RW_Float4_Textures3D[PassDataCB.WriteOnlyJFAHelperUAVIndex];
+    RWTexture3D<float4> ReadJFAHelperTexture = RW_Float4_Textures3D[PassDataCB.ReadOnlyJFAConesIndirectionUAVIndex];
+    RWTexture3D<float4> WriteJFAHelperTexture = RW_Float4_Textures3D[PassDataCB.WriteOnlyJFAConesIndirectionUAVIndex];
 
     uint3 currentClosestVoxel = ReadJFAHelperTexture[dispatchThreadID].xyz;
     float currentClosestDistance = ReadJFAHelperTexture[dispatchThreadID].w;
 
-    // This voxel is intersected by displacement map (a seed in terminology of Jump Flooding algorithm)
+    // This voxel is intersected by displacement map (a 'Seed' in terminology of Jump Flooding algorithm)
     bool isOriginalSeed = all(int3(currentClosestVoxel) == dispatchThreadID);
 
     // This voxel is located under all of the displacement values located in the corresponding UV rect of displacement map

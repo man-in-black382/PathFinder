@@ -118,8 +118,10 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData)
     float3 samplingPosition = float3(originalVertexData.UV, 1.0);    
     float3 viewDir = originalVertexData.ViewDirectionTS;
 
-    // Scaling Z will make surface look smaller. 
-    viewDir.z *= 8.0;
+    // Scaling up Z is equivalent to scaling down values in the displacement map.
+    float POMScale = 8.0;
+
+    viewDir.z *= POMScale;
     viewDir = normalize(viewDir);
 
     float distance = distanceField.Sample(PointClampSampler, samplingPosition).r;

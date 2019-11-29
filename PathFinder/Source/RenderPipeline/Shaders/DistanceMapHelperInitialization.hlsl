@@ -4,8 +4,8 @@
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D displacementMap = Textures2D[PassDataCB.DisplacementMapSRVIndex];
-    RWTexture3D<float4> JFAHelperTexture0 = RW_Float4_Textures3D[PassDataCB.ReadOnlyJFAHelperUAVIndex];
-    RWTexture3D<float4> JFAHelperTexture1 = RW_Float4_Textures3D[PassDataCB.WriteOnlyJFAHelperUAVIndex];
+    RWTexture3D<float4> JFAHelperTexture0 = RW_Float4_Textures3D[PassDataCB.ReadOnlyJFAConesIndirectionUAVIndex];
+    RWTexture3D<float4> JFAHelperTexture1 = RW_Float4_Textures3D[PassDataCB.WriteOnlyJFAConesIndirectionUAVIndex];
 
     VoxelIntersectionInfo intersectionInfo = VoxelIntersectsDisplacementMap(displacementMap, dispatchThreadID);
 

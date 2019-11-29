@@ -5,8 +5,10 @@ struct PassData
     uint DisplacementMapSRVIndex;
     uint DistanceAltasIndirectionMapUAVIndex;
     uint DistanceAltasUAVIndex;
-    uint ReadOnlyJFAHelperUAVIndex;
-    uint WriteOnlyJFAHelperUAVIndex;
+    uint ReadOnlyJFAConesIndirectionUAVIndex;
+    uint WriteOnlyJFAConesIndirectionUAVIndex;
+    uint ReadOnlyJFAConesUAVIndex;
+    uint WriteOnlyJFAConesUAVIndex;
     uint FloodStep;
 };
 
@@ -24,6 +26,26 @@ struct VoxelIntersectionInfo
     bool VoxelIntersectsDisplacementMap;
     bool VoxelIsUnderDisplacementMap;
 };
+
+uint VectorConeIndex(float3 normalizedVector)
+{
+    uint index = 0;
+
+    if (abs(normalizedVector.x) > abs(normalizedVector.z))
+    {
+        index = normalizedVector.x < 0 ? 0 : 2;
+    }
+    else {
+        index = normalizedVector.z < 0 ? 3 : 1;
+    }
+
+    if (normalizedVector.y < 0)
+    {
+        index += 4;
+    }
+
+    return index;
+}
 
 float FindClosestDisplacementMapPointDistance(Texture2D displacementMap, uint3 currentVoxel, uint3 neighbourVoxel)
 {
