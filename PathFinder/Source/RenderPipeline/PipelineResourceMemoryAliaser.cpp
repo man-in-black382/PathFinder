@@ -118,11 +118,6 @@ namespace PathFinder
 
     void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt)
     {
-        if (nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() == 8847360)
-        {
-            printf("");
-        }
-
         // Bail out if there is nothing to alias with
         if (AliasAsFirstAllocation(nextAllocationIt)) return;
 
