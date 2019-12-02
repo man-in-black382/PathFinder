@@ -1,29 +1,10 @@
 # PathFinder
-DirectX 12 renderer to eventually become real-time physically-based path tracer.
+An attempt to build a modern renderer using modern graphic APIs.
 
-# Todo List
-- [x] Implement hardware abstraction layer: an interface between renderer and graphic API.
-- [x] Architect render pipeline around bindless resources
-- [ ] Implement per-pass resource scheduling system
-  - [x] Texture scheduling
-  - [ ] Buffer scheduling
-  - [ ] Pipeline state and root signature scheduling
-    - [x] Root signatures
-    - [x] Graphic states
-    - [x] Compute states
-    - [ ] Ray Tracing states
-    
-- [ ] Implement memory aliasing for pipeline-scheduled resources
-- [ ] Implement asset system
-  - [x] Mesh system
-    - [x] Loading
-    - [x] Integration in scene
-    - [x] Transfer to GPU
-  - [ ] Material system
-    - [x] Loading
-    - [ ] Integration in scene
-    - [ ] Transfer to GPU
- - [ ] Integrate ImGUI as single render pass
- - [ ] Proccess user inputs
- - [ ] Area lights
- 
+# Engine Architecture
+Pillars of the architecture are __Bindless Resources__ and __Render Graph__. 
+Relying only on hardware that supports unbounded arrays of textures in shaders greatly reduces the complexity of resource binding model, which leads to less complicated code, smaller amount of root signatures and descriptor heaps. One GPU (CB, SR, UA) descriptor heap and a few root signatures are enough to cover any rendering scenario.
+Render pass system enables automatic behind-the-scenes resource state tracking and optimization, resource memory aliasing, pipeline states management, command lists management and more, while providing a simple unified interface that allows user to prototype an arbitrary but efficient render pipleline fast without concentrating on low-level management.
+
+# Graphic Pipleline
+At the moment it's a basic deferred renderer with a tone mapper and 1 type of PBR material: Cook-Torrance with GGX for specular and Lambertian diffuse. 
