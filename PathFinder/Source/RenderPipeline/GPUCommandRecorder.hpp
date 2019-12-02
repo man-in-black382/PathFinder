@@ -18,7 +18,6 @@ namespace PathFinder
         void ClearDepth(Foundation::Name resourceName, float depthValue);
         void ApplyPipelineState(Foundation::Name psoName);
         void SetViewport(const HAL::Viewport& viewport);
-        void WaitUntilUnorderedAccessesComplete(Foundation::Name resourceName);
 
         void Draw(uint32_t vertexCount, uint32_t instanceCount = 1);
         void Draw(const DrawablePrimitive& primitive);

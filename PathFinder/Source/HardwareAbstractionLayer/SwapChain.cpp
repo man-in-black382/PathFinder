@@ -22,7 +22,7 @@ namespace HAL
         chain.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
         chain.SampleDesc.Count = 1;
         chain.SampleDesc.Quality = 0;
-        chain.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        chain.BufferUsage = DXGI_USAGE_BACK_BUFFER;
         chain.BufferCount = bufferCount;
         chain.OutputWindow = windowHandle;
         chain.Windowed = true;

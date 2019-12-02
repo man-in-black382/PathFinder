@@ -41,7 +41,7 @@ namespace PathFinder
 
         ResourceScheduler::NewTextureProperties JFAConesTextureProps{};
         // Depth 8 for eight cones
-        JFAConesTextureProps.Dimensions = { 128, 128, 8 };
+        JFAConesTextureProps.Dimensions = { 1024, 1024, 8 };
         JFAConesTextureProps.Kind = HAL::ResourceFormat::TextureKind::Texture3D;
         JFAConesTextureProps.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Float;
 
@@ -105,8 +105,6 @@ namespace PathFinder
             // Initialize jump flooding helper texture
             commandRecorder->ApplyPipelineState(PSONames::DistanceMapHelperInitialization);
             commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);
-            commandRecorder->WaitUntilUnorderedAccessesComplete(readOnlyJFAHelperName);
-            commandRecorder->WaitUntilUnorderedAccessesComplete(writeOnlyJFAHelperName);
 
             uint64_t largestDimension = material.DistanceAtlasIndirectionMap->Dimensions().LargestDimension();
             uint32_t jumpFloodingStepCount = log2(largestDimension);
@@ -129,8 +127,6 @@ namespace PathFinder
                 cbContent->WriteOnlyJFAConesIndirectionUAVIndex = conesIndirectionUAVIndex1;
 
                 commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);
-                commandRecorder->WaitUntilUnorderedAccessesComplete(readOnlyJFAHelperName);
-                commandRecorder->WaitUntilUnorderedAccessesComplete(writeOnlyJFAHelperName);
 
                 std::swap(conesIndirectionUAVIndex0, conesIndirectionUAVIndex1);
                 std::swap(readOnlyJFAHelperName, writeOnlyJFAHelperName);
@@ -141,8 +137,6 @@ namespace PathFinder
 
             commandRecorder->ApplyPipelineState(PSONames::DistanceMapHelperCompression);
             commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);
-            commandRecorder->WaitUntilUnorderedAccessesComplete(readOnlyJFAHelperName);
-            commandRecorder->WaitUntilUnorderedAccessesComplete(writeOnlyJFAHelperName);
         });
     }
 

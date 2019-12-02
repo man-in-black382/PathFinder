@@ -35,7 +35,7 @@ namespace PathFinder
     class PipelineResourceStorage
     {
     public:
-        struct PerPassData
+        struct PerPassObjects
         {
             // Constant buffers for each pass that require it.
             std::unique_ptr<HAL::RingBufferResource<uint8_t>> PassConstantBuffer;
@@ -51,11 +51,13 @@ namespace PathFinder
             HAL::ResourceBarrierCollection UAVBarriers;
         };
 
-        struct PerResourceData
+        struct PerResourceObjects
         {
-            PipelineResourceAllocation Allocation;
+            std::unique_ptr<PipelineResourceAllocation> Allocation;
             std::unique_ptr<TexturePipelineResource> Texture;
             std::unique_ptr<BufferPipelineResource> Buffer;
+
+            const HAL::Resource* GetResource() const;
         };
 
         PipelineResourceStorage(
@@ -79,15 +81,16 @@ namespace PathFinder
 
         GlobalRootConstants* GlobalRootConstantData();
         PerFrameRootConstants* PerFrameRootConstantData();
-        template <class RootConstants> RootConstants* RootConstantDataForCurrentPass() const;
-        HAL::BufferResource<uint8_t>* RootConstantBufferForCurrentPass() const;
+        template <class RootConstants> RootConstants* RootConstantDataForCurrentPass();
+        HAL::BufferResource<uint8_t>* RootConstantBufferForCurrentPass();
         const HAL::BufferResource<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
         const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
         const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
         const HAL::Resource* GetResource(ResourceName resourceName) const;
-        const HAL::ResourceBarrierCollection& ResourceBarriersForCurrentPass();
+        const HAL::ResourceBarrierCollection& TransitionAndAliasingBarriersForCurrentPass();
+        const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();
         const Foundation::Name CurrentPassName() const;
         const ResourceDescriptorStorage* DescriptorStorage() const;
 
@@ -115,8 +118,13 @@ namespace PathFinder
         );
 
     private:
-        void CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::TextureResource* texture);
-        void CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceAllocation& allocator, const HAL::BufferResource<uint8_t>* buffer, uint64_t explicitStride);
+        PerPassObjects& GetPerPassObjects(PassName name);
+        PerResourceObjects& GetPerResourceObjects(ResourceName name);
+        const PerPassObjects* GetPerPassObjects(PassName name) const;
+        const PerResourceObjects* GetPerResourceObjects(ResourceName name) const;
+
+        void CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceAllocation& allocator);
+        void CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceAllocation& allocator, uint64_t explicitStride);
 
         void PrepareAllocationsForOptimization();
         void CreateResourceBarriers();
@@ -156,9 +164,9 @@ namespace PathFinder
         // Constant buffer for data that changes every frame
         HAL::RingBufferResource<PerFrameRootConstants> mPerFrameRootConstantsBuffer;
 
-        std::unordered_map<ResourceName, PerResourceData> mPerResourceData;
+        std::unordered_map<ResourceName, PerResourceObjects> mPerResourceObjects;
 
-        std::unordered_map<ResourceName, PerPassData> mPerPassData;
+        std::unordered_map<ResourceName, PerPassObjects> mPerPassObjects;
 
         uint8_t mCurrentBackBufferIndex = 0;
     };

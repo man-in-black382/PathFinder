@@ -141,15 +141,10 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::WaitUntilUnorderedAccessesComplete(Foundation::Name resourceName)
-    {
-        CommandList().InsertBarrier(HAL::UnorderedAccessResourceBarrier{ mResourceStorage->GetResource(resourceName) });
-    }
-
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
         CommandList().Dispatch(groupCountX, groupCountY, groupCountZ);
+        CommandList().InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>

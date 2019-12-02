@@ -215,7 +215,7 @@ namespace PathFinder
         {
             mGraphicsDevice.ResetViewportToDefault();
             mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
-            mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.ResourceBarriersForCurrentPass());
+            mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.TransitionAndAliasingBarriersForCurrentPass());
 
             passPtr->Render(&mContext);
         }

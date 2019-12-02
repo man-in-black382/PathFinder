@@ -67,6 +67,7 @@ namespace PathFinder
     {
         ApplyDefaultViewportIfNeeded();
         CommandList().Draw(vertexCount, 0);
+        CommandList().InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
     
     void GraphicsDevice::Draw(const DrawablePrimitive& primitive)
@@ -74,6 +75,7 @@ namespace PathFinder
         ApplyDefaultViewportIfNeeded();
         CommandList().SetPrimitiveTopology(primitive.Topology());
         CommandList().Draw(primitive.VertexCount(), 0);
+        CommandList().InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
 
     void GraphicsDevice::ResetViewportToDefault()

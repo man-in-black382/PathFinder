@@ -48,11 +48,6 @@ namespace PathFinder
         mGraphicsDevice->SetViewport(viewport);
     }
 
-    void GPUCommandRecorder::WaitUntilUnorderedAccessesComplete(Foundation::Name resourceName)
-    {
-        mGraphicsDevice->WaitUntilUnorderedAccessesComplete(resourceName);
-    }
-
     void GPUCommandRecorder::Draw(uint32_t vertexCount, uint32_t instanceCount)
     {
         mGraphicsDevice->Draw(vertexCount, instanceCount);

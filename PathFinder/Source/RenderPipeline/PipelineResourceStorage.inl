@@ -4,68 +4,69 @@ namespace PathFinder
 {
 
     template <class RootConstants>
-    RootConstants* PipelineResourceStorage::RootConstantDataForCurrentPass() const
+    RootConstants* PipelineResourceStorage::RootConstantDataForCurrentPass()
     {
-        auto buffer = mPerPassData[mCurrentPassName].PassConstantBuffer;
-        if (!buffer) return nullptr;
-        return reinterpret_cast<RootConstants *>(buffer->At(0));
+        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
+
+        if (!passObjects.PassConstantBuffer)
+        {
+            return nullptr;
+        }
+
+        return reinterpret_cast<RootConstants *>(passObjects.PassConstantBuffer->At(0));
     }
 
     template <class BufferDataT>
     void PipelineResourceStorage::AllocateRootConstantBufferIfNeeded()
     {
-        auto buffer = mPerPassData[mCurrentPassName].PassConstantBuffer;
+        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
 
-        if (buffer) return;
+        if (passObjects.PassConstantBuffer) return;
 
         // Because we store complex objects in unified buffers of primitive type
         // we must alight manually beforehand and pass alignment of 1 to the buffer
         //
         auto bufferSize = Foundation::MemoryUtils::Align(sizeof(BufferDataT), 256);
 
-        mPerPassConstantBuffers.emplace(mCurrentPassName, std::make_unique<HAL::RingBufferResource<uint8_t>>(
-            *mDevice, bufferSize, mSimultaneousFramesInFlight, 1, HAL::CPUAccessibleHeapType::Upload));
+        passObjects.PassConstantBuffer = std::make_unique<HAL::RingBufferResource<uint8_t>>(
+            *mDevice, bufferSize, mSimultaneousFramesInFlight, 1, HAL::CPUAccessibleHeapType::Upload);
     }
 
     template <class BufferDataT>
     PipelineResourceAllocation* PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment)
     {
-        auto it = mPipelineResourceAllocations.find(resourceName);
+        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
-        if (it != mPipelineResourceAllocations.end())
+        if (resourceObjects.Allocation)
         {
-            return &it->second;
+            return resourceObjects.Allocation.get();
         }
         
-        auto [iter, success] = mPipelineResourceAllocations.emplace(
-            resourceName, HAL::BufferResource<BufferDataT>::ConstructResourceFormat(mDevice, capacity, perElementAlignment)
-        );
+        resourceObjects.Allocation = std::make_unique<PipelineResourceAllocation>(
+            HAL::BufferResource<BufferDataT>::ConstructResourceFormat(mDevice, capacity, perElementAlignment));
 
-        PipelineResourceAllocation& allocation = iter->second;
-
-        allocation.AllocationAction = [=, &allocation]()
+        resourceObjects.Allocation->AllocationAction = [=, &resourceObjects]()
         {
+            PipelineResourceAllocation* allocation = resourceObjects.Allocation.get();
             HAL::Heap* heap = mBufferHeap.get();
 
             // Store as byte buffer and alight manually
             auto stride = Foundation::MemoryUtils::Align(sizeof(BufferDataT), 256);
             auto bufferSize = stride * capacity;
 
-            auto buffer = std::make_unique<HAL::BufferResource<uint8_t>>(
-                *mDevice, *heap, allocation.AliasingInfo.HeapOffset, bufferSize, 1,
-                allocation.InitialStates(), allocation.ExpectedStates()
+            resourceObjects.Buffer = std::make_unique<BufferPipelineResource>();
+
+            resourceObjects.Buffer->Resource = std::make_unique<HAL::BufferResource<uint8_t>>(
+                *mDevice, *heap, allocation->AliasingInfo.HeapOffset, bufferSize, 1,
+                allocation->InitialStates(), allocation->ExpectedStates()
             );
 
-            buffer->SetDebugName(resourceName.ToString());
+            resourceObjects.Buffer->Resource->SetDebugName(resourceName.ToString());
 
-            BufferPipelineResource newResource;
-            CreateDescriptors(newResource, allocation, buffer.get(), stride);
-
-            newResource.Resource = std::move(buffer);
-            mPipelineBufferResources[resourceName] = std::move(newResource);
+            CreateDescriptors(*resourceObjects.Buffer, *resourceObjects.Allocation, stride);
         };
 
-        return &allocation;
+        return resourceObjects.Allocation.get();
     }
 
 }
