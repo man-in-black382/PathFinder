@@ -21,6 +21,7 @@ namespace PathFinder
             HAL::ResourceState RequestedState = HAL::ResourceState::Common;
             std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
             std::optional<StatePair> OptimizedTransitionStates;
+            bool NeedsUAVBarrier = false;
             bool CreateTextureRTDescriptor = false;
             bool CreateTextureDSDescriptor = false;
             bool CreateTextureSRDescriptor = false;

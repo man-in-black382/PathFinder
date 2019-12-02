@@ -21,7 +21,7 @@ namespace PathFinder
         void Optimize();
 
     private:
-        void CollapseStateSequences(const PipelineResourceAllocation* allocation);
+        void CollapseStateSequences(PipelineResourceAllocation* allocation);
 
         // To be used between function calls to avoid memory reallocations
         std::vector<std::pair<Foundation::Name, HAL::ResourceState>> mCollapsedStateSequences;

@@ -71,7 +71,7 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStateOptimizer::CollapseStateSequences(const PipelineResourceAllocation* allocation)
+    void PipelineResourceStateOptimizer::CollapseStateSequences(PipelineResourceAllocation* allocation)
     {
         std::vector<Foundation::Name> relevantPassNames;
         HAL::ResourceState stateSequence = HAL::ResourceState::Common;
@@ -136,6 +136,12 @@ namespace PathFinder
                 stateTransitionPassName = currentPassName;
 
                 mCollapsedStateSequences.push_back({ stateTransitionPassName, stateSequence });
+            }
+
+            // Determine UAV barrier necessity
+            if (EnumMaskBitSet(perPassData->RequestedState, HAL::ResourceState::UnorderedAccess))
+            {
+                perPassData->NeedsUAVBarrier = true;
             }
         }
     }

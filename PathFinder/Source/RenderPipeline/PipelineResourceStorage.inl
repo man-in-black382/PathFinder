@@ -6,19 +6,17 @@ namespace PathFinder
     template <class RootConstants>
     RootConstants* PipelineResourceStorage::RootConstantDataForCurrentPass() const
     {
-        auto bufferIt = mPerPassConstantBuffers.find(mCurrentPassName);
-        if (bufferIt == mPerPassConstantBuffers.end()) return nullptr;
-
-        return reinterpret_cast<RootConstants *>(bufferIt->second->At(0));
+        auto buffer = mPerPassData[mCurrentPassName].PassConstantBuffer;
+        if (!buffer) return nullptr;
+        return reinterpret_cast<RootConstants *>(buffer->At(0));
     }
 
     template <class BufferDataT>
     void PipelineResourceStorage::AllocateRootConstantBufferIfNeeded()
     {
-        auto bufferIt = mPerPassConstantBuffers.find(mCurrentPassName);
-        bool alreadyAllocated = bufferIt != mPerPassConstantBuffers.end();
+        auto buffer = mPerPassData[mCurrentPassName].PassConstantBuffer;
 
-        if (alreadyAllocated) return;
+        if (buffer) return;
 
         // Because we store complex objects in unified buffers of primitive type
         // we must alight manually beforehand and pass alignment of 1 to the buffer

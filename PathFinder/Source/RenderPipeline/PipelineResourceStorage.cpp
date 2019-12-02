@@ -297,19 +297,8 @@ namespace PathFinder
     {
         for (auto& [resourceName, allocation] : mPipelineResourceAllocations)
         {
-            const HAL::Resource* resource = nullptr;
-
-            if (const TexturePipelineResource* textureResource = GetPipelineTextureResource(resourceName))
-            {
-                resource = textureResource->Resource.get();
-            }
-            else if (const BufferPipelineResource * bufferResource = GetPipelineBufferResource(resourceName))
-            {
-                resource = bufferResource->Resource.get();
-            }
-            else {
-                assert_format(false, "Resource must be allocated before creating any transitions");
-            }
+            const HAL::Resource* resource = GetResource(resourceName);
+            assert_format(resource, "Resource must be allocated before creating any transitions");
 
             if (allocation.AliasingInfo.NeedsAliasingBarrier)
             {

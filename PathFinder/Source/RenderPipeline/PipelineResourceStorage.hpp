@@ -35,7 +35,28 @@ namespace PathFinder
     class PipelineResourceStorage
     {
     public:
-        using PassNameResourceName = NameNameTuple;
+        struct PerPassData
+        {
+            // Constant buffers for each pass that require it.
+            std::unique_ptr<HAL::RingBufferResource<uint8_t>> PassConstantBuffer;
+
+            // Resource names scheduled for each pass
+            std::unordered_set<ResourceName> ScheduledResourceNames;
+
+            // Resource transition and aliasing barriers for each pass
+            HAL::ResourceBarrierCollection TransitionAndAliasingBarriers;
+
+            // UAV barriers to be applied after each draw/dispatch in
+            // a pass that makes unordered accesses to resources
+            HAL::ResourceBarrierCollection UAVBarriers;
+        };
+
+        struct PerResourceData
+        {
+            PipelineResourceAllocation Allocation;
+            std::unique_ptr<TexturePipelineResource> Texture;
+            std::unique_ptr<BufferPipelineResource> Buffer;
+        };
 
         PipelineResourceStorage(
             HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, 
@@ -129,31 +150,16 @@ namespace PathFinder
         // No fancy management is required.
         std::vector<HAL::RTDescriptor> mBackBufferDescriptors;
 
-        // Constant buffers for each pass that require it.
-        std::unordered_map<PassName, std::unique_ptr<HAL::RingBufferResource<uint8_t>>> mPerPassConstantBuffers;
-        
-        // Resource names scheduled for each pass
-        std::unordered_map<PassName, std::unordered_set<ResourceName>> mPerPassResourceNames;
-
-        // Allocations info for each resource
-        std::unordered_map<ResourceName, PipelineResourceAllocation> mPipelineResourceAllocations;
-
-        // Allocated pipeline textures
-        std::unordered_map<ResourceName, TexturePipelineResource> mPipelineTextureResources;
-
-        // Allocated pipeline buffers
-        std::unordered_map<ResourceName, BufferPipelineResource> mPipelineBufferResources;
-
-        // Resource barriers for each pass
-        std::unordered_map<PassName, HAL::ResourceBarrierCollection> mPerPassResourceBarriers;
-
         // Constant buffer for global data that changes rarely
         HAL::RingBufferResource<GlobalRootConstants> mGlobalRootConstantsBuffer;
 
         // Constant buffer for data that changes every frame
         HAL::RingBufferResource<PerFrameRootConstants> mPerFrameRootConstantsBuffer;
 
-        // 
+        std::unordered_map<ResourceName, PerResourceData> mPerResourceData;
+
+        std::unordered_map<ResourceName, PerPassData> mPerPassData;
+
         uint8_t mCurrentBackBufferIndex = 0;
     };
 
