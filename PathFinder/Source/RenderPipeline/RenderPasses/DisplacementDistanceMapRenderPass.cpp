@@ -1,4 +1,5 @@
 #include "DisplacementDistanceMapRenderPass.hpp"
+#include "../Scene/MaterialLoader.hpp"
 
 namespace PathFinder
 {
@@ -9,7 +10,8 @@ namespace PathFinder
     void DisplacementDistanceMapRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         HAL::RootSignature signature = stateCreator->CloneBaseRootSignature();
-        signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 0, 0 }); // UAV Counter | u0 - s0
+        signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 0, 0 }); // Read Only Cones Buffer | u0 - s0
+        signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 1, 0 }); // Write Only Cones Buffer | u1 - s0
 
         stateCreator->StoreRootSignature(RootSignatureNames::DisplacementDistanceMapGeneration, std::move(signature));
 
@@ -34,22 +36,15 @@ namespace PathFinder
      
     void DisplacementDistanceMapRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        ResourceScheduler::NewTextureProperties JFAConeIndirectionTextureProps{};
-        JFAConeIndirectionTextureProps.Dimensions = { 128, 128, 64 };
-        JFAConeIndirectionTextureProps.Kind = HAL::ResourceFormat::TextureKind::Texture3D;
-        JFAConeIndirectionTextureProps.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Float;
+        ResourceScheduler::NewBufferProperties<JFACones> JFAConesBufferProps{
+            MaterialLoader::UncompressedDistanceFieldSize.Width * 
+            MaterialLoader::UncompressedDistanceFieldSize.Height *
+            MaterialLoader::UncompressedDistanceFieldSize.Depth,
+            1
+        };
 
-        ResourceScheduler::NewTextureProperties JFAConesTextureProps{};
-        // Depth 8 for eight cones
-        JFAConesTextureProps.Dimensions = { 1024, 1024, 8 };
-        JFAConesTextureProps.Kind = HAL::ResourceFormat::TextureKind::Texture3D;
-        JFAConesTextureProps.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Float;
-
-        // Ping-pong textures
-        scheduler->NewTexture(ResourceNames::JumpFloodingConesIndirection0, JFAConeIndirectionTextureProps);
-        scheduler->NewTexture(ResourceNames::JumpFloodingConesIndirection1, JFAConeIndirectionTextureProps);
-        scheduler->NewTexture(ResourceNames::JumpFloodingCones0, JFAConesTextureProps);
-        scheduler->NewTexture(ResourceNames::JumpFloodingCones1, JFAConesTextureProps);
+        scheduler->NewBuffer(ResourceNames::JumpFloodingCones0, JFAConesBufferProps);
+        scheduler->NewBuffer(ResourceNames::JumpFloodingCones1, JFAConesBufferProps);
 
         scheduler->WillUseRootConstantBuffer<DisplacementDistanceMapGenerationCBContent>();
     } 
@@ -58,15 +53,11 @@ namespace PathFinder
     {
         auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<DisplacementDistanceMapGenerationCBContent>();
 
-        uint32_t conesIndirectionUAVIndex0 = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingConesIndirection0);
-        uint32_t conesIndirectionUAVIndex1 = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingConesIndirection1);
-        uint32_t conesUAVIndex0 = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingCones0);
-        uint32_t conesUAVIndex1 = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::JumpFloodingCones1);
+        ResourceProvider* resourceProvider = context->GetResourceProvider();
+        GPUCommandRecorder* commandRecorder = context->GetCommandRecorder();
 
-        auto commandRecorder = context->GetCommandRecorder();
-
-        ResourceName readOnlyJFAHelperName = ResourceNames::JumpFloodingConesIndirection0;
-        ResourceName writeOnlyJFAHelperName = ResourceNames::JumpFloodingConesIndirection1;
+        ResourceName readOnlyConesBufferName = ResourceNames::JumpFloodingCones0;
+        ResourceName writeOnlyConesBufferName = ResourceNames::JumpFloodingCones1;
 
         context->GetScene()->IterateMaterials([&](const Material& material)
         {
@@ -81,13 +72,13 @@ namespace PathFinder
 
             // Setup common CB data
             cbContent->DisplacementMapSRVIndex = 
-                context->GetResourceProvider()->GetExternalTextureDescriptorTableIndex(material.DisplacementMap, HAL::ShaderRegister::ShaderResource);
+                resourceProvider->GetExternalTextureDescriptorTableIndex(material.DisplacementMap, HAL::ShaderRegister::ShaderResource);
 
             cbContent->DistanceAltasIndirectionMapUAVIndex = 
-                context->GetResourceProvider()->GetExternalTextureDescriptorTableIndex(material.DistanceAtlasIndirectionMap, HAL::ShaderRegister::UnorderedAccess);
+                resourceProvider->GetExternalTextureDescriptorTableIndex(material.DistanceAtlasIndirectionMap, HAL::ShaderRegister::UnorderedAccess);
 
             cbContent->DistanceAltasUAVIndex =
-                context->GetResourceProvider()->GetExternalTextureDescriptorTableIndex(material.DistanceAtlas, HAL::ShaderRegister::UnorderedAccess);
+                resourceProvider->GetExternalTextureDescriptorTableIndex(material.DistanceAtlas, HAL::ShaderRegister::UnorderedAccess);
 
             cbContent->DisplacementMapSize = glm::uvec4{
                 material.DisplacementMap->Dimensions().Width,
@@ -104,6 +95,8 @@ namespace PathFinder
 
             // Initialize jump flooding helper texture
             commandRecorder->ApplyPipelineState(PSONames::DistanceMapHelperInitialization);
+            commandRecorder->BindBuffer(readOnlyConesBufferName, 0, 0, HAL::ShaderRegister::UnorderedAccess);
+            commandRecorder->BindBuffer(writeOnlyConesBufferName, 1, 0, HAL::ShaderRegister::UnorderedAccess);
             commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);
 
             uint64_t largestDimension = material.DistanceAtlasIndirectionMap->Dimensions().LargestDimension();
@@ -123,19 +116,16 @@ namespace PathFinder
 
                 cbContent->FloodStep = step;
 
-                cbContent->ReadOnlyJFAConesIndirectionUAVIndex = conesIndirectionUAVIndex0;
-                cbContent->WriteOnlyJFAConesIndirectionUAVIndex = conesIndirectionUAVIndex1;
-
+                commandRecorder->BindBuffer(readOnlyConesBufferName, 0, 0, HAL::ShaderRegister::UnorderedAccess);
+                commandRecorder->BindBuffer(writeOnlyConesBufferName, 1, 0, HAL::ShaderRegister::UnorderedAccess);
                 commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);
 
-                std::swap(conesIndirectionUAVIndex0, conesIndirectionUAVIndex1);
-                std::swap(readOnlyJFAHelperName, writeOnlyJFAHelperName);
+                std::swap(readOnlyConesBufferName, writeOnlyConesBufferName);
             }
 
-            // Transfer helper texture data to asset texture and compress it at the same time
-            cbContent->ReadOnlyJFAConesIndirectionUAVIndex = conesIndirectionUAVIndex0;
-
             commandRecorder->ApplyPipelineState(PSONames::DistanceMapHelperCompression);
+            commandRecorder->BindBuffer(readOnlyConesBufferName, 0, 0, HAL::ShaderRegister::UnorderedAccess);
+            commandRecorder->BindBuffer(writeOnlyConesBufferName, 1, 0, HAL::ShaderRegister::UnorderedAccess);
             commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);
         });
     }

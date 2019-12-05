@@ -4,6 +4,13 @@ struct PassData
     uint ParallaxCounterTextureUAVIndex;
 };
 
+static const float DistanceFieldMaxVoxelDistance = sqrt(3);
+
+struct DistanceFieldCones
+{
+    float Distances[8];
+};
+
 #define PassDataType PassData
 
 #include "InstanceData.hlsl"
@@ -108,14 +115,68 @@ float FetchDisplacementMap(VertexOut vertex, InstanceData instanceData)
     return displacementMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
+DistanceFieldCones UnpackConeData(uint4 packedCones)
+{
+    DistanceFieldCones cones;
+
+    float2 c01 = UnpackUnorm2x16(packedCones.x, DistanceFieldMaxVoxelDistance);
+    float2 c23 = UnpackUnorm2x16(packedCones.y, DistanceFieldMaxVoxelDistance);
+    float2 c45 = UnpackUnorm2x16(packedCones.z, DistanceFieldMaxVoxelDistance);
+    float2 c67 = UnpackUnorm2x16(packedCones.w, DistanceFieldMaxVoxelDistance);
+
+    cones.Distances[0] = c01.x;
+    cones.Distances[1] = c01.y;
+    cones.Distances[2] = c23.x;
+    cones.Distances[3] = c23.y;
+    cones.Distances[4] = c45.x;
+    cones.Distances[5] = c45.y;
+    cones.Distances[6] = c67.x;
+    cones.Distances[7] = c67.y;
+
+    return cones;
+}
+
+uint VectorConeIndex(float3 normalizedVector)
+{
+    uint index = 0;
+
+    if (abs(normalizedVector.x) > abs(normalizedVector.z))
+    {
+        index = normalizedVector.x < 0 ? 0 : 2;
+    }
+    else {
+        index = normalizedVector.z < 0 ? 3 : 1;
+    }
+
+    if (normalizedVector.y < 0)
+    {
+        index += 4;
+    }
+
+    return index;
+}
+
+float3 VoxelIndex(float3 uvw, float3 voxelGridSize)
+{
+    return uvw * (voxelGridSize - 1.0);
+}
+
 VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData)
 {
-    Texture3D distanceField = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
+    Texture3D distanceFieldAtlasIndirectionMap = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
     Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
+    Texture3D<uint4> distanceFieldAtlas = UInt4_Textures3D[instanceData.DistanceAtlasIndex];
+
+    float atlasWidth;
+    float atlasHeight;
+    float atlasDepth;
+
+    distanceFieldAtlas.GetDimensions(atlasWidth, atlasHeight, atlasDepth);
 
     RWTexture2D<uint4> counterTexture = RW_UInt4_Textures2D[PassDataCB.ParallaxCounterTextureUAVIndex];
 
-    float3 samplingPosition = float3(originalVertexData.UV, 1.0);    
+    float3 samplingPosition = float3(originalVertexData.UV, 1.0); 
+    float3 voxelIndex = VoxelIndex(samplingPosition, float3(atlasWidth, atlasHeight, atlasDepth));
     float3 viewDir = originalVertexData.ViewDirectionTS;
 
     // Scaling up Z is equivalent to scaling down values in the displacement map.
@@ -124,24 +185,27 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData)
     viewDir.z *= POMScale;
     viewDir = normalize(viewDir);
 
-    float distance = distanceField.Sample(PointClampSampler, samplingPosition).r;
+    uint viewDirConeIndex = 0;// VectorConeIndex(-viewDir);
+    DistanceFieldCones cones = UnpackConeData(distanceFieldAtlas.Load(int4(voxelIndex, 0)));
+    float distance = cones.Distances[viewDirConeIndex];
 
     uint i = 0;
 
     while (distance > 0.0)
     {
         samplingPosition -= viewDir * distance;
-        distance = distanceField.Sample(PointClampSampler, samplingPosition).r;
+        voxelIndex = VoxelIndex(samplingPosition, float3(atlasWidth, atlasHeight, atlasDepth));
+        cones = UnpackConeData(distanceFieldAtlas.Load(int4(voxelIndex, 0)));
+        distance = cones.Distances[viewDirConeIndex];
 
         // Sanity check
-        if (++i > 16)
+        if (++i > 150)
         {
             break;
         }
     }
 
     counterTexture[originalVertexData.Position.xy].r = i;
-
     originalVertexData.UV = samplingPosition.xy;
     return originalVertexData;
 }
@@ -153,6 +217,7 @@ PixelOut PSMain(VertexOut pin)
     VertexOut displacedVertexData = DisplaceUV(pin, instanceData);
 
     GBufferCookTorrance gBufferData;
+
     gBufferData.Albedo = FetchAlbedoMap(displacedVertexData, instanceData);
     gBufferData.Normal = FetchNormalMap(displacedVertexData, instanceData);
     gBufferData.Metalness = FetchMetallnessMap(displacedVertexData, instanceData);

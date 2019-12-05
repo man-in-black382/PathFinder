@@ -97,17 +97,29 @@ namespace PathFinder
             CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 4);
         }
             
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 5);
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 6);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
+        {
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 5);
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 6);
+        }
+
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 7);
        
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0))
         {
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 7);
             CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 8);
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 9);
         }
             
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 9);
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0)) CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 10);
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0))
+        {
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 10);
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 11);
+        }
+       
+        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0))
+            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 12);
     }
 
     void GraphicsDevice::BindCurrentPassConstantBufferGraphics()

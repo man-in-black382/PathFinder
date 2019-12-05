@@ -5,6 +5,8 @@
 #include "../HardwareAbstractionLayer/TextureResource.hpp"
 #include "../HardwareAbstractionLayer/BufferResource.hpp"
 
+#include <glm/vec4.hpp>
+
 namespace PathFinder 
 {
 

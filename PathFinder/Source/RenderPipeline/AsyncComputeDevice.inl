@@ -1,3 +1,5 @@
+#include "../Foundation/StringUtils.hpp"
+
 namespace PathFinder
 {
 
@@ -27,6 +29,9 @@ namespace PathFinder
         const BufferPipelineResource* resource = mResourceStorage->GetPipelineBufferResource(resourceName);
         assert_format(resource, "Buffer ' ", resourceName.ToString(), "' doesn't exist");
 
+        OutputDebugStringA(StringFormat("Binding buffer %s to register %d space %d ", 
+            resourceName.ToString().c_str(), shaderRegister, registerSpace).c_str());
+
         BindExternalBuffer(*resource->Resource, shaderRegister, registerSpace, registerType);
     }
 
@@ -38,6 +43,8 @@ namespace PathFinder
         if (mAppliedComputeState || mAppliedRayTracingState)
         {
             auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, registerType });
+
+            OutputDebugStringA(StringFormat("Root Sig Arg Idx %d\n", *index).c_str());
 
             assert_format(index, "Root signature parameter doesn't exist");
 
@@ -76,22 +83,28 @@ namespace PathFinder
         }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
+        {
             CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 5);
+            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 6);
+        }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 6);
+            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 7);
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0))
         {
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 7);
             CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 8);
+            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 9);
         }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 9);
+        {
+            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 10);
+            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 11);
+        }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 10);
+            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 12);
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>

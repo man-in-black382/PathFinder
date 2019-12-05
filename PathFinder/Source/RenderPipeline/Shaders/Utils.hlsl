@@ -16,3 +16,13 @@ float4x4 Matrix4x4ColumnMajor(float4 column0, float4 column1, float4 column2, fl
     M[3] = float4(column0.w, column1.w, column2.w, column3.w);
     return M;
 }
+
+float Flatten3DIndexFloat(float3 index3D, float3 dimensions)
+{
+    return (index3D.x) + (index3D.y * dimensions.x) + (index3D.z * dimensions.x * dimensions.y);
+}
+
+int Flatten3DIndexInt(int3 index3D, int3 dimensions)
+{
+    return (index3D.x) + (index3D.y * dimensions.x) + (index3D.z * dimensions.x * dimensions.y);
+}

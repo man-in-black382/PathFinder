@@ -17,10 +17,6 @@ namespace PathFinder
         uint32_t DisplacementMapSRVIndex = 0;
         uint32_t DistanceAltasIndirectionMapUAVIndex = 0;
         uint32_t DistanceAltasUAVIndex = 0;
-        uint32_t ReadOnlyJFAConesIndirectionUAVIndex = 0;
-        uint32_t WriteOnlyJFAConesIndirectionUAVIndex = 0;
-        uint32_t ReadOnlyJFAConesUAVIndex = 0;
-        uint32_t WriteOnlyJFAConesUAVIndex = 0;
         uint32_t FloodStep = 0;
     };
 
@@ -33,6 +29,14 @@ namespace PathFinder
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 
         virtual void Render(RenderContext* context) override;
+
+    private:
+        struct JFACones
+        {
+            // 3 first floats for JFA seed position and 4th float for distance to it
+            // 8 directions
+            glm::vec4 Cone[8];
+        };
     };
 
 }

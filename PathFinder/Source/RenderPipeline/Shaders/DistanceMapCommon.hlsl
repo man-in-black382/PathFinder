@@ -5,10 +5,6 @@ struct PassData
     uint DisplacementMapSRVIndex;
     uint DistanceAltasIndirectionMapUAVIndex;
     uint DistanceAltasUAVIndex;
-    uint ReadOnlyJFAConesIndirectionUAVIndex;
-    uint WriteOnlyJFAConesIndirectionUAVIndex;
-    uint ReadOnlyJFAConesUAVIndex;
-    uint WriteOnlyJFAConesUAVIndex;
     uint FloodStep;
 };
 
@@ -16,10 +12,19 @@ struct PassData
 
 #include "BaseRootSignature.hlsl"
 #include "ColorConversion.hlsl"
+#include "Utils.hlsl"
+
+struct DistanceFieldCones
+{
+    float4 PositionsAndDistances[8];
+};
+
+RWStructuredBuffer<DistanceFieldCones> ReadOnlyConesBuffer : register(u0);
+RWStructuredBuffer<DistanceFieldCones> WriteOnlyConesBuffer : register(u1);
 
 static const int VoxelUnderDisplacementMap = -2.0;
 static const int VoxelFree = -1.0;
-static const int VoxelOccupied = 0.0;
+static const int VoxelIntersectedByDisplacementSurface = 0.0;
 
 struct VoxelIntersectionInfo
 {

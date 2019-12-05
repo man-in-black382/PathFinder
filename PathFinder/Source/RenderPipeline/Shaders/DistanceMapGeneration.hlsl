@@ -15,14 +15,21 @@ static const int3 Offsets[26] = {
 };
 
 [numthreads(8, 8, 8)]
-void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
+void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D displacementMap = Textures2D[PassDataCB.DisplacementMapSRVIndex];
-    RWTexture3D<float4> ReadJFAHelperTexture = RW_Float4_Textures3D[PassDataCB.ReadOnlyJFAConesIndirectionUAVIndex];
-    RWTexture3D<float4> WriteJFAHelperTexture = RW_Float4_Textures3D[PassDataCB.WriteOnlyJFAConesIndirectionUAVIndex];
 
-    uint3 currentClosestVoxel = ReadJFAHelperTexture[dispatchThreadID].xyz;
-    float currentClosestDistance = ReadJFAHelperTexture[dispatchThreadID].w;
+    if (dispatchThreadID.x > 127 || dispatchThreadID.y > 127 || dispatchThreadID.z > 63) return;
+
+    int dispatchThreadIDFlat = Flatten3DIndexInt(dispatchThreadID, PassDataCB.DistanceAtlasIndirectionMapSize.xyz);
+
+    DistanceFieldCones cones = ReadOnlyConesBuffer[dispatchThreadIDFlat];
+
+    // Make sure that the other buffer is updated
+    WriteOnlyConesBuffer[dispatchThreadIDFlat] = cones;
+
+    float3 currentClosestVoxel = cones.PositionsAndDistances[0].xyz;
+    float currentClosestDistance = cones.PositionsAndDistances[0].w;
 
     // This voxel is intersected by displacement map (a 'Seed' in terminology of Jump Flooding algorithm)
     bool isOriginalSeed = all(int3(currentClosestVoxel) == dispatchThreadID);
@@ -37,17 +44,21 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     for (uint i = 0; i < 26; ++i)
     {
-        int3 neighbourVoxel = dispatchThreadID; 
-        neighbourVoxel += Offsets[i] * PassDataCB.FloodStep;
+        int3 neighbourVoxel = dispatchThreadID + Offsets[i] * PassDataCB.FloodStep;
         
+        int coneIndex = 0;// VectorConeIndex(normalize(float3(Offsets[i])));
+
         // If the neighbor is outside the bounds, skip it
         if (any(neighbourVoxel < 0) || any(neighbourVoxel >= PassDataCB.DistanceAtlasIndirectionMapSize.xyz))
         {
             continue;
         }
 
-        float3 closestVoxelOfNeighbour = ReadJFAHelperTexture[neighbourVoxel].xyz;
-        bool neighbourHasClosestVoxelRecorded = all(neighbourVoxel >= 0);
+        int neighborVoxelFlat = Flatten3DIndexInt(neighbourVoxel, PassDataCB.DistanceAtlasIndirectionMapSize.xyz);
+
+        float3 closestVoxelOfNeighbour = ReadOnlyConesBuffer[neighborVoxelFlat].PositionsAndDistances[coneIndex].xyz;
+
+        bool neighbourHasClosestVoxelRecorded = all(closestVoxelOfNeighbour >= 0.0f);
 
         if (!neighbourHasClosestVoxelRecorded)
         {
@@ -62,8 +73,8 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
 
         if (noClosestSeedInfoPresent || neighbourClosestDistance < currentClosestDistance)
         {
-            WriteJFAHelperTexture[dispatchThreadID] = float4(closestVoxelOfNeighbour, neighbourClosestDistance);
             currentClosestDistance = neighbourClosestDistance;
+            WriteOnlyConesBuffer[dispatchThreadIDFlat].PositionsAndDistances[coneIndex] = float4(closestVoxelOfNeighbour, neighbourClosestDistance);
         }
     }
 }

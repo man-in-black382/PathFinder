@@ -56,11 +56,11 @@ namespace PathFinder
 
                 auto distanceIndirectionMap = std::make_shared<HAL::TextureResource>(
                     *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture3D,
-                    Geometry::Dimensions{ 128, 128, 64 }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
+                    UncompressedDistanceFieldSize, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
 
                 auto distanceAtlas = std::make_shared<HAL::TextureResource>(
-                    *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture3D,
-                    Geometry::Dimensions{ 128, 128, 8 }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
+                    *mDevice, HAL::ResourceFormat::Color::RGBA32_Unsigned, HAL::ResourceFormat::TextureKind::Texture3D,
+                    UncompressedDistanceFieldSize, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
 
                 auto atlasEntryCounter = std::make_shared<HAL::BufferResource<uint32_t>>(
                     *mDevice, 1, 1, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::CopySource);

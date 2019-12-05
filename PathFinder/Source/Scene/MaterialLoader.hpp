@@ -16,6 +16,8 @@ namespace PathFinder
     class MaterialLoader
     {
     public:
+        inline static const Geometry::Dimensions UncompressedDistanceFieldSize{ 128, 128, 64 };
+
         MaterialLoader(const std::filesystem::path& fileRoot, const HAL::Device* device, AssetResourceStorage* assetStorage, CopyDevice* copyDevice);
 
         Material LoadMaterial(

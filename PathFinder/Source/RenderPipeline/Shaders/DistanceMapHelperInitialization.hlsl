@@ -4,16 +4,16 @@
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D displacementMap = Textures2D[PassDataCB.DisplacementMapSRVIndex];
-    RWTexture3D<float4> JFAHelperTexture0 = RW_Float4_Textures3D[PassDataCB.ReadOnlyJFAConesIndirectionUAVIndex];
-    RWTexture3D<float4> JFAHelperTexture1 = RW_Float4_Textures3D[PassDataCB.WriteOnlyJFAConesIndirectionUAVIndex];
 
     VoxelIntersectionInfo intersectionInfo = VoxelIntersectsDisplacementMap(displacementMap, dispatchThreadID);
+
+    int bufferIndex = Flatten3DIndexInt(dispatchThreadID, PassDataCB.DistanceAtlasIndirectionMapSize.xyz);
 
     float4 output;
 
     if (intersectionInfo.VoxelIntersectsDisplacementMap)
     {
-        output = float4(dispatchThreadID, VoxelOccupied);
+        output = float4(dispatchThreadID, VoxelIntersectedByDisplacementSurface);
     }
     else if (intersectionInfo.VoxelIsUnderDisplacementMap)
     {
@@ -24,6 +24,13 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
         output = float4(VoxelFree, VoxelFree, VoxelFree, VoxelFree);
     }
 
-    JFAHelperTexture0[dispatchThreadID] = output;
-    JFAHelperTexture1[dispatchThreadID] = output;
+    DistanceFieldCones cones;
+
+    for (uint i = 0; i < 8; ++i)
+    {
+        cones.PositionsAndDistances[i] = output;
+    }
+
+    ReadOnlyConesBuffer[bufferIndex] = cones;
+    WriteOnlyConesBuffer[bufferIndex] = cones;
 }

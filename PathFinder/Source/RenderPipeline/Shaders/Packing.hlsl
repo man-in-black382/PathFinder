@@ -52,6 +52,39 @@ float2 UnpackSnorm2x16(uint package, float range)
     return float2(fFirst, fSecond);
 }
 
+uint PackUnorm2x16(float first, float second, float range)
+{
+    static const float base = 65535.0;
+
+    float rangeInverse = 1.0 / range;
+
+    uint packed = 0;
+    uint iFirst = uint(abs(first) * rangeInverse * base);
+    uint iSecond = uint(abs(second) * rangeInverse * base);
+
+    packed |= iFirst;
+    packed <<= 16;
+
+    packed |= (iSecond & 0x0000FFFFu);
+
+    return packed;
+}
+
+float2 UnpackUnorm2x16(uint package, float range)
+{
+    static const float baseInverse = 1.0 / 65535.0;
+
+    // Unpack encoded floats into individual variables
+    uint uFirst = package >> 16;
+    uint uSecond = package & 0x0000FFFFu;
+
+    // At last, convert integers back to floats using range and base
+    float fFirst = (float(uFirst) * baseInverse) * range;
+    float fSecond = (float(uSecond) * baseInverse) * range;
+
+    return float2(fFirst, fSecond);
+}
+
 float4 Decode8888(uint encoded)
 {
     float4 decoded;

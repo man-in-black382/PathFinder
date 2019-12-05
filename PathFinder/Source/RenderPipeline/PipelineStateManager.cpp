@@ -271,9 +271,14 @@ namespace PathFinder
         textures3D.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 12 }); 
         mBaseRootSignature.AddDescriptorTableParameter(textures3D);
 
+        // Unbounded Texture3D<uint4> range
+        HAL::RootDescriptorTableParameter textures3DUInt4;
+        textures3DUInt4.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 13 });
+        mBaseRootSignature.AddDescriptorTableParameter(textures3DUInt4);
+
         // Unbounded Texture2DArray range
         HAL::RootDescriptorTableParameter texture2DArrays;
-        texture2DArrays.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 13 });
+        texture2DArrays.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 14 });
         mBaseRootSignature.AddDescriptorTableParameter(texture2DArrays);
 
         // Unbounded RWTexture2D range
@@ -291,9 +296,14 @@ namespace PathFinder
         RWTextures3D.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 12 });
         mBaseRootSignature.AddDescriptorTableParameter(RWTextures3D);
 
+        // Unbounded RWTexture3D<uint4> range
+        HAL::RootDescriptorTableParameter RWTextures3DUInt4;
+        RWTextures3DUInt4.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 13 });
+        mBaseRootSignature.AddDescriptorTableParameter(RWTextures3DUInt4);
+
         // Unbounded RWTexture2DArray range
         HAL::RootDescriptorTableParameter RWTexture2DArrays;
-        RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 13 });
+        RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 14 });
         mBaseRootSignature.AddDescriptorTableParameter(RWTexture2DArrays);
 
         mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::AnisotropicClamp(0));

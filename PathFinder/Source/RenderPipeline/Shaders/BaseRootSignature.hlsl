@@ -35,14 +35,18 @@ Texture2D        Textures2D[]       : register(t0, space10);
 Texture2D<uint4> UInt4_Textures2D[] : register(t0, space11);
 
 Texture3D        Textures3D[]       : register(t0, space12);
-Texture2DArray   Texture2DArrays[]  : register(t0, space13);
+Texture3D<uint4> UInt4_Textures3D[] : register(t0, space13);
+
+Texture2DArray   Texture2DArrays[]  : register(t0, space14);
 
 // UAV Raw and Typed boundless descriptor ranges
-RWTexture2D<uint4>       RW_UInt4_Textures2D[]        : register(u0, space10);
-RWTexture2D<float4>      RW_Float4_Textures2D[]       : register(u0, space11);
+RWTexture2D<float4>      RW_Float4_Textures2D[]       : register(u0, space10);
+RWTexture2D<uint4>       RW_UInt4_Textures2D[]        : register(u0, space11);
 
 RWTexture3D<float4>      RW_Float4_Textures3D[]       : register(u0, space12);
-RWTexture2DArray<float4> RW_Float4_Texture2DArrays[]  : register(u0, space13);
+RWTexture3D<uint4>       RW_UInt4_Textures3D[]        : register(u0, space13);
+
+RWTexture2DArray<float4> RW_Float4_Texture2DArrays[]  : register(u0, space14);
 
 // Static samplers
 SamplerState AnisotropicClampSampler : register(s0);

@@ -51,7 +51,7 @@ namespace PathFinder
             HAL::Heap* heap = mBufferHeap.get();
 
             // Store as byte buffer and alight manually
-            auto stride = Foundation::MemoryUtils::Align(sizeof(BufferDataT), 256);
+            auto stride = Foundation::MemoryUtils::Align(sizeof(BufferDataT), perElementAlignment);
             auto bufferSize = stride * capacity;
 
             resourceObjects.Buffer = std::make_unique<BufferPipelineResource>();

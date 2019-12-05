@@ -99,24 +99,17 @@ namespace HAL
             EnumMaskBitSet(expectedStates, ResourceState::DepthWrite))
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+            if (!EnumMaskBitSet(expectedStates, ResourceState::PixelShaderAccess) &&
+                !EnumMaskBitSet(expectedStates, ResourceState::NonPixelShaderAccess))
+            {
+                mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+            }
         }
 
         if (EnumMaskBitSet(expectedStates, ResourceState::UnorderedAccess))
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-        }
-
-        if (!EnumMaskBitSet(expectedStates, ResourceState::PixelShaderAccess) &&
-            !EnumMaskBitSet(expectedStates, ResourceState::NonPixelShaderAccess) &&
-            !EnumMaskBitSet(expectedStates, ResourceState::RenderTarget) &&
-            !EnumMaskBitSet(expectedStates, ResourceState::GenericRead) &&
-            !EnumMaskBitSet(expectedStates, ResourceState::IndirectArgument) &&
-            !EnumMaskBitSet(expectedStates, ResourceState::CopySource) &&
-            !EnumMaskBitSet(expectedStates, ResourceState::DepthRead) &&
-            !EnumMaskBitSet(expectedStates, ResourceState::ConstantBuffer) &&
-            !EnumMaskBitSet(expectedStates, ResourceState::UnorderedAccess))
-        {
-            mDescription.Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
         }
 
         QueryAllocationInfo();
