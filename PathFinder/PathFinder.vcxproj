@@ -1616,7 +1616,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Source\RenderPipeline\Shaders\RayTracingHelpers.hlsl">
+    <FxCompile Include="Source\RenderPipeline\Shaders\Geometry.hlsl">
       <FileType>Document</FileType>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>

@@ -14,6 +14,7 @@ struct PassData
 #include "ColorConversion.hlsl"
 #include "Utils.hlsl"
 
+// Holds positions of and distances to voxels in 8 directions
 struct DistanceFieldCones
 {
     float4 PositionsAndDistances[8];
@@ -32,56 +33,15 @@ struct VoxelIntersectionInfo
     bool VoxelIsUnderDisplacementMap;
 };
 
-uint VectorConeIndex(float3 normalizedVector)
+float VoxelCentersDistance(uint3 currentVoxel, uint3 neighbourVoxel, uint3 voxelGridSize)
 {
-    uint index = 0;
+    float3 voxelGridSizeInv = 1.0f / float3(voxelGridSize);
+    float3 voxelNormHalfSize = voxelGridSizeInv * 0.5;
 
-    if (abs(normalizedVector.x) > abs(normalizedVector.z))
-    {
-        index = normalizedVector.x < 0 ? 0 : 2;
-    }
-    else {
-        index = normalizedVector.z < 0 ? 3 : 1;
-    }
+    float3 currentVoxelCenterInTexSpace = (float3(currentVoxel) * voxelGridSizeInv) + voxelNormHalfSize;
+    float3 neighbourVoxeCenterlInTexSpace = (float3(neighbourVoxel) * voxelGridSizeInv) + voxelNormHalfSize;
 
-    if (normalizedVector.y < 0)
-    {
-        index += 4;
-    }
-
-    return index;
-}
-
-float FindClosestDisplacementMapPointDistance(Texture2D displacementMap, uint3 currentVoxel, uint3 neighbourVoxel)
-{
-    uint2 displacementMapSize = PassDataCB.DisplacementMapSize.xy;
-    uint3 vogelGridSize = PassDataCB.DistanceAtlasIndirectionMapSize.xyz;
-
-    float3 voxelNormSize = 1.0f / vogelGridSize;
-    float3 voxelNormHalfSize = voxelNormSize * 0.5;
-
-    float3 currentVoxelCenterInTexSpace = (float3(currentVoxel) / vogelGridSize) + voxelNormHalfSize;
-    float3 neighbourVoxelInTexSpace = float3(neighbourVoxel) / vogelGridSize;
-
-    uint2 samplingOrigin = neighbourVoxelInTexSpace.xy * displacementMapSize;
-    uint2 texelCount = voxelNormSize.xy * displacementMapSize;
-
-    float minDistance = 3.402823466e+38F;
-
-    for (uint x = samplingOrigin.x; x < samplingOrigin.x + texelCount.x; ++x)
-    {
-        for (uint y = samplingOrigin.y; y < samplingOrigin.y + texelCount.y; ++y)
-        {
-            float displacement = displacementMap.Load(uint3(x, y, 0)).r;
-
-            float2 uv = float2(x / float(displacementMapSize.x), y / float(displacementMapSize.y));
-            float3 sample3DPosition = float3(uv, displacement);
-            float currentDistance = distance(sample3DPosition, currentVoxelCenterInTexSpace);
-            minDistance = min(minDistance, currentDistance);
-        }
-    }
-
-    return minDistance;
+    return distance(neighbourVoxeCenterlInTexSpace, currentVoxelCenterInTexSpace);
 }
 
 VoxelIntersectionInfo VoxelIntersectsDisplacementMap(Texture2D displacementMap, uint3 voxel)

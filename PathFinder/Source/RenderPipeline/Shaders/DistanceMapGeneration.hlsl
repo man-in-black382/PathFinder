@@ -14,30 +14,65 @@ static const int3 Offsets[26] = {
     int3(1,-1,-1), int3(-1,1,-1), int3(-1,-1,-1)
 };
 
+// Checks whether voxel is intersected by displacement map 
+// (a 'Seed' in terminology of Jump Flooding algorithm)
+bool IsOriginalSeed(DistanceFieldCones cones, int3 currentVoxel)
+{
+    return all(int3(cones.PositionsAndDistances[0].xyz) == currentVoxel) &&
+        all(int3(cones.PositionsAndDistances[1].xyz) == currentVoxel) &&
+        all(int3(cones.PositionsAndDistances[2].xyz) == currentVoxel) &&
+        all(int3(cones.PositionsAndDistances[3].xyz) == currentVoxel) &&
+        all(int3(cones.PositionsAndDistances[4].xyz) == currentVoxel) &&
+        all(int3(cones.PositionsAndDistances[5].xyz) == currentVoxel) &&
+        all(int3(cones.PositionsAndDistances[6].xyz) == currentVoxel) &&
+        all(int3(cones.PositionsAndDistances[7].xyz) == currentVoxel);
+}
+
+// Checks whether voxel is located under all of the displacement values
+// located in the corresponding UV rect of displacement map
+bool IsUnderDisplacementSurface(DistanceFieldCones cones)
+{
+    return int(cones.PositionsAndDistances[0].w) == VoxelUnderDisplacementMap &&
+        int(cones.PositionsAndDistances[1].w) == VoxelUnderDisplacementMap &&
+        int(cones.PositionsAndDistances[2].w) == VoxelUnderDisplacementMap &&
+        int(cones.PositionsAndDistances[3].w) == VoxelUnderDisplacementMap &&
+        int(cones.PositionsAndDistances[4].w) == VoxelUnderDisplacementMap &&
+        int(cones.PositionsAndDistances[5].w) == VoxelUnderDisplacementMap &&
+        int(cones.PositionsAndDistances[6].w) == VoxelUnderDisplacementMap &&
+        int(cones.PositionsAndDistances[7].w) == VoxelUnderDisplacementMap;
+}
+
 [numthreads(8, 8, 8)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D displacementMap = Textures2D[PassDataCB.DisplacementMapSRVIndex];
 
-    if (dispatchThreadID.x > 127 || dispatchThreadID.y > 127 || dispatchThreadID.z > 63) return;
+    uint3 voxelGridSize = PassDataCB.DistanceAtlasIndirectionMapSize.xyz;
 
-    int dispatchThreadIDFlat = Flatten3DIndexInt(dispatchThreadID, PassDataCB.DistanceAtlasIndirectionMapSize.xyz);
+    if (any(dispatchThreadID >= voxelGridSize))
+    {
+        return;
+    }
 
-    DistanceFieldCones cones = ReadOnlyConesBuffer[dispatchThreadIDFlat];
+    int currentVoxelFlat = Flatten3DIndexInt(dispatchThreadID, voxelGridSize);
 
-    // Make sure that the other buffer is updated
-    WriteOnlyConesBuffer[dispatchThreadIDFlat] = cones;
+    DistanceFieldCones cones = ReadOnlyConesBuffer[currentVoxelFlat];
 
-    float3 currentClosestVoxel = cones.PositionsAndDistances[0].xyz;
-    float currentClosestDistance = cones.PositionsAndDistances[0].w;
+    // Make sure that the other buffer is always updated
+    WriteOnlyConesBuffer[currentVoxelFlat] = cones;
 
-    // This voxel is intersected by displacement map (a 'Seed' in terminology of Jump Flooding algorithm)
-    bool isOriginalSeed = all(int3(currentClosestVoxel) == dispatchThreadID);
+    float currentClosestDistances[8] = { 
+        cones.PositionsAndDistances[0].w,
+        cones.PositionsAndDistances[1].w,
+        cones.PositionsAndDistances[2].w,
+        cones.PositionsAndDistances[3].w,
+        cones.PositionsAndDistances[4].w,
+        cones.PositionsAndDistances[5].w,
+        cones.PositionsAndDistances[6].w,
+        cones.PositionsAndDistances[7].w
+    };
 
-    // This voxel is located under all of the displacement values located in the corresponding UV rect of displacement map
-    bool isCompletelyUnderDisplacementSurface = int(currentClosestDistance) == VoxelUnderDisplacementMap;
-
-    if (isOriginalSeed || isCompletelyUnderDisplacementSurface)
+    if (IsOriginalSeed(cones, dispatchThreadID) || IsUnderDisplacementSurface(cones))
     {
         return;
     }
@@ -46,35 +81,33 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     {
         int3 neighbourVoxel = dispatchThreadID + Offsets[i] * PassDataCB.FloodStep;
         
-        int coneIndex = 0;// VectorConeIndex(normalize(float3(Offsets[i])));
+        int coneIndex = VectorOctant(normalize(float3(Offsets[i])));
+        bool isOutOfBounds = any(neighbourVoxel < 0) || any(neighbourVoxel >= voxelGridSize);
 
-        // If the neighbor is outside the bounds, skip it
-        if (any(neighbourVoxel < 0) || any(neighbourVoxel >= PassDataCB.DistanceAtlasIndirectionMapSize.xyz))
+        if (isOutOfBounds)
         {
             continue;
         }
 
-        int neighborVoxelFlat = Flatten3DIndexInt(neighbourVoxel, PassDataCB.DistanceAtlasIndirectionMapSize.xyz);
-
+        int neighborVoxelFlat = Flatten3DIndexInt(neighbourVoxel, voxelGridSize);
         float3 closestVoxelOfNeighbour = ReadOnlyConesBuffer[neighborVoxelFlat].PositionsAndDistances[coneIndex].xyz;
-
-        bool neighbourHasClosestVoxelRecorded = all(closestVoxelOfNeighbour >= 0.0f);
+        bool neighbourHasClosestVoxelRecorded = all(closestVoxelOfNeighbour >= 0);
 
         if (!neighbourHasClosestVoxelRecorded)
         {
             continue;
         }
 
-        float neighbourClosestDistance = FindClosestDisplacementMapPointDistance(displacementMap, dispatchThreadID, closestVoxelOfNeighbour);
+        float neighbourClosestDistance = VoxelCentersDistance(dispatchThreadID, closestVoxelOfNeighbour, voxelGridSize);
 
         // If this voxel doesn't contain info of some other seed that is closest to it,
         // then we treat closest neighbor voxel as a closest seed and store it's data in this voxel
-        bool noClosestSeedInfoPresent = int(currentClosestDistance) == VoxelFree;
+        bool noClosestSeedInfoPresent = int(currentClosestDistances[coneIndex]) == VoxelFree;
 
-        if (noClosestSeedInfoPresent || neighbourClosestDistance < currentClosestDistance)
+        if (noClosestSeedInfoPresent || neighbourClosestDistance < currentClosestDistances[coneIndex])
         {
-            currentClosestDistance = neighbourClosestDistance;
-            WriteOnlyConesBuffer[dispatchThreadIDFlat].PositionsAndDistances[coneIndex] = float4(closestVoxelOfNeighbour, neighbourClosestDistance);
+            currentClosestDistances[coneIndex] = neighbourClosestDistance;
+            WriteOnlyConesBuffer[currentVoxelFlat].PositionsAndDistances[coneIndex] = float4(closestVoxelOfNeighbour, neighbourClosestDistance);
         }
     }
 }

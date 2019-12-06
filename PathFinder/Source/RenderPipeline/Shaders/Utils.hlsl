@@ -1,3 +1,5 @@
+static const float FloatMax = 3.402823466e+38;
+
 float3x3 Matrix3x3ColumnMajor(float3 column0, float3 column1, float3 column2)
 {
     float3x3 M;
@@ -25,4 +27,41 @@ float Flatten3DIndexFloat(float3 index3D, float3 dimensions)
 int Flatten3DIndexInt(int3 index3D, int3 dimensions)
 {
     return (index3D.x) + (index3D.y * dimensions.x) + (index3D.z * dimensions.x * dimensions.y);
+}
+
+uint VectorOctant(float3 normalizedVector)
+{
+    uint index = 0;
+
+    if (abs(normalizedVector.x) > abs(normalizedVector.z))
+    {
+        index = normalizedVector.x < 0 ? 0 : 2;
+    }
+    else {
+        index = normalizedVector.z < 0 ? 3 : 1;
+    }
+
+    if (normalizedVector.y < 0)
+    {
+        index += 4;
+    }
+
+    return index;
+}
+
+float2 CountFittingTexels(float2 originalTextureResolution, float2 otherTextureResolution)
+{
+    return floor(originalTextureResolution / otherTextureResolution);
+}
+
+// Composes a floating point value with the magnitude of x and the sign of y
+//
+float CopySign(float x, float y)
+{
+    if ((x < 0 && y > 0) || (x > 0 && y < 0))
+    {
+        return -x;
+    }
+        
+    return x;
 }

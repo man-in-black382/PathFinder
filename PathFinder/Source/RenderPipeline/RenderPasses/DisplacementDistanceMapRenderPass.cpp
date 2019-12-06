@@ -106,8 +106,10 @@ namespace PathFinder
             // Perform jump flooding (distance field computation)
             commandRecorder->ApplyPipelineState(PSONames::DistanceMapGeneration);
 
-            // JFA + 1 algorithm, hence the jumpFloodingStepCount + 1
-            for (auto i = 0u; i < jumpFloodingStepCount + 1; ++i)
+            // JFA + 4 algorithm, hence the jumpFloodingStepCount + 2
+            // JFA + 4 reduces errors to an acceptable minimum.
+            // Lower values were not acceptable in some cases
+            for (auto i = 0u; i < jumpFloodingStepCount + 4; ++i)
             {
                 if (i >= jumpFloodingStepCount)
                 {

@@ -50,5 +50,5 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     float3 outgoingRadiance = CookTorranceBRDF(N, V, H, L, roughness2, gBufferCookTorrance.Albedo, gBufferCookTorrance.Metalness, testLight.RadiantFlux);
 
     RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
-    outputImage[dispatchThreadID.xy] = float4(gBufferCookTorrance.AO.xxx, 1.0);
+    outputImage[dispatchThreadID.xy] = float4(gBufferCookTorrance.Albedo, 1.0);
 }

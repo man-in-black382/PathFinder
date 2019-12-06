@@ -1,4 +1,0 @@
-struct T
-{
-    uint a;
-};

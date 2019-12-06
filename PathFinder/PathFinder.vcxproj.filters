@@ -2550,7 +2550,6 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\InstanceData.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\RayTracingHelpers.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BlurRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLightingRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
@@ -2562,6 +2561,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapGeneration.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapCommon.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Utils.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Geometry.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

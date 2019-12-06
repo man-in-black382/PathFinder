@@ -29,9 +29,6 @@ namespace PathFinder
         const BufferPipelineResource* resource = mResourceStorage->GetPipelineBufferResource(resourceName);
         assert_format(resource, "Buffer ' ", resourceName.ToString(), "' doesn't exist");
 
-        OutputDebugStringA(StringFormat("Binding buffer %s to register %d space %d ", 
-            resourceName.ToString().c_str(), shaderRegister, registerSpace).c_str());
-
         BindExternalBuffer(*resource->Resource, shaderRegister, registerSpace, registerType);
     }
 
@@ -43,8 +40,6 @@ namespace PathFinder
         if (mAppliedComputeState || mAppliedRayTracingState)
         {
             auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, registerType });
-
-            OutputDebugStringA(StringFormat("Root Sig Arg Idx %d\n", *index).c_str());
 
             assert_format(index, "Root signature parameter doesn't exist");
 
