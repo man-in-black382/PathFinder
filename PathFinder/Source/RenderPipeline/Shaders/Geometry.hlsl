@@ -45,7 +45,7 @@ bool IntersectPatch(BilinearPatch patch, Ray ray, out float3 intersectionPoint)
                             // |       e10       |  qn = cross(q10-q00, 
                             // q00 ----------- q10             q01-q11) 
 
-    float3 qn = normalize(cross(e00, e10));
+    float3 qn = cross(q10 - q00, q01 - q11);
 
     q00 -= ray.Origin;
     q10 -= ray.Origin;
@@ -59,7 +59,7 @@ bool IntersectPatch(BilinearPatch patch, Ray ray, out float3 intersectionPoint)
     if (det < 0) return false;     // see the right part of Figure 5
     det = sqrt(det);               //  we -use_fast_math in CUDA_NVRTC_OPTIONS 
     float u1, u2;                  // two roots(u parameter) 
-    float t = FloatMax, u, v;      // need solution for the smallest t > 0 
+    float t = ray.TMax, u, v;      // need solution for the smallest t > 0  
     if (c == 0) {                  // if c == 0, it is a trapezoid
         u1 = -a / b; u2 = -1;      // and there is only one root
     }
@@ -93,7 +93,7 @@ bool IntersectPatch(BilinearPatch patch, Ray ray, out float3 intersectionPoint)
         }
     }
 
-    if (t > ray.TMin && t < ray.TMax)
+    if (t >= ray.TMin && t < ray.TMax)
     {
         intersectionPoint = ray.Origin + t * ray.Direction;
         return true;

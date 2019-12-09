@@ -146,13 +146,14 @@ DistanceFieldCones UnpackConeData(uint4 packedCones)
 
 float3 VoxelIndex(float3 uvw, float3 voxelGridSize)
 {
-    return (uvw * (voxelGridSize - 1.0));
+    // Either floor ar cast to int/uint to stick values to the corner
+    return floor(uvw * (voxelGridSize - 1.0));
 }
 
 SamplingCorners BilinearPatchCorners(float2 cornerUV, float2 displacementMapSize, float3 voxelGridSize)
 {
     float2 texelCountPerVoxel = CountFittingTexels(displacementMapSize, voxelGridSize.xy);
-    float2 uvIncrement = texelCountPerVoxel / displacementMapSize;
+    float2 uvIncrement = 32.0 / displacementMapSize;// texelCountPerVoxel / displacementMapSize;
 
     SamplingCorners corners;
     corners.UV0 = cornerUV;
@@ -162,7 +163,7 @@ SamplingCorners BilinearPatchCorners(float2 cornerUV, float2 displacementMapSize
     return corners;
 }
 
-VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, out bool patchIntersects)
+VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, out bool patchIntersects, out float3 voxel)
 {
     Texture3D distanceFieldAtlasIndirectionMap = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
     Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
@@ -197,7 +198,7 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, ou
     DistanceFieldCones cones = UnpackConeData(distanceFieldAtlas.Load(int4(voxelIndex, 0)));
     float distance = cones.Distances[viewDirConeIndex];
 
-    static const uint maxStepCount = 16;
+    static const uint maxStepCount = 160;
 
     uint step = 0;
 
@@ -215,24 +216,27 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, ou
     float2 uvCorner = voxelIndex.xy / float2(atlasWidth, atlasHeight);
     SamplingCorners bpCorners = BilinearPatchCorners(uvCorner, float2(displacementMapWidth, displacementMapsHeight), float3(atlasWidth, atlasHeight, atlasDepth));
 
-    float3 pb0 = float3(bpCorners.UV0, displacementMap.Sample(PointClampSampler, bpCorners.UV0).r);
-    float3 pb1 = float3(bpCorners.UV1, displacementMap.Sample(PointClampSampler, bpCorners.UV1).r);
-    float3 pb2 = float3(bpCorners.UV2, displacementMap.Sample(PointClampSampler, bpCorners.UV2).r);
-    float3 pb3 = float3(bpCorners.UV3, displacementMap.Sample(PointClampSampler, bpCorners.UV3).r);
+    float3 pb0 = float3(bpCorners.UV0, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV0, 0).r);
+    float3 pb1 = float3(bpCorners.UV1, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV1, 0).r);
+    float3 pb2 = float3(bpCorners.UV2, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV2, 0).r);
+    float3 pb3 = float3(bpCorners.UV3, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV3, 0).r);
 
     BilinearPatch patch = { pb0, pb1, pb2, pb3 }; 
     float3 rayPatchIntersectionPoint;
 
-    if (IntersectPatch(patch, ray, rayPatchIntersectionPoint))
+    patchIntersects = true;
+    originalVertexData.UV = samplingPosition.xy;
+    voxel = voxelIndex;
+
+    /*if (IntersectPatch(patch, ray, rayPatchIntersectionPoint))
     {
-        patchIntersects = true;
         originalVertexData.UV = rayPatchIntersectionPoint.xy;
     }
     else
     {
         patchIntersects = false;
-        originalVertexData.UV = samplingPosition.xy;;
-    }
+        originalVertexData.UV = samplingPosition.xy;
+    }*/
 
     counterTexture[originalVertexData.Position.xy].r = step;
     
@@ -244,7 +248,8 @@ PixelOut PSMain(VertexOut pin)
     InstanceData instanceData = InstanceTable[PassDataCB.InstanceTableIndex];
 
     bool intersection;
-    VertexOut displacedVertexData = DisplaceUV(pin, instanceData, intersection);
+    float3 voxel;
+    VertexOut displacedVertexData = DisplaceUV(pin, instanceData, intersection, voxel);
 
     GBufferCookTorrance gBufferData;
 
@@ -252,18 +257,50 @@ PixelOut PSMain(VertexOut pin)
     gBufferData.Normal = FetchNormalMap(displacedVertexData, instanceData);
     gBufferData.Metalness = FetchMetallnessMap(displacedVertexData, instanceData);
     gBufferData.Roughness = FetchRoughnessMap(displacedVertexData, instanceData);
-    gBufferData.AO = intersection ? FetchDisplacementMap(displacedVertexData, instanceData) : 0.0;
+    gBufferData.AO = FetchAOMap(displacedVertexData, instanceData);
 
-   /* Ray ray = { float3(0.1, 1.0, 0.9), normalize(float3(0.0, -1.0, 0.0)), 0.0, 2.0 };
-    BilinearPatch patch = { float3(0.0, 0.0, 0.0), float3(0.0, 0.0, 1.0), float3(1.0, 0.0, 1.0), float3(1.0, 0.0, 0.0) };
+    gBufferData.Albedo = intersection ? FetchDisplacementMap(displacedVertexData, instanceData).xxx : 0.0;
+
+    float2 uvCorner = (voxel.xy) / 64.0;
+    SamplingCorners bpCorners = BilinearPatchCorners(uvCorner, float2(2048, 2048), float3(64, 64, 64));
+    Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
+    float3 pb0 = float3(bpCorners.UV0, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV0, 0).r);
+    float3 pb1 = float3(bpCorners.UV1, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV1, 0).r);
+    float3 pb2 = float3(bpCorners.UV2, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV2, 0).r);
+    float3 pb3 = float3(bpCorners.UV3, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV3, 0).r);
+
+    BilinearPatch patch = { pb0, pb1, pb2, pb3 };
+
+
+    //gBufferData.Albedo.y = displacementMap.SampleLevel(PointClampSampler, uvCorner + (0.5 / 2048), 0).r; 
+    //gBufferData.Albedo.y = displacementMap.Load(int3(uvCorner * 2048.0, 0)).r;
+    //gBufferData.Albedo.y = InterpolatePatch(patch, 0.0.xxx).z;   
+    //gBufferData.Albedo.y = voxel.z / 64.0;
+
+
+    //gBufferData.Albedo.xz = 0.0;
+
+    //Ray ray = { float3(0.0505050505050, 0.82582582582585, 1.0), float3(0.0, 0.0, -1.0), 0.0, 3.0 };
+    Ray ray = { float3(pin.UV, 1.0), float3(0.0, 0.0, -1.0), 0.0, 3.0 };
+    //BilinearPatch patch = { float3(0.0, 0.0, 0.0), float3(0.0, 0.0, 1.0), float3(1.0, 0.0, 1.0), float3(1.0, 0.0, 0.0) };
     float3 rayPatchIntersectionPoint;
 
     if (IntersectPatch(patch, ray, rayPatchIntersectionPoint))
     {
-        gBufferData.Albedo = float3(rayPatchIntersectionPoint.xz, 0.0);
+        gBufferData.Albedo = float3(0.0, 1.0, 0.0);
+        //gBufferData.Albedo = float3(rayPatchIntersectionPoint.xz, 0.0);
     }
-     
-*/
+   
+    if (ray.Origin.x > pb3.x)
+    {
+        gBufferData.Albedo = float3(1.0, 0.0, 0.0);
+    }
+
+    if (ray.Origin.x < pb0.x)
+    {
+        gBufferData.Albedo = float3(0.0, 0.0, 1.0);
+    }
+
     GBufferEncoded encoded = EncodeCookTorranceMaterial(gBufferData);
 
     PixelOut pixelOut;

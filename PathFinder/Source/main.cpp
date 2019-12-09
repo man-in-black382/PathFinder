@@ -533,13 +533,13 @@ int main(int argc, char** argv)
     PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &harshBricksMaterial });
 
     auto t = sphereInstance.Transformation();
-    t.Rotation = glm::angleAxis(glm::radians(20.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
+    t.Rotation = glm::angleAxis(glm::radians(90.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
     sphereInstance.SetTransformation(t);    
      
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);
     camera.SetNearPlane(1);
-    camera.MoveTo({ 0.0, 0.0f, 25.f });
+    camera.MoveTo({ 0.0, 0.0f, 20.f });
     camera.LookAt({ 0.f, 0.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
 
