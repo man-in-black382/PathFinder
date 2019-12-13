@@ -47,7 +47,7 @@ float VoxelCentersDistance(uint3 currentVoxel, uint3 neighbourVoxel, uint3 voxel
 VoxelIntersectionInfo VoxelIntersectsDisplacementMap(Texture2D displacementMap, uint3 voxel)
 {
     float3 voxelNormSize = 1.0f / float3(PassDataCB.DistanceAtlasIndirectionMapSize.xyz);
-    float3 currentVoxelInTexSpace = (float3(voxel) / PassDataCB.DistanceAtlasIndirectionMapSize.xyz);
+    float3 currentVoxelInTexSpace = VoxelIndexToUVW(voxel, PassDataCB.DistanceAtlasIndirectionMapSize.xyz);
 
     uint2 samplingOrigin = currentVoxelInTexSpace.xy * PassDataCB.DisplacementMapSize.xy;
     uint2 texelCount = voxelNormSize.xy * PassDataCB.DisplacementMapSize.xy;

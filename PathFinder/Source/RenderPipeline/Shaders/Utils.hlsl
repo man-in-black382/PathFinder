@@ -51,7 +51,7 @@ uint VectorOctant(float3 normalizedVector)
 
 float2 CountFittingTexels(float2 originalTextureResolution, float2 otherTextureResolution)
 {
-    return floor(originalTextureResolution / otherTextureResolution);
+    return floor(originalTextureResolution / otherTextureResolution); 
 }
 
 // Composes a floating point value with the magnitude of x and the sign of y
@@ -64,4 +64,24 @@ float CopySign(float x, float y)
     }
         
     return x;
+}
+
+float2 TexelIndexToUV(uint2 index, uint2 textureSize)
+{
+    return float2(index) / (textureSize - 1);
+}
+
+float3 VoxelIndexToUVW(uint3 index, uint3 textureSize)
+{
+    return float3(index) / (textureSize - 1);
+}
+
+uint2 UVToTexelIndex(float2 uv, uint2 textureSize)
+{
+    return uv * (textureSize - 1);
+}
+
+uint3 UVWToVoxelIndex(float3 uvw, uint3 textureSize)
+{
+    return uvw * (textureSize - 1);
 }
