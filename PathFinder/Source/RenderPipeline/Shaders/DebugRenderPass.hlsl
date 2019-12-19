@@ -5,7 +5,7 @@ struct PassData
 
 #define PassDataType PassData
 
-#include "BaseRootSignature.hlsl"
+#include "MandatoryEntryPointInclude.hlsl"
 #include "FullScreenQuadVS.hlsl"
 
 float4 PSMain(VertexOut pin) : SV_Target

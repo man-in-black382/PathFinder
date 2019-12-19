@@ -250,12 +250,14 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\UIRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp" />
+    <ClCompile Include="Source\RenderPipeline\UIGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\VertexLayouts.cpp" />
     <ClCompile Include="Source\RenderPipeline\VertexStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateManager.cpp" />
@@ -399,6 +401,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\UIRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
@@ -407,6 +410,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp" />
     <ClInclude Include="Source\RenderPipeline\ShaderFileNames.hpp" />
+    <ClInclude Include="Source\RenderPipeline\UIGPUStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexLayouts.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateManager.hpp" />
@@ -590,6 +594,56 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\filewatch\FileWatcherLinux.h" />
     <ClInclude Include="Source\ThirdParty\filewatch\FileWatcherOSX.h" />
     <ClInclude Include="Source\ThirdParty\filewatch\FileWatcherWin32.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\config\ftconfig.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\config\ftheader.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\config\ftmodule.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\config\ftoption.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\config\ftstdlib.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\freetype.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftadvanc.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftbbox.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftbdf.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftbitmap.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftbzip2.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftcache.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftchapters.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftcid.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftcolor.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftdriver.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\fterrdef.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\fterrors.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftfntfmt.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftgasp.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftglyph.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftgxval.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftgzip.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftimage.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftincrem.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftlcdfil.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftlist.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftlzw.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftmac.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftmm.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftmodapi.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftmoderr.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftotval.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftoutln.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftparams.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftpfr.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftrender.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftsizes.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftsnames.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftstroke.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftsynth.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftsystem.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\fttrigon.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\fttypes.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ftwinfnt.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\t1tables.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\ttnameid.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\tttables.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\freetype\tttags.h" />
+    <ClInclude Include="Source\ThirdParty\freetype\ft2build.h" />
     <ClInclude Include="Source\ThirdParty\glm\common.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\detail\compute_common.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\detail\compute_vector_relational.hpp" />
@@ -1316,7 +1370,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Source\RenderPipeline\Shaders\BaseRootSignature.hlsl">
+    <FxCompile Include="Source\RenderPipeline\Shaders\MandatoryEntryPointInclude.hlsl">
       <FileType>Document</FileType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.2</ShaderModel>
@@ -1551,6 +1605,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</AllResourcesBound>
     </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\UIRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Utils.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>

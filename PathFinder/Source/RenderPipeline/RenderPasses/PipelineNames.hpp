@@ -29,6 +29,7 @@ namespace PathFinder
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name Blur{ "PSO_Blur" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
+        inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
     }  
    
@@ -36,6 +37,7 @@ namespace PathFinder
     {
         inline Foundation::Name GBuffer{ "GBuffer_Root_Sig" };
         inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
+        inline Foundation::Name UI{ "UI_Root_Sig" };
         inline Foundation::Name DisplacementDistanceMapGeneration{ "Distance_Map_Generation_Root_Sig" };
     }
 

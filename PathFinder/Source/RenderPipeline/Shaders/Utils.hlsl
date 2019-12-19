@@ -68,20 +68,20 @@ float CopySign(float x, float y)
 
 float2 TexelIndexToUV(uint2 index, uint2 textureSize)
 {
-    return float2(index) / (textureSize - 1);
+    return float2(index) / textureSize;
 }
 
 float3 VoxelIndexToUVW(uint3 index, uint3 textureSize)
 {
-    return float3(index) / (textureSize - 1);
+    return float3(index) / textureSize;
 }
 
 uint2 UVToTexelIndex(float2 uv, uint2 textureSize)
 {
-    return uv * (textureSize - 1);
+    return clamp(uv * textureSize, 0.xx, textureSize - 1);
 }
 
 uint3 UVWToVoxelIndex(float3 uvw, uint3 textureSize)
 {
-    return uvw * (textureSize - 1);
+    return clamp(uvw * textureSize, 0.xxx, textureSize - 1);
 }

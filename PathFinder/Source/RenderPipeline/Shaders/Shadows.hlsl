@@ -3,7 +3,7 @@ struct ShadowRayPayload
     float ShadowFactor;
 };
 
-#include "BaseRootSignature.hlsl"
+#include "MandatoryEntryPointInclude.hlsl"
 #include "InstanceData.hlsl"
 #include "Vertices.hlsl"
 

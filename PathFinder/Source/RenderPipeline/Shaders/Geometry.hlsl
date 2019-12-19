@@ -143,12 +143,12 @@ float3 triIntersect(float3 ro, float3 rd, float3 v0, float3 v1, float3 v2)
 //
 float3 VoxelWallIntersection(float3 voxelUVW, uint3 voxelGridResolution, Ray ray)
 {
-    static const float Epsilon = 0.0001;
+    static const float Epsilon = 0.001;
 
-    float3 s = voxelUVW * voxelGridResolution;
+    float3 s = floor(voxelUVW * voxelGridResolution);
     float3 u = (sign(ray.Direction) + 1.0) / 2.0;
     float3 w = (s + u) / voxelGridResolution;
-    float3 a = (w - voxelUVW) / (ray.Direction + Epsilon); // Add e to prevent division by zero
+    float3 a = (w - voxelUVW) / (ray.Direction/* + Epsilon*/); // Add e to prevent division by zero
 
     // Find minimum non-zero value in 'a'
     float d = a[0];

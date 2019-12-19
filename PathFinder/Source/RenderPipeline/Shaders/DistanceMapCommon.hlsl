@@ -10,7 +10,7 @@ struct PassData
 
 #define PassDataType PassData
 
-#include "BaseRootSignature.hlsl"
+#include "MandatoryEntryPointInclude.hlsl"
 #include "ColorConversion.hlsl"
 #include "Utils.hlsl"
 

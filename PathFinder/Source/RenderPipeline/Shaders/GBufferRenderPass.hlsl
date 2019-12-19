@@ -22,7 +22,7 @@ struct SamplingCorners
 #define PassDataType PassData
 
 #include "InstanceData.hlsl"
-#include "BaseRootSignature.hlsl"
+#include "MandatoryEntryPointInclude.hlsl"
 #include "GBuffer.hlsl"
 #include "ColorConversion.hlsl"
 #include "Vertices.hlsl"
@@ -189,7 +189,7 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, ou
     patchIntersects = true;
 
     // Scaling up Z is equivalent to scaling down values in the displacement map.
-    float POMScale = 17.0;
+    float POMScale = 20.0;
 
     float3 viewDir = originalVertexData.ViewDirectionTS;
     viewDir.z *= POMScale;
@@ -209,6 +209,8 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, ou
         DistanceFieldCones cones = UnpackConeData(distanceFieldAtlas.Load(int4(voxelIndex, 0)));
         float safeTravelDistance = cones.Distances[viewDirConeIndex];
         bool voxelIntersectedByDisplacementSurface = safeTravelDistance <= 0.0;
+
+        voxel = voxelIndex;
 
         if (voxelIntersectedByDisplacementSurface)
         {
@@ -232,19 +234,21 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, ou
             }
             else
             {
+                //return originalVertexData;
                 // Missed the patch. Go to the next voxel.
-                samplingPosition = VoxelWallIntersection(voxelUVW, atlasSize, traversalRay);
-             /*   patchIntersects = false;
-                return originalVertexData;*/
+                samplingPosition = VoxelWallIntersection(samplingPosition, atlasSize, traversalRay);
+
+                voxelIndex = UVWToVoxelIndex(samplingPosition, atlasSize);
+                samplingPosition = VoxelIndexToUVW(voxelIndex, atlasSize);
             }
         }
         else
         {
             samplingPosition += traversalRay.Direction * safeTravelDistance;
         }
-
-        originalVertexData.UV = samplingPosition.xy;
     }
+
+    originalVertexData.UV = samplingPosition.xy;
 
     //counterTexture[originalVertexData.Position.xy].r = step;
     
@@ -267,16 +271,25 @@ PixelOut PSMain(VertexOut pin)
     gBufferData.Roughness = FetchRoughnessMap(displacedVertexData, instanceData);
     gBufferData.AO = FetchAOMap(displacedVertexData, instanceData);
 
-    //gBufferData.Albedo = intersection ? FetchDisplacementMap(displacedVertexData, instanceData).xxx : 0.0;
+    gBufferData.Albedo = intersection ? FetchDisplacementMap(displacedVertexData, instanceData).xxx : 0.0;
 
-    if (voxel.x == 26 && voxel.y == 36)
+   /* if (voxel.x == 26 && voxel.y == 36)
     {
         gBufferData.Albedo = float3(0.0, 0.0, 1.0);
     }
     else
     {
-        //gBufferData.Albedo = float3(0.0, voxel.z / 63, 0.0);
-    }
+        gBufferData.Albedo = float3(0.0, voxel.z / 64, 0.0);
+    }*/
+
+    //Ray testRay = { float3(0.5, 0.5, 0.5), float3(-1, -1, 0), 0, 0 };
+    //float3 newPos = VoxelWallIntersection(testRay.Origin, float3(5, 5, 5), testRay);
+    //uint3 i = UVWToVoxelIndex(newPos, uint3(5, 5, 5));
+
+    //if (all(i == uint3(1, 1, 2)))
+    //{
+    //    gBufferData.Albedo = float3(0.0, voxel.z / 64, 0.0);
+    //}
 
     GBufferEncoded encoded = EncodeCookTorranceMaterial(gBufferData);
 
