@@ -171,9 +171,6 @@
     <ClCompile Include="Source\Scene\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Scene\Cameraman.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\IO\Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -382,6 +379,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\UIGPUStorage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\UIInteractor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\CameraInteractor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1284,9 +1287,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scene\Camera.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Scene\Cameraman.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\IO\Input.hpp">
@@ -2196,6 +2196,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\UIGPUStorage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\UIInteractor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\CameraInteractor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

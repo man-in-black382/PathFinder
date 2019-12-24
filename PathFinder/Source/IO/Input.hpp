@@ -9,28 +9,57 @@
 
 #include "../Foundation/Event.hpp"
 
-namespace PathFinder {
+namespace PathFinder
+{
 
-    class Input {
+    class Input 
+    {
     public:
-        enum class KeyboardAction {
+        enum class KeyboardAction
+        {
             KeyDown, KeyUp
         };
 
-        enum class SimpleMouseAction {
+        enum class SimpleMouseAction
+        {
             PressDown, PressUp, Drag, Move
         };
 
         using KeyCode = uint16_t;
         using KeySet = std::unordered_set<KeyCode>;
-        using KeyboardEvent = Foundation::MultiEvent<Input, KeyboardAction, std::string, void(const Input *)>;
-        using SimpleMouseEvent = Foundation::MultiEvent<Input, SimpleMouseAction, std::string, void(const Input *)>;
-        using ScrollEvent = Foundation::Event<Input, std::string, void(const Input *)>;
-        using ClickEvent = Foundation::Event<Input, std::string, void(const Input *)>;
+        using KeyboardEvent = Foundation::MultiEvent<Input, KeyboardAction, std::string, void(const Input*)>;
+        using SimpleMouseEvent = Foundation::MultiEvent<Input, SimpleMouseAction, std::string, void(const Input*)>;
+        using ScrollEvent = Foundation::Event<Input, std::string, void(const Input*)>;
+        using ClickEvent = Foundation::Event<Input, std::string, void(const Input*)>;
 
-        enum class Key : KeyCode {
+        enum class Key : KeyCode
+        {
             W = 13, S = 1, A = 0, D = 2
         };
+
+        Input() = default;
+        ~Input() = default;
+        Input(Input&& that) = default;
+        Input& operator=(Input&& rhs) = default;
+        Input(const Input& that) = delete;
+        Input& operator=(const Input& rhs) = delete;
+
+        SimpleMouseEvent& GetSimpleMouseEvent();
+        ScrollEvent& GetScrollMouseEvent();
+        ClickEvent& GetClickMouseEvent();
+        KeyboardEvent& GetKeyboardEvent();
+
+        uint8_t ClicksCount() const;
+        const glm::vec2& ScrollDelta() const;
+        const glm::vec2& MousePosition() const;
+        const KeyCode PressedMouseButtonsMask() const;
+        const KeySet& PressedKeyboardButtons() const;
+        void RegisterMouseAction(SimpleMouseAction action, const glm::vec2& position, KeyCode keysMask);
+        void RegisterMouseScroll(const glm::vec2& delta);
+        void RegisterKey(KeyCode code);
+        void UnregisterKey(KeyCode code);
+        bool IsKeyPressed(Key key) const;
+        bool IsMouseButtonPressed(uint8_t button) const;
 
     private:
         SimpleMouseEvent mSimpleMouseEvent;
@@ -44,47 +73,6 @@ namespace PathFinder {
         KeySet mPressedKeyboardKeys;
         KeyCode mPressedMouseButtonsMask;
         std::chrono::time_point<std::chrono::steady_clock> mTimePoint;
-
-        Input() = default;
-
-        ~Input() = default;
-
-        Input(const Input &that) = delete;
-
-        Input &operator=(const Input &rhs) = delete;
-
-    public:
-        static Input &shared();
-
-        SimpleMouseEvent &simpleMouseEvent();
-
-        ScrollEvent &scrollMouseEvent();
-
-        ClickEvent &clickMouseEvent();
-
-        KeyboardEvent &keyboardEvent();
-
-        uint8_t clicksCount() const;
-
-        const glm::vec2 &scrollDelta() const;
-
-        const glm::vec2 &mousePosition() const;
-
-        const KeyCode pressedMouseButtonsMask() const;
-
-        const KeySet &pressedKeyboardButtons() const;
-
-        void registerMouseAction(SimpleMouseAction action, const glm::vec2 &position, KeyCode keysMask);
-
-        void registerMouseScroll(const glm::vec2 &delta);
-
-        void registerKey(KeyCode code);
-
-        void unregisterKey(KeyCode code);
-
-        bool isKeyPressed(Key key) const;
-
-        bool isMouseButtonPressed(uint8_t button) const;
     };
 
 }

@@ -38,7 +38,7 @@ namespace HAL
         {
             ThrowIfFailed(mSwapChain->GetBuffer(bufferIdx, IID_PPV_ARGS(&backBufferResourcePtr)));
             mBackBuffers.emplace_back(std::make_unique<TextureResource>(backBufferResourcePtr));
-            mBackBuffers.back()->SetDebugName("Back_Buffer_" + std::to_string(bufferIdx));
+            mBackBuffers.back()->SetDebugName("Back Buffer " + std::to_string(bufferIdx));
         }
     }
 

@@ -269,7 +269,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\ResourceDescriptorStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\ShaderManager.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
-    <ClCompile Include="Source\Scene\Cameraman.cpp" />
+    <ClCompile Include="Source\Scene\CameraInteractor.cpp" />
     <ClCompile Include="Source\Scene\Material.cpp" />
     <ClCompile Include="Source\Scene\MaterialLoader.cpp" />
     <ClCompile Include="Source\Scene\Mesh.cpp" />
@@ -277,6 +277,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Scene\MeshLoader.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
     <ClCompile Include="Source\Scene\TextureLoader.cpp" />
+    <ClCompile Include="Source\Scene\UIInteractor.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P3.cpp" />
@@ -426,7 +427,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\ShaderManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\VertexStorageLocation.hpp" />
     <ClInclude Include="Source\Scene\Camera.hpp" />
-    <ClInclude Include="Source\Scene\Cameraman.hpp" />
+    <ClInclude Include="Source\Scene\CameraInteractor.hpp" />
     <ClInclude Include="Source\Scene\Material.hpp" />
     <ClInclude Include="Source\Scene\MaterialLoader.hpp" />
     <ClInclude Include="Source\Scene\Mesh.hpp" />
@@ -434,6 +435,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Scene\MeshLoader.hpp" />
     <ClInclude Include="Source\Scene\Scene.hpp" />
     <ClInclude Include="Source\Scene\TextureLoader.hpp" />
+    <ClInclude Include="Source\Scene\UIInteractor.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P3.hpp" />
@@ -1605,7 +1607,24 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</AllResourcesBound>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\UIRenderPass.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\UIRenderPass.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">6.2</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">6.2</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.2</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.2</ShaderModel>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\Utils.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>

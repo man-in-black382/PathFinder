@@ -10,7 +10,7 @@
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 
 #include "../Scene/Scene.hpp"
-
+#include "../Foundation/Event.hpp"
 #include "../IO/CommandLineParser.hpp"
 
 #include "RenderPass.hpp"
@@ -29,6 +29,7 @@
 #include "RenderPassExecutionGraph.hpp"
 #include "CopyDevice.hpp"
 #include "GPUCommandRecorder.hpp"
+#include "UIGPUStorage.hpp"
 
 namespace PathFinder
 {
@@ -36,19 +37,25 @@ namespace PathFinder
     class RenderEngine
     {
     public:
+        using Event = Foundation::Event<RenderEngine, std::string, void()>;
+
         RenderEngine(HWND windowHandle, const CommandLineParser& commandLineParser, Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
 
         void ScheduleAndAllocatePipelineResources();
         void ProcessAndTransferAssets();
         void Render();
+        void FlushAllQueuedFrames();
 
     private:
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
+        void NotifyStartFrame();
+        void NotifyEndFrame();
         void MoveToNextBackBuffer();
         void BuildBottomAccelerationStructures();
         void BuildTopAccelerationStructures();
         void UploadCommonRootConstants();
         void UploadMeshInstanceData();
+        void UploadUI();
 
         void RunRenderPasses(const std::list<RenderPass*>& passes);
 
@@ -83,17 +90,23 @@ namespace PathFinder
         GraphicsDevice mGraphicsDevice;
         AsyncComputeDevice<> mAsyncComputeDevice;
         GPUCommandRecorder mCommandRecorder;
+        UIGPUStorage mUIStorage;
         RenderContext mContext;  
 
         HAL::SwapChain mSwapChain;
 
         Scene* mScene;
 
+        Event mPreRenderEvent;
+        Event mPostRenderEvent;
+
     public:
         inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }
         inline AssetResourceStorage& AssetGPUStorage() { return mAssetResourceStorage; }
         inline CopyDevice& StandardCopyDevice() { return mStandardCopyDevice; }
         inline HAL::Device& Device() { return mDevice; }
+        inline Event& PreRenderEvent() { return mPreRenderEvent; }
+        inline Event& PostRenderEvent() { return mPostRenderEvent; }
     };
 
 }

@@ -34,6 +34,7 @@ namespace PathFinder
         mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mAsyncComputeDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mCommandRecorder{ &mGraphicsDevice },
+        mUIStorage{ &mDevice, mSimultaneousFramesInFlight },
         mContext{ scene, &mAssetResourceStorage, &mVertexStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
@@ -86,57 +87,68 @@ namespace PathFinder
         if (mPassExecutionGraph->DefaultPasses().empty()) return;
 
         mFrameFence.IncreaseExpectedValue();
+        NotifyStartFrame();
+        mPreRenderEvent.Raise();
 
-        mShaderManager.BeginFrame();
-        mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
-        mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
-        mAsyncComputeDevice.BeginFrame(mFrameFence.ExpectedValue());
-        mAssetResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
-
+        UploadUI();
         UploadCommonRootConstants();
         UploadMeshInstanceData();
         BuildTopAccelerationStructures();
 
         HAL::TextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
+        HAL::ResourceTransitionBarrier preRenderBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer };
+        HAL::ResourceTransitionBarrier postRenderBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer };
 
-        mGraphicsDevice.CommandList().InsertBarrier(
-            HAL::ResourceTransitionBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer }
-        );
-
+        mGraphicsDevice.CommandList().InsertBarrier(preRenderBarrier);
         RunRenderPasses(mPassExecutionGraph->DefaultPasses());
-
-        mGraphicsDevice.CommandList().InsertBarrier(
-            HAL::ResourceTransitionBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer }
-        );
-
+        mGraphicsDevice.CommandList().InsertBarrier(postRenderBarrier);
         mGraphicsDevice.WaitFence(mAccelerationStructureFence);
         mGraphicsDevice.ExecuteCommands();
         mGraphicsDevice.SignalFence(mFrameFence);
-        
         mSwapChain.Present();
-
         mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
+        mPostRenderEvent.Raise();
 
-        mShaderManager.EndFrame();
-        mPipelineResourceStorage.EndFrame(mFrameFence.CompletedValue());
-        mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
-        mAsyncComputeDevice.EndFrame(mFrameFence.CompletedValue());
-        mAssetResourceStorage.EndFrame(mFrameFence.CompletedValue());
+        NotifyEndFrame();
 
         if (mPipelineStateManager.HasModifiedStates())
         {
-            // Flush all frames currently executing on GPU before recompiling PSOs
-            mFrameFence.StallCurrentThreadUntilCompletion();
+            FlushAllQueuedFrames();
             mPipelineStateManager.RecompileModifiedStates();
         }
 
         MoveToNextBackBuffer();
     }
 
+    void RenderEngine::FlushAllQueuedFrames()
+    {
+        mFrameFence.StallCurrentThreadUntilCompletion();
+    }
+
     HAL::DisplayAdapter RenderEngine::FetchDefaultDisplayAdapter() const
     {
         HAL::DisplayAdapterFetcher adapterFetcher;
         return adapterFetcher.Fetch()[0];// .back();
+    }
+
+    void RenderEngine::NotifyStartFrame()
+    {
+        mShaderManager.BeginFrame();
+        mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
+        mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
+        mAsyncComputeDevice.BeginFrame(mFrameFence.ExpectedValue());
+        mAssetResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
+        mUIStorage.BeginFrame(mFrameFence.ExpectedValue());
+    }
+
+    void RenderEngine::NotifyEndFrame()
+    {
+        mShaderManager.EndFrame();
+        mPipelineResourceStorage.EndFrame(mFrameFence.CompletedValue());
+        mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
+        mAsyncComputeDevice.EndFrame(mFrameFence.CompletedValue());
+        mAssetResourceStorage.EndFrame(mFrameFence.CompletedValue());
+        mUIStorage.EndFrame(mFrameFence.CompletedValue());
     }
 
     void RenderEngine::MoveToNextBackBuffer()
@@ -207,6 +219,11 @@ namespace PathFinder
         mScene->IterateMeshInstances(iterator);
 
         mAssetResourceStorage.AllocateTopAccelerationStructureIfNeeded();
+    }
+
+    void RenderEngine::UploadUI()
+    {
+        mUIStorage.UploadUIVertices();
     }
 
     void RenderEngine::RunRenderPasses(const std::list<RenderPass*>& passes)
