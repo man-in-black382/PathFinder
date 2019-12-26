@@ -23,14 +23,32 @@
 namespace PathFinder
 {
 
-    class VertexStorage
+    struct GPUInstanceTableEntry
+    {
+        glm::mat4 InstanceWorldMatrix;
+        glm::mat4 InstanceNormalMatrix;
+        uint32_t AlbedoMapIndex;
+        uint32_t NormalMapIndex;
+        uint32_t RoughnessMapIndex;
+        uint32_t MetalnessMapIndex;
+        uint32_t AOMapIndex;
+        uint32_t DisplacementMapIndex;
+        uint32_t DistanceAtlasIndirectionMapIndex;
+        uint32_t DistanceAtlasIndex;
+        uint32_t UnifiedVertexBufferOffset;
+        uint32_t UnifiedIndexBufferOffset;
+        uint32_t IndexCount;
+    };
+
+    using GPUInstanceIndex = uint64_t;
+
+    class MeshGPUStorage
     {
     public:
-        VertexStorage(HAL::Device* device, CopyDevice* copyDevice);
+        MeshGPUStorage(HAL::Device* device, CopyDevice* copyDevice, uint8_t simultaneousFramesInFlight);
 
-        VertexStorageLocation AddVertices(const Vertex1P1N1UV1T1BT* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
-        VertexStorageLocation AddVertices(const Vertex1P1N1UV* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
-        VertexStorageLocation AddVertices(const Vertex1P3* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
+        void StoreMesh(Mesh& mesh);
+        void StoreMeshInstance(MeshInstance& instance, const HAL::RayTracingBottomAccelerationStructure& blas);
 
         const HAL::BufferResource<Vertex1P1N1UV1T1BT>* UnifiedVertexBuffer_1P1N1UV1T1BT() const;
         const HAL::BufferResource<Vertex1P1N1UV>* UnifiedVertexBuffer_1P1N1UV() const;
@@ -40,13 +58,14 @@ namespace PathFinder
         const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer_1P1N1UV() const;
         const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer_1P() const;
 
-        // Barriers to wait for AS build completion
-        const HAL::ResourceBarrierCollection& AccelerationStructureBarriers() const;
+        void BeginFrame(uint64_t frameFenceValue);
+        void EndFrame(uint64_t completedFrameFenceValue);
 
-        void AllocateAndQueueBuffersForCopy();
+        void UploadVerticesAndQueueForCopy();
+        void CreateBottomAccelerationStructures();
+        void CreateTopAccelerationStructure();
 
     private:
-
         template <class Vertex>
         struct UploadBufferPackage
         {
@@ -66,19 +85,31 @@ namespace PathFinder
         void CopyBuffersToDefaultHeap();
 
         template <class Vertex>
+        void CreateBottomAccelerationStructuresInternal();
+
+        template <class Vertex>
         VertexStorageLocation WriteToUploadBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
 
         std::tuple<UploadBufferPackage<Vertex1P1N1UV1T1BT>, UploadBufferPackage<Vertex1P1N1UV>, UploadBufferPackage<Vertex1P3>> mUploadBuffers;
         std::tuple<FinalBufferPackage<Vertex1P1N1UV1T1BT>, FinalBufferPackage<Vertex1P1N1UV>, FinalBufferPackage<Vertex1P3>> mFinalBuffers;
 
         std::vector<HAL::RayTracingBottomAccelerationStructure> mBottomAccelerationStructures;
-        HAL::ResourceBarrierCollection mAccelerationStructureBarriers;
+        HAL::RayTracingTopAccelerationStructure mTopAccelerationStructure;
+        HAL::ResourceBarrierCollection mTopASBuildBarriers;
+        HAL::ResourceBarrierCollection mBottomASBuildBarriers;
+        HAL::RingBufferResource<GPUInstanceTableEntry> mInstanceTable;
+        
+        uint64_t mCurrentFrameInsertedInstanceCount = 0;
 
         HAL::Device* mDevice;
         CopyDevice* mCopyDevice;
 
     public:
+        inline const auto& InstanceTable() const { return mInstanceTable; }
+        inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
+        inline const auto& TopASBuildBarriers() const { return mTopASBuildBarriers; }
+        inline const auto& BottomASBuildBarriers() const { return mBottomASBuildBarriers; }
     };
 
 }

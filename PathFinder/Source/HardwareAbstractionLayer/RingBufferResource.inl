@@ -9,7 +9,7 @@ namespace HAL
         uint64_t perElementAlignment,
         CPUAccessibleHeapType heapType)
         :
-        BufferResource<T>(device, elementCapacity* frameCapacity, perElementAlignment, heapType),
+        BufferResource<T>(device, elementCapacity * frameCapacity, perElementAlignment, heapType),
         mRingBuffer{ this->Capacity() },
         mPerFrameCapacity{ elementCapacity } {}
 

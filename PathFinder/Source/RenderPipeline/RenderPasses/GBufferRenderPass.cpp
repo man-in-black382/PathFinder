@@ -47,9 +47,9 @@ namespace PathFinder
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
 
         // Use vertex and index buffers as normal structured buffers
-        context->GetCommandRecorder()->BindExternalBuffer(*context->GetVertexStorage()->UnifiedVertexBuffer_1P1N1UV1T1BT(), 0, 0, HAL::ShaderRegister::ShaderResource);
-        context->GetCommandRecorder()->BindExternalBuffer(*context->GetVertexStorage()->UnifiedIndexBuffer_1P1N1UV1T1BT(), 1, 0, HAL::ShaderRegister::ShaderResource);
-        context->GetCommandRecorder()->BindExternalBuffer(context->GetAssetStorage()->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedVertexBuffer_1P1N1UV1T1BT(), 0, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedIndexBuffer_1P1N1UV1T1BT(), 1, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(context->GetMeshStorage()->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
 
         GBufferCBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<GBufferCBContent>();
         cbContent->ParallaxCounterTextureUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex("POMCounter");

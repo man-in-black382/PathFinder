@@ -1,5 +1,7 @@
 #include "RingBuffer.hpp"
 
+#include "../Foundation/Assert.hpp"
+
 namespace HAL
 {
 
@@ -70,9 +72,7 @@ namespace HAL
         {
             const auto &oldestFrameTail = mCompletedFrameTails.front();
 
-            if (oldestFrameTail.Size > mUsedSize) {
-                throw std::runtime_error("Oldest frame's tail is bigger than total used size");
-            }
+            assert_format(oldestFrameTail.Size <= mUsedSize, "Oldest frame's tail is bigger than total used size");
 
             mUsedSize -= oldestFrameTail.Size;
             mHead = oldestFrameTail.Tail;

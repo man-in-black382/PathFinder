@@ -1,16 +1,9 @@
 #pragma once
 
 #include "../HardwareAbstractionLayer/Device.hpp"
-#include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
-#include "../HardwareAbstractionLayer/ResourceBarrier.hpp"
+#include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 
-#include "../Scene/Vertices/Vertex1P1N1UV1T1BT.hpp"
-#include "../Scene/Vertices/Vertex1P1N1UV.hpp"
-#include "../Scene/Vertices/Vertex1P3.hpp"
-
-#include "VertexStorageLocation.hpp"
-#include "VertexLayouts.hpp"
 #include "CopyDevice.hpp"
 
 #include <vector>
@@ -33,8 +26,11 @@ namespace PathFinder
         void UploadUIVertices();
 
     private:
-        uint32_t GetVertexBufferPerFrameCapacity(const ImDrawData* drawData) const;
-        uint32_t GetIndexBufferPerFrameCapacity(const ImDrawData* drawData) const;
+        void AllocateVertexBufferIfNeeded(const ImDrawData& drawData);
+        void AllocateIndexBufferIfNeeded(const ImDrawData& drawData);
+        void AllocateFontTextureIfNeeded(const ImGuiIO& io);
+        uint32_t GetVertexBufferPerFrameCapacity(const ImDrawData& drawData) const;
+        uint32_t GetIndexBufferPerFrameCapacity(const ImDrawData& drawData) const;
 
         uint8_t mFrameCount = 0;
         uint32_t mLastFenceValue = 0;
@@ -42,6 +38,7 @@ namespace PathFinder
         const HAL::Device* mDevice = nullptr;
         std::unique_ptr<HAL::RingBufferResource<ImDrawVert>> mVertexBuffer;
         std::unique_ptr<HAL::RingBufferResource<ImDrawIdx>> mIndexBuffer;
+        std::unique_ptr<HAL::TextureResource> mFontTexture;
     };
 
 }

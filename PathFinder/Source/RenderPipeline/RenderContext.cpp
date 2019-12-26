@@ -5,15 +5,13 @@ namespace PathFinder
 
     RenderContext::RenderContext(
         const Scene* scene,
-        const AssetResourceStorage* assetStorage,
-        const VertexStorage* vertexStorage, 
+        const MeshGPUStorage* meshStorage,
         GPUCommandRecorder* graphicCommandRecorder,
         RootConstantsUpdater* rootConstantsUpdater, ResourceProvider* resourceProvider,
         const RenderSurfaceDescription& defaultRenderSurface)
         : 
         mScene{ scene }, 
-        mAssetStorage{ assetStorage },
-        mVertexStorage{ vertexStorage },
+        mMeshStorage{ meshStorage },
         mGrapicCommandRecorder{ graphicCommandRecorder },
         mRootConstantsUpdater{ rootConstantsUpdater },
         mResourceProvider{ resourceProvider },

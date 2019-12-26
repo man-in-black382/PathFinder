@@ -8,7 +8,7 @@
 #include "ResourceProvider.hpp"
 #include "RenderSurfaceDescription.hpp"
 #include "AssetResourceStorage.hpp"
-#include "VertexStorage.hpp"
+#include "MeshGPUStorage.hpp"
 
 namespace PathFinder
 {
@@ -18,8 +18,7 @@ namespace PathFinder
     public:
         RenderContext(
             const Scene* scene, 
-            const AssetResourceStorage* assetStorage,
-            const VertexStorage* vertexStorage,
+            const MeshGPUStorage* meshStorage,
             GPUCommandRecorder* graphicCommandRecorder, 
             RootConstantsUpdater* rootConstantsUpdater, 
             ResourceProvider* resourceProvider,
@@ -29,7 +28,7 @@ namespace PathFinder
     private:
         const Scene* mScene;
         const AssetResourceStorage* mAssetStorage;
-        const VertexStorage* mVertexStorage;
+        const MeshGPUStorage* mMeshStorage;
         GPUCommandRecorder* mGrapicCommandRecorder;
         RootConstantsUpdater* mRootConstantsUpdater;
         ResourceProvider* mResourceProvider;
@@ -37,8 +36,7 @@ namespace PathFinder
 
     public:
         inline const Scene* GetScene() const { return mScene; }
-        inline const AssetResourceStorage* GetAssetStorage() const { return mAssetStorage; }
-        inline const VertexStorage* GetVertexStorage() const { return mVertexStorage; }
+        inline const MeshGPUStorage* GetMeshStorage() const { return mMeshStorage; }
         inline GPUCommandRecorder* GetCommandRecorder() const { return mGrapicCommandRecorder; }
         inline RootConstantsUpdater* GetConstantsUpdater() const { return mRootConstantsUpdater; }
         inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }

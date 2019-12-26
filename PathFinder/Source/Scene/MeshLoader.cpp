@@ -3,7 +3,7 @@
 namespace PathFinder
 {
 
-    MeshLoader::MeshLoader(const std::filesystem::path& fileRoot, VertexStorage* gpuVertexStorage)
+    MeshLoader::MeshLoader(const std::filesystem::path& fileRoot, MeshGPUStorage* gpuVertexStorage)
         : mRootPath{ fileRoot }, mVertexStorage{ gpuVertexStorage } {}
 
     std::vector<Mesh> MeshLoader::Load(const std::string& fileName)
@@ -82,12 +82,7 @@ namespace PathFinder
         }
 
         subMesh.SetName(mesh->mName.data);
-
-        VertexStorageLocation vsLocation = mVertexStorage->AddVertices(
-            subMesh.Vertices().data(), subMesh.Vertices().size(), subMesh.Indices().data(), subMesh.Indices().size()
-        );
-
-        subMesh.SetVertexStorageLocation(vsLocation);
+        mVertexStorage->StoreMesh(subMesh);
 
         return subMesh;
     }

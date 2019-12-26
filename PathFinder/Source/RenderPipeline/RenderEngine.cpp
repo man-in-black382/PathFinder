@@ -21,10 +21,10 @@ namespace PathFinder
         mAccelerationStructureFence{ mDevice },
         mStandardCopyDevice{ &mDevice },
         mAssetPostprocessCopyDevice{ &mDevice },
-        mVertexStorage{ &mDevice, &mStandardCopyDevice },
+        mMeshStorage{ &mDevice, &mStandardCopyDevice, mSimultaneousFramesInFlight },
         mDescriptorStorage{ &mDevice },
         mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight, mPassExecutionGraph },
-        mAssetResourceStorage{ &mDevice, &mAssetPostprocessCopyDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
+        mAssetResourceStorage{ &mDevice, &mAssetPostprocessCopyDevice, &mDescriptorStorage},
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage, &mDescriptorStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
@@ -35,7 +35,7 @@ namespace PathFinder
         mAsyncComputeDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mCommandRecorder{ &mGraphicsDevice },
         mUIStorage{ &mDevice, mSimultaneousFramesInFlight },
-        mContext{ scene, &mAssetResourceStorage, &mVertexStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
+        mContext{ scene, &mMeshStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
     {
@@ -59,7 +59,8 @@ namespace PathFinder
     void RenderEngine::ProcessAndTransferAssets()
     {
         // Allocate and transfer GPU memory, compile states, perform initial resource transitions
-        mVertexStorage.AllocateAndQueueBuffersForCopy();
+        mMeshStorage.UploadVerticesAndQueueForCopy();
+        mMeshStorage.CreateBottomAccelerationStructures();
         mStandardCopyDevice.CopyResources();
 
         // Run setup and asset-processing passes
@@ -137,7 +138,7 @@ namespace PathFinder
         mPipelineResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
         mGraphicsDevice.BeginFrame(mFrameFence.ExpectedValue());
         mAsyncComputeDevice.BeginFrame(mFrameFence.ExpectedValue());
-        mAssetResourceStorage.BeginFrame(mFrameFence.ExpectedValue());
+        mMeshStorage.BeginFrame(mFrameFence.ExpectedValue());
         mUIStorage.BeginFrame(mFrameFence.ExpectedValue());
     }
 
@@ -147,7 +148,7 @@ namespace PathFinder
         mPipelineResourceStorage.EndFrame(mFrameFence.CompletedValue());
         mGraphicsDevice.EndFrame(mFrameFence.CompletedValue());
         mAsyncComputeDevice.EndFrame(mFrameFence.CompletedValue());
-        mAssetResourceStorage.EndFrame(mFrameFence.CompletedValue());
+        mMeshStorage.EndFrame(mFrameFence.CompletedValue());
         mUIStorage.EndFrame(mFrameFence.CompletedValue());
     }
 
@@ -180,12 +181,12 @@ namespace PathFinder
         mAccelerationStructureFence.IncreaseExpectedValue();
 
         // Build BLASes once 
-        for (const HAL::RayTracingBottomAccelerationStructure& blas : mVertexStorage.BottomAccelerationStructures())
+        for (const HAL::RayTracingBottomAccelerationStructure& blas : mMeshStorage.BottomAccelerationStructures())
         {
             mAsyncComputeDevice.CommandList().BuildRaytracingAccelerationStructure(blas);
         }
 
-        mAsyncComputeDevice.CommandList().InsertBarriers(mVertexStorage.AccelerationStructureBarriers()); 
+        mAsyncComputeDevice.CommandList().InsertBarriers(mMeshStorage.BottomASBuildBarriers()); 
         mAsyncComputeDevice.ExecuteCommands();
         mAsyncComputeDevice.SignalFence(mAccelerationStructureFence);
         mAccelerationStructureFence.StallCurrentThreadUntilCompletion();
@@ -195,30 +196,23 @@ namespace PathFinder
     void RenderEngine::BuildTopAccelerationStructures()
     {
         mAccelerationStructureFence.IncreaseExpectedValue();
-        mAssetResourceStorage.AllocateTopAccelerationStructureIfNeeded();
-        mAsyncComputeDevice.CommandList().BuildRaytracingAccelerationStructure(mAssetResourceStorage.TopAccelerationStructure());
-        mAsyncComputeDevice.CommandList().InsertBarriers(mAssetResourceStorage.TopAccelerationStructureBarriers());
+        mMeshStorage.CreateTopAccelerationStructure();
+        mAsyncComputeDevice.CommandList().BuildRaytracingAccelerationStructure(mMeshStorage.TopAccelerationStructure());
+        mAsyncComputeDevice.CommandList().InsertBarriers(mMeshStorage.TopASBuildBarriers());
         mAsyncComputeDevice.ExecuteCommands();
         mAsyncComputeDevice.SignalFence(mAccelerationStructureFence);
     }
 
     void RenderEngine::UploadMeshInstanceData()
     {
-        mAssetResourceStorage.ResetInstanceStorages();
-
         auto iterator = [&](MeshInstance& instance)
         {
             auto blasIndex = instance.AssosiatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex;
-            auto& blas = mVertexStorage.BottomAccelerationStructures()[blasIndex];
-
-            auto indexInTable = mAssetResourceStorage.StoreMeshInstance(instance, blas);
-
-            instance.SetGPUInstanceIndex(indexInTable);
+            auto& blas = mMeshStorage.BottomAccelerationStructures()[blasIndex];
+            mMeshStorage.StoreMeshInstance(instance, blas);
         };
 
         mScene->IterateMeshInstances(iterator);
-
-        mAssetResourceStorage.AllocateTopAccelerationStructureIfNeeded();
     }
 
     void RenderEngine::UploadUI()

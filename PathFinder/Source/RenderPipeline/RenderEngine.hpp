@@ -14,7 +14,7 @@
 #include "../IO/CommandLineParser.hpp"
 
 #include "RenderPass.hpp"
-#include "VertexStorage.hpp"
+#include "MeshGPUStorage.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "AssetResourceStorage.hpp"
 #include "ResourceScheduler.hpp"
@@ -77,7 +77,7 @@ namespace PathFinder
         // by asset-preprocessing render passes
         CopyDevice mAssetPostprocessCopyDevice;
 
-        VertexStorage mVertexStorage;
+        MeshGPUStorage mMeshStorage;
         ResourceDescriptorStorage mDescriptorStorage;
         PipelineResourceStorage mPipelineResourceStorage;
         AssetResourceStorage mAssetResourceStorage;
@@ -101,7 +101,7 @@ namespace PathFinder
         Event mPostRenderEvent;
 
     public:
-        inline VertexStorage& VertexGPUStorage() { return mVertexStorage; }
+        inline MeshGPUStorage& VertexGPUStorage() { return mMeshStorage; }
         inline AssetResourceStorage& AssetGPUStorage() { return mAssetResourceStorage; }
         inline CopyDevice& StandardCopyDevice() { return mStandardCopyDevice; }
         inline HAL::Device& Device() { return mDevice; }

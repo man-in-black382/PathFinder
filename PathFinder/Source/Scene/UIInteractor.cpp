@@ -26,6 +26,9 @@ namespace PathFinder
         // - Read 'misc/fonts/README.txt' for more instructions and details.
         // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
         io.Fonts->AddFontDefault();
+        io.Fonts->Build();
+
+        UpdateUIInputs();
     }
 
     void UIInteractor::UpdateUIInputs()
@@ -37,6 +40,8 @@ namespace PathFinder
         RECT rect;
         ::GetClientRect(mWindowHandle, &rect);
         io.DisplaySize = ImVec2((float)(rect.right - rect.left), (float)(rect.bottom - rect.top));
+
+        io.KeyMap[ImGuiKey_Space] = VK_SPACE;
 
         // Setup time step
         //INT64 current_time;

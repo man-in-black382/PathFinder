@@ -1,15 +1,14 @@
-#include <d3d12.h>
-#include <dxgi.h>
-#include <tchar.h>
-#include <filesystem>
+#pragma once
 
-#include "ThirdParty/imgui/imgui.h"
-#include "ThirdParty/imgui/imgui_impl_win32.h"
-#include "ThirdParty/imgui/imgui_impl_dx12.h"
+#include <windows.h>
+#include <tchar.h>
 
 #include "Scene/Scene.hpp"
 #include "Scene/MeshLoader.hpp"
 #include "Scene/MaterialLoader.hpp"
+#include "Scene/UIInteractor.hpp"
+#include "Scene/CameraInteractor.hpp"
+
 #include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BlurRenderPass.hpp"
@@ -18,7 +17,9 @@
 #include "RenderPipeline/RenderPasses/DeferredLightingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
+
 #include "IO/CommandLineParser.hpp"
+#include "IO/Input.hpp"
 
 #include "../resource.h"
 
@@ -262,7 +263,10 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(blurPass.get());
     renderPassGraph.AddPass(backBufferOutputPass.get());
 
-    PathFinder::Scene scene;
+    PathFinder::Scene scene{};
+    PathFinder::Input input{};
+    PathFinder::UIInteractor uiInteractor{ hwnd, &input };
+    PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::RenderEngine engine{ hwnd, cmdLineParser, &scene, &renderPassGraph };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/", &engine.VertexGPUStorage() };
     PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage(), &engine.StandardCopyDevice() };

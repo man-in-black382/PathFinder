@@ -1,5 +1,7 @@
 #include "Color.hpp"
 
+#include <complex>
+
 namespace Foundation
 {
 

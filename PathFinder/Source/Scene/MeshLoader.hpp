@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../RenderPipeline/VertexStorage.hpp"
+#include "../RenderPipeline/MeshGPUStorage.hpp"
 
 #include "Vertices/Vertex1P1N1UV1T1BT.hpp"
 #include "Mesh.hpp"
@@ -30,7 +30,7 @@ namespace PathFinder
     class MeshLoader
     {
     public:
-        MeshLoader(const std::filesystem::path& fileRoot, VertexStorage* gpuVertexStorage);
+        MeshLoader(const std::filesystem::path& fileRoot, MeshGPUStorage* gpuVertexStorage);
 
         std::vector<Mesh> Load(const std::string& fileName);
 
@@ -41,7 +41,7 @@ namespace PathFinder
 
         std::vector<Mesh> mLoadedMeshes;
         std::filesystem::path mRootPath;
-        VertexStorage* mVertexStorage;
+        MeshGPUStorage* mVertexStorage;
     };
 
 }
