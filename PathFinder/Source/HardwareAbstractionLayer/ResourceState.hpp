@@ -30,7 +30,9 @@ namespace HAL
         DepthWrite                      = 1 << 16,
         VertexBuffer                    = 1 << 17,
         ConstantBuffer                  = 1 << 18,
-        IndexBuffer                     = 1 << 19
+        IndexBuffer                     = 1 << 19,
+
+        AnyShaderAccess = PixelShaderAccess | NonPixelShaderAccess
     };
 
     bool IsResourceStateReadOnly(ResourceState state);

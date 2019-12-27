@@ -30,7 +30,11 @@ namespace PathFinder
 
     void UIRenderPass::Render(RenderContext* context)
     {
-       
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::UI);
+        context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
+
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetUIStorage()->VertexBuffer(), 0, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetUIStorage()->IndexBuffer(), 1, 0, HAL::ShaderRegister::ShaderResource);
     }
 
 }

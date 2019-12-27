@@ -7,7 +7,7 @@
 #include "RootConstantsUpdater.hpp"
 #include "ResourceProvider.hpp"
 #include "RenderSurfaceDescription.hpp"
-#include "AssetResourceStorage.hpp"
+#include "UIGPUStorage.hpp"
 #include "MeshGPUStorage.hpp"
 
 namespace PathFinder
@@ -19,6 +19,7 @@ namespace PathFinder
         RenderContext(
             const Scene* scene, 
             const MeshGPUStorage* meshStorage,
+            const UIGPUStorage* uiStorage,
             GPUCommandRecorder* graphicCommandRecorder, 
             RootConstantsUpdater* rootConstantsUpdater, 
             ResourceProvider* resourceProvider,
@@ -27,8 +28,8 @@ namespace PathFinder
 
     private:
         const Scene* mScene;
-        const AssetResourceStorage* mAssetStorage;
         const MeshGPUStorage* mMeshStorage;
+        const UIGPUStorage* mUIStorage;
         GPUCommandRecorder* mGrapicCommandRecorder;
         RootConstantsUpdater* mRootConstantsUpdater;
         ResourceProvider* mResourceProvider;
@@ -37,6 +38,7 @@ namespace PathFinder
     public:
         inline const Scene* GetScene() const { return mScene; }
         inline const MeshGPUStorage* GetMeshStorage() const { return mMeshStorage; }
+        inline const UIGPUStorage* GetUIStorage() const { return mUIStorage; }
         inline GPUCommandRecorder* GetCommandRecorder() const { return mGrapicCommandRecorder; }
         inline RootConstantsUpdater* GetConstantsUpdater() const { return mRootConstantsUpdater; }
         inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }

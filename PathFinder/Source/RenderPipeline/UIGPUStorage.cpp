@@ -8,11 +8,8 @@
 namespace PathFinder
 {
 
-    UIGPUStorage::UIGPUStorage(const HAL::Device* device, uint8_t simulataneousFrameCount)
-        : mDevice{ device }, mFrameCount{ simulataneousFrameCount }
-    {
-       
-    }
+    UIGPUStorage::UIGPUStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage, uint8_t simulataneousFrameCount)
+        : mDevice{ device }, mCopyDevice{ copyDevice }, mDescriptorStorage{ descriptorStorage }, mFrameCount{ simulataneousFrameCount } {}
 
     void UIGPUStorage::BeginFrame(uint64_t frameFenceValue)
     {
@@ -32,22 +29,17 @@ namespace PathFinder
         mLastFenceValue = completedFrameFenceValue;
     }
 
-    void UIGPUStorage::UploadUIVertices()
+    void UIGPUStorage::UploadUI()
     {
         ImGui::Render();
         ImDrawData* drawData = ImGui::GetDrawData();
         
-        AllocateVertexBufferIfNeeded(*drawData);
-        AllocateIndexBufferIfNeeded(*drawData);
-
-        if (drawData->CmdLists)
-        {
-            mVertexBuffer->Write(0, drawData->CmdLists[mCurrentFrameIndex]->VtxBuffer.Data, drawData->CmdLists[mCurrentFrameIndex]->VtxBuffer.Size);
-            mIndexBuffer->Write(0, drawData->CmdLists[mCurrentFrameIndex]->IdxBuffer.Data, drawData->CmdLists[mCurrentFrameIndex]->IdxBuffer.Size);
-        }
+        UploadVertices(*drawData);
+        UploadIndices(*drawData);
+        UploadFont(ImGui::GetIO());
     }
 
-    void UIGPUStorage::AllocateVertexBufferIfNeeded(const ImDrawData& drawData)
+    void UIGPUStorage::UploadVertices(const ImDrawData& drawData)
     {
         if (!mVertexBuffer || mVertexBuffer->Capacity() < drawData.TotalVtxCount)
         {
@@ -56,9 +48,14 @@ namespace PathFinder
 
             mVertexBuffer->SetDebugName("ImGUI Vertex Buffer");
         }
+
+        if (drawData.CmdLists)
+        {
+            mVertexBuffer->Write(0, drawData.CmdLists[mCurrentFrameIndex]->VtxBuffer.Data, drawData.CmdLists[mCurrentFrameIndex]->VtxBuffer.Size);
+        }
     }
 
-    void UIGPUStorage::AllocateIndexBufferIfNeeded(const ImDrawData& drawData)
+    void UIGPUStorage::UploadIndices(const ImDrawData& drawData)
     {
         if (!mIndexBuffer || mIndexBuffer->Capacity() < drawData.TotalIdxCount)
         {
@@ -67,22 +64,37 @@ namespace PathFinder
 
             mIndexBuffer->SetDebugName("ImGUI Index Buffer");
         }
+
+        if (drawData.CmdLists)
+        {
+            mIndexBuffer->Write(0, drawData.CmdLists[mCurrentFrameIndex]->IdxBuffer.Data, drawData.CmdLists[mCurrentFrameIndex]->IdxBuffer.Size);
+        }
     }
 
-    void UIGPUStorage::AllocateFontTextureIfNeeded(const ImGuiIO& io)
+    void UIGPUStorage::UploadFont(const ImGuiIO& io)
     {
-        /*ImGuiIO& io = ImGui::GetIO();
-        unsigned char* pixels;
+        uint8_t* pixels;
         int width, height;
         io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
+        auto byteCount = height * (width * 4);
+
+        if (!mFontUploadBuffer || mFontUploadBuffer->Capacity() < byteCount)
+        {
+            mFontUploadBuffer = std::make_shared<HAL::BufferResource<uint8_t>>(*mDevice, byteCount, 1, HAL::CPUAccessibleHeapType::Upload);
+            mFontUploadBuffer->Write(0, pixels, byteCount);
+        }
+
         if (!mFontTexture || mFontTexture->Dimensions().Width != width || mFontTexture->Dimensions().Height != height)
         {
-            mFontTexture = std::make_unique<HAL::TextureResource>(
+            mFontTexture = std::make_shared<HAL::TextureResource>(
                 *mDevice, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, HAL::ResourceFormat::TextureKind::Texture2D,
-                { width, height }, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, 
-                HAL::ResourceState::Shader, eStates)
-        }*/
+                Geometry::Dimensions( width, height ), HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 },
+                HAL::ResourceState::Common, HAL::ResourceState::AnyShaderAccess);
+
+            mFontSRVIndex = mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mFontTexture.get()).IndexInHeapRange();
+            mCopyDevice->QueueBufferToTextureCopy(mFontUploadBuffer, mFontTexture, HAL::ResourceFootprint{ *mFontTexture });
+        }
     }
 
     uint32_t UIGPUStorage::GetVertexBufferPerFrameCapacity(const ImDrawData& drawData) const

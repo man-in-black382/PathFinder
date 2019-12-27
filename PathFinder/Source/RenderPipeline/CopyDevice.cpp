@@ -50,6 +50,8 @@ namespace PathFinder
 
     void CopyDevice::CopyResources()
     {
+        if (mResourcesToCopy.empty()) return;
+
         mFence.IncreaseExpectedValue();
 
         mCommandList.Close();

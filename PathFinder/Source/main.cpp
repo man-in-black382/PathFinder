@@ -313,6 +313,8 @@ int main(int argc, char** argv)
         engine.Render();
     }
 
+    engine.FlushAllQueuedFrames();
+
     ::DestroyWindow(hwnd);
     ::UnregisterClass(wc.lpszClassName, wc.hInstance);
 

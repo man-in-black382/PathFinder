@@ -19,12 +19,12 @@ namespace PathFinder
         mDevice{ FetchDefaultDisplayAdapter() },
         mFrameFence{ mDevice },
         mAccelerationStructureFence{ mDevice },
-        mStandardCopyDevice{ &mDevice },
-        mAssetPostprocessCopyDevice{ &mDevice },
-        mMeshStorage{ &mDevice, &mStandardCopyDevice, mSimultaneousFramesInFlight },
+        mUploadCopyDevice{ &mDevice },
+        mReadbackCopyDevice{ &mDevice },
+        mMeshStorage{ &mDevice, &mUploadCopyDevice, mSimultaneousFramesInFlight },
         mDescriptorStorage{ &mDevice },
         mPipelineResourceStorage{ &mDevice, &mDescriptorStorage, mDefaultRenderSurface, mSimultaneousFramesInFlight, mPassExecutionGraph },
-        mAssetResourceStorage{ &mDevice, &mAssetPostprocessCopyDevice, &mDescriptorStorage},
+        mAssetResourceStorage{ &mDevice, &mReadbackCopyDevice, &mDescriptorStorage},
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage, &mDescriptorStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
@@ -34,8 +34,8 @@ namespace PathFinder
         mGraphicsDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mAsyncComputeDevice{ mDevice, &mDescriptorStorage.CBSRUADescriptorHeap(), &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface, mSimultaneousFramesInFlight },
         mCommandRecorder{ &mGraphicsDevice },
-        mUIStorage{ &mDevice, mSimultaneousFramesInFlight },
-        mContext{ scene, &mMeshStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
+        mUIStorage{ &mDevice, &mUploadCopyDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
+        mContext{ scene, &mMeshStorage, &mUIStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
     {
@@ -61,7 +61,7 @@ namespace PathFinder
         // Allocate and transfer GPU memory, compile states, perform initial resource transitions
         mMeshStorage.UploadVerticesAndQueueForCopy();
         mMeshStorage.CreateBottomAccelerationStructures();
-        mStandardCopyDevice.CopyResources();
+        mUploadCopyDevice.CopyResources();
 
         // Run setup and asset-processing passes
         RunRenderPasses(mPassExecutionGraph->OneTimePasses());
@@ -74,8 +74,8 @@ namespace PathFinder
         mGraphicsDevice.SignalFence(mFrameFence);
 
         // Copy processed assets if needed
-        mAssetPostprocessCopyDevice.WaitFence(mFrameFence);
-        mAssetPostprocessCopyDevice.CopyResources();
+        mReadbackCopyDevice.WaitFence(mFrameFence);
+        mReadbackCopyDevice.CopyResources();
 
         // Unlock device before rendering starts
         mGraphicsDevice.ResetCommandList();
@@ -91,10 +91,12 @@ namespace PathFinder
         NotifyStartFrame();
         mPreRenderEvent.Raise();
 
-        UploadUI();
+        mUIStorage.UploadUI();
         UploadCommonRootConstants();
         UploadMeshInstanceData();
         BuildTopAccelerationStructures();
+
+        mUploadCopyDevice.CopyResources();
 
         HAL::TextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
         HAL::ResourceTransitionBarrier preRenderBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer };
@@ -105,10 +107,12 @@ namespace PathFinder
         mGraphicsDevice.CommandList().InsertBarrier(postRenderBarrier);
         mGraphicsDevice.WaitFence(mAccelerationStructureFence);
         mGraphicsDevice.ExecuteCommands();
-        mGraphicsDevice.SignalFence(mFrameFence);
         mSwapChain.Present();
+        mGraphicsDevice.SignalFence(mFrameFence);
         mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
         mPostRenderEvent.Raise();
+
+        mReadbackCopyDevice.CopyResources();
 
         NotifyEndFrame();
 
@@ -213,11 +217,6 @@ namespace PathFinder
         };
 
         mScene->IterateMeshInstances(iterator);
-    }
-
-    void RenderEngine::UploadUI()
-    {
-        mUIStorage.UploadUIVertices();
     }
 
     void RenderEngine::RunRenderPasses(const std::list<RenderPass*>& passes)

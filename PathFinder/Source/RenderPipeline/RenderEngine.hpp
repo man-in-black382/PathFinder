@@ -55,7 +55,6 @@ namespace PathFinder
         void BuildTopAccelerationStructures();
         void UploadCommonRootConstants();
         void UploadMeshInstanceData();
-        void UploadUI();
 
         void RunRenderPasses(const std::list<RenderPass*>& passes);
 
@@ -71,11 +70,11 @@ namespace PathFinder
         HAL::Fence mAccelerationStructureFence;
 
         // Device to copy everything non-processable at the beginning of the frame
-        CopyDevice mStandardCopyDevice;
+        CopyDevice mUploadCopyDevice;
 
         // Device to copy resources that first need to be preprocessed
         // by asset-preprocessing render passes
-        CopyDevice mAssetPostprocessCopyDevice;
+        CopyDevice mReadbackCopyDevice;
 
         MeshGPUStorage mMeshStorage;
         ResourceDescriptorStorage mDescriptorStorage;
@@ -103,7 +102,7 @@ namespace PathFinder
     public:
         inline MeshGPUStorage& VertexGPUStorage() { return mMeshStorage; }
         inline AssetResourceStorage& AssetGPUStorage() { return mAssetResourceStorage; }
-        inline CopyDevice& StandardCopyDevice() { return mStandardCopyDevice; }
+        inline CopyDevice& StandardCopyDevice() { return mUploadCopyDevice; }
         inline HAL::Device& Device() { return mDevice; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }
