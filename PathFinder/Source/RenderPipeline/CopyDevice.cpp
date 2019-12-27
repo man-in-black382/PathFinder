@@ -52,8 +52,6 @@ namespace PathFinder
     {
         if (mResourcesToCopy.empty()) return;
 
-        mFence.IncreaseExpectedValue();
-
         mCommandList.Close();
         mCommandQueue.ExecuteCommandList(mCommandList);
         mFence.IncreaseExpectedValue();

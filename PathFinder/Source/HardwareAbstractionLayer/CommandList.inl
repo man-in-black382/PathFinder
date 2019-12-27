@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Foundation/Assert.hpp"
+
 namespace HAL
 {
    
@@ -8,9 +10,7 @@ namespace HAL
         const BufferResource<T>& source, BufferResource<T>& destination,
         uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset)
     {
-        if (source.PaddedElementSize() != destination.PaddedElementSize()) {
-            throw std::runtime_error("Buffers are misaligned. Copy will lay out data incorrectly.");
-        }
+        assert_format(source.PaddedElementSize() == destination.PaddedElementSize(), "Buffers are misaligned. Copy will lay out data incorrectly.");
 
         auto sourceOffsetInBytes = source.PaddedElementSize() * sourceOffset;
         auto destinationOffsetInBytes = destination.PaddedElementSize() * destinationOffset;
