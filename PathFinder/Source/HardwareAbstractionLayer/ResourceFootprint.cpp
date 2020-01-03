@@ -8,7 +8,7 @@ namespace HAL
         mRowSizeInBytes{ rowSize }, mOffset{ d3dFootprint.Offset }, 
         mRowPitch{ d3dFootprint.Footprint.RowPitch }, mSubresourceIndex{ index } {}
 
-    ResourceFootprint::ResourceFootprint(const Resource& resource)
+    ResourceFootprint::ResourceFootprint(const Resource& resource, uint64_t initialByteOffset)
     {
         auto subresourceCount = resource.SubresourceCount();
 
@@ -32,6 +32,7 @@ namespace HAL
         for (auto i = 0u; i < subresourceCount; ++i)
         {
             mSubresourceFootprints.emplace_back(d3dFootprints[i], rowCounts[i], rowSizes[i], i);
+            mSubresourceFootprints.back().mOffset += initialByteOffset;
         }
     }
 

@@ -41,13 +41,11 @@ namespace PathFinder
         template <class T>
         void BindExternalBuffer(const HAL::BufferResource<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
-        void WaitFence(HAL::Fence& fence);
-        void ExecuteCommands();
+        void ExecuteCommands(const HAL::Fence* fenceToWaitFor = nullptr, const HAL::Fence* fenceToSignal = nullptr);
         void ResetCommandList();
-        void SignalFence(HAL::Fence& fence);
 
-        void BeginFrame(uint64_t frameFenceValue);
-        void EndFrame(uint64_t completedFrameFenceValue);
+        void BeginFrame(uint64_t newFrameNumber);
+        void EndFrame(uint64_t completedFrameNumber);
 
     protected:
         virtual void ApplyStateIfNeeded(const HAL::ComputePipelineState* state);
@@ -64,13 +62,11 @@ namespace PathFinder
         RenderSurfaceDescription mDefaultRenderSurface;
 
         CommandQueueT mCommandQueue;
+        HAL::RingCommandList<CommandListT, CommandAllocatorT> mRingCommandList;
 
     private:
         void ApplyCommonComputeResourceBindings();
         void BindCurrentPassConstantBufferCompute();
-
-        const HAL::Device* mDevice;
-        HAL::RingCommandList<CommandListT, CommandAllocatorT> mRingCommandList;
 
     public:
         inline CommandListT& CommandList() { return mRingCommandList.CurrentCommandList(); }

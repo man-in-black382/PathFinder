@@ -130,16 +130,16 @@ namespace PathFinder
         uploadBuffers.Locations.clear();
     }
 
-    void MeshGPUStorage::BeginFrame(uint64_t frameFenceValue)
+    void MeshGPUStorage::BeginFrame(uint64_t newFrameNumber)
     {
         mCurrentFrameInsertedInstanceCount = 0;
         mTopAccelerationStructure.ResetInputs();
-        mInstanceTable.PrepareMemoryForNewFrame(frameFenceValue);
+        mInstanceTable.PrepareMemoryForNewFrame(newFrameNumber);
     }
 
-    void MeshGPUStorage::EndFrame(uint64_t completedFrameFenceValue)
+    void MeshGPUStorage::EndFrame(uint64_t completedFrameNumber)
     {
-        mInstanceTable.DiscardMemoryForCompletedFrames(completedFrameFenceValue);
+        mInstanceTable.DiscardMemoryForCompletedFrames(completedFrameNumber);
     }
 
     void MeshGPUStorage::UploadVerticesAndQueueForCopy()

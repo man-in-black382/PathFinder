@@ -48,11 +48,9 @@ namespace PathFinder
 
     private:
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
-        void NotifyStartFrame();
-        void NotifyEndFrame();
+        void NotifyStartFrame(uint64_t newFrameNumber);
+        void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextBackBuffer();
-        void BuildBottomAccelerationStructures();
-        void BuildTopAccelerationStructures();
         void UploadCommonRootConstants();
         void UploadMeshInstanceData();
 
@@ -62,18 +60,17 @@ namespace PathFinder
 
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 3;
+        uint64_t mFrameNumber = 0;
 
         RenderSurfaceDescription mDefaultRenderSurface;
 
         HAL::Device mDevice;
-        HAL::Fence mFrameFence;
-        HAL::Fence mAccelerationStructureFence;
+        HAL::Fence mUploadFence;
+        HAL::Fence mAsyncComputeFence;
+        HAL::Fence mGraphicsFence;
+        HAL::Fence mReadbackFence;
 
-        // Device to copy everything non-processable at the beginning of the frame
         CopyDevice mUploadCopyDevice;
-
-        // Device to copy resources that first need to be preprocessed
-        // by asset-preprocessing render passes
         CopyDevice mReadbackCopyDevice;
 
         MeshGPUStorage mMeshStorage;

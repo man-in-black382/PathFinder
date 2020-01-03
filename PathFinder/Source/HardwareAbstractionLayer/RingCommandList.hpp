@@ -15,10 +15,12 @@ namespace HAL
         RingCommandList(const Device& device, uint8_t frameCapacity);
 
         void PrepareCommandListForNewFrame(uint64_t newFrameFenceValue);
-        void ReleaseAndResetForCompletedFrames(uint64_t completedFrameFenceValue);
+        void ReleaseAndResetForCompletedFrames(uint64_t completedFrameNumber);
 
         CommandListT& CurrentCommandList();
         CommandAllocatorT& CurrentCommandAllocator();
+
+        void SetDebugName(const std::string& name);
 
     private:
         std::vector<CommandAllocatorT> mCommandAllocators;

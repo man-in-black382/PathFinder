@@ -19,7 +19,8 @@ namespace PathFinder
         mPipelineStateManager{ pipelineStateManager },
         mDefaultRenderSurface{ defaultRenderSurface }
     {
-        mCommandQueue.SetDebugName("Async_Compute_Device_Cmd_Queue");
+        mCommandQueue.SetDebugName("Async Compute Device Command Queue");
+        mRingCommandList.SetDebugName("Async Compute Device");
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
@@ -112,21 +113,15 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::EndFrame(uint64_t completedFrameFenceValue)
+    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::EndFrame(uint64_t completedFrameNumber)
     {
-        mRingCommandList.ReleaseAndResetForCompletedFrames(completedFrameFenceValue);
+        mRingCommandList.ReleaseAndResetForCompletedFrames(completedFrameNumber);
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BeginFrame(uint64_t frameFenceValue)
+    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BeginFrame(uint64_t newFrameNumber)
     {
-        mRingCommandList.PrepareCommandListForNewFrame(frameFenceValue);
-    }
-
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::SignalFence(HAL::Fence& fence)
-    {
-        mCommandQueue.SignalFence(fence);
+        mRingCommandList.PrepareCommandListForNewFrame(newFrameNumber);
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
@@ -136,16 +131,20 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ExecuteCommands()
+    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ExecuteCommands(const HAL::Fence* fenceToWaitFor, const HAL::Fence* fenceToSignal)
     {
+        if (fenceToWaitFor)
+        {
+            mCommandQueue.WaitFence(*fenceToWaitFor);
+        }
+
         CommandList().Close();
         mCommandQueue.ExecuteCommandList(CommandList());
-    }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::WaitFence(HAL::Fence& fence)
-    {
-        mCommandQueue.WaitFence(fence);
+        if (fenceToSignal)
+        {
+            mCommandQueue.SignalFence(*fenceToSignal);
+        }        
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>

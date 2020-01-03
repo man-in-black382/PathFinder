@@ -66,8 +66,8 @@ namespace PathFinder
             const RenderPassExecutionGraph* passExecutionGraph
         );
 
-        void BeginFrame(uint64_t frameFenceValue);
-        void EndFrame(uint64_t completedFrameFenceValue);
+        void BeginFrame(uint64_t newFrameNumber);
+        void EndFrame(uint64_t completedFrameNumber);
 
         const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName) const;
         const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName) const;

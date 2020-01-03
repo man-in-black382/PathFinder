@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
+#include "../HardwareAbstractionLayer/RingCommandList.hpp"
 #include "../HardwareAbstractionLayer/ResourceFootprint.hpp"
 
 #include <memory>
@@ -11,7 +12,7 @@ namespace PathFinder
     class CopyDevice
     {
     public:
-        CopyDevice(const HAL::Device* device);
+        CopyDevice(const HAL::Device* device, uint8_t simultaneousFramesInFlight);
 
         template <class T> void QueueBufferToTextureCopy(std::shared_ptr<HAL::BufferResource<T>> buffer, std::shared_ptr<HAL::TextureResource> texture, const HAL::ResourceFootprint& footprint);
         
@@ -21,18 +22,21 @@ namespace PathFinder
         template <class T> std::shared_ptr<HAL::BufferResource<T>> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::BufferResource<T>> buffer);
         std::shared_ptr<HAL::BufferResource<uint8_t>> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::TextureResource> texture);
         
-        void CopyResources();
-        void WaitFence(HAL::Fence& fence);
-        void SignalFence(HAL::Fence& fence);
+        void ExecuteCommands(const HAL::Fence* fenceToWaitFor = nullptr, const HAL::Fence* fenceToSignal = nullptr);
+        void ResetCommandList();
+
+        void BeginFrame(uint64_t newFrameNumber);
+        void EndFrame(uint64_t completedFrameNumber);
 
     private:
         const HAL::Device* mDevice;
-        HAL::CopyCommandAllocator mCommandAllocator;
-        HAL::CopyCommandList mCommandList;
         HAL::CopyCommandQueue mCommandQueue;
-        HAL::Fence mFence;
+        HAL::CopyRingCommandList mRingCommandList;
+        uint8_t mSimultaneousFramesInFlight = 1;
+        uint64_t mLastFenceValue = 0;
+        uint64_t mCurrentFrameIndex = 0;
 
-        std::vector<std::shared_ptr<HAL::Resource>> mResourcesToCopy;
+        std::vector<std::vector<std::shared_ptr<HAL::Resource>>> mResourcesToCopy;
     };
 
 }

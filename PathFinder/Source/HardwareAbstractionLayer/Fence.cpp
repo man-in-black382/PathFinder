@@ -13,7 +13,7 @@ namespace HAL
         ThrowIfFailed(device.D3DDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
     }
 
-    void Fence::IncreaseExpectedValue()
+    void Fence::IncrementExpectedValue()
     {
         mExpectedValue++;
     }

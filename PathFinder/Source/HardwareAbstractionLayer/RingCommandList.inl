@@ -1,10 +1,13 @@
 #pragma once
 
+#include "../Foundation/StringUtils.hpp"
+
 namespace HAL
 {
    
     template <class CommandListT, class CommandAllocatorT>
-    RingCommandList<CommandListT, CommandAllocatorT>::RingCommandList(const Device& device, uint8_t frameCapacity) : mRingBuffer{ frameCapacity }
+    RingCommandList<CommandListT, CommandAllocatorT>::RingCommandList(const Device& device, uint8_t frameCapacity)
+        : mRingBuffer{ frameCapacity }
     {
         for (auto i = 0u; i < frameCapacity; i++)
         {
@@ -13,11 +16,11 @@ namespace HAL
         }
 
         mRingBuffer.SetDeallocationCallback([this](const RingBuffer::FrameTailAttributes& frameAttributes)
-            {
-                auto indexToReset = frameAttributes.Tail - frameAttributes.Size;
-                mCommandAllocators[indexToReset].Reset();
-                mCommandLists[indexToReset].Reset(mCommandAllocators[indexToReset]);
-            });
+        {
+            auto indexToReset = frameAttributes.Tail - frameAttributes.Size;
+            mCommandAllocators[indexToReset].Reset();
+            mCommandLists[indexToReset].Reset(mCommandAllocators[indexToReset]);
+        });
     }
 
     template <class CommandListT, class CommandAllocatorT>
@@ -28,9 +31,9 @@ namespace HAL
     }
 
     template <class CommandListT, class CommandAllocatorT>
-    void RingCommandList<CommandListT, CommandAllocatorT>::ReleaseAndResetForCompletedFrames(uint64_t completedFrameFenceValue)
+    void RingCommandList<CommandListT, CommandAllocatorT>::ReleaseAndResetForCompletedFrames(uint64_t completedFrameNumber)
     {
-        mRingBuffer.ReleaseCompletedFrames(completedFrameFenceValue);
+        mRingBuffer.ReleaseCompletedFrames(completedFrameNumber);
     }
 
     template <class CommandListT, class CommandAllocatorT>
@@ -43,6 +46,16 @@ namespace HAL
     CommandAllocatorT& RingCommandList<CommandListT, CommandAllocatorT>::CurrentCommandAllocator()
     {
         return mCommandAllocators[mCurrentIndex];
+    }
+
+    template <class CommandListT, class CommandAllocatorT>
+    void RingCommandList<CommandListT, CommandAllocatorT>::SetDebugName(const std::string& name)
+    {
+        for (auto i = 0u; i < mCommandLists.size(); i++)
+        {
+            mCommandAllocators[i].SetDebugName(StringFormat(name + " Ring Command List Allocator %d", i));
+            mCommandLists[i].SetDebugName(StringFormat(name + " Ring Command List %d", i));
+        }
     }
 
 }

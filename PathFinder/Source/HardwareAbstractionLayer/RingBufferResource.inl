@@ -16,7 +16,7 @@ namespace HAL
     template <class T>
     D3D12_GPU_VIRTUAL_ADDRESS RingBufferResource<T>::GPUVirtualAddress() const
     {
-        return BufferResource<T>::GPUVirtualAddress() + mCurrentRingOffset * this->PaddedElementSize();
+        return BufferResource<T>::GPUVirtualAddress() + mCurrentRingOffset * BufferResource<T>::PaddedElementSize();
     }
 
     template <class T>
@@ -32,6 +32,12 @@ namespace HAL
     }
 
     template <class T>
+    uint64_t RingBufferResource<T>::CurrentFrameByteOffset() const
+    {
+        return mCurrentRingOffset * BufferResource<T>::PaddedElementSize();
+    }
+
+    template <class T>
     void RingBufferResource<T>::PrepareMemoryForNewFrame(uint64_t newFrameFenceValue)
     {
         mCurrentRingOffset = mRingBuffer.Allocate(mPerFrameCapacity);
@@ -39,9 +45,9 @@ namespace HAL
     }
 
     template <class T>
-    void RingBufferResource<T>::DiscardMemoryForCompletedFrames(uint64_t completedFrameFenceValue)
+    void RingBufferResource<T>::DiscardMemoryForCompletedFrames(uint64_t completedFrameNumber)
     {
-        mRingBuffer.ReleaseCompletedFrames(completedFrameFenceValue);
+        mRingBuffer.ReleaseCompletedFrames(completedFrameNumber);
     }
 
 }

@@ -24,8 +24,10 @@ namespace HAL
         virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
         virtual T* At(uint64_t index) override;
 
+        uint64_t CurrentFrameByteOffset() const;
+
         void PrepareMemoryForNewFrame(uint64_t newFrameFenceValue);
-        void DiscardMemoryForCompletedFrames(uint64_t completedFrameFenceValue);
+        void DiscardMemoryForCompletedFrames(uint64_t completedFrameNumber);
 
     private:
         RingBuffer mRingBuffer;

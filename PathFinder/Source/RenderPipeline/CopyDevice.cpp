@@ -3,14 +3,15 @@
 namespace PathFinder
 {
 
-    CopyDevice::CopyDevice(const HAL::Device* device)
-        : mDevice{ device },
-        mCommandAllocator{ *mDevice },
-        mCommandList{ *mDevice, mCommandAllocator },
+    CopyDevice::CopyDevice(const HAL::Device* device, uint8_t simultaneousFramesInFlight)
+        : mDevice{ device }, 
+        mRingCommandList{ *device, simultaneousFramesInFlight }, 
         mCommandQueue{ *device },
-        mFence{ *mDevice } 
+        mSimultaneousFramesInFlight{ simultaneousFramesInFlight }
     {
-        mCommandQueue.SetDebugName("Copy_Device_Cmd_Queue");
+        mResourcesToCopy.resize(simultaneousFramesInFlight);
+        mCommandQueue.SetDebugName("Copy Device Command Queue");
+        mRingCommandList.SetDebugName("Copy Device");
     }
  
     std::shared_ptr<HAL::TextureResource> CopyDevice::QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::TextureResource> texture)
@@ -20,11 +21,11 @@ namespace PathFinder
             texture->OptimizedClearValue(), HAL::ResourceState::CopyDestination, texture->ExpectedStates()
         );
 
-        mCommandList.CopyResource(*texture, *emptyClone);
+        mRingCommandList.CurrentCommandList().CopyResource(*texture, *emptyClone);
 
         // Hold in RAM until actual copy is performed
-        mResourcesToCopy.push_back(texture);
-        mResourcesToCopy.push_back(emptyClone);
+        mResourcesToCopy[mCurrentFrameIndex].push_back(texture);
+        mResourcesToCopy[mCurrentFrameIndex].push_back(emptyClone);
 
         return emptyClone;
     }
@@ -38,40 +39,51 @@ namespace PathFinder
 
         for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())
         {
-            mCommandList.CopyTextureToBuffer(*texture, *emptyClone, subresourceFootprint);
+            mRingCommandList.CurrentCommandList().CopyTextureToBuffer(*texture, *emptyClone, subresourceFootprint);
         }
 
         // Hold in RAM until actual copy is performed
-        mResourcesToCopy.push_back(texture);
-        mResourcesToCopy.push_back(emptyClone);
+        mResourcesToCopy[mCurrentFrameIndex].push_back(texture);
+        mResourcesToCopy[mCurrentFrameIndex].push_back(emptyClone);
 
         return emptyClone;
     }
 
-    void CopyDevice::CopyResources()
+    void CopyDevice::ExecuteCommands(const HAL::Fence* fenceToWaitFor, const HAL::Fence* fenceToSignal)
     {
-        if (mResourcesToCopy.empty()) return;
+        if (fenceToWaitFor)
+        {
+            mCommandQueue.WaitFence(*fenceToWaitFor);
+        }
 
-        mCommandList.Close();
-        mCommandQueue.ExecuteCommandList(mCommandList);
-        mFence.IncreaseExpectedValue();
-        mCommandQueue.SignalFence(mFence);
-        mFence.StallCurrentThreadUntilCompletion();
-        
-        mCommandAllocator.Reset();
-        mCommandList.Reset(mCommandAllocator);
+        auto& commandList = mRingCommandList.CurrentCommandList();
 
-        mResourcesToCopy.clear();
+        commandList.Close();
+        mCommandQueue.ExecuteCommandList(commandList);
+
+        if (fenceToSignal)
+        {
+            mCommandQueue.SignalFence(*fenceToSignal);
+        }
     }
 
-    void CopyDevice::WaitFence(HAL::Fence& fence)
+    void CopyDevice::ResetCommandList()
     {
-        mCommandQueue.WaitFence(fence);
+        mRingCommandList.CurrentCommandList().Reset(mRingCommandList.CurrentCommandAllocator());
+        mResourcesToCopy[mCurrentFrameIndex].clear();
     }
 
-    void CopyDevice::SignalFence(HAL::Fence& fence)
+    void CopyDevice::BeginFrame(uint64_t newFrameNumber)
     {
-        mCommandQueue.SignalFence(fence);
+        mRingCommandList.PrepareCommandListForNewFrame(newFrameNumber);
+        mCurrentFrameIndex = (newFrameNumber - mLastFenceValue) % mSimultaneousFramesInFlight;
+    }
+
+    void CopyDevice::EndFrame(uint64_t completedFrameNumber)
+    {
+        mResourcesToCopy[mCurrentFrameIndex].clear();
+        mRingCommandList.ReleaseAndResetForCompletedFrames(completedFrameNumber);
+        mLastFenceValue = completedFrameNumber;
     }
 
 }

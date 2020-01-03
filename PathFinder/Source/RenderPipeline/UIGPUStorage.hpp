@@ -21,8 +21,8 @@ namespace PathFinder
     public:
         UIGPUStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage, uint8_t simulataneousFrameCount);
 
-        void BeginFrame(uint64_t frameFenceValue);
-        void EndFrame(uint64_t completedFrameFenceValue);
+        void BeginFrame(uint64_t newFrameNumber);
+        void EndFrame(uint64_t completedFrameNumber);
 
         void UploadUI();
 

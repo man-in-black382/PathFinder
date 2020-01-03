@@ -58,8 +58,8 @@ namespace PathFinder
         const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer_1P1N1UV() const;
         const HAL::BufferResource<uint32_t>* UnifiedIndexBuffer_1P() const;
 
-        void BeginFrame(uint64_t frameFenceValue);
-        void EndFrame(uint64_t completedFrameFenceValue);
+        void BeginFrame(uint64_t newFrameNumber);
+        void EndFrame(uint64_t completedFrameNumber);
 
         void UploadVerticesAndQueueForCopy();
         void CreateBottomAccelerationStructures();

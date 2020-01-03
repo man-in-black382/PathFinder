@@ -15,6 +15,7 @@ namespace HAL
         virtual ~CommandAllocator() = 0;
 
         void Reset();
+        void SetDebugName(const std::string& name) override;
 
     private:
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> mAllocator;

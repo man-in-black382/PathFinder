@@ -1,6 +1,8 @@
 #include "CommandAllocator.hpp"
 #include "Utils.h"
 
+#include "../Foundation/StringUtils.hpp"
+
 namespace HAL
 {
 
@@ -14,6 +16,11 @@ namespace HAL
     void CommandAllocator::Reset()
     {
         ThrowIfFailed(mAllocator->Reset());
+    }
+
+    void CommandAllocator::SetDebugName(const std::string& name)
+    {
+        mAllocator->SetName(s2ws(name).c_str());
     }
 
     GraphicsCommandAllocator::GraphicsCommandAllocator(const Device& device)

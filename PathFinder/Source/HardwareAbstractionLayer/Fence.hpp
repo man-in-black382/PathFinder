@@ -14,12 +14,13 @@ namespace HAL
     public:
         Fence(const Device& device);
 
-        void IncreaseExpectedValue();
+        void IncrementExpectedValue();
         bool IsCompleted() const;
-        void SetCompletionEventHandle(HANDLE handle);
         void StallCurrentThreadUntilCompletion(uint8_t allowedSimultaneousFramesCount = 1);
     
     private:
+        void SetCompletionEventHandle(HANDLE handle);
+
         Microsoft::WRL::ComPtr<ID3D12Fence> mFence;
         uint64_t mExpectedValue = 0;
     

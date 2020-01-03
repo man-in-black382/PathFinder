@@ -11,22 +11,22 @@ namespace PathFinder
     UIGPUStorage::UIGPUStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage, uint8_t simulataneousFrameCount)
         : mDevice{ device }, mCopyDevice{ copyDevice }, mDescriptorStorage{ descriptorStorage }, mFrameCount{ simulataneousFrameCount } {}
 
-    void UIGPUStorage::BeginFrame(uint64_t frameFenceValue)
+    void UIGPUStorage::BeginFrame(uint64_t newFrameNumber)
     {
-        if (mVertexBuffer) mVertexBuffer->PrepareMemoryForNewFrame(frameFenceValue);
-        if (mIndexBuffer) mIndexBuffer->PrepareMemoryForNewFrame(frameFenceValue);
+        if (mVertexBuffer) mVertexBuffer->PrepareMemoryForNewFrame(newFrameNumber);
+        if (mIndexBuffer) mIndexBuffer->PrepareMemoryForNewFrame(newFrameNumber);
 
-        mCurrentFrameIndex = (frameFenceValue - mLastFenceValue) % mFrameCount;
+        mCurrentFrameIndex = (newFrameNumber - mLastFenceValue) % mFrameCount;
 
         ImGui::NewFrame();
     }
 
-    void UIGPUStorage::EndFrame(uint64_t completedFrameFenceValue)
+    void UIGPUStorage::EndFrame(uint64_t completedFrameNumber)
     {
-        if (mVertexBuffer) mVertexBuffer->DiscardMemoryForCompletedFrames(completedFrameFenceValue);
-        if (mIndexBuffer) mIndexBuffer->DiscardMemoryForCompletedFrames(completedFrameFenceValue);
+        if (mVertexBuffer) mVertexBuffer->DiscardMemoryForCompletedFrames(completedFrameNumber);
+        if (mIndexBuffer) mIndexBuffer->DiscardMemoryForCompletedFrames(completedFrameNumber);
 
-        mLastFenceValue = completedFrameFenceValue;
+        mLastFenceValue = completedFrameNumber;
     }
 
     void UIGPUStorage::UploadUI()

@@ -26,32 +26,32 @@ namespace PathFinder
         mPerFrameRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload }
     {}
 
-    void PipelineResourceStorage::BeginFrame(uint64_t frameFenceValue)
+    void PipelineResourceStorage::BeginFrame(uint64_t newFrameNumber)
     {
         for (auto& [passName, passObjects] : mPerPassObjects)
         {
             if (passObjects.PassConstantBuffer)
             {
-                passObjects.PassConstantBuffer->PrepareMemoryForNewFrame(frameFenceValue);
+                passObjects.PassConstantBuffer->PrepareMemoryForNewFrame(newFrameNumber);
             }
         }
 
-        mGlobalRootConstantsBuffer.PrepareMemoryForNewFrame(frameFenceValue);
-        mPerFrameRootConstantsBuffer.PrepareMemoryForNewFrame(frameFenceValue);
+        mGlobalRootConstantsBuffer.PrepareMemoryForNewFrame(newFrameNumber);
+        mPerFrameRootConstantsBuffer.PrepareMemoryForNewFrame(newFrameNumber);
     }
 
-    void PipelineResourceStorage::EndFrame(uint64_t completedFrameFenceValue)
+    void PipelineResourceStorage::EndFrame(uint64_t completedFrameNumber)
     {
         for (auto& [passName, passObjects] : mPerPassObjects)
         {
             if (passObjects.PassConstantBuffer)
             {
-                passObjects.PassConstantBuffer->DiscardMemoryForCompletedFrames(completedFrameFenceValue);
+                passObjects.PassConstantBuffer->DiscardMemoryForCompletedFrames(completedFrameNumber);
             }
         }
 
-        mGlobalRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameFenceValue);
-        mPerFrameRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameFenceValue);
+        mGlobalRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameNumber);
+        mPerFrameRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameNumber);
     }
 
     const HAL::RTDescriptor& PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName) const

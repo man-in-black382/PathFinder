@@ -10,6 +10,8 @@ namespace HAL
     class SubresourceFootprint
     {
     public:
+        friend class ResourceFootprint;
+
         SubresourceFootprint(const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& d3dFootprint, uint32_t rowCount, uint64_t rowSize, uint16_t index);
 
     private:
@@ -32,7 +34,7 @@ namespace HAL
     class ResourceFootprint
     {
     public:
-        ResourceFootprint(const Resource& resource);
+        ResourceFootprint(const Resource& resource, uint64_t initialByteOffset = 0);
 
     private:
         std::vector<SubresourceFootprint> mSubresourceFootprints;

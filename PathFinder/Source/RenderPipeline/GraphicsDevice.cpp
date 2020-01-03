@@ -12,7 +12,8 @@ namespace PathFinder
         :
         GraphicsDeviceBase(device, universalGPUDescriptorHeap, resourceStorage, pipelineStateManager, defaultRenderSurface, simultaneousFramesInFlight)
     {
-        mCommandQueue.SetDebugName("Graphics_Device_Cmd_Queue");
+        mCommandQueue.SetDebugName("Graphics Device Command Queue");
+        mRingCommandList.SetDebugName("Graphics Device");
     }
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
