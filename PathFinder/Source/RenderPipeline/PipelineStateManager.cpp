@@ -309,6 +309,10 @@ namespace PathFinder
         mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::AnisotropicClamp(0));
         mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::LinearClamp(1));
         mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::PointClamp(2));
+
+        // Debug readback buffer
+        HAL::RootUnorderedAccessParameter debugBuffer{ 0, 15 };
+        mBaseRootSignature.AddDescriptorParameter(debugBuffer);
     }
 
 }

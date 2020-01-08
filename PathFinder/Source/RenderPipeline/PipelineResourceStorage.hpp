@@ -40,6 +40,12 @@ namespace PathFinder
             // Constant buffers for each pass that require it.
             std::unique_ptr<HAL::RingBufferResource<uint8_t>> PassConstantBuffer;
 
+            // Debug buffers for each pass.
+            std::unique_ptr<HAL::BufferResource<float>> PassDebugBuffer;
+
+            // Debug readback buffers for each pass.
+            std::unique_ptr<HAL::RingBufferResource<float>> PassDebugReadbackBuffer;
+
             // Resource names scheduled for each pass
             std::unordered_set<ResourceName> ScheduledResourceNames;
 
@@ -66,6 +72,10 @@ namespace PathFinder
             const RenderPassExecutionGraph* passExecutionGraph
         );
 
+        using DebugBufferIteratorFunc = std::function<void(
+            PassName passName, const HAL::BufferResource<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer
+        )>;
+
         void BeginFrame(uint64_t newFrameNumber);
         void EndFrame(uint64_t completedFrameNumber);
 
@@ -83,6 +93,8 @@ namespace PathFinder
         PerFrameRootConstants* PerFrameRootConstantData();
         template <class RootConstants> RootConstants* RootConstantDataForCurrentPass();
         HAL::BufferResource<uint8_t>* RootConstantBufferForCurrentPass();
+        const HAL::BufferResource<float>* DebugBufferForCurrentPass() const;
+        const HAL::RingBufferResource<float>* DebugReadbackBufferForCurrentPass() const;
         const HAL::BufferResource<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
         const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
@@ -91,8 +103,11 @@ namespace PathFinder
         const HAL::Resource* GetResource(ResourceName resourceName) const;
         const HAL::ResourceBarrierCollection& TransitionAndAliasingBarriersForCurrentPass();
         const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();
+        const HAL::ResourceBarrierCollection& ReadbackBarriers();
         const Foundation::Name CurrentPassName() const;
         const ResourceDescriptorStorage* DescriptorStorage() const;
+
+        void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
         bool IsResourceAllocationScheduled(ResourceName name) const;
         void RegisterResourceNameForCurrentPass(ResourceName name);
@@ -167,6 +182,9 @@ namespace PathFinder
         std::unordered_map<ResourceName, PerResourceObjects> mPerResourceObjects;
 
         std::unordered_map<ResourceName, PerPassObjects> mPerPassObjects;
+
+        // Transitions for resources scheduled for readback
+        HAL::ResourceBarrierCollection mReadbackBarriers;
 
         uint8_t mCurrentBackBufferIndex = 0;
     };

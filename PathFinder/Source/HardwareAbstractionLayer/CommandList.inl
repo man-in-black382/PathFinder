@@ -7,7 +7,7 @@ namespace HAL
    
     template <class T>
     void CopyCommandListBase::CopyBufferRegion(
-        const BufferResource<T>& source, BufferResource<T>& destination,
+        const BufferResource<T>& source, const BufferResource<T>& destination,
         uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset)
     {
         assert_format(source.PaddedElementSize() == destination.PaddedElementSize(), "Buffers are misaligned. Copy will lay out data incorrectly.");

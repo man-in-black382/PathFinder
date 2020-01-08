@@ -50,9 +50,10 @@ namespace PathFinder
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
-        void MoveToNextBackBuffer();
+        void MoveToNextFrame();
         void UploadCommonRootConstants();
         void UploadMeshInstanceData();
+        void GatherReadbackData();
 
         void RunRenderPasses(const std::list<RenderPass*>& passes);
 

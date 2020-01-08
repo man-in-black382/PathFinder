@@ -296,5 +296,9 @@ PixelOut PSMain(VertexOut pin)
     PixelOut pixelOut;
     pixelOut.MaterialData = encoded.MaterialData;
 
+    DebugOut(123.0, pin.Position.xy, uint2(1000, 500));
+    DebugOut(566.0, pin.Position.xy, uint2(1000, 500));
+    DebugOut(2548.1234, pin.Position.xy, uint2(1000, 500));
+
     return pixelOut;
 }

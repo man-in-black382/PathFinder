@@ -66,7 +66,7 @@ namespace PathFinder
 
     private:
         void ApplyCommonComputeResourceBindings();
-        void BindCurrentPassConstantBufferCompute();
+        void BindCurrentPassBuffersCompute();
 
     public:
         inline CommandListT& CommandList() { return mRingCommandList.CurrentCommandList(); }

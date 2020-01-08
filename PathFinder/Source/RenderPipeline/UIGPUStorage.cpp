@@ -39,6 +39,22 @@ namespace PathFinder
         UploadFont(ImGui::GetIO());
     }
 
+    void UIGPUStorage::ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::BufferResource<float>& buffer)
+    {
+        buffer.Read([this, passName](const float* data)
+        {
+            auto amountOfWrittenFloats = uint32_t(data[0]);
+
+            if (amountOfWrittenFloats == 0)
+            {
+                return;
+            }
+
+            auto& debugFloats = mPerPassDebugData[passName];
+            debugFloats.assign(data + 1, data + amountOfWrittenFloats + 1);
+        });
+    }
+
     void UIGPUStorage::UploadVertices(const ImDrawData& drawData)
     {
         if (!mVertexBuffer || mVertexBuffer->Capacity() < drawData.TotalVtxCount)

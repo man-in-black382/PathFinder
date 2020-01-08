@@ -123,12 +123,14 @@ namespace PathFinder
             CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 12);
     }
 
-    void GraphicsDevice::BindCurrentPassConstantBufferGraphics()
+    void GraphicsDevice::BindCurrentPassBuffersGraphics()
     {
         if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
         {
             CommandList().SetGraphicsRootConstantBuffer(*buffer, 2);
         }
+
+        CommandList().SetGraphicsRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);
     }
 
     void GraphicsDevice::ApplyDefaultViewportIfNeeded()
@@ -174,13 +176,13 @@ namespace PathFinder
         //
         if (graphicsStateApplied && state->GetRootSignature() == mAppliedGraphicsRootSignature)
         {
-            BindCurrentPassConstantBufferGraphics();
+            BindCurrentPassBuffersGraphics();
             return;
         }
 
         CommandList().SetGraphicsRootSignature(*state->GetRootSignature());
         ApplyCommonGraphicsResourceBindings();
-        BindCurrentPassConstantBufferGraphics();
+        BindCurrentPassBuffersGraphics();
 
         // Nullify cached states and signatures
         mAppliedComputeState = nullptr;
@@ -221,13 +223,13 @@ namespace PathFinder
         //
         if (rayTracingStateApplied && state->GetGlobalRootSignature() == mAppliedGraphicsRootSignature)
         {
-            BindCurrentPassConstantBufferGraphics();
+            BindCurrentPassBuffersGraphics();
             return;
         }
 
         CommandList().SetGraphicsRootSignature(*state->GetGlobalRootSignature());
         ApplyCommonGraphicsResourceBindings();
-        BindCurrentPassConstantBufferGraphics();
+        BindCurrentPassBuffersGraphics();
 
         // Nullify cached states and signatures
         mAppliedGraphicsState = nullptr;

@@ -78,12 +78,19 @@ namespace HAL
     }
 
     template <class T>
-    void BufferResource<T>::Read(const ReadbackSession& session) const
+    void BufferResource<T>::Read(const ReadbackSession& session, uint64_t startOffset, uint64_t objectCount) const
     {
         const T* mappedMemory = nullptr;
-        ThrowIfFailed(mResource->Map(0, nullptr, (void**)& mappedMemory));
+        D3D12_RANGE readRange{ startOffset * mPaddedElementSize, (startOffset + objectCount) * mPaddedElementSize };
+        ThrowIfFailed(mResource->Map(0, &readRange, (void**)& mappedMemory));
         session(mappedMemory);
         mResource->Unmap(0, nullptr);
+    }
+
+    template <class T>
+    void BufferResource<T>::Read(const ReadbackSession& session) const
+    {
+        Read(session, 0, mCapacity);
     }
 
     template <class T>
@@ -104,7 +111,7 @@ namespace HAL
     }
 
     template <class T>
-    T* HAL::BufferResource<T>::At(uint64_t index)
+    T* HAL::BufferResource<T>::At(uint64_t index) 
     {
         ValidateMappedMemory();
         ValidateIndex(index);

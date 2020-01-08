@@ -56,7 +56,7 @@ namespace HAL
 
         template <class T>
         void CopyBufferRegion(
-            const BufferResource<T>& source, BufferResource<T>& destination,
+            const BufferResource<T>& source, const BufferResource<T>& destination,
             uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
 
         void CopyTextureRegion(

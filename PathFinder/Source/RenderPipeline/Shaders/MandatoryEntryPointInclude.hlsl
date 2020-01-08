@@ -1,3 +1,9 @@
+// The maximum size of a root signature is 64 DWORDs :
+// Descriptor tables cost 1 DWORD each.
+// Root constants cost 1 DWORD each, since they are 32 - bit values.
+// Root descriptors(64 - bit GPU virtual addresses) cost 2 DWORDs each.
+// Static samplers do not have any cost in the size of the root signature.
+
 struct GlobalData
 {
     uint2 PipelineRTResolution;
@@ -53,8 +59,23 @@ SamplerState AnisotropicClampSampler : register(s0);
 SamplerState LinearClampSampler : register(s1);
 SamplerState PointClampSampler : register(s2);
 
-// The maximum size of a root signature is 64 DWORDs :
-// Descriptor tables cost 1 DWORD each.
-// Root constants cost 1 DWORD each, since they are 32 - bit values.
-// Root descriptors(64 - bit GPU virtual addresses) cost 2 DWORDs each.
-// Static samplers do not have any cost in the size of the root signature.
+// Debug
+
+struct ReadBackData
+{
+    float Value;
+};
+
+RWStructuredBuffer<ReadBackData> DebugReadbackBuffer : register(u0, space15);
+
+static uint DebugBufferWriteIndex = 1;
+
+void DebugOut(float value, uint2 currentPixel, uint2 targetPixel)
+{
+    if (!all(currentPixel == targetPixel)) return;
+
+    DebugReadbackBuffer[DebugBufferWriteIndex].Value = value;
+    DebugReadbackBuffer[0].Value = DebugBufferWriteIndex;
+    DebugBufferWriteIndex += 1;
+}
+

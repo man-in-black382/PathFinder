@@ -20,7 +20,7 @@ namespace HAL
 
         ~BufferResource();
 
-        void Read(const ReadbackSession& session) const;
+        virtual void Read(const ReadbackSession& session) const;
 
         virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
         virtual T* At(uint64_t index);
@@ -34,6 +34,7 @@ namespace HAL
 
     protected:
         uint64_t PaddedElementSize(uint64_t alignment);
+        void Read(const ReadbackSession& session, uint64_t startOffset, uint64_t objectCount) const;
 
         uint8_t* mMappedMemory = nullptr;
         uint64_t mNonPaddedElementSize = 0;

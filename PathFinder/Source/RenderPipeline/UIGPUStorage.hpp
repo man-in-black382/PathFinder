@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <tuple>
+#include <unordered_map>
 
 #include <imgui/imgui.h>
 
@@ -25,6 +26,7 @@ namespace PathFinder
         void EndFrame(uint64_t completedFrameNumber);
 
         void UploadUI();
+        void ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::BufferResource<float>& buffer);
 
     private:
         void UploadVertices(const ImDrawData& drawData);
@@ -44,6 +46,7 @@ namespace PathFinder
         std::unique_ptr<HAL::RingBufferResource<ImDrawIdx>> mIndexBuffer;
         std::shared_ptr<HAL::BufferResource<uint8_t>> mFontUploadBuffer;
         std::shared_ptr<HAL::TextureResource> mFontTexture;
+        std::unordered_map<Foundation::Name, std::vector<float>> mPerPassDebugData;
 
     public:
         inline auto FontSRVIndex() const { return mFontSRVIndex; }

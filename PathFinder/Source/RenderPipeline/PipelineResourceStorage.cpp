@@ -24,7 +24,20 @@ namespace PathFinder
         mSimultaneousFramesInFlight{ simultaneousFramesInFlight },
         mGlobalRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
         mPerFrameRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload }
-    {}
+    {
+        // Create debug buffers
+        for (const RenderPass* pass : passExecutionGraph->AllPasses())
+        {
+            auto& passObjects = GetPerPassObjects(pass->Name());
+
+            // Use Common to leverage automatic state promotion/decay for buffers when transitioning from/to readback and rendering
+            passObjects.PassDebugBuffer = std::make_unique<HAL::BufferResource<float>>(
+                *device, 1024, 1, HAL::ResourceState::Common, HAL::ResourceState::Common);
+
+            passObjects.PassDebugReadbackBuffer = std::make_unique<HAL::RingBufferResource<float>>(
+                *device, 1024, mSimultaneousFramesInFlight, 1, HAL::CPUAccessibleHeapType::Readback);
+        }
+    }
 
     void PipelineResourceStorage::BeginFrame(uint64_t newFrameNumber)
     {
@@ -357,12 +370,27 @@ namespace PathFinder
                 }
             }
         }
+
+        // TODO: Create readback barriers for textures when readback functionality for pipeline-induced resources is implemented
+        // Barriers for buffers aren't necessary as per DirectX documentation (auto state promotion and decay for buffers)
     }
 
     HAL::BufferResource<uint8_t>* PipelineResourceStorage::RootConstantBufferForCurrentPass() 
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
         return passObjects.PassConstantBuffer.get();
+    }
+
+    const HAL::BufferResource<float>* PipelineResourceStorage::DebugBufferForCurrentPass() const
+    {
+        const PerPassObjects* passObjects = GetPerPassObjects(mCurrentPassName);
+        return passObjects->PassDebugBuffer.get();
+    }
+
+    const HAL::RingBufferResource<float>* PipelineResourceStorage::DebugReadbackBufferForCurrentPass() const
+    {
+        const PerPassObjects* passObjects = GetPerPassObjects(mCurrentPassName);
+        return passObjects->PassDebugReadbackBuffer.get();
     }
 
     const HAL::BufferResource<GlobalRootConstants>& PipelineResourceStorage::GlobalRootConstantsBuffer() const
@@ -430,6 +458,11 @@ namespace PathFinder
         return passObjects.UAVBarriers;
     }
 
+    const HAL::ResourceBarrierCollection& PipelineResourceStorage::ReadbackBarriers()
+    {
+        return mReadbackBarriers;
+    }
+
     const Foundation::Name PipelineResourceStorage::CurrentPassName() const
     {
         return mCurrentPassName;
@@ -438,6 +471,14 @@ namespace PathFinder
     const PathFinder::ResourceDescriptorStorage* PipelineResourceStorage::DescriptorStorage() const
     {
         return mDescriptorStorage;
+    }
+
+    void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const
+    {
+        for (const auto& [passName, passObjects] : mPerPassObjects)
+        {
+            func(passName, passObjects.PassDebugBuffer.get(), passObjects.PassDebugReadbackBuffer.get());
+        }
     }
 
     const HAL::Resource* PipelineResourceStorage::PerResourceObjects::GetResource() const

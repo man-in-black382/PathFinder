@@ -14,8 +14,30 @@ namespace PathFinder
     public:
         CopyDevice(const HAL::Device* device, uint8_t simultaneousFramesInFlight);
 
-        template <class T> void QueueBufferToTextureCopy(std::shared_ptr<HAL::BufferResource<T>> buffer, std::shared_ptr<HAL::TextureResource> texture, const HAL::ResourceFootprint& footprint);
+        // No ownership transfer
+
+        template <class T> void QueueBufferToBufferCopy(
+            const HAL::BufferResource<T>& source, 
+            const HAL::BufferResource<T>& destination,
+            uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
+
+        template <class T> void QueueBufferToTextureCopy(
+            const HAL::BufferResource<T>& buffer,
+            const HAL::TextureResource& texture,
+            const HAL::ResourceFootprint& footprint);
         
+        // For cases when a resource may not be needed after copy, ownership is shared until copy is completed
+
+        template <class T> void QueueBufferToBufferCopy(
+            std::shared_ptr<HAL::BufferResource<T>> source,
+            std::shared_ptr<HAL::BufferResource<T>> destination,
+            uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
+
+        template <class T> void QueueBufferToTextureCopy(
+            std::shared_ptr<HAL::BufferResource<T>> buffer,
+            std::shared_ptr<HAL::TextureResource> texture,
+            const HAL::ResourceFootprint& footprint);
+
         template <class T> std::shared_ptr<HAL::BufferResource<T>> QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::BufferResource<T>> buffer);
         std::shared_ptr<HAL::TextureResource> QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::TextureResource> texture);
 

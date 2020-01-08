@@ -110,6 +110,10 @@ namespace PathFinder
 
         NotifyStartFrame(mReadbackFence.ExpectedValue());
 
+        // Readback ring buffers moved to safe-to-read memory region.
+        // Read safe region before scheduling more rendering commands.
+        GatherReadbackData();
+
         mPreRenderEvent.Raise();
 
         mUIStorage.UploadUI();
@@ -144,7 +148,7 @@ namespace PathFinder
 
         // Wait for read back then finish frame. Stall if N frames are in flight simultaneously.
         mReadbackFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
-        
+
         mPostRenderEvent.Raise();
         NotifyEndFrame(mReadbackFence.CompletedValue());
 
@@ -154,7 +158,7 @@ namespace PathFinder
             mPipelineStateManager.RecompileModifiedStates();
         }
 
-        MoveToNextBackBuffer();
+        MoveToNextFrame();
     }
 
     void RenderEngine::FlushAllQueuedFrames()
@@ -192,10 +196,11 @@ namespace PathFinder
         mUIStorage.EndFrame(completedFrameNumber);
     }
 
-    void RenderEngine::MoveToNextBackBuffer()
+    void RenderEngine::MoveToNextFrame()
     {
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % (uint8_t)mSwapChain.BackBuffers().size();
         mPipelineResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
+        mFrameNumber++;
     }
 
     void RenderEngine::UploadCommonRootConstants()
@@ -228,6 +233,20 @@ namespace PathFinder
         mScene->IterateMeshInstances(iterator);
     }
 
+    void RenderEngine::GatherReadbackData()
+    {
+        // We can't touch read-back buffers until at least N first frames are complete
+        if (mFrameNumber < mSimultaneousFramesInFlight)
+        {
+            return;
+        }
+
+        mPipelineResourceStorage.IterateDebugBuffers([this](PassName passName, const HAL::BufferResource<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer) 
+        {
+            mUIStorage.ReadbackPassDebugBuffer(passName, *debugReadbackBuffer);
+        });
+    }
+
     void RenderEngine::RunRenderPasses(const std::list<RenderPass*>& passes)
     {
         for (auto passPtr : passes)
@@ -237,6 +256,11 @@ namespace PathFinder
             mGraphicsDevice.CommandList().InsertBarriers(mPipelineResourceStorage.TransitionAndAliasingBarriersForCurrentPass());
 
             passPtr->Render(&mContext);
+
+            // Queue debug buffer read
+            auto debugBuffer = mPipelineResourceStorage.DebugBufferForCurrentPass();
+            auto readackDebugBuffer = mPipelineResourceStorage.DebugReadbackBufferForCurrentPass();
+            mReadbackCopyDevice.QueueBufferToBufferCopy(*debugBuffer, *readackDebugBuffer, 0, debugBuffer->Capacity(), readackDebugBuffer->CurrentFrameObjectOffset());
         }
     }
 

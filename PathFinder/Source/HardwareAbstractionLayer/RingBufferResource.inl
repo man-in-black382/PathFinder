@@ -14,6 +14,13 @@ namespace HAL
         mPerFrameCapacity{ elementCapacity } {}
 
     template <class T>
+    void RingBufferResource<T>::Read(const BufferResource<T>::ReadbackSession& session) const
+    {
+        // Read data for current frame
+        BufferResource<T>::Read(session, mCurrentRingOffset, mPerFrameCapacity);
+    }
+
+    template <class T>
     D3D12_GPU_VIRTUAL_ADDRESS RingBufferResource<T>::GPUVirtualAddress() const
     {
         return BufferResource<T>::GPUVirtualAddress() + mCurrentRingOffset * BufferResource<T>::PaddedElementSize();
@@ -35,6 +42,12 @@ namespace HAL
     uint64_t RingBufferResource<T>::CurrentFrameByteOffset() const
     {
         return mCurrentRingOffset * BufferResource<T>::PaddedElementSize();
+    }
+
+    template <class T>
+    uint64_t RingBufferResource<T>::CurrentFrameObjectOffset() const
+    {
+        return mCurrentRingOffset;
     }
 
     template <class T>

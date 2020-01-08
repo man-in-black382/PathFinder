@@ -104,12 +104,14 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BindCurrentPassConstantBufferCompute()
+    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BindCurrentPassBuffersCompute()
     {
         if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
         {
             CommandList().SetComputeRootConstantBuffer(*buffer, 2);
         }
+
+        CommandList().SetComputeRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
@@ -186,13 +188,13 @@ namespace PathFinder
         //
         if (computeStateApplied && state->GetRootSignature() == mAppliedComputeRootSignature)
         {
-            BindCurrentPassConstantBufferCompute();
+            BindCurrentPassBuffersCompute();
             return;
         }
 
         CommandList().SetComputeRootSignature(*state->GetRootSignature());
         ApplyCommonComputeResourceBindings();
-        BindCurrentPassConstantBufferCompute();
+        BindCurrentPassBuffersCompute();
 
         mAppliedComputeRootSignature = state->GetRootSignature();
         mAppliedComputeState = state;
@@ -215,13 +217,13 @@ namespace PathFinder
         //
         if (rayTracingStateApplied && state->GetGlobalRootSignature() == mAppliedComputeRootSignature)
         {
-            BindCurrentPassConstantBufferCompute();
+            BindCurrentPassBuffersCompute();
             return;
         }
 
         CommandList().SetComputeRootSignature(*state->GetGlobalRootSignature());
         ApplyCommonComputeResourceBindings();
-        BindCurrentPassConstantBufferCompute();
+        BindCurrentPassBuffersCompute();
 
         mAppliedComputeRootSignature = state->GetGlobalRootSignature();
         mAppliedRayTracingState = state;
