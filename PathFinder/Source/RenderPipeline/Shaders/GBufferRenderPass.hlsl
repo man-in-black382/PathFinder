@@ -1,9 +1,3 @@
-struct PassData
-{
-    uint InstanceTableIndex;
-    uint ParallaxCounterTextureUAVIndex;
-};
-
 static const float DistanceFieldMaxVoxelDistance = sqrt(3.0);
 
 struct DistanceFieldCones
@@ -19,7 +13,10 @@ struct SamplingCorners
     float2 UV3;
 };
 
-#define PassDataType PassData
+struct RootConstants
+{
+    uint InstanceTableIndex;
+};
 
 #include "InstanceData.hlsl"
 #include "MandatoryEntryPointInclude.hlsl"
@@ -28,6 +25,7 @@ struct SamplingCorners
 #include "Vertices.hlsl"
 #include "Geometry.hlsl"
 
+ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t0);
 StructuredBuffer<IndexU32> UnifiedIndexBuffer : register(t1);
 StructuredBuffer<InstanceData> InstanceTable : register(t2);
@@ -56,7 +54,7 @@ VertexOut VSMain(uint indexId : SV_VertexID)
 {
     VertexOut vout;
     
-    InstanceData instanceData = InstanceTable[PassDataCB.InstanceTableIndex];
+    InstanceData instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
 
     // Load index and vertex
     IndexU32 index = UnifiedIndexBuffer[instanceData.UnifiedIndexBufferOffset + indexId];
@@ -184,8 +182,6 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, ou
     uint2 displacementMapSize = uint2(displacementMapWidth, displacementMapsHeight);
     uint3 atlasSize = uint3(atlasWidth, atlasHeight, atlasDepth);
 
-    RWTexture2D<uint4> counterTexture = RW_UInt4_Textures2D[PassDataCB.ParallaxCounterTextureUAVIndex];
-
     patchIntersects = true;
 
     // Scaling up Z is equivalent to scaling down values in the displacement map.
@@ -249,15 +245,13 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, ou
     }
 
     originalVertexData.UV = samplingPosition.xy;
-
-    //counterTexture[originalVertexData.Position.xy].r = step;
     
     return originalVertexData;
 }
 
 PixelOut PSMain(VertexOut pin)
 {
-    InstanceData instanceData = InstanceTable[PassDataCB.InstanceTableIndex];
+    InstanceData instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
 
     bool intersection;
     float3 voxel;

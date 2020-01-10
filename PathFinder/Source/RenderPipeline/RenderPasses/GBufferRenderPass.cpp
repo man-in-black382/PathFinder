@@ -9,9 +9,10 @@ namespace PathFinder
     void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         HAL::RootSignature GBufferSinature = stateCreator->CloneBaseRootSignature();
-        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 });
-        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 });
-        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 2, 0 });
+        GBufferSinature.AddConstantsParameter(HAL::RootConstantsParameter{ 1, 0, 0 }); // 1 uint index
+        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 }); // Unified vertex buffer
+        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 }); // Unified index buffer
+        GBufferSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 2, 0 }); // Instance data buffer
         stateCreator->StoreRootSignature(RootSignatureNames::GBuffer, std::move(GBufferSinature));
 
         stateCreator->CreateGraphicsState(PSONames::GBuffer, [](GraphicsStateProxy& state)
@@ -30,13 +31,8 @@ namespace PathFinder
         ResourceScheduler::NewTextureProperties RT0Properties{};
         RT0Properties.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Unsigned;
 
-        ResourceScheduler::NewTextureProperties parallaxCounterProperties{};
-        parallaxCounterProperties.ShaderVisibleFormat = HAL::ResourceFormat::Color::R16_Unsigned;
-
-        scheduler->NewTexture("POMCounter", parallaxCounterProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
-        scheduler->WillUseRootConstantBuffer<GBufferCBContent>();
     }  
 
     void GBufferRenderPass::Render(RenderContext* context) 
@@ -51,12 +47,9 @@ namespace PathFinder
         context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedIndexBuffer_1P1N1UV1T1BT(), 1, 0, HAL::ShaderRegister::ShaderResource);
         context->GetCommandRecorder()->BindExternalBuffer(context->GetMeshStorage()->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
 
-        GBufferCBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<GBufferCBContent>();
-        cbContent->ParallaxCounterTextureUAVIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex("POMCounter");
-
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
-            cbContent->InstanceTableIndex = instance.GPUInstanceIndex();
+            context->GetCommandRecorder()->SetRootConstants(instance.GPUInstanceIndex(), 0, 0);
             context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount);
         });
     }
