@@ -72,6 +72,15 @@ namespace HAL
 
 
 
+    RootConstantsParameter::RootConstantsParameter(uint16_t numberOf32BitValues, uint16_t shaderRegister, uint16_t registerSpace)
+        : RootParameter(D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS)
+    {
+        AddSignatureLocation({ shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
+        mParameter.Constants = { shaderRegister, registerSpace, numberOf32BitValues };
+    }
+
+
+
     RootDescriptorParameter::RootDescriptorParameter(D3D12_ROOT_PARAMETER_TYPE type, uint16_t shaderRegister, uint16_t registerSpace, ShaderRegister registerType)
         : RootParameter(type)
     {

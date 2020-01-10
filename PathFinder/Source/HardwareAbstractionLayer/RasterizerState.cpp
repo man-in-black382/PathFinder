@@ -7,9 +7,9 @@ namespace HAL
     {
         SetCullMode(CullMode::Back);
         SetFillMode(FillMode::Solid);
+        SetFrontClockwise(false);
 
         mDesc.DepthClipEnable = true;
-        mDesc.FrontCounterClockwise = true;
     }
 
     void RasterizerState::SetFillMode(FillMode mode)
@@ -29,6 +29,11 @@ namespace HAL
         case CullMode::Front: mDesc.CullMode = D3D12_CULL_MODE_FRONT; break;
         case CullMode::Back: mDesc.CullMode = D3D12_CULL_MODE_BACK; break;
         }
+    }
+
+    void RasterizerState::SetFrontClockwise(bool frontIsClockwise)
+    {
+        mDesc.FrontCounterClockwise = !frontIsClockwise;
     }
 
 }

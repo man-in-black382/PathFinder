@@ -64,6 +64,16 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
+    template <class T>
+    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::SetRootConstants(
+        const T& constants, uint16_t shaderRegister, uint16_t registerSpace)
+    {
+        auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({shaderRegister, registerSpace,  HAL::ShaderRegister::ConstantBuffer });
+        assert_format(index, "Root signature parameter doesn't exist");
+        CommandList().SetComputeRootConstants(constants, index->IndexInSignature);
+    }
+
+    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ApplyCommonComputeResourceBindings()
     {
         CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);

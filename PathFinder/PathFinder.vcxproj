@@ -258,7 +258,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp" />
     <ClCompile Include="Source\RenderPipeline\UIGPUStorage.cpp" />
-    <ClCompile Include="Source\RenderPipeline\VertexLayouts.cpp" />
     <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateManager.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderContext.cpp" />
@@ -378,6 +377,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\IO\Input.hpp" />
     <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
+    <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp" />
     <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
@@ -412,7 +412,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp" />
     <ClInclude Include="Source\RenderPipeline\ShaderFileNames.hpp" />
     <ClInclude Include="Source\RenderPipeline\UIGPUStorage.hpp" />
-    <ClInclude Include="Source\RenderPipeline\VertexLayouts.hpp" />
     <ClInclude Include="Source\RenderPipeline\MeshGPUStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderContext.hpp" />

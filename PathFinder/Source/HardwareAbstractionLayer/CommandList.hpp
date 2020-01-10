@@ -83,6 +83,7 @@ namespace HAL
         void SetComputeRootSignature(const RootSignature& signature);
 
         template <class T> void SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex);
+        template <class T> void SetComputeRootConstants(const T& constants, uint32_t rootParameterIndex);
 
         void SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
@@ -108,6 +109,7 @@ namespace HAL
         void SetGraphicsRootSignature(const RootSignature& signature);
 
         template <class T> void SetGraphicsRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex);
+        template <class T> void SetGraphicsRootConstants(const T& constants, uint32_t rootParameterIndex);
 
         void SetGraphicsRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetGraphicsRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);

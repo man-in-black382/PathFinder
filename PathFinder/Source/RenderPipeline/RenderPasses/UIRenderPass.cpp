@@ -1,5 +1,7 @@
 #include "UIRenderPass.hpp"
 
+#include "../CommonBlendStates.hpp"
+
 namespace PathFinder
 {
 
@@ -11,6 +13,7 @@ namespace PathFinder
         HAL::RootSignature UISinature = stateCreator->CloneBaseRootSignature();
         UISinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 }); // UI Vertex Buffer
         UISinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 }); // UI Index Buffer
+        UISinature.AddConstantsParameter(HAL::RootConstantsParameter{ 2, 0, 0 }); // Vertex/Index offsets. 2 root constants
         stateCreator->StoreRootSignature(RootSignatureNames::UI, std::move(UISinature));
 
         stateCreator->CreateGraphicsState(PSONames::UI, [](GraphicsStateProxy& state)
@@ -20,6 +23,9 @@ namespace PathFinder
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::UI;
             state.DepthStencilState.SetDepthTestEnabled(false);
+            state.RasterizerState.SetFrontClockwise(true); // ImGui is Clockwise for front face
+            state.BlendState = AlphaBlendingState();
+            state.RenderTargetFormats = { HAL::ResourceFormat::Color::RGBA8_Usigned_Norm };
         });
     }
       
@@ -33,8 +39,29 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::UI);
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
 
-        context->GetCommandRecorder()->BindExternalBuffer(*context->GetUIStorage()->VertexBuffer(), 0, 0, HAL::ShaderRegister::ShaderResource);
-        context->GetCommandRecorder()->BindExternalBuffer(*context->GetUIStorage()->IndexBuffer(), 1, 0, HAL::ShaderRegister::ShaderResource);
+        if (auto vertexBuffer = context->GetUIStorage()->VertexBuffer())
+        {
+            context->GetCommandRecorder()->BindExternalBuffer(*vertexBuffer, 0, 0, HAL::ShaderRegister::ShaderResource);
+        }
+        
+        if (auto indexBuffer = context->GetUIStorage()->IndexBuffer())
+        {
+            context->GetCommandRecorder()->BindExternalBuffer(*indexBuffer, 1, 0, HAL::ShaderRegister::ShaderResource);
+        }
+
+        UICBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<UICBContent>();
+        cbContent->ProjectionMatrix = context->GetUIStorage()->MVP();
+        cbContent->UITextureSRVIndex = context->GetUIStorage()->FontSRVIndex();
+
+        for (const UIGPUStorage::DrawCommand& drawCommand : context->GetUIStorage()->DrawCommands())
+        {
+            UIRootConstants offsets;
+            offsets.VertexBufferOffset = drawCommand.VertexBufferOffset;
+            offsets.IndexBufferOffset = drawCommand.IndexBufferOffset;
+
+            context->GetCommandRecorder()->SetRootConstants(offsets, 0, 0);
+            context->GetCommandRecorder()->Draw(drawCommand.IndexCount);
+        }
     }
 
 }

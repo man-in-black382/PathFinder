@@ -228,9 +228,6 @@
     <ClCompile Include="Source\Scene\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\VertexLayouts.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\RingBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1820,9 +1817,6 @@
     <ClInclude Include="Source\Scene\Scene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\VertexLayouts.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\RingBufferResource.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2202,6 +2196,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\MeshGPUStorage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

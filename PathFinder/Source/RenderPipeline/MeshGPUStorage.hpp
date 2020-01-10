@@ -13,7 +13,7 @@
 #include "../Scene/Vertices/Vertex1P3.hpp"
 
 #include "VertexStorageLocation.hpp"
-#include "VertexLayouts.hpp"
+
 #include "CopyDevice.hpp"
 
 #include <vector>

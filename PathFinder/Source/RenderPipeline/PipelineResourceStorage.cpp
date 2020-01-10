@@ -36,6 +36,9 @@ namespace PathFinder
 
             passObjects.PassDebugReadbackBuffer = std::make_unique<HAL::RingBufferResource<float>>(
                 *device, 1024, mSimultaneousFramesInFlight, 1, HAL::CPUAccessibleHeapType::Readback);
+
+            passObjects.PassDebugBuffer->SetDebugName(StringFormat("System Memory Debug Buffer (%s)", pass->Name().ToString().c_str()));
+            passObjects.PassDebugReadbackBuffer->SetDebugName(StringFormat("Readback Memory Debug Buffer (%s)", pass->Name().ToString().c_str()));
         }
     }
 

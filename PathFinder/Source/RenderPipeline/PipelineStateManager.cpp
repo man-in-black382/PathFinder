@@ -69,7 +69,12 @@ namespace PathFinder
         newState.SetDepthStencilState(proxy.DepthStencilState);
         newState.SetDepthStencilFormat(proxy.DepthStencilFormat);
         newState.SetPrimitiveTopology(proxy.PrimitiveTopology);
-        newState.SetInputAssemblerLayout(proxy.InputLayout);
+
+        // Vertex shaders are getting more and more unified. PathFinder is not using
+        // vertex input buffers since they're just normal structured buffers under the hood.
+        // Use structured buffers directly in vertex shader to get vertices/indices.
+        // Set dummy to avoid runtime errors.
+        newState.SetInputAssemblerLayout(HAL::InputAssemblerLayout{});
 
         newState.SetRenderTargetFormats(
             proxy.RenderTargetFormats.size() > 0 ? std::optional(proxy.RenderTargetFormats[0]) : std::nullopt,

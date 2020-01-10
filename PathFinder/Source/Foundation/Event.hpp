@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include <string>
-#include <vector>
 #include <functional>
 
 #include "BitwiseEnum.hpp"

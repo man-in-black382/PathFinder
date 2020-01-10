@@ -60,8 +60,7 @@ namespace HAL
 
     class RootConstantsParameter : public RootParameter {
     public:
-        // TODO: Implement
-        //RootConstantsParameter();
+        RootConstantsParameter(uint16_t numberOf32BitValues, uint16_t shaderRegister, uint16_t registerSpace);
         ~RootConstantsParameter() = default;
     };
 

@@ -9,7 +9,17 @@ namespace PathFinder
 
     struct UICBContent
     {
+        glm::mat4 ProjectionMatrix;
+        uint32_t UITextureSRVIndex;
         
+    };
+
+    // Separate root constants to version vertex/index 
+    // offsets between draw calls
+    struct UIRootConstants
+    {
+        uint32_t VertexBufferOffset;
+        uint32_t IndexBufferOffset;
     };
 
     class UIRenderPass : public RenderPass  

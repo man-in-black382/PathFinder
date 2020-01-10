@@ -2,7 +2,6 @@
 
 #include "AsyncComputeDevice.hpp"
 
-#include "VertexLayouts.hpp"
 #include "VertexStorageLocation.hpp"
 #include "DrawablePrimitive.hpp"
 
@@ -42,6 +41,9 @@ namespace PathFinder
         
         template <class T>
         void BindExternalBuffer(const HAL::BufferResource<T>& resource, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+
+        template <class T>
+        void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
     private:
         void ApplyStateIfNeeded(const HAL::GraphicsPipelineState* state);

@@ -123,7 +123,16 @@ namespace HAL
     }
 
   
-    
+    //https://devblogs.nvidia.com/rtx-best-practices/
+    // 
+    // Consider using more than one ray tracing pipeline (State Object). 
+    // This especially applies when you trace several types of rays,
+    // such as shadows and reflections where one type (shadows) has a few simple shaders,
+    // small payloads, and/or low register pressure, 
+    // while the other type (reflections) involves many complex shaders and/or larger payloads.
+    // Separating these cases into different pipelines helps the driver schedule
+    // shader execution more efficiently and run workloads at higher occupancy.
+    //
     RayTracingPipelineState::RayTracingPipelineState(const Device* device)
         : mDevice{ device }, mShaderTable{ device } {}
 

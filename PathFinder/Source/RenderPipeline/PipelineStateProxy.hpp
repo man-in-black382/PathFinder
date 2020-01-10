@@ -15,7 +15,6 @@ namespace PathFinder
         HAL::BlendState BlendState;
         HAL::RasterizerState RasterizerState;
         HAL::DepthStencilState DepthStencilState;
-        HAL::InputAssemblerLayout InputLayout;
         HAL::ResourceFormat::DepthStencil DepthStencilFormat;
         HAL::PrimitiveTopology PrimitiveTopology;
         std::vector<HAL::GraphicsPipelineState::RenderTargetFormat> RenderTargetFormats;

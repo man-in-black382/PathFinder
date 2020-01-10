@@ -15,6 +15,7 @@ namespace HAL
 
         void SetFillMode(FillMode mode);
         void SetCullMode(CullMode mode);
+        void SetFrontClockwise(bool frontIsClockwise);
 
     private:
         D3D12_RASTERIZER_DESC mDesc{};

@@ -38,8 +38,8 @@ namespace HAL
 
     void BlendState::SetFunctions(Function colorFunction, Function alphaFunction, RenderTarget renderTarget)
     {
-        D3D12_BLEND_OP colorValue;
-        D3D12_BLEND_OP alphaValue;
+        D3D12_BLEND_OP colorValue{};
+        D3D12_BLEND_OP alphaValue{};
 
         switch (colorFunction)
         {

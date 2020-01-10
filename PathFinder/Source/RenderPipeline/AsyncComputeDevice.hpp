@@ -35,11 +35,13 @@ namespace PathFinder
 
         virtual void ApplyPipelineState(Foundation::Name psoName);
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
-
         virtual void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         template <class T>
         void BindExternalBuffer(const HAL::BufferResource<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+
+        template <class T>
+        void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
         void ExecuteCommands(const HAL::Fence* fenceToWaitFor = nullptr, const HAL::Fence* fenceToSignal = nullptr);
         void ResetCommandList();
