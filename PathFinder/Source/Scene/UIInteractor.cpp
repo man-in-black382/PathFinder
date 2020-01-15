@@ -3,6 +3,8 @@
 #include <imgui/imgui.h>
 #include <windows.h>
 
+#include "../Foundation/StringUtils.hpp"
+
 namespace PathFinder 
 {
 
@@ -11,7 +13,7 @@ namespace PathFinder
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
@@ -28,20 +30,15 @@ namespace PathFinder
         io.Fonts->AddFontDefault();
         io.Fonts->Build();
 
-        UpdateUIInputs();
+        io.KeyMap[ImGuiKey_Space] = VK_SPACE;
+
+        PollInputs();
     }
 
-    void UIInteractor::UpdateUIInputs()
+    void UIInteractor::PollInputs()
     {
         ImGuiIO& io = ImGui::GetIO();
         IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built!");
-
-        // Setup display size (every frame to accommodate for window resizing)
-        RECT rect;
-        ::GetClientRect(mWindowHandle, &rect);
-        io.DisplaySize = ImVec2((float)(rect.right - rect.left), (float)(rect.bottom - rect.top));
-
-        io.KeyMap[ImGuiKey_Space] = VK_SPACE;
 
         // Setup time step
         //INT64 current_time;
@@ -50,15 +47,27 @@ namespace PathFinder
         //g_Time = current_time;
 
         // Read keyboard modifiers inputs
-       /* io.KeyCtrl = (::GetKeyState(VK_CONTROL) & 0x8000) != 0;
-        io.KeyShift = (::GetKeyState(VK_SHIFT) & 0x8000) != 0;
-        io.KeyAlt = (::GetKeyState(VK_MENU) & 0x8000) != 0;
-        io.KeySuper = false;*/
+        io.KeyCtrl = mInput->IsKeyboardKeyPressed(KeyboardKey::Ctrl);
+        io.KeyShift = mInput->IsKeyboardKeyPressed(KeyboardKey::Shift);
+        io.KeyAlt = mInput->IsKeyboardKeyPressed(KeyboardKey::Alt);
 
+        io.KeySuper = mInput->IsKeyboardKeyPressed(KeyboardKey::SuperLeft) ||
+            mInput->IsKeyboardKeyPressed(KeyboardKey::SuperRight);
 
-        io.MousePos = ImVec2(mInput->MousePosition().x, mInput->MousePosition().y);
+        io.MousePos = { mInput->MousePosition().x, mInput->MousePosition().y };
+
+        for (auto i = 0; i < std::size(io.MouseDown); ++i)
+        {
+            io.MouseDown[i] = mInput->IsMouseButtonPressed(i);
+        }
 
         UpdateCursor();
+    }
+
+    void UIInteractor::SetViewportSize(const Geometry::Dimensions& size)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        io.DisplaySize = ImVec2{ (float)size.Width, (float)size.Height };
     }
 
     void UIInteractor::UpdateCursor()

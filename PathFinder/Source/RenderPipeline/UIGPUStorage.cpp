@@ -37,34 +37,6 @@ namespace PathFinder
         UploadVertices(*drawData);
         UploadFont(ImGui::GetIO());
         ConstructMVP(*drawData);
-
-        //// Render command lists
-        //int vtx_offset = 0;
-        //int idx_offset = 0;
-        //ImVec2 clip_off = draw_data->DisplayPos;
-        //for (int n = 0; n < draw_data->CmdListsCount; n++)
-        //{
-        //    const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        //    for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
-        //    {
-        //        const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-        //        if (pcmd->UserCallback)
-        //        {
-        //            // User callback (registered via ImDrawList::AddCallback)
-        //            pcmd->UserCallback(cmd_list, pcmd);
-        //        }
-        //        else
-        //        {
-        //            // Apply Scissor, Bind texture, Draw
-        //            const D3D12_RECT r = { (LONG)(pcmd->ClipRect.x - clip_off.x), (LONG)(pcmd->ClipRect.y - clip_off.y), (LONG)(pcmd->ClipRect.z - clip_off.x), (LONG)(pcmd->ClipRect.w - clip_off.y) };
-        //            ctx->SetGraphicsRootDescriptorTable(1, *(D3D12_GPU_DESCRIPTOR_HANDLE*)& pcmd->TextureId);
-        //            ctx->RSSetScissorRects(1, &r);
-        //            ctx->DrawIndexedInstanced(pcmd->ElemCount, 1, idx_offset, vtx_offset, 0);
-        //        }
-        //        idx_offset += pcmd->ElemCount;
-        //    }
-        //    vtx_offset += cmd_list->VtxBuffer.Size;
-        //}
     }
 
     void UIGPUStorage::ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::BufferResource<float>& buffer)

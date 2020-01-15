@@ -21,8 +21,11 @@
 
 #include "IO/CommandLineParser.hpp"
 #include "IO/Input.hpp"
+#include "IO/InputHandlerWindows.hpp"
 
 #include "../resource.h"
+
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -73,6 +76,7 @@ int main(int argc, char** argv)
 
     PathFinder::Scene scene{};
     PathFinder::Input input{};
+    PathFinder::InputHandlerWindows windowsInputHandler{ &input, hwnd };
     PathFinder::UIInteractor uiInteractor{ hwnd, &input };
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::RenderEngine engine{ hwnd, cmdLineParser, &scene, &renderPassGraph };
@@ -101,6 +105,8 @@ int main(int argc, char** argv)
     camera.LookAt({ 0.f, 0.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
 
+    input.SetInvertVerticalDelta(true);
+
     engine.ScheduleAndAllocatePipelineResources();
     engine.ProcessAndTransferAssets();
 
@@ -120,10 +126,27 @@ int main(int argc, char** argv)
         {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
+
+            windowsInputHandler.HandleMessage(msg);
             continue;
         }
 
+        RECT clientRect{};
+        if (::GetClientRect(hwnd, &clientRect))
+        {
+            // 'Top' is screen bottom
+            Geometry::Dimensions viewportSize(
+                clientRect.right - clientRect.left,
+                clientRect.bottom - clientRect.top);
+
+            uiInteractor.SetViewportSize(viewportSize);
+            cameraInteractor.SetViewportSize(viewportSize);
+        }
+
+        uiInteractor.PollInputs();
+        cameraInteractor.PollInputs();
         engine.Render();
+        windowsInputHandler.EndFrame();
     }
 
     engine.FlushAllQueuedFrames();

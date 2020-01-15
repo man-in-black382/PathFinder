@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../IO/Input.hpp"
+#include "../Geometry/Dimensions.hpp"
 
 #include <windef.h>
 
@@ -12,7 +13,8 @@ namespace PathFinder
     public:
         UIInteractor(HWND windowHandle, Input* input);
 
-        void UpdateUIInputs();
+        void PollInputs();
+        void SetViewportSize(const Geometry::Dimensions& size);
 
     private:
         void UpdateCursor();

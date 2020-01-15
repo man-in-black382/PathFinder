@@ -8,34 +8,37 @@
 #include <chrono>
 
 #include "../Foundation/Event.hpp"
+#include "../Geometry/Dimensions.hpp"
 
 namespace PathFinder
 {
 
+    enum class KeyboardKey : uint16_t
+    {
+        A = 0, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+        Escape, Space, F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+        Tilde,
+        Num1, Num2, Num3, Num4, Num5, Num6, Num7, Num8, Num9, Num0,
+        MinusUnderscore, PlusEquals, Backspace, Semicolon, Tab,
+        BracketSquaredLeft, BracketSquaredRight, Enter, CapsLock,
+        Slash, Backslash, Shift, Ctrl, Alt, SuperLeft, SuperRight,
+        NumPad0, NumPad1, NumPad2, NumPad3, NumPad4, NumPad5,
+        NumPad6, NumPad7, NumPad8, NumPad9,
+        Left, Right, Up, Down,
+        Insert, Home, End, Delete, PageUp, PageDown,
+        END, BEGIN = A
+    };
+
+    constexpr uint16_t RawKeyboardKey(KeyboardKey key);
+
+    /// A platform-independent input. 
+    /// Use to receive input events.
     class Input 
     {
     public:
-        enum class KeyboardAction
-        {
-            KeyDown, KeyUp
-        };
-
-        enum class SimpleMouseAction
-        {
-            PressDown, PressUp, Drag, Move
-        };
-
-        using KeyCode = uint16_t;
-        using KeySet = std::unordered_set<KeyCode>;
-        using KeyboardEvent = Foundation::MultiEvent<Input, KeyboardAction, std::string, void(const Input*)>;
-        using SimpleMouseEvent = Foundation::MultiEvent<Input, SimpleMouseAction, std::string, void(const Input*)>;
-        using ScrollEvent = Foundation::Event<Input, std::string, void(const Input*)>;
-        using ClickEvent = Foundation::Event<Input, std::string, void(const Input*)>;
-
-        enum class Key : KeyCode
-        {
-            W = 13, S = 1, A = 0, D = 2
-        };
+        using MouseButton = uint16_t;
+        using MouseButtonMask = uint16_t;
+        using KeyboardKeySet = std::unordered_set<KeyboardKey>;
 
         Input() = default;
         ~Input() = default;
@@ -44,35 +47,47 @@ namespace PathFinder
         Input(const Input& that) = delete;
         Input& operator=(const Input& rhs) = delete;
 
-        SimpleMouseEvent& GetSimpleMouseEvent();
-        ScrollEvent& GetScrollMouseEvent();
-        ClickEvent& GetClickMouseEvent();
-        KeyboardEvent& GetKeyboardEvent();
+        bool IsKeyboardKeyPressed(KeyboardKey key, bool reportOnlyFreshPress = false) const;
+        bool WasKeyboardKeyPressedPrevously(KeyboardKey key) const;
+        bool WasKeyboardKeyUnpressed(KeyboardKey key) const;
+        bool IsMouseButtonPressed(MouseButton button) const;
+        bool IsAnyMouseButtonPressed() const;
+        bool IsAnyKeyboardKeyPressed() const;
 
-        uint8_t ClicksCount() const;
-        const glm::vec2& ScrollDelta() const;
-        const glm::vec2& MousePosition() const;
-        const KeyCode PressedMouseButtonsMask() const;
-        const KeySet& PressedKeyboardButtons() const;
-        void RegisterMouseAction(SimpleMouseAction action, const glm::vec2& position, KeyCode keysMask);
-        void RegisterMouseScroll(const glm::vec2& delta);
-        void RegisterKey(KeyCode code);
-        void UnregisterKey(KeyCode code);
-        bool IsKeyPressed(Key key) const;
-        bool IsMouseButtonPressed(uint8_t button) const;
+        // To be called from platform-specific input handlers
+        // ------------------------------------------------ //
+        void MouseDown(MouseButton buttonNumber);
+        void MouseUp(MouseButton buttonNumber);
+        void SetMouseAbsolutePosition(const glm::vec2& position, bool originTopLeft);
+        void SetScrollDelta(const glm::vec2& delta);
+        void SetMouseDelta(const glm::vec2& delta);
+        void SetInvertVerticalDelta(bool invert);
+        void KeyboardKeyDown(KeyboardKey key);
+        void KeyboardKeyUp(KeyboardKey key);
+        void BeginFrame();
+        // ------------------------------------------------ //
 
     private:
-        SimpleMouseEvent mSimpleMouseEvent;
-        ScrollEvent mMouseScrollEvent;
-        ClickEvent mMouseClickEvent;
-        KeyboardEvent mKeyboardEvent;
-
-        uint8_t mClickCount;
+        std::chrono::milliseconds mClickDetectionTime = std::chrono::milliseconds{ 200 };
+        uint8_t mClickCountAccumulator = 0; // Accumulates clicks until no more clicks are performed in detection time
+        uint8_t mClickCountFinal = 0; // Final detected amount of clicks
         glm::vec2 mScrollDelta;
+        glm::vec2 mMouseDelta;
         glm::vec2 mMousePosition;
-        KeySet mPressedKeyboardKeys;
-        KeyCode mPressedMouseButtonsMask;
-        std::chrono::time_point<std::chrono::steady_clock> mTimePoint;
+        KeyboardKeySet mCurrentFramePressedKeyboardKeys;
+        KeyboardKeySet mPreviousFramePressedKeyboardKeys;
+        MouseButtonMask mPressedMouseButtonsMask;
+        bool mInvertVerticalDelta = false;
+        std::chrono::time_point<std::chrono::steady_clock> mMouseDownTimeStamp;
+        Geometry::Dimensions mWindowDimensions = { 1, 1 };
+
+    public:
+        inline auto CurrentClickCount() const { return mClickCountFinal; }
+        inline const glm::vec2& ScrollDelta() const { return mScrollDelta; }
+        inline const glm::vec2& MouseDelta() const { return mMouseDelta; }
+        inline const glm::vec2& MousePosition() const { return mMousePosition; }
+        inline MouseButtonMask PressedMouseButtonsMask() const { return mPressedMouseButtonsMask; }
+        inline const KeyboardKeySet& PressedKeyboardButtons() const { return mCurrentFramePressedKeyboardKeys; }
     };
 
 }

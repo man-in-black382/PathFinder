@@ -60,7 +60,7 @@ namespace PathFinder
         const RenderPassExecutionGraph* mPassExecutionGraph;
 
         uint8_t mCurrentBackBufferIndex = 0;
-        uint8_t mSimultaneousFramesInFlight = 3;
+        uint8_t mSimultaneousFramesInFlight = 2;
         uint64_t mFrameNumber = 0;
 
         RenderSurfaceDescription mDefaultRenderSurface;

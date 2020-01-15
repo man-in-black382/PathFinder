@@ -3,119 +3,120 @@
 #include <type_traits>
 #include <glm/gtc/constants.hpp>
 
-static constexpr std::chrono::milliseconds ClickDetectionTime(200);
+#include <windows.h>
+#include "../Foundation//StringUtils.hpp"
 
 namespace PathFinder
 {
 
-    Input::SimpleMouseEvent &Input::GetSimpleMouseEvent()
+    bool Input::IsKeyboardKeyPressed(KeyboardKey key, bool reportOnlyFreshPress) const
     {
-        return mSimpleMouseEvent;
+        const auto &it = mCurrentFramePressedKeyboardKeys.find(key);
+        bool pressedInCurrentFrame = it != mCurrentFramePressedKeyboardKeys.end();
+        return reportOnlyFreshPress ? pressedInCurrentFrame && !WasKeyboardKeyPressedPrevously(key) : pressedInCurrentFrame;
     }
 
-    Input::ScrollEvent &Input::GetScrollMouseEvent()
+    bool Input::WasKeyboardKeyPressedPrevously(KeyboardKey key) const
     {
-        return mMouseScrollEvent;
+        const auto& it = mPreviousFramePressedKeyboardKeys.find(key);
+        return it != mPreviousFramePressedKeyboardKeys.end();
     }
 
-
-    Input::ClickEvent &Input::GetClickMouseEvent() {
-        return mMouseClickEvent;
-    }
-
-    Input::KeyboardEvent &Input::GetKeyboardEvent() 
+    bool Input::WasKeyboardKeyUnpressed(KeyboardKey key) const
     {
-        return mKeyboardEvent;
+        return WasKeyboardKeyPressedPrevously(key) && !IsKeyboardKeyPressed(key, false);
     }
 
-    uint8_t Input::ClicksCount() const 
-    {
-        return mClickCount;
-    }
-
-    const glm::vec2 &Input::ScrollDelta() const 
-    {
-        return mScrollDelta;
-    }
-
-    const glm::vec2 &Input::MousePosition() const 
-    {
-        return mMousePosition;
-    }
-
-    const Input::KeyCode Input::PressedMouseButtonsMask() const 
-    {
-        return mPressedMouseButtonsMask;
-    }
-
-    const Input::KeySet &Input::PressedKeyboardButtons() const
-    {
-        return mPressedKeyboardKeys;
-    }
-
-    void Input::RegisterMouseAction(SimpleMouseAction action, const glm::vec2 &position, KeyCode keysMask)
-    {
-        using namespace std::chrono;
-
-        auto now = steady_clock::now();
-        milliseconds clickDuration = duration_cast<milliseconds>(now - mTimePoint);
-
-        switch (action) {
-            case SimpleMouseAction::PressDown: {
-                if (clickDuration >= ClickDetectionTime) {
-                    mClickCount = 0;
-                }
-                mTimePoint = steady_clock::now();
-                break;
-            }
-            case SimpleMouseAction::PressUp: {
-                if (clickDuration < ClickDetectionTime) {
-                    mClickCount++;
-                    mTimePoint = steady_clock::now();
-                    mMouseClickEvent(this);
-                }
-                break;
-            }
-
-            default: {
-                break;
-            }
-        }
-
-        mMousePosition = position;
-        mPressedMouseButtonsMask = keysMask;
-        mSimpleMouseEvent[action](this);
-    }
-
-    void Input::RegisterMouseScroll(const glm::vec2 &delta) 
-    {
-        mScrollDelta = delta;
-        mMouseScrollEvent(this);
-    }
-
-    void Input::RegisterKey(KeyCode code)
-    {
-        mPressedKeyboardKeys.insert(code);
-        mKeyboardEvent[KeyboardAction::KeyDown](this);
-    }
-
-    void Input::UnregisterKey(KeyCode code)
-    {
-        mPressedKeyboardKeys.erase(code);
-        mKeyboardEvent[KeyboardAction::KeyUp](this);
-    }
-
-    bool Input::IsKeyPressed(Key key) const 
-    {
-        using type = std::underlying_type<Key>::type;
-        type rawKey = static_cast<type>(key);
-        const auto &it = mPressedKeyboardKeys.find(rawKey);
-        return it != mPressedKeyboardKeys.end();
-    }
-
-    bool Input::IsMouseButtonPressed(uint8_t button) const
+    bool Input::IsMouseButtonPressed(MouseButton button) const
     {
         return (1 << button) & mPressedMouseButtonsMask;
+    }
+
+    bool Input::IsAnyMouseButtonPressed() const
+    {
+        return mPressedMouseButtonsMask != 0;
+    }
+
+    bool Input::IsAnyKeyboardKeyPressed() const
+    {
+        return !mCurrentFramePressedKeyboardKeys.empty();
+    }
+
+    void Input::MouseDown(MouseButton buttonNumber)
+    {
+        mMouseDownTimeStamp = std::chrono::steady_clock::now();
+        mPressedMouseButtonsMask |= 1 << buttonNumber;
+    }
+
+    void Input::MouseUp(MouseButton buttonNumber)
+    {
+        using namespace std::chrono;
+        milliseconds clickDuration = duration_cast<milliseconds>(steady_clock::now() - mMouseDownTimeStamp);
+
+        if (clickDuration < mClickDetectionTime)
+        {
+            ++mClickCountAccumulator;
+        }
+        else
+        {
+            mClickCountFinal = mClickCountAccumulator;
+            mClickCountAccumulator = 0;
+        }
+
+        mPressedMouseButtonsMask &= ~(1 << buttonNumber);
+    }
+
+    void Input::SetMouseAbsolutePosition(const glm::vec2& position, bool originTopLeft)
+    {
+        mMousePosition = position;
+
+        if (!originTopLeft)
+        {
+            mMousePosition.y = mWindowDimensions.Height - mMousePosition.y;
+        }
+    }
+
+    void Input::SetScrollDelta(const glm::vec2& delta)
+    {
+        mScrollDelta = delta;
+    }
+
+    void Input::SetMouseDelta(const glm::vec2& delta)
+    {
+        mMouseDelta = delta;
+        
+        if (mInvertVerticalDelta)
+        {
+            mMouseDelta.y *= -1;
+        }
+    }
+
+    void Input::SetInvertVerticalDelta(bool invert)
+    {
+        mInvertVerticalDelta = invert;
+    }
+
+    void Input::KeyboardKeyDown(KeyboardKey key)
+    {
+        mCurrentFramePressedKeyboardKeys.insert(key);
+    }
+
+    void Input::KeyboardKeyUp(KeyboardKey key)
+    {
+        mCurrentFramePressedKeyboardKeys.erase(key);
+    }
+
+    void Input::BeginFrame()
+    {
+        mPreviousFramePressedKeyboardKeys = mCurrentFramePressedKeyboardKeys;
+        mClickCountFinal = 0;
+        mScrollDelta = glm::vec2{ 0.0f };
+        mMouseDelta = glm::vec2{ 0.0f };
+    }
+
+    constexpr uint16_t RawKeyboardKey(KeyboardKey key)
+    {
+        return static_cast<std::underlying_type_t<KeyboardKey>>(key);
     }
 
 }

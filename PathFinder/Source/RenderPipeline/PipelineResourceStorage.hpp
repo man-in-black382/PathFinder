@@ -67,8 +67,10 @@ namespace PathFinder
         };
 
         PipelineResourceStorage(
-            HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, 
-            const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight,
+            HAL::Device* device,
+            ResourceDescriptorStorage* descriptorStorage, 
+            const RenderSurfaceDescription& defaultRenderSurface,
+            uint8_t simultaneousFramesInFlight,
             const RenderPassExecutionGraph* passExecutionGraph
         );
 
@@ -140,7 +142,7 @@ namespace PathFinder
 
         void CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceAllocation& allocator);
         void CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceAllocation& allocator, uint64_t explicitStride);
-
+        void CreateDebugBuffers(const RenderPassExecutionGraph* passExecutionGraph);
         void PrepareAllocationsForOptimization();
         void CreateResourceBarriers();
 

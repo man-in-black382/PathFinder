@@ -25,21 +25,7 @@ namespace PathFinder
         mGlobalRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
         mPerFrameRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload }
     {
-        // Create debug buffers
-        for (const RenderPass* pass : passExecutionGraph->AllPasses())
-        {
-            auto& passObjects = GetPerPassObjects(pass->Name());
-
-            // Use Common to leverage automatic state promotion/decay for buffers when transitioning from/to readback and rendering
-            passObjects.PassDebugBuffer = std::make_unique<HAL::BufferResource<float>>(
-                *device, 1024, 1, HAL::ResourceState::Common, HAL::ResourceState::Common);
-
-            passObjects.PassDebugReadbackBuffer = std::make_unique<HAL::RingBufferResource<float>>(
-                *device, 1024, mSimultaneousFramesInFlight, 1, HAL::CPUAccessibleHeapType::Readback);
-
-            passObjects.PassDebugBuffer->SetDebugName(StringFormat("System Memory Debug Buffer (%s)", pass->Name().ToString().c_str()));
-            passObjects.PassDebugReadbackBuffer->SetDebugName(StringFormat("Readback Memory Debug Buffer (%s)", pass->Name().ToString().c_str()));
-        }
+        CreateDebugBuffers(passExecutionGraph);
     }
 
     void PipelineResourceStorage::BeginFrame(uint64_t newFrameNumber)
@@ -302,6 +288,26 @@ namespace PathFinder
                 newResourcePerPassData.IsUADescriptorRequested = true;
                 mDescriptorStorage->EmplaceUADescriptorIfNeeded(resource.Resource.get(), explicitStride);
             }
+        }
+    }
+
+    void PipelineResourceStorage::CreateDebugBuffers(const RenderPassExecutionGraph* passExecutionGraph)
+    {
+        for (const RenderPass* pass : passExecutionGraph->AllPasses())
+        {
+            auto& passObjects = GetPerPassObjects(pass->Name());
+
+            // Use Common to leverage automatic state promotion/decay for buffers when transitioning from/to readback and rendering
+            passObjects.PassDebugBuffer = std::make_unique<HAL::BufferResource<float>>(
+                *mDevice, 512, 1, HAL::ResourceState::Common, HAL::ResourceState::UnorderedAccess);
+
+            passObjects.PassDebugReadbackBuffer = std::make_unique<HAL::RingBufferResource<float>>(
+                *mDevice, 512, mSimultaneousFramesInFlight, 1, HAL::CPUAccessibleHeapType::Readback);
+
+            passObjects.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ passObjects.PassDebugBuffer.get() });
+
+            passObjects.PassDebugBuffer->SetDebugName(StringFormat("System Memory Debug Buffer (%s)", pass->Name().ToString().c_str()));
+            passObjects.PassDebugReadbackBuffer->SetDebugName(StringFormat("Readback Memory Debug Buffer (%s)", pass->Name().ToString().c_str()));
         }
     }
 

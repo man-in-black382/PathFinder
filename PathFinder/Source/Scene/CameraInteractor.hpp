@@ -5,6 +5,7 @@
 
 #include "Camera.hpp"
 #include "../IO/Input.hpp"
+#include "../Geometry/Dimensions.hpp"
 
 namespace PathFinder
 {
@@ -12,31 +13,35 @@ namespace PathFinder
     class CameraInteractor
     {
     public:
+        struct InputScale
+        {
+            float KeyboardMovementScale = 0.1;
+            float MouseMovementScale = 0.07;
+        };
+
         CameraInteractor(Camera* camera, Input* userInput);
-        ~CameraInteractor();
 
         bool IsEnabled() const;
         void SetIsEnabled(bool enabled);
-        void UpdateCamera();
+        void SetViewportSize(const Geometry::Dimensions& viewportSize);
+        void PollInputs();
 
     private:
-        void HandleKeyDown(const Input *input);
-        void HandleKeyUp(const Input *input);
-        void HandleMouseDrag(const Input* input);
-        void HandleMouseScroll(const Input *input);
-        void HandleMouseDown(const Input *input);
-        void HandleMouseUp(const Input *input);
+        void HandleKeyDown();
+        void HandleMouseDrag();
+        void HandleMouseScroll();
         bool IsMouseMovingVertically(const glm::vec2 &mouseDirection) const;
         bool IsMouseMovingHorizontally(const glm::vec2 &mouseDirection) const;
 
         Camera* mCamera = nullptr;
         Input* mUserInput = nullptr;
 
-        glm::vec2 mPreviousMousePosition;
+        glm::vec2 mViewportSize;
         glm::vec2 mRotation;
         glm::vec3 mMouseMoveDirection;
         glm::vec3 mKeyboardMoveDirection;
         glm::vec2 mMouseLockDirection;
+        InputScale mInputScale;
 
         bool mIsEnabled = true;
     };
