@@ -11,7 +11,7 @@ namespace HAL
 
 
 
-    const RTDescriptor& RTDescriptorHeap::EmplaceRTDescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisisbleFormat)
+    const RTDescriptor& RTDescriptorHeap::EmplaceRTDescriptor(const Texture& texture, std::optional<ColorFormat> shaderVisisbleFormat)
     {
         ValidateCapacity(0);
         RangeAllocationInfo& range = GetRange(0);
@@ -19,11 +19,11 @@ namespace HAL
 
         if (shaderVisisbleFormat)
         {
-            assert_format(std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for texture that has it's own format");
+            assert_format(std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for texture that has it's own format");
             d3dDesc.Format = ResourceFormat::D3DFormat(*shaderVisisbleFormat);
         }
         else {
-            assert_format(std::holds_alternative<ResourceFormat::Color>(texture.Format()), "Texture format is not suited for render targets");
+            assert_format(std::holds_alternative<ColorFormat>(texture.Format()), "Texture format is not suited for render targets");
         }
 
         auto& descriptor = dynamic_cast<RTDescriptor&>(*range.Descriptors.emplace_back(
@@ -96,12 +96,12 @@ namespace HAL
     DSDescriptorHeap::DSDescriptorHeap(const Device* device, uint32_t capacity)
         : DescriptorHeap(device, capacity, 1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV) {}
 
-    const DSDescriptor& DSDescriptorHeap::EmplaceDSDescriptor(const TextureResource& texture)
+    const DSDescriptor& DSDescriptorHeap::EmplaceDSDescriptor(const Texture& texture)
     {
         ValidateCapacity(0);
         RangeAllocationInfo& range = GetRange(0);
 
-        assert_format(std::holds_alternative<ResourceFormat::DepthStencil>(texture.Format()), "Texture is not of depth-stencil format");
+        assert_format(std::holds_alternative<DepthStencilFormat>(texture.Format()), "Texture is not of depth-stencil format");
 
         auto& descriptor = dynamic_cast<DSDescriptor&>(*range.Descriptors.emplace_back(
             std::make_unique<DSDescriptor>(range.CurrentCPUHandle)));
@@ -150,7 +150,7 @@ namespace HAL
     D3D12_SHADER_RESOURCE_VIEW_DESC CBSRUADescriptorHeap::ResourceToSRVDescription(
         const D3D12_RESOURCE_DESC& resourceDesc, 
         uint64_t bufferStride,
-        std::optional<ResourceFormat::Color> explicitFormat) const
+        std::optional<ColorFormat> explicitFormat) const
     {
         D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
 
@@ -227,9 +227,9 @@ namespace HAL
 
         ResourceFormat::FormatVariant format = ResourceFormat::FormatFromD3DFormat(resourceDesc.Format);
 
-        if (std::holds_alternative<ResourceFormat::DepthStencil>(format))
+        if (std::holds_alternative<DepthStencilFormat>(format))
         {
-            auto d3dDepthStencilSRVFormats = ResourceFormat::D3DDepthStecilSRVFormats(std::get<ResourceFormat::DepthStencil>(format));
+            auto d3dDepthStencilSRVFormats = ResourceFormat::D3DDepthStecilSRVFormats(std::get<DepthStencilFormat>(format));
             desc.Format = d3dDepthStencilSRVFormats.first;
         }
         else {
@@ -242,7 +242,7 @@ namespace HAL
     D3D12_UNORDERED_ACCESS_VIEW_DESC CBSRUADescriptorHeap::ResourceToUAVDescription(
         const D3D12_RESOURCE_DESC& resourceDesc,
         uint64_t bufferStride,
-        std::optional<ResourceFormat::Color> explicitFormat) const
+        std::optional<ColorFormat> explicitFormat) const
     {
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc{};
 
@@ -318,13 +318,13 @@ namespace HAL
         return rangeInfo.Descriptors[indexInRange].get();
     }
 
-    const SRDescriptor& CBSRUADescriptorHeap::EmplaceSRDescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat)
+    const SRDescriptor& CBSRUADescriptorHeap::EmplaceSRDescriptor(const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
     {
         auto index = std::underlying_type_t<Range>(RangeTypeForTexture(texture));
         ValidateCapacity(index);
         RangeAllocationInfo& range = GetRange(index);
 
-        assert_format(!shaderVisibleFormat || std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for typed texture");
+        assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
 
         auto& descriptor = dynamic_cast<SRDescriptor&>(*range.Descriptors.emplace_back(
             std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
@@ -336,13 +336,13 @@ namespace HAL
         return descriptor;
     }
 
-    const UADescriptor& CBSRUADescriptorHeap::EmplaceUADescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat)
+    const UADescriptor& CBSRUADescriptorHeap::EmplaceUADescriptor(const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
     {
         auto index = std::underlying_type_t<Range>(UARangeTypeForTexture(texture));
         ValidateCapacity(index);
         RangeAllocationInfo& range = GetRange(index);
 
-        assert_format(!shaderVisibleFormat || std::holds_alternative<ResourceFormat::TypelessColor>(texture.Format()), "Format redefinition for typed texture");
+        assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
 
         auto& descriptor = dynamic_cast<UADescriptor&>(*range.Descriptors.emplace_back(
             std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
@@ -354,24 +354,24 @@ namespace HAL
         return descriptor;
     }
 
-    CBSRUADescriptorHeap::Range CBSRUADescriptorHeap::RangeTypeForTexture(const TextureResource& texture) const
+    CBSRUADescriptorHeap::Range CBSRUADescriptorHeap::RangeTypeForTexture(const Texture& texture) const
     {
         switch (texture.Kind())
         {
-        case ResourceFormat::TextureKind::Texture1D: return Range::Texture1D;
-        case ResourceFormat::TextureKind::Texture2D: return texture.IsArray() ? Range::Texture2DArray : Range::Texture2D;
-        case ResourceFormat::TextureKind::Texture3D: return Range::Texture3D;
+        case TextureKind::Texture1D: return Range::Texture1D;
+        case TextureKind::Texture2D: return texture.IsArray() ? Range::Texture2DArray : Range::Texture2D;
+        case TextureKind::Texture3D: return Range::Texture3D;
         default: assert_format(false, "Should never be hit"); return Range::Texture1D;
         }
     }
 
-    CBSRUADescriptorHeap::Range CBSRUADescriptorHeap::UARangeTypeForTexture(const TextureResource& texture) const
+    CBSRUADescriptorHeap::Range CBSRUADescriptorHeap::UARangeTypeForTexture(const Texture& texture) const
     {
         switch (texture.Kind())
         {
-        case ResourceFormat::TextureKind::Texture1D: return Range::UATexture1D;
-        case ResourceFormat::TextureKind::Texture2D: return texture.IsArray() ? Range::UATexture2DArray : Range::UATexture2D;
-        case ResourceFormat::TextureKind::Texture3D: return Range::UATexture3D;
+        case TextureKind::Texture1D: return Range::UATexture1D;
+        case TextureKind::Texture2D: return texture.IsArray() ? Range::UATexture2DArray : Range::UATexture2D;
+        case TextureKind::Texture3D: return Range::UATexture3D;
         default: assert_format(false, "Should never be hit"); return Range::UATexture1D;
         }
     }

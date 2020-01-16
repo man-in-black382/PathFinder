@@ -2,7 +2,7 @@ namespace PathFinder
 {
 
     template <class T>
-    void GraphicsDevice::BindExternalBuffer(const HAL::BufferResource<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+    void GraphicsDevice::BindExternalBuffer(const HAL::Buffer<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         if (mAppliedComputeState)
         {

@@ -229,17 +229,18 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\ShaderExport.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ShaderTable.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\SwapChain.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\TextureResource.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\Texture.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Viewport.cpp" />
     <ClCompile Include="Source\IO\CommandLineParser.cpp" />
     <ClCompile Include="Source\IO\Input.cpp" />
     <ClCompile Include="Source\IO\InputHandlerWindows.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp" />
+    <ClCompile Include="Source\RenderPipeline\BufferAllocation.cpp" />
     <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
-    <ClCompile Include="Source\RenderPipeline\PipelineResourceAllocation.cpp" />
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStateOptimizer.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateCreator.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp" />
@@ -328,7 +329,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Geometry\Triangle2D.hpp" />
     <ClInclude Include="Source\Geometry\Triangle3D.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\BlendState.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\BufferResource.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\Buffer.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandAllocator.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandList.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandQueue.hpp" />
@@ -372,7 +373,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderTable.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\SwapChain.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\TextureResource.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\Texture.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Utils.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Viewport.hpp" />
     <ClInclude Include="Source\IO\CommandLineParser.hpp" />
@@ -380,6 +381,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\IO\InputHandlerWindows.hpp" />
     <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
+    <ClInclude Include="Source\RenderPipeline\BufferAllocation.hpp" />
     <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp" />
     <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
@@ -391,7 +393,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\PerFrameRootConstants.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResource.hpp" />
-    <ClInclude Include="Source\RenderPipeline\PipelineResourceAllocation.hpp" />
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStateOptimizer.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateCreator.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateProxy.hpp" />
@@ -915,7 +917,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Libs\dxcompiler.dll" />
     <None Include="Libs\dxil.dll" />
     <None Include="packages.config" />
-    <None Include="Source\HardwareAbstractionLayer\BufferResource.inl" />
+    <None Include="Source\HardwareAbstractionLayer\Buffer.inl" />
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl" />
     <None Include="Source\HardwareAbstractionLayer\Descriptor.inl" />
     <None Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.inl" />

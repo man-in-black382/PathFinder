@@ -49,7 +49,7 @@ namespace HAL
     class GraphicsPipelineState : public PipelineState
     {
     public:
-        using RenderTargetFormat = std::variant<ResourceFormat::Color, ResourceFormat::TypelessColor>;
+        using RenderTargetFormat = std::variant<ColorFormat, TypelessColorFormat>;
         using RenderTargetFormatMap = std::unordered_map<RenderTarget, RenderTargetFormat>;
 
         using PipelineState::PipelineState;
@@ -67,7 +67,7 @@ namespace HAL
         inline void SetHullShader(const Shader* hullShader) { mHullShader = hullShader; }
         inline void SetGeometryShader(const Shader* geometryShader) { mGeometryShader = geometryShader; }
         inline void SetPrimitiveTopology(PrimitiveTopology topology) { mPrimitiveTopology = topology; }
-        inline void SetDepthStencilFormat(ResourceFormat::DepthStencil format) { mDepthStencilFormat = format; }
+        inline void SetDepthStencilFormat(DepthStencilFormat format) { mDepthStencilFormat = format; }
         inline void SetInputAssemblerLayout(const InputAssemblerLayout& layout) { mInputLayout = layout; }
         inline void SetBlendState(const BlendState& state) { mBlendState = state; }
         inline void SetRasterizerState(const RasterizerState& state) { mRasterizerState = state; }
@@ -122,7 +122,7 @@ namespace HAL
         DepthStencilState mDepthStencilState;
         InputAssemblerLayout mInputLayout;
         RenderTargetFormatMap mRenderTargetFormats;
-        ResourceFormat::DepthStencil mDepthStencilFormat;
+        DepthStencilFormat mDepthStencilFormat;
         PrimitiveTopology mPrimitiveTopology;
     };
 

@@ -19,7 +19,7 @@ namespace PathFinder
         {
             state.ShaderFileNames.VertexShaderFileName = L"GBufferRenderPass.hlsl";
             state.ShaderFileNames.PixelShaderFileName = L"GBufferRenderPass.hlsl";
-            state.RenderTargetFormats = { HAL::ResourceFormat::Color::RGBA32_Unsigned };
+            state.RenderTargetFormats = { HAL::ColorFormat::RGBA32_Unsigned };
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::GBuffer;
             state.DepthStencilState.SetDepthTestEnabled(true);
@@ -29,7 +29,7 @@ namespace PathFinder
     void GBufferRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         ResourceScheduler::NewTextureProperties RT0Properties{};
-        RT0Properties.ShaderVisibleFormat = HAL::ResourceFormat::Color::RGBA32_Unsigned;
+        RT0Properties.ShaderVisibleFormat = HAL::ColorFormat::RGBA32_Unsigned;
 
         scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);

@@ -4,7 +4,7 @@
 #include "../HardwareAbstractionLayer/Resource.hpp"
 #include "../HardwareAbstractionLayer/ResourceFormat.hpp"
 
-#include "PipelineResourceAllocation.hpp"
+#include "PipelineResourceSchedulingInfo.hpp"
 #include "RenderPassExecutionGraph.hpp"
 
 #include <set>
@@ -17,7 +17,7 @@ namespace PathFinder
     public:
         PipelineResourceMemoryAliaser(const RenderPassExecutionGraph* renderPassGraph);
 
-        void AddAllocation(PipelineResourceAllocation* allocation);
+        void AddAllocation(PipelineResourceSchedulingInfo* allocation);
         uint64_t Alias();
 
     private:
@@ -36,9 +36,9 @@ namespace PathFinder
         struct AliasingMetadata
         {
             Timeline ResourceTimeline;
-            PipelineResourceAllocation* Allocation;
+            PipelineResourceSchedulingInfo* Allocation;
 
-            AliasingMetadata(const Timeline& timeline, PipelineResourceAllocation* allocation);
+            AliasingMetadata(const Timeline& timeline, PipelineResourceSchedulingInfo* allocation);
     
             static bool SortAscending(const AliasingMetadata& first, const AliasingMetadata& second);
             static bool SortDescending(const AliasingMetadata& first, const AliasingMetadata& second);
@@ -48,7 +48,7 @@ namespace PathFinder
         using AliasingMetadataIterator = AliasingMetadataSet::iterator;
 
         bool TimelinesIntersect(const Timeline& first, const Timeline& second) const;
-        Timeline GetTimeline(const PipelineResourceAllocation* allocation) const;
+        Timeline GetTimeline(const PipelineResourceSchedulingInfo* allocation) const;
         void FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const;
         void FindNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt);
         bool AliasAsFirstAllocation(AliasingMetadataIterator nextAllocationIt);

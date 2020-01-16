@@ -4,7 +4,7 @@ namespace PathFinder
 {
 
     template <class T>
-    const HAL::SRDescriptor& ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded(const HAL::BufferResource<T>* buffer, std::optional<uint64_t> explicitStride)
+    const HAL::SRDescriptor& ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded(const HAL::Buffer<T>* buffer, std::optional<uint64_t> explicitStride)
     {
         if (auto descriptor = GetSRDescriptor(buffer)) return *descriptor;
 
@@ -15,7 +15,7 @@ namespace PathFinder
     }
 
     template <class T>
-    const HAL::UADescriptor& ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded(const HAL::BufferResource<T>* buffer, std::optional<uint64_t> explicitStride)
+    const HAL::UADescriptor& ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded(const HAL::Buffer<T>* buffer, std::optional<uint64_t> explicitStride)
     {
         if (auto descriptor = GetUADescriptor(buffer)) return *descriptor;
 
@@ -26,7 +26,7 @@ namespace PathFinder
     }
 
     template <class T>
-    const HAL::CBDescriptor& ResourceDescriptorStorage::EmplaceCBDescriptorIfNeeded(const HAL::BufferResource<T>* buffer, std::optional<uint64_t> explicitStride)
+    const HAL::CBDescriptor& ResourceDescriptorStorage::EmplaceCBDescriptorIfNeeded(const HAL::Buffer<T>* buffer, std::optional<uint64_t> explicitStride)
     {
         if (auto descriptor = GetCBDescriptor(buffer)) return *descriptor;
 

@@ -41,7 +41,7 @@ namespace HAL
     }
 
     void CopyCommandListBase::CopyTextureRegion(
-        const TextureResource& source, const TextureResource& destination,
+        const Texture& source, const Texture& destination,
         uint16_t sourceSubresource, uint16_t destinationSubresource, 
         const glm::ivec3& sourceOrigin, const glm::ivec3& destinationOrigin,
         const Geometry::Dimensions& regionDimensions)

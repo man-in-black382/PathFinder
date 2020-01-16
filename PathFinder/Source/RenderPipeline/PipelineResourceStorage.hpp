@@ -7,7 +7,7 @@
 #include "GlobalRootConstants.hpp"
 #include "PerFrameRootConstants.hpp"
 #include "PipelineResource.hpp"
-#include "PipelineResourceAllocation.hpp"
+#include "PipelineResourceSchedulingInfo.hpp"
 #include "PipelineResourceMemoryAliaser.hpp"
 #include "PipelineResourceStateOptimizer.hpp"
 
@@ -41,7 +41,7 @@ namespace PathFinder
             std::unique_ptr<HAL::RingBufferResource<uint8_t>> PassConstantBuffer;
 
             // Debug buffers for each pass.
-            std::unique_ptr<HAL::BufferResource<float>> PassDebugBuffer;
+            std::unique_ptr<HAL::Buffer<float>> PassDebugBuffer;
 
             // Debug readback buffers for each pass.
             std::unique_ptr<HAL::RingBufferResource<float>> PassDebugReadbackBuffer;
@@ -59,7 +59,7 @@ namespace PathFinder
 
         struct PerResourceObjects
         {
-            std::unique_ptr<PipelineResourceAllocation> Allocation;
+            std::unique_ptr<PipelineResourceSchedulingInfo> SchedulingInfo;
             std::unique_ptr<TexturePipelineResource> Texture;
             std::unique_ptr<BufferPipelineResource> Buffer;
 
@@ -75,7 +75,7 @@ namespace PathFinder
         );
 
         using DebugBufferIteratorFunc = std::function<void(
-            PassName passName, const HAL::BufferResource<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer
+            PassName passName, const HAL::Buffer<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer
         )>;
 
         void BeginFrame(uint64_t newFrameNumber);
@@ -94,11 +94,11 @@ namespace PathFinder
         GlobalRootConstants* GlobalRootConstantData();
         PerFrameRootConstants* PerFrameRootConstantData();
         template <class RootConstants> RootConstants* RootConstantDataForCurrentPass();
-        HAL::BufferResource<uint8_t>* RootConstantBufferForCurrentPass();
-        const HAL::BufferResource<float>* DebugBufferForCurrentPass() const;
+        HAL::Buffer<uint8_t>* RootConstantBufferForCurrentPass();
+        const HAL::Buffer<float>* DebugBufferForCurrentPass() const;
         const HAL::RingBufferResource<float>* DebugReadbackBufferForCurrentPass() const;
-        const HAL::BufferResource<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
-        const HAL::BufferResource<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
+        const HAL::Buffer<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
+        const HAL::Buffer<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
         const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
@@ -113,22 +113,22 @@ namespace PathFinder
 
         bool IsResourceAllocationScheduled(ResourceName name) const;
         void RegisterResourceNameForCurrentPass(ResourceName name);
-        PipelineResourceAllocation* GetResourceAllocator(ResourceName name);
+        PipelineResourceSchedulingInfo* GetResourceSchedulingInfo(ResourceName name);
 
         template <class BufferDataT>
         void AllocateRootConstantBufferIfNeeded();
 
-        PipelineResourceAllocation* QueueTextureAllocationIfNeeded(
+        PipelineResourceSchedulingInfo* QueueTextureAllocationIfNeeded(
             ResourceName resourceName,
             HAL::ResourceFormat::FormatVariant format,
-            HAL::ResourceFormat::TextureKind kind,
+            HAL::TextureKind kind,
             const Geometry::Dimensions& dimensions,
-            const HAL::ResourceFormat::ClearValue& optimizedClearValue,
+            const HAL::ClearValue& optimizedClearValue,
             uint16_t mipCount
         );
 
         template <class BufferDataT>
-        PipelineResourceAllocation* QueueBufferAllocationIfNeeded(
+        PipelineResourceSchedulingInfo* QueueBufferAllocationIfNeeded(
             ResourceName resourceName,
             uint64_t capacity,
             uint64_t perElementAlignment
@@ -140,8 +140,8 @@ namespace PathFinder
         const PerPassObjects* GetPerPassObjects(PassName name) const;
         const PerResourceObjects* GetPerResourceObjects(ResourceName name) const;
 
-        void CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceAllocation& allocator);
-        void CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceAllocation& allocator, uint64_t explicitStride);
+        void CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceSchedulingInfo& allocator);
+        void CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceSchedulingInfo& allocator, uint64_t explicitStride);
         void CreateDebugBuffers(const RenderPassExecutionGraph* passExecutionGraph);
         void PrepareAllocationsForOptimization();
         void CreateResourceBarriers();

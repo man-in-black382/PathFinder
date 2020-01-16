@@ -15,7 +15,7 @@ namespace PathFinder
         ResourceProvider(const PipelineResourceStorage* storage, const ResourceDescriptorStorage* descriptorStorage);
        
         uint32_t GetTextureDescriptorTableIndex(Foundation::Name resourceName) const;
-        uint32_t GetExternalTextureDescriptorTableIndex(const HAL::TextureResource* texture, HAL::ShaderRegister registerType);
+        uint32_t GetExternalTextureDescriptorTableIndex(const HAL::Texture* texture, HAL::ShaderRegister registerType);
 
     private:
         const PipelineResourceStorage* mResourceStorage;

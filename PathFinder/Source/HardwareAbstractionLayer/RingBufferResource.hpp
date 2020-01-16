@@ -1,13 +1,13 @@
 #pragma once
 
+#include "Buffer.hpp"
 #include "RingBuffer.hpp"
-#include "BufferResource.hpp"
 
 namespace HAL
 {
 
     template <class T>
-    class RingBufferResource : public BufferResource<T>
+    class RingBufferResource : public Buffer<T>
     {
     public:
         RingBufferResource(
@@ -21,7 +21,7 @@ namespace HAL
         virtual ~RingBufferResource() = default;
 
         // Read current frame memory
-        virtual void Read(const BufferResource<T>::ReadbackSession& session) const override;
+        virtual void Read(const Buffer<T>::ReadbackSession& session) const override;
 
         // Get virtual address of memory for current frame
         virtual D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress() const override;

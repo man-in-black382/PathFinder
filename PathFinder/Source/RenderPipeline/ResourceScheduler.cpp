@@ -14,7 +14,7 @@ namespace PathFinder
 
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "New render target has already been scheduled");
 
-        HAL::ResourceFormat::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
+        HAL::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
         NewTextureProperties props = FillMissingFields(properties);
 
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
@@ -24,11 +24,11 @@ namespace PathFinder
             format = *props.TypelessFormat;
         }
 
-        PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
+        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount
         );
 
-        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.CreateTextureRTDescriptor = true;
 
@@ -46,14 +46,14 @@ namespace PathFinder
 
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "New depth-stencil texture has already been scheduled");
 
-        HAL::ResourceFormat::DepthStencilClearValue clearValue{ 1.0, 0 };
+        HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
         NewDepthStencilProperties props = FillMissingFields(properties);
 
-        PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, *props.Format, HAL::ResourceFormat::TextureKind::Texture2D, *props.Dimensions, clearValue, 1
+        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTextureAllocationIfNeeded(
+            resourceName, *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, 1
         );
 
-        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.CreateTextureDSDescriptor = true;
 
@@ -66,7 +66,7 @@ namespace PathFinder
 
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "Texture creation has already been scheduled");
 
-        HAL::ResourceFormat::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
+        HAL::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
         NewTextureProperties props = FillMissingFields(properties);
 
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
@@ -76,11 +76,11 @@ namespace PathFinder
             format = *props.TypelessFormat;
         }
 
-        PipelineResourceAllocation* allocator = mResourceStorage->QueueTextureAllocationIfNeeded(
+        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount
         );
 
-        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.CreateTextureUADescriptor = true;
 
@@ -92,19 +92,19 @@ namespace PathFinder
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
-    void ResourceScheduler::UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)
+    void ResourceScheduler::UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat)
     {
         EnsureSingleSchedulingRequestForCurrentPass(resourceName);
 
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot use non-scheduled render target");
 
-        PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(*allocator->ResourceFormat().DataType());
+        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->GetResourceSchedulingInfo(resourceName);
+        bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*schedulingInfo->ResourceFormat().DataType());
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.CreateTextureRTDescriptor = true;
 
@@ -119,34 +119,34 @@ namespace PathFinder
 
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot reuse non-scheduled depth-stencil texture");
 
-        PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
+        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->GetResourceSchedulingInfo(resourceName);
 
-        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(*allocator->ResourceFormat().DataType()), "Cannot reuse non-depth-stencil texture");
+        assert_format(std::holds_alternative<HAL::DepthStencilFormat>(*schedulingInfo->ResourceFormat().DataType()), "Cannot reuse non-depth-stencil texture");
 
-        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.CreateTextureDSDescriptor = true;
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
-    void ResourceScheduler::ReadTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)
+    void ResourceScheduler::ReadTexture(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat)
     {
         EnsureSingleSchedulingRequestForCurrentPass(resourceName);
 
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot read non-scheduled texture");
 
-        PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
+        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->GetResourceSchedulingInfo(resourceName);
 
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(*allocator->ResourceFormat().DataType());
+        bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*schedulingInfo->ResourceFormat().DataType());
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
-        if (std::holds_alternative<HAL::ResourceFormat::DepthStencil>(*allocator->ResourceFormat().DataType()))
+        if (std::holds_alternative<HAL::DepthStencilFormat>(*schedulingInfo->ResourceFormat().DataType()))
         {
             passData.RequestedState |= HAL::ResourceState::DepthRead;
         } 
@@ -158,19 +158,19 @@ namespace PathFinder
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
-    void ResourceScheduler::ReadWriteTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat)
+    void ResourceScheduler::ReadWriteTexture(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat)
     {
         EnsureSingleSchedulingRequestForCurrentPass(resourceName);
 
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceName), "Cannot read/write non-scheduled texture");
 
-        PipelineResourceAllocation* allocator = mResourceStorage->GetResourceAllocator(resourceName);
-        bool isTypeless = std::holds_alternative<HAL::ResourceFormat::TypelessColor>(*allocator->ResourceFormat().DataType());
+        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->GetResourceSchedulingInfo(resourceName);
+        bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*schedulingInfo->ResourceFormat().DataType());
 
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        auto& passData = allocator->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.CreateTextureUADescriptor = true;
 
@@ -192,7 +192,7 @@ namespace PathFinder
     ResourceScheduler::NewTextureProperties ResourceScheduler::FillMissingFields(std::optional<NewTextureProperties> properties)
     {
         NewTextureProperties filledProperties{
-            HAL::ResourceFormat::TextureKind::Texture2D,
+            HAL::TextureKind::Texture2D,
             mDefaultRenderSurfaceDesc.Dimensions(),
             mDefaultRenderSurfaceDesc.RenderTargetFormat(),
             std::nullopt,

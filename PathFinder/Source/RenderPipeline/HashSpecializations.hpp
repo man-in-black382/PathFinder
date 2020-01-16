@@ -7,7 +7,7 @@
 #include <limits>
 
 using NameNameTuple = std::tuple<Foundation::Name, Foundation::Name>;
-using NameColorTuple = std::tuple<Foundation::Name, HAL::ResourceFormat::Color>;
+using NameColorTuple = std::tuple<Foundation::Name, HAL::ColorFormat>;
 
 namespace std
 {
@@ -35,7 +35,7 @@ namespace std
         size_t operator()(const NameColorTuple& value) const
         {
             const auto nameId = std::get<0>(value).ToId();
-            const auto formatValue = std::underlying_type_t<HAL::ResourceFormat::Color>(std::get<1>(value));
+            const auto formatValue = std::underlying_type_t<HAL::ColorFormat>(std::get<1>(value));
 
             size_t hashValue = 0;
             hashValue |= nameId;

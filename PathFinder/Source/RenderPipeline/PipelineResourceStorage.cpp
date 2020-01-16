@@ -61,7 +61,7 @@ namespace PathFinder
         const TexturePipelineResource* pipelineResource = GetPipelineTextureResource(resourceName);
         assert_format(pipelineResource, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
 
-        std::optional<HAL::ResourceFormat::Color> format = std::nullopt;
+        std::optional<HAL::ColorFormat> format = std::nullopt;
 
         auto perPassData = pipelineResource->GetMetadataForPass(mCurrentPassName);
         if (perPassData) format = perPassData->ShaderVisibleFormat;
@@ -118,7 +118,7 @@ namespace PathFinder
 
         for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
         {
-            resourceObjects.Allocation->AllocationAction();
+            resourceObjects.SchedulingInfo->AllocationAction();
         }
 
         CreateResourceBarriers();
@@ -151,7 +151,7 @@ namespace PathFinder
             return false;
         }
 
-        return resourceObjects->Allocation != nullptr;
+        return resourceObjects->SchedulingInfo != nullptr;
     }
 
     void PipelineResourceStorage::RegisterResourceNameForCurrentPass(ResourceName name)
@@ -159,33 +159,33 @@ namespace PathFinder
         GetPerPassObjects(mCurrentPassName).ScheduledResourceNames.insert(name);
     }
 
-    PipelineResourceAllocation* PipelineResourceStorage::GetResourceAllocator(ResourceName name)
+    PipelineResourceSchedulingInfo* PipelineResourceStorage::GetResourceSchedulingInfo(ResourceName name)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(name);
-        return resourceObjects.Allocation.get();
+        return resourceObjects.SchedulingInfo.get();
     }
 
-    PipelineResourceAllocation* PipelineResourceStorage::QueueTextureAllocationIfNeeded(
+    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueTextureAllocationIfNeeded(
         ResourceName resourceName,
         HAL::ResourceFormat::FormatVariant format,
-        HAL::ResourceFormat::TextureKind kind,
+        HAL::TextureKind kind,
         const Geometry::Dimensions& dimensions,
-        const HAL::ResourceFormat::ClearValue& optimizedClearValue,
+        const HAL::ClearValue& optimizedClearValue,
         uint16_t mipCount)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
-        if (resourceObjects.Allocation)
+        if (resourceObjects.SchedulingInfo)
         {
-            return resourceObjects.Allocation.get();
+            return resourceObjects.SchedulingInfo.get();
         }
 
-        resourceObjects.Allocation = std::make_unique<PipelineResourceAllocation>(
-            HAL::TextureResource::ConstructResourceFormat(mDevice, format, kind, dimensions, 1, optimizedClearValue));
+        resourceObjects.SchedulingInfo = std::make_unique<PipelineResourceSchedulingInfo>(
+            HAL::Texture::ConstructResourceFormat(mDevice, format, kind, dimensions, 1, optimizedClearValue));
 
-        resourceObjects.Allocation->AllocationAction = [=, &resourceObjects]()
+        resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
         {
-            PipelineResourceAllocation* allocation = resourceObjects.Allocation.get();
+            PipelineResourceSchedulingInfo* allocation = resourceObjects.SchedulingInfo.get();
             HAL::Heap* heap = nullptr;
 
             switch (allocation->AliasingInfo.HeapAliasingGroup)
@@ -197,7 +197,7 @@ namespace PathFinder
 
             resourceObjects.Texture = std::make_unique<TexturePipelineResource>();
 
-            resourceObjects.Texture->Resource = std::make_unique<HAL::TextureResource>(
+            resourceObjects.Texture->Resource = std::make_unique<HAL::Texture>(
                 *mDevice, *heap, allocation->AliasingInfo.HeapOffset, format, kind,
                 dimensions, optimizedClearValue, allocation->InitialStates(), allocation->ExpectedStates(), mipCount);
 
@@ -206,7 +206,7 @@ namespace PathFinder
             CreateDescriptors(*resourceObjects.Texture, *allocation);
         };
 
-        return resourceObjects.Allocation.get();
+        return resourceObjects.SchedulingInfo.get();
     }
 
     PipelineResourceStorage::PerPassObjects& PipelineResourceStorage::GetPerPassObjects(PassName name)
@@ -233,7 +233,7 @@ namespace PathFinder
         return &it->second;
     }
 
-    void PipelineResourceStorage::CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceAllocation& allocator)
+    void PipelineResourceStorage::CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceSchedulingInfo& allocator)
     {
         for (const auto& [passName, passMetadata] : allocator.AllPassesMetadata())
         {
@@ -265,7 +265,7 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceAllocation& allocator, uint64_t explicitStride)
+    void PipelineResourceStorage::CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceSchedulingInfo& allocator, uint64_t explicitStride)
     {
         for (const auto& [passName, passMetadata] : allocator.AllPassesMetadata())
         {
@@ -298,7 +298,7 @@ namespace PathFinder
             auto& passObjects = GetPerPassObjects(pass->Name());
 
             // Use Common to leverage automatic state promotion/decay for buffers when transitioning from/to readback and rendering
-            passObjects.PassDebugBuffer = std::make_unique<HAL::BufferResource<float>>(
+            passObjects.PassDebugBuffer = std::make_unique<HAL::Buffer<float>>(
                 *mDevice, 512, 1, HAL::ResourceState::Common, HAL::ResourceState::UnorderedAccess);
 
             passObjects.PassDebugReadbackBuffer = std::make_unique<HAL::RingBufferResource<float>>(
@@ -315,19 +315,19 @@ namespace PathFinder
     {
         for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
         {
-            PipelineResourceAllocation* allocation = resourceObjects.Allocation.get();
+            PipelineResourceSchedulingInfo* allocation = resourceObjects.SchedulingInfo.get();
             
             allocation->GatherExpectedStates();
-            mStateOptimizer.AddAllocation(resourceObjects.Allocation.get());
+            mStateOptimizer.AddAllocation(resourceObjects.SchedulingInfo.get());
 
             // Dispatch allocations to correct aliasers
             std::visit(Foundation::MakeVisitor(
-                [this, allocation](const HAL::ResourceFormat::BufferKind& kind)
+                [this, allocation](const HAL::BufferKind& kind)
                 {
                     allocation->AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::Buffers;
                     mBufferMemoryAliaser.AddAllocation(allocation);
                 },
-                [this, allocation](const HAL::ResourceFormat::TextureKind& kind)
+                [this, allocation](const HAL::TextureKind& kind)
                 {
                     HAL::ResourceState expectedStates = allocation->ExpectedStates();
 
@@ -355,13 +355,13 @@ namespace PathFinder
             assert_format(resource, "Resource must be allocated before creating any transitions");
             
             // Create aliasing barriers
-            if (resourceObjects.Allocation->AliasingInfo.NeedsAliasingBarrier)
+            if (resourceObjects.SchedulingInfo->AliasingInfo.NeedsAliasingBarrier)
             {
-                PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.Allocation->FirstPassName());
+                PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.SchedulingInfo->FirstPassName());
                 passObjects.TransitionAndAliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource });
             }
 
-            for (auto& [passName, passData] : resourceObjects.Allocation->AllPassesMetadata())
+            for (auto& [passName, passData] : resourceObjects.SchedulingInfo->AllPassesMetadata())
             {
                 PerPassObjects& passObjects = GetPerPassObjects(passName);
 
@@ -384,13 +384,13 @@ namespace PathFinder
         // Barriers for buffers aren't necessary as per DirectX documentation (auto state promotion and decay for buffers)
     }
 
-    HAL::BufferResource<uint8_t>* PipelineResourceStorage::RootConstantBufferForCurrentPass() 
+    HAL::Buffer<uint8_t>* PipelineResourceStorage::RootConstantBufferForCurrentPass() 
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
         return passObjects.PassConstantBuffer.get();
     }
 
-    const HAL::BufferResource<float>* PipelineResourceStorage::DebugBufferForCurrentPass() const
+    const HAL::Buffer<float>* PipelineResourceStorage::DebugBufferForCurrentPass() const
     {
         const PerPassObjects* passObjects = GetPerPassObjects(mCurrentPassName);
         return passObjects->PassDebugBuffer.get();
@@ -402,12 +402,12 @@ namespace PathFinder
         return passObjects->PassDebugReadbackBuffer.get();
     }
 
-    const HAL::BufferResource<GlobalRootConstants>& PipelineResourceStorage::GlobalRootConstantsBuffer() const
+    const HAL::Buffer<GlobalRootConstants>& PipelineResourceStorage::GlobalRootConstantsBuffer() const
     {
         return mGlobalRootConstantsBuffer;
     }
 
-    const HAL::BufferResource<PerFrameRootConstants>& PipelineResourceStorage::PerFrameRootConstantsBuffer() const
+    const HAL::Buffer<PerFrameRootConstants>& PipelineResourceStorage::PerFrameRootConstantsBuffer() const
     {
         return mPerFrameRootConstantsBuffer;
     }

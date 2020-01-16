@@ -9,20 +9,20 @@ namespace PathFinder
     AssetResourceStorage::AssetResourceStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage)
         : mDevice{ device }, mCopyDevice{ copyDevice }, mDescriptorStorage{ descriptorStorage } {}
 
-    GPUDescriptorIndex AssetResourceStorage::StoreAsset(std::shared_ptr<HAL::TextureResource> resource)
+    GPUDescriptorIndex AssetResourceStorage::StoreAsset(std::shared_ptr<HAL::Texture> resource)
     {
         mAssets.push_back(resource);
         return mDescriptorStorage->EmplaceSRDescriptorIfNeeded(resource.get()).IndexInHeapRange();
     }
 
-    PreprocessableAsset<uint8_t> AssetResourceStorage::StorePreprocessableAsset(std::shared_ptr<HAL::TextureResource> asset, bool queueContentReadback)
+    PreprocessableAsset<uint8_t> AssetResourceStorage::StorePreprocessableAsset(std::shared_ptr<HAL::Texture> asset, bool queueContentReadback)
     {        
         mAssets.push_back(asset);
         
         auto srIndex = mDescriptorStorage->EmplaceSRDescriptorIfNeeded(asset.get()).IndexInHeapRange();
         auto uaIndex = mDescriptorStorage->EmplaceUADescriptorIfNeeded(asset.get()).IndexInHeapRange();
 
-        std::shared_ptr<HAL::BufferResource<uint8_t>> readBackBuffer = nullptr;
+        std::shared_ptr<HAL::Buffer<uint8_t>> readBackBuffer = nullptr;
 
         if (queueContentReadback)
         {

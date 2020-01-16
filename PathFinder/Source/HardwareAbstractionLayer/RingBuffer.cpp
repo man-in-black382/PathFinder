@@ -1,4 +1,4 @@
-#include "RingBuffer.hpp"
+#include "RingBufferResource.hpp"
 
 #include "../Foundation/Assert.hpp"
 

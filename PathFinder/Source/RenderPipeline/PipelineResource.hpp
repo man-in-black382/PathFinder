@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../Foundation/Name.hpp"
-#include "../HardwareAbstractionLayer/TextureResource.hpp"
-#include "../HardwareAbstractionLayer/BufferResource.hpp"
+#include "../HardwareAbstractionLayer/Texture.hpp"
+#include "../HardwareAbstractionLayer/Buffer.hpp"
 
 #include <functional>
 #include <optional>
@@ -16,7 +16,7 @@ namespace PathFinder
     public:
         struct PassMetadata
         {
-            std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
+            std::optional<HAL::ColorFormat> ShaderVisibleFormat;
             bool IsRTDescriptorRequested = false;
             bool IsDSDescriptorRequested = false;
             bool IsSRDescriptorRequested = false;
@@ -33,8 +33,8 @@ namespace PathFinder
         std::unordered_map<Foundation::Name, PassMetadata> mPerPassData;
     };
 
-    class TexturePipelineResource : public PipelineResource<HAL::TextureResource> {};
-    class BufferPipelineResource : public PipelineResource<HAL::BufferResource<uint8_t>> {};
+    class TexturePipelineResource : public PipelineResource<HAL::Texture> {};
+    class BufferPipelineResource : public PipelineResource<HAL::Buffer<uint8_t>> {};
 
 }
 

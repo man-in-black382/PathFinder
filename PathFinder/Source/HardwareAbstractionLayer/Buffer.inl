@@ -5,7 +5,7 @@
 namespace HAL
 {
     template <class T>
-    BufferResource<T>::BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType)
+    Buffer<T>::Buffer(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType)
         :
         Resource(device, ConstructResourceFormat(&device, capacity, perElementAlignment), heapType),
         mNonPaddedElementSize{ sizeof(T) },
@@ -21,7 +21,7 @@ namespace HAL
     }
 
     template <class T>
-    BufferResource<T>::BufferResource(
+    Buffer<T>::Buffer(
         const Device& device, uint64_t capacity, uint64_t perElementAlignment, 
         ResourceState initialState, ResourceState expectedStates)
         : 
@@ -33,7 +33,7 @@ namespace HAL
     { }
 
     template <class T>
-    HAL::BufferResource<T>::BufferResource(
+    HAL::Buffer<T>::Buffer(
         const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t capacity,
         uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates)
         :
@@ -45,7 +45,7 @@ namespace HAL
     {}
 
     template <class T>
-    BufferResource<T>::~BufferResource()
+    Buffer<T>::~Buffer()
     {
         if (mMappedMemory)
         {
@@ -55,7 +55,7 @@ namespace HAL
     }
 
     template <class T>
-    void HAL::BufferResource<T>::ValidateMappedMemory() const
+    void HAL::Buffer<T>::ValidateMappedMemory() const
     {
         if (!mMappedMemory)
         {
@@ -64,7 +64,7 @@ namespace HAL
     }
 
     template <class T>
-    void HAL::BufferResource<T>::ValidateIndex(uint64_t index) const
+    void HAL::Buffer<T>::ValidateIndex(uint64_t index) const
     {
         if (index >= mCapacity) {
             throw std::invalid_argument("Index is out of bounds");
@@ -72,13 +72,13 @@ namespace HAL
     }
 
     template <class T>
-    uint64_t BufferResource<T>::PaddedElementSize(uint64_t alignment)
+    uint64_t Buffer<T>::PaddedElementSize(uint64_t alignment)
     {
         return (sizeof(T) + alignment - 1) & ~(alignment - 1);
     }
 
     template <class T>
-    void BufferResource<T>::Read(const ReadbackSession& session, uint64_t startOffset, uint64_t objectCount) const
+    void Buffer<T>::Read(const ReadbackSession& session, uint64_t startOffset, uint64_t objectCount) const
     {
         const T* mappedMemory = nullptr;
         D3D12_RANGE readRange{ startOffset * mPaddedElementSize, (startOffset + objectCount) * mPaddedElementSize };
@@ -88,13 +88,13 @@ namespace HAL
     }
 
     template <class T>
-    void BufferResource<T>::Read(const ReadbackSession& session) const
+    void Buffer<T>::Read(const ReadbackSession& session) const
     {
         Read(session, 0, mCapacity);
     }
 
     template <class T>
-    void BufferResource<T>::Write(uint64_t startIndex, const T* data, uint64_t dataLength)
+    void Buffer<T>::Write(uint64_t startIndex, const T* data, uint64_t dataLength)
     {
         ValidateMappedMemory();
         ValidateIndex(startIndex);
@@ -111,7 +111,7 @@ namespace HAL
     }
 
     template <class T>
-    T* HAL::BufferResource<T>::At(uint64_t index) 
+    T* HAL::Buffer<T>::At(uint64_t index) 
     {
         ValidateMappedMemory();
         ValidateIndex(index);
@@ -120,16 +120,16 @@ namespace HAL
     }
 
     template <class T>
-    uint32_t BufferResource<T>::SubresourceCount() const
+    uint32_t Buffer<T>::SubresourceCount() const
     {
         return 1;
     }
 
     template <class T>
-    ResourceFormat BufferResource<T>::ConstructResourceFormat(const Device* device, uint64_t capacity, uint64_t perElementAlignment)
+    ResourceFormat Buffer<T>::ConstructResourceFormat(const Device* device, uint64_t capacity, uint64_t perElementAlignment)
     {
         return { 
-            device, std::nullopt, ResourceFormat::BufferKind::Buffer, 
+            device, std::nullopt, BufferKind::Buffer, 
             Geometry::Dimensions{ Foundation::MemoryUtils::Align(sizeof(T), perElementAlignment) * capacity }
         };
     }

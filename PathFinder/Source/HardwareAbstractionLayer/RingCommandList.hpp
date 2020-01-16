@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CommandList.hpp"
-#include "RingBuffer.hpp"
+#include "RingBufferResource.hpp"
 
 #include <vector>
 

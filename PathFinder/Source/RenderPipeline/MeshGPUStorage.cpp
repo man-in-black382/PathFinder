@@ -20,32 +20,32 @@ namespace PathFinder
         mesh.SetVertexStorageLocation(locationInStorage);
     }
 
-    const HAL::BufferResource<Vertex1P1N1UV1T1BT>* MeshGPUStorage::UnifiedVertexBuffer_1P1N1UV1T1BT() const
+    const HAL::Buffer<Vertex1P1N1UV1T1BT>* MeshGPUStorage::UnifiedVertexBuffer_1P1N1UV1T1BT() const
     {
         return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get();
     }
 
-    const HAL::BufferResource<Vertex1P1N1UV>* MeshGPUStorage::UnifiedVertexBuffer_1P1N1UV() const
+    const HAL::Buffer<Vertex1P1N1UV>* MeshGPUStorage::UnifiedVertexBuffer_1P1N1UV() const
     {
         return std::get<FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).VertexBuffer.get();
     }
 
-    const HAL::BufferResource<PathFinder::Vertex1P3>* MeshGPUStorage::UnifiedVertexBuffer_1P() const
+    const HAL::Buffer<PathFinder::Vertex1P3>* MeshGPUStorage::UnifiedVertexBuffer_1P() const
     {
         return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).VertexBuffer.get();
     }
 
-    const HAL::BufferResource<uint32_t>* MeshGPUStorage::UnifiedIndexBuffer_1P1N1UV1T1BT() const
+    const HAL::Buffer<uint32_t>* MeshGPUStorage::UnifiedIndexBuffer_1P1N1UV1T1BT() const
     {
         return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBuffer.get();
     }
 
-    const HAL::BufferResource<uint32_t>* MeshGPUStorage::UnifiedIndexBuffer_1P1N1UV() const
+    const HAL::Buffer<uint32_t>* MeshGPUStorage::UnifiedIndexBuffer_1P1N1UV() const
     {
         return std::get<FinalBufferPackage<Vertex1P1N1UV>>(mFinalBuffers).IndexBuffer.get();
     }
 
-    const HAL::BufferResource<uint32_t>* MeshGPUStorage::UnifiedIndexBuffer_1P() const
+    const HAL::Buffer<uint32_t>* MeshGPUStorage::UnifiedIndexBuffer_1P() const
     {
         return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).IndexBuffer.get();
     }
@@ -81,7 +81,7 @@ namespace PathFinder
 
         if (!uploadBuffers.Vertices.empty())
         {
-            auto uploadVertexBuffer = std::make_shared<HAL::BufferResource<Vertex>>(
+            auto uploadVertexBuffer = std::make_shared<HAL::Buffer<Vertex>>(
                 *mDevice, uploadBuffers.Vertices.size(), 1, HAL::CPUAccessibleHeapType::Upload);
 
             uploadVertexBuffer->Write(0, uploadBuffers.Vertices.data(), uploadBuffers.Vertices.size());
@@ -91,7 +91,7 @@ namespace PathFinder
 
         if (!uploadBuffers.Indices.empty())
         {
-            auto uploadIndexBuffer = std::make_shared<HAL::BufferResource<uint32_t>>(
+            auto uploadIndexBuffer = std::make_shared<HAL::Buffer<uint32_t>>(
                 *mDevice, uploadBuffers.Indices.size(), 1, HAL::CPUAccessibleHeapType::Upload);
 
             uploadIndexBuffer->Write(0, uploadBuffers.Indices.data(), uploadBuffers.Indices.size());
@@ -115,8 +115,8 @@ namespace PathFinder
             HAL::RayTracingBottomAccelerationStructure& blas = mBottomAccelerationStructures[location.BottomAccelerationStructureIndex];
 
             HAL::RayTracingGeometry<Vertex, uint32_t> blasGeometry{
-                finalBuffers.VertexBuffer.get(), location.VertexBufferOffset, location.VertexCount, HAL::ResourceFormat::Color::RGB32_Float,
-                finalBuffers.IndexBuffer.get(), location.IndexBufferOffset, location.IndexCount, HAL::ResourceFormat::Color::R32_Unsigned,
+                finalBuffers.VertexBuffer.get(), location.VertexBufferOffset, location.VertexCount, HAL::ColorFormat::RGB32_Float,
+                finalBuffers.IndexBuffer.get(), location.IndexBufferOffset, location.IndexCount, HAL::ColorFormat::R32_Unsigned,
                 glm::mat4x4{}, true
             };
 

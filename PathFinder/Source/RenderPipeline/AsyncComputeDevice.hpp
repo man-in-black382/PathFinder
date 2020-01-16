@@ -38,7 +38,7 @@ namespace PathFinder
         virtual void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         template <class T>
-        void BindExternalBuffer(const HAL::BufferResource<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void BindExternalBuffer(const HAL::Buffer<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         template <class T>
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);

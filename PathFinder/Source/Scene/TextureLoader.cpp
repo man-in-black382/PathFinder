@@ -14,7 +14,7 @@ namespace PathFinder
     TextureLoader::TextureLoader(const std::filesystem::path& rootTexturePath, const HAL::Device* device, CopyDevice* copyDevice)
         : mRootPath{ rootTexturePath }, mDevice{ device }, mCopyDevice{ copyDevice } {}
 
-    std::shared_ptr<HAL::TextureResource> TextureLoader::Load(const std::string& relativeFilePath) const
+    std::shared_ptr<HAL::Texture> TextureLoader::Load(const std::string& relativeFilePath) const
     {
         std::filesystem::path fullPath = mRootPath;
         fullPath += relativeFilePath;
@@ -43,10 +43,10 @@ namespace PathFinder
 
         assert_format(textureInfo.num_layers == 1, "Texture array are not supported yet");
 
-        std::shared_ptr<HAL::TextureResource> texture = AllocateTexture(textureInfo);
+        std::shared_ptr<HAL::Texture> texture = AllocateTexture(textureInfo);
         HAL::ResourceFootprint textureFootprint{ *texture };
 
-        auto uploadBuffer = std::make_shared<HAL::BufferResource<uint8_t>>(
+        auto uploadBuffer = std::make_shared<HAL::Buffer<uint8_t>>(
             *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Upload);
 
         uint64_t bufferMemoryOffset = 0;
@@ -86,35 +86,35 @@ namespace PathFinder
         return std::move(texture);
     }
 
-    HAL::ResourceFormat::TextureKind TextureLoader::ToKind(const ddsktx_texture_info& textureInfo) const
+    HAL::TextureKind TextureLoader::ToKind(const ddsktx_texture_info& textureInfo) const
     {
         bool isArray = textureInfo.num_layers > 1;
 
-        if (textureInfo.depth > 1 && !isArray) return HAL::ResourceFormat::TextureKind::Texture3D;
-        if (textureInfo.depth > 1 || textureInfo.width > 1) return HAL::ResourceFormat::TextureKind::Texture2D;
+        if (textureInfo.depth > 1 && !isArray) return HAL::TextureKind::Texture3D;
+        if (textureInfo.depth > 1 || textureInfo.width > 1) return HAL::TextureKind::Texture2D;
 
-        return HAL::ResourceFormat::TextureKind::Texture1D;
+        return HAL::TextureKind::Texture1D;
     }
 
     HAL::ResourceFormat::FormatVariant TextureLoader::ToResourceFormat(const ddsktx_format& parserFormat) const
     {
         switch (parserFormat)
         {
-        case DDSKTX_FORMAT_R8:          return HAL::ResourceFormat::Color::R8_Usigned_Norm;
-        case DDSKTX_FORMAT_RGBA8:       return HAL::ResourceFormat::Color::RGBA8_Usigned_Norm;
-        case DDSKTX_FORMAT_RGBA8S:      return HAL::ResourceFormat::Color::RGBA8_Signed;
-        case DDSKTX_FORMAT_RG16:        return HAL::ResourceFormat::Color::RG16_Unsigned;
-        case DDSKTX_FORMAT_RGB8:        return HAL::ResourceFormat::Color::RGBA8_Unsigned;
-        case DDSKTX_FORMAT_R16:         return HAL::ResourceFormat::Color::R16_Unsigned;
-        case DDSKTX_FORMAT_R32F:        return HAL::ResourceFormat::Color::R32_Float;
-        case DDSKTX_FORMAT_R16F:        return HAL::ResourceFormat::Color::R16_Float;
-        case DDSKTX_FORMAT_RG16F:       return HAL::ResourceFormat::Color::RG16_Float;
-        case DDSKTX_FORMAT_RG16S:       return HAL::ResourceFormat::Color::RG16_Signed;
-        case DDSKTX_FORMAT_RGBA16F:     return HAL::ResourceFormat::Color::RGBA16_Float;
-        case DDSKTX_FORMAT_RGBA16:      return HAL::ResourceFormat::Color::RGBA16_Unsigned;
-        case DDSKTX_FORMAT_RG8:         return HAL::ResourceFormat::Color::RG8_Usigned_Norm;
-        case DDSKTX_FORMAT_RG8S:        return HAL::ResourceFormat::Color::RG8_Signed;
-        case DDSKTX_FORMAT_BGRA8:       return HAL::ResourceFormat::Color::BGRA8_Unsigned_Norm;
+        case DDSKTX_FORMAT_R8:          return HAL::ColorFormat::R8_Usigned_Norm;
+        case DDSKTX_FORMAT_RGBA8:       return HAL::ColorFormat::RGBA8_Usigned_Norm;
+        case DDSKTX_FORMAT_RGBA8S:      return HAL::ColorFormat::RGBA8_Signed;
+        case DDSKTX_FORMAT_RG16:        return HAL::ColorFormat::RG16_Unsigned;
+        case DDSKTX_FORMAT_RGB8:        return HAL::ColorFormat::RGBA8_Unsigned;
+        case DDSKTX_FORMAT_R16:         return HAL::ColorFormat::R16_Unsigned;
+        case DDSKTX_FORMAT_R32F:        return HAL::ColorFormat::R32_Float;
+        case DDSKTX_FORMAT_R16F:        return HAL::ColorFormat::R16_Float;
+        case DDSKTX_FORMAT_RG16F:       return HAL::ColorFormat::RG16_Float;
+        case DDSKTX_FORMAT_RG16S:       return HAL::ColorFormat::RG16_Signed;
+        case DDSKTX_FORMAT_RGBA16F:     return HAL::ColorFormat::RGBA16_Float;
+        case DDSKTX_FORMAT_RGBA16:      return HAL::ColorFormat::RGBA16_Unsigned;
+        case DDSKTX_FORMAT_RG8:         return HAL::ColorFormat::RG8_Usigned_Norm;
+        case DDSKTX_FORMAT_RG8S:        return HAL::ColorFormat::RG8_Signed;
+        case DDSKTX_FORMAT_BGRA8:       return HAL::ColorFormat::BGRA8_Unsigned_Norm;
 
         case DDSKTX_FORMAT_RGB10A2:
         case DDSKTX_FORMAT_RG11B10F:
@@ -147,18 +147,18 @@ namespace PathFinder
         case DDSKTX_FORMAT_ASTC10x5:    // ASTC 10x5 2.56 BPP
         default: 
             assert_format(false, "Format is not supported at the moment"); 
-            return HAL::ResourceFormat::Color::R16_Float;
+            return HAL::ColorFormat::R16_Float;
         }
     }
 
-    std::shared_ptr<HAL::TextureResource> TextureLoader::AllocateTexture(const ddsktx_texture_info& textureInfo) const
+    std::shared_ptr<HAL::Texture> TextureLoader::AllocateTexture(const ddsktx_texture_info& textureInfo) const
     {
         HAL::ResourceFormat::FormatVariant format = ToResourceFormat(textureInfo.format);
         Geometry::Dimensions dimensions(textureInfo.width, textureInfo.height, textureInfo.depth);
-        HAL::ResourceFormat::TextureKind kind = ToKind(textureInfo);
-        HAL::ResourceFormat::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 0.0 };
+        HAL::TextureKind kind = ToKind(textureInfo);
+        HAL::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 0.0 };
 
-        return std::make_shared<HAL::TextureResource>(
+        return std::make_shared<HAL::Texture>(
             *mDevice, format, kind, dimensions, clearValue,
             HAL::ResourceState::Common,
             HAL::ResourceState::PixelShaderAccess | 

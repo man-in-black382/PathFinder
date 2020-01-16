@@ -9,7 +9,7 @@ namespace PathFinder
         : mRenderPassGraph{ renderPassGraph },
         mAllocations{ &AliasingMetadata::SortDescending } {}
 
-    void PipelineResourceMemoryAliaser::AddAllocation(PipelineResourceAllocation* allocation)
+    void PipelineResourceMemoryAliaser::AddAllocation(PipelineResourceSchedulingInfo* allocation)
     {
         mAllocations.emplace(GetTimeline(allocation), allocation);
     }
@@ -53,7 +53,7 @@ namespace PathFinder
         return startIntersects || endIntersects;
     }
 
-    PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceAllocation* allocation) const
+    PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceSchedulingInfo* allocation) const
     {
         return { mRenderPassGraph->IndexOfPass(allocation->FirstPassName()), mRenderPassGraph->IndexOfPass(allocation->LastPassName()) };
     }
@@ -202,7 +202,7 @@ namespace PathFinder
             //
             //nextAllocationIt->Allocation->AliasingSource = mAllocations.begin()->Allocation;
 
-            PipelineResourceAllocation::AliasingMetadata& aliasingInfo = nextAllocationIt->Allocation->AliasingInfo;
+            PipelineResourceSchedulingInfo::AliasingMetadata& aliasingInfo = nextAllocationIt->Allocation->AliasingInfo;
 
             aliasingInfo.HeapOffset = mGlobalStartOffset + mostFittingMemoryRegion.Offset;
             aliasingInfo.NeedsAliasingBarrier = true;
@@ -227,7 +227,7 @@ namespace PathFinder
         mAlreadyAliasedAllocations.clear();
     }
 
-    PipelineResourceMemoryAliaser::AliasingMetadata::AliasingMetadata(const Timeline& timeline, PipelineResourceAllocation* allocation)
+    PipelineResourceMemoryAliaser::AliasingMetadata::AliasingMetadata(const Timeline& timeline, PipelineResourceSchedulingInfo* allocation)
         : ResourceTimeline{ timeline }, Allocation{ allocation } {}
 
     bool PipelineResourceMemoryAliaser::AliasingMetadata::SortAscending(const AliasingMetadata& first, const AliasingMetadata& second)

@@ -1,11 +1,11 @@
-#include "TextureResource.hpp"
+#include "Texture.hpp"
 
 #include "../Foundation/Assert.hpp"
 
 namespace HAL
 {
 
-    TextureResource::TextureResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr) 
+    Texture::Texture(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr) 
         : Resource(existingResourcePtr)
     {
         mFormat = ResourceFormat::FormatFromD3DFormat(D3DDescription().Format);
@@ -13,38 +13,38 @@ namespace HAL
 
         switch (D3DDescription().Dimension)
         {
-        case D3D12_RESOURCE_DIMENSION_TEXTURE1D: mKind = HAL::ResourceFormat::TextureKind::Texture1D; break;
-        case D3D12_RESOURCE_DIMENSION_TEXTURE2D: mKind = HAL::ResourceFormat::TextureKind::Texture2D; break;
-        case D3D12_RESOURCE_DIMENSION_TEXTURE3D: mKind = HAL::ResourceFormat::TextureKind::Texture3D; break;
+        case D3D12_RESOURCE_DIMENSION_TEXTURE1D: mKind = HAL::TextureKind::Texture1D; break;
+        case D3D12_RESOURCE_DIMENSION_TEXTURE2D: mKind = HAL::TextureKind::Texture2D; break;
+        case D3D12_RESOURCE_DIMENSION_TEXTURE3D: mKind = HAL::TextureKind::Texture3D; break;
         default: assert_format(false, "Existing resource is not a texture");
         }
     }
 
-    TextureResource::TextureResource(
-        const Device& device, ResourceFormat::FormatVariant format, ResourceFormat::TextureKind kind,
-        const Geometry::Dimensions& dimensions, const ResourceFormat::ClearValue& optimizedClearValue, 
+    Texture::Texture(
+        const Device& device, ResourceFormat::FormatVariant format, TextureKind kind,
+        const Geometry::Dimensions& dimensions, const ClearValue& optimizedClearValue, 
         ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount)
         :
         Resource(device, ConstructResourceFormat(&device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
         mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
 
-    TextureResource::TextureResource(
+    Texture::Texture(
         const Device& device, const Heap& heap, uint64_t heapOffset, 
-        ResourceFormat::FormatVariant format, ResourceFormat::TextureKind kind, 
+        ResourceFormat::FormatVariant format, TextureKind kind, 
         const Geometry::Dimensions& dimensions, 
-        const ResourceFormat::ClearValue& optimizedClearValue, 
+        const ClearValue& optimizedClearValue, 
         ResourceState initialStateMask, ResourceState expectedStateMask, 
         uint16_t mipCount)
         :
         Resource(device, heap, heapOffset, ConstructResourceFormat(&device, format, kind, dimensions, mipCount, optimizedClearValue), initialStateMask, expectedStateMask),
         mDimensions{ dimensions }, mKind{ kind }, mFormat{ format }, mOptimizedClearValue{ optimizedClearValue }, mMipCount{ mipCount } {}
 
-    bool TextureResource::IsArray() const
+    bool Texture::IsArray() const
     {
         switch (mKind)
         {
-        case ResourceFormat::TextureKind::Texture1D: 
-        case ResourceFormat::TextureKind::Texture2D: 
+        case TextureKind::Texture1D: 
+        case TextureKind::Texture2D: 
             return mDimensions.Depth > 1;
 
         default:
@@ -52,15 +52,15 @@ namespace HAL
         }
     }
 
-    uint32_t TextureResource::SubresourceCount() const
+    uint32_t Texture::SubresourceCount() const
     {
         return IsArray() ? mDimensions.Depth * mMipCount : mMipCount;
     }
 
-    ResourceFormat TextureResource::ConstructResourceFormat(
+    ResourceFormat Texture::ConstructResourceFormat(
         const Device* device, ResourceFormat::FormatVariant format, 
-        ResourceFormat::TextureKind kind, const Geometry::Dimensions& dimensions, 
-        uint16_t mipCount, const ResourceFormat::ClearValue& optimizedClearValue)
+        TextureKind kind, const Geometry::Dimensions& dimensions, 
+        uint16_t mipCount, const ClearValue& optimizedClearValue)
     {
         return { device, format, kind, dimensions, mipCount, optimizedClearValue };
     }

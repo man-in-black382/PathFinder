@@ -8,17 +8,17 @@ namespace HAL
 {
 
     template <class T>
-    class BufferResource : public Resource
+    class Buffer : public Resource
     {
     public:
         using Resource::Resource;
         using ReadbackSession = std::function<void(const T*)>;
 
-        BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
-        BufferResource(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
-        BufferResource(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType);
+        Buffer(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
+        Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
+        Buffer(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType);
 
-        ~BufferResource();
+        ~Buffer();
 
         virtual void Read(const ReadbackSession& session) const;
 
@@ -51,5 +51,5 @@ namespace HAL
 
 }
 
-#include "BufferResource.inl"
+#include "Buffer.inl"
 

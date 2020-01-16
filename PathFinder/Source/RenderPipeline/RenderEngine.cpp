@@ -15,7 +15,7 @@ namespace PathFinder
         const RenderPassExecutionGraph* passExecutionGraph)
         : 
         mPassExecutionGraph{ passExecutionGraph },
-        mDefaultRenderSurface{ { 1920, 1080 }, HAL::ResourceFormat::Color::RGBA16_Float, HAL::ResourceFormat::DepthStencil::Depth32_Float },
+        mDefaultRenderSurface{ { 1920, 1080 }, HAL::ColorFormat::RGBA16_Float, HAL::DepthStencilFormat::Depth32_Float },
         mDevice{ FetchDefaultDisplayAdapter() },
         mUploadFence{ mDevice },
         mAsyncComputeFence{ mDevice },
@@ -38,7 +38,7 @@ namespace PathFinder
         mCommandRecorder{ &mGraphicsDevice },
         mUIStorage{ &mDevice, &mUploadCopyDevice, &mDescriptorStorage, mSimultaneousFramesInFlight },
         mContext{ scene, &mMeshStorage, &mUIStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
-        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
+        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ColorFormat::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
         mScene{ scene }
     {
         mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);
@@ -131,7 +131,7 @@ namespace PathFinder
         mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
 
         // Wait for TLAS build then execute render passes
-        HAL::TextureResource* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
+        HAL::Texture* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
         HAL::ResourceTransitionBarrier preRenderBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer };
         HAL::ResourceTransitionBarrier postRenderBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer };
 
@@ -241,7 +241,7 @@ namespace PathFinder
             return;
         }
 
-        mPipelineResourceStorage.IterateDebugBuffers([this](PassName passName, const HAL::BufferResource<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer) 
+        mPipelineResourceStorage.IterateDebugBuffers([this](PassName passName, const HAL::Buffer<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer) 
         {
             mUIStorage.ReadbackPassDebugBuffer(passName, *debugReadbackBuffer);
         });

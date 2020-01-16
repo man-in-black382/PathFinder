@@ -54,15 +54,15 @@ namespace PathFinder
                 auto iStates = HAL::ResourceState::UnorderedAccess;
                 auto eStates = HAL::ResourceState::CopySource | HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
-                auto distanceIndirectionMap = std::make_shared<HAL::TextureResource>(
-                    *mDevice, HAL::ResourceFormat::Color::R16_Float, HAL::ResourceFormat::TextureKind::Texture3D,
-                    UncompressedDistanceFieldSize, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
+                auto distanceIndirectionMap = std::make_shared<HAL::Texture>(
+                    *mDevice, HAL::ColorFormat::R16_Float, HAL::TextureKind::Texture3D,
+                    UncompressedDistanceFieldSize, HAL::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
 
-                auto distanceAtlas = std::make_shared<HAL::TextureResource>(
-                    *mDevice, HAL::ResourceFormat::Color::RGBA32_Unsigned, HAL::ResourceFormat::TextureKind::Texture3D,
-                    UncompressedDistanceFieldSize, HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
+                auto distanceAtlas = std::make_shared<HAL::Texture>(
+                    *mDevice, HAL::ColorFormat::RGBA32_Unsigned, HAL::TextureKind::Texture3D,
+                    UncompressedDistanceFieldSize, HAL::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
 
-                auto atlasEntryCounter = std::make_shared<HAL::BufferResource<uint32_t>>(
+                auto atlasEntryCounter = std::make_shared<HAL::Buffer<uint32_t>>(
                     *mDevice, 1, 1, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::CopySource);
 
                 distanceIndirectionMap->SetDebugName("DistanceIndirectionMap");

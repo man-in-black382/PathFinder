@@ -14,7 +14,7 @@ namespace PathFinder
             state.ShaderFileNames.PixelShaderFileName = L"BackBufferOutput.hlsl";
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleStrip;
             state.DepthStencilState.SetDepthTestEnabled(false);
-            state.RenderTargetFormats = { HAL::ResourceFormat::Color::RGBA8_Usigned_Norm };
+            state.RenderTargetFormats = { HAL::ColorFormat::RGBA8_Usigned_Norm };
         });
     }
      

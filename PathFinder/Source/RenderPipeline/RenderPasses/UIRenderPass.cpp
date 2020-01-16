@@ -25,7 +25,7 @@ namespace PathFinder
             state.DepthStencilState.SetDepthTestEnabled(false);
             state.RasterizerState.SetFrontClockwise(true); // ImGui is Clockwise for front face
             state.BlendState = AlphaBlendingState();
-            state.RenderTargetFormats = { HAL::ResourceFormat::Color::RGBA8_Usigned_Norm };
+            state.RenderTargetFormats = { HAL::ColorFormat::RGBA8_Usigned_Norm };
         });
     }
       

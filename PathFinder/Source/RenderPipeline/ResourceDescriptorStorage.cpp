@@ -10,7 +10,7 @@ namespace PathFinder
         mDSDescriptorHeap{ device, mDescriptorHeapRangeCapacity },
         mCBSRUADescriptorHeap{ device, mDescriptorHeapRangeCapacity } {}
 
-    const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
+    const HAL::RTDescriptor* ResourceDescriptorStorage::GetRTDescriptor(const HAL::Resource* resource, std::optional<HAL::ColorFormat> format) const
     {
         auto descriptorSet = GetRTSRUASet(resource, format);
         return descriptorSet ? descriptorSet->RTDescriptor : nullptr;
@@ -22,13 +22,13 @@ namespace PathFinder
         return descriptorSet ? descriptorSet->DSDescriptor : nullptr;
     }
 
-    const HAL::SRDescriptor* ResourceDescriptorStorage::GetSRDescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
+    const HAL::SRDescriptor* ResourceDescriptorStorage::GetSRDescriptor(const HAL::Resource* resource, std::optional<HAL::ColorFormat> format) const
     {
         auto descriptorSet = GetRTSRUASet(resource, format);
         return descriptorSet ? descriptorSet->SRDescriptor : nullptr;
     }
 
-    const HAL::UADescriptor* ResourceDescriptorStorage::GetUADescriptor(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
+    const HAL::UADescriptor* ResourceDescriptorStorage::GetUADescriptor(const HAL::Resource* resource, std::optional<HAL::ColorFormat> format) const
     {
         auto descriptorSet = GetRTSRUASet(resource, format);
         return descriptorSet ? descriptorSet->UADescriptor : nullptr;
@@ -40,7 +40,7 @@ namespace PathFinder
         return descriptorSet ? descriptorSet->CBDescriptor : nullptr;
     }
 
-    const HAL::RTDescriptor& ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
+    const HAL::RTDescriptor& ResourceDescriptorStorage::EmplaceRTDescriptorIfNeeded(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
         ValidateRTFormatsCompatibility(texture->Format(), shaderVisibleFormat);
 
@@ -59,9 +59,9 @@ namespace PathFinder
         return descriptor;
     }
 
-    const HAL::DSDescriptor& ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded(const HAL::TextureResource* texture)
+    const HAL::DSDescriptor& ResourceDescriptorStorage::EmplaceDSDescriptorIfNeeded(const HAL::Texture* texture)
     {
-        assert_format(std::holds_alternative<HAL::ResourceFormat::DepthStencil>(texture->Format()), "Texture is not of depth-stencil format");
+        assert_format(std::holds_alternative<HAL::DepthStencilFormat>(texture->Format()), "Texture is not of depth-stencil format");
 
         if (auto descriptor = GetDSDescriptor(texture)) return *descriptor;
 
@@ -70,7 +70,7 @@ namespace PathFinder
         return descriptor;
     }
 
-    const HAL::SRDescriptor& ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded(const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
+    const HAL::SRDescriptor& ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
         ValidateSRUAFormatsCompatibility(texture->Format(), shaderVisibleFormat);
 
@@ -90,7 +90,7 @@ namespace PathFinder
     }
 
     const HAL::UADescriptor& ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded(
-        const HAL::TextureResource* texture, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
+        const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
         ValidateSRUAFormatsCompatibility(texture->Format(), shaderVisibleFormat);
 
@@ -110,21 +110,21 @@ namespace PathFinder
     }
 
     void ResourceDescriptorStorage::ValidateRTFormatsCompatibility(
-        HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
+        HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
         if (shaderVisibleFormat)
         {
-            assert_format(std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for texture that has it's own format");
+            assert_format(std::holds_alternative<HAL::TypelessColorFormat>(textureFormat), "Format redefinition for texture that has it's own format");
         }
         else {
-            assert_format(std::holds_alternative<HAL::ResourceFormat::Color>(textureFormat), "Texture format is not suited for render targets");
+            assert_format(std::holds_alternative<HAL::ColorFormat>(textureFormat), "Texture format is not suited for render targets");
         }
     }
 
     void ResourceDescriptorStorage::ValidateSRUAFormatsCompatibility(
-        HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat)
+        HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
-        assert_format(!shaderVisibleFormat || std::holds_alternative<HAL::ResourceFormat::TypelessColor>(textureFormat), "Format redefinition for typed texture");
+        assert_format(!shaderVisibleFormat || std::holds_alternative<HAL::TypelessColorFormat>(textureFormat), "Format redefinition for typed texture");
     }
 
     const ResourceDescriptorStorage::DSCBSet* ResourceDescriptorStorage::GetDSCBSet(const HAL::Resource* resource) const
@@ -133,7 +133,7 @@ namespace PathFinder
         return it != mDescriptors.end() ? &it->second.DSCB : nullptr;
     }
 
-    const ResourceDescriptorStorage::RTSRUASet* ResourceDescriptorStorage::GetRTSRUASet(const HAL::Resource* resource, std::optional<HAL::ResourceFormat::Color> format) const
+    const ResourceDescriptorStorage::RTSRUASet* ResourceDescriptorStorage::GetRTSRUASet(const HAL::Resource* resource, std::optional<HAL::ColorFormat> format) const
     {
         auto it = mDescriptors.find(resource);
 
@@ -146,7 +146,7 @@ namespace PathFinder
         }
     }
 
-    const ResourceDescriptorStorage::RTSRUASet* ResourceDescriptorStorage::DescriptorSet::GetExplicitlyTypedRTSRUA(HAL::ResourceFormat::Color format) const
+    const ResourceDescriptorStorage::RTSRUASet* ResourceDescriptorStorage::DescriptorSet::GetExplicitlyTypedRTSRUA(HAL::ColorFormat format) const
     {
         auto it = ExplicitlyTypedRTSRUA.find(format);
         return it != ExplicitlyTypedRTSRUA.end() ? &it->second : nullptr;

@@ -3,8 +3,8 @@ namespace PathFinder
 
     template <class T>
     void CopyDevice::QueueBufferToTextureCopy(
-        const HAL::BufferResource<T>& buffer,
-        const HAL::TextureResource& texture, 
+        const HAL::Buffer<T>& buffer,
+        const HAL::Texture& texture, 
         const HAL::ResourceFootprint& footprint)
     {
         for (const HAL::SubresourceFootprint& subresourceFootprint : footprint.SubresourceFootprints())
@@ -15,8 +15,8 @@ namespace PathFinder
 
     template <class T>
     void CopyDevice::QueueBufferToBufferCopy(
-        const HAL::BufferResource<T>& source,
-        const HAL::BufferResource<T>& destination,
+        const HAL::Buffer<T>& source,
+        const HAL::Buffer<T>& destination,
         uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset)
     {
         mRingCommandList.CurrentCommandList().CopyBufferRegion(source, destination, sourceOffset, objectCount, destinationOffset);
@@ -24,8 +24,8 @@ namespace PathFinder
 
     template <class T>
     void CopyDevice::QueueBufferToTextureCopy(
-        std::shared_ptr<HAL::BufferResource<T>> buffer, 
-        std::shared_ptr<HAL::TextureResource> texture, 
+        std::shared_ptr<HAL::Buffer<T>> buffer, 
+        std::shared_ptr<HAL::Texture> texture, 
         const HAL::ResourceFootprint& footprint)
     {
         QueueBufferToTextureCopy(*buffer, *texture, footprint);
@@ -37,8 +37,8 @@ namespace PathFinder
 
     template <class T>
     void CopyDevice::QueueBufferToBufferCopy(
-        std::shared_ptr<HAL::BufferResource<T>> source,
-        std::shared_ptr<HAL::BufferResource<T>> destination,
+        std::shared_ptr<HAL::Buffer<T>> source,
+        std::shared_ptr<HAL::Buffer<T>> destination,
         uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset)
     {
         QueueBufferToBufferCopy(*source, *destination, sourceOffset, objectCount, destinationOffset);
@@ -49,9 +49,9 @@ namespace PathFinder
     }
 
     template <class T>
-    std::shared_ptr<HAL::BufferResource<T>> CopyDevice::QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::BufferResource<T>> buffer)
+    std::shared_ptr<HAL::Buffer<T>> CopyDevice::QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::Buffer<T>> buffer)
     {
-        auto emptyClone = std::make_shared<HAL::BufferResource<T>>(
+        auto emptyClone = std::make_shared<HAL::Buffer<T>>(
             *mDevice, buffer->Capacity(), buffer->PerElementAlignment(), HAL::ResourceState::CopyDestination, buffer->ExpectedStates());
 
         mRingCommandList.CurrentCommandList().CopyResource(*buffer, *emptyClone);
@@ -64,9 +64,9 @@ namespace PathFinder
     }
 
     template <class T>
-    std::shared_ptr<HAL::BufferResource<T>> CopyDevice::QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::BufferResource<T>> buffer)
+    std::shared_ptr<HAL::Buffer<T>> CopyDevice::QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::Buffer<T>> buffer)
     {
-        auto emptyClone = std::make_shared<HAL::BufferResource<T>>(
+        auto emptyClone = std::make_shared<HAL::Buffer<T>>(
             *mDevice, buffer->Capacity(), buffer->PerElementAlignment(), HAL::CPUAccessibleHeapType::Readback);
 
         mRingCommandList.CurrentCommandList().CopyResource(*buffer, *emptyClone);

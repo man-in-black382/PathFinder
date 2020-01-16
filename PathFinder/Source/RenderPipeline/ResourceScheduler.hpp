@@ -16,18 +16,18 @@ namespace PathFinder
         struct NewTextureProperties
         {
             NewTextureProperties(
-                std::optional<HAL::ResourceFormat::TextureKind> kind = std::nullopt,
+                std::optional<HAL::TextureKind> kind = std::nullopt,
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt,
-                std::optional<HAL::ResourceFormat::Color> shaderVisibleFormat = std::nullopt,
-                std::optional<HAL::ResourceFormat::TypelessColor> typelessFormat = std::nullopt,
+                std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt,
+                std::optional<HAL::TypelessColorFormat> typelessFormat = std::nullopt,
                 uint8_t mipCount = 1)
                 : 
                 TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat }, 
                 Kind{ kind }, Dimensions{ dimensions }, MipCount{ mipCount } {}
 
-            std::optional<HAL::ResourceFormat::TypelessColor> TypelessFormat;
-            std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
-            std::optional<HAL::ResourceFormat::TextureKind> Kind;
+            std::optional<HAL::TypelessColorFormat> TypelessFormat;
+            std::optional<HAL::ColorFormat> ShaderVisibleFormat;
+            std::optional<HAL::TextureKind> Kind;
             std::optional<Geometry::Dimensions> Dimensions;
             std::optional<uint8_t> MipCount;
         };
@@ -35,12 +35,12 @@ namespace PathFinder
         struct NewDepthStencilProperties
         {
             NewDepthStencilProperties(
-                std::optional<HAL::ResourceFormat::DepthStencil> format = std::nullopt,
+                std::optional<HAL::DepthStencilFormat> format = std::nullopt,
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt)
                 : 
                 Format{ format }, Dimensions{ dimensions } {}
 
-            std::optional<HAL::ResourceFormat::DepthStencil> Format;
+            std::optional<HAL::DepthStencilFormat> Format;
             std::optional<Geometry::Dimensions> Dimensions;
         };
 
@@ -71,16 +71,16 @@ namespace PathFinder
         void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 
 
         // Indicates that a previously created render target will be used as a render target in the scheduling pass (Write Only)
-        void UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt);
+        void UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Indicates that a previously created depth-stencil texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
         void UseDepthStencil(Foundation::Name resourceName); 
 
         // Read any previously created texture as a Shader Resource (Read Only)
-        void ReadTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt); 
+        void ReadTexture(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt); 
 
         // Access a previously created texture as an Unordered Access resource (Read/Write)
-        void ReadWriteTexture(Foundation::Name resourceName, std::optional<HAL::ResourceFormat::Color> concreteFormat = std::nullopt);
+        void ReadWriteTexture(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Allocates new buffer to be accessed as Unordered Access resource (Read/Write)
         template <class T> 

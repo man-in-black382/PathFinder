@@ -21,7 +21,7 @@ namespace HAL
 
         if (mBuildScratchBuffer == nullptr || mBuildScratchBuffer->TotalMemory() < prebuildInfo.ScratchDataSizeInBytes)
         {
-            mBuildScratchBuffer = std::make_unique<BufferResource<uint8_t>>(
+            mBuildScratchBuffer = std::make_unique<Buffer<uint8_t>>(
                 *mDevice, prebuildInfo.ScratchDataSizeInBytes, 1,
                 ResourceState::UnorderedAccess, ResourceState::UnorderedAccess);
 
@@ -30,7 +30,7 @@ namespace HAL
 
         if (mFinalBuffer == nullptr || mFinalBuffer->TotalMemory() < prebuildInfo.ResultDataMaxSizeInBytes)
         {
-            mFinalBuffer = std::make_unique<BufferResource<uint8_t>>(
+            mFinalBuffer = std::make_unique<Buffer<uint8_t>>(
                 *mDevice, prebuildInfo.ResultDataMaxSizeInBytes, 1,
                 ResourceState::RaytracingAccelerationStructure, ResourceState::UnorderedAccess);
 
@@ -92,7 +92,7 @@ namespace HAL
     {
         if (mInstanceBuffer == nullptr || mInstanceBuffer->Capacity() < mD3DInstances.size())
         {
-            mInstanceBuffer = std::make_unique<BufferResource<D3D12_RAYTRACING_INSTANCE_DESC>>(
+            mInstanceBuffer = std::make_unique<Buffer<D3D12_RAYTRACING_INSTANCE_DESC>>(
                 *mDevice, mD3DInstances.size(), 1, CPUAccessibleHeapType::Upload);
         }
 

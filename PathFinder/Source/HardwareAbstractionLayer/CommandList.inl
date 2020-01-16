@@ -7,7 +7,7 @@ namespace HAL
    
     template <class T>
     void CopyCommandListBase::CopyBufferRegion(
-        const BufferResource<T>& source, const BufferResource<T>& destination,
+        const Buffer<T>& source, const Buffer<T>& destination,
         uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset)
     {
         assert_format(source.PaddedElementSize() == destination.PaddedElementSize(), "Buffers are misaligned. Copy will lay out data incorrectly.");
@@ -20,7 +20,7 @@ namespace HAL
     }
 
     template <class T>
-    void CopyCommandListBase::CopyBufferToTexture(const BufferResource<T>& buffer, const TextureResource& texture, const SubresourceFootprint& footprint)
+    void CopyCommandListBase::CopyBufferToTexture(const Buffer<T>& buffer, const Texture& texture, const SubresourceFootprint& footprint)
     {
         D3D12_TEXTURE_COPY_LOCATION srcLocation{};
         D3D12_TEXTURE_COPY_LOCATION dstLocation{};
@@ -37,7 +37,7 @@ namespace HAL
     }
 
     template <class T>
-    void HAL::CopyCommandListBase::CopyTextureToBuffer(const TextureResource& texture, const BufferResource<T>& buffer, const SubresourceFootprint& footprint)
+    void HAL::CopyCommandListBase::CopyTextureToBuffer(const Texture& texture, const Buffer<T>& buffer, const SubresourceFootprint& footprint)
     {
         D3D12_TEXTURE_COPY_LOCATION srcLocation{};
         D3D12_TEXTURE_COPY_LOCATION dstLocation{};
@@ -56,7 +56,7 @@ namespace HAL
 
 
     template <class T>
-    void ComputeCommandListBase::SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex)
+    void ComputeCommandListBase::SetComputeRootConstantBuffer(const Buffer<T>& cbResource, uint32_t rootParameterIndex)
     {
         mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
     }
@@ -70,7 +70,7 @@ namespace HAL
 
 
     template <class T>
-    void GraphicsCommandListBase::SetGraphicsRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex)
+    void GraphicsCommandListBase::SetGraphicsRootConstantBuffer(const Buffer<T>& cbResource, uint32_t rootParameterIndex)
     {
         mList->SetGraphicsRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
     }

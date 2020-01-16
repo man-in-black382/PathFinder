@@ -14,21 +14,21 @@ namespace PathFinder
     public:
         RenderSurfaceDescription(
             const Geometry::Dimensions& dimensions,
-            HAL::ResourceFormat::Color rtFormat,
-            HAL::ResourceFormat::DepthStencil dsFormat
+            HAL::ColorFormat rtFormat,
+            HAL::DepthStencilFormat dsFormat
         );
 
         glm::uvec2 DispatchDimensionsForGroupSize(uint32_t groupSizeX, uint32_t groupSizeY) const;
 
     private:
         Geometry::Dimensions mDimensions;
-        HAL::ResourceFormat::Color mRTFormat;
-        HAL::ResourceFormat::DepthStencil mDSFormat;
+        HAL::ColorFormat mRTFormat;
+        HAL::DepthStencilFormat mDSFormat;
 
     public:
         const Geometry::Dimensions& Dimensions() const { return mDimensions; }
-        const HAL::ResourceFormat::Color RenderTargetFormat() const { return mRTFormat; }
-        const HAL::ResourceFormat::DepthStencil DepthStencilFormat() const { return mDSFormat; }
+        const HAL::ColorFormat RenderTargetFormat() const { return mRTFormat; }
+        const HAL::DepthStencilFormat DepthStencilFormat() const { return mDSFormat; }
     };
 
 }

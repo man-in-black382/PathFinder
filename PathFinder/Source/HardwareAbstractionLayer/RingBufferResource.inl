@@ -9,39 +9,39 @@ namespace HAL
         uint64_t perElementAlignment,
         CPUAccessibleHeapType heapType)
         :
-        BufferResource<T>(device, elementCapacity * frameCapacity, perElementAlignment, heapType),
+        Buffer<T>(device, elementCapacity * frameCapacity, perElementAlignment, heapType),
         mRingBuffer{ this->Capacity() },
         mPerFrameCapacity{ elementCapacity } {}
 
     template <class T>
-    void RingBufferResource<T>::Read(const BufferResource<T>::ReadbackSession& session) const
+    void RingBufferResource<T>::Read(const Buffer<T>::ReadbackSession& session) const
     {
         // Read data for current frame
-        BufferResource<T>::Read(session, mCurrentRingOffset, mPerFrameCapacity);
+        Buffer<T>::Read(session, mCurrentRingOffset, mPerFrameCapacity);
     }
 
     template <class T>
     D3D12_GPU_VIRTUAL_ADDRESS RingBufferResource<T>::GPUVirtualAddress() const
     {
-        return BufferResource<T>::GPUVirtualAddress() + mCurrentRingOffset * BufferResource<T>::PaddedElementSize();
+        return Buffer<T>::GPUVirtualAddress() + mCurrentRingOffset * Buffer<T>::PaddedElementSize();
     }
 
     template <class T>
     void RingBufferResource<T>::Write(uint64_t startIndex, const T* data, uint64_t dataLength)
     {
-        BufferResource<T>::Write(startIndex + mCurrentRingOffset, data, dataLength);
+        Buffer<T>::Write(startIndex + mCurrentRingOffset, data, dataLength);
     }
 
     template <class T>
     T* RingBufferResource<T>::At(uint64_t index)
     {
-        return BufferResource<T>::At(index + mCurrentRingOffset);
+        return Buffer<T>::At(index + mCurrentRingOffset);
     }
 
     template <class T>
     uint64_t RingBufferResource<T>::CurrentFrameByteOffset() const
     {
-        return mCurrentRingOffset * BufferResource<T>::PaddedElementSize();
+        return mCurrentRingOffset * Buffer<T>::PaddedElementSize();
     }
 
     template <class T>

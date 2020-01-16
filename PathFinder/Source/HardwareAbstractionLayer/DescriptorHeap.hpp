@@ -8,8 +8,8 @@
 #include <optional>
 
 #include "GraphicAPIObject.hpp"
-#include "TextureResource.hpp"
-#include "BufferResource.hpp"
+#include "Texture.hpp"
+#include "Buffer.hpp"
 #include "Descriptor.hpp"
 #include "Device.hpp"
 #include "Utils.h"
@@ -62,7 +62,7 @@ namespace HAL
         RTDescriptorHeap(const Device* device, uint32_t capacity);
         ~RTDescriptorHeap() = default;
 
-        const RTDescriptor& EmplaceRTDescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> shaderVisibleFormat = std::nullopt);
+        const RTDescriptor& EmplaceRTDescriptor(const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat = std::nullopt);
 
     private:
         D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
@@ -75,7 +75,7 @@ namespace HAL
         DSDescriptorHeap(const Device* device, uint32_t capacity);
         ~DSDescriptorHeap() = default;
 
-        const DSDescriptor& EmplaceDSDescriptor(const TextureResource& texture);
+        const DSDescriptor& EmplaceDSDescriptor(const Texture& texture);
 
     private:
         D3D12_DEPTH_STENCIL_VIEW_DESC ResourceToDSVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
@@ -101,26 +101,26 @@ namespace HAL
 
         const GPUDescriptor* GetDescriptor(Range range, uint32_t indexInRange) const;
 
-        template <class T> const CBDescriptor& EmplaceCBDescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
-        template <class T> const SRDescriptor& EmplaceSRDescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
-        template <class T> const UADescriptor& EmplaceUADescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        template <class T> const CBDescriptor& EmplaceCBDescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        template <class T> const SRDescriptor& EmplaceSRDescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        template <class T> const UADescriptor& EmplaceUADescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
 
-        const SRDescriptor& EmplaceSRDescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> concreteFormat = std::nullopt);
-        const UADescriptor& EmplaceUADescriptor(const TextureResource& texture, std::optional<ResourceFormat::Color> concreteFormat = std::nullopt);
+        const SRDescriptor& EmplaceSRDescriptor(const Texture& texture, std::optional<ColorFormat> concreteFormat = std::nullopt);
+        const UADescriptor& EmplaceUADescriptor(const Texture& texture, std::optional<ColorFormat> concreteFormat = std::nullopt);
 
     private:
         D3D12_SHADER_RESOURCE_VIEW_DESC ResourceToSRVDescription(
             const D3D12_RESOURCE_DESC& resourceDesc, 
             uint64_t bufferStride,
-            std::optional<ResourceFormat::Color> explicitFormat = std::nullopt) const;
+            std::optional<ColorFormat> explicitFormat = std::nullopt) const;
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC ResourceToUAVDescription(
             const D3D12_RESOURCE_DESC& resourceDesc,
             uint64_t bufferStride,
-            std::optional<ResourceFormat::Color> explicitFormat = std::nullopt) const;
+            std::optional<ColorFormat> explicitFormat = std::nullopt) const;
 
-        Range RangeTypeForTexture(const TextureResource& texture) const;
-        Range UARangeTypeForTexture(const TextureResource& texture) const;
+        Range RangeTypeForTexture(const Texture& texture) const;
+        Range UARangeTypeForTexture(const Texture& texture) const;
     };
 
 }

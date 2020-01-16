@@ -13,7 +13,7 @@
 #include "ResourceBarrier.hpp"
 #include "DescriptorHeap.hpp"
 #include "Fence.hpp"
-#include "BufferResource.hpp"
+#include "Buffer.hpp"
 #include "RayTracingAccelerationStructure.hpp"
 #include "ResourceFootprint.hpp"
 #include "ShaderRegister.hpp"
@@ -56,21 +56,21 @@ namespace HAL
 
         template <class T>
         void CopyBufferRegion(
-            const BufferResource<T>& source, const BufferResource<T>& destination,
+            const Buffer<T>& source, const Buffer<T>& destination,
             uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
 
         void CopyTextureRegion(
-            const TextureResource& source, const TextureResource& destination,
+            const Texture& source, const Texture& destination,
             uint16_t sourceSubresource, uint16_t destinationSubresource,
             const glm::ivec3& sourceOrigin, const glm::ivec3& destinationOrigin,
             const Geometry::Dimensions& regionDimensions
         );
 
         template <class T>
-        void CopyBufferToTexture(const BufferResource<T>& buffer, const TextureResource& texture, const SubresourceFootprint& footprint);
+        void CopyBufferToTexture(const Buffer<T>& buffer, const Texture& texture, const SubresourceFootprint& footprint);
 
         template <class T>
-        void CopyTextureToBuffer(const TextureResource& texture, const BufferResource<T>& buffer, const SubresourceFootprint& footprint);
+        void CopyTextureToBuffer(const Texture& texture, const Buffer<T>& buffer, const SubresourceFootprint& footprint);
     };
 
 
@@ -82,7 +82,7 @@ namespace HAL
         void SetPipelineState(const ComputePipelineState& state);
         void SetComputeRootSignature(const RootSignature& signature);
 
-        template <class T> void SetComputeRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex);
+        template <class T> void SetComputeRootConstantBuffer(const Buffer<T>& cbResource, uint32_t rootParameterIndex);
         template <class T> void SetComputeRootConstants(const T& constants, uint32_t rootParameterIndex);
 
         void SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
@@ -108,7 +108,7 @@ namespace HAL
         void SetPipelineState(const PipelineState& state);
         void SetGraphicsRootSignature(const RootSignature& signature);
 
-        template <class T> void SetGraphicsRootConstantBuffer(const BufferResource<T>& cbResource, uint32_t rootParameterIndex);
+        template <class T> void SetGraphicsRootConstantBuffer(const Buffer<T>& cbResource, uint32_t rootParameterIndex);
         template <class T> void SetGraphicsRootConstants(const T& constants, uint32_t rootParameterIndex);
 
         void SetGraphicsRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);

@@ -8,7 +8,7 @@ namespace HAL
         const GraphicsCommandQueue& commandQueue,
         HWND windowHandle,
         BackBufferingStrategy strategy,
-        ResourceFormat::Color backBufferFormat,
+        ColorFormat backBufferFormat,
         const Geometry::Dimensions& dimensions)
     {
         DXGI_SWAP_CHAIN_DESC chain{};
@@ -37,7 +37,7 @@ namespace HAL
         for (int bufferIdx = 0; bufferIdx < bufferCount; bufferIdx++)
         {
             ThrowIfFailed(mSwapChain->GetBuffer(bufferIdx, IID_PPV_ARGS(&backBufferResourcePtr)));
-            mBackBuffers.emplace_back(std::make_unique<TextureResource>(backBufferResourcePtr));
+            mBackBuffers.emplace_back(std::make_unique<Texture>(backBufferResourcePtr));
             mBackBuffers.back()->SetDebugName("Back Buffer " + std::to_string(bufferIdx));
         }
     }

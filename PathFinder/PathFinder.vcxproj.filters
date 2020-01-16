@@ -165,9 +165,6 @@
     <ClCompile Include="Source\Foundation\Color.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\TextureResource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Scene\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -321,9 +318,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderSurfaceDescription.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\PipelineResourceAllocation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -388,6 +382,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\ResourceAllocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\BufferAllocation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1283,12 +1286,6 @@
     <ClInclude Include="Source\Foundation\Color.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\BufferResource.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\TextureResource.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Scene\Camera.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1961,9 +1958,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderSurfaceDescription.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\PipelineResourceAllocation.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\PipelineResource.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2211,6 +2205,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\ResourceAllocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\BufferAllocation.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\Buffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\Texture.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2665,9 +2671,6 @@
     </None>
     <None Include="Libs\dxcompiler.dll" />
     <None Include="Libs\dxil.dll" />
-    <None Include="Source\HardwareAbstractionLayer\BufferResource.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -2705,6 +2708,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="Source\HardwareAbstractionLayer\Buffer.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />

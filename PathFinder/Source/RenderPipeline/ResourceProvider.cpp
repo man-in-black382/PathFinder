@@ -32,7 +32,7 @@ namespace PathFinder
         return 0;
     }
 
-    uint32_t ResourceProvider::GetExternalTextureDescriptorTableIndex(const HAL::TextureResource* texture, HAL::ShaderRegister registerType)
+    uint32_t ResourceProvider::GetExternalTextureDescriptorTableIndex(const HAL::Texture* texture, HAL::ShaderRegister registerType)
     {
         switch (registerType)
         {

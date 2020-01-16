@@ -3,7 +3,7 @@
 #include <d3d12.h>
 #include <cstdint>
 
-#include "BufferResource.hpp"
+#include "Buffer.hpp"
 
 namespace HAL
 {
@@ -82,7 +82,7 @@ namespace HAL
     {
     public:
         template <class Vertex>
-        VertexBufferDescriptor(const BufferResource<Vertex>& vertexBuffer);
+        VertexBufferDescriptor(const Buffer<Vertex>& vertexBuffer);
 
     private:
         D3D12_VERTEX_BUFFER_VIEW mDescriptor{};
@@ -97,7 +97,7 @@ namespace HAL
     {
     public:
         template <class Index>
-        IndexBufferDescriptor(const BufferResource<Index>& indexBuffer, ResourceFormat::Color format);
+        IndexBufferDescriptor(const Buffer<Index>& indexBuffer, ColorFormat format);
 
     private:
         D3D12_INDEX_BUFFER_VIEW mDescriptor{};

@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "../HardwareAbstractionLayer/TextureResource.hpp"
-#include "../HardwareAbstractionLayer/BufferResource.hpp"
+#include "../HardwareAbstractionLayer/Texture.hpp"
+#include "../HardwareAbstractionLayer/Buffer.hpp"
 
 #include <glm/vec4.hpp>
 
@@ -12,15 +12,15 @@ namespace PathFinder
 
     struct Material
     {
-        const HAL::TextureResource* AlbedoMap = nullptr;
-        const HAL::TextureResource* NormalMap = nullptr;
-        const HAL::TextureResource* RoughnessMap = nullptr;
-        const HAL::TextureResource* MetalnessMap = nullptr; 
-        const HAL::TextureResource* AOMap = nullptr;
-        const HAL::TextureResource* DisplacementMap = nullptr;
-        const HAL::TextureResource* DistanceAtlasIndirectionMap = nullptr;
-        const HAL::TextureResource* DistanceAtlas = nullptr;
-        const HAL::BufferResource<uint32_t>* DistanceAtlasCounter = nullptr;
+        const HAL::Texture* AlbedoMap = nullptr;
+        const HAL::Texture* NormalMap = nullptr;
+        const HAL::Texture* RoughnessMap = nullptr;
+        const HAL::Texture* MetalnessMap = nullptr; 
+        const HAL::Texture* AOMap = nullptr;
+        const HAL::Texture* DisplacementMap = nullptr;
+        const HAL::Texture* DistanceAtlasIndirectionMap = nullptr;
+        const HAL::Texture* DistanceAtlas = nullptr;
+        const HAL::Buffer<uint32_t>* DistanceAtlasCounter = nullptr;
 
         uint32_t AlbedoMapSRVIndex = 0;
         uint32_t NormalMapSRVIndex = 0;

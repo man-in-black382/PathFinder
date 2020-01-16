@@ -14,9 +14,9 @@ namespace PathFinder
         mRingCommandList.SetDebugName("Copy Device");
     }
  
-    std::shared_ptr<HAL::TextureResource> CopyDevice::QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::TextureResource> texture)
+    std::shared_ptr<HAL::Texture> CopyDevice::QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::Texture> texture)
     {
-        auto emptyClone = std::make_shared<HAL::TextureResource>(
+        auto emptyClone = std::make_shared<HAL::Texture>(
             *mDevice, texture->Format(), texture->Kind(), texture->Dimensions(),
             texture->OptimizedClearValue(), HAL::ResourceState::CopyDestination, texture->ExpectedStates()
         );
@@ -30,11 +30,11 @@ namespace PathFinder
         return emptyClone;
     }
 
-    std::shared_ptr<HAL::BufferResource<uint8_t>> CopyDevice::QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::TextureResource> texture)
+    std::shared_ptr<HAL::Buffer<uint8_t>> CopyDevice::QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::Texture> texture)
     {
         HAL::ResourceFootprint textureFootprint{ *texture };
 
-        auto emptyClone = std::make_shared<HAL::BufferResource<uint8_t>>(
+        auto emptyClone = std::make_shared<HAL::Buffer<uint8_t>>(
             *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Readback);
 
         for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())

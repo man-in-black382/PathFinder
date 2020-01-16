@@ -75,7 +75,7 @@ namespace HAL
 
 
     template <class T>
-    const CBDescriptor& CBSRUADescriptorHeap::EmplaceCBDescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride)
+    const CBDescriptor& CBSRUADescriptorHeap::EmplaceCBDescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride)
     {
         auto index = std::underlying_type_t<Range>(Range::CBuffer);
         ValidateCapacity(index);
@@ -93,7 +93,7 @@ namespace HAL
 
 
     template <class T>
-    const SRDescriptor& HAL::CBSRUADescriptorHeap::EmplaceSRDescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride)
+    const SRDescriptor& HAL::CBSRUADescriptorHeap::EmplaceSRDescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride)
     {
         auto index = std::underlying_type_t<Range>(Range::SBuffer);
         ValidateCapacity(index);
@@ -111,7 +111,7 @@ namespace HAL
 
 
     template <class T>
-    const UADescriptor& HAL::CBSRUADescriptorHeap::EmplaceUADescriptor(const BufferResource<T>& buffer, std::optional<uint64_t> explicitStride)
+    const UADescriptor& HAL::CBSRUADescriptorHeap::EmplaceUADescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride)
     {
         auto index = std::underlying_type_t<Range>(Range::UABuffer);
         ValidateCapacity(index);

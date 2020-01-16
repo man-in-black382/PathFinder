@@ -11,7 +11,7 @@
 namespace PathFinder
 {
 
-    class PipelineResourceAllocation
+    class PipelineResourceSchedulingInfo
     {
     public:
         using StatePair = std::pair<HAL::ResourceState, HAL::ResourceState>;
@@ -19,7 +19,7 @@ namespace PathFinder
         struct PassMetadata
         {
             HAL::ResourceState RequestedState = HAL::ResourceState::Common;
-            std::optional<HAL::ResourceFormat::Color> ShaderVisibleFormat;
+            std::optional<HAL::ColorFormat> ShaderVisibleFormat;
             std::optional<StatePair> OptimizedTransitionStates;
             bool NeedsUAVBarrier = false;
             bool CreateTextureRTDescriptor = false;
@@ -33,13 +33,13 @@ namespace PathFinder
 
         struct AliasingMetadata
         {
-            const PipelineResourceAllocation* AliasingSource = nullptr;
+            const PipelineResourceSchedulingInfo* AliasingSource = nullptr;
             HAL::HeapAliasingGroup HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
             uint64_t HeapOffset = 0;
             bool NeedsAliasingBarrier = false;
         };
 
-        PipelineResourceAllocation(const HAL::ResourceFormat& format);
+        PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format);
 
         void GatherExpectedStates();
         const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;

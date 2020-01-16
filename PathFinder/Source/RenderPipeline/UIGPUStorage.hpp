@@ -2,7 +2,7 @@
 
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
-#include "../HardwareAbstractionLayer/TextureResource.hpp"
+#include "../HardwareAbstractionLayer/Texture.hpp"
 #include "../Geometry/Rect2D.hpp"
 
 #include "ResourceDescriptorStorage.hpp"
@@ -36,7 +36,7 @@ namespace PathFinder
         void EndFrame(uint64_t completedFrameNumber);
 
         void UploadUI();
-        void ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::BufferResource<float>& buffer);
+        void ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::Buffer<float>& buffer);
 
     private:
         void UploadVertices(const ImDrawData& drawData);
@@ -55,8 +55,8 @@ namespace PathFinder
         ResourceDescriptorStorage* mDescriptorStorage;
         std::unique_ptr<HAL::RingBufferResource<ImDrawVert>> mVertexBuffer;
         std::unique_ptr<HAL::RingBufferResource<ImDrawIdx>> mIndexBuffer;
-        std::shared_ptr<HAL::BufferResource<uint8_t>> mFontUploadBuffer;
-        std::shared_ptr<HAL::TextureResource> mFontTexture;
+        std::shared_ptr<HAL::Buffer<uint8_t>> mFontUploadBuffer;
+        std::shared_ptr<HAL::Texture> mFontTexture;
         std::unordered_map<Foundation::Name, std::vector<float>> mPerPassDebugData;
         std::vector<DrawCommand> mDrawCommands;
 

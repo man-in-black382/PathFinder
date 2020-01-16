@@ -33,21 +33,21 @@ namespace PathFinder
     }
 
     template <class BufferDataT>
-    PipelineResourceAllocation* PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment)
+    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
-        if (resourceObjects.Allocation)
+        if (resourceObjects.SchedulingInfo)
         {
-            return resourceObjects.Allocation.get();
+            return resourceObjects.SchedulingInfo.get();
         }
         
-        resourceObjects.Allocation = std::make_unique<PipelineResourceAllocation>(
-            HAL::BufferResource<BufferDataT>::ConstructResourceFormat(mDevice, capacity, perElementAlignment));
+        resourceObjects.SchedulingInfo = std::make_unique<PipelineResourceSchedulingInfo>(
+            HAL::Buffer<BufferDataT>::ConstructResourceFormat(mDevice, capacity, perElementAlignment));
 
-        resourceObjects.Allocation->AllocationAction = [=, &resourceObjects]()
+        resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
         {
-            PipelineResourceAllocation* allocation = resourceObjects.Allocation.get();
+            PipelineResourceSchedulingInfo* allocation = resourceObjects.SchedulingInfo.get();
             HAL::Heap* heap = mBufferHeap.get();
 
             // Store as byte buffer and alight manually
@@ -56,17 +56,17 @@ namespace PathFinder
 
             resourceObjects.Buffer = std::make_unique<BufferPipelineResource>();
 
-            resourceObjects.Buffer->Resource = std::make_unique<HAL::BufferResource<uint8_t>>(
+            resourceObjects.Buffer->Resource = std::make_unique<HAL::Buffer<uint8_t>>(
                 *mDevice, *heap, allocation->AliasingInfo.HeapOffset, bufferSize, 1,
                 allocation->InitialStates(), allocation->ExpectedStates()
             );
 
             resourceObjects.Buffer->Resource->SetDebugName(resourceName.ToString());
 
-            CreateDescriptors(*resourceObjects.Buffer, *resourceObjects.Allocation, stride);
+            CreateDescriptors(*resourceObjects.Buffer, *resourceObjects.SchedulingInfo, stride);
         };
 
-        return resourceObjects.Allocation.get();
+        return resourceObjects.SchedulingInfo.get();
     }
 
 }

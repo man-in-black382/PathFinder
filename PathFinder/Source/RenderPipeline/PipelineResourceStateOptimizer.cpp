@@ -9,14 +9,14 @@ namespace PathFinder
     PipelineResourceStateOptimizer::PipelineResourceStateOptimizer(const RenderPassExecutionGraph* renderPassGraph)
         : mRenderPassGraph{ renderPassGraph } {}
 
-    void PipelineResourceStateOptimizer::AddAllocation(PipelineResourceAllocation* allocation)
+    void PipelineResourceStateOptimizer::AddAllocation(PipelineResourceSchedulingInfo* allocation)
     {
         mAllocations.push_back(allocation);
     }
 
     void PipelineResourceStateOptimizer::Optimize()
     {
-        for (PipelineResourceAllocation* allocation : mAllocations)
+        for (PipelineResourceSchedulingInfo* allocation : mAllocations)
         {
             CollapseStateSequences(allocation);
 
@@ -71,7 +71,7 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStateOptimizer::CollapseStateSequences(PipelineResourceAllocation* allocation)
+    void PipelineResourceStateOptimizer::CollapseStateSequences(PipelineResourceSchedulingInfo* allocation)
     {
         std::vector<Foundation::Name> relevantPassNames;
         HAL::ResourceState stateSequence = HAL::ResourceState::Common;

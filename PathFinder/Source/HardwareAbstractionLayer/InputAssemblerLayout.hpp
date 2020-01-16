@@ -11,8 +11,8 @@ namespace HAL
    
     class InputAssemblerLayout {
     public:
-        void AddPerVertexLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ResourceFormat::Color format, uint32_t inputSlot, uint32_t alighnedByteOffset);
-        void AddPerInstanceLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ResourceFormat::Color format, uint32_t inputSlot, uint32_t alighnedByteOffset, uint32_t stepRate);
+        void AddPerVertexLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ColorFormat format, uint32_t inputSlot, uint32_t alighnedByteOffset);
+        void AddPerInstanceLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ColorFormat format, uint32_t inputSlot, uint32_t alighnedByteOffset, uint32_t stepRate);
 
     private:
         std::vector<std::string> mElementSemanticNames;

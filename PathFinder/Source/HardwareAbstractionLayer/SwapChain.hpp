@@ -21,7 +21,7 @@ namespace HAL
             const GraphicsCommandQueue& commandQueue,
             HWND windowHandle, 
             BackBufferingStrategy strategy,
-            ResourceFormat::Color backBufferFormat,
+            ColorFormat backBufferFormat,
             const Geometry::Dimensions& dimensions
         );
 
@@ -31,7 +31,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<IDXGIFactory> mDXGIFactory;
         Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
 
-        std::vector<std::unique_ptr<TextureResource>> mBackBuffers;
+        std::vector<std::unique_ptr<Texture>> mBackBuffers;
 
     public:
         inline auto& BackBuffers() { return mBackBuffers; }

@@ -3,7 +3,7 @@
 #include "ResourceDescriptorStorage.hpp"
 #include "CopyDevice.hpp"
 
-#include "../HardwareAbstractionLayer/TextureResource.hpp"
+#include "../HardwareAbstractionLayer/Texture.hpp"
 #include "../HardwareAbstractionLayer/ResourceBarrier.hpp"
 
 #include <memory>
@@ -19,7 +19,7 @@ namespace PathFinder
     {
         GPUDescriptorIndex SRIndex = 0;
         GPUDescriptorIndex UAIndex = 0;
-        std::shared_ptr<HAL::BufferResource<T>> AssetReadbackBuffer = nullptr;
+        std::shared_ptr<HAL::Buffer<T>> AssetReadbackBuffer = nullptr;
     };
 
     class AssetResourceStorage
@@ -27,12 +27,12 @@ namespace PathFinder
     public:
         AssetResourceStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage);
 
-        GPUDescriptorIndex StoreAsset(std::shared_ptr<HAL::TextureResource> resource);
+        GPUDescriptorIndex StoreAsset(std::shared_ptr<HAL::Texture> resource);
 
         // Store asset that is required to be processed by an asset-processing render pass.
         // When processing is done an optional transfer to a read-back buffer can be performed
-        PreprocessableAsset<uint8_t> StorePreprocessableAsset(std::shared_ptr<HAL::TextureResource> asset, bool queueContentReadback);
-        template <class T> PreprocessableAsset<T> StorePreprocessableAsset(std::shared_ptr<HAL::BufferResource<T>> asset, bool queueContentReadback);
+        PreprocessableAsset<uint8_t> StorePreprocessableAsset(std::shared_ptr<HAL::Texture> asset, bool queueContentReadback);
+        template <class T> PreprocessableAsset<T> StorePreprocessableAsset(std::shared_ptr<HAL::Buffer<T>> asset, bool queueContentReadback);
 
     private:
         const HAL::Device* mDevice;

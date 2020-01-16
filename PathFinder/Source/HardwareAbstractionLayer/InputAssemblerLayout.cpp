@@ -3,7 +3,7 @@
 namespace HAL
 {
 
-    void InputAssemblerLayout::AddPerVertexLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ResourceFormat::Color format, uint32_t inputSlot, uint32_t alighnedByteOffset)
+    void InputAssemblerLayout::AddPerVertexLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ColorFormat format, uint32_t inputSlot, uint32_t alighnedByteOffset)
     {
         D3D12_INPUT_ELEMENT_DESC desc{};
         desc.Format = ResourceFormat::D3DFormat(format);
@@ -21,7 +21,7 @@ namespace HAL
         SetSemanticNames();
     }
 
-    void InputAssemblerLayout::AddPerInstanceLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ResourceFormat::Color format, uint32_t inputSlot, uint32_t alighnedByteOffset, uint32_t stepRate)
+    void InputAssemblerLayout::AddPerInstanceLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ColorFormat format, uint32_t inputSlot, uint32_t alighnedByteOffset, uint32_t stepRate)
     {
         D3D12_INPUT_ELEMENT_DESC desc{};
         desc.Format = ResourceFormat::D3DFormat(format);

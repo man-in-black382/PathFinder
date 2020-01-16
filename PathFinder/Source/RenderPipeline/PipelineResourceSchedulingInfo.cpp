@@ -1,12 +1,12 @@
-#include "PipelineResourceAllocation.hpp"
+#include "PipelineResourceSchedulingInfo.hpp"
 
 namespace PathFinder
 {
 
-    PipelineResourceAllocation::PipelineResourceAllocation(const HAL::ResourceFormat& format)
+    PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format)
         : mResourceFormat{ format } {}
 
-    void PipelineResourceAllocation::GatherExpectedStates()
+    void PipelineResourceSchedulingInfo::GatherExpectedStates()
     {
         HAL::ResourceState expectedStates = HAL::ResourceState::Common;
 
@@ -21,19 +21,19 @@ namespace PathFinder
         mResourceFormat.UpdateExpectedUsageFlags(expectedStates);
     }
 
-    const PipelineResourceAllocation::PassMetadata* PipelineResourceAllocation::GetMetadataForPass(Foundation::Name passName) const
+    const PipelineResourceSchedulingInfo::PassMetadata* PipelineResourceSchedulingInfo::GetMetadataForPass(Foundation::Name passName) const
     {
         auto it = mPerPassData.find(passName);
         return it != mPerPassData.end() ? &it->second : nullptr;
     }
 
-    PipelineResourceAllocation::PassMetadata* PipelineResourceAllocation::GetMetadataForPass(Foundation::Name passName)
+    PipelineResourceSchedulingInfo::PassMetadata* PipelineResourceSchedulingInfo::GetMetadataForPass(Foundation::Name passName)
     {
         auto it = mPerPassData.find(passName);
         return it != mPerPassData.end() ? &it->second : nullptr;
     }
 
-    PipelineResourceAllocation::PassMetadata& PipelineResourceAllocation::AllocateMetadataForPass(Foundation::Name passName)
+    PipelineResourceSchedulingInfo::PassMetadata& PipelineResourceSchedulingInfo::AllocateMetadataForPass(Foundation::Name passName)
     {
         if (!mFirstPassName.IsValid())
         {
@@ -46,7 +46,7 @@ namespace PathFinder
         return iter->second;
     }
 
-    HAL::ResourceState PipelineResourceAllocation::InitialStates() const
+    HAL::ResourceState PipelineResourceSchedulingInfo::InitialStates() const
     {
         if (OneAndOnlyState) return *OneAndOnlyState;
 

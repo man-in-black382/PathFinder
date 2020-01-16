@@ -5,30 +5,30 @@
 namespace HAL
 {
 
-    class TextureResource : public Resource
+    class Texture : public Resource
     {
     public:
-        TextureResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);
+        Texture(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);
 
-        TextureResource(
+        Texture(
             const Device& device,
             ResourceFormat::FormatVariant format,
-            ResourceFormat::TextureKind kind,
+            TextureKind kind,
             const Geometry::Dimensions& dimensions,
-            const ResourceFormat::ClearValue& optimizedClearValue,
+            const ClearValue& optimizedClearValue,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
             uint16_t mipCount = 1
         );
 
-        TextureResource(
+        Texture(
             const Device& device,
             const Heap& heap, 
             uint64_t heapOffset,
             ResourceFormat::FormatVariant format,
-            ResourceFormat::TextureKind kind,
+            TextureKind kind,
             const Geometry::Dimensions& dimensions,
-            const ResourceFormat::ClearValue& optimizedClearValue,
+            const ClearValue& optimizedClearValue,
             ResourceState initialStateMask,
             ResourceState expectedStateMask,
             uint16_t mipCount = 1
@@ -40,23 +40,23 @@ namespace HAL
         static ResourceFormat ConstructResourceFormat(
             const Device* device,
             ResourceFormat::FormatVariant format,
-            ResourceFormat::TextureKind kind,
+            TextureKind kind,
             const Geometry::Dimensions& dimensions,
             uint16_t mipCount,
-            const ResourceFormat::ClearValue& optimizedClearValue);
+            const ClearValue& optimizedClearValue);
 
     protected:
         Geometry::Dimensions mDimensions;
         ResourceFormat::FormatVariant mFormat;
-        ResourceFormat::TextureKind mKind;
-        ResourceFormat::ClearValue mOptimizedClearValue;
+        TextureKind mKind;
+        ClearValue mOptimizedClearValue;
         uint16_t mMipCount;
 
     public:
         inline const Geometry::Dimensions& Dimensions() const { return mDimensions; }
-        inline ResourceFormat::TextureKind Kind() const { return mKind; }
+        inline TextureKind Kind() const { return mKind; }
         inline ResourceFormat::FormatVariant Format() const { return mFormat; }
-        inline ResourceFormat::ClearValue OptimizedClearValue() const { return mOptimizedClearValue; }
+        inline ClearValue OptimizedClearValue() const { return mOptimizedClearValue; }
     };
 
 }

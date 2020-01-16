@@ -15,7 +15,7 @@ namespace PathFinder
         HAL::BlendState BlendState;
         HAL::RasterizerState RasterizerState;
         HAL::DepthStencilState DepthStencilState;
-        HAL::ResourceFormat::DepthStencil DepthStencilFormat;
+        HAL::DepthStencilFormat DepthStencilFormat;
         HAL::PrimitiveTopology PrimitiveTopology;
         std::vector<HAL::GraphicsPipelineState::RenderTargetFormat> RenderTargetFormats;
         std::optional<Foundation::Name> RootSignatureName;

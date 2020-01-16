@@ -39,7 +39,7 @@ namespace PathFinder
         ConstructMVP(*drawData);
     }
 
-    void UIGPUStorage::ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::BufferResource<float>& buffer)
+    void UIGPUStorage::ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::Buffer<float>& buffer)
     {
         buffer.Read([this, passName](const float* data)
         {
@@ -120,15 +120,15 @@ namespace PathFinder
 
         if (!mFontUploadBuffer || mFontUploadBuffer->Capacity() < byteCount)
         {
-            mFontUploadBuffer = std::make_shared<HAL::BufferResource<uint8_t>>(*mDevice, byteCount, 1, HAL::CPUAccessibleHeapType::Upload);
+            mFontUploadBuffer = std::make_shared<HAL::Buffer<uint8_t>>(*mDevice, byteCount, 1, HAL::CPUAccessibleHeapType::Upload);
             mFontUploadBuffer->Write(0, pixels, byteCount);
         }
 
         if (!mFontTexture || mFontTexture->Dimensions().Width != width || mFontTexture->Dimensions().Height != height)
         {
-            mFontTexture = std::make_shared<HAL::TextureResource>(
-                *mDevice, HAL::ResourceFormat::Color::RGBA8_Usigned_Norm, HAL::ResourceFormat::TextureKind::Texture2D,
-                Geometry::Dimensions( width, height ), HAL::ResourceFormat::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 },
+            mFontTexture = std::make_shared<HAL::Texture>(
+                *mDevice, HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture2D,
+                Geometry::Dimensions( width, height ), HAL::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 },
                 HAL::ResourceState::Common, HAL::ResourceState::AnyShaderAccess);
 
             mFontSRVIndex = mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mFontTexture.get()).IndexInHeapRange();
