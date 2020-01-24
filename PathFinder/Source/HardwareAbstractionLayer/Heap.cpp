@@ -6,7 +6,7 @@ namespace HAL
 {
 
     Heap::Heap(const Device& device, uint64_t size, HeapAliasingGroup aliasingGroup, std::optional<CPUAccessibleHeapType> cpuAccessibleType)
-        : mAlighnedSize{ Foundation::MemoryUtils::Align(size, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT) }
+        : mAlighnedSize{ Foundation::MemoryUtils::Align(size, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT) }, mCPUAccessibleType{ cpuAccessibleType }
     {
         D3D12_HEAP_DESC desc{};
 
@@ -19,9 +19,10 @@ namespace HAL
 
         switch (aliasingGroup)
         {
-        case HeapAliasingGroup::RTDSTextures: desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES; break;
-        case HeapAliasingGroup::NonRTDSTextures: desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES; break;
-        case HeapAliasingGroup::Buffers: desc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS; break;
+        case HeapAliasingGroup::RTDSTextures: desc.Flags |= D3D12_HEAP_FLAG_ALLOW_ONLY_RT_DS_TEXTURES; break;
+        case HeapAliasingGroup::NonRTDSTextures: desc.Flags |= D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES; break;
+        case HeapAliasingGroup::Buffers: desc.Flags |= D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS; break;
+        case HeapAliasingGroup::Universal: desc.Flags |= D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES; break;
         }
 
         if (cpuAccessibleType)

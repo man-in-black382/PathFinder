@@ -7,6 +7,7 @@
 
 #include "Device.hpp"
 #include "ResourceState.hpp"
+#include "Heap.hpp"
 
 #include "../Geometry/Dimensions.hpp"
 
@@ -65,7 +66,7 @@ namespace HAL
         ResourceFormat(const Device* device, FormatVariant dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue);
         ResourceFormat(const Device* device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
 
-        void UpdateExpectedUsageFlags(ResourceState expectedStates);
+        void SetExpectedStates(ResourceState expectedStates);
 
         static DXGI_FORMAT D3DFormat(TypelessColorFormat type);
         static DXGI_FORMAT D3DFormat(ColorFormat type);
@@ -84,6 +85,8 @@ namespace HAL
         void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);
         void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions);
         void QueryAllocationInfo();
+        void DetermineExpectedUsageFlags(ResourceState expectedStates);
+        void DetermineAliasingGroup(ResourceState expectedStates);
 
         const Device* mDevice;
         D3D12_RESOURCE_DESC mDescription{};
@@ -92,6 +95,7 @@ namespace HAL
         uint64_t mResourceAlignment = 0;
         uint64_t mResourceSizeInBytes = 0;
         KindVariant mKind;
+        HeapAliasingGroup mAliasingGroup = HeapAliasingGroup::Universal;
 
     public:
         inline const D3D12_RESOURCE_DESC& D3DResourceDescription() const { return mDescription; }
@@ -100,6 +104,7 @@ namespace HAL
         inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }
         inline auto DataType() const { return mDataType; }
         inline auto Kind() const { return mKind; }
+        inline auto ResourceAliasingGroup() const { return mAliasingGroup; }
     };
 
 }

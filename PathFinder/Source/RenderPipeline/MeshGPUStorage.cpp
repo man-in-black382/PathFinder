@@ -9,7 +9,7 @@ namespace PathFinder
     MeshGPUStorage::MeshGPUStorage(HAL::Device* device, CopyDevice* copyDevice, uint8_t simultaneousFramesInFlight)
         : mDevice{ device },
         mCopyDevice{ copyDevice },
-        mInstanceTable{ *device, 1024, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
+        //mInstanceTable{ *device, 1024, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
         mTopAccelerationStructure{ device } {}
 
     void MeshGPUStorage::StoreMesh(Mesh& mesh)
@@ -20,7 +20,7 @@ namespace PathFinder
         mesh.SetVertexStorageLocation(locationInStorage);
     }
 
-    const HAL::Buffer<Vertex1P1N1UV1T1BT>* MeshGPUStorage::UnifiedVertexBuffer_1P1N1UV1T1BT() const
+   /* const HAL::Buffer<Vertex1P1N1UV1T1BT>* MeshGPUStorage::UnifiedVertexBuffer_1P1N1UV1T1BT() const
     {
         return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get();
     }
@@ -48,12 +48,12 @@ namespace PathFinder
     const HAL::Buffer<uint32_t>* MeshGPUStorage::UnifiedIndexBuffer_1P() const
     {
         return std::get<FinalBufferPackage<Vertex1P3>>(mFinalBuffers).IndexBuffer.get();
-    }
+    }*/
 
     template <class Vertex>
     VertexStorageLocation MeshGPUStorage::WriteToUploadBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
-        auto& package = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
+      /*  auto& package = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
         auto vertexStartIndex = package.Vertices.size();
         auto indexStartIndex = package.Indices.size();
 
@@ -70,13 +70,13 @@ namespace PathFinder
 
         mBottomAccelerationStructures.emplace_back(mDevice);
 
-        return location;
+        return location;*/
     }
 
     template <class Vertex>
     void MeshGPUStorage::CopyBuffersToDefaultHeap()
     {
-        auto& uploadBuffers = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
+      /*  auto& uploadBuffers = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
         auto& finalBuffers = std::get<FinalBufferPackage<Vertex>>(mFinalBuffers);
 
         if (!uploadBuffers.Vertices.empty())
@@ -97,49 +97,49 @@ namespace PathFinder
             uploadIndexBuffer->Write(0, uploadBuffers.Indices.data(), uploadBuffers.Indices.size());
             finalBuffers.IndexBuffer = mCopyDevice->QueueResourceCopyToDefaultMemory(uploadIndexBuffer);
             uploadBuffers.Indices.clear();
-        }
+        }*/
     }
 
     template <class Vertex>
     void MeshGPUStorage::CreateBottomAccelerationStructuresInternal()
     {
-        // BLAS is created when mesh vertices are added. Here we only setup geometry inputs and allocate upload buffers.
+        //// BLAS is created when mesh vertices are added. Here we only setup geometry inputs and allocate upload buffers.
 
-        auto& uploadBuffers = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
-        auto& finalBuffers = std::get<FinalBufferPackage<Vertex>>(mFinalBuffers);
+        //auto& uploadBuffers = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
+        //auto& finalBuffers = std::get<FinalBufferPackage<Vertex>>(mFinalBuffers);
 
-        mBottomASBuildBarriers = HAL::ResourceBarrierCollection{};
+        //mBottomASBuildBarriers = HAL::ResourceBarrierCollection{};
 
-        for (const VertexStorageLocation& location : uploadBuffers.Locations)
-        {
-            HAL::RayTracingBottomAccelerationStructure& blas = mBottomAccelerationStructures[location.BottomAccelerationStructureIndex];
+        //for (const VertexStorageLocation& location : uploadBuffers.Locations)
+        //{
+        //    HAL::RayTracingBottomAccelerationStructure& blas = mBottomAccelerationStructures[location.BottomAccelerationStructureIndex];
 
-            HAL::RayTracingGeometry<Vertex, uint32_t> blasGeometry{
-                finalBuffers.VertexBuffer.get(), location.VertexBufferOffset, location.VertexCount, HAL::ColorFormat::RGB32_Float,
-                finalBuffers.IndexBuffer.get(), location.IndexBufferOffset, location.IndexCount, HAL::ColorFormat::R32_Unsigned,
-                glm::mat4x4{}, true
-            };
+        //    HAL::RayTracingGeometry<Vertex, uint32_t> blasGeometry{
+        //        finalBuffers.VertexBuffer.get(), location.VertexBufferOffset, location.VertexCount, HAL::ColorFormat::RGB32_Float,
+        //        finalBuffers.IndexBuffer.get(), location.IndexBufferOffset, location.IndexCount, HAL::ColorFormat::R32_Unsigned,
+        //        glm::mat4x4{}, true
+        //    };
 
-            blas.AddGeometry(blasGeometry);
-            blas.AllocateBuffersIfNeeded();
-            blas.SetDebugName("Bottom Acceleration Structure");
+        //    blas.AddGeometry(blasGeometry);
+        //    blas.AllocateBuffersIfNeeded();
+        //    blas.SetDebugName("Bottom Acceleration Structure");
 
-            mBottomASBuildBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ blas.FinalBuffer() });
-        }
+        //    mBottomASBuildBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ blas.FinalBuffer() });
+        //}
 
-        uploadBuffers.Locations.clear();
+        //uploadBuffers.Locations.clear();
     }
 
     void MeshGPUStorage::BeginFrame(uint64_t newFrameNumber)
     {
         mCurrentFrameInsertedInstanceCount = 0;
         mTopAccelerationStructure.ResetInputs();
-        mInstanceTable.PrepareMemoryForNewFrame(newFrameNumber);
+        //mInstanceTable.PrepareMemoryForNewFrame(newFrameNumber);
     }
 
     void MeshGPUStorage::EndFrame(uint64_t completedFrameNumber)
     {
-        mInstanceTable.DiscardMemoryForCompletedFrames(completedFrameNumber);
+        //mInstanceTable.DiscardMemoryForCompletedFrames(completedFrameNumber);
     }
 
     void MeshGPUStorage::UploadVerticesAndQueueForCopy()
@@ -187,7 +187,7 @@ namespace PathFinder
 
         GPUInstanceIndex instanceIndex = mCurrentFrameInsertedInstanceCount;
 
-        mInstanceTable.Write(mCurrentFrameInsertedInstanceCount, &instanceEntry);
+        //mInstanceTable.Write(mCurrentFrameInsertedInstanceCount, &instanceEntry);
         ++mCurrentFrameInsertedInstanceCount;
 
         mTopAccelerationStructure.AddInstance(blas, instanceIndex, instance.Transformation().ModelMatrix());

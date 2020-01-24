@@ -14,34 +14,28 @@
 namespace HAL
 {
     
-    template <class Vertex, class Index>
     struct RayTracingGeometry
     {
-        template <class Vertex, class Index>
-        RayTracingGeometry(const Buffer<Vertex>* vertexBuffer, uint32_t vertexOffset, uint32_t vertexCount, ColorFormat vertexPositionFormat,
-            const Buffer<Index>* indexBuffer, uint32_t indexOffset, uint32_t indexCount, ColorFormat indexFormat, const glm::mat4x4& transform,
+        RayTracingGeometry(const Buffer* vertexBuffer, uint32_t vertexOffset, uint32_t vertexCount, uint32_t vertexStride, ColorFormat vertexPositionFormat,
+            const Buffer* indexBuffer, uint32_t indexOffset, uint32_t indexCount, uint32_t indexStride, ColorFormat indexFormat, const glm::mat4x4& transform,
             bool isOpaque = true)
             :
-            VertexBuffer{ vertexBuffer }, IndexBuffer{ indexBuffer }, VertexOffset{ vertexOffset }, VertexCount{ vertexCount },
-            IndexOffset{ indexOffset }, IndexCount{ indexCount }, VertexPositionFormat{ vertexPositionFormat }, IndexFormat{ indexFormat },
+            VertexBuffer{ vertexBuffer }, IndexBuffer{ indexBuffer }, VertexOffset{ vertexOffset }, VertexCount{ vertexCount }, VertexStride{ vertexStride },
+            IndexOffset{ indexOffset }, IndexCount{ indexCount }, IndexStride{ indexStride }, VertexPositionFormat{ vertexPositionFormat }, IndexFormat{ indexFormat },
             Transform{ transform }, IsOpaque{ isOpaque } {}
-
-        template <class Vertex, class Index>
-        RayTracingGeometry(const Buffer<Vertex>* vertexBuffer, ColorFormat vertexFormat,
-            const Buffer<Index>* indexBuffer, ColorFormat indexFormat)
-            :
-            RayTracingGeometry(vertexBuffer, 0, vertexBuffer.Capacity(), vertexFormat, indexBuffer, 0, indexBuffer.Capacity(), indexFormat, glm::mat4x4(1.0), true) {}
 
         // A format for 'Position' vertex structure field
         // Implies that 'Position' must be placed first in vertex's memory
         ColorFormat VertexPositionFormat;
         ColorFormat IndexFormat;
-        const Buffer<Vertex>* VertexBuffer;
-        const Buffer<Index>* IndexBuffer;
+        const Buffer* VertexBuffer;
+        const Buffer* IndexBuffer;
         uint32_t VertexOffset;
         uint32_t VertexCount;
+        uint32_t VertexStride;
         uint32_t IndexOffset;
         uint32_t IndexCount;
+        uint32_t IndexStride;
         glm::mat4x4 Transform;
         bool IsOpaque;
     };
@@ -63,8 +57,8 @@ namespace HAL
     
     private:
         std::string mDebugName;
-        std::unique_ptr<Buffer<uint8_t>> mBuildScratchBuffer;
-        std::unique_ptr<Buffer<uint8_t>> mFinalBuffer;
+        std::unique_ptr<Buffer> mBuildScratchBuffer;
+        std::unique_ptr<Buffer> mFinalBuffer;
         // There could also be an Update Scratch Buffer. Isn't needed right now.
 
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC mD3DAccelerationStructure{};
@@ -81,8 +75,7 @@ namespace HAL
     public:
         using RayTracingAccelerationStructure::RayTracingAccelerationStructure;
 
-        template <class Vertex, class Index> 
-        void AddGeometry(const RayTracingGeometry<Vertex, Index>& geometry);
+        void AddGeometry(const RayTracingGeometry& geometry);
 
         virtual void AllocateBuffersIfNeeded() override;
         virtual void ResetInputs() override;
@@ -104,10 +97,8 @@ namespace HAL
         virtual void ResetInputs() override;
 
     private:
-        std::unique_ptr<Buffer<D3D12_RAYTRACING_INSTANCE_DESC>> mInstanceBuffer;
+        std::unique_ptr<Buffer> mInstanceBuffer;
         std::vector<D3D12_RAYTRACING_INSTANCE_DESC> mD3DInstances;
     };
 
 }
-
-#include "RayTracingAccelerationStructure.inl"

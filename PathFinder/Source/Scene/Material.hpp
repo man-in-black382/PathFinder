@@ -20,7 +20,7 @@ namespace PathFinder
         const HAL::Texture* DisplacementMap = nullptr;
         const HAL::Texture* DistanceAtlasIndirectionMap = nullptr;
         const HAL::Texture* DistanceAtlas = nullptr;
-        const HAL::Buffer<uint32_t>* DistanceAtlasCounter = nullptr;
+        const HAL::Buffer* DistanceAtlasCounter = nullptr;
 
         uint32_t AlbedoMapSRVIndex = 0;
         uint32_t NormalMapSRVIndex = 0;

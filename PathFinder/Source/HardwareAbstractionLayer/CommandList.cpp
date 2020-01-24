@@ -63,6 +63,52 @@ namespace HAL
         //mList->CopyTextureRegion(&dstLocation, destinationRectOrigin.x, destinationRectOrigin.y, destinationRectOrigin.z, &srcLocation, )
     }
 
+    void CopyCommandListBase::CopyBufferRegion(
+        const Buffer& source, const Buffer& destination,
+        uint64_t sourceOffset, uint64_t copyRegionSize, uint64_t destinationOffset)
+    {
+        mList->CopyBufferRegion(destination.D3DResource(), destinationOffset, source.D3DResource(), sourceOffset, copyRegionSize);
+    }
+
+    void CopyCommandListBase::CopyBufferToTexture(const Buffer& buffer, const Texture& texture, const SubresourceFootprint& footprint)
+    {
+        D3D12_TEXTURE_COPY_LOCATION srcLocation{};
+        D3D12_TEXTURE_COPY_LOCATION dstLocation{};
+
+        srcLocation.pResource = buffer.D3DResource();
+        srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        srcLocation.PlacedFootprint = footprint.D3DFootprint();
+
+        dstLocation.pResource = texture.D3DResource();
+        dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        dstLocation.SubresourceIndex = footprint.IndexInResource();
+
+        mList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, nullptr);
+    }
+
+    void CopyCommandListBase::CopyTextureToBuffer(const Texture& texture, const Buffer& buffer, const SubresourceFootprint& footprint)
+    {
+        D3D12_TEXTURE_COPY_LOCATION srcLocation{};
+        D3D12_TEXTURE_COPY_LOCATION dstLocation{};
+
+        srcLocation.pResource = texture.D3DResource();
+        srcLocation.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        srcLocation.SubresourceIndex = footprint.IndexInResource();
+
+        dstLocation.pResource = buffer.D3DResource();
+        dstLocation.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        dstLocation.PlacedFootprint = footprint.D3DFootprint();
+
+        mList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, nullptr);
+    }
+
+
+
+    void ComputeCommandListBase::SetComputeRootConstantBuffer(const Buffer& cbResource, uint32_t rootParameterIndex)
+    {
+        mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
+    }
+
     void ComputeCommandListBase::SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex)
     {
         mList->SetComputeRootShaderResourceView(rootParameterIndex, resource.GPUVirtualAddress());
@@ -125,16 +171,6 @@ namespace HAL
         mList->ClearDepthStencilView(dsDescriptor.CPUHandle(), D3D12_CLEAR_FLAG_DEPTH, depthValue, 0, 0, nullptr);
     }
 
-    void GraphicsCommandListBase::SetVertexBuffer(const VertexBufferDescriptor& descriptor)
-    {
-        mList->IASetVertexBuffers(0, 1, &descriptor.D3DDescriptor());
-    }
-   
-    void GraphicsCommandListBase::SetIndexBuffer(const IndexBufferDescriptor& descriptor)
-    {
-        mList->IASetIndexBuffer(&descriptor.D3DDescriptor());
-    }
-
     void GraphicsCommandListBase::SetPrimitiveTopology(PrimitiveTopology topology)
     {
         mList->IASetPrimitiveTopology(D3DPrimitiveTopology(topology));
@@ -150,6 +186,11 @@ namespace HAL
         mList->SetGraphicsRootSignature(signature.D3DSignature());
     }
     
+    void GraphicsCommandListBase::SetGraphicsRootConstantBuffer(const Buffer& cbResource, uint32_t rootParameterIndex)
+    {
+        mList->SetGraphicsRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
+    }
+
     void GraphicsCommandListBase::SetGraphicsRootShaderResource(const Resource& resource, uint32_t rootParameterIndex)
     {
         mList->SetGraphicsRootShaderResourceView(rootParameterIndex, resource.GPUVirtualAddress());

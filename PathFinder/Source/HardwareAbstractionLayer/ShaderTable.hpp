@@ -26,7 +26,7 @@ namespace HAL
 
         RayDispatchInfo GenerateRayDispatchInfo() const;
 
-        std::optional<D3D12_GPU_VIRTUAL_ADDRESS> ShaderStageFirstRecordAddress(Shader::Stage stage);
+        //std::optional<D3D12_GPU_VIRTUAL_ADDRESS> ShaderStageFirstRecordAddress(Shader::Stage stage);
 
     private:
         struct Record
@@ -43,14 +43,14 @@ namespace HAL
         const Device* mDevice;
         uint8_t mFrameCapacity = 1;
         uint32_t mTableSize = 0;
-        std::unique_ptr<RingBufferResource<uint8_t>> mGPUTable;
+        //std::unique_ptr<RingBufferResource<uint8_t>> mGPUTable;
         std::unordered_map<Shader::Stage, std::vector<Record>> mRecords;
 
         /// Shader table stride (maximum record size) for each RT shader type
         std::unordered_map<Shader::Stage, uint32_t> mPerStageStrides;
 
     public:
-        inline const auto GPUTable() const { return mGPUTable.get(); }
+        //inline const auto GPUTable() const { return mGPUTable.get(); }
     };
 
 }

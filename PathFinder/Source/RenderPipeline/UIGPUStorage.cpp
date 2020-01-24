@@ -39,75 +39,75 @@ namespace PathFinder
         ConstructMVP(*drawData);
     }
 
-    void UIGPUStorage::ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::Buffer<float>& buffer)
-    {
-        buffer.Read([this, passName](const float* data)
-        {
-            auto amountOfWrittenFloats = uint32_t(data[0]);
+    /*  void UIGPUStorage::ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::Buffer<float>& buffer)
+      {
+          buffer.Read([this, passName](const float* data)
+          {
+              auto amountOfWrittenFloats = uint32_t(data[0]);
 
-            if (amountOfWrittenFloats == 0)
-            {
-                return;
-            }
+              if (amountOfWrittenFloats == 0)
+              {
+                  return;
+              }
 
-            auto& debugFloats = mPerPassDebugData[passName];
-            debugFloats.assign(data + 1, data + amountOfWrittenFloats + 1);
-        });
-    }
+              auto& debugFloats = mPerPassDebugData[passName];
+              debugFloats.assign(data + 1, data + amountOfWrittenFloats + 1);
+          });
+      }*/
 
     void UIGPUStorage::UploadVertices(const ImDrawData& drawData)
     {
-        if (drawData.TotalVtxCount > 0 && (!mVertexBuffer || mVertexBuffer->PerFrameCapacity() < drawData.TotalVtxCount))
-        {
-            mVertexBuffer = std::make_unique<HAL::RingBufferResource<ImDrawVert>>(
-                *mDevice, drawData.TotalVtxCount, mFrameCount, 1, HAL::CPUAccessibleHeapType::Upload);
+        //if (drawData.TotalVtxCount > 0 && (!mVertexBuffer || mVertexBuffer->PerFrameCapacity() < drawData.TotalVtxCount))
+        //{
+        //    mVertexBuffer = std::make_unique<HAL::RingBufferResource<ImDrawVert>>(
+        //        *mDevice, drawData.TotalVtxCount, mFrameCount, 1, HAL::CPUAccessibleHeapType::Upload);
 
-            mVertexBuffer->SetDebugName("ImGUI Vertex Buffer");
-        }
+        //    mVertexBuffer->SetDebugName("ImGUI Vertex Buffer");
+        //}
 
-        if (drawData.TotalIdxCount > 0 && (!mIndexBuffer || mIndexBuffer->PerFrameCapacity() < drawData.TotalIdxCount))
-        {
-            mIndexBuffer = std::make_unique<HAL::RingBufferResource<ImDrawIdx>>(
-                *mDevice, drawData.TotalIdxCount, mFrameCount, 1, HAL::CPUAccessibleHeapType::Upload);
+        //if (drawData.TotalIdxCount > 0 && (!mIndexBuffer || mIndexBuffer->PerFrameCapacity() < drawData.TotalIdxCount))
+        //{
+        //    mIndexBuffer = std::make_unique<HAL::RingBufferResource<ImDrawIdx>>(
+        //        *mDevice, drawData.TotalIdxCount, mFrameCount, 1, HAL::CPUAccessibleHeapType::Upload);
 
-            mIndexBuffer->SetDebugName("ImGUI Index Buffer");
-        }
+        //    mIndexBuffer->SetDebugName("ImGUI Index Buffer");
+        //}
 
-        mDrawCommands.clear();
+        //mDrawCommands.clear();
 
-        // All vertices and indices for all ImGui command lists and buffers
-        // are stored in 1 vertex / 1 index buffer.
-        // Track offsets as we fill in draw commands info.
-        uint64_t vertexOffset = 0;
-        uint64_t indexOffset = 0;
-        glm::vec2 clipOffset{ drawData.DisplayPos.x, drawData.DisplayPos.y };
+        //// All vertices and indices for all ImGui command lists and buffers
+        //// are stored in 1 vertex / 1 index buffer.
+        //// Track offsets as we fill in draw commands info.
+        //uint64_t vertexOffset = 0;
+        //uint64_t indexOffset = 0;
+        //glm::vec2 clipOffset{ drawData.DisplayPos.x, drawData.DisplayPos.y };
 
-        for (auto cmdListIdx = 0; cmdListIdx < drawData.CmdListsCount; ++cmdListIdx)
-        {
-            const ImDrawList* imCommandList = drawData.CmdLists[cmdListIdx];
+        //for (auto cmdListIdx = 0; cmdListIdx < drawData.CmdListsCount; ++cmdListIdx)
+        //{
+        //    const ImDrawList* imCommandList = drawData.CmdLists[cmdListIdx];
 
-            mVertexBuffer->Write(vertexOffset, imCommandList->VtxBuffer.Data, imCommandList->VtxBuffer.Size);
-            mIndexBuffer->Write(indexOffset, imCommandList->IdxBuffer.Data, imCommandList->IdxBuffer.Size);
+        //    mVertexBuffer->Write(vertexOffset, imCommandList->VtxBuffer.Data, imCommandList->VtxBuffer.Size);
+        //    mIndexBuffer->Write(indexOffset, imCommandList->IdxBuffer.Data, imCommandList->IdxBuffer.Size);
 
-            for (auto cmdBufferIdx = 0; cmdBufferIdx < imCommandList->CmdBuffer.Size; ++cmdBufferIdx)
-            {
-                DrawCommand& drawCommand = mDrawCommands.emplace_back();
-                const ImDrawCmd* imCommand = &imCommandList->CmdBuffer[cmdBufferIdx];
+        //    for (auto cmdBufferIdx = 0; cmdBufferIdx < imCommandList->CmdBuffer.Size; ++cmdBufferIdx)
+        //    {
+        //        DrawCommand& drawCommand = mDrawCommands.emplace_back();
+        //        const ImDrawCmd* imCommand = &imCommandList->CmdBuffer[cmdBufferIdx];
 
-                drawCommand.ScissorRect = Geometry::Rect2D{
-                    {imCommand->ClipRect.x - clipOffset.x, imCommand->ClipRect.y - clipOffset.y},
-                    {imCommand->ClipRect.z - clipOffset.x, imCommand->ClipRect.w - clipOffset.y}
-                };
+        //        drawCommand.ScissorRect = Geometry::Rect2D{
+        //            {imCommand->ClipRect.x - clipOffset.x, imCommand->ClipRect.y - clipOffset.y},
+        //            {imCommand->ClipRect.z - clipOffset.x, imCommand->ClipRect.w - clipOffset.y}
+        //        };
 
-                drawCommand.VertexBufferOffset = vertexOffset;
-                drawCommand.IndexBufferOffset = indexOffset;
-                drawCommand.IndexCount = imCommand->ElemCount;
+        //        drawCommand.VertexBufferOffset = vertexOffset;
+        //        drawCommand.IndexBufferOffset = indexOffset;
+        //        drawCommand.IndexCount = imCommand->ElemCount;
 
-                indexOffset += imCommand->ElemCount;
-            }
+        //        indexOffset += imCommand->ElemCount;
+        //    }
 
-            vertexOffset += imCommandList->VtxBuffer.Size;
-        }
+        //    vertexOffset += imCommandList->VtxBuffer.Size;
+        //}
     }
 
     void UIGPUStorage::UploadFont(const ImGuiIO& io)
@@ -118,7 +118,7 @@ namespace PathFinder
 
         auto byteCount = height * (width * 4);
 
-        if (!mFontUploadBuffer || mFontUploadBuffer->Capacity() < byteCount)
+     /*   if (!mFontUploadBuffer || mFontUploadBuffer->Capacity() < byteCount)
         {
             mFontUploadBuffer = std::make_shared<HAL::Buffer<uint8_t>>(*mDevice, byteCount, 1, HAL::CPUAccessibleHeapType::Upload);
             mFontUploadBuffer->Write(0, pixels, byteCount);
@@ -133,7 +133,7 @@ namespace PathFinder
 
             mFontSRVIndex = mDescriptorStorage->EmplaceSRDescriptorIfNeeded(mFontTexture.get()).IndexInHeapRange();
             mCopyDevice->QueueBufferToTextureCopy(mFontUploadBuffer, mFontTexture, HAL::ResourceFootprint{ *mFontTexture });
-        }
+        }*/
     }
 
     void UIGPUStorage::ConstructMVP(const ImDrawData& drawData)

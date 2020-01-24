@@ -54,10 +54,9 @@ namespace HAL
         void InsertBarriers(const ResourceBarrierCollection& collection);
         void CopyResource(const Resource& source, Resource& destination);
 
-        template <class T>
         void CopyBufferRegion(
-            const Buffer<T>& source, const Buffer<T>& destination,
-            uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
+            const Buffer& source, const Buffer& destination,
+            uint64_t sourceOffset, uint64_t copyRegionSize, uint64_t destinationOffset);
 
         void CopyTextureRegion(
             const Texture& source, const Texture& destination,
@@ -66,11 +65,8 @@ namespace HAL
             const Geometry::Dimensions& regionDimensions
         );
 
-        template <class T>
-        void CopyBufferToTexture(const Buffer<T>& buffer, const Texture& texture, const SubresourceFootprint& footprint);
-
-        template <class T>
-        void CopyTextureToBuffer(const Texture& texture, const Buffer<T>& buffer, const SubresourceFootprint& footprint);
+        void CopyBufferToTexture(const Buffer& buffer, const Texture& texture, const SubresourceFootprint& footprint);
+        void CopyTextureToBuffer(const Texture& texture, const Buffer& buffer, const SubresourceFootprint& footprint);
     };
 
 
@@ -82,9 +78,9 @@ namespace HAL
         void SetPipelineState(const ComputePipelineState& state);
         void SetComputeRootSignature(const RootSignature& signature);
 
-        template <class T> void SetComputeRootConstantBuffer(const Buffer<T>& cbResource, uint32_t rootParameterIndex);
         template <class T> void SetComputeRootConstants(const T& constants, uint32_t rootParameterIndex);
 
+        void SetComputeRootConstantBuffer(const Buffer& cbResource, uint32_t rootParameterIndex);
         void SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetComputeRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex);
@@ -102,15 +98,13 @@ namespace HAL
         void SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor = std::nullopt);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
         void CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue);
-        void SetVertexBuffer(const VertexBufferDescriptor& descriptor);
-        void SetIndexBuffer(const IndexBufferDescriptor& descriptor);
         void SetPrimitiveTopology(PrimitiveTopology topology);
         void SetPipelineState(const PipelineState& state);
         void SetGraphicsRootSignature(const RootSignature& signature);
 
-        template <class T> void SetGraphicsRootConstantBuffer(const Buffer<T>& cbResource, uint32_t rootParameterIndex);
         template <class T> void SetGraphicsRootConstants(const T& constants, uint32_t rootParameterIndex);
 
+        void SetGraphicsRootConstantBuffer(const Buffer& cbResource, uint32_t rootParameterIndex);
         void SetGraphicsRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetGraphicsRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetGraphicsRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex);

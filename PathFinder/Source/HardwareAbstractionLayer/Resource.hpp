@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <optional>
 #include <array>
+#include <functional>
 #include <d3d12.h>
 
 #include "Device.hpp"
@@ -24,9 +25,13 @@ namespace HAL
     class Resource : public GraphicAPIObject
     {
     public:
+        using DeallocationCallback = std::function<void()>;
+
         Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);
         Resource(const Resource& other) = delete;
         Resource(Resource&& other) = default;
+
+        void SetDeallocationCallback(const DeallocationCallback& callback);
 
         virtual ~Resource() = 0;
 
@@ -49,6 +54,7 @@ namespace HAL
         uint64_t mResourceAlignment = 0;
         uint64_t mSubresourceCount = 0;
         uint64_t mHeapOffset = 0;
+        DeallocationCallback mDeallocationCallback = []{};
         D3D12_RESOURCE_DESC mDescription{};
 
     public:

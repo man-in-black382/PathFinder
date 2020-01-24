@@ -76,38 +76,6 @@ namespace HAL
         ~SamplerDescriptor() = default;
     };
 
-
-
-    class VertexBufferDescriptor
-    {
-    public:
-        template <class Vertex>
-        VertexBufferDescriptor(const Buffer<Vertex>& vertexBuffer);
-
-    private:
-        D3D12_VERTEX_BUFFER_VIEW mDescriptor{};
-
-    public:
-        inline const auto& D3DDescriptor() const { return mDescriptor; }
-    };
-
-    
-
-    class IndexBufferDescriptor
-    {
-    public:
-        template <class Index>
-        IndexBufferDescriptor(const Buffer<Index>& indexBuffer, ColorFormat format);
-
-    private:
-        D3D12_INDEX_BUFFER_VIEW mDescriptor{};
-
-    public:
-        inline const auto& D3DDescriptor() const { return mDescriptor; }
-    };
-
-   
-
 }
 
 #include "Descriptor.inl"

@@ -36,7 +36,7 @@ namespace PathFinder
         void EndFrame(uint64_t completedFrameNumber);
 
         void UploadUI();
-        void ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::Buffer<float>& buffer);
+        //void ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::Buffer<float>& buffer);
 
     private:
         void UploadVertices(const ImDrawData& drawData);
@@ -53,17 +53,17 @@ namespace PathFinder
         glm::mat4 mMVP;
 
         ResourceDescriptorStorage* mDescriptorStorage;
-        std::unique_ptr<HAL::RingBufferResource<ImDrawVert>> mVertexBuffer;
-        std::unique_ptr<HAL::RingBufferResource<ImDrawIdx>> mIndexBuffer;
-        std::shared_ptr<HAL::Buffer<uint8_t>> mFontUploadBuffer;
+        /*  std::unique_ptr<HAL::RingBufferResource<ImDrawVert>> mVertexBuffer;
+          std::unique_ptr<HAL::RingBufferResource<ImDrawIdx>> mIndexBuffer;
+          std::shared_ptr<HAL::Buffer<uint8_t>> mFontUploadBuffer;*/
         std::shared_ptr<HAL::Texture> mFontTexture;
         std::unordered_map<Foundation::Name, std::vector<float>> mPerPassDebugData;
         std::vector<DrawCommand> mDrawCommands;
 
     public:
         inline auto FontSRVIndex() const { return mFontSRVIndex; }
-        inline const auto VertexBuffer() const { return mVertexBuffer.get(); }
-        inline const auto IndexBuffer() const { return mIndexBuffer.get(); }
+  /*      inline const auto VertexBuffer() const { return mVertexBuffer.get(); }
+        inline const auto IndexBuffer() const { return mIndexBuffer.get(); }*/
         inline const auto& DrawCommands() const { return mDrawCommands; }
         inline const auto& MVP() const { return mMVP; }
     };

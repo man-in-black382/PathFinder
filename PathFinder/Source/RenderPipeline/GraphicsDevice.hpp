@@ -39,8 +39,7 @@ namespace PathFinder
         
         void ResetViewportToDefault();
         
-        template <class T>
-        void BindExternalBuffer(const HAL::Buffer<T>& resource, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void BindExternalBuffer(const HAL::Buffer& resource, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         template <class T>
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);

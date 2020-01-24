@@ -34,9 +34,8 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    template <class T>
     void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BindExternalBuffer(
-        const HAL::Buffer<T>& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+        const HAL::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         if (mAppliedComputeState || mAppliedRayTracingState)
         {

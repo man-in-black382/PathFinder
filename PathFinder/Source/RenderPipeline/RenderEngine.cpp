@@ -3,6 +3,8 @@
 #include "../HardwareAbstractionLayer/DisplayAdapterFetcher.hpp"
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 
+#include "../Memory/SegregatedPoolsResourceAllocator.hpp"
+
 #include <pix.h>
 
 namespace PathFinder

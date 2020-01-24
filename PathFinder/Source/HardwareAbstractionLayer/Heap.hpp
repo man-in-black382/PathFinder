@@ -9,7 +9,7 @@ namespace HAL
 
     enum class HeapAliasingGroup
     {
-        RTDSTextures, NonRTDSTextures, Buffers
+        RTDSTextures, NonRTDSTextures, Buffers, Universal
     };
 
     enum class CPUAccessibleHeapType
@@ -24,11 +24,13 @@ namespace HAL
 
     private:
         Microsoft::WRL::ComPtr<ID3D12Heap> mHeap;
+        std::optional<CPUAccessibleHeapType> mCPUAccessibleType = std::nullopt;
         uint64_t mAlighnedSize;
 
     public:
         inline ID3D12Heap* D3DHeap() const { return mHeap.Get(); }
         inline auto AlighnedSize() const { return mAlighnedSize; }
+        inline auto CPUAccessibleType() const { return mCPUAccessibleType; }
     };
 
 }

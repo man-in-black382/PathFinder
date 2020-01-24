@@ -101,9 +101,9 @@ namespace HAL
 
         const GPUDescriptor* GetDescriptor(Range range, uint32_t indexInRange) const;
 
-        template <class T> const CBDescriptor& EmplaceCBDescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
-        template <class T> const SRDescriptor& EmplaceSRDescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
-        template <class T> const UADescriptor& EmplaceUADescriptor(const Buffer<T>& buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        const CBDescriptor& EmplaceCBDescriptor(const Buffer& buffer, uint64_t stride);
+        const SRDescriptor& EmplaceSRDescriptor(const Buffer& buffer, uint64_t stride);
+        const UADescriptor& EmplaceUADescriptor(const Buffer& buffer, uint64_t stride);
 
         const SRDescriptor& EmplaceSRDescriptor(const Texture& texture, std::optional<ColorFormat> concreteFormat = std::nullopt);
         const UADescriptor& EmplaceUADescriptor(const Texture& texture, std::optional<ColorFormat> concreteFormat = std::nullopt);

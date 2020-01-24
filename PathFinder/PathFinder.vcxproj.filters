@@ -381,16 +381,22 @@
     <ClCompile Include="Source\IO\InputHandlerWindows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\ResourceAllocator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\BufferAllocation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Memory\SegregatedPoolsResourceAllocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\Buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Memory\Pool.inl">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Memory\SegregatedPools.inl">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2204,12 +2210,6 @@
     <ClInclude Include="Source\IO\InputHandlerWindows.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceAllocator.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\BufferAllocation.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\Buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2217,6 +2217,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\SFLGPUAllocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\SFLGPUAllocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\Pool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\SegregatedPools.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\SegregatedPoolsResourceAllocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\BufferCPUAccessor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2666,9 +2684,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.exp" />
-    <None Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Libs\dxcompiler.dll" />
     <None Include="Libs\dxil.dll" />
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
@@ -2689,9 +2704,6 @@
     <None Include="Source\RenderPipeline\ResourceScheduler.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\RenderPipeline\ResourceDescriptorStorage.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Source\RenderPipeline\PipelineResource.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -2709,6 +2721,12 @@
     </None>
     <None Include="packages.config" />
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\HardwareAbstractionLayer\BufferCPUAccessor.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -40,21 +40,21 @@ namespace HAL
 
     void ShaderTable::UploadToGPUMemory()
     {
-        mGPUTable = std::make_unique<RingBufferResource<uint8_t>>(
-            *mDevice, mTableSize, mFrameCapacity, 1, CPUAccessibleHeapType::Upload);
+        //mGPUTable = std::make_unique<RingBufferResource<uint8_t>>(
+        //    *mDevice, mTableSize, mFrameCapacity, 1, CPUAccessibleHeapType::Upload);
 
-        for (const auto& keyValue : mRecords)
-        {
-            const auto& records = keyValue.second;
+        //for (const auto& keyValue : mRecords)
+        //{
+        //    const auto& records = keyValue.second;
 
-            for (const Record& record : records)
-            {
-                // Write Shader ID
-                mGPUTable->Write(record.TableOffset, (uint8_t*)(&record.ID), sizeof(record.ID));
+        //    for (const Record& record : records)
+        //    {
+        //        // Write Shader ID
+        //        mGPUTable->Write(record.TableOffset, (uint8_t*)(&record.ID), sizeof(record.ID));
 
-                // TODO: Write local root signature arguments here ??? Probably not here
-            }
-        }
+        //        // TODO: Write local root signature arguments here ??? Probably not here
+        //    }
+        //}
     }
 
     void ShaderTable::Clear()
@@ -69,17 +69,17 @@ namespace HAL
         return {};
     }
 
-    std::optional<D3D12_GPU_VIRTUAL_ADDRESS> ShaderTable::ShaderStageFirstRecordAddress(Shader::Stage stage)
-    {
-        if (!mGPUTable) return std::nullopt;
+    //std::optional<D3D12_GPU_VIRTUAL_ADDRESS> ShaderTable::ShaderStageFirstRecordAddress(Shader::Stage stage)
+    //{
+    //    /*    if (!mGPUTable) return std::nullopt;
 
-        auto it = mRecords.find(stage);
-        if (it == mRecords.end()) return std::nullopt;
-        
-        std::vector<Record>& records = it->second;
-        if (records.empty()) return std::nullopt;
+    //        auto it = mRecords.find(stage);
+    //        if (it == mRecords.end()) return std::nullopt;
 
-        return records.front().TableOffset * mGPUTable->GPUVirtualAddress();
-    }
+    //        std::vector<Record>& records = it->second;
+    //        if (records.empty()) return std::nullopt;*/
+
+    //    return records.front().TableOffset * mGPUTable->GPUVirtualAddress();
+    //}
 
 }

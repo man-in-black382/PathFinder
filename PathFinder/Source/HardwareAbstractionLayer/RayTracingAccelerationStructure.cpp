@@ -21,8 +21,8 @@ namespace HAL
 
         if (mBuildScratchBuffer == nullptr || mBuildScratchBuffer->TotalMemory() < prebuildInfo.ScratchDataSizeInBytes)
         {
-            mBuildScratchBuffer = std::make_unique<Buffer<uint8_t>>(
-                *mDevice, prebuildInfo.ScratchDataSizeInBytes, 1,
+            mBuildScratchBuffer = std::make_unique<Buffer>(
+                *mDevice, prebuildInfo.ScratchDataSizeInBytes,
                 ResourceState::UnorderedAccess, ResourceState::UnorderedAccess);
 
             mBuildScratchBuffer->SetDebugName(mDebugName + "_Scratch_Buffer");
@@ -30,8 +30,8 @@ namespace HAL
 
         if (mFinalBuffer == nullptr || mFinalBuffer->TotalMemory() < prebuildInfo.ResultDataMaxSizeInBytes)
         {
-            mFinalBuffer = std::make_unique<Buffer<uint8_t>>(
-                *mDevice, prebuildInfo.ResultDataMaxSizeInBytes, 1,
+            mFinalBuffer = std::make_unique<Buffer>(
+                *mDevice, prebuildInfo.ResultDataMaxSizeInBytes,
                 ResourceState::RaytracingAccelerationStructure, ResourceState::UnorderedAccess);
 
             mFinalBuffer->SetDebugName(mDebugName + "_Destination_Buffer");
@@ -66,6 +66,28 @@ namespace HAL
         mD3DGeometries.clear();
     }
 
+    void RayTracingBottomAccelerationStructure::AddGeometry(const RayTracingGeometry& geometry)
+    {
+        D3D12_RAYTRACING_GEOMETRY_DESC d3dGeometry{};
+
+        d3dGeometry.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+
+        d3dGeometry.Triangles.VertexBuffer.StartAddress = geometry.VertexBuffer->GPUVirtualAddress() + geometry.VertexOffset * geometry.VertexStride;
+        d3dGeometry.Triangles.VertexBuffer.StrideInBytes = geometry.VertexStride;
+        d3dGeometry.Triangles.VertexCount = geometry.VertexCount;
+        d3dGeometry.Triangles.VertexFormat = ResourceFormat::D3DFormat(geometry.VertexPositionFormat);
+
+        d3dGeometry.Triangles.IndexBuffer = geometry.IndexBuffer->GPUVirtualAddress() + geometry.IndexOffset * geometry.IndexStride;
+        d3dGeometry.Triangles.IndexCount = geometry.IndexCount;
+        d3dGeometry.Triangles.IndexFormat = ResourceFormat::D3DFormat(geometry.IndexFormat);
+
+        d3dGeometry.Triangles.Transform3x4 = 0;
+
+        if (geometry.IsOpaque) d3dGeometry.Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+
+        mD3DGeometries.push_back(d3dGeometry);
+    }
+
 
 
     void RayTracingTopAccelerationStructure::AddInstance(const RayTracingBottomAccelerationStructure& blas, uint32_t instanceId, const glm::mat4& transform)
@@ -90,13 +112,13 @@ namespace HAL
 
     void RayTracingTopAccelerationStructure::AllocateBuffersIfNeeded()
     {
-        if (mInstanceBuffer == nullptr || mInstanceBuffer->Capacity() < mD3DInstances.size())
+      /*  if (mInstanceBuffer == nullptr || mInstanceBuffer->Capacity() < mD3DInstances.size())
         {
-            mInstanceBuffer = std::make_unique<Buffer<D3D12_RAYTRACING_INSTANCE_DESC>>(
-                *mDevice, mD3DInstances.size(), 1, CPUAccessibleHeapType::Upload);
-        }
+            mInstanceBuffer = std::make_unique<Buffer>(
+                *mDevice, mD3DInstances.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC), CPUAccessibleHeapType::Upload);
+        }*/
 
-        mInstanceBuffer->Write(0, mD3DInstances.data(), mD3DInstances.size());
+        //mInstanceBuffer->Write(0, mD3DInstances.data(), mD3DInstances.size());
 
         mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
         mD3DInputs.NumDescs = (UINT)mD3DInstances.size();

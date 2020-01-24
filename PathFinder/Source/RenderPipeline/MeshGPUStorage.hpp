@@ -50,13 +50,13 @@ namespace PathFinder
         void StoreMesh(Mesh& mesh);
         void StoreMeshInstance(MeshInstance& instance, const HAL::RayTracingBottomAccelerationStructure& blas);
 
-        const HAL::Buffer<Vertex1P1N1UV1T1BT>* UnifiedVertexBuffer_1P1N1UV1T1BT() const;
+      /*  const HAL::Buffer<Vertex1P1N1UV1T1BT>* UnifiedVertexBuffer_1P1N1UV1T1BT() const;
         const HAL::Buffer<Vertex1P1N1UV>* UnifiedVertexBuffer_1P1N1UV() const;
         const HAL::Buffer<Vertex1P3>* UnifiedVertexBuffer_1P() const;
 
         const HAL::Buffer<uint32_t>* UnifiedIndexBuffer_1P1N1UV1T1BT() const;
         const HAL::Buffer<uint32_t>* UnifiedIndexBuffer_1P1N1UV() const;
-        const HAL::Buffer<uint32_t>* UnifiedIndexBuffer_1P() const;
+        const HAL::Buffer<uint32_t>* UnifiedIndexBuffer_1P() const;*/
 
         void BeginFrame(uint64_t newFrameNumber);
         void EndFrame(uint64_t completedFrameNumber);
@@ -77,8 +77,8 @@ namespace PathFinder
         template <class Vertex>
         struct FinalBufferPackage
         {
-            std::shared_ptr<HAL::Buffer<Vertex>> VertexBuffer;
-            std::shared_ptr<HAL::Buffer<uint32_t>> IndexBuffer;
+          /*  std::shared_ptr<HAL::Buffer<Vertex>> VertexBuffer;
+            std::shared_ptr<HAL::Buffer<uint32_t>> IndexBuffer;*/
         };
 
         template <class Vertex>
@@ -97,7 +97,7 @@ namespace PathFinder
         HAL::RayTracingTopAccelerationStructure mTopAccelerationStructure;
         HAL::ResourceBarrierCollection mTopASBuildBarriers;
         HAL::ResourceBarrierCollection mBottomASBuildBarriers;
-        HAL::RingBufferResource<GPUInstanceTableEntry> mInstanceTable;
+        //HAL::RingBufferResource<GPUInstanceTableEntry> mInstanceTable;
         
         uint64_t mCurrentFrameInsertedInstanceCount = 0;
 
@@ -105,7 +105,7 @@ namespace PathFinder
         CopyDevice* mCopyDevice;
 
     public:
-        inline const auto& InstanceTable() const { return mInstanceTable; }
+        //inline const auto& InstanceTable() const { return mInstanceTable; }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
         inline const auto& TopASBuildBarriers() const { return mTopASBuildBarriers; }

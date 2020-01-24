@@ -34,7 +34,7 @@ namespace PathFinder
     };
 
     class TexturePipelineResource : public PipelineResource<HAL::Texture> {};
-    class BufferPipelineResource : public PipelineResource<HAL::Buffer<uint8_t>> {};
+    class BufferPipelineResource : public PipelineResource<HAL::Buffer> {};
 
 }
 

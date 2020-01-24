@@ -30,9 +30,9 @@ namespace PathFinder
         const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
         const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
 
-        template <class T> const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(const HAL::Buffer<T>* buffer, std::optional<uint64_t> explicitStride = std::nullopt);
-        template <class T> const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(const HAL::Buffer<T>* buffer, std::optional<uint64_t> explicitStride = std::nullopt);
-        template <class T> const HAL::CBDescriptor& EmplaceCBDescriptorIfNeeded(const HAL::Buffer<T>* buffer, std::optional<uint64_t> explicitStride = std::nullopt);
+        const HAL::SRDescriptor& EmplaceSRDescriptorIfNeeded(const HAL::Buffer* buffer, uint64_t stride);
+        const HAL::UADescriptor& EmplaceUADescriptorIfNeeded(const HAL::Buffer* buffer, uint64_t stride);
+        const HAL::CBDescriptor& EmplaceCBDescriptorIfNeeded(const HAL::Buffer* buffer, uint64_t stride);
 
     private:
         struct DSCBSet
@@ -82,5 +82,3 @@ namespace PathFinder
     };
 
 }
-
-#include "ResourceDescriptorStorage.inl"

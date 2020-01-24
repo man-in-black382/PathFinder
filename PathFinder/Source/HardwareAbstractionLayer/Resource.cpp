@@ -20,7 +20,7 @@ namespace HAL
         heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
         ResourceFormat updatedFormat = format;
-        updatedFormat.UpdateExpectedUsageFlags(mExpectedStates);
+        updatedFormat.SetExpectedStates(mExpectedStates);
         mDescription = updatedFormat.D3DResourceDescription();
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
@@ -60,7 +60,7 @@ namespace HAL
         mExpectedStates = mInitialStates;
 
         ResourceFormat updatedFormat = format;
-        updatedFormat.UpdateExpectedUsageFlags(mExpectedStates);
+        updatedFormat.SetExpectedStates(mExpectedStates);
         mDescription = updatedFormat.D3DResourceDescription();
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
@@ -85,7 +85,7 @@ namespace HAL
             EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
 
         ResourceFormat updatedFormat = format;
-        updatedFormat.UpdateExpectedUsageFlags(mExpectedStates);
+        updatedFormat.SetExpectedStates(mExpectedStates);
         mDescription = updatedFormat.D3DResourceDescription();
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
@@ -99,7 +99,15 @@ namespace HAL
             IID_PPV_ARGS(mResource.GetAddressOf())));
     }
 
-    Resource::~Resource() {}
+    Resource::~Resource()
+    {
+        mDeallocationCallback();
+    }
+
+    void Resource::SetDeallocationCallback(const DeallocationCallback& callback)
+    {
+        mDeallocationCallback = callback;
+    }
 
     D3D12_GPU_VIRTUAL_ADDRESS Resource::GPUVirtualAddress() const
     {

@@ -16,33 +16,33 @@ namespace PathFinder
 
         // No ownership transfer
 
-        template <class T> void QueueBufferToBufferCopy(
-            const HAL::Buffer<T>& source, 
-            const HAL::Buffer<T>& destination,
+        void QueueBufferToBufferCopy(
+            const HAL::Buffer& source, 
+            const HAL::Buffer& destination,
             uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
 
-        template <class T> void QueueBufferToTextureCopy(
-            const HAL::Buffer<T>& buffer,
+        void QueueBufferToTextureCopy(
+            const HAL::Buffer& buffer,
             const HAL::Texture& texture,
             const HAL::ResourceFootprint& footprint);
         
         // For cases when a resource may not be needed after copy, ownership is shared until copy is completed
 
-        template <class T> void QueueBufferToBufferCopy(
-            std::shared_ptr<HAL::Buffer<T>> source,
-            std::shared_ptr<HAL::Buffer<T>> destination,
+        void QueueBufferToBufferCopy(
+            std::shared_ptr<HAL::Buffer> source,
+            std::shared_ptr<HAL::Buffer> destination,
             uint64_t sourceOffset, uint64_t objectCount, uint64_t destinationOffset);
 
-        template <class T> void QueueBufferToTextureCopy(
-            std::shared_ptr<HAL::Buffer<T>> buffer,
+        void QueueBufferToTextureCopy(
+            std::shared_ptr<HAL::Buffer> buffer,
             std::shared_ptr<HAL::Texture> texture,
             const HAL::ResourceFootprint& footprint);
 
-        template <class T> std::shared_ptr<HAL::Buffer<T>> QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::Buffer<T>> buffer);
+        std::shared_ptr<HAL::Buffer> QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::Buffer> buffer);
         std::shared_ptr<HAL::Texture> QueueResourceCopyToDefaultMemory(std::shared_ptr<HAL::Texture> texture);
 
-        template <class T> std::shared_ptr<HAL::Buffer<T>> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::Buffer<T>> buffer);
-        std::shared_ptr<HAL::Buffer<uint8_t>> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::Texture> texture);
+        std::shared_ptr<HAL::Buffer> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::Buffer> buffer);
+        std::shared_ptr<HAL::Buffer> QueueResourceCopyToReadbackMemory(std::shared_ptr<HAL::Texture> texture);
         
         void ExecuteCommands(const HAL::Fence* fenceToWaitFor = nullptr, const HAL::Fence* fenceToSignal = nullptr);
         void ResetCommandList();

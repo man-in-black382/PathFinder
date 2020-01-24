@@ -18,7 +18,7 @@ namespace PathFinder
 
         mExpectedStates = expectedStates;
 
-        mResourceFormat.UpdateExpectedUsageFlags(expectedStates);
+        mResourceFormat.SetExpectedStates(expectedStates);
     }
 
     const PipelineResourceSchedulingInfo::PassMetadata* PipelineResourceSchedulingInfo::GetMetadataForPass(Foundation::Name passName) const

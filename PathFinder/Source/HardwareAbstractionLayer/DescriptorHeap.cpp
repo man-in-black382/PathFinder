@@ -354,6 +354,54 @@ namespace HAL
         return descriptor;
     }
 
+    const CBDescriptor& CBSRUADescriptorHeap::EmplaceCBDescriptor(const Buffer& buffer, uint64_t stride)
+    {
+        auto index = std::underlying_type_t<Range>(Range::CBuffer);
+        ValidateCapacity(index);
+        RangeAllocationInfo& range = GetRange(index);
+
+        auto& descriptor = dynamic_cast<CBDescriptor&>(*range.Descriptors.emplace_back(
+            std::make_unique<CBDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
+
+        D3D12_CONSTANT_BUFFER_VIEW_DESC desc{ buffer.GPUVirtualAddress(), stride };
+        mDevice->D3DDevice()->CreateConstantBufferView(&desc, range.CurrentCPUHandle);
+
+        IncrementCounters(index);
+        return descriptor;
+    }
+
+    const SRDescriptor& CBSRUADescriptorHeap::EmplaceSRDescriptor(const Buffer& buffer, uint64_t stride)
+    {
+        auto index = std::underlying_type_t<Range>(Range::SBuffer);
+        ValidateCapacity(index);
+        RangeAllocationInfo& range = GetRange(index);
+
+        auto& descriptor = dynamic_cast<SRDescriptor&>(*range.Descriptors.emplace_back(
+            std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(buffer.D3DDescription(), stride);
+        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DResource(), &desc, range.CurrentCPUHandle);
+
+        IncrementCounters(index);
+        return descriptor;
+    }
+
+    const UADescriptor& CBSRUADescriptorHeap::EmplaceUADescriptor(const Buffer& buffer, uint64_t stride)
+    {
+        auto index = std::underlying_type_t<Range>(Range::UABuffer);
+        ValidateCapacity(index);
+        RangeAllocationInfo& range = GetRange(index);
+
+        auto& descriptor = dynamic_cast<UADescriptor&>(*range.Descriptors.emplace_back(
+            std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(buffer.D3DDescription(), stride);
+        mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DResource(), nullptr, &desc, range.CurrentCPUHandle);
+
+        IncrementCounters(index);
+        return descriptor;
+    }
+
     CBSRUADescriptorHeap::Range CBSRUADescriptorHeap::RangeTypeForTexture(const Texture& texture) const
     {
         switch (texture.Kind())

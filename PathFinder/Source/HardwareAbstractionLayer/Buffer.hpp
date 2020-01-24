@@ -2,54 +2,36 @@
 
 #include "Resource.hpp"
 
-#include <functional>
+#include <optional>
 
 namespace HAL
 {
 
-    template <class T>
     class Buffer : public Resource
     {
     public:
-        using Resource::Resource;
-        using ReadbackSession = std::function<void(const T*)>;
-
-        Buffer(const Device& device, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
-        Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t capacity, uint64_t perElementAlignment, ResourceState initialState, ResourceState expectedStates);
-        Buffer(const Device& device, uint64_t capacity, uint64_t perElementAlignment, CPUAccessibleHeapType heapType);
+        Buffer(const Device& device, uint64_t size, ResourceState initialState, ResourceState expectedStates);
+        Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t size, ResourceState initialState, ResourceState expectedStates);
+        Buffer(const Device& device, uint64_t size, CPUAccessibleHeapType heapType);
 
         ~Buffer();
 
-        virtual void Read(const ReadbackSession& session) const;
+        uint8_t* Map();
+        void Unmap();
 
-        virtual void Write(uint64_t startIndex, const T* data, uint64_t dataLength = 1);
-        virtual T* At(uint64_t index);
         virtual uint32_t SubresourceCount() const override;
 
-        static ResourceFormat ConstructResourceFormat(const Device* device, uint64_t capacity, uint64_t perElementAlignment);
+        static ResourceFormat ConstructResourceFormat(const Device* device, uint64_t bufferSize);
 
     private:
-        void ValidateMappedMemory() const;
-        void ValidateIndex(uint64_t index) const;
-
-    protected:
-        uint64_t PaddedElementSize(uint64_t alignment);
-        void Read(const ReadbackSession& session, uint64_t startOffset, uint64_t objectCount) const;
-
         uint8_t* mMappedMemory = nullptr;
-        uint64_t mNonPaddedElementSize = 0;
-        uint64_t mPaddedElementSize = 0;
-        uint64_t mCapacity = 0;
-        uint64_t mPerElementAlignment = 1;
+        uint64_t mSize = 0;
+        std::optional<CPUAccessibleHeapType> mCPUAccessibleHeapType = std::nullopt;
 
     public:
-        inline const auto Capacity() const { return mCapacity; }
-        inline const auto PaddedElementSize() const { return mPaddedElementSize; }
-        inline const auto NonPaddedElementSize() const { return mNonPaddedElementSize; }
-        inline const auto PerElementAlignment() const { return mPerElementAlignment; }
+        inline const auto Size() const { return mSize; }
+        inline auto HeapType() const { return mCPUAccessibleHeapType; }
     };
 
 }
-
-#include "Buffer.inl"
 

@@ -78,6 +78,13 @@ namespace HAL
         mDescription.SampleDesc.Quality = 0;
     }
 
+    void ResourceFormat::SetExpectedStates(ResourceState expectedStates)
+    {
+        DetermineExpectedUsageFlags(expectedStates);
+        QueryAllocationInfo();
+        DetermineAliasingGroup(expectedStates);
+    }
+
     void ResourceFormat::QueryAllocationInfo()
     {
         UINT GPUMask = 0;
@@ -88,7 +95,7 @@ namespace HAL
         mDescription.Alignment = mResourceAlignment;
     }
 
-    void ResourceFormat::UpdateExpectedUsageFlags(ResourceState expectedStates)
+    void ResourceFormat::DetermineExpectedUsageFlags(ResourceState expectedStates)
     {
         if (EnumMaskBitSet(expectedStates, ResourceState::RenderTarget))
         {
@@ -111,8 +118,28 @@ namespace HAL
         {
             mDescription.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
         }
+    }
 
-        QueryAllocationInfo();
+    void ResourceFormat::DetermineAliasingGroup(ResourceState expectedStates)
+    {
+        std::visit(Foundation::MakeVisitor(
+            [this](const HAL::BufferKind& kind)
+            {
+                mAliasingGroup = HAL::HeapAliasingGroup::Buffers;
+            },
+            [this, expectedStates](const HAL::TextureKind& kind)
+            {
+                if (EnumMaskBitSet(expectedStates, HAL::ResourceState::RenderTarget) ||
+                    EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthWrite) ||
+                    EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthRead))
+                {
+                    mAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
+                }
+                else {
+                    mAliasingGroup = HAL::HeapAliasingGroup::NonRTDSTextures;
+                }
+            }),
+            mKind);
     }
 
     DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColorFormat type)

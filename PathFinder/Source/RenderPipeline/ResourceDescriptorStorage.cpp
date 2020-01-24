@@ -109,6 +109,36 @@ namespace PathFinder
         return descriptor;
     }
 
+    const HAL::SRDescriptor& ResourceDescriptorStorage::EmplaceSRDescriptorIfNeeded(const HAL::Buffer* buffer, uint64_t stride)
+    {
+        if (auto descriptor = GetSRDescriptor(buffer)) return *descriptor;
+
+        const HAL::SRDescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceSRDescriptor(*buffer, stride);
+        mDescriptors[buffer].ImplicitlyTypedRTSRUA.SRDescriptor = &descriptor;
+
+        return descriptor;
+    }
+
+    const HAL::UADescriptor& ResourceDescriptorStorage::EmplaceUADescriptorIfNeeded(const HAL::Buffer* buffer, uint64_t stride)
+    {
+        if (auto descriptor = GetUADescriptor(buffer)) return *descriptor;
+
+        const HAL::UADescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(*buffer, stride);
+        mDescriptors[buffer].ImplicitlyTypedRTSRUA.UADescriptor = &descriptor;
+
+        return descriptor;
+    }
+
+    const HAL::CBDescriptor& ResourceDescriptorStorage::EmplaceCBDescriptorIfNeeded(const HAL::Buffer* buffer, uint64_t stride)
+    {
+        if (auto descriptor = GetCBDescriptor(buffer)) return *descriptor;
+
+        const HAL::CBDescriptor& descriptor = mCBSRUADescriptorHeap.EmplaceCBDescriptor(*buffer, stride);
+        mDescriptors[buffer].DSCB.CBDescriptor = &descriptor;
+
+        return descriptor;
+    }
+
     void ResourceDescriptorStorage::ValidateRTFormatsCompatibility(
         HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
