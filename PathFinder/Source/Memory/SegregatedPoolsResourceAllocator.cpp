@@ -106,7 +106,8 @@ namespace Memory
 
     uint64_t SegregatedPoolsResourceAllocator::AdjustMemoryOffsetToPointInsideHeap(const Pool<SlotUserData>::Slot& slot)
     {
-
+        // One heap is created for OnGrowSlotCount slots in a bucket
+        auto 
     }
 
 }
