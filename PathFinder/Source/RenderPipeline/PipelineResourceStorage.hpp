@@ -38,13 +38,13 @@ namespace PathFinder
         struct PerPassObjects
         {
             // Constant buffers for each pass that require it.
-            std::unique_ptr<HAL::RingBufferResource<uint8_t>> PassConstantBuffer;
+            //std::unique_ptr<HAL::RingBufferResource<uint8_t>> PassConstantBuffer;
 
-            // Debug buffers for each pass.
-            std::unique_ptr<HAL::Buffer<float>> PassDebugBuffer;
+            //// Debug buffers for each pass.
+            //std::unique_ptr<HAL::Buffer<float>> PassDebugBuffer;
 
-            // Debug readback buffers for each pass.
-            std::unique_ptr<HAL::RingBufferResource<float>> PassDebugReadbackBuffer;
+            //// Debug readback buffers for each pass.
+            //std::unique_ptr<HAL::RingBufferResource<float>> PassDebugReadbackBuffer;
 
             // Resource names scheduled for each pass
             std::unordered_set<ResourceName> ScheduledResourceNames;
@@ -74,9 +74,9 @@ namespace PathFinder
             const RenderPassExecutionGraph* passExecutionGraph
         );
 
-        using DebugBufferIteratorFunc = std::function<void(
+      /*  using DebugBufferIteratorFunc = std::function<void(
             PassName passName, const HAL::Buffer<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer
-        )>;
+        )>;*/
 
         void BeginFrame(uint64_t newFrameNumber);
         void EndFrame(uint64_t completedFrameNumber);
@@ -94,11 +94,11 @@ namespace PathFinder
         GlobalRootConstants* GlobalRootConstantData();
         PerFrameRootConstants* PerFrameRootConstantData();
         template <class RootConstants> RootConstants* RootConstantDataForCurrentPass();
-        HAL::Buffer<uint8_t>* RootConstantBufferForCurrentPass();
-        const HAL::Buffer<float>* DebugBufferForCurrentPass() const;
-        const HAL::RingBufferResource<float>* DebugReadbackBufferForCurrentPass() const;
-        const HAL::Buffer<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
-        const HAL::Buffer<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;
+        /*  HAL::Buffer<uint8_t>* RootConstantBufferForCurrentPass();
+          const HAL::Buffer<float>* DebugBufferForCurrentPass() const;
+          const HAL::RingBufferResource<float>* DebugReadbackBufferForCurrentPass() const;
+          const HAL::Buffer<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
+          const HAL::Buffer<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;*/
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
         const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
@@ -109,7 +109,7 @@ namespace PathFinder
         const Foundation::Name CurrentPassName() const;
         const ResourceDescriptorStorage* DescriptorStorage() const;
 
-        void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
+        //void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
         bool IsResourceAllocationScheduled(ResourceName name) const;
         void RegisterResourceNameForCurrentPass(ResourceName name);
@@ -175,11 +175,11 @@ namespace PathFinder
         // No fancy management is required.
         std::vector<HAL::RTDescriptor> mBackBufferDescriptors;
 
-        // Constant buffer for global data that changes rarely
-        HAL::RingBufferResource<GlobalRootConstants> mGlobalRootConstantsBuffer;
+        //// Constant buffer for global data that changes rarely
+        //HAL::RingBufferResource<GlobalRootConstants> mGlobalRootConstantsBuffer;
 
-        // Constant buffer for data that changes every frame
-        HAL::RingBufferResource<PerFrameRootConstants> mPerFrameRootConstantsBuffer;
+        //// Constant buffer for data that changes every frame
+        //HAL::RingBufferResource<PerFrameRootConstants> mPerFrameRootConstantsBuffer;
 
         std::unordered_map<ResourceName, PerResourceObjects> mPerResourceObjects;
 

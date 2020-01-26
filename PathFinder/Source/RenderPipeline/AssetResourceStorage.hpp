@@ -19,7 +19,7 @@ namespace PathFinder
     {
         GPUDescriptorIndex SRIndex = 0;
         GPUDescriptorIndex UAIndex = 0;
-        std::shared_ptr<HAL::Buffer<T>> AssetReadbackBuffer = nullptr;
+        //std::shared_ptr<HAL::Buffer<T>> AssetReadbackBuffer = nullptr;
     };
 
     class AssetResourceStorage
@@ -31,8 +31,8 @@ namespace PathFinder
 
         // Store asset that is required to be processed by an asset-processing render pass.
         // When processing is done an optional transfer to a read-back buffer can be performed
-        PreprocessableAsset<uint8_t> StorePreprocessableAsset(std::shared_ptr<HAL::Texture> asset, bool queueContentReadback);
-        template <class T> PreprocessableAsset<T> StorePreprocessableAsset(std::shared_ptr<HAL::Buffer<T>> asset, bool queueContentReadback);
+        //PreprocessableAsset<uint8_t> StorePreprocessableAsset(std::shared_ptr<HAL::Texture> asset, bool queueContentReadback);
+        //template <class T> PreprocessableAsset<T> StorePreprocessableAsset(std::shared_ptr<HAL::Buffer<T>> asset, bool queueContentReadback);
 
     private:
         const HAL::Device* mDevice;

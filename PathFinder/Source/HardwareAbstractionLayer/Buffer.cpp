@@ -17,6 +17,11 @@ namespace HAL
         : Resource(device, ConstructResourceFormat(&device, size), heapType),
         mSize{ size }, mCPUAccessibleHeapType{ heapType } {}
 
+    Buffer::Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t size)
+    {
+
+    }
+
     Buffer::~Buffer()
     {
         Unmap();

@@ -17,7 +17,7 @@ namespace Memory
         BucketUserData UserData;
 
     private:
-        friend SegregatedPools;
+        friend SegregatedPools<BucketUserData, SlotUserData>;
 
         Pool<SlotUserData> mSlots;
         uint64_t mSlotSize;
@@ -32,7 +32,7 @@ namespace Memory
     template <class BucketUserData, class SlotUserData>
     struct SegregatedPoolsAllocation
     {
-        const SegregatedPoolsBucket<BucketUserData, SlotUserData>* Bucket;
+        SegregatedPoolsBucket<BucketUserData, SlotUserData>* Bucket;
         Pool<SlotUserData>::Slot Slot;
     };
 
@@ -43,10 +43,12 @@ namespace Memory
     class SegregatedPools
     {
     public:
+        using Allocation = SegregatedPoolsAllocation<BucketUserData, SlotUserData>;
+
         SegregatedPools(uint64_t minimumBucketSlotSize, uint64_t bucketGrowSlotCount);
 
-        SegregatedPoolsAllocation Allocate(uint64_t allocationSize);
-        void Deallocate(const SegregatedPoolsAllocation& bucketSlot);
+        Allocation Allocate(uint64_t allocationSize);
+        void Deallocate(const Allocation& allocation);
 
     private:
         uint64_t CeilToClosestPowerOf2(uint64_t value);

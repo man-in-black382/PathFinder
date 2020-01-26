@@ -30,7 +30,7 @@ namespace Memory
     }
 
     template <class BucketUserData, class SlotUserData>
-    SegregatedPoolsAllocation<BucketUserData, SlotUserData>
+    SegregatedPools<BucketUserData, SlotUserData>::Allocation
         SegregatedPools<BucketUserData, SlotUserData>::Allocate(uint64_t allocationSize)
     {
         assert_format(allocationSize >= mMinimumBucketSlotSize,
@@ -56,9 +56,9 @@ namespace Memory
     }
 
     template <class BucketUserData, class SlotUserData>
-    void SegregatedPools<BucketUserData, SlotUserData>::Deallocate(const SegregatedPoolsAllocation<BucketUserData, SlotUserData>& bucketSlot)
+    void SegregatedPools<BucketUserData, SlotUserData>::Deallocate(const SegregatedPools<BucketUserData, SlotUserData>::Allocation& allocation)
     {
-        mBuckets[bucketSlot.Bucket->mBucketIndex].Deallocate(bucketSlot.Slot);
+        mBuckets[allocation.Bucket->mBucketIndex].Deallocate(allocation.Slot);
     }
 
 }

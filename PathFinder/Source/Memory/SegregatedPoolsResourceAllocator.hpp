@@ -18,8 +18,8 @@ namespace Memory
     public:
         SegregatedPoolsResourceAllocator(const HAL::Device* device);
 
-        template <class T> HAL::Buffer AllocateBuffer(uint64_t capacity, uint64_t perElementAlignment, HAL::ResourceState initialState, HAL::ResourceState expectedStates);
-        template <class T> HAL::BufferCPUAccessor<T> AllocateBuffer(uint64_t capacity, uint64_t perElementAlignment, HAL::CPUAccessibleHeapType heapType);
+        template <class T> std::unique_ptr<HAL::Buffer> AllocateBuffer(uint64_t capacity, uint64_t perElementAlignment, HAL::ResourceState initialState, HAL::ResourceState expectedStates);
+        template <class T> std::unique_ptr<HAL::BufferCPUAccessor<T>> AllocateBuffer(uint64_t capacity, uint64_t perElementAlignment, HAL::CPUAccessibleHeapType heapType);
         
         std::unique_ptr<HAL::Texture> AllocateTexture(const HAL::Texture::Properties& properties);
 
@@ -27,21 +27,22 @@ namespace Memory
         using HeapList = std::list<HAL::Heap>;
         using HeapIterator = HeapList::iterator;
 
-        struct HeapListIteratorAndResource
+        struct SlotUserData
         {
             std::optional<HeapIterator> HeapListIterator = std::nullopt;
 
             // We only store buffers inside pool slots
             // to keep them alive and reuse on new buffer allocation requests.
             // Textures are recreated on each allocation request and not stored here.
-            std::unique_ptr<HAL::Buffer> Buffer;
+            // Manually managed.
+            HAL::Buffer* Buffer = nullptr;
         };
 
-        struct HeapListAndTotalSize
+        struct BucketUserData
         {
             // List of heaps for one bucket 
             HeapList Heaps;
-
+            
             // Tracks total size of heaps in a bucket
             uint64_t TotalHeapsSize = 0;
         };
@@ -49,10 +50,13 @@ namespace Memory
         // We store actual heaps inside segregated pool buckets 
         // and resource and a reference to one of those heaps the 
         // resource is allocated in inside pool slot
-        using Pools = SegregatedPools<HeapListAndTotalSize, HeapListIteratorAndResource>;
-        using PoolsAllocation = SegregatedPoolsAllocation<HeapListAndTotalSize, HeapListIteratorAndResource>;
+        using Pools = SegregatedPools<BucketUserData, SlotUserData>;
+        using PoolsAllocation = SegregatedPoolsAllocation<BucketUserData, SlotUserData>;
 
-        PoolsAllocation Allocate(uint64_t alloctionSizeInBytes, const HAL::ResourceFormat& resourceFormat, std::optional<HAL::CPUAccessibleHeapType> cpuHeapType);
+        std::pair<PoolsAllocation, Pools*> FindOrAllocateMostFittingFreeSlot(
+            uint64_t alloctionSizeInBytes, const HAL::ResourceFormat& resourceFormat, std::optional<HAL::CPUAccessibleHeapType> cpuHeapType);
+
+        uint64_t AdjustMemoryOffsetToPointInsideHeap(const Pool<SlotUserData>::Slot& slot);
 
         const HAL::Device* mDevice = nullptr;
 

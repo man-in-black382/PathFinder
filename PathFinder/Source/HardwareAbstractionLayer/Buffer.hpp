@@ -12,6 +12,7 @@ namespace HAL
     public:
         Buffer(const Device& device, uint64_t size, ResourceState initialState, ResourceState expectedStates);
         Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t size, ResourceState initialState, ResourceState expectedStates);
+        Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t size);
         Buffer(const Device& device, uint64_t size, CPUAccessibleHeapType heapType);
 
         ~Buffer();
