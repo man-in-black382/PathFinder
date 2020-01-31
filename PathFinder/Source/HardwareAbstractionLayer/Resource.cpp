@@ -19,9 +19,7 @@ namespace HAL
         D3D12_HEAP_PROPERTIES heapProperties{};
         heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
-        ResourceFormat updatedFormat = format;
-        updatedFormat.SetExpectedStates(mExpectedStates);
-        mDescription = updatedFormat.D3DResourceDescription();
+        mDescription = format.D3DResourceDescription();
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
 
@@ -58,10 +56,7 @@ namespace HAL
         }
 
         mExpectedStates = mInitialStates;
-
-        ResourceFormat updatedFormat = format;
-        updatedFormat.SetExpectedStates(mExpectedStates);
-        mDescription = updatedFormat.D3DResourceDescription();
+        mDescription = format.D3DResourceDescription();
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
 
@@ -80,13 +75,21 @@ namespace HAL
         mExpectedStates{ expectedStateMask | initialStateMask },
         mHeapOffset{ heapOffset }
     {
-        bool isSubjectForClearing =
-            EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) ||
-            EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
+        // Force correct states for Upload/Readback heaps
+        if (heap.CPUAccessibleType())
+        {
+            switch (*heap.CPUAccessibleType())
+            {
+            case HAL::CPUAccessibleHeapType::Upload: mInitialStates = mExpectedStates = ResourceState::GenericRead; break;
+            case HAL::CPUAccessibleHeapType::Readback: mInitialStates = mExpectedStates = ResourceState::CopyDestination; break;
+            }
+        }
 
-        ResourceFormat updatedFormat = format;
-        updatedFormat.SetExpectedStates(mExpectedStates);
-        mDescription = updatedFormat.D3DResourceDescription();
+        bool isSubjectForClearing =
+            EnumMaskBitSet(mExpectedStates, ResourceState::RenderTarget) ||
+            EnumMaskBitSet(mExpectedStates, ResourceState::DepthWrite);
+
+        mDescription = format.D3DResourceDescription();
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
 

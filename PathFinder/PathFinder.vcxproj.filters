@@ -225,9 +225,6 @@
     <ClCompile Include="Source\Scene\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\RingBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -393,10 +390,22 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Memory\Pool.inl">
+    <ClCompile Include="Source\Memory\Ring.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Memory\SegregatedPools.inl">
+    <ClCompile Include="Source\Memory\PoolCommandListAllocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Memory\GPUResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Memory\Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Memory\Buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Memory\GPUResourceProducer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1826,15 +1835,6 @@
     <ClInclude Include="Source\Scene\Scene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\RingBufferResource.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\RingCommandList.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\RingBuffer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2222,9 +2222,6 @@
     <ClInclude Include="Source\RenderPipeline\SFLGPUAllocator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Memory\SFLGPUAllocator.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Memory\Pool.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2234,7 +2231,22 @@
     <ClInclude Include="Source\Memory\SegregatedPoolsResourceAllocator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\BufferCPUAccessor.hpp">
+    <ClInclude Include="Source\Memory\Ring.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\PoolCommandListAllocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\GPUResource.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\Texture.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\Buffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\GPUResourceProducer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2689,16 +2701,10 @@
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\HardwareAbstractionLayer\RingBufferResource.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Source\RenderPipeline\CopyDevice.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\HardwareAbstractionLayer\Descriptor.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\HardwareAbstractionLayer\RingCommandList.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\ResourceScheduler.inl">
@@ -2723,10 +2729,22 @@
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\HardwareAbstractionLayer\BufferCPUAccessor.inl">
+    <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl">
+    <None Include="Source\Memory\Pool.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\Memory\SegregatedPools.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\Memory\GPUResource.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\Memory\Buffer.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\Memory\GPUResourceProducer.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -32,6 +32,9 @@ namespace HAL
     {
     public:
         CommandList(const Device& device, const CommandAllocator& allocator, D3D12_COMMAND_LIST_TYPE type);
+        CommandList(CommandList&& that) = default;
+        CommandList(const CommandList& that) = delete;
+        CommandList& operator=(const CommandList& that) = delete;
         virtual ~CommandList() = 0; 
 
         void Reset(const CommandAllocator& allocator);

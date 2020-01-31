@@ -6,7 +6,6 @@
 #include <limits>
 
 #include "RootSignature.hpp"
-#include "RingBufferResource.hpp"
 #include "Shader.hpp"
 #include "RayDispatchInfo.hpp"
 

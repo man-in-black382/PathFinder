@@ -21,9 +21,7 @@ namespace HAL
     }
 
     Texture::Texture(const Device& device, const Properties& properties)
-        : Resource(device, ConstructResourceFormat(
-            &device, properties.Format, properties.Kind, properties.Dimensions, 
-            properties.MipCount, properties.OptimizedClearValue), 
+        : Resource(device, ConstructResourceFormat(&device, properties), 
             properties.InitialStateMask, properties.ExpectedStateMask),
         mDimensions{ properties.Dimensions }, 
         mKind{ properties.Kind}, 
@@ -32,9 +30,7 @@ namespace HAL
         mMipCount{ properties.MipCount } {}
 
     Texture::Texture(const Device& device, const Heap& heap, uint64_t heapOffset, const Properties& properties)
-        : Resource(device, heap, heapOffset, ConstructResourceFormat(
-            &device, properties.Format, properties.Kind, properties.Dimensions,
-            properties.MipCount, properties.OptimizedClearValue),
+        : Resource(device, heap, heapOffset, ConstructResourceFormat(&device, properties), 
             properties.InitialStateMask, properties.ExpectedStateMask),
         mDimensions{ properties.Dimensions },
         mKind{ properties.Kind },
@@ -63,12 +59,11 @@ namespace HAL
         return IsArray() ? mDimensions.Depth * mMipCount : mMipCount;
     }
 
-    ResourceFormat Texture::ConstructResourceFormat(
-        const Device* device, ResourceFormat::FormatVariant format,
-        TextureKind kind, const Geometry::Dimensions& dimensions,
-        uint16_t mipCount, const ClearValue& optimizedClearValue)
+    ResourceFormat Texture::ConstructResourceFormat(const Device* device, const Properties& properties)
     {
-        return { device, format, kind, dimensions, mipCount, optimizedClearValue };
+        ResourceFormat format{ device, properties.Format, properties.Kind, properties.Dimensions, properties.MipCount, properties.OptimizedClearValue };
+        format.SetExpectedStates(properties.InitialStateMask | properties.ExpectedStateMask);
+        return format;
     }
 
     Texture::Properties::Properties(

@@ -9,7 +9,6 @@
 #include "../Geometry/Dimensions.hpp"
 #include "../HardwareAbstractionLayer/ShaderRegister.hpp"
 #include "../HardwareAbstractionLayer/Resource.hpp"
-#include "../HardwareAbstractionLayer/RingCommandList.hpp"
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
 

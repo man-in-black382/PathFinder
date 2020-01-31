@@ -3,7 +3,7 @@ namespace Memory
 
     template <class SlotUserData>
     Pool<SlotUserData>::Pool(uint64_t slotSize, uint64_t onGrowSlotCount)
-        : mSlotSize{ slotSize }, mGrowSlotCount{ initialSlotCount } {}
+        : mSlotSize{ slotSize }, mGrowSlotCount{ onGrowSlotCount } {}
 
     template <class SlotUserData>
     void Pool<SlotUserData>::Grow()
@@ -16,13 +16,13 @@ namespace Memory
     }
 
     template <class SlotUserData>
-    void Pool<SlotUserData>::Deallocate(const Slot& slot)
+    void Pool<SlotUserData>::Deallocate(const Pool<SlotUserData>::Slot& slot)
     {
         mFreeSlots.push_back(slot);
     }
 
     template <class SlotUserData>
-    Pool<SlotUserData>::Slot Pool<SlotUserData>::Allocate()
+    typename Pool<SlotUserData>::Slot Pool<SlotUserData>::Allocate()
     {
         if (mFreeSlots.empty())
         {

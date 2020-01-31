@@ -3,8 +3,6 @@
 #include "../HardwareAbstractionLayer/DisplayAdapterFetcher.hpp"
 #include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 
-#include "../Memory/SegregatedPoolsResourceAllocator.hpp"
-
 #include <pix.h>
 
 namespace PathFinder
@@ -19,6 +17,7 @@ namespace PathFinder
         mPassExecutionGraph{ passExecutionGraph },
         mDefaultRenderSurface{ { 1920, 1080 }, HAL::ColorFormat::RGBA16_Float, HAL::DepthStencilFormat::Depth32_Float },
         mDevice{ FetchDefaultDisplayAdapter() },
+        mSegregatedPoolsAllocator{ &mDevice },
         mUploadFence{ mDevice },
         mAsyncComputeFence{ mDevice },
         mGraphicsFence{ mDevice },
@@ -243,10 +242,10 @@ namespace PathFinder
             return;
         }
 
-        mPipelineResourceStorage.IterateDebugBuffers([this](PassName passName, const HAL::Buffer<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer) 
+       /* mPipelineResourceStorage.IterateDebugBuffers([this](PassName passName, const HAL::Buffer<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer) 
         {
             mUIStorage.ReadbackPassDebugBuffer(passName, *debugReadbackBuffer);
-        });
+        });*/
     }
 
     void RenderEngine::RunRenderPasses(const std::list<RenderPass*>& passes)
@@ -260,9 +259,9 @@ namespace PathFinder
             passPtr->Render(&mContext);
 
             // Queue debug buffer read
-            auto debugBuffer = mPipelineResourceStorage.DebugBufferForCurrentPass();
+          /*  auto debugBuffer = mPipelineResourceStorage.DebugBufferForCurrentPass();
             auto readackDebugBuffer = mPipelineResourceStorage.DebugReadbackBufferForCurrentPass();
-            mReadbackCopyDevice.QueueBufferToBufferCopy(*debugBuffer, *readackDebugBuffer, 0, debugBuffer->Capacity(), readackDebugBuffer->CurrentFrameObjectOffset());
+            mReadbackCopyDevice.QueueBufferToBufferCopy(*debugBuffer, *readackDebugBuffer, 0, debugBuffer->Capacity(), readackDebugBuffer->CurrentFrameObjectOffset());*/
         }
     }
 

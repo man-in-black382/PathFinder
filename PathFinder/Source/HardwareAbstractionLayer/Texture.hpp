@@ -35,13 +35,7 @@ namespace HAL
         bool IsArray() const;
         virtual uint32_t SubresourceCount() const override;
 
-        static ResourceFormat ConstructResourceFormat(
-            const Device* device,
-            ResourceFormat::FormatVariant format,
-            TextureKind kind,
-            const Geometry::Dimensions& dimensions,
-            uint16_t mipCount,
-            const ClearValue& optimizedClearValue);
+        static ResourceFormat ConstructResourceFormat(const Device* device, const Properties& properties);
 
     protected:
         Geometry::Dimensions mDimensions;

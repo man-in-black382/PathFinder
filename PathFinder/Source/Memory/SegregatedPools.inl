@@ -24,20 +24,13 @@ namespace Memory
     }
 
     template <class BucketUserData, class SlotUserData>
-    uint64_t SegregatedPools<BucketUserData, SlotUserData>::BucketSingleSlotSize(uint32_t bucketIndex) const
-    {
-        return mBuckets[bucketIndex].SlotSize();
-    }
-
-    template <class BucketUserData, class SlotUserData>
-    SegregatedPools<BucketUserData, SlotUserData>::Allocation
+    typename SegregatedPools<BucketUserData, SlotUserData>::Allocation
         SegregatedPools<BucketUserData, SlotUserData>::Allocate(uint64_t allocationSize)
     {
         assert_format(allocationSize >= mMinimumBucketSlotSize,
             "Requested allocation is smaller than the minimum provided to allocator at construction");
 
         auto bucketIndex = CalculateBucketIndex(allocationSize);
-        auto allocationSize = std::pow(2.0, bucketIndex);
 
         // Create missing pools if existing pools do not satisfy allocation memory requirement
         if (bucketIndex >= mBuckets.size())
@@ -52,13 +45,13 @@ namespace Memory
             }
         }
 
-        return { &mBuckets[bucketIndex], mBuckets[bucketIndex].Allocate() };
+        return { &mBuckets[bucketIndex], mBuckets[bucketIndex].mSlots.Allocate() };
     }
 
     template <class BucketUserData, class SlotUserData>
     void SegregatedPools<BucketUserData, SlotUserData>::Deallocate(const SegregatedPools<BucketUserData, SlotUserData>::Allocation& allocation)
     {
-        mBuckets[allocation.Bucket->mBucketIndex].Deallocate(allocation.Slot);
+        mBuckets[allocation.Bucket->mBucketIndex].mSlots.Deallocate(allocation.Slot);
     }
 
 }

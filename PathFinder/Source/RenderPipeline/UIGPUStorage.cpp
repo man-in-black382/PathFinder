@@ -13,8 +13,8 @@ namespace PathFinder
 
     void UIGPUStorage::BeginFrame(uint64_t newFrameNumber)
     {
-        if (mVertexBuffer) mVertexBuffer->PrepareMemoryForNewFrame(newFrameNumber);
-        if (mIndexBuffer) mIndexBuffer->PrepareMemoryForNewFrame(newFrameNumber);
+      /*  if (mVertexBuffer) mVertexBuffer->PrepareMemoryForNewFrame(newFrameNumber);
+        if (mIndexBuffer) mIndexBuffer->PrepareMemoryForNewFrame(newFrameNumber);*/
 
         mCurrentFrameIndex = (newFrameNumber - mLastFenceValue) % mFrameCount;
 
@@ -23,8 +23,8 @@ namespace PathFinder
 
     void UIGPUStorage::EndFrame(uint64_t completedFrameNumber)
     {
-        if (mVertexBuffer) mVertexBuffer->DiscardMemoryForCompletedFrames(completedFrameNumber);
-        if (mIndexBuffer) mIndexBuffer->DiscardMemoryForCompletedFrames(completedFrameNumber);
+        //if (mVertexBuffer) mVertexBuffer->DiscardMemoryForCompletedFrames(completedFrameNumber);
+        //if (mIndexBuffer) mIndexBuffer->DiscardMemoryForCompletedFrames(completedFrameNumber);
 
         mLastFenceValue = completedFrameNumber;
     }

@@ -221,7 +221,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceFootprint.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceFormat.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ResourceState.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\RingBuffer.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RootParameters.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RootSignature.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\StaticSampler.cpp" />
@@ -236,9 +235,13 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\IO\Input.cpp" />
     <ClCompile Include="Source\IO\InputHandlerWindows.cpp" />
     <ClCompile Include="Source\main.cpp" />
-    <ClCompile Include="Source\Memory\Pool.inl" />
-    <ClCompile Include="Source\Memory\SegregatedPools.inl" />
+    <ClCompile Include="Source\Memory\Buffer.cpp" />
+    <ClCompile Include="Source\Memory\GPUResource.cpp" />
+    <ClCompile Include="Source\Memory\GPUResourceProducer.cpp" />
+    <ClCompile Include="Source\Memory\Ring.cpp" />
+    <ClCompile Include="Source\Memory\PoolCommandListAllocator.cpp" />
     <ClCompile Include="Source\Memory\SegregatedPoolsResourceAllocator.cpp" />
+    <ClCompile Include="Source\Memory\Texture.cpp" />
     <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp" />
@@ -332,7 +335,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Geometry\Triangle3D.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\BlendState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Buffer.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\BufferCPUAccessor.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandAllocator.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandList.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandQueue.hpp" />
@@ -363,9 +365,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceFootprint.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceFormat.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ResourceState.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\RingBuffer.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\RingBufferResource.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\RingCommandList.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RootParameters.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RootSignature.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\StaticSampler.hpp" />
@@ -382,9 +381,15 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\IO\CommandLineParser.hpp" />
     <ClInclude Include="Source\IO\Input.hpp" />
     <ClInclude Include="Source\IO\InputHandlerWindows.hpp" />
+    <ClInclude Include="Source\Memory\Buffer.hpp" />
+    <ClInclude Include="Source\Memory\GPUResource.hpp" />
+    <ClInclude Include="Source\Memory\GPUResourceProducer.hpp" />
     <ClInclude Include="Source\Memory\Pool.hpp" />
+    <ClInclude Include="Source\Memory\Ring.hpp" />
+    <ClInclude Include="Source\Memory\PoolCommandListAllocator.hpp" />
     <ClInclude Include="Source\Memory\SegregatedPools.hpp" />
     <ClInclude Include="Source\Memory\SegregatedPoolsResourceAllocator.hpp" />
+    <ClInclude Include="Source\Memory\Texture.hpp" />
     <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp" />
@@ -923,19 +928,41 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Libs\dxil.dll" />
     <None Include="packages.config" />
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl" />
-    <None Include="Source\HardwareAbstractionLayer\BufferCPUAccessor.inl" />
-    <None Include="Source\HardwareAbstractionLayer\CommandList.inl" />
-    <None Include="Source\HardwareAbstractionLayer\Descriptor.inl" />
-    <None Include="Source\HardwareAbstractionLayer\RingBufferResource.inl" />
-    <None Include="Source\HardwareAbstractionLayer\RingCommandList.inl" />
-    <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl" />
-    <None Include="Source\RenderPipeline\AssetResourceStorage.inl" />
-    <None Include="Source\RenderPipeline\AsyncComputeDevice.inl" />
-    <None Include="Source\RenderPipeline\CopyDevice.inl" />
-    <None Include="Source\RenderPipeline\GPUCommandRecorder.inl" />
-    <None Include="Source\RenderPipeline\GraphicsDevice.inl" />
-    <None Include="Source\RenderPipeline\PipelineResource.inl" />
-    <None Include="Source\RenderPipeline\ResourceScheduler.inl" />
+    <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\HardwareAbstractionLayer\Descriptor.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\Memory\Buffer.inl" />
+    <None Include="Source\Memory\GPUResource.inl" />
+    <None Include="Source\Memory\GPUResourceProducer.inl" />
+    <None Include="Source\Memory\Pool.inl" />
+    <None Include="Source\Memory\SegregatedPools.inl" />
+    <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\RenderPipeline\AssetResourceStorage.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\RenderPipeline\AsyncComputeDevice.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\RenderPipeline\CopyDevice.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\RenderPipeline\GPUCommandRecorder.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\RenderPipeline\GraphicsDevice.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\RenderPipeline\PipelineResource.inl">
+      <FileType>CppHeader</FileType>
+    </None>
+    <None Include="Source\RenderPipeline\ResourceScheduler.inl">
+      <FileType>CppHeader</FileType>
+    </None>
     <None Include="Source\ThirdParty\assimp\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\material.inl" />

@@ -39,7 +39,7 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::UI);
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
 
-        if (auto vertexBuffer = context->GetUIStorage()->VertexBuffer())
+       /* if (auto vertexBuffer = context->GetUIStorage()->VertexBuffer())
         {
             context->GetCommandRecorder()->BindExternalBuffer(*vertexBuffer, 0, 0, HAL::ShaderRegister::ShaderResource);
         }
@@ -48,7 +48,7 @@ namespace PathFinder
         {
             context->GetCommandRecorder()->BindExternalBuffer(*indexBuffer, 1, 0, HAL::ShaderRegister::ShaderResource);
         }
-
+*/
         UICBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<UICBContent>();
         cbContent->ProjectionMatrix = context->GetUIStorage()->MVP();
         cbContent->UITextureSRVIndex = context->GetUIStorage()->FontSRVIndex();

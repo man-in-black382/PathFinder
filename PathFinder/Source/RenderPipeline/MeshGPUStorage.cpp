@@ -166,8 +166,8 @@ namespace PathFinder
 
     void MeshGPUStorage::StoreMeshInstance(MeshInstance& instance, const HAL::RayTracingBottomAccelerationStructure& blas)
     {
-        assert_format(mCurrentFrameInsertedInstanceCount < mInstanceTable.PerFrameCapacity(),
-            "Buffer capacity is static in current implementation and you have reached a maximum amount of updates per frame");
+        /*assert_format(mCurrentFrameInsertedInstanceCount < mInstanceTable.PerFrameCapacity(),
+            "Buffer capacity is static in current implementation and you have reached a maximum amount of updates per frame");*/
 
         GPUInstanceTableEntry instanceEntry{
             instance.Transformation().ModelMatrix(),

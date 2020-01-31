@@ -13,7 +13,6 @@
 
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
-#include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 #include "../Foundation/MemoryUtils.hpp"
 
 #include <vector>

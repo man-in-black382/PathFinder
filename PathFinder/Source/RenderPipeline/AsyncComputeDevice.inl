@@ -78,8 +78,8 @@ namespace PathFinder
         CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
         // Look at PipelineStateManager for base root signature parameter ordering
-        CommandList().SetComputeRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
-        CommandList().SetComputeRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);
+        /*CommandList().SetComputeRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
+        CommandList().SetComputeRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);*/
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
         {
@@ -115,12 +115,12 @@ namespace PathFinder
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BindCurrentPassBuffersCompute()
     {
-        if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
+       /* if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
         {
             CommandList().SetComputeRootConstantBuffer(*buffer, 2);
         }
 
-        CommandList().SetComputeRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);
+        CommandList().SetComputeRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);*/
     }
 
     template <class CommandListT, class CommandAllocatorT, class CommandQueueT>

@@ -4,10 +4,10 @@
 #include <deque>
 #include <functional>
 
-namespace HAL
+namespace Memory
 {
    
-    class RingBuffer
+    class Ring
     {
     public:
         using OffsetType = size_t;
@@ -28,7 +28,7 @@ namespace HAL
 
         static const OffsetType InvalidOffset = static_cast<OffsetType>(-1);
 
-        RingBuffer(OffsetType maxSize);
+        Ring(OffsetType maxSize);
 
         OffsetType Allocate(OffsetType Size);
 

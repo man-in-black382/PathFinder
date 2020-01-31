@@ -35,9 +35,9 @@ namespace PathFinder
         struct SerializationData
         {
             std::string DistanceMapReltivePath;
-            const HAL::Buffer<uint8_t>* DistanceAtlasIndirectionBuffer;
-            const HAL::Buffer<uint8_t>* DistanceAtlasBuffer;
-            const HAL::Buffer<uint8_t>* DistanceAtlasCounterBuffer;
+            const HAL::Buffer* DistanceAtlasIndirectionBuffer;
+            const HAL::Buffer* DistanceAtlasBuffer;
+            const HAL::Buffer* DistanceAtlasCounterBuffer;
         };
 
         const HAL::Device* mDevice;

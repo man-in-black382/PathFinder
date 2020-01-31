@@ -6,7 +6,7 @@
 namespace Memory
 {
 
-    template <class SlotUserData>
+    template <class SlotUserData = void>
     class Pool
     {
     public:

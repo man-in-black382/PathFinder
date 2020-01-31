@@ -5,23 +5,6 @@
 namespace HAL
 {
 
-    Buffer::Buffer(const Device& device, uint64_t size, ResourceState initialState, ResourceState expectedStates)
-        : Resource(device, ConstructResourceFormat(&device, size), initialState, expectedStates),
-        mSize{ size } {}
-
-    Buffer::Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t size, ResourceState initialState, ResourceState expectedStates)
-        : Resource(device, heap, heapOffset, ConstructResourceFormat(&device, size), initialState, expectedStates), 
-        mSize{ size }, mCPUAccessibleHeapType{heap.CPUAccessibleType()} {}
-
-    Buffer::Buffer(const Device& device, uint64_t size, CPUAccessibleHeapType heapType)
-        : Resource(device, ConstructResourceFormat(&device, size), heapType),
-        mSize{ size }, mCPUAccessibleHeapType{ heapType } {}
-
-    Buffer::Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t size)
-    {
-
-    }
-
     Buffer::~Buffer()
     {
         Unmap();
@@ -52,14 +35,6 @@ namespace HAL
     uint32_t Buffer::SubresourceCount() const
     {
         return 1;
-    }
-
-    ResourceFormat Buffer::ConstructResourceFormat(const Device* device, uint64_t bufferSize)
-    {
-        return { 
-            device, std::nullopt, BufferKind::Buffer, 
-            Geometry::Dimensions{ bufferSize }
-        };
     }
 
 }

@@ -7,6 +7,9 @@
 namespace Memory
 {
 
+    template <class BucketUserData = void, class SlotUserData = void>
+    class SegregatedPools;
+
     template <
         class BucketUserData, // User data to associate with each bucket
         class SlotUserData // User data to associate with each individual slot in a bucket
@@ -17,7 +20,7 @@ namespace Memory
         BucketUserData UserData;
 
     private:
-        friend SegregatedPools<BucketUserData, SlotUserData>;
+        friend class SegregatedPools<BucketUserData, SlotUserData>;
 
         Pool<SlotUserData> mSlots;
         uint64_t mSlotSize;
@@ -33,7 +36,7 @@ namespace Memory
     struct SegregatedPoolsAllocation
     {
         SegregatedPoolsBucket<BucketUserData, SlotUserData>* Bucket;
-        Pool<SlotUserData>::Slot Slot;
+        typename Pool<SlotUserData>::Slot Slot;
     };
 
 
@@ -44,6 +47,7 @@ namespace Memory
     {
     public:
         using Allocation = SegregatedPoolsAllocation<BucketUserData, SlotUserData>;
+        using Bucket = SegregatedPoolsBucket<BucketUserData, SlotUserData>;
 
         SegregatedPools(uint64_t minimumBucketSlotSize, uint64_t bucketGrowSlotCount);
 

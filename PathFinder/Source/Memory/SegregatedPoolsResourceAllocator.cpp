@@ -1,41 +1,59 @@
 #include "SegregatedPoolsResourceAllocator.hpp"
 
+#include "../Foundation/Assert.hpp"
+
 namespace Memory
 {
 
-    SegregatedPoolsResourceAllocator::SegregatedPoolsResourceAllocator(const HAL::Device* device)
-        : mDevice{ device },
+    SegregatedPoolsResourceAllocator::SegregatedPoolsResourceAllocator(const HAL::Device* device, uint8_t simultaneousFramesInFlight)
+        : mDevice{ device }, 
+        mRingFrameTracker{ simultaneousFramesInFlight },
+        mSimultaneousFramesInFlight{ simultaneousFramesInFlight },
         mUploadPools{ mMinimumSlotSize, mOnGrowSlotCount },
         mReadbackPools{ mMinimumSlotSize, mOnGrowSlotCount },
         mDefaultUniversalOrBufferPools{ mMinimumSlotSize, mOnGrowSlotCount },
         mDefaultRTDSPools{ mMinimumSlotSize, mOnGrowSlotCount },
         mDefaultNonRTDSPools{ mMinimumSlotSize, mOnGrowSlotCount }
     {
+        mPendingDeallocations.resize(simultaneousFramesInFlight);
 
+        mRingFrameTracker.SetDeallocationCallback([this](const Ring::FrameTailAttributes& frameAttributes)
+        {
+            auto frameIndex = frameAttributes.Tail - frameAttributes.Size;
+            ExecutePendingDeallocations(frameIndex);
+        });
     }
 
     std::unique_ptr<HAL::Texture> SegregatedPoolsResourceAllocator::AllocateTexture(const HAL::Texture::Properties& properties)
     {
-        HAL::ResourceFormat format = HAL::Texture::ConstructResourceFormat(
-            mDevice, properties.Format, properties.Kind, properties.Dimensions, properties.MipCount, properties.OptimizedClearValue);
-        
-        format.SetExpectedStates(properties.ExpectedStateMask | properties.InitialStateMask);
-
+        HAL::ResourceFormat format = HAL::Texture::ConstructResourceFormat(mDevice, properties);
         auto [allocation, pools] = FindOrAllocateMostFittingFreeSlot(format.ResourceSizeInBytes(), format, std::nullopt);
 
-        HeapIterator heapIt = *allocation.Slot.UserData.HeapListIterator;
+        std::optional<HeapIterator> heapIt = allocation.Slot.UserData.HeapListIterator;
+        assert_format(heapIt, "Heap reference is missing. It must be present.");
 
-        return std::make_unique<HAL::Texture>(mDevice, properties, [this, pools, allocation](HAL::Texture* texture)
+        auto offsetInHeap = AdjustMemoryOffsetToPointInsideHeap(allocation);
+
+        auto deallocationCallback = [this, pools, allocation](HAL::Texture* texture)
         {
-            // Put texture in a deletion queue
-            // .. put in queue ..
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ texture, allocation, pools });
+        };
 
-            // Return slot to its pool to be potentially reused for other allocations
-            pools->Deallocate(allocation);
-        });
+        return std::make_unique<HAL::Texture>(mDevice, *heapIt, offsetInHeap, properties, deallocationCallback);
     }
 
-    std::pair<SegregatedPoolsResourceAllocator::PoolsAllocation, SegregatedPoolsResourceAllocator::Pools*> 
+    void SegregatedPoolsResourceAllocator::BeginFrame(uint64_t frameNumber)
+    {
+        mCurrentFrameIndex = mRingFrameTracker.Allocate(1);
+        mRingFrameTracker.FinishCurrentFrame(frameNumber);
+    }
+
+    void SegregatedPoolsResourceAllocator::EndFrame(uint64_t frameNumber)
+    {
+        mRingFrameTracker.ReleaseCompletedFrames(frameNumber);
+    }
+
+    std::pair<SegregatedPoolsResourceAllocator::PoolsAllocation, SegregatedPoolsResourceAllocator::Pools*>
         SegregatedPoolsResourceAllocator::FindOrAllocateMostFittingFreeSlot(
         uint64_t alloctionSizeInBytes, const HAL::ResourceFormat& resourceFormat, std::optional<HAL::CPUAccessibleHeapType> cpuHeapType)
     {
@@ -75,9 +93,11 @@ namespace Memory
 
         SegregatedPoolsAllocation allocation = pools->Allocate(alloctionSizeInBytes);
         HeapList& heaps = allocation.Bucket->UserData.Heaps;
-        HeapIterator heapIt = allocation.Slot.UserData.HeapListIterator;
+        std::optional<HeapIterator> heapIt = allocation.Slot.UserData.HeapListIterator;
 
-        bool outOfAllocatedMemory = allocation.Slot.MemoryOffset >= allocation.Bucket->UserData.TotalHeapsSize;
+        auto totalHeapsSize = TotalHeapsSizeInBytes(*allocation.Bucket);
+
+        bool outOfAllocatedMemory = allocation.Slot.MemoryOffset >= totalHeapsSize;
         bool existingHeapReferencePresent = heapIt != std::nullopt;
 
         assert_format(!(outOfAllocatedMemory && existingHeapReferencePresent),
@@ -87,27 +107,46 @@ namespace Memory
         if (outOfAllocatedMemory)
         {
             auto newHeapSize = mOnGrowSlotCount * allocation.Bucket->SlotSize();
-
-            // Track the sum of heap sizes associated with the bucket
-            allocation.Bucket->UserData.TotalHeapsSize += newHeapSize; 
-            heaps.emplace_front(mDevice, newHeapSize, resourceFormat.ResourceAliasingGroup(), cpuHeapType);
+            heaps.emplace_back(mDevice, newHeapSize, resourceFormat.ResourceAliasingGroup(), cpuHeapType);
         }
 
         // Heap definitely exists at this point but its reference is not recorded in the slot,
         // which means this slot has not ever been requested yet.
-        // All new heaps not referenced by slots are located at the beginning of the list.
         if (!existingHeapReferencePresent)
         {
-            allocation.Slot.UserData.HeapListIterator = heaps.begin();
+            allocation.Slot.UserData.HeapListIterator = std::prev(heaps.end());
         }
 
         return std::make_pair(std::move(allocation), pools);
     }
 
-    uint64_t SegregatedPoolsResourceAllocator::AdjustMemoryOffsetToPointInsideHeap(const Pool<SlotUserData>::Slot& slot)
+    uint64_t SegregatedPoolsResourceAllocator::AdjustMemoryOffsetToPointInsideHeap(const PoolsAllocation& allocation)
     {
-        // One heap is created for OnGrowSlotCount slots in a bucket
-        auto 
+        // One heap is created per OnGrowSlotCount slots in a bucket.
+        // So we can calculate an offset local to a particular heap.
+        uint64_t bytesPerHeap = mOnGrowSlotCount * allocation.Bucket->SlotSize();
+        uint64_t allocationHeapIndex = allocation.Slot.MemoryOffset / bytesPerHeap;
+        uint64_t localOffset = allocation.Slot.MemoryOffset - allocationHeapIndex * bytesPerHeap;
+
+        return localOffset;
+    }
+
+    uint64_t SegregatedPoolsResourceAllocator::TotalHeapsSizeInBytes(const PoolsBucket& bucket)
+    {
+        return bucket.UserData.Heaps.size() * mOnGrowSlotCount * bucket.SlotSize();
+    }
+
+    void SegregatedPoolsResourceAllocator::ExecutePendingDeallocations(uint64_t frameIndex)
+    {
+        for (Deallocation& deallocation : mPendingDeallocations[frameIndex])
+        {
+            if (deallocation.Resource)
+            {
+                delete deallocation.Resource;
+            }
+            deallocation.PoolsThatProducedAllocation->Deallocate(deallocation.Allocation);
+        }
+        mPendingDeallocations[frameIndex].clear();
     }
 
 }

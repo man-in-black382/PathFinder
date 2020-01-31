@@ -54,7 +54,7 @@ namespace PathFinder
                 auto iStates = HAL::ResourceState::UnorderedAccess;
                 auto eStates = HAL::ResourceState::CopySource | HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
-                auto distanceIndirectionMap = std::make_shared<HAL::Texture>(
+               /* auto distanceIndirectionMap = std::make_shared<HAL::Texture>(
                     *mDevice, HAL::ColorFormat::R16_Float, HAL::TextureKind::Texture3D,
                     UncompressedDistanceFieldSize, HAL::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
 
@@ -67,18 +67,18 @@ namespace PathFinder
 
                 distanceIndirectionMap->SetDebugName("DistanceIndirectionMap");
                 distanceAtlas->SetDebugName("DistanceAtlas");
-                atlasEntryCounter->SetDebugName("DistanceAtlasCounter");
+                atlasEntryCounter->SetDebugName("DistanceAtlasCounter");*/
 
-                auto distanceIndirectionAsset = mAssetStorage->StorePreprocessableAsset(distanceIndirectionMap, true);
-                auto distanceAtlasAsset = mAssetStorage->StorePreprocessableAsset(distanceAtlas, true);
-                auto counterAsset = mAssetStorage->StorePreprocessableAsset(atlasEntryCounter, true);
+                /*    auto distanceIndirectionAsset = mAssetStorage->StorePreprocessableAsset(distanceIndirectionMap, true);
+                    auto distanceAtlasAsset = mAssetStorage->StorePreprocessableAsset(distanceAtlas, true);
+                    auto counterAsset = mAssetStorage->StorePreprocessableAsset(atlasEntryCounter, true);
 
-                material.DistanceAtlasIndirectionMapSRVIndex = distanceIndirectionAsset.SRIndex;
-                material.DistanceAtlasSRVIndex = distanceAtlasAsset.SRIndex;
+                    material.DistanceAtlasIndirectionMapSRVIndex = distanceIndirectionAsset.SRIndex;
+                    material.DistanceAtlasSRVIndex = distanceAtlasAsset.SRIndex;
 
-                material.DistanceAtlasIndirectionMap = distanceIndirectionMap.get();
-                material.DistanceAtlas = distanceAtlas.get();
-                material.DistanceAtlasCounter = atlasEntryCounter.get();
+                    material.DistanceAtlasIndirectionMap = distanceIndirectionMap.get();
+                    material.DistanceAtlas = distanceAtlas.get();
+                    material.DistanceAtlasCounter = atlasEntryCounter.get();*/
             }
         }
 

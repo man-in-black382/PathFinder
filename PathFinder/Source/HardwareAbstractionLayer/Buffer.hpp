@@ -10,10 +10,25 @@ namespace HAL
     class Buffer : public Resource
     {
     public:
-        Buffer(const Device& device, uint64_t size, ResourceState initialState, ResourceState expectedStates);
-        Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t size, ResourceState initialState, ResourceState expectedStates);
-        Buffer(const Device& device, const Heap& heap, uint64_t heapOffset, uint64_t size);
-        Buffer(const Device& device, uint64_t size, CPUAccessibleHeapType heapType);
+        template <class Element = uint8_t>
+        struct Properties
+        {
+            uint64_t ElementCapacity = 1;
+            uint64_t ElementAlighnment = 1;
+            ResourceState InitialState = ResourceState::Common;
+            ResourceState ExpectedStates = ResourceState::Common;
+
+            Properties(uint64_t capacity);
+            Properties(uint64_t capacity, uint64_t alignment);
+            Properties(uint64_t capacity, uint64_t alignment, ResourceState initialStates);
+            Properties(uint64_t capacity, uint64_t alignment, ResourceState initialStates, ResourceState expectedStates);
+        };
+
+        template <class Element>
+        Buffer(const Device& device, const Properties<Element>& properties, std::optional<CPUAccessibleHeapType> heapType = std::nullopt);
+
+        template <class Element>
+        Buffer(const Device& device, const Properties<Element>& properties, const Heap& heap, uint64_t heapOffset);
 
         ~Buffer();
 
@@ -22,17 +37,17 @@ namespace HAL
 
         virtual uint32_t SubresourceCount() const override;
 
-        static ResourceFormat ConstructResourceFormat(const Device* device, uint64_t bufferSize);
+        template <class Element>
+        static ResourceFormat ConstructResourceFormat(const Device* device, const Properties<Element>& properties);
 
     private:
         uint8_t* mMappedMemory = nullptr;
-        uint64_t mSize = 0;
         std::optional<CPUAccessibleHeapType> mCPUAccessibleHeapType = std::nullopt;
 
     public:
-        inline const auto Size() const { return mSize; }
         inline auto HeapType() const { return mCPUAccessibleHeapType; }
     };
 
 }
 
+#include "Buffer.inl"

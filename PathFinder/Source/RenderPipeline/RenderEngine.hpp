@@ -7,11 +7,12 @@
 
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
-#include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 
 #include "../Scene/Scene.hpp"
 #include "../Foundation/Event.hpp"
 #include "../IO/CommandLineParser.hpp"
+
+#include "../Memory/SegregatedPoolsResourceAllocator.hpp"
 
 #include "RenderPass.hpp"
 #include "MeshGPUStorage.hpp"
@@ -66,6 +67,9 @@ namespace PathFinder
         RenderSurfaceDescription mDefaultRenderSurface;
 
         HAL::Device mDevice;
+
+        Memory::SegregatedPoolsResourceAllocator mSegregatedPoolsAllocator;
+
         HAL::Fence mUploadFence;
         HAL::Fence mAsyncComputeFence;
         HAL::Fence mGraphicsFence;
@@ -85,7 +89,7 @@ namespace PathFinder
         PipelineStateManager mPipelineStateManager;
         PipelineStateCreator mPipelineStateCreator;
         GraphicsDevice mGraphicsDevice;
-        AsyncComputeDevice<> mAsyncComputeDevice;
+        AsyncComputeDevice mAsyncComputeDevice;
         GPUCommandRecorder mCommandRecorder;
         UIGPUStorage mUIStorage;
         RenderContext mContext;  

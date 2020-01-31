@@ -1,14 +1,15 @@
 #pragma once
 
 #include "SegregatedPools.hpp"
+#include "Ring.hpp"
 
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/Heap.hpp"
 #include "../HardwareAbstractionLayer/Buffer.hpp"
 #include "../HardwareAbstractionLayer/Texture.hpp"
-#include "../HardwareAbstractionLayer/BufferCPUAccessor.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace Memory
 {
@@ -16,12 +17,14 @@ namespace Memory
     class SegregatedPoolsResourceAllocator
     {
     public:
-        SegregatedPoolsResourceAllocator(const HAL::Device* device);
+        SegregatedPoolsResourceAllocator(const HAL::Device* device, uint8_t simultaneousFramesInFlight);
 
-        template <class T> std::unique_ptr<HAL::Buffer> AllocateBuffer(uint64_t capacity, uint64_t perElementAlignment, HAL::ResourceState initialState, HAL::ResourceState expectedStates);
-        template <class T> std::unique_ptr<HAL::BufferCPUAccessor<T>> AllocateBuffer(uint64_t capacity, uint64_t perElementAlignment, HAL::CPUAccessibleHeapType heapType);
-        
+        template <class Element>
+        std::unique_ptr<HAL::Buffer> AllocateBuffer(const HAL::Buffer::Properties<Element> properties, std::optional<HAL::CPUAccessibleHeapType> heapType = std::nullopt);
         std::unique_ptr<HAL::Texture> AllocateTexture(const HAL::Texture::Properties& properties);
+
+        void BeginFrame(uint64_t frameNumber);
+        void EndFrame(uint64_t frameNumber);
 
     private:
         using HeapList = std::list<HAL::Heap>;
@@ -40,11 +43,8 @@ namespace Memory
 
         struct BucketUserData
         {
-            // List of heaps for one bucket 
+            // List of heaps associated with a bucket
             HeapList Heaps;
-            
-            // Tracks total size of heaps in a bucket
-            uint64_t TotalHeapsSize = 0;
         };
 
         // We store actual heaps inside segregated pool buckets 
@@ -52,13 +52,28 @@ namespace Memory
         // resource is allocated in inside pool slot
         using Pools = SegregatedPools<BucketUserData, SlotUserData>;
         using PoolsAllocation = SegregatedPoolsAllocation<BucketUserData, SlotUserData>;
+        using PoolsBucket = SegregatedPoolsBucket<BucketUserData, SlotUserData>;
+
+        struct Deallocation
+        {
+            HAL::Resource* Resource = nullptr;
+            PoolsAllocation Allocation;
+            Pools* PoolsThatProducedAllocation;
+        };
 
         std::pair<PoolsAllocation, Pools*> FindOrAllocateMostFittingFreeSlot(
             uint64_t alloctionSizeInBytes, const HAL::ResourceFormat& resourceFormat, std::optional<HAL::CPUAccessibleHeapType> cpuHeapType);
 
-        uint64_t AdjustMemoryOffsetToPointInsideHeap(const Pool<SlotUserData>::Slot& slot);
+        uint64_t AdjustMemoryOffsetToPointInsideHeap(const PoolsAllocation& allocation);
+        uint64_t TotalHeapsSizeInBytes(const PoolsBucket& bucket);
+        void ExecutePendingDeallocations(uint64_t frameIndex);
 
         const HAL::Device* mDevice = nullptr;
+
+        Ring mRingFrameTracker;
+
+        uint8_t mSimultaneousFramesInFlight;
+        uint64_t mCurrentFrameIndex = 0;
 
         // Minimum allocation size
         uint64_t mMinimumSlotSize = 4096; 
@@ -81,6 +96,8 @@ namespace Memory
 
         // Other texture type, default memory heaps. Unused when universal heaps are supported by HW.
         Pools mDefaultNonRTDSPools;
+
+        std::vector<std::vector<Deallocation>> mPendingDeallocations;
     };
 
 }

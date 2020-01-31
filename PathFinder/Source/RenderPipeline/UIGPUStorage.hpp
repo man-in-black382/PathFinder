@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../HardwareAbstractionLayer/Device.hpp"
-#include "../HardwareAbstractionLayer/RingBufferResource.hpp"
 #include "../HardwareAbstractionLayer/Texture.hpp"
 #include "../Geometry/Rect2D.hpp"
 

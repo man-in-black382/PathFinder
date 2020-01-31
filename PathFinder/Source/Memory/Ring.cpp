@@ -1,14 +1,14 @@
-#include "RingBufferResource.hpp"
+#include "Ring.hpp"
 
 #include "../Foundation/Assert.hpp"
 
-namespace HAL
+namespace Memory
 {
 
-    RingBuffer::RingBuffer(OffsetType maxSize)
+    Ring::Ring(OffsetType maxSize)
         : mMaxSize{ maxSize } {}
 
-    RingBuffer::OffsetType RingBuffer::Allocate(OffsetType size)
+    Ring::OffsetType Ring::Allocate(OffsetType size)
     {
         if (IsFull())
         {
@@ -57,13 +57,13 @@ namespace HAL
         return InvalidOffset;
     }
 
-    void RingBuffer::FinishCurrentFrame(uint64_t fenceValue)
+    void Ring::FinishCurrentFrame(uint64_t fenceValue)
     {
         mCompletedFrameTails.emplace_back(fenceValue, mTail, mCurrentFrameSize);
         mCurrentFrameSize = 0;
     }
 
-    void RingBuffer::ReleaseCompletedFrames(uint64_t completedFenceValue)
+    void Ring::ReleaseCompletedFrames(uint64_t completedFenceValue)
     {
         // We can release all tails whose associated fence value is less 
         // than or equal to CompletedFenceValue
@@ -81,7 +81,7 @@ namespace HAL
         }
     }
 
-    void RingBuffer::SetDeallocationCallback(const DeallocationCallback& callback)
+    void Ring::SetDeallocationCallback(const DeallocationCallback& callback)
     {
         mDeallocationCallback = callback;
     }
