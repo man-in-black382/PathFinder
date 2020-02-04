@@ -11,7 +11,7 @@
 namespace PathFinder
 {
 
-    using GraphicsDeviceBase = AsyncComputeDevice<HAL::GraphicsCommandList, HAL::GraphicsCommandAllocator, HAL::GraphicsCommandQueue>;
+    using GraphicsDeviceBase = AsyncComputeDevice<HAL::GraphicsCommandList, Memory::PoolCommandListAllocator::GraphicsCommandListPtr, HAL::GraphicsCommandQueue>;
 
     class GraphicsDevice : public GraphicsDeviceBase
     {
@@ -19,10 +19,10 @@ namespace PathFinder
         GraphicsDevice(
             const HAL::Device& device,
             const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
+            Memory::PoolCommandListAllocator* commandListAllocator,
             PipelineResourceStorage* resourceStorage,
             PipelineStateManager* pipelineStateManager,
-            const RenderSurfaceDescription& defaultRenderSurface,
-            uint8_t simultaneousFramesInFlight
+            const RenderSurfaceDescription& defaultRenderSurface
         );
 
         void ApplyPipelineState(Foundation::Name psoName) override;

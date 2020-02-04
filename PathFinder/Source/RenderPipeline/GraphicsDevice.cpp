@@ -6,38 +6,46 @@ namespace PathFinder
 {
 
     GraphicsDevice::GraphicsDevice(
-        const HAL::Device& device, const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
-        PipelineResourceStorage* resourceStorage, PipelineStateManager* pipelineStateManager,
-        const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight)
+        const HAL::Device& device, 
+        const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
+        Memory::PoolCommandListAllocator* commandListAllocator,
+        PipelineResourceStorage* resourceStorage,
+        PipelineStateManager* pipelineStateManager,
+        const RenderSurfaceDescription& defaultRenderSurface)
         :
-        GraphicsDeviceBase(device, universalGPUDescriptorHeap, resourceStorage, pipelineStateManager, defaultRenderSurface, simultaneousFramesInFlight)
+        GraphicsDeviceBase(
+            device, 
+            universalGPUDescriptorHeap, 
+            commandListAllocator, 
+            resourceStorage, 
+            pipelineStateManager, 
+            defaultRenderSurface)
     {
         mCommandQueue.SetDebugName("Graphics Device Command Queue");
-        mRingCommandList.SetDebugName("Graphics Device");
     }
 
     void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName)
     {
-        CommandList().SetRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName));
+        mCommandList->SetRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName));
     }
 
     void GraphicsDevice::SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName)
     {
         if (depthStencilResourceName)
         {
-            CommandList().SetRenderTarget(
+            mCommandList->SetRenderTarget(
                 mResourceStorage->GetCurrentBackBufferDescriptor(),
                 mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName)
             );
         }
         else {
-            CommandList().SetRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor());
+            mCommandList->SetRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor());
         }
     }
 
     void GraphicsDevice::SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName)
     {
-        CommandList().SetRenderTarget(
+        mCommandList->SetRenderTarget(
             mResourceStorage->GetRenderTargetDescriptor(rtResourceName),
             mResourceStorage->GetDepthStencilDescriptor(dsResourceName)
         );
@@ -45,38 +53,38 @@ namespace PathFinder
 
     void GraphicsDevice::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)
     {
-        CommandList().ClearRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName), color);
+        mCommandList->ClearRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName), color);
     }
 
     void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
     {
-        CommandList().ClearRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor(), color);
+        mCommandList->ClearRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor(), color);
     }
 
     void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)
     {
-        CommandList().CleadDepthStencil(mResourceStorage->GetDepthStencilDescriptor(resourceName), depthValue);
+        mCommandList->CleadDepthStencil(mResourceStorage->GetDepthStencilDescriptor(resourceName), depthValue);
     }
 
     void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)
     {
         mCurrentPassViewport = viewport;
-        CommandList().SetViewport(viewport);
+        mCommandList->SetViewport(viewport);
     }
 
     void GraphicsDevice::Draw(uint32_t vertexCount, uint32_t instanceCount)
     {
         ApplyDefaultViewportIfNeeded();
-        CommandList().Draw(vertexCount, 0);
-        CommandList().InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
+        mCommandList->Draw(vertexCount, 0);
+        mCommandList->InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
     
     void GraphicsDevice::Draw(const DrawablePrimitive& primitive)
     {
         ApplyDefaultViewportIfNeeded();
-        CommandList().SetPrimitiveTopology(primitive.Topology());
-        CommandList().Draw(primitive.VertexCount(), 0);
-        CommandList().InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
+        mCommandList->SetPrimitiveTopology(primitive.Topology());
+        mCommandList->Draw(primitive.VertexCount(), 0);
+        mCommandList->InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
 
     void GraphicsDevice::ResetViewportToDefault()
@@ -86,51 +94,51 @@ namespace PathFinder
 
     void GraphicsDevice::ApplyCommonGraphicsResourceBindings()
     {   
-        CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
+        mCommandList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
         // Look at PipelineStateManager for base root signature parameter ordering
-        //CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
-        //CommandList().SetGraphicsRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);
+        //mCommandList->SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
+        //mCommandList->SetGraphicsRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
         {
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 3);
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 4);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 3);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 4);
         }
             
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
         {
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 5);
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 6);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 5);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 6);
         }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 7);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 7);
        
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0))
         {
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 8);
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 9);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 8);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 9);
         }
             
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0))
         {
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 10);
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 11);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 10);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 11);
         }
        
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0))
-            CommandList().SetGraphicsRootDescriptorTable(*baseDescriptor, 12);
+            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 12);
     }
 
     void GraphicsDevice::BindCurrentPassBuffersGraphics()
     {
        /* if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
         {
-            CommandList().SetGraphicsRootConstantBuffer(*buffer, 2);
+            mCommandList->SetGraphicsRootConstantBuffer(*buffer, 2);
         }*/
 
-        //CommandList().SetGraphicsRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);
+        //mCommandList->SetGraphicsRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);
     }
 
     void GraphicsDevice::ApplyDefaultViewportIfNeeded()
@@ -138,7 +146,7 @@ namespace PathFinder
         if (mCurrentPassViewport) return;
 
         mCurrentPassViewport = HAL::Viewport(mDefaultRenderSurface.Dimensions().Width, mDefaultRenderSurface.Dimensions().Height);
-        CommandList().SetViewport(*mCurrentPassViewport);
+        mCommandList->SetViewport(*mCurrentPassViewport);
     }
 
     void GraphicsDevice::ApplyPipelineState(Foundation::Name psoName)
@@ -169,8 +177,8 @@ namespace PathFinder
         if (graphicsStateApplied && mAppliedGraphicsState == state) return;
 
         // Set RT state
-        CommandList().SetPipelineState(*state);
-        CommandList().SetPrimitiveTopology(state->GetPrimitiveTopology());
+        mCommandList->SetPipelineState(*state);
+        mCommandList->SetPrimitiveTopology(state->GetPrimitiveTopology());
 
         // Same root signature is already applied as a graphics signature
         //
@@ -180,7 +188,7 @@ namespace PathFinder
             return;
         }
 
-        CommandList().SetGraphicsRootSignature(*state->GetRootSignature());
+        mCommandList->SetGraphicsRootSignature(*state->GetRootSignature());
         ApplyCommonGraphicsResourceBindings();
         BindCurrentPassBuffersGraphics();
 
@@ -217,7 +225,7 @@ namespace PathFinder
         if (rayTracingStateApplied && mAppliedRayTracingState == state) return;
 
         // Set RT state
-        //CommandList().SetPipelineState(*pso);
+        //mCommandList->SetPipelineState(*pso);
 
         // Same root signature is already applied as a graphics signature
         //
@@ -227,7 +235,7 @@ namespace PathFinder
             return;
         }
 
-        CommandList().SetGraphicsRootSignature(*state->GetGlobalRootSignature());
+        mCommandList->SetGraphicsRootSignature(*state->GetGlobalRootSignature());
         ApplyCommonGraphicsResourceBindings();
         BindCurrentPassBuffersGraphics();
 
@@ -261,9 +269,9 @@ namespace PathFinder
 
             switch (registerType)
             {
-            case HAL::ShaderRegister::ShaderResource: CommandList().SetGraphicsRootShaderResource(buffer, index->IndexInSignature); break;
-            case HAL::ShaderRegister::ConstantBuffer: CommandList().SetGraphicsRootConstantBuffer(buffer, index->IndexInSignature); break;
-            case HAL::ShaderRegister::UnorderedAccess: CommandList().SetGraphicsRootUnorderedAccessResource(buffer, index->IndexInSignature); break;
+            case HAL::ShaderRegister::ShaderResource: mCommandList->SetGraphicsRootShaderResource(buffer, index->IndexInSignature); break;
+            case HAL::ShaderRegister::ConstantBuffer: mCommandList->SetGraphicsRootConstantBuffer(buffer, index->IndexInSignature); break;
+            case HAL::ShaderRegister::UnorderedAccess: mCommandList->SetGraphicsRootUnorderedAccessResource(buffer, index->IndexInSignature); break;
             case HAL::ShaderRegister::Sampler:
                 assert_format(false, "Incompatible register type");
             }

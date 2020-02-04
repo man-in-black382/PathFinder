@@ -14,6 +14,8 @@ namespace PathFinder
         }
 
         return reinterpret_cast<RootConstants *>(passObjects.PassConstantBuffer->At(0));*/
+
+        return nullptr;
     }
 
     template <class BufferDataT>

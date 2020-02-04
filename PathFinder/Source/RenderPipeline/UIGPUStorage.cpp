@@ -8,8 +8,8 @@
 namespace PathFinder
 {
 
-    UIGPUStorage::UIGPUStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage, uint8_t simulataneousFrameCount)
-        : mDevice{ device }, mCopyDevice{ copyDevice }, mDescriptorStorage{ descriptorStorage }, mFrameCount{ simulataneousFrameCount } {}
+    UIGPUStorage::UIGPUStorage(const HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, uint8_t simulataneousFrameCount)
+        : mDevice{ device }, mDescriptorStorage{ descriptorStorage }, mFrameCount{ simulataneousFrameCount } {}
 
     void UIGPUStorage::BeginFrame(uint64_t newFrameNumber)
     {

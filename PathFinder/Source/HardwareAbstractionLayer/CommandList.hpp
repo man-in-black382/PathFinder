@@ -31,16 +31,17 @@ namespace HAL
     class CommandList : public GraphicAPIObject
     {
     public:
-        CommandList(const Device& device, const CommandAllocator& allocator, D3D12_COMMAND_LIST_TYPE type);
+        CommandList(const Device& device, CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type);
         CommandList(CommandList&& that) = default;
         CommandList(const CommandList& that) = delete;
         CommandList& operator=(const CommandList& that) = delete;
         virtual ~CommandList() = 0; 
 
-        void Reset(const CommandAllocator& allocator);
+        void Reset();
         void Close();
 
     protected:
+        CommandAllocator* mCommandAllocator;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> mList;
 
     public:
@@ -117,13 +118,13 @@ namespace HAL
 
     class CopyCommandList : public CopyCommandListBase {
     public:
-        CopyCommandList(const Device& device, const CopyCommandAllocator& allocator);
+        CopyCommandList(const Device& device, CopyCommandAllocator* allocator);
         ~CopyCommandList() = default;
     };
 
     class ComputeCommandList : public ComputeCommandListBase {
     public:
-        ComputeCommandList(const Device& device, const ComputeCommandAllocator& allocator);
+        ComputeCommandList(const Device& device, ComputeCommandAllocator* allocator);
         ~ComputeCommandList() = default;
 
         void BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as);
@@ -131,13 +132,13 @@ namespace HAL
     
     class BundleCommandList : public GraphicsCommandListBase {
     public:
-        BundleCommandList(const Device& device, const BundleCommandAllocator& allocator);
+        BundleCommandList(const Device& device, BundleCommandAllocator* allocator);
         ~BundleCommandList() = default;
     };
 
     class GraphicsCommandList : public GraphicsCommandListBase {
     public:
-        GraphicsCommandList(const Device& device, const GraphicsCommandAllocator& allocator);
+        GraphicsCommandList(const Device& device, GraphicsCommandAllocator* allocator);
         ~GraphicsCommandList() = default;
 
         void ExecuteBundle(const BundleCommandList& bundle);

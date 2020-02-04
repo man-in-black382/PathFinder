@@ -37,5 +37,15 @@ namespace HAL
         return 1;
     }
 
+    bool Buffer::CanImplicitlyPromoteFromCommonStateToState(ResourceState state) const
+    {
+        return true;
+    }
+
+    bool Buffer::CanImplicitlyDecayToCommonStateFromState(ResourceState state) const
+    {
+        return true;
+    }
+
 }
 

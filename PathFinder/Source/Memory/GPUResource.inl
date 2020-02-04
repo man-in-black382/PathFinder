@@ -26,7 +26,7 @@ namespace Memory
 
         const T* mappedMemory = reinterpret_cast<T*>(mCompletedReadbackBuffer->Map());
         session(mappedMemory);
-        mBuffer->Unmap(); // Invalidate CPU cache before next read
+        mCompletedReadbackBuffer->Unmap(); // Invalidate CPU cache before next read
     }
 
 }

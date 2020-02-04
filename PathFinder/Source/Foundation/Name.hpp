@@ -8,7 +8,7 @@ namespace Foundation
     class Name
     {
     public:
-        using ID = uint16_t;
+        using ID = uint64_t;
 
         Name();
         Name(const std::string& string);

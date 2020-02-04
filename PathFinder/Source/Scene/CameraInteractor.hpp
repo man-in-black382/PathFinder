@@ -15,8 +15,8 @@ namespace PathFinder
     public:
         struct InputScale
         {
-            float KeyboardMovementScale = 0.1;
-            float MouseMovementScale = 0.07;
+            float KeyboardMovementScale = 0.1f;
+            float MouseMovementScale = 0.07f;
         };
 
         CameraInteractor(Camera* camera, Input* userInput);

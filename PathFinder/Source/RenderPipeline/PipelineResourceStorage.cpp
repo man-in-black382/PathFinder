@@ -180,15 +180,17 @@ namespace PathFinder
             return resourceObjects.SchedulingInfo.get();
         }
 
+        HAL::Texture::Properties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
+
         resourceObjects.SchedulingInfo = std::make_unique<PipelineResourceSchedulingInfo>(
-            HAL::Texture::ConstructResourceFormat(mDevice, format, kind, dimensions, 1, optimizedClearValue));
+            HAL::Texture::ConstructResourceFormat(mDevice, textureProperties));
 
         resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
         {
-            PipelineResourceSchedulingInfo* allocation = resourceObjects.SchedulingInfo.get();
+            PipelineResourceSchedulingInfo* schedulingInfo = resourceObjects.SchedulingInfo.get();
             HAL::Heap* heap = nullptr;
 
-            switch (allocation->AliasingInfo.HeapAliasingGroup)
+            switch (schedulingInfo->AliasingInfo.HeapAliasingGroup)
             {
             case HAL::HeapAliasingGroup::RTDSTextures: heap = mRTDSHeap.get(); break;
             case HAL::HeapAliasingGroup::NonRTDSTextures: heap = mNonRTDSHeap.get(); break;
@@ -197,13 +199,15 @@ namespace PathFinder
 
             resourceObjects.Texture = std::make_unique<TexturePipelineResource>();
 
+            HAL::Texture::Properties completeProperties{ 
+                format, kind, dimensions, optimizedClearValue, schedulingInfo->InitialStates(), schedulingInfo->ExpectedStates(), mipCount };
+
             resourceObjects.Texture->Resource = std::make_unique<HAL::Texture>(
-                *mDevice, *heap, allocation->AliasingInfo.HeapOffset, format, kind,
-                dimensions, optimizedClearValue, allocation->InitialStates(), allocation->ExpectedStates(), mipCount);
+                *mDevice, *heap, schedulingInfo->AliasingInfo.HeapOffset, completeProperties);
 
             resourceObjects.Texture->Resource->SetDebugName(resourceName.ToString());
 
-            CreateDescriptors(*resourceObjects.Texture, *allocation);
+            CreateDescriptors(*resourceObjects.Texture, *schedulingInfo);
         };
 
         return resourceObjects.SchedulingInfo.get();

@@ -17,7 +17,13 @@ namespace Memory
 
     const HAL::Buffer* Buffer::HALBuffer() const
     {
-        return static_cast<const HAL::Buffer*>(HALResource());
+        return mUploadStrategy == GPUResource::UploadStrategy::Automatic ? 
+            mBufferPtr.get() : CurrentFrameUploadBuffer();
+    }
+
+    const HAL::Resource* Buffer::HALResource() const
+    {
+        return HALBuffer();
     }
 
 }

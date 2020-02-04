@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::RenderEngine engine{ hwnd, cmdLineParser, &scene, &renderPassGraph };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/", &engine.VertexGPUStorage() };
-    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage(), &engine.StandardCopyDevice() };
+    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage() };
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",

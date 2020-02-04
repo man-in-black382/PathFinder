@@ -14,8 +14,6 @@
 
 #include "VertexStorageLocation.hpp"
 
-#include "CopyDevice.hpp"
-
 #include <vector>
 #include <memory>
 #include <tuple>
@@ -45,7 +43,7 @@ namespace PathFinder
     class MeshGPUStorage
     {
     public:
-        MeshGPUStorage(HAL::Device* device, CopyDevice* copyDevice, uint8_t simultaneousFramesInFlight);
+        MeshGPUStorage(HAL::Device* device, uint8_t simultaneousFramesInFlight);
 
         void StoreMesh(Mesh& mesh);
         void StoreMeshInstance(MeshInstance& instance, const HAL::RayTracingBottomAccelerationStructure& blas);
@@ -102,7 +100,6 @@ namespace PathFinder
         uint64_t mCurrentFrameInsertedInstanceCount = 0;
 
         HAL::Device* mDevice;
-        CopyDevice* mCopyDevice;
 
     public:
         //inline const auto& InstanceTable() const { return mInstanceTable; }

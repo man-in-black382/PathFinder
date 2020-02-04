@@ -6,8 +6,8 @@
 namespace PathFinder
 {
 
-    AssetResourceStorage::AssetResourceStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage)
-        : mDevice{ device }, mCopyDevice{ copyDevice }, mDescriptorStorage{ descriptorStorage } {}
+    AssetResourceStorage::AssetResourceStorage(const HAL::Device* device, ResourceDescriptorStorage* descriptorStorage)
+        : mDevice{ device }, mDescriptorStorage{ descriptorStorage } {}
 
     GPUDescriptorIndex AssetResourceStorage::StoreAsset(std::shared_ptr<HAL::Texture> resource)
     {

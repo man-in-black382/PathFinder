@@ -40,6 +40,9 @@ namespace HAL
         template <class Element>
         static ResourceFormat ConstructResourceFormat(const Device* device, const Properties<Element>& properties);
 
+        bool CanImplicitlyPromoteFromCommonStateToState(ResourceState state) const override;
+        bool CanImplicitlyDecayToCommonStateFromState(ResourceState state) const override;
+
     private:
         uint8_t* mMappedMemory = nullptr;
         std::optional<CPUAccessibleHeapType> mCPUAccessibleHeapType = std::nullopt;

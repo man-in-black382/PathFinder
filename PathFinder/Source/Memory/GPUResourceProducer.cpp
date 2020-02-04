@@ -9,7 +9,7 @@ namespace Memory
 
     }
 
-    std::unique_ptr<Texture> GPUResourceProducer::NewTexture(const HAL::Texture::Properties& properties)
+    GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::Texture::Properties& properties)
     {
         Texture* texture = new Texture{ properties, mAllocator, mCommandList };
         auto [iter, success] = mAllocatedResources.insert(texture);
@@ -20,24 +20,29 @@ namespace Memory
             delete texture;
         };
 
-        auto ptr = std::unique_ptr<Texture, decltype(deallocationCallback)>(texture, deallocationCallback);
-
-        return 
+        return TexturePtr{ texture, deallocationCallback };
     }
 
     void GPUResourceProducer::SetCommandList(HAL::CopyCommandListBase* commandList)
     {
-
+        mCommandList = commandList;
     }
 
     void GPUResourceProducer::BeginFrame(uint64_t frameNumber)
     {
-
+        for (GPUResource* resource : mAllocatedResources)
+        {
+            resource->SetCommandList(mCommandList);
+            resource->BeginFrame(frameNumber);
+        }
     }
 
     void GPUResourceProducer::EndFrame(uint64_t frameNumber)
     {
-
+        for (GPUResource* resource : mAllocatedResources)
+        {
+            resource->EndFrame(frameNumber);
+        }
     }
 
 }

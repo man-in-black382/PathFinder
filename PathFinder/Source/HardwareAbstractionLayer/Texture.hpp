@@ -37,6 +37,9 @@ namespace HAL
 
         static ResourceFormat ConstructResourceFormat(const Device* device, const Properties& properties);
 
+        bool CanImplicitlyPromoteFromCommonStateToState(ResourceState state) const override;
+        bool CanImplicitlyDecayToCommonStateFromState(ResourceState state) const override;
+
     protected:
         Geometry::Dimensions mDimensions;
         ResourceFormat::FormatVariant mFormat;

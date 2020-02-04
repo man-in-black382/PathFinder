@@ -11,13 +11,14 @@
 #include "../HardwareAbstractionLayer/Resource.hpp"
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
+#include "../Memory/PoolCommandListAllocator.hpp"
 
 namespace PathFinder
 {
 
     template<
         class CommandListT = HAL::ComputeCommandList,
-        class CommandAllocatorT = HAL::ComputeCommandAllocator,
+        class CommandListPtrT = Memory::PoolCommandListAllocator::ComputeCommandListPtr,
         class CommandQueueT = HAL::ComputeCommandQueue
     >
     class AsyncComputeDevice
@@ -26,10 +27,10 @@ namespace PathFinder
         AsyncComputeDevice(
             const HAL::Device& device,
             const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
+            Memory::PoolCommandListAllocator* commandListAllocator,
             PipelineResourceStorage* resourceStorage,
             PipelineStateManager* pipelineStateManager,
-            const RenderSurfaceDescription& defaultRenderSurface,
-            uint8_t simultaneousFramesInFlight
+            const RenderSurfaceDescription& defaultRenderSurface
         );
 
         virtual void ApplyPipelineState(Foundation::Name psoName);
@@ -54,22 +55,22 @@ namespace PathFinder
         const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap;
         const HAL::ComputePipelineState* mAppliedComputeState;
         const HAL::RayTracingPipelineState* mAppliedRayTracingState;
-
         const HAL::RootSignature* mAppliedComputeRootSignature;
 
+        Memory::PoolCommandListAllocator* mCommandListAllocator;
         PipelineResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
         RenderSurfaceDescription mDefaultRenderSurface;
 
         CommandQueueT mCommandQueue;
-        HAL::RingCommandList<CommandListT, CommandAllocatorT> mRingCommandList;
+        CommandListPtrT mCommandList;
 
     private:
         void ApplyCommonComputeResourceBindings();
         void BindCurrentPassBuffersCompute();
 
     public:
-        inline CommandListT& CommandList() { return mRingCommandList.CurrentCommandList(); }
+        inline CommandListT* CommandList() { return mCommandList.get(); }
         inline CommandQueueT& CommandQueue() { return mCommandQueue; }
     };
 

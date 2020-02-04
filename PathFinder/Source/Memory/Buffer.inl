@@ -8,14 +8,10 @@ namespace Memory
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         HAL::CopyCommandListBase* commandList)
         :
-        GPUResource(
-            uploadStrategy, 
-            uploadStrategy == GPUResource::UploadStrategy::Automatic ? // Skip allocating default memory buffer when direct access
-                resourceAllocator->AllocateTexture(properties) : nullptr, // through persistent mapping is requested
-            resourceAllocator, 
-            commandList) 
+        GPUResource(uploadStrategy, resourceAllocator, commandList)
     {
-
+        mBufferPtr = uploadStrategy == GPUResource::UploadStrategy::Automatic ? // Skip allocating default memory buffer when direct access
+            resourceAllocator->AllocateTexture(properties) : nullptr; // through persistent mapping is requested
     }
 
 }

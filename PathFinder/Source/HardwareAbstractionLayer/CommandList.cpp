@@ -4,16 +4,17 @@
 namespace HAL
 {
 
-    CommandList::CommandList(const Device& device, const CommandAllocator& allocator, D3D12_COMMAND_LIST_TYPE type)
+    CommandList::CommandList(const Device& device, CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type)
+        : mCommandAllocator{ allocator }
     {
-        ThrowIfFailed(device.D3DDevice()->CreateCommandList(0, type, allocator.D3DPtr(), nullptr, IID_PPV_ARGS(&mList)));
+        ThrowIfFailed(device.D3DDevice()->CreateCommandList(0, type, allocator->D3DPtr(), nullptr, IID_PPV_ARGS(&mList)));
     }
 
     CommandList::~CommandList() {}
 
-    void CommandList::Reset(const CommandAllocator& allocator)
+    void CommandList::Reset()
     {
-        ThrowIfFailed(mList->Reset(allocator.D3DPtr(), nullptr));
+        ThrowIfFailed(mList->Reset(mCommandAllocator->D3DPtr(), nullptr));
     }
 
     void CommandList::Close()
@@ -208,12 +209,12 @@ namespace HAL
 
 
 
-    CopyCommandList::CopyCommandList(const Device& device, const CopyCommandAllocator& allocator)
+    CopyCommandList::CopyCommandList(const Device& device, CopyCommandAllocator* allocator)
         : CopyCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_COPY) {}
 
 
 
-    ComputeCommandList::ComputeCommandList(const Device& device, const ComputeCommandAllocator& allocator)
+    ComputeCommandList::ComputeCommandList(const Device& device, ComputeCommandAllocator* allocator)
         : ComputeCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_COMPUTE) {}
 
     void ComputeCommandList::BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as)
@@ -223,12 +224,12 @@ namespace HAL
 
 
 
-    BundleCommandList::BundleCommandList(const Device& device, const BundleCommandAllocator& allocator)
+    BundleCommandList::BundleCommandList(const Device& device, BundleCommandAllocator* allocator)
         : GraphicsCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_BUNDLE) {}
 
 
 
-    GraphicsCommandList::GraphicsCommandList(const Device& device, const GraphicsCommandAllocator& allocator)
+    GraphicsCommandList::GraphicsCommandList(const Device& device, GraphicsCommandAllocator* allocator)
         : GraphicsCommandListBase(device, allocator, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
 
     void GraphicsCommandList::ExecuteBundle(const BundleCommandList& bundle)

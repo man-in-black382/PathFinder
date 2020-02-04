@@ -24,6 +24,10 @@ namespace Memory
         void RequestRead() override;
 
         const HAL::Buffer* HALBuffer() const;
+        const HAL::Resource* HALResource() const override;
+
+    private:
+        SegregatedPoolsResourceAllocator::BufferPtr mBufferPtr;
     };
 
 }

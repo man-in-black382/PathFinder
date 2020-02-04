@@ -4,7 +4,8 @@ namespace Memory
 {
 
     Texture::Texture(const HAL::Texture::Properties& properties, SegregatedPoolsResourceAllocator* resourceAllocator, HAL::CopyCommandListBase* commandList)
-        : GPUResource(GPUResource::UploadStrategy::Automatic, resourceAllocator->AllocateTexture(properties), resourceAllocator, commandList) {}
+        : GPUResource(GPUResource::UploadStrategy::Automatic, resourceAllocator, commandList),
+        mTexturePtr{ resourceAllocator->AllocateTexture(properties) } {}
 
     void Texture::RequestWrite()
     {
@@ -32,7 +33,12 @@ namespace Memory
 
     const HAL::Texture* Texture::HALTexture() const
     {
-        return static_cast<const HAL::Texture*>(HALResource());
+        return mTexturePtr.get();
+    }
+
+    const HAL::Resource* Texture::HALResource() const
+    {
+        return mTexturePtr.get();
     }
 
 }

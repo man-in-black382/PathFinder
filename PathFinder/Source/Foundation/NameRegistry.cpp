@@ -18,7 +18,7 @@ namespace Foundation
 
     }
 
-    uint16_t NameRegistry::ToId(const std::string& string)
+    uint64_t NameRegistry::ToId(const std::string& string)
     {
         auto found = m_NameToId.find(string);
 
@@ -30,10 +30,10 @@ namespace Foundation
         m_IdToName.push_back(string);
         m_NameToId.insert({ string, m_IdToName.size() - 1 });
 
-        return (uint16_t)m_IdToName.size() - 1;
+        return (uint64_t)m_IdToName.size() - 1;
     }
 
-    const std::string& NameRegistry::ToString(uint16_t id)
+    const std::string& NameRegistry::ToString(uint64_t id)
     {
         return m_IdToName.at(id);
     }

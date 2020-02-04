@@ -17,14 +17,16 @@ namespace Memory
     struct SegregatedPoolsBucket
     {
     public:
+        SegregatedPoolsBucket(uint64_t slotSize, uint64_t onGrowSlotCount);
+
         BucketUserData UserData;
 
     private:
         friend class SegregatedPools<BucketUserData, SlotUserData>;
 
         Pool<SlotUserData> mSlots;
-        uint64_t mSlotSize;
-        uint64_t mBucketIndex;
+        uint64_t mSlotSize = 1;
+        uint64_t mBucketIndex = 0;
 
     public:
         inline auto SlotSize() const { return mSlotSize; }
@@ -36,7 +38,7 @@ namespace Memory
     struct SegregatedPoolsAllocation
     {
         SegregatedPoolsBucket<BucketUserData, SlotUserData>* Bucket;
-        typename Pool<SlotUserData>::Slot Slot;
+        typename Pool<SlotUserData>::SlotType Slot;
     };
 
 

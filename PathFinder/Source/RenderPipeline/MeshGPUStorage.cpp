@@ -6,9 +6,8 @@
 namespace PathFinder
 {
 
-    MeshGPUStorage::MeshGPUStorage(HAL::Device* device, CopyDevice* copyDevice, uint8_t simultaneousFramesInFlight)
+    MeshGPUStorage::MeshGPUStorage(HAL::Device* device, uint8_t simultaneousFramesInFlight)
         : mDevice{ device },
-        mCopyDevice{ copyDevice },
         //mInstanceTable{ *device, 1024, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
         mTopAccelerationStructure{ device } {}
 
@@ -71,6 +70,8 @@ namespace PathFinder
         mBottomAccelerationStructures.emplace_back(mDevice);
 
         return location;*/
+
+        return {};
     }
 
     template <class Vertex>

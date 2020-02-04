@@ -15,7 +15,7 @@ namespace PathFinder
 
             auto index = signature->GetParameterIndex({ shaderRegister, registerSpace,  HAL::ShaderRegister::ConstantBuffer });
             assert_format(index, "Root signature parameter doesn't exist");
-            CommandList().SetGraphicsRootConstants(constants, index->IndexInSignature);
+            mCommandList->SetGraphicsRootConstants(constants, index->IndexInSignature);
         }
         else {
             assert_format(false, "No pipeline state applied");

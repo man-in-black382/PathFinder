@@ -205,12 +205,12 @@ namespace HAL
 
         GenerateLibrariesAndHitGroups();
 
-        uint32_t subobjectsToReserve = 
+        uint64_t subobjectsToReserve = 
             mShaders.size() * 5 + // Each Association can produce up to 5 subobjects
             mHitGroups.size() + // Each hit group produces 1 subobject
             2; // 1 global root sig subobject and 1 pipeline config subobject
 
-        uint32_t associationsToReserve =
+        uint64_t associationsToReserve =
             mShaders.size() * 2; // Each Association can produce up to 2 association subobjects
             
         // Reserve vectors to avoid pointer invalidation on pushes and emplacements

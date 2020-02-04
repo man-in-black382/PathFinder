@@ -4,6 +4,13 @@
 namespace Memory
 {
 
+
+    template <class BucketUserData, class SlotUserData>
+    SegregatedPoolsBucket<BucketUserData, SlotUserData>::SegregatedPoolsBucket(uint64_t slotSize, uint64_t onGrowSlotCount)
+        : mSlots{ slotSize, onGrowSlotCount } {}
+
+
+
     template <class BucketUserData, class SlotUserData>
     SegregatedPools<BucketUserData, SlotUserData>::SegregatedPools(uint64_t minimumBucketSlotSize, uint64_t bucketGrowSlotCount)
         : mMinimumBucketSlotSize{ minimumBucketSlotSize }, mGrowSlotCount{ bucketGrowSlotCount } {}
@@ -11,16 +18,16 @@ namespace Memory
     template <class BucketUserData, class SlotUserData>
     uint32_t SegregatedPools<BucketUserData, SlotUserData>::CalculateBucketIndex(uint64_t allocationSize)
     {
-        auto valueLog = std::log2((float)allocationSize);
+        auto valueLog = std::log2f((float)allocationSize);
         return std::ceil(valueLog);
     }
 
     template <class BucketUserData, class SlotUserData>
     uint64_t SegregatedPools<BucketUserData, SlotUserData>::CeilToClosestPowerOf2(uint64_t value)
     {
-        auto valueLog = std::log2((float)value);
-        auto newPowerOf2 = (uint32_t)std::ceil(value);
-        return std::pow(2.0, newPowerOf2);
+        auto valueLog = std::log2f((float)value);
+        auto newPowerOf2 = std::ceil(value);
+        return std::powf(2.0f, newPowerOf2);
     }
 
     template <class BucketUserData, class SlotUserData>
@@ -39,9 +46,10 @@ namespace Memory
           
             for (auto i = 0; i < numberOfBucketsToAdd; ++i)
             {
-                auto bucket = mBuckets.emplace_back();
+                uint64_t slotSize = std::powf(2.0f, bucketIndex);
+                auto& bucket = mBuckets.emplace_back(slotSize, mGrowSlotCount);
                 bucket.mBucketIndex = mBuckets.size() - 1;
-                bucket.mSlotSize = std::pow(2.0, bucketIndex);
+                bucket.mSlotSize = slotSize;
             }
         }
 

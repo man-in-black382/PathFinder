@@ -288,9 +288,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -406,6 +403,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Memory\GPUResourceProducer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\ResourceStateTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1862,9 +1862,6 @@
     <ClInclude Include="Source\Foundation\STDHelpers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\HashSpecializations.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Foundation\Assert.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1932,9 +1929,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\ThirdParty\dds\dds-ktx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.hpp">
@@ -2247,6 +2241,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Memory\GPUResourceProducer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\ResourceStateTracker.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2699,9 +2696,6 @@
     <None Include="Libs\dxcompiler.dll" />
     <None Include="Libs\dxil.dll" />
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\RenderPipeline\CopyDevice.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\HardwareAbstractionLayer\Descriptor.inl">

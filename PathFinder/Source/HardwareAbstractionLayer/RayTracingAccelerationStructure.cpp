@@ -19,7 +19,7 @@ namespace HAL
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo{};
         mDevice->D3DDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&mD3DInputs, &prebuildInfo);
 
-        if (mBuildScratchBuffer == nullptr || mBuildScratchBuffer->TotalMemory() < prebuildInfo.ScratchDataSizeInBytes)
+        /*if (mBuildScratchBuffer == nullptr || mBuildScratchBuffer->TotalMemory() < prebuildInfo.ScratchDataSizeInBytes)
         {
             mBuildScratchBuffer = std::make_unique<Buffer>(
                 *mDevice, prebuildInfo.ScratchDataSizeInBytes,
@@ -35,7 +35,7 @@ namespace HAL
                 ResourceState::RaytracingAccelerationStructure, ResourceState::UnorderedAccess);
 
             mFinalBuffer->SetDebugName(mDebugName + "_Destination_Buffer");
-        }
+        }*/
 
         mD3DAccelerationStructure.ScratchAccelerationStructureData = mBuildScratchBuffer->GPUVirtualAddress();
         mD3DAccelerationStructure.DestAccelerationStructureData = mFinalBuffer->GPUVirtualAddress();

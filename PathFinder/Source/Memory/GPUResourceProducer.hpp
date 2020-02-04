@@ -12,11 +12,14 @@ namespace Memory
     class GPUResourceProducer
     {
     public:
+        using BufferPtr = std::unique_ptr<Buffer, std::function<void(Buffer*)>>;
+        using TexturePtr = std::unique_ptr<Texture, std::function<void(Texture*)>>;
+
         GPUResourceProducer(SegregatedPoolsResourceAllocator* resourceAllocator, HAL::CopyCommandListBase* commandList);
 
         template <class Element>
-        std::unique_ptr<Buffer> NewBuffer(const HAL::Buffer::Properties<Element>& properties);
-        std::unique_ptr<Texture> NewTexture(const HAL::Texture::Properties& properties);
+        BufferPtr NewBuffer(const HAL::Buffer::Properties<Element>& properties, GPUResource::UploadStrategy uploadStrategy = GPUResource::UploadStrategy::Automatic);
+        TexturePtr NewTexture(const HAL::Texture::Properties& properties);
         
         void SetCommandList(HAL::CopyCommandListBase* commandList);
 
@@ -33,4 +36,4 @@ namespace Memory
 
 }
 
-#include "GPUResourceProducer.hpp"
+#include "GPUResourceProducer.inl"

@@ -3,28 +3,27 @@
 namespace PathFinder
 {
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::AsyncComputeDevice(
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::AsyncComputeDevice(
         const HAL::Device& device,
         const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
+        Memory::PoolCommandListAllocator* commandListAllocator,
         PipelineResourceStorage* resourceStorage, 
         PipelineStateManager* pipelineStateManager,
-        const RenderSurfaceDescription& defaultRenderSurface, 
-        uint8_t simultaneousFramesInFlight)
+        const RenderSurfaceDescription& defaultRenderSurface)
         :
         mCommandQueue{ device },
         mUniversalGPUDescriptorHeap{ universalGPUDescriptorHeap },
-        mRingCommandList{ device, simultaneousFramesInFlight },
+        mCommandListAllocator{ commandListAllocator },
         mResourceStorage{ resourceStorage },
         mPipelineStateManager{ pipelineStateManager },
         mDefaultRenderSurface{ defaultRenderSurface }
     {
         mCommandQueue.SetDebugName("Async Compute Device Command Queue");
-        mRingCommandList.SetDebugName("Async Compute Device");
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BindBuffer(
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::BindBuffer(
         Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         const BufferPipelineResource* resource = mResourceStorage->GetPipelineBufferResource(resourceName);
@@ -33,8 +32,8 @@ namespace PathFinder
         BindExternalBuffer(*resource->Resource, shaderRegister, registerSpace, registerType);
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BindExternalBuffer(
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::BindExternalBuffer(
         const HAL::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         if (mAppliedComputeState || mAppliedRayTracingState)
@@ -48,9 +47,9 @@ namespace PathFinder
 
             switch (registerType)
             {
-            case HAL::ShaderRegister::ShaderResource: CommandList().SetComputeRootShaderResource(buffer, index->IndexInSignature); break;
-            case HAL::ShaderRegister::ConstantBuffer: CommandList().SetComputeRootConstantBuffer(buffer, index->IndexInSignature); break;
-            case HAL::ShaderRegister::UnorderedAccess: CommandList().SetComputeRootUnorderedAccessResource(buffer, index->IndexInSignature); break;
+            case HAL::ShaderRegister::ShaderResource: mCommandList->SetComputeRootShaderResource(buffer, index->IndexInSignature); break;
+            case HAL::ShaderRegister::ConstantBuffer: mCommandList->SetComputeRootConstantBuffer(buffer, index->IndexInSignature); break;
+            case HAL::ShaderRegister::UnorderedAccess: mCommandList->SetComputeRootUnorderedAccessResource(buffer, index->IndexInSignature); break;
             case HAL::ShaderRegister::Sampler:
                 assert_format(false, "Incompatible register type");
             }
@@ -62,95 +61,95 @@ namespace PathFinder
         }
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
     template <class T>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::SetRootConstants(
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::SetRootConstants(
         const T& constants, uint16_t shaderRegister, uint16_t registerSpace)
     {
         auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({shaderRegister, registerSpace,  HAL::ShaderRegister::ConstantBuffer });
         assert_format(index, "Root signature parameter doesn't exist");
-        CommandList().SetComputeRootConstants(constants, index->IndexInSignature);
+        mCommandList->SetComputeRootConstants(constants, index->IndexInSignature);
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ApplyCommonComputeResourceBindings()
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::ApplyCommonComputeResourceBindings()
     {
-        CommandList().SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
+        mCommandList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
         // Look at PipelineStateManager for base root signature parameter ordering
-        /*CommandList().SetComputeRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
-        CommandList().SetComputeRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);*/
+        /*mCommandList->SetComputeRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
+        mCommandList->SetComputeRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);*/
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
         {
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 3);
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 4);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 3);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 4);
         }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
         {
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 5);
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 6);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 5);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 6);
         }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 7);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 7);
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0))
         {
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 8);
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 9);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 8);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 9);
         }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0))
         {
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 10);
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 11);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 10);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 11);
         }
 
         if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0))
-            CommandList().SetComputeRootDescriptorTable(*baseDescriptor, 12);
+            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 12);
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BindCurrentPassBuffersCompute()
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::BindCurrentPassBuffersCompute()
     {
        /* if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
         {
-            CommandList().SetComputeRootConstantBuffer(*buffer, 2);
+            mCommandList->SetComputeRootConstantBuffer(*buffer, 2);
         }
 
-        CommandList().SetComputeRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);*/
+        mCommandList->SetComputeRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);*/
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::EndFrame(uint64_t completedFrameNumber)
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::BeginFrame(uint64_t newFrameNumber)
     {
-        mRingCommandList.ReleaseAndResetForCompletedFrames(completedFrameNumber);
+        
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::BeginFrame(uint64_t newFrameNumber)
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::EndFrame(uint64_t completedFrameNumber)
     {
-        mRingCommandList.PrepareCommandListForNewFrame(newFrameNumber);
+        
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ResetCommandList()
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::ResetCommandList()
     {
-        mRingCommandList.CurrentCommandList().Reset(mRingCommandList.CurrentCommandAllocator());
+        mCommandList->Reset();
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ExecuteCommands(const HAL::Fence* fenceToWaitFor, const HAL::Fence* fenceToSignal)
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::ExecuteCommands(const HAL::Fence* fenceToWaitFor, const HAL::Fence* fenceToSignal)
     {
         if (fenceToWaitFor)
         {
             mCommandQueue.WaitFence(*fenceToWaitFor);
         }
 
-        CommandList().Close();
-        mCommandQueue.ExecuteCommandList(CommandList());
+        mCommandList->Close();
+        mCommandQueue.ExecuteCommandList(*mCommandList);
 
         if (fenceToSignal)
         {
@@ -158,15 +157,15 @@ namespace PathFinder
         }        
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
-        CommandList().Dispatch(groupCountX, groupCountY, groupCountZ);
-        CommandList().InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
+        mCommandList->Dispatch(groupCountX, groupCountY, groupCountZ);
+        mCommandList->InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ApplyPipelineState(Foundation::Name psoName)
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::ApplyPipelineState(Foundation::Name psoName)
     {
         const PipelineStateManager::PipelineStateVariant* state = mPipelineStateManager->GetPipelineState(psoName);
         assert_format(state, "Pipeline state doesn't exist");
@@ -182,8 +181,8 @@ namespace PathFinder
         } 
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ApplyStateIfNeeded(const HAL::ComputePipelineState* state)
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::ApplyStateIfNeeded(const HAL::ComputePipelineState* state)
     {
         bool computeStateApplied = mAppliedComputeState != nullptr;
 
@@ -191,7 +190,7 @@ namespace PathFinder
         //
         if (computeStateApplied && mAppliedComputeState == state) return;
 
-        CommandList().SetPipelineState(*state);
+        mCommandList->SetPipelineState(*state);
 
         // Skip setting common bindings when workload type and root signature are not going to change
         //
@@ -201,7 +200,7 @@ namespace PathFinder
             return;
         }
 
-        CommandList().SetComputeRootSignature(*state->GetRootSignature());
+        mCommandList->SetComputeRootSignature(*state->GetRootSignature());
         ApplyCommonComputeResourceBindings();
         BindCurrentPassBuffersCompute();
 
@@ -210,8 +209,8 @@ namespace PathFinder
         mAppliedRayTracingState = nullptr;
     }
 
-    template <class CommandListT, class CommandAllocatorT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandAllocatorT, CommandQueueT>::ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state)
+    template <class CommandListT, class CommandListPtrT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandListPtrT, CommandQueueT>::ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state)
     {
         bool rayTracingStateApplied = mAppliedRayTracingState != nullptr;
 
@@ -220,7 +219,7 @@ namespace PathFinder
         if (rayTracingStateApplied && mAppliedRayTracingState == state) return;
 
         // Set RT state
-        //CommandList().SetPipelineState(*pso);
+        //mCommandList->SetPipelineState(*pso);
 
         // Skip setting common bindings when workload type and root signature are not going to change
         //
@@ -230,7 +229,7 @@ namespace PathFinder
             return;
         }
 
-        CommandList().SetComputeRootSignature(*state->GetGlobalRootSignature());
+        mCommandList->SetComputeRootSignature(*state->GetGlobalRootSignature());
         ApplyCommonComputeResourceBindings();
         BindCurrentPassBuffersCompute();
 

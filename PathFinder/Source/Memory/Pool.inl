@@ -10,26 +10,26 @@ namespace Memory
     {
         for (auto i = 0u; i < mGrowSlotCount; ++i)
         {
-            mFreeSlots.emplace_back(Slot{ mAllocatedSize });
+            mFreeSlots.emplace_back(SlotType{ mAllocatedSize });
             mAllocatedSize += mSlotSize;
         }
     }
 
     template <class SlotUserData>
-    void Pool<SlotUserData>::Deallocate(const Pool<SlotUserData>::Slot& slot)
+    void Pool<SlotUserData>::Deallocate(const Pool<SlotUserData>::SlotType& slot)
     {
         mFreeSlots.push_back(slot);
     }
 
     template <class SlotUserData>
-    typename Pool<SlotUserData>::Slot Pool<SlotUserData>::Allocate()
+    typename Pool<SlotUserData>::SlotType Pool<SlotUserData>::Allocate()
     {
         if (mFreeSlots.empty())
         {
             Grow();
         }
 
-        Slot slot = mFreeSlots.front();
+        Slot<SlotUserData> slot = mFreeSlots.front();
         mFreeSlots.pop_front();
         return slot;
     }

@@ -91,6 +91,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
@@ -111,6 +112,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -133,6 +135,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -157,6 +160,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -243,7 +247,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Memory\SegregatedPoolsResourceAllocator.cpp" />
     <ClCompile Include="Source\Memory\Texture.cpp" />
     <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp" />
-    <ClCompile Include="Source\RenderPipeline\CopyDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
@@ -264,6 +267,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
+    <ClCompile Include="Source\RenderPipeline\ResourceStateTracker.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp" />
     <ClCompile Include="Source\RenderPipeline\UIGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp" />
@@ -393,12 +397,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp" />
-    <ClInclude Include="Source\RenderPipeline\CopyDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
     <ClInclude Include="Source\RenderPipeline\GPUCommandRecorder.hpp" />
     <ClInclude Include="Source\RenderPipeline\GraphicsDevice.hpp" />
-    <ClInclude Include="Source\RenderPipeline\HashSpecializations.hpp" />
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\PerFrameRootConstants.hpp" />
@@ -423,6 +425,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
+    <ClInclude Include="Source\RenderPipeline\ResourceStateTracker.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp" />
     <ClInclude Include="Source\RenderPipeline\SFLGPUAllocator.hpp" />
@@ -946,9 +949,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <FileType>CppHeader</FileType>
     </None>
     <None Include="Source\RenderPipeline\AsyncComputeDevice.inl">
-      <FileType>CppHeader</FileType>
-    </None>
-    <None Include="Source\RenderPipeline\CopyDevice.inl">
       <FileType>CppHeader</FileType>
     </None>
     <None Include="Source\RenderPipeline\GPUCommandRecorder.inl">

@@ -1,12 +1,11 @@
+#include "../Foundation/MemoryUtils.hpp"
+
 namespace HAL
 {
 
     template <class Element>
-    Buffer::Properties<Element>::Properties(uint64_t capacity) : ElementCapacity{ capacity } {}
-
-    template <class Element>
-    Buffer::Properties<Element>::Properties(uint64_t capacity, uint64_t alignment)
-        : ElementCapacity{ capacity }, ElementAlighnment{ alignment } {}
+    Buffer::Properties<Element>::Properties(uint64_t capacity)
+        : ElementCapacity{ capacity } {}
 
     template <class Element>
     Buffer::Properties<Element>::Properties(uint64_t capacity, uint64_t alignment)
@@ -39,7 +38,7 @@ namespace HAL
     {
         ResourceFormat format{
             device, std::nullopt, BufferKind::Buffer,
-            Geometry::Dimensions{ MemoryUtils::Align(sizeof(Element), properties.ElementAlighnment) * properties.ElementCapacity }
+            Geometry::Dimensions{ Foundation::MemoryUtils::Align(sizeof(Element), properties.ElementAlighnment) * properties.ElementCapacity }
         };
 
         format.SetExpectedStates(properties.InitialState | properties.ExpectedStates);

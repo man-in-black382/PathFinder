@@ -5,6 +5,49 @@
 namespace HAL
 {
 
+    Texture::Properties::Properties(
+        ResourceFormat::FormatVariant format,
+        TextureKind kind,
+        const Geometry::Dimensions& dimensions,
+        const ClearValue& optimizedClearValue,
+        ResourceState initialStateMask,
+        ResourceState expectedStateMask,
+        uint16_t mipCount)
+        :
+        Format{ format },
+        Kind{ kind },
+        Dimensions{ dimensions },
+        OptimizedClearValue{ optimizedClearValue },
+        InitialStateMask{ initialStateMask },
+        ExpectedStateMask{ expectedStateMask },
+        MipCount{ mipCount } {}
+
+    Texture::Properties::Properties(
+        ResourceFormat::FormatVariant format,
+        TextureKind kind,
+        const Geometry::Dimensions& dimensions,
+        const ClearValue& optimizedClearValue,
+        ResourceState initialStateMask,
+        uint16_t mipCount)
+        :
+        Texture::Properties(
+            format, kind, dimensions, optimizedClearValue,
+            initialStateMask, initialStateMask, mipCount) {}
+
+    Texture::Properties::Properties(
+        ResourceFormat::FormatVariant format,
+        TextureKind kind,
+        const Geometry::Dimensions& dimensions,
+        ResourceState initialStateMask,
+        uint16_t mipCount)
+        :
+        Texture::Properties(
+            format, kind, dimensions,
+            ColorClearValue{ 0, 0, 0, 0 },
+            initialStateMask, initialStateMask, mipCount) {}
+
+
+
     Texture::Texture(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr)
         : Resource(existingResourcePtr)
     {
@@ -66,45 +109,33 @@ namespace HAL
         return format;
     }
 
-    Texture::Properties::Properties(
-        ResourceFormat::FormatVariant format,
-        TextureKind kind,
-        const Geometry::Dimensions& dimensions,
-        const ClearValue& optimizedClearValue,
-        ResourceState initialStateMask,
-        ResourceState expectedStateMask,
-        uint16_t mipCount)
-        :
-        Format{ format },
-        Kind{ kind },
-        Dimensions{ dimensions },
-        OptimizedClearValue{ optimizedClearValue },
-        InitialStateMask{ initialStateMask },
-        ExpectedStateMask{ expectedStateMask },
-        MipCount{ mipCount } {}
+    bool Texture::CanImplicitlyPromoteFromCommonStateToState(ResourceState state) const
+    {
+        // Simultaneous-Access Textures are not considered at the moment.
+        // Simultaneous-Access Textures are able to be explicitly promoted 
+        // to a larger number of states.
+        // Promotes from common to these states:
+        //
+        ResourceState compatibleStatesMask =
+            ResourceState::NonPixelShaderAccess |
+            ResourceState::PixelShaderAccess |
+            ResourceState::CopyDestination |
+            ResourceState::CopySource;
 
-    Texture::Properties::Properties(
-        ResourceFormat::FormatVariant format,
-        TextureKind kind,
-        const Geometry::Dimensions& dimensions,
-        const ClearValue& optimizedClearValue,
-        ResourceState initialStateMask,
-        uint16_t mipCount)
-        :
-        Texture::Properties(
-            format, kind, dimensions, optimizedClearValue,
-            initialStateMask, initialStateMask, mipCount) {}
+        return EnumMaskBitSet(compatibleStatesMask, state);
+    }
 
-    Texture::Properties::Properties(
-        ResourceFormat::FormatVariant format, 
-        TextureKind kind, 
-        const Geometry::Dimensions& dimensions, 
-        ResourceState initialStateMask, 
-        uint16_t mipCount)
-        :
-        Texture::Properties(
-            format, kind, dimensions,
-            ColorClearValue{ 0, 0, 0, 0 },
-            initialStateMask, initialStateMask, mipCount) {}
+    bool Texture::CanImplicitlyDecayToCommonStateFromState(ResourceState state) const
+    {
+        // Decay rules for Simultaneous-Access Textures are not considered at the moment.
+        // Decays to common from any read-only state
+        //
+        ResourceState compatibleStatesMask =
+            ResourceState::NonPixelShaderAccess |
+            ResourceState::PixelShaderAccess |
+            ResourceState::CopySource;
+
+        return EnumMaskBitSet(compatibleStatesMask, state);
+    }
 
 }

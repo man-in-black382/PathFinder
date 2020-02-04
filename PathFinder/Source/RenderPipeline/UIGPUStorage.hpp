@@ -5,7 +5,6 @@
 #include "../Geometry/Rect2D.hpp"
 
 #include "ResourceDescriptorStorage.hpp"
-#include "CopyDevice.hpp"
 
 #include <vector>
 #include <memory>
@@ -29,7 +28,7 @@ namespace PathFinder
             Geometry::Rect2D ScissorRect;
         };
 
-        UIGPUStorage(const HAL::Device* device, CopyDevice* copyDevice, ResourceDescriptorStorage* descriptorStorage, uint8_t simulataneousFrameCount);
+        UIGPUStorage(const HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, uint8_t simulataneousFrameCount);
 
         void BeginFrame(uint64_t newFrameNumber);
         void EndFrame(uint64_t completedFrameNumber);
@@ -46,7 +45,6 @@ namespace PathFinder
         uint32_t mLastFenceValue = 0;
         uint32_t mCurrentFrameIndex = 0;
         const HAL::Device* mDevice = nullptr;
-        CopyDevice* mCopyDevice;
         uint64_t mFontSRVIndex;
         uint64_t mIndexCount;
         glm::mat4 mMVP;

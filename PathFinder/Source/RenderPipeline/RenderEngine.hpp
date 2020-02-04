@@ -28,7 +28,6 @@
 #include "RenderContext.hpp"
 #include "PipelineStateCreator.hpp"
 #include "RenderPassExecutionGraph.hpp"
-#include "CopyDevice.hpp"
 #include "GPUCommandRecorder.hpp"
 #include "UIGPUStorage.hpp"
 
@@ -68,15 +67,13 @@ namespace PathFinder
 
         HAL::Device mDevice;
 
-        Memory::SegregatedPoolsResourceAllocator mSegregatedPoolsAllocator;
+        Memory::SegregatedPoolsResourceAllocator mResourceAllocator;
+        Memory::PoolCommandListAllocator mCommandListAllocator;
 
         HAL::Fence mUploadFence;
         HAL::Fence mAsyncComputeFence;
         HAL::Fence mGraphicsFence;
         HAL::Fence mReadbackFence;
-
-        CopyDevice mUploadCopyDevice;
-        CopyDevice mReadbackCopyDevice;
 
         MeshGPUStorage mMeshStorage;
         ResourceDescriptorStorage mDescriptorStorage;
@@ -89,7 +86,7 @@ namespace PathFinder
         PipelineStateManager mPipelineStateManager;
         PipelineStateCreator mPipelineStateCreator;
         GraphicsDevice mGraphicsDevice;
-        AsyncComputeDevice mAsyncComputeDevice;
+        AsyncComputeDevice<> mAsyncComputeDevice;
         GPUCommandRecorder mCommandRecorder;
         UIGPUStorage mUIStorage;
         RenderContext mContext;  
@@ -104,7 +101,6 @@ namespace PathFinder
     public:
         inline MeshGPUStorage& VertexGPUStorage() { return mMeshStorage; }
         inline AssetResourceStorage& AssetGPUStorage() { return mAssetResourceStorage; }
-        inline CopyDevice& StandardCopyDevice() { return mUploadCopyDevice; }
         inline HAL::Device& Device() { return mDevice; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }

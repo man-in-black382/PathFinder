@@ -43,37 +43,35 @@ namespace Memory
 
         void SetCommandList(HAL::CopyCommandListBase* commandList);
 
-        const HAL::Resource* HALResource() const;
+        virtual const HAL::Resource* HALResource() const = 0;
 
     protected:
         GPUResource(
             UploadStrategy uploadStrategy,
-            std::unique_ptr<HAL::Resource> resource,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             HAL::CopyCommandListBase* commandList
         );
 
         inline HAL::CopyCommandListBase* CommandList() { return mCommandList; }
         
-        HAL::Buffer* CurrentFrameUploadBuffer();
-        HAL::Buffer* CurrentFrameReadbackBuffer();
+        const HAL::Buffer* CurrentFrameUploadBuffer() const;
+        const HAL::Buffer* CurrentFrameReadbackBuffer() const;
+
+        UploadStrategy mUploadStrategy = UploadStrategy::Automatic;
 
     private:
-        using BufferFrameNumberPair = std::pair<std::unique_ptr<HAL::Buffer>, uint64_t>;
+        using BufferFrameNumberPair = std::pair<SegregatedPoolsResourceAllocator::BufferPtr, uint64_t>;
 
         uint64_t mFrameNumber = 0;
 
-        UploadStrategy mUploadStrategy = UploadStrategy::Automatic;
         SegregatedPoolsResourceAllocator* mAllocator;
         HAL::CopyCommandListBase* mCommandList;
 
-        std::unique_ptr<HAL::Buffer> mCompletedReadbackBuffer;
-        std::unique_ptr<HAL::Buffer> mCompletedUploadBuffer;
+        SegregatedPoolsResourceAllocator::BufferPtr mCompletedReadbackBuffer;
+        SegregatedPoolsResourceAllocator::BufferPtr mCompletedUploadBuffer;
 
         std::queue<BufferFrameNumberPair> mUploadBuffers;
         std::queue<BufferFrameNumberPair> mReadbackBuffers;
-
-        std::unique_ptr<HAL::Resource> mResource;
     };
 
 }

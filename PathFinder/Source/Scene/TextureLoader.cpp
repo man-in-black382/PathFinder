@@ -11,8 +11,8 @@
 namespace PathFinder
 {
 
-    TextureLoader::TextureLoader(const std::filesystem::path& rootTexturePath, const HAL::Device* device, CopyDevice* copyDevice)
-        : mRootPath{ rootTexturePath }, mDevice{ device }, mCopyDevice{ copyDevice } {}
+    TextureLoader::TextureLoader(const std::filesystem::path& rootTexturePath, const HAL::Device* device)
+        : mRootPath{ rootTexturePath }, mDevice{ device } {}
 
     std::shared_ptr<HAL::Texture> TextureLoader::Load(const std::string& relativeFilePath) const
     {
@@ -43,45 +43,45 @@ namespace PathFinder
 
         assert_format(textureInfo.num_layers == 1, "Texture array are not supported yet");
 
-        std::shared_ptr<HAL::Texture> texture = AllocateTexture(textureInfo);
-        HAL::ResourceFootprint textureFootprint{ *texture };
+        std::shared_ptr<HAL::Texture> texture = nullptr;// AllocateTexture(textureInfo);
+        //HAL::ResourceFootprint textureFootprint{ *texture };
 
-        auto uploadBuffer = std::make_shared<HAL::Buffer<uint8_t>>(
-            *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Upload);
+        //auto uploadBuffer = std::make_shared<HAL::Buffer<uint8_t>>(
+        //    *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Upload);
 
-        uint64_t bufferMemoryOffset = 0;
+        //uint64_t bufferMemoryOffset = 0;
 
-        for (int mip = 0; mip < textureInfo.num_mips; mip++)
-        {
-            ddsktx_sub_data subData;
-            ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, 0, mip);
+        //for (int mip = 0; mip < textureInfo.num_mips; mip++)
+        //{
+        //    ddsktx_sub_data subData;
+        //    ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, 0, mip);
 
-            const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
+        //    const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
 
-            bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes;
+        //    bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes;
 
-            if (imageDataSatisfiesTextureRowAlignment)
-            {
-                // Copy whole subresource
-                uploadBuffer->Write(bufferMemoryOffset, (uint8_t*)subData.buff, subData.size_bytes);
-                bufferMemoryOffset += subData.size_bytes;
-            }
-            else {
-                // Have to copy row-by-row
-                uint8_t* rowData = (uint8_t*)subData.buff;
+        //    if (imageDataSatisfiesTextureRowAlignment)
+        //    {
+        //        // Copy whole subresource
+        //        uploadBuffer->Write(bufferMemoryOffset, (uint8_t*)subData.buff, subData.size_bytes);
+        //        bufferMemoryOffset += subData.size_bytes;
+        //    }
+        //    else {
+        //        // Have to copy row-by-row
+        //        uint8_t* rowData = (uint8_t*)subData.buff;
 
-                for (auto row = 0; row < subData.height; ++row)
-                {
-                    uploadBuffer->Write(bufferMemoryOffset, (uint8_t*)subData.buff, subData.row_pitch_bytes);
-                    bufferMemoryOffset += mipFootprint.RowPitch();
-                }
-            }  
-        }
+        //        for (auto row = 0; row < subData.height; ++row)
+        //        {
+        //            uploadBuffer->Write(bufferMemoryOffset, (uint8_t*)subData.buff, subData.row_pitch_bytes);
+        //            bufferMemoryOffset += mipFootprint.RowPitch();
+        //        }
+        //    }  
+        //}
 
-        mCopyDevice->QueueBufferToTextureCopy(uploadBuffer, texture, textureFootprint);
-        texture->SetDebugName(fullPath.filename().string());
+        //mCopyDevice->QueueBufferToTextureCopy(uploadBuffer, texture, textureFootprint);
+        //texture->SetDebugName(fullPath.filename().string());
 
-        input.close();
+        //input.close();
         
         return std::move(texture);
     }
@@ -158,13 +158,15 @@ namespace PathFinder
         HAL::TextureKind kind = ToKind(textureInfo);
         HAL::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 0.0 };
 
-        return std::make_shared<HAL::Texture>(
+        return nullptr;
+
+        /*return std::make_shared<HAL::Texture>(
             *mDevice, format, kind, dimensions, clearValue,
             HAL::ResourceState::Common,
-            HAL::ResourceState::PixelShaderAccess | 
+            HAL::ResourceState::PixelShaderAccess |
             HAL::ResourceState::NonPixelShaderAccess |
             HAL::ResourceState::CopyDestination,
-            textureInfo.num_mips);
+            textureInfo.num_mips);*/
     }
 
 }

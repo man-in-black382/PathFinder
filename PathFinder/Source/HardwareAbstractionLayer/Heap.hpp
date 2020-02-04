@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Device.hpp"
+#include "GraphicAPIObject.hpp"
 
 #include <optional>
 
@@ -17,10 +18,16 @@ namespace HAL
         Upload, Readback
     };
 
-    class Heap
+    class Heap : public GraphicAPIObject
     {
     public:
         Heap(const Device& device, uint64_t size, HeapAliasingGroup aliasingGroup, std::optional<CPUAccessibleHeapType> cpuAccessibleType = std::nullopt);
+        Heap(const Heap& that) = delete;
+        Heap(Heap&& that) = default;
+        ~Heap() = default;
+
+        Heap& operator=(const Heap& that) = delete;
+        Heap& operator=(Heap&& that) = default;
 
     private:
         Microsoft::WRL::ComPtr<ID3D12Heap> mHeap;

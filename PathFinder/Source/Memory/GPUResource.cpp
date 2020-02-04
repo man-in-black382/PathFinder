@@ -4,18 +4,13 @@ namespace Memory
 {
 
     GPUResource::GPUResource(
-        UploadStrategy uploadStrategy, 
-        std::unique_ptr<HAL::Resource> resource,
-        SegregatedPoolsResourceAllocator* resourceAllocator, 
+        UploadStrategy uploadStrategy,
+        SegregatedPoolsResourceAllocator* resourceAllocator,
         HAL::CopyCommandListBase* commandList)
-        : 
-        mUploadStrategy{ uploadStrategy }, 
-        mResource{ std::move(resource) }, 
-        mAllocator{ resourceAllocator }, 
-        mCommandList{ commandList } 
-    {
-        
-    }
+        :
+        mUploadStrategy{ uploadStrategy },
+        mAllocator{ resourceAllocator },
+        mCommandList{ commandList } {}
 
     GPUResource::~GPUResource() {}
 
@@ -27,7 +22,7 @@ namespace Memory
             return;
         }
 
-        HAL::Buffer::Properties properties{ mResource->TotalMemory() };
+        HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
         mUploadBuffers.emplace(mAllocator->AllocateBuffer<uint8_t>(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
     }
 
@@ -41,7 +36,7 @@ namespace Memory
             return;
         }
 
-        HAL::Buffer::Properties properties{ mResource->TotalMemory() };
+        HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
         mReadbackBuffers.emplace(mAllocator->AllocateBuffer<uint8_t>(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
     }
 
@@ -72,18 +67,13 @@ namespace Memory
         mCommandList = commandList;
     }
 
-    const HAL::Resource* GPUResource::HALResource() const
-    {
-        return mUploadStrategy == UploadStrategy::Automatic ? mResource.get() : mCompletedUploadBuffer.get();
-    }
-
-    HAL::Buffer* GPUResource::CurrentFrameUploadBuffer()
+    const HAL::Buffer* GPUResource::CurrentFrameUploadBuffer() const
     {
         return !mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber ? 
             mUploadBuffers.back().first.get() : nullptr;
     }
 
-    HAL::Buffer* GPUResource::CurrentFrameReadbackBuffer()
+    const HAL::Buffer* GPUResource::CurrentFrameReadbackBuffer() const
     {
         return !mReadbackBuffers.empty() && mReadbackBuffers.back().second == mFrameNumber ?
             mReadbackBuffers.back().first.get() : nullptr;

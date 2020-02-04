@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../RenderPipeline/CopyDevice.hpp"
 #include "../HardwareAbstractionLayer/Texture.hpp"
 #include "../ThirdParty/dds/dds-ktx.h"
 
@@ -13,7 +12,7 @@ namespace PathFinder
     class TextureLoader
     {
     public:
-        TextureLoader(const std::filesystem::path& rootTexturePath, const HAL::Device* device, CopyDevice* copyDevice);
+        TextureLoader(const std::filesystem::path& rootTexturePath, const HAL::Device* device);
 
         std::shared_ptr<HAL::Texture> Load(const std::string& relativeFilePath) const;
 
@@ -24,7 +23,6 @@ namespace PathFinder
 
         std::filesystem::path mRootPath;
         const HAL::Device* mDevice;
-        CopyDevice* mCopyDevice;
     };
 
 }

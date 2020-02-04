@@ -17,17 +17,20 @@ namespace Memory
     class SegregatedPoolsResourceAllocator
     {
     public:
+        using BufferPtr = std::unique_ptr<HAL::Buffer, std::function<void(HAL::Buffer*)>>;
+        using TexturePtr = std::unique_ptr<HAL::Texture, std::function<void(HAL::Texture*)>>;
+
         SegregatedPoolsResourceAllocator(const HAL::Device* device, uint8_t simultaneousFramesInFlight);
 
         template <class Element>
-        std::unique_ptr<HAL::Buffer> AllocateBuffer(const HAL::Buffer::Properties<Element> properties, std::optional<HAL::CPUAccessibleHeapType> heapType = std::nullopt);
-        std::unique_ptr<HAL::Texture> AllocateTexture(const HAL::Texture::Properties& properties);
+        BufferPtr AllocateBuffer(const HAL::Buffer::Properties<Element>& properties, std::optional<HAL::CPUAccessibleHeapType> heapType = std::nullopt);
+        TexturePtr AllocateTexture(const HAL::Texture::Properties& properties);
 
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);
 
     private:
-        using HeapList = std::list<HAL::Heap>;
+        using HeapList = std::vector<HAL::Heap>;
         using HeapIterator = HeapList::iterator;
 
         struct SlotUserData
@@ -44,7 +47,7 @@ namespace Memory
         struct BucketUserData
         {
             // List of heaps associated with a bucket
-            HeapList Heaps;
+            HeapList* HeapListPtr = nullptr;
         };
 
         // We store actual heaps inside segregated pool buckets 
@@ -96,6 +99,8 @@ namespace Memory
 
         // Other texture type, default memory heaps. Unused when universal heaps are supported by HW.
         Pools mDefaultNonRTDSPools;
+
+        std::vector<HeapList> mHeapLists;
 
         std::vector<std::vector<Deallocation>> mPendingDeallocations;
     };

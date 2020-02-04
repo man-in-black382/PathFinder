@@ -3,7 +3,6 @@
 #include "PipelineResourceStorage.hpp"
 #include "RenderSurfaceDescription.hpp"
 #include "ResourceDescriptorStorage.hpp"
-#include "HashSpecializations.hpp"
 #include "GlobalRootConstants.hpp"
 #include "PerFrameRootConstants.hpp"
 #include "PipelineResource.hpp"
@@ -90,8 +89,8 @@ namespace PathFinder
         void AllocateScheduledResources();
         void CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain);
 
-        GlobalRootConstants* GlobalRootConstantData();
-        PerFrameRootConstants* PerFrameRootConstantData();
+     /*   GlobalRootConstants* GlobalRootConstantData();
+        PerFrameRootConstants* PerFrameRootConstantData();*/
         template <class RootConstants> RootConstants* RootConstantDataForCurrentPass();
         /*  HAL::Buffer<uint8_t>* RootConstantBufferForCurrentPass();
           const HAL::Buffer<float>* DebugBufferForCurrentPass() const;

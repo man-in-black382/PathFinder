@@ -13,6 +13,16 @@ namespace Memory
         });
     }
 
+    PoolCommandListAllocator::~PoolCommandListAllocator()
+    {
+        for (HAL::GraphicsCommandList* cmdList : mGraphicCommandLists) delete cmdList;
+        for (HAL::ComputeCommandList* cmdList : mComputeCommandLists) delete cmdList;
+        for (HAL::CopyCommandList* cmdList : mCopyCommandLists) delete cmdList;
+        for (HAL::GraphicsCommandAllocator* allocator : mGraphicCommandAllocators) delete allocator;
+        for (HAL::ComputeCommandAllocator* allocator : mComputeCommandAllocators) delete allocator;
+        for (HAL::CopyCommandAllocator* allocator : mCopyCommandAllocators) delete allocator;
+    }
+
     void PoolCommandListAllocator::BeginFrame(uint64_t frameNumber)
     {
         mCurrentFrameIndex = mRingFrameTracker.Allocate(1);
@@ -24,39 +34,52 @@ namespace Memory
         mRingFrameTracker.ReleaseCompletedFrames(frameNumber);
     }
   
-    std::unique_ptr<HAL::GraphicsCommandList> PoolCommandListAllocator::AllocateGraphicsCommandList()
+    PoolCommandListAllocator::GraphicsCommandListPtr PoolCommandListAllocator::AllocateGraphicsCommandList()
     {
-        return AllocateCommandList(mGraphicsPool, mGraphicCommandLists, mGraphicCommandAllocators);
+        return AllocateCommandList<
+            HAL::GraphicsCommandList, 
+            HAL::GraphicsCommandAllocator, 
+            std::function<void(HAL::GraphicsCommandList*)>>
+            (mGraphicsPool, mGraphicCommandLists, mGraphicCommandAllocators);
     }
 
-    std::unique_ptr<HAL::ComputeCommandList> PoolCommandListAllocator::AllocateComputeCommandList()
+    PoolCommandListAllocator::ComputeCommandListPtr PoolCommandListAllocator::AllocateComputeCommandList()
     {
-        return AllocateCommandList(mComputePool, mComputeCommandLists, mComputeCommandAllocators);
+        return AllocateCommandList<
+            HAL::ComputeCommandList,
+            HAL::ComputeCommandAllocator,
+            std::function<void(HAL::ComputeCommandList*)>>
+            (mComputePool, mComputeCommandLists, mComputeCommandAllocators);
     }
 
-    std::unique_ptr<HAL::CopyCommandList> PoolCommandListAllocator::AllocateCopyCommandList()
+    PoolCommandListAllocator::CopyCommandListPtr PoolCommandListAllocator::AllocateCopyCommandList()
     {
-        return AllocateCommandList(mCopyPool, mCopyCommandLists, mComputeCommandAllocators);
+        return AllocateCommandList<
+            HAL::CopyCommandList,
+            HAL::CopyCommandAllocator,
+            std::function<void(HAL::CopyCommandList*)>>
+            (mCopyPool, mCopyCommandLists, mCopyCommandAllocators);
     }
 
-    template <class CommandListT, class CommandAllocatorT>
-    std::unique_ptr<CommandListT> PoolCommandListAllocator::AllocateCommandList(Pool<>& pool, std::vector<CommandListT>& cmdLists, std::vector<CommandAllocatorT>& cmdAllocators)
+    template <class CommandListT, class CommandAllocatorT, class DeleterT>
+    std::unique_ptr<CommandListT, DeleterT> PoolCommandListAllocator::AllocateCommandList(Pool<void>& pool, std::vector<CommandListT*>& cmdLists, std::vector<CommandAllocatorT*>& cmdAllocators)
     {
-        Pool<void>::Slot slot = pool.Allocate();
+        Pool<void>::SlotType slot = pool.Allocate();
         auto index = slot.MemoryOffset;
 
         if (index >= cmdLists.size())
         {
-            CommandAllocatorT& allocator = cmdAllocators.emplace_back(*mDevice);
-            cmdLists.emplace_back(*mDevice, allocator);
+            CommandAllocatorT* allocator = new CommandAllocatorT{ *mDevice };
+            cmdAllocators.emplace_back(allocator);
+            cmdLists.emplace_back(new CommandListT{ *mDevice, allocator });
         }
 
-        auto deallocationCallback = [this, slot, cmdList = &cmdLists[index], cmdAllocator = &cmdAllocators[index]](CommandListT* cmdList)
+        auto deleter = [this, slot, &pool, cmdList = cmdLists[index], cmdAllocator = cmdAllocators[index]](CommandListT* cmdList)
         {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(&pool, slot, cmdList, cmdAllocator);
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ &pool, slot, cmdList });
         };
 
-        return std::make_unique<CommandListT>(&cmdLists[index], deallocationCallback);
+        return { cmdLists[index], deleter };
     }
 
     void PoolCommandListAllocator::ExecutePendingDealloactions(uint64_t frameIndex)
@@ -64,7 +87,7 @@ namespace Memory
         for (Deallocation& deallocation : mPendingDeallocations[frameIndex])
         {
             deallocation.PoolThatProducedAllocation->Deallocate(deallocation.Slot);
-            deallocation.CommandList->Reset(*deallocation.CommandAllocator);
+            deallocation.CommandList->Reset();
         }
 
         mPendingDeallocations[frameIndex].clear();

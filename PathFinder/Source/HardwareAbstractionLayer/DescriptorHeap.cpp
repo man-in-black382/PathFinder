@@ -363,7 +363,7 @@ namespace HAL
         auto& descriptor = dynamic_cast<CBDescriptor&>(*range.Descriptors.emplace_back(
             std::make_unique<CBDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
-        D3D12_CONSTANT_BUFFER_VIEW_DESC desc{ buffer.GPUVirtualAddress(), stride };
+        D3D12_CONSTANT_BUFFER_VIEW_DESC desc{ buffer.GPUVirtualAddress(), (UINT)stride };
         mDevice->D3DDevice()->CreateConstantBufferView(&desc, range.CurrentCPUHandle);
 
         IncrementCounters(index);

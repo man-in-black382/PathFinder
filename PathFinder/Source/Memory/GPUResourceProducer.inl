@@ -2,9 +2,18 @@ namespace Memory
 {
 
     template <class Element>
-    std::unique_ptr<Buffer> GPUResourceProducer::NewBuffer(const HAL::Buffer::Properties<Element>& properties)
+    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::Buffer::Properties<Element>& properties, GPUResource::UploadStrategy uploadStrategy)
     {
+        Buffer* buffer = new Buffer{ properties, uploadStrategy, mAllocator, mCommandList };
+        auto [iter, success] = mAllocatedResources.insert(buffer);
 
+        auto deallocationCallback = [this, iter](Buffer* buffer)
+        {
+            mAllocatedResources.erase(iter);
+            delete buffer;
+        };
+
+        return BufferPtr{ buffer, deallocationCallback };
     }
 
 }

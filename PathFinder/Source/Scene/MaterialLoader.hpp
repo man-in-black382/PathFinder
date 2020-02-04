@@ -18,7 +18,7 @@ namespace PathFinder
     public:
         inline static const Geometry::Dimensions UncompressedDistanceFieldSize{ 128, 128, 64 };
 
-        MaterialLoader(const std::filesystem::path& fileRoot, const HAL::Device* device, AssetResourceStorage* assetStorage, CopyDevice* copyDevice);
+        MaterialLoader(const std::filesystem::path& fileRoot, const HAL::Device* device, AssetResourceStorage* assetStorage);
 
         Material LoadMaterial(
             const std::string& albedoMapRelativePath,

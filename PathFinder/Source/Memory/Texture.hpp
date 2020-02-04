@@ -17,9 +17,10 @@ namespace Memory
         void RequestRead() override;
 
         const HAL::Texture* HALTexture() const;
+        const HAL::Resource* HALResource() const override;
 
     private:
-        
+        SegregatedPoolsResourceAllocator::TexturePtr mTexturePtr;
     };
 
 }
