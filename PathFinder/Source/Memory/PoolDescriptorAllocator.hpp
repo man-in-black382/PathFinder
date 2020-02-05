@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <functional>
+#include <list>
 
 namespace Memory
 {
@@ -16,6 +17,8 @@ namespace Memory
     class PoolDescriptorAllocator
     {
     public:
+        PoolDescriptorAllocator(const HAL::Device* device, uint8_t simultaneousFramesInFlight);
+
         template <class DescriptorT>
         using DescriptorPtr = std::unique_ptr<DescriptorT, std::function<void(DescriptorT*)>>;
 
@@ -35,8 +38,40 @@ namespace Memory
         CBDescriptorPtr AllocateCBDescriptor(const HAL::Buffer* buffer, uint64_t stride);
         
     private:
+        template <class DescriptorT>
+        struct Allocation
+        {
+            DescriptorT Descriptor;
+            Pool<>::SlotType Slot;
+
+            Allocation(const DescriptorT& descriptor, const Pool<>::SlotType& slot)
+                : Descriptor{ descriptor }, Slot{ slot } {}
+        };
+
         void ValidateRTFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
         void ValidateSRUAFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
+
+        uint64_t mDescriptorRangeCapacity = 5000;
+
+        HAL::CBSRUADescriptorHeap mCBSRUADescriptorHeap;
+        HAL::RTDescriptorHeap mRTDescriptorHeap;
+        HAL::DSDescriptorHeap mDSDescriptorHeap;
+
+        Ring mRingFrameTracker;
+
+        Pool<> mRTPool;
+        Pool<> mDSPool;
+        Pool<> mSRPool;
+        Pool<> mUAPool;
+        Pool<> mCBPool;
+
+        std::list<Allocation<HAL::RTDescriptor>> mAllocatedRTDescriptors;
+        std::list<Allocation<HAL::DSDescriptor>> mAllocatedDSDescriptors;
+        std::list<Allocation<HAL::SRDescriptor>> mAllocatedSRDescriptors;
+        std::list<Allocation<HAL::UADescriptor>> mAllocatedUADescriptors;
+        std::list<Allocation<HAL::CBDescriptor>> mAllocatedCBDescriptors;
+
+        //std::vector<std::vector>
     };
 
 }
