@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SegregatedPoolsResourceAllocator.hpp"
+#include "ResourceStateTracker.hpp"
 
 #include "../HardwareAbstractionLayer/Resource.hpp"
 #include "../HardwareAbstractionLayer/CommandList.hpp"
@@ -18,6 +19,13 @@ namespace Memory
             DirectAccess,
             Automatic
         };
+
+        GPUResource(
+            UploadStrategy uploadStrategy,
+            ResourceStateTracker* stateTracker,
+            SegregatedPoolsResourceAllocator* resourceAllocator,
+            HAL::CopyCommandListBase* commandList
+        );
 
         GPUResource(const GPUResource& that) = delete;
         GPUResource(GPUResource&& that) = default;
@@ -38,20 +46,16 @@ namespace Memory
         virtual void RequestWrite();
         virtual void RequestRead();
 
+        void RequestNewState(HAL::ResourceState newState);
+
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);
 
         void SetCommandList(HAL::CopyCommandListBase* commandList);
 
-        virtual const HAL::Resource* HALResource() const = 0;
+        virtual const HAL::Resource* HALResource() const;
 
     protected:
-        GPUResource(
-            UploadStrategy uploadStrategy,
-            SegregatedPoolsResourceAllocator* resourceAllocator,
-            HAL::CopyCommandListBase* commandList
-        );
-
         inline HAL::CopyCommandListBase* CommandList() { return mCommandList; }
         
         const HAL::Buffer* CurrentFrameUploadBuffer() const;
@@ -64,6 +68,7 @@ namespace Memory
 
         uint64_t mFrameNumber = 0;
 
+        ResourceStateTracker* mStateTracker;
         SegregatedPoolsResourceAllocator* mAllocator;
         HAL::CopyCommandListBase* mCommandList;
 

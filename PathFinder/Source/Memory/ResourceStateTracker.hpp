@@ -5,7 +5,7 @@
 
 #include <unordered_map>
 
-namespace PathFinder
+namespace Memory
 {
 
     class ResourceStateTracker
@@ -14,7 +14,7 @@ namespace PathFinder
         void StartTrakingResource(const HAL::Resource* resource);
         void StopTrakingResource(const HAL::Resource* resource);
 
-        // Queue state update but wait until ApplyRequestedTransitions
+        // Queue state update but wait until CommitPendingTransitions
         void RequestTransition(const HAL::Resource* resource, HAL::ResourceState newState);
 
         // Register new resource states that are currently pending and return a corresponding barrier collection

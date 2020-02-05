@@ -17,6 +17,7 @@ namespace PathFinder
         struct PassMetadata
         {
             std::optional<HAL::ColorFormat> ShaderVisibleFormat;
+            HAL::ResourceState RequiredState = HAL::ResourceState::Common;
             bool IsRTDescriptorRequested = false;
             bool IsDSDescriptorRequested = false;
             bool IsSRDescriptorRequested = false;

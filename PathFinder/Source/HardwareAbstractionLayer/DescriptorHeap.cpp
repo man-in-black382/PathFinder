@@ -7,13 +7,12 @@ namespace HAL
 {
 
     RTDescriptorHeap::RTDescriptorHeap(const Device* device, uint32_t capacity)
-        : DescriptorHeap(device, capacity, 1, D3D12_DESCRIPTOR_HEAP_TYPE_RTV) {}
+        : DescriptorHeap(device, { capacity }, D3D12_DESCRIPTOR_HEAP_TYPE_RTV) {}
 
 
 
-    const RTDescriptor& RTDescriptorHeap::EmplaceRTDescriptor(const Texture& texture, std::optional<ColorFormat> shaderVisisbleFormat)
+    const RTDescriptor RTDescriptorHeap::EmplaceRTDescriptor(uint64_t indexInHeap, const Texture& texture, std::optional<ColorFormat> shaderVisisbleFormat)
     {
-        ValidateCapacity(0);
         RangeAllocationInfo& range = GetRange(0);
         D3D12_RESOURCE_DESC d3dDesc = d3dDesc = texture.D3DDescription();
 
@@ -26,14 +25,10 @@ namespace HAL
             assert_format(std::holds_alternative<ColorFormat>(texture.Format()), "Texture format is not suited for render targets");
         }
 
-        auto& descriptor = dynamic_cast<RTDescriptor&>(*range.Descriptors.emplace_back(
-            std::make_unique<RTDescriptor>(range.CurrentCPUHandle)));
-
         D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(d3dDesc);
-        mDevice->D3DDevice()->CreateRenderTargetView(texture.D3DResource(), &rtvDesc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateRenderTargetView(texture.D3DResource(), &rtvDesc, range.StartCPUHandle);
 
-        IncrementCounters(0);
-        return descriptor;
+        return RTDescriptor{ { range.StartCPUHandle.ptr + indexInHeap * mIncrementSize } };
     }
 
     D3D12_RENDER_TARGET_VIEW_DESC RTDescriptorHeap::ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const
@@ -94,23 +89,18 @@ namespace HAL
 
 
     DSDescriptorHeap::DSDescriptorHeap(const Device* device, uint32_t capacity)
-        : DescriptorHeap(device, capacity, 1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV) {}
+        : DescriptorHeap(device, { capacity }, D3D12_DESCRIPTOR_HEAP_TYPE_DSV) {}
 
-    const DSDescriptor& DSDescriptorHeap::EmplaceDSDescriptor(const Texture& texture)
+    const DSDescriptor DSDescriptorHeap::EmplaceDSDescriptor(uint64_t indexInHeap, const Texture& texture)
     {
-        ValidateCapacity(0);
         RangeAllocationInfo& range = GetRange(0);
 
         assert_format(std::holds_alternative<DepthStencilFormat>(texture.Format()), "Texture is not of depth-stencil format");
 
-        auto& descriptor = dynamic_cast<DSDescriptor&>(*range.Descriptors.emplace_back(
-            std::make_unique<DSDescriptor>(range.CurrentCPUHandle)));
-
         D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = ResourceToDSVDescription(texture.D3DDescription());
-        mDevice->D3DDevice()->CreateDepthStencilView(texture.D3DResource(), &dsvDesc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateDepthStencilView(texture.D3DResource(), &dsvDesc, range.StartCPUHandle);
 
-        IncrementCounters(0);
-        return descriptor;
+        return DSDescriptor{ { range.StartCPUHandle.ptr + indexInHeap * mIncrementSize } };;
     }
 
     D3D12_DEPTH_STENCIL_VIEW_DESC DSDescriptorHeap::ResourceToDSVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const
@@ -144,9 +134,9 @@ namespace HAL
 
 
 
-    CBSRUADescriptorHeap::CBSRUADescriptorHeap(const Device* device, uint32_t rangeCapacity)
-        : DescriptorHeap(device, rangeCapacity, std::underlying_type_t<Range>(Range::TotalCount), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {}
-  
+    CBSRUADescriptorHeap::CBSRUADescriptorHeap(const Device* device, uint64_t shaderResourceRangeCapacity, uint64_t unorderedAccessRangeCapacity, uint64_t constantBufferRangeCapacity)
+        : DescriptorHeap(device, { shaderResourceRangeCapacity, unorderedAccessRangeCapacity, constantBufferRangeCapacity }, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {}
+
     D3D12_SHADER_RESOURCE_VIEW_DESC CBSRUADescriptorHeap::ResourceToSRVDescription(
         const D3D12_RESOURCE_DESC& resourceDesc, 
         uint64_t bufferStride,
@@ -298,130 +288,83 @@ namespace HAL
         return desc;
     }
 
-    uint32_t CBSRUADescriptorHeap::RangeCapacity() const
+    const SRDescriptor CBSRUADescriptorHeap::EmplaceSRDescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
     {
-        return mRangeCapacity;
-    }
-
-    uint32_t CBSRUADescriptorHeap::RangeStartIndex(Range range) const
-    {
-        return mRangeCapacity * std::underlying_type_t<Range>(range);
-    }
-
-    const GPUDescriptor* CBSRUADescriptorHeap::GetDescriptor(Range range, uint32_t indexInRange) const
-    {
-        auto rangeIndex = std::underlying_type_t<Range>(range);
-        const RangeAllocationInfo& rangeInfo = GetRange(rangeIndex);
-        
-        if (indexInRange >= rangeInfo.Descriptors.size()) return nullptr;
-
-        return rangeInfo.Descriptors[indexInRange].get();
-    }
-
-    const SRDescriptor& CBSRUADescriptorHeap::EmplaceSRDescriptor(const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
-    {
-        auto index = std::underlying_type_t<Range>(RangeTypeForTexture(texture));
-        ValidateCapacity(index);
+        auto index = std::underlying_type_t<Range>(Range::ShaderResource);
         RangeAllocationInfo& range = GetRange(index);
 
         assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
-
-        auto& descriptor = dynamic_cast<SRDescriptor&>(*range.Descriptors.emplace_back(
-            std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
-        mDevice->D3DDevice()->CreateShaderResourceView(texture.D3DResource(), &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateShaderResourceView(texture.D3DResource(), &desc, range.StartCPUHandle);
 
-        IncrementCounters(index);
-        return descriptor;
+        return SRDescriptor{
+            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            indexInHeapRange
+        };
     }
 
-    const UADescriptor& CBSRUADescriptorHeap::EmplaceUADescriptor(const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
+    const UADescriptor CBSRUADescriptorHeap::EmplaceUADescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
     {
-        auto index = std::underlying_type_t<Range>(UARangeTypeForTexture(texture));
-        ValidateCapacity(index);
+        auto index = std::underlying_type_t<Range>(Range::UnorderedAccess);
         RangeAllocationInfo& range = GetRange(index);
 
         assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
 
-        auto& descriptor = dynamic_cast<UADescriptor&>(*range.Descriptors.emplace_back(
-            std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
-
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
-        mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DResource(), nullptr, &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DResource(), nullptr, &desc, range.StartCPUHandle);
 
-        IncrementCounters(index);
-        return descriptor;
+        return UADescriptor{
+            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            indexInHeapRange
+        };
     }
 
-    const CBDescriptor& CBSRUADescriptorHeap::EmplaceCBDescriptor(const Buffer& buffer, uint64_t stride)
+    const CBDescriptor CBSRUADescriptorHeap::EmplaceCBDescriptor(uint64_t indexInHeapRange, const Buffer& buffer, uint64_t stride)
     {
-        auto index = std::underlying_type_t<Range>(Range::CBuffer);
-        ValidateCapacity(index);
+        auto index = std::underlying_type_t<Range>(Range::ConstantBuffer);
         RangeAllocationInfo& range = GetRange(index);
-
-        auto& descriptor = dynamic_cast<CBDescriptor&>(*range.Descriptors.emplace_back(
-            std::make_unique<CBDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC desc{ buffer.GPUVirtualAddress(), (UINT)stride };
-        mDevice->D3DDevice()->CreateConstantBufferView(&desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateConstantBufferView(&desc, range.StartCPUHandle);
 
-        IncrementCounters(index);
-        return descriptor;
+        return CBDescriptor{
+            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            indexInHeapRange
+        };
     }
 
-    const SRDescriptor& CBSRUADescriptorHeap::EmplaceSRDescriptor(const Buffer& buffer, uint64_t stride)
+    const SRDescriptor CBSRUADescriptorHeap::EmplaceSRDescriptor(uint64_t indexInHeapRange, const Buffer& buffer, uint64_t stride)
     {
-        auto index = std::underlying_type_t<Range>(Range::SBuffer);
-        ValidateCapacity(index);
+        auto index = std::underlying_type_t<Range>(Range::ShaderResource);
         RangeAllocationInfo& range = GetRange(index);
-
-        auto& descriptor = dynamic_cast<SRDescriptor&>(*range.Descriptors.emplace_back(
-            std::make_unique<SRDescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
 
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(buffer.D3DDescription(), stride);
-        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DResource(), &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DResource(), &desc, range.StartCPUHandle);
 
-        IncrementCounters(index);
-        return descriptor;
+        return SRDescriptor{
+            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            indexInHeapRange
+        };
     }
 
-    const UADescriptor& CBSRUADescriptorHeap::EmplaceUADescriptor(const Buffer& buffer, uint64_t stride)
+    const UADescriptor CBSRUADescriptorHeap::EmplaceUADescriptor(uint64_t indexInHeapRange, const Buffer& buffer, uint64_t stride)
     {
-        auto index = std::underlying_type_t<Range>(Range::UABuffer);
-        ValidateCapacity(index);
+        auto index = std::underlying_type_t<Range>(Range::UnorderedAccess);
         RangeAllocationInfo& range = GetRange(index);
 
-        auto& descriptor = dynamic_cast<UADescriptor&>(*range.Descriptors.emplace_back(
-            std::make_unique<UADescriptor>(range.CurrentCPUHandle, range.CurrentGPUHandle, range.Descriptors.size())));
-
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(buffer.D3DDescription(), stride);
-        mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DResource(), nullptr, &desc, range.CurrentCPUHandle);
+        mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DResource(), nullptr, &desc, range.StartCPUHandle);
 
-        IncrementCounters(index);
-        return descriptor;
-    }
-
-    CBSRUADescriptorHeap::Range CBSRUADescriptorHeap::RangeTypeForTexture(const Texture& texture) const
-    {
-        switch (texture.Kind())
-        {
-        case TextureKind::Texture1D: return Range::Texture1D;
-        case TextureKind::Texture2D: return texture.IsArray() ? Range::Texture2DArray : Range::Texture2D;
-        case TextureKind::Texture3D: return Range::Texture3D;
-        default: assert_format(false, "Should never be hit"); return Range::Texture1D;
-        }
-    }
-
-    CBSRUADescriptorHeap::Range CBSRUADescriptorHeap::UARangeTypeForTexture(const Texture& texture) const
-    {
-        switch (texture.Kind())
-        {
-        case TextureKind::Texture1D: return Range::UATexture1D;
-        case TextureKind::Texture2D: return texture.IsArray() ? Range::UATexture2DArray : Range::UATexture2D;
-        case TextureKind::Texture3D: return Range::UATexture3D;
-        default: assert_format(false, "Should never be hit"); return Range::UATexture1D;
-        }
+        return UADescriptor{
+            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
+            indexInHeapRange
+        };
     }
 
  }

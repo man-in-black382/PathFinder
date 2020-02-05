@@ -48,7 +48,7 @@ namespace PathFinder
             std::unordered_set<ResourceName> ScheduledResourceNames;
 
             // Resource transition and aliasing barriers for each pass
-            HAL::ResourceBarrierCollection TransitionAndAliasingBarriers;
+            HAL::ResourceBarrierCollection AliasingBarriers;
 
             // UAV barriers to be applied after each draw/dispatch in
             // a pass that makes unordered accesses to resources
@@ -142,7 +142,7 @@ namespace PathFinder
         void CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceSchedulingInfo& allocator, uint64_t explicitStride);
         void CreateDebugBuffers(const RenderPassExecutionGraph* passExecutionGraph);
         void PrepareAllocationsForOptimization();
-        void CreateResourceBarriers();
+        void CreateAliasingAndUAVBarriers();
 
         HAL::Device* mDevice;
 

@@ -121,7 +121,7 @@ namespace PathFinder
             resourceObjects.SchedulingInfo->AllocationAction();
         }
 
-        CreateResourceBarriers();
+        CreateAliasingAndUAVBarriers();
     }
 
     void PipelineResourceStorage::CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain)
@@ -205,6 +205,7 @@ namespace PathFinder
             resourceObjects.Texture->Resource = std::make_unique<HAL::Texture>(
                 *mDevice, *heap, schedulingInfo->AliasingInfo.HeapOffset, completeProperties);
 
+            resourceObjects.Texture->
             resourceObjects.Texture->Resource->SetDebugName(resourceName.ToString());
 
             CreateDescriptors(*resourceObjects.Texture, *schedulingInfo);
@@ -237,9 +238,9 @@ namespace PathFinder
         return &it->second;
     }
 
-    void PipelineResourceStorage::CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceSchedulingInfo& allocator)
+    void PipelineResourceStorage::CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceSchedulingInfo& schedulingInfo)
     {
-        for (const auto& [passName, passMetadata] : allocator.AllPassesMetadata())
+        for (const auto& [passName, passMetadata] : schedulingInfo.AllPassesMetadata())
         {
             TexturePipelineResource::PassMetadata& newResourcePerPassData = resource.AllocateMetadateForPass(passName);
 
@@ -269,9 +270,9 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceSchedulingInfo& allocator, uint64_t explicitStride)
+    void PipelineResourceStorage::CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceSchedulingInfo& schedulingInfo, uint64_t explicitStride)
     {
-        for (const auto& [passName, passMetadata] : allocator.AllPassesMetadata())
+        for (const auto& [passName, passMetadata] : schedulingInfo.AllPassesMetadata())
         {
             BufferPipelineResource::PassMetadata& newResourcePerPassData = resource.AllocateMetadateForPass(passName);
 
@@ -322,7 +323,7 @@ namespace PathFinder
             PipelineResourceSchedulingInfo* allocation = resourceObjects.SchedulingInfo.get();
             
             allocation->GatherExpectedStates();
-            mStateOptimizer.AddAllocation(resourceObjects.SchedulingInfo.get());
+            mStateOptimizer.AddSchedulingInfo(resourceObjects.SchedulingInfo.get());
 
             // Dispatch allocations to correct aliasers
             std::visit(Foundation::MakeVisitor(
@@ -351,7 +352,7 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::CreateResourceBarriers()
+    void PipelineResourceStorage::CreateAliasingAndUAVBarriers()
     {
         for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
         {
@@ -362,19 +363,12 @@ namespace PathFinder
             if (resourceObjects.SchedulingInfo->AliasingInfo.NeedsAliasingBarrier)
             {
                 PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.SchedulingInfo->FirstPassName());
-                passObjects.TransitionAndAliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource });
+                passObjects.AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource });
             }
 
             for (auto& [passName, passData] : resourceObjects.SchedulingInfo->AllPassesMetadata())
             {
                 PerPassObjects& passObjects = GetPerPassObjects(passName);
-
-                // Create transition barriers
-                if (passData.OptimizedTransitionStates)
-                {
-                    passObjects.TransitionAndAliasingBarriers.AddBarrier(HAL::ResourceTransitionBarrier{
-                        passData.OptimizedTransitionStates->first, passData.OptimizedTransitionStates->second, resource });
-                }
 
                 // Create unordered access barriers
                 if (passData.NeedsUAVBarrier)
@@ -383,9 +377,6 @@ namespace PathFinder
                 }
             }
         }
-
-        // TODO: Create readback barriers for textures when readback functionality for pipeline-induced resources is implemented
-        // Barriers for buffers aren't necessary as per DirectX documentation (auto state promotion and decay for buffers)
     }
 
    /* HAL::Buffer<uint8_t>* PipelineResourceStorage::RootConstantBufferForCurrentPass() 
@@ -462,7 +453,7 @@ namespace PathFinder
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::TransitionAndAliasingBarriersForCurrentPass()
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
-        return passObjects.TransitionAndAliasingBarriers;
+        return passObjects.AliasingBarriers;
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::UnorderedAccessBarriersForCurrentPass()

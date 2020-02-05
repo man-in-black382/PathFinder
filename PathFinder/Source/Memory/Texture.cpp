@@ -3,8 +3,13 @@
 namespace Memory
 {
 
-    Texture::Texture(const HAL::Texture::Properties& properties, SegregatedPoolsResourceAllocator* resourceAllocator, HAL::CopyCommandListBase* commandList)
-        : GPUResource(GPUResource::UploadStrategy::Automatic, resourceAllocator, commandList),
+    Texture::Texture(
+        const HAL::Texture::Properties& properties, 
+        ResourceStateTracker* stateTracker,
+        SegregatedPoolsResourceAllocator* resourceAllocator, 
+        HAL::CopyCommandListBase* commandList)
+        :
+        GPUResource(GPUResource::UploadStrategy::Automatic, stateTracker, resourceAllocator, commandList),
         mTexturePtr{ resourceAllocator->AllocateTexture(properties) } {}
 
     void Texture::RequestWrite()

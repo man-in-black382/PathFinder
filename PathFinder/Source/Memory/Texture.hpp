@@ -10,7 +10,12 @@ namespace Memory
     class Texture : public GPUResource
     {
     public:
-        Texture(const HAL::Texture::Properties& properties, SegregatedPoolsResourceAllocator* resourceAllocator, HAL::CopyCommandListBase* commandList);
+        Texture(
+            const HAL::Texture::Properties& properties, 
+            ResourceStateTracker* stateTracker,
+            SegregatedPoolsResourceAllocator* resourceAllocator,
+            HAL::CopyCommandListBase* commandList);
+
         ~Texture() = default;
 
         void RequestWrite() override;

@@ -14,13 +14,11 @@ namespace PathFinder
     class PipelineResourceSchedulingInfo
     {
     public:
-        using StatePair = std::pair<HAL::ResourceState, HAL::ResourceState>;
-
         struct PassMetadata
         {
             HAL::ResourceState RequestedState = HAL::ResourceState::Common;
             std::optional<HAL::ColorFormat> ShaderVisibleFormat;
-            std::optional<StatePair> OptimizedTransitionStates;
+            HAL::ResourceState OptimizedState = HAL::ResourceState::Common;
             bool NeedsUAVBarrier = false;
             bool CreateTextureRTDescriptor = false;
             bool CreateTextureDSDescriptor = false;
@@ -48,7 +46,6 @@ namespace PathFinder
         HAL::ResourceState InitialStates() const;
 
         std::function<void()> AllocationAction;
-        std::optional<HAL::ResourceState> OneAndOnlyState;
         AliasingMetadata AliasingInfo;
 
     private:

@@ -408,6 +408,12 @@
     <ClCompile Include="Source\RenderPipeline\ResourceStateTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Memory\ResourceStateTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Memory\PoolDescriptorAllocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2246,6 +2252,12 @@
     <ClInclude Include="Source\RenderPipeline\ResourceStateTracker.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Memory\ResourceStateTracker.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Memory\PoolDescriptorAllocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2739,6 +2751,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\Memory\GPUResourceProducer.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\Memory\PoolCommandListAllocator.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

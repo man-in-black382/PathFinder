@@ -11,22 +11,23 @@
 
 namespace PathFinder
 {
-
+    /// Preprocesses states by combining read-only state sequences
+    /// and determining the need for UAV barriers
     class PipelineResourceStateOptimizer
     {
     public:
         PipelineResourceStateOptimizer(const RenderPassExecutionGraph* renderPassGraph);
 
-        void AddAllocation(PipelineResourceSchedulingInfo* allocation);
+        void AddSchedulingInfo(PipelineResourceSchedulingInfo* schedulingInfo);
         void Optimize();
 
     private:
-        void CollapseStateSequences(PipelineResourceSchedulingInfo* allocation);
+        void CombineStateSequences(PipelineResourceSchedulingInfo* allocation);
 
         // To be used between function calls to avoid memory reallocations
-        std::vector<std::pair<Foundation::Name, HAL::ResourceState>> mCollapsedStateSequences;
+        std::vector<std::pair<Foundation::Name, HAL::ResourceState>> mCombinedStateSequences;
 
-        std::vector<PipelineResourceSchedulingInfo*> mAllocations;
+        std::vector<PipelineResourceSchedulingInfo*> mSchedulingInfos;
         const RenderPassExecutionGraph* mRenderPassGraph;
     };
 

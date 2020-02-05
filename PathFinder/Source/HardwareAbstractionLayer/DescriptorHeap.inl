@@ -1,13 +1,15 @@
 #pragma once
 
+#include <numeric>
+
 namespace HAL
 {
     template <class DescriptorT>
-    DescriptorHeap<DescriptorT>::DescriptorHeap(const Device* device, uint32_t rangeCapacity, uint32_t rangeCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
-        : mDevice{ device }, mRangeCapacity{ rangeCapacity }, mIncrementSize{ device->D3DDevice()->GetDescriptorHandleIncrementSize(heapType) }
+    DescriptorHeap<DescriptorT>::DescriptorHeap(const Device* device, const std::vector<uint64_t>& rangeCapacities, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
+        : mDevice{ device }, mIncrementSize{ device->D3DDevice()->GetDescriptorHandleIncrementSize(heapType) }
     {
         D3D12_DESCRIPTOR_HEAP_DESC desc{};
-        desc.NumDescriptors = rangeCapacity * rangeCount;
+        desc.NumDescriptors = std::accumulate(rangeCapacities.begin(), rangeCapacities.end(), 0);
         desc.Type = heapType;
         desc.NodeMask = 0;
 
@@ -25,34 +27,20 @@ namespace HAL
             GPUHandle = mHeap->GetGPUDescriptorHandleForHeapStart();
         }
 
-        for (auto rangeIdx = 0u; rangeIdx < rangeCount; rangeIdx++)
+        for (auto rangeIdx = 0u; rangeIdx < rangeCapacities.size(); rangeIdx++)
         {
+            uint64_t capacity = rangeCapacities[rangeIdx];
+
             mRanges.emplace_back(
-                D3D12_CPU_DESCRIPTOR_HANDLE{ CPUHandle.ptr + rangeIdx * mIncrementSize * mRangeCapacity }, 
-                D3D12_GPU_DESCRIPTOR_HANDLE{ GPUHandle.ptr + rangeIdx * mIncrementSize * mRangeCapacity }
+                D3D12_CPU_DESCRIPTOR_HANDLE{ CPUHandle.ptr + rangeIdx * mIncrementSize * capacity },
+                D3D12_GPU_DESCRIPTOR_HANDLE{ GPUHandle.ptr + rangeIdx * mIncrementSize * capacity },
+                capacity
             );
         }
     }
 
     template <class DescriptorT>
     DescriptorHeap<DescriptorT>::~DescriptorHeap() {}
-
-    template <class DescriptorT>
-    void DescriptorHeap<DescriptorT>::ValidateCapacity(uint32_t rangeIndex) const
-    {
-        if (mRanges[rangeIndex].Descriptors.size() >= mRangeCapacity)
-        {
-            throw std::runtime_error("Exceeded descriptor heap's capacity");
-        }
-    }
-
-    template <class DescriptorT>
-    void DescriptorHeap<DescriptorT>::IncrementCounters(uint32_t rangeIndex)
-    {
-        RangeAllocationInfo& range = mRanges[rangeIndex];
-        range.CurrentCPUHandle.ptr += mIncrementSize;
-        range.CurrentGPUHandle.ptr += mIncrementSize;
-    }
 
     template <class DescriptorT>
     typename DescriptorHeap<DescriptorT>::RangeAllocationInfo& DescriptorHeap<DescriptorT>::GetRange(uint32_t rangeIndex)
@@ -64,12 +52,6 @@ namespace HAL
     typename const DescriptorHeap<DescriptorT>::RangeAllocationInfo& DescriptorHeap<DescriptorT>::GetRange(uint32_t rangeIndex) const
     {
         return mRanges.at(rangeIndex);
-    }
-
-    template <class DescriptorT>
-    uint32_t HAL::DescriptorHeap<DescriptorT>::Capacity() const
-    {
-        return mRangeCapacity * mRanges.size();
     }
 
 }

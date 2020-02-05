@@ -5,14 +5,22 @@ namespace Memory
 
     GPUResource::GPUResource(
         UploadStrategy uploadStrategy,
+        ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator,
         HAL::CopyCommandListBase* commandList)
         :
         mUploadStrategy{ uploadStrategy },
+        mStateTracker{ uploadStrategy == UploadStrategy::DirectAccess ? nullptr : stateTracker },
         mAllocator{ resourceAllocator },
-        mCommandList{ commandList } {}
+        mCommandList{ commandList }
+    {
+        if (mStateTracker) mStateTracker->StartTrakingResource(HALResource());
+    }
 
-    GPUResource::~GPUResource() {}
+    GPUResource::~GPUResource() 
+    {
+        if (mStateTracker) mStateTracker->StopTrakingResource(HALResource());
+    }
 
     void GPUResource::RequestWrite()
     {
@@ -23,7 +31,17 @@ namespace Memory
         }
 
         HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
-        mUploadBuffers.emplace(mAllocator->AllocateBuffer<uint8_t>(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
+        mUploadBuffers.emplace(mAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
+
+        if (mStateTracker)
+        {
+            auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
+
+            if (barrier)
+            {
+                CommandList()->InsertBarrier(*barrier);
+            }
+        }
     }
 
     void GPUResource::RequestRead()
@@ -37,7 +55,22 @@ namespace Memory
         }
 
         HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
-        mReadbackBuffers.emplace(mAllocator->AllocateBuffer<uint8_t>(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
+        mReadbackBuffers.emplace(mAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
+
+        if (mStateTracker)
+        {
+            auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopySource);
+
+            if (barrier)
+            {
+                CommandList()->InsertBarrier(*barrier);
+            }
+        }
+    }
+
+    void GPUResource::RequestNewState(HAL::ResourceState newState)
+    {
+        if (mStateTracker) mStateTracker->RequestTransition(HALResource(), newState);
     }
 
     void GPUResource::BeginFrame(uint64_t frameNumber)
@@ -65,6 +98,11 @@ namespace Memory
     void GPUResource::SetCommandList(HAL::CopyCommandListBase* commandList)
     {
         mCommandList = commandList;
+    }
+
+    const HAL::Resource* GPUResource::HALResource() const
+    {
+        return nullptr;
     }
 
     const HAL::Buffer* GPUResource::CurrentFrameUploadBuffer() const

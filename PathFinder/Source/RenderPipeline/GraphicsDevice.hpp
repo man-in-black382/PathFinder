@@ -11,7 +11,7 @@
 namespace PathFinder
 {
 
-    using GraphicsDeviceBase = AsyncComputeDevice<HAL::GraphicsCommandList, Memory::PoolCommandListAllocator::GraphicsCommandListPtr, HAL::GraphicsCommandQueue>;
+    using GraphicsDeviceBase = AsyncComputeDevice<HAL::GraphicsCommandList, HAL::GraphicsCommandQueue>;
 
     class GraphicsDevice : public GraphicsDeviceBase
     {

@@ -18,12 +18,13 @@ namespace PathFinder
 
     template<
         class CommandListT = HAL::ComputeCommandList,
-        class CommandListPtrT = Memory::PoolCommandListAllocator::ComputeCommandListPtr,
         class CommandQueueT = HAL::ComputeCommandQueue
     >
     class AsyncComputeDevice
     {
     public:
+        using CommandListPtr = Memory::PoolCommandListAllocator::CommandListPtr<CommandListT>;
+
         AsyncComputeDevice(
             const HAL::Device& device,
             const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
@@ -63,7 +64,7 @@ namespace PathFinder
         RenderSurfaceDescription mDefaultRenderSurface;
 
         CommandQueueT mCommandQueue;
-        CommandListPtrT mCommandList;
+        CommandListPtr mCommandList;
 
     private:
         void ApplyCommonComputeResourceBindings();

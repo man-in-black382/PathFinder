@@ -48,17 +48,8 @@ namespace PathFinder
 
     HAL::ResourceState PipelineResourceSchedulingInfo::InitialStates() const
     {
-        if (OneAndOnlyState) return *OneAndOnlyState;
-
         auto firstPassMetadata = GetMetadataForPass(mFirstPassName);
-
-        if (firstPassMetadata && firstPassMetadata->OptimizedTransitionStates)
-        {
-            return firstPassMetadata->OptimizedTransitionStates->first;
-        } 
-        else {
-            return HAL::ResourceState::Common;
-        }
+        return firstPassMetadata->OptimizedState;
     }
 
 }

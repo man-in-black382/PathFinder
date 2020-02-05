@@ -3,15 +3,15 @@
 namespace Memory
 {
 
-    GPUResourceProducer::GPUResourceProducer(SegregatedPoolsResourceAllocator* resourceAllocator, HAL::CopyCommandListBase* commandList)
-        : mAllocator{ resourceAllocator }, mCommandList{ commandList }
+    GPUResourceProducer::GPUResourceProducer(SegregatedPoolsResourceAllocator* resourceAllocator, ResourceStateTracker* stateTracker, HAL::CopyCommandListBase* commandList)
+        : mAllocator{ resourceAllocator }, mStateTracker{ stateTracker }, mCommandList{ commandList }
     {
 
     }
 
     GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::Texture::Properties& properties)
     {
-        Texture* texture = new Texture{ properties, mAllocator, mCommandList };
+        Texture* texture = new Texture{ properties, mStateTracker, mAllocator, mCommandList };
         auto [iter, success] = mAllocatedResources.insert(texture);
 
         auto deallocationCallback = [this, iter](Texture* texture)

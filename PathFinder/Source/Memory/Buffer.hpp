@@ -14,6 +14,7 @@ namespace Memory
         Buffer(
             const HAL::Buffer::Properties<Element>& properties,
             GPUResource::UploadStrategy uploadStrategy,
+            ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator, 
             HAL::CopyCommandListBase* commandList
         );

@@ -242,6 +242,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Memory\Buffer.cpp" />
     <ClCompile Include="Source\Memory\GPUResource.cpp" />
     <ClCompile Include="Source\Memory\GPUResourceProducer.cpp" />
+    <ClCompile Include="Source\Memory\PoolDescriptorAllocator.cpp" />
+    <ClCompile Include="Source\Memory\ResourceStateTracker.cpp" />
     <ClCompile Include="Source\Memory\Ring.cpp" />
     <ClCompile Include="Source\Memory\PoolCommandListAllocator.cpp" />
     <ClCompile Include="Source\Memory\SegregatedPoolsResourceAllocator.cpp" />
@@ -389,6 +391,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Memory\GPUResource.hpp" />
     <ClInclude Include="Source\Memory\GPUResourceProducer.hpp" />
     <ClInclude Include="Source\Memory\Pool.hpp" />
+    <ClInclude Include="Source\Memory\PoolDescriptorAllocator.hpp" />
+    <ClInclude Include="Source\Memory\ResourceStateTracker.hpp" />
     <ClInclude Include="Source\Memory\Ring.hpp" />
     <ClInclude Include="Source\Memory\PoolCommandListAllocator.hpp" />
     <ClInclude Include="Source\Memory\SegregatedPools.hpp" />
@@ -941,6 +945,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\Memory\GPUResource.inl" />
     <None Include="Source\Memory\GPUResourceProducer.inl" />
     <None Include="Source\Memory\Pool.inl" />
+    <None Include="Source\Memory\PoolCommandListAllocator.inl" />
     <None Include="Source\Memory\SegregatedPools.inl" />
     <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl">
       <FileType>CppHeader</FileType>

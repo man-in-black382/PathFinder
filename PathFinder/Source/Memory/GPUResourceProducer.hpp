@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SegregatedPoolsResourceAllocator.hpp"
+#include "ResourceStateTracker.hpp"
 #include "Buffer.hpp"
 #include "Texture.hpp"
 
@@ -15,7 +16,7 @@ namespace Memory
         using BufferPtr = std::unique_ptr<Buffer, std::function<void(Buffer*)>>;
         using TexturePtr = std::unique_ptr<Texture, std::function<void(Texture*)>>;
 
-        GPUResourceProducer(SegregatedPoolsResourceAllocator* resourceAllocator, HAL::CopyCommandListBase* commandList);
+        GPUResourceProducer(SegregatedPoolsResourceAllocator* resourceAllocator, ResourceStateTracker* stateTracker, HAL::CopyCommandListBase* commandList);
 
         template <class Element>
         BufferPtr NewBuffer(const HAL::Buffer::Properties<Element>& properties, GPUResource::UploadStrategy uploadStrategy = GPUResource::UploadStrategy::Automatic);
@@ -30,6 +31,7 @@ namespace Memory
         using ResourceSetIterator = std::unordered_set<GPUResource*>::iterator;
 
         SegregatedPoolsResourceAllocator* mAllocator = nullptr;
+        ResourceStateTracker* mStateTracker = nullptr;
         HAL::CopyCommandListBase* mCommandList = nullptr;
         std::unordered_set<GPUResource*> mAllocatedResources;
     };

@@ -2,7 +2,7 @@
 
 #include "../Foundation/Assert.hpp"
 
-namespace PathFinder
+namespace Memory
 {
 
     void ResourceStateTracker::StartTrakingResource(const HAL::Resource* resource)

@@ -16,9 +16,12 @@ namespace Memory
     class PoolCommandListAllocator
     {
     public:
-        using GraphicsCommandListPtr = std::unique_ptr<HAL::GraphicsCommandList, std::function<void(HAL::GraphicsCommandList*)>>;
-        using ComputeCommandListPtr = std::unique_ptr<HAL::ComputeCommandList, std::function<void(HAL::ComputeCommandList*)>>;
-        using CopyCommandListPtr = std::unique_ptr<HAL::CopyCommandList, std::function<void(HAL::CopyCommandList*)>>;
+        template <class CommandListT>
+        using CommandListPtr = std::unique_ptr<CommandListT, std::function<void(CommandListT*)>>;
+
+        using GraphicsCommandListPtr = CommandListPtr<HAL::GraphicsCommandList>;
+        using ComputeCommandListPtr = CommandListPtr<HAL::ComputeCommandList>;
+        using CopyCommandListPtr = CommandListPtr<HAL::CopyCommandList>;
 
         PoolCommandListAllocator(const HAL::Device* device, uint8_t simultaneousFramesInFlight);
         ~PoolCommandListAllocator();
@@ -29,6 +32,11 @@ namespace Memory
         GraphicsCommandListPtr AllocateGraphicsCommandList();
         ComputeCommandListPtr AllocateComputeCommandList();
         CopyCommandListPtr AllocateCopyCommandList();
+
+        template <class CommandListT> CommandListPtr<CommandListT> AllocateCommandList() = delete;
+        template <> GraphicsCommandListPtr AllocateCommandList();
+        template <> ComputeCommandListPtr AllocateCommandList();
+        template <> CopyCommandListPtr AllocateCommandList();
 
     private:
         struct Deallocation
@@ -64,3 +72,4 @@ namespace Memory
 
 }
 
+#include "PoolCommandListAllocator.inl"
