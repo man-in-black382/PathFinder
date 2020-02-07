@@ -6,13 +6,13 @@
 namespace PathFinder
 {
 
-    AssetResourceStorage::AssetResourceStorage(const HAL::Device* device, ResourceDescriptorStorage* descriptorStorage)
-        : mDevice{ device }, mDescriptorStorage{ descriptorStorage } {}
+    AssetResourceStorage::AssetResourceStorage(const HAL::Device* device)
+        : mDevice{ device } {}
 
     GPUDescriptorIndex AssetResourceStorage::StoreAsset(std::shared_ptr<HAL::Texture> resource)
     {
         mAssets.push_back(resource);
-        return mDescriptorStorage->EmplaceSRDescriptorIfNeeded(resource.get()).IndexInHeapRange();
+        return 0;/*mDescriptorStorage->EmplaceSRDescriptorIfNeeded(resource.get()).IndexInHeapRange();*/
     }
 
     //PreprocessableAsset<uint8_t> AssetResourceStorage::StorePreprocessableAsset(std::shared_ptr<HAL::Texture> asset, bool queueContentReadback)

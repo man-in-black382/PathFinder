@@ -100,35 +100,21 @@ namespace PathFinder
         //mCommandList->SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
         //mCommandList->SetGraphicsRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);
 
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
-        {
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 3);
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 4);
-        }
-            
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
-        {
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 5);
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 6);
-        }
+        HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
+        HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
 
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 7);
-       
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0))
-        {
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 8);
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 9);
-        }
-            
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0))
-        {
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 10);
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 11);
-        }
-       
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0))
-            mCommandList->SetGraphicsRootDescriptorTable(*baseDescriptor, 12);
+        // Alias different registers to one GPU address
+        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 3);
+        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 4);
+        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 5);
+        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 6);
+        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 7);
+
+        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 8);
+        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 9);
+        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 10);
+        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 11);
+        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 12);
     }
 
     void GraphicsDevice::BindCurrentPassBuffersGraphics()
@@ -249,7 +235,7 @@ namespace PathFinder
         mAppliedGraphicsRootSignature = state->GetGlobalRootSignature();
     }
     
-    void GraphicsDevice::BindExternalBuffer(const HAL::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+    void GraphicsDevice::BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         if (mAppliedComputeState)
         {
@@ -269,9 +255,9 @@ namespace PathFinder
 
             switch (registerType)
             {
-            case HAL::ShaderRegister::ShaderResource: mCommandList->SetGraphicsRootShaderResource(buffer, index->IndexInSignature); break;
-            case HAL::ShaderRegister::ConstantBuffer: mCommandList->SetGraphicsRootConstantBuffer(buffer, index->IndexInSignature); break;
-            case HAL::ShaderRegister::UnorderedAccess: mCommandList->SetGraphicsRootUnorderedAccessResource(buffer, index->IndexInSignature); break;
+            case HAL::ShaderRegister::ShaderResource: mCommandList->SetGraphicsRootShaderResource(*buffer.HALBuffer(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::ConstantBuffer: mCommandList->SetGraphicsRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::UnorderedAccess: mCommandList->SetGraphicsRootUnorderedAccessResource(*buffer.HALBuffer(), index->IndexInSignature); break;
             case HAL::ShaderRegister::Sampler:
                 assert_format(false, "Incompatible register type");
             }

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "ResourceDescriptorStorage.hpp"
-
 #include "../Foundation/Name.hpp"
 #include "../HardwareAbstractionLayer/ResourceState.hpp"
+#include "../HardwareAbstractionLayer/ResourceFormat.hpp"
 
 #include <functional>
 #include <optional>
@@ -32,7 +31,6 @@ namespace PathFinder
         struct AliasingMetadata
         {
             const PipelineResourceSchedulingInfo* AliasingSource = nullptr;
-            HAL::HeapAliasingGroup HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
             uint64_t HeapOffset = 0;
             bool NeedsAliasingBarrier = false;
         };

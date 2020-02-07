@@ -7,10 +7,61 @@ namespace Memory
         const HAL::Texture::Properties& properties, 
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator, 
+        PoolDescriptorAllocator* descriptorAllocator,
         HAL::CopyCommandListBase* commandList)
         :
-        GPUResource(GPUResource::UploadStrategy::Automatic, stateTracker, resourceAllocator, commandList),
-        mTexturePtr{ resourceAllocator->AllocateTexture(properties) } {}
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandList),
+        mTexturePtr{ resourceAllocator->AllocateTexture(properties) } 
+    {
+        if (StateTracker()) StateTracker()->StartTrakingResource(HALTexture());
+    }
+
+    Texture::Texture(
+        const HAL::Texture::Properties& properties, 
+        ResourceStateTracker* stateTracker, 
+        SegregatedPoolsResourceAllocator* resourceAllocator, 
+        PoolDescriptorAllocator* descriptorAllocator, 
+        HAL::CopyCommandListBase* commandList,
+        const HAL::Device& device, 
+        const HAL::Heap& mainResourceExplicitHeap, 
+        uint64_t explicitHeapOffset)
+        :
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandList)
+    {
+        mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{
+           new HAL::Texture{ device, mainResourceExplicitHeap, explicitHeapOffset, properties },
+           [](HAL::Texture* texture) { delete texture; }
+        };
+    }
+
+    Texture::~Texture()
+    {
+        if (StateTracker()) StateTracker()->StopTrakingResource(HALTexture());
+    }
+
+    const HAL::RTDescriptor* Texture::GetOrCreateRTDescriptor()
+    {
+        if (!mRTDescriptor) mRTDescriptor = DescriptorAllocator()->AllocateRTDescriptor(HALTexture());
+        return mRTDescriptor.get();
+    }
+
+    const HAL::DSDescriptor* Texture::GetOrCreateDSDescriptor()
+    {
+        if (!mDSDescriptor) mDSDescriptor = DescriptorAllocator()->AllocateDSDescriptor(HALTexture());
+        return mDSDescriptor.get();
+    }
+
+    const HAL::SRDescriptor* Texture::GetOrCreateSRDescriptor()
+    {
+        if (!mSRDescriptor) mSRDescriptor = DescriptorAllocator()->AllocateSRDescriptor(HALTexture());
+        return mSRDescriptor.get();
+    }
+
+    const HAL::UADescriptor* Texture::GetOrCreateUADescriptor()
+    {
+        if (!mUADescriptor) mUADescriptor = DescriptorAllocator()->AllocateUADescriptor(HALTexture());
+        return mUADescriptor.get();
+    }
 
     void Texture::RequestWrite()
     {

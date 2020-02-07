@@ -36,6 +36,9 @@ namespace Memory
         SRDescriptorPtr AllocateSRDescriptor(const HAL::Buffer* buffer, uint64_t stride);
         UADescriptorPtr AllocateUADescriptor(const HAL::Buffer* buffer, uint64_t stride);
         CBDescriptorPtr AllocateCBDescriptor(const HAL::Buffer* buffer, uint64_t stride);
+
+        void BeginFrame(uint64_t frameNumber);
+        void EndFrame(uint64_t frameNumber);
         
     private:
         template <class DescriptorT>
@@ -48,10 +51,21 @@ namespace Memory
                 : Descriptor{ descriptor }, Slot{ slot } {}
         };
 
+        struct Deallocation
+        {
+            Pool<>::SlotType Slot;
+            Pool<>* PoolPtr;
+
+            Deallocation(const Pool<>::SlotType& slot, Pool<>* pool) 
+                : Slot{ slot }, PoolPtr{ pool } {}
+        };
+
+        void ExecutePendingDeallocations(uint64_t frameIndex);
         void ValidateRTFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
         void ValidateSRUAFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
 
         uint64_t mDescriptorRangeCapacity = 5000;
+        uint64_t mCurrentFrameIndex = 0;
 
         HAL::CBSRUADescriptorHeap mCBSRUADescriptorHeap;
         HAL::RTDescriptorHeap mRTDescriptorHeap;
@@ -71,7 +85,10 @@ namespace Memory
         std::list<Allocation<HAL::UADescriptor>> mAllocatedUADescriptors;
         std::list<Allocation<HAL::CBDescriptor>> mAllocatedCBDescriptors;
 
-        //std::vector<std::vector>
+        std::vector<std::vector<Deallocation>> mPendingDeallocations;
+
+    public:
+        inline const HAL::CBSRUADescriptorHeap& CBSRUADescriptorHeap() const { return mCBSRUADescriptorHeap; }
     };
 
 }

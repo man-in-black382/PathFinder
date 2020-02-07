@@ -13,13 +13,15 @@
 #include "../IO/CommandLineParser.hpp"
 
 #include "../Memory/SegregatedPoolsResourceAllocator.hpp"
+#include "../Memory/PoolDescriptorAllocator.hpp"
+#include "../Memory/ResourceStateTracker.hpp"
+#include "../Memory/GPUResourceProducer.hpp"
 
 #include "RenderPass.hpp"
 #include "MeshGPUStorage.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "AssetResourceStorage.hpp"
 #include "ResourceScheduler.hpp"
-#include "ResourceDescriptorStorage.hpp"
 #include "RootConstantsUpdater.hpp"
 #include "GraphicsDevice.hpp"
 #include "AsyncComputeDevice.hpp"
@@ -69,14 +71,11 @@ namespace PathFinder
 
         Memory::SegregatedPoolsResourceAllocator mResourceAllocator;
         Memory::PoolCommandListAllocator mCommandListAllocator;
-
-        HAL::Fence mUploadFence;
-        HAL::Fence mAsyncComputeFence;
-        HAL::Fence mGraphicsFence;
-        HAL::Fence mReadbackFence;
+        Memory::PoolDescriptorAllocator mDescriptorAllocator;
+        Memory::ResourceStateTracker mStateTracker;
+        Memory::GPUResourceProducer mResourceProducer;
 
         MeshGPUStorage mMeshStorage;
-        ResourceDescriptorStorage mDescriptorStorage;
         PipelineResourceStorage mPipelineResourceStorage;
         AssetResourceStorage mAssetResourceStorage;
         ResourceScheduler mResourceScheduler;
@@ -90,6 +89,10 @@ namespace PathFinder
         GPUCommandRecorder mCommandRecorder;
         UIGPUStorage mUIStorage;
         RenderContext mContext;  
+
+        HAL::Fence mGraphicsFence;
+        HAL::Fence mAsyncComputeFence;
+        HAL::Fence mUploadFence;
 
         HAL::SwapChain mSwapChain;
 

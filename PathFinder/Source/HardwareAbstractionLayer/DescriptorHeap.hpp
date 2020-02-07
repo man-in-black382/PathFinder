@@ -16,6 +16,8 @@
 
 namespace HAL
 {
+    using DescriptorAddress = uint64_t;
+
     template <class DescriptorT>
     class DescriptorHeap : public GraphicAPIObject
     {
@@ -93,6 +95,8 @@ namespace HAL
 
         const SRDescriptor EmplaceSRDescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> concreteFormat = std::nullopt);
         const UADescriptor EmplaceUADescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> concreteFormat = std::nullopt);
+
+        DescriptorAddress RangeStartGPUAddress(Range range) const;
 
     private:
         D3D12_SHADER_RESOURCE_VIEW_DESC ResourceToSRVDescription(

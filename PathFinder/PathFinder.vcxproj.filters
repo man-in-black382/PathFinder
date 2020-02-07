@@ -210,9 +210,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\ResourceDescriptorStorage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\ShaderManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1809,9 +1806,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderContext.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceDescriptorStorage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp">

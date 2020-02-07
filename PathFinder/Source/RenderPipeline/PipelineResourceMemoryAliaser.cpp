@@ -7,33 +7,33 @@ namespace PathFinder
 
     PipelineResourceMemoryAliaser::PipelineResourceMemoryAliaser(const RenderPassExecutionGraph* renderPassGraph)
         : mRenderPassGraph{ renderPassGraph },
-        mAllocations{ &AliasingMetadata::SortDescending } {}
+        mSchedulingInfos{ &AliasingMetadata::SortDescending } {}
 
-    void PipelineResourceMemoryAliaser::AddAllocation(PipelineResourceSchedulingInfo* allocation)
+    void PipelineResourceMemoryAliaser::AddSchedulingInfo(PipelineResourceSchedulingInfo* allocation)
     {
-        mAllocations.emplace(GetTimeline(allocation), allocation);
+        mSchedulingInfos.emplace(GetTimeline(allocation), allocation);
     }
 
     uint64_t PipelineResourceMemoryAliaser::Alias()
     {
         uint64_t optimalHeapSize = 0;
 
-        if (mAllocations.size() == 0) return 1;
+        if (mSchedulingInfos.size() == 0) return 1;
 
-        if (mAllocations.size() == 1)
+        if (mSchedulingInfos.size() == 1)
         {
-            mAllocations.begin()->Allocation->AliasingInfo.HeapOffset = 0;
-            optimalHeapSize = mAllocations.begin()->Allocation->ResourceFormat().ResourceSizeInBytes();
+            mSchedulingInfos.begin()->Allocation->AliasingInfo.HeapOffset = 0;
+            optimalHeapSize = mSchedulingInfos.begin()->Allocation->ResourceFormat().ResourceSizeInBytes();
             return optimalHeapSize;
         }
 
-        while (!mAllocations.empty())
+        while (!mSchedulingInfos.empty())
         {
-            auto largestAllocationIt = mAllocations.begin();
+            auto largestAllocationIt = mSchedulingInfos.begin();
             mAvailableMemory = largestAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes();
             optimalHeapSize += mAvailableMemory;
 
-            for (auto allocationIt = largestAllocationIt; allocationIt != mAllocations.end(); ++allocationIt)
+            for (auto allocationIt = largestAllocationIt; allocationIt != mSchedulingInfos.end(); ++allocationIt)
             {
                 AliasWithAlreadyAliasedAllocations(allocationIt);
             }
@@ -44,6 +44,11 @@ namespace PathFinder
         }
 
         return optimalHeapSize == 0 ? 1 : optimalHeapSize;
+    }
+
+    bool PipelineResourceMemoryAliaser::IsEmpty() const
+    {
+        return mSchedulingInfos.empty();
     }
 
     bool PipelineResourceMemoryAliaser::TimelinesIntersect(const PipelineResourceMemoryAliaser::Timeline& first, const PipelineResourceMemoryAliaser::Timeline& second) const
@@ -221,7 +226,7 @@ namespace PathFinder
     {
         for (AliasingMetadataIterator it : mAlreadyAliasedAllocations)
         {
-            mAllocations.erase(it);
+            mSchedulingInfos.erase(it);
         }
 
         mAlreadyAliasedAllocations.clear();

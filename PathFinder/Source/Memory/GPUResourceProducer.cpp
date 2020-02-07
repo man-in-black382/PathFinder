@@ -3,15 +3,38 @@
 namespace Memory
 {
 
-    GPUResourceProducer::GPUResourceProducer(SegregatedPoolsResourceAllocator* resourceAllocator, ResourceStateTracker* stateTracker, HAL::CopyCommandListBase* commandList)
-        : mAllocator{ resourceAllocator }, mStateTracker{ stateTracker }, mCommandList{ commandList }
-    {
-
-    }
+    GPUResourceProducer::GPUResourceProducer(
+        const HAL::Device* device,
+        SegregatedPoolsResourceAllocator* resourceAllocator, 
+        ResourceStateTracker* stateTracker, 
+        PoolDescriptorAllocator* descriptorAllocator)
+        : 
+        mDevice{ device },
+        mResourceAllocator{ resourceAllocator }, 
+        mStateTracker{ stateTracker }, 
+        mDescriptorAllocator{ descriptorAllocator } {}
 
     GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::Texture::Properties& properties)
     {
-        Texture* texture = new Texture{ properties, mStateTracker, mAllocator, mCommandList };
+        Texture* texture = new Texture{ properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, mCommandList };
+        auto [iter, success] = mAllocatedResources.insert(texture);
+
+        auto deallocationCallback = [this, iter](Texture* texture)
+        {
+            mAllocatedResources.erase(iter);
+            delete texture;
+        };
+
+        return TexturePtr{ texture, deallocationCallback };
+    }
+
+    GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::Texture::Properties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset)
+    {
+        Texture* texture = new Texture{
+            properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, 
+            mCommandList, *mDevice, explicitHeap, heapOffset 
+        };
+
         auto [iter, success] = mAllocatedResources.insert(texture);
 
         auto deallocationCallback = [this, iter](Texture* texture)

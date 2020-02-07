@@ -1,10 +1,9 @@
 #pragma once
 
+#include "../Foundation/Name.hpp"
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/Texture.hpp"
 #include "../Geometry/Rect2D.hpp"
-
-#include "ResourceDescriptorStorage.hpp"
 
 #include <vector>
 #include <memory>
@@ -28,7 +27,7 @@ namespace PathFinder
             Geometry::Rect2D ScissorRect;
         };
 
-        UIGPUStorage(const HAL::Device* device, ResourceDescriptorStorage* descriptorStorage, uint8_t simulataneousFrameCount);
+        UIGPUStorage(const HAL::Device* device, uint8_t simulataneousFrameCount);
 
         void BeginFrame(uint64_t newFrameNumber);
         void EndFrame(uint64_t completedFrameNumber);
@@ -49,7 +48,6 @@ namespace PathFinder
         uint64_t mIndexCount;
         glm::mat4 mMVP;
 
-        ResourceDescriptorStorage* mDescriptorStorage;
         /*  std::unique_ptr<HAL::RingBufferResource<ImDrawVert>> mVertexBuffer;
           std::unique_ptr<HAL::RingBufferResource<ImDrawIdx>> mIndexBuffer;
           std::shared_ptr<HAL::Buffer<uint8_t>> mFontUploadBuffer;*/

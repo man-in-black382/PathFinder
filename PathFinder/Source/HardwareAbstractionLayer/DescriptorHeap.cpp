@@ -322,6 +322,13 @@ namespace HAL
         };
     }
 
+    DescriptorAddress CBSRUADescriptorHeap::RangeStartGPUAddress(Range range) const
+    {
+        auto index = std::underlying_type_t<Range>(Range::UnorderedAccess);
+        const RangeAllocationInfo& allocInfo = GetRange(index);
+        return allocInfo.StartGPUHandle.ptr;
+    }
+
     const CBDescriptor CBSRUADescriptorHeap::EmplaceCBDescriptor(uint64_t indexInHeapRange, const Buffer& buffer, uint64_t stride)
     {
         auto index = std::underlying_type_t<Range>(Range::ConstantBuffer);

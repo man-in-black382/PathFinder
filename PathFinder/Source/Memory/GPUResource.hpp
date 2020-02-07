@@ -2,6 +2,7 @@
 
 #include "SegregatedPoolsResourceAllocator.hpp"
 #include "ResourceStateTracker.hpp"
+#include "PoolDescriptorAllocator.hpp"
 
 #include "../HardwareAbstractionLayer/Resource.hpp"
 #include "../HardwareAbstractionLayer/CommandList.hpp"
@@ -24,8 +25,8 @@ namespace Memory
             UploadStrategy uploadStrategy,
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
-            HAL::CopyCommandListBase* commandList
-        );
+            PoolDescriptorAllocator* descriptorAllocator,
+            HAL::CopyCommandListBase* commandList);
 
         GPUResource(const GPUResource& that) = delete;
         GPUResource(GPUResource&& that) = default;
@@ -52,24 +53,28 @@ namespace Memory
         void EndFrame(uint64_t frameNumber);
 
         void SetCommandList(HAL::CopyCommandListBase* commandList);
+        void SetDebugName(const std::string& name);
 
         virtual const HAL::Resource* HALResource() const;
 
     protected:
         inline HAL::CopyCommandListBase* CommandList() { return mCommandList; }
+        inline ResourceStateTracker* StateTracker() { return mStateTracker; }
+        inline PoolDescriptorAllocator* DescriptorAllocator() { return mDescriptorAllocator; }
+        inline UploadStrategy CurrentUploadStrategy() { return mUploadStrategy; }
         
         const HAL::Buffer* CurrentFrameUploadBuffer() const;
         const HAL::Buffer* CurrentFrameReadbackBuffer() const;
-
-        UploadStrategy mUploadStrategy = UploadStrategy::Automatic;
 
     private:
         using BufferFrameNumberPair = std::pair<SegregatedPoolsResourceAllocator::BufferPtr, uint64_t>;
 
         uint64_t mFrameNumber = 0;
+        UploadStrategy mUploadStrategy = UploadStrategy::Automatic;
 
         ResourceStateTracker* mStateTracker;
-        SegregatedPoolsResourceAllocator* mAllocator;
+        SegregatedPoolsResourceAllocator* mResourceAllocator;
+        PoolDescriptorAllocator* mDescriptorAllocator;
         HAL::CopyCommandListBase* mCommandList;
 
         SegregatedPoolsResourceAllocator::BufferPtr mCompletedReadbackBuffer;

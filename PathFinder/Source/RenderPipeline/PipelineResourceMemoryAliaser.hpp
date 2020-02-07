@@ -17,8 +17,9 @@ namespace PathFinder
     public:
         PipelineResourceMemoryAliaser(const RenderPassExecutionGraph* renderPassGraph);
 
-        void AddAllocation(PipelineResourceSchedulingInfo* allocation);
+        void AddSchedulingInfo(PipelineResourceSchedulingInfo* schedulingInfo);
         uint64_t Alias();
+        bool IsEmpty() const;
 
     private:
         struct MemoryRegion
@@ -63,7 +64,7 @@ namespace PathFinder
         uint64_t mGlobalStartOffset = 0;
         uint64_t mAvailableMemory = 0;
 
-        AliasingMetadataSet mAllocations;
+        AliasingMetadataSet mSchedulingInfos;
         
         const RenderPassExecutionGraph* mRenderPassGraph;
     };

@@ -44,28 +44,38 @@ namespace PathFinder
             return resourceObjects.SchedulingInfo.get();
         }
         
-      /*  resourceObjects.SchedulingInfo = std::make_unique<PipelineResourceSchedulingInfo>(
-            HAL::Buffer<BufferDataT>::ConstructResourceFormat(mDevice, capacity, perElementAlignment));*/
+        HAL::Buffer::Properties<BufferDataT> properties{ capacity, perElementAlignment };
+
+        resourceObjects.SchedulingInfo = std::make_unique<PipelineResourceSchedulingInfo>(
+            HAL::Buffer::ConstructResourceFormat(mDevice, properties));
 
         resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
         {
-            PipelineResourceSchedulingInfo* allocation = resourceObjects.SchedulingInfo.get();
-            HAL::Heap* heap = mBufferHeap.get();
+            PipelineResourceSchedulingInfo* schedulingInfo = resourceObjects.SchedulingInfo.get();
+            HAL::Heap* heap = nullptr;
 
-            // Store as byte buffer and alight manually
-            auto stride = Foundation::MemoryUtils::Align(sizeof(BufferDataT), perElementAlignment);
-            auto bufferSize = stride * capacity;
+            switch (schedulingInfo->ResourceFormat().ResourceAliasingGroup())
+            { 
+            case HAL::HeapAliasingGroup::Buffers: heap = mBufferHeap.get(); break;
+            case HAL::HeapAliasingGroup::Universal: heap = mUniversalHeap.get(); break;
+            case HAL::HeapAliasingGroup::RTDSTextures:
+            case HAL::HeapAliasingGroup::NonRTDSTextures:
+                assert_format(false, "Should never be hit");
+            }
 
-            resourceObjects.Buffer = std::make_unique<BufferPipelineResource>();
-
-            /*resourceObjects.Buffer->Resource = std::make_unique<HAL::Buffer<uint8_t>>(
-                *mDevice, *heap, allocation->AliasingInfo.HeapOffset, bufferSize, 1,
-                allocation->InitialStates(), allocation->ExpectedStates()
-            );*/
-
+            HAL::Buffer::Properties<BufferDataT> finalProperties{ capacity, perElementAlignment, schedulingInfo->InitialStates(), schedulingInfo->ExpectedStates() };
+            resourceObjects.Buffer->Resource = mResourceProducer->NewBuffer(finalProperties, *heap, schedulingInfo->AliasingInfo.HeapOffset);
             resourceObjects.Buffer->Resource->SetDebugName(resourceName.ToString());
 
-            CreateDescriptors(*resourceObjects.Buffer, *resourceObjects.SchedulingInfo, stride);
+            for (const auto& [passName, passMetadata] : schedulingInfo->AllPassesMetadata())
+            {
+                BufferPipelineResource::PassMetadata& newResourcePerPassData = resourceObjects.Buffer->AllocateMetadateForPass(passName);
+                newResourcePerPassData.IsCBDescriptorRequested = passMetadata.CreateBufferCBDescriptor;
+                newResourcePerPassData.IsSRDescriptorRequested = passMetadata.CreateBufferSRDescriptor;
+                newResourcePerPassData.IsUADescriptorRequested = passMetadata.CreateBufferUADescriptor;
+                newResourcePerPassData.RequiredState = passMetadata.OptimizedState;
+                newResourcePerPassData.ShaderVisibleFormat = passMetadata.ShaderVisibleFormat;
+            }
         };
 
         return resourceObjects.SchedulingInfo.get();

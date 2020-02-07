@@ -2,7 +2,6 @@
 
 #include "PipelineResourceStorage.hpp"
 #include "RenderSurfaceDescription.hpp"
-#include "ResourceDescriptorStorage.hpp"
 #include "GlobalRootConstants.hpp"
 #include "PerFrameRootConstants.hpp"
 #include "PipelineResource.hpp"
@@ -13,6 +12,8 @@
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
 #include "../Foundation/MemoryUtils.hpp"
+#include "../Memory/GPUResourceProducer.hpp"
+#include "../Memory/PoolDescriptorAllocator.hpp"
 
 #include <vector>
 #include <unordered_map>
@@ -61,14 +62,14 @@ namespace PathFinder
             std::unique_ptr<TexturePipelineResource> Texture;
             std::unique_ptr<BufferPipelineResource> Buffer;
 
-            const HAL::Resource* GetResource() const;
+            const Memory::GPUResource* GetGPUResource() const;
         };
 
         PipelineResourceStorage(
             HAL::Device* device,
-            ResourceDescriptorStorage* descriptorStorage, 
+            Memory::GPUResourceProducer* resourceProducer,
+            Memory::PoolDescriptorAllocator* descriptorAllocator,
             const RenderSurfaceDescription& defaultRenderSurface,
-            uint8_t simultaneousFramesInFlight,
             const RenderPassExecutionGraph* passExecutionGraph
         );
 
@@ -76,12 +77,8 @@ namespace PathFinder
             PassName passName, const HAL::Buffer<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer
         )>;*/
 
-        void BeginFrame(uint64_t newFrameNumber);
-        void EndFrame(uint64_t completedFrameNumber);
-
-        const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName) const;
-        const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName) const;
-        const HAL::UADescriptor& GetUnorderedAccessDescriptor(Foundation::Name resourceName) const;
+        const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName);
+        const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName);
         const HAL::RTDescriptor& GetCurrentBackBufferDescriptor() const;
         
         void SetCurrentBackBufferIndex(uint8_t index);
@@ -100,12 +97,10 @@ namespace PathFinder
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
         const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
-        const HAL::Resource* GetResource(ResourceName resourceName) const;
-        const HAL::ResourceBarrierCollection& TransitionAndAliasingBarriersForCurrentPass();
+        const Memory::GPUResource* GetGPUResource(ResourceName resourceName) const;
+        const HAL::ResourceBarrierCollection& AliasingBarriersForCurrentPass();
         const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();
-        const HAL::ResourceBarrierCollection& ReadbackBarriers();
         const Foundation::Name CurrentPassName() const;
-        const ResourceDescriptorStorage* DescriptorStorage() const;
 
         //void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
@@ -138,17 +133,18 @@ namespace PathFinder
         const PerPassObjects* GetPerPassObjects(PassName name) const;
         const PerResourceObjects* GetPerResourceObjects(ResourceName name) const;
 
-        void CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceSchedulingInfo& allocator);
-        void CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceSchedulingInfo& allocator, uint64_t explicitStride);
         void CreateDebugBuffers(const RenderPassExecutionGraph* passExecutionGraph);
-        void PrepareAllocationsForOptimization();
+        void PrepareSchedulingInfoForOptimization();
         void CreateAliasingAndUAVBarriers();
 
         HAL::Device* mDevice;
+        Memory::GPUResourceProducer* mResourceProducer;
+        Memory::PoolDescriptorAllocator* mDescriptorAllocator;
 
         std::unique_ptr<HAL::Heap> mRTDSHeap;
         std::unique_ptr<HAL::Heap> mNonRTDSHeap;
         std::unique_ptr<HAL::Heap> mBufferHeap;
+        std::unique_ptr<HAL::Heap> mUniversalHeap;
 
         RenderSurfaceDescription mDefaultRenderSurface;
 
@@ -157,17 +153,11 @@ namespace PathFinder
         PipelineResourceMemoryAliaser mRTDSMemoryAliaser;
         PipelineResourceMemoryAliaser mNonRTDSMemoryAliaser;
         PipelineResourceMemoryAliaser mBufferMemoryAliaser;
+        PipelineResourceMemoryAliaser mUniversalMemoryAliaser;
 
         // This class's logic works with 'the current' render pass.
         // Saves the user from passing current pass name in every possible API.
         PassName mCurrentPassName;
-
-        // Amount of frames to be scheduled until a CPU wait is required.
-        // To be used by ring buffers.
-        uint8_t mSimultaneousFramesInFlight;
-
-        // Manages descriptor heaps
-        ResourceDescriptorStorage* mDescriptorStorage;
 
         // Dedicated storage for back buffer descriptors.
         // No fancy management is required.

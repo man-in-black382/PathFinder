@@ -12,6 +12,7 @@
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
 #include "../Memory/PoolCommandListAllocator.hpp"
+#include "../Memory/GPUResource.hpp"
 
 namespace PathFinder
 {
@@ -38,7 +39,7 @@ namespace PathFinder
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
         virtual void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
-        void BindExternalBuffer(const HAL::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         template <class T>
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);

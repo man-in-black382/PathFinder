@@ -71,7 +71,7 @@ namespace PathFinder
             float dispatchZ = ceilf((float)material.DistanceAtlasIndirectionMap->Dimensions().Depth / 8);
 
             // Setup common CB data
-            cbContent->DisplacementMapSRVIndex = 
+          /*  cbContent->DisplacementMapSRVIndex = 
                 resourceProvider->GetExternalTextureDescriptorTableIndex(material.DisplacementMap, HAL::ShaderRegister::ShaderResource);
 
             cbContent->DistanceAltasIndirectionMapUAVIndex = 
@@ -79,7 +79,7 @@ namespace PathFinder
 
             cbContent->DistanceAltasUAVIndex =
                 resourceProvider->GetExternalTextureDescriptorTableIndex(material.DistanceAtlas, HAL::ShaderRegister::UnorderedAccess);
-
+*/
             cbContent->DisplacementMapSize = glm::uvec4{
                 material.DisplacementMap->Dimensions().Width,
                 material.DisplacementMap->Dimensions().Height,

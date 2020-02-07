@@ -4,8 +4,8 @@
 namespace PathFinder
 {
 
-    ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage, const ResourceDescriptorStorage* descriptorStorage)
-        : mResourceStorage{ storage }, mDescriptorStorage{ descriptorStorage } {}
+    ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage)
+        : mResourceStorage{ storage } {}
 
     uint32_t ResourceProvider::GetTextureDescriptorTableIndex(Foundation::Name resourceName) const
     {
@@ -17,43 +17,19 @@ namespace PathFinder
 
         if (perPassData->IsSRDescriptorRequested)
         {
-            auto srDescriptor = mResourceStorage->DescriptorStorage()->GetSRDescriptor(resource->Resource.get(), perPassData->ShaderVisibleFormat);
+            auto srDescriptor = resource->Resource->GetOrCreateSRDescriptor();
             return srDescriptor->IndexInHeapRange();
         } 
 
         if (perPassData->IsUADescriptorRequested)
         {
-            auto uaDescriptor = mResourceStorage->DescriptorStorage()->GetUADescriptor(resource->Resource.get(), perPassData->ShaderVisibleFormat);
+            auto uaDescriptor = resource->Resource->GetOrCreateUADescriptor();
             return uaDescriptor->IndexInHeapRange();
         }
 
         assert_format(perPassData, "Resource ", resourceName.ToString(), " was not scheduled for reading in this pass");
 
         return 0;
-    }
-
-    uint32_t ResourceProvider::GetExternalTextureDescriptorTableIndex(const HAL::Texture* texture, HAL::ShaderRegister registerType)
-    {
-        switch (registerType)
-        {
-        case HAL::ShaderRegister::ShaderResource:
-        {
-            auto descriptor = mDescriptorStorage->GetSRDescriptor(texture);
-            assert_format(descriptor, "Descriptor for texture does not exist");
-            return descriptor->IndexInHeapRange();
-        }
-            
-        case HAL::ShaderRegister::UnorderedAccess:
-        {
-            auto descriptor = mDescriptorStorage->GetUADescriptor(texture);
-            assert_format(descriptor, "Descriptor for texture does not exist");
-            return descriptor->IndexInHeapRange();
-        }
-
-        default:
-            assert_format(false, "Invalid register type");
-            return 0;
-        }
     }
 
 }

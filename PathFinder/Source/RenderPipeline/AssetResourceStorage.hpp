@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ResourceDescriptorStorage.hpp"
-
 #include "../HardwareAbstractionLayer/Texture.hpp"
 #include "../HardwareAbstractionLayer/ResourceBarrier.hpp"
 
@@ -24,7 +22,7 @@ namespace PathFinder
     class AssetResourceStorage
     {
     public:
-        AssetResourceStorage(const HAL::Device* device, ResourceDescriptorStorage* descriptorStorage);
+        AssetResourceStorage(const HAL::Device* device);
 
         GPUDescriptorIndex StoreAsset(std::shared_ptr<HAL::Texture> resource);
 
@@ -35,7 +33,6 @@ namespace PathFinder
 
     private:
         const HAL::Device* mDevice;
-        ResourceDescriptorStorage* mDescriptorStorage;
         std::vector<std::shared_ptr<HAL::Resource>> mAssets;
 
         // Barriers for resources that were processed by asset-processing

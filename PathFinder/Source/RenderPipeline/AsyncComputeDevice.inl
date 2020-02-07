@@ -34,7 +34,7 @@ namespace PathFinder
 
     template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::BindExternalBuffer(
-        const HAL::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+        const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         if (mAppliedComputeState || mAppliedRayTracingState)
         {
@@ -47,9 +47,9 @@ namespace PathFinder
 
             switch (registerType)
             {
-            case HAL::ShaderRegister::ShaderResource: mCommandList->SetComputeRootShaderResource(buffer, index->IndexInSignature); break;
-            case HAL::ShaderRegister::ConstantBuffer: mCommandList->SetComputeRootConstantBuffer(buffer, index->IndexInSignature); break;
-            case HAL::ShaderRegister::UnorderedAccess: mCommandList->SetComputeRootUnorderedAccessResource(buffer, index->IndexInSignature); break;
+            case HAL::ShaderRegister::ShaderResource: mCommandList->SetComputeRootShaderResource(*buffer.HALBuffer(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::ConstantBuffer: mCommandList->SetComputeRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::UnorderedAccess: mCommandList->SetComputeRootUnorderedAccessResource(*buffer.HALBuffer(), index->IndexInSignature); break;
             case HAL::ShaderRegister::Sampler:
                 assert_format(false, "Incompatible register type");
             }
@@ -80,35 +80,21 @@ namespace PathFinder
         /*mCommandList->SetComputeRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
         mCommandList->SetComputeRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);*/
 
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2D, 0))
-        {
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 3);
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 4);
-        }
+        HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
+        HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
 
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture3D, 0))
-        {
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 5);
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 6);
-        }
+        // Alias different registers to one GPU address
+        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 3);
+        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 4);
+        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 5);
+        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 6);
+        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 7);
 
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::Texture2DArray, 0))
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 7);
-
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2D, 0))
-        {
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 8);
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 9);
-        }
-
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture3D, 0))
-        {
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 10);
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 11);
-        }
-
-        if (auto baseDescriptor = mUniversalGPUDescriptorHeap->GetDescriptor(HAL::CBSRUADescriptorHeap::Range::UATexture2DArray, 0))
-            mCommandList->SetComputeRootDescriptorTable(*baseDescriptor, 12);
+        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 8);
+        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 9);
+        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 10);
+        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 11);
+        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 12);
     }
 
     template <class CommandListT, class CommandQueueT>

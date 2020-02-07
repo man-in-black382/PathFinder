@@ -120,9 +120,9 @@ namespace HAL
         mList->SetComputeRootUnorderedAccessView(rootParameterIndex, resource.GPUVirtualAddress());
     }
 
-    void ComputeCommandListBase::SetComputeRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex)
+    void ComputeCommandListBase::SetComputeRootDescriptorTable(DescriptorAddress tableStartAddress, uint32_t rootParameterIndex)
     {
-        mList->SetComputeRootDescriptorTable(rootParameterIndex, baseDescriptor.GPUHandle());
+        mList->SetComputeRootDescriptorTable(rootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE{ tableStartAddress });
     }
 
     void ComputeCommandListBase::SetDescriptorHeap(const CBSRUADescriptorHeap& heap)
@@ -202,9 +202,9 @@ namespace HAL
         mList->SetGraphicsRootUnorderedAccessView(rootParameterIndex, resource.GPUVirtualAddress());
     }
 
-    void GraphicsCommandListBase::SetGraphicsRootDescriptorTable(const GPUDescriptor& baseDescriptor, uint32_t rootParameterIndex)
+    void GraphicsCommandListBase::SetGraphicsRootDescriptorTable(DescriptorAddress tableStartAddress, uint32_t rootParameterIndex)
     {
-        mList->SetGraphicsRootDescriptorTable(rootParameterIndex, baseDescriptor.GPUHandle());
+        mList->SetGraphicsRootDescriptorTable(rootParameterIndex, D3D12_GPU_DESCRIPTOR_HANDLE{ tableStartAddress });
     }
 
 

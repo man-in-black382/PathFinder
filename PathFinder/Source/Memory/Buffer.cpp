@@ -3,6 +3,11 @@
 namespace Memory
 {
 
+    Buffer::~Buffer()
+    {
+        if (StateTracker() && mBufferPtr) StateTracker()->StopTrakingResource(HALBuffer());
+    }
+
     void Buffer::RequestWrite()
     {
         GPUResource::RequestWrite();
@@ -17,7 +22,7 @@ namespace Memory
 
     const HAL::Buffer* Buffer::HALBuffer() const
     {
-        return mUploadStrategy == GPUResource::UploadStrategy::Automatic ? 
+        return UploadStrategy() == GPUResource::UploadStrategy::Automatic ? 
             mBufferPtr.get() : CurrentFrameUploadBuffer();
     }
 

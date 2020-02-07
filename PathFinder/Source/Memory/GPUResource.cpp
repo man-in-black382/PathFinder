@@ -7,20 +7,16 @@ namespace Memory
         UploadStrategy uploadStrategy,
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator,
+        PoolDescriptorAllocator* descriptorAllocator,
         HAL::CopyCommandListBase* commandList)
         :
         mUploadStrategy{ uploadStrategy },
         mStateTracker{ uploadStrategy == UploadStrategy::DirectAccess ? nullptr : stateTracker },
-        mAllocator{ resourceAllocator },
-        mCommandList{ commandList }
-    {
-        if (mStateTracker) mStateTracker->StartTrakingResource(HALResource());
-    }
+        mResourceAllocator{ resourceAllocator },
+        mDescriptorAllocator{ descriptorAllocator },
+        mCommandList{ commandList } {}
 
-    GPUResource::~GPUResource() 
-    {
-        if (mStateTracker) mStateTracker->StopTrakingResource(HALResource());
-    }
+    GPUResource::~GPUResource() {}
 
     void GPUResource::RequestWrite()
     {
@@ -31,7 +27,7 @@ namespace Memory
         }
 
         HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
-        mUploadBuffers.emplace(mAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
+        mUploadBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
 
         if (mStateTracker)
         {
@@ -55,7 +51,7 @@ namespace Memory
         }
 
         HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
-        mReadbackBuffers.emplace(mAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
+        mReadbackBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
 
         if (mStateTracker)
         {
@@ -98,6 +94,11 @@ namespace Memory
     void GPUResource::SetCommandList(HAL::CopyCommandListBase* commandList)
     {
         mCommandList = commandList;
+    }
+
+    void GPUResource::SetDebugName(const std::string& name)
+    {
+        
     }
 
     const HAL::Resource* GPUResource::HALResource() const

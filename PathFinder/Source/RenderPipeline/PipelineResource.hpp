@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../Foundation/Name.hpp"
-#include "../HardwareAbstractionLayer/Texture.hpp"
-#include "../HardwareAbstractionLayer/Buffer.hpp"
+#include "../Memory/GPUResourceProducer.hpp"
 
 #include <functional>
 #include <optional>
@@ -28,14 +27,14 @@ namespace PathFinder
         PassMetadata& AllocateMetadateForPass(Foundation::Name passName);
         const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;
 
-        std::unique_ptr<ResourceT> Resource;
+        ResourceT Resource;
 
     private:
         std::unordered_map<Foundation::Name, PassMetadata> mPerPassData;
     };
 
-    class TexturePipelineResource : public PipelineResource<HAL::Texture> {};
-    class BufferPipelineResource : public PipelineResource<HAL::Buffer> {};
+    class TexturePipelineResource : public PipelineResource<Memory::GPUResourceProducer::TexturePtr> {};
+    class BufferPipelineResource : public PipelineResource<Memory::GPUResourceProducer::BufferPtr> {};
 
 }
 

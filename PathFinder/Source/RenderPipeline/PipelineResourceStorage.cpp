@@ -10,81 +10,47 @@ namespace PathFinder
 {
 
     PipelineResourceStorage::PipelineResourceStorage(
-        HAL::Device* device, ResourceDescriptorStorage* descriptorStorage,
-        const RenderSurfaceDescription& defaultRenderSurface, uint8_t simultaneousFramesInFlight,
+        HAL::Device* device, 
+        Memory::GPUResourceProducer* resourceProducer,
+        Memory::PoolDescriptorAllocator* descriptorAllocator,
+        const RenderSurfaceDescription& defaultRenderSurface,
         const RenderPassExecutionGraph* passExecutionGraph)
         :
         mDevice{ device },
         mStateOptimizer{ passExecutionGraph },
         mRTDSMemoryAliaser{ passExecutionGraph },
         mNonRTDSMemoryAliaser{ passExecutionGraph },
+        mUniversalMemoryAliaser{ passExecutionGraph },
         mBufferMemoryAliaser{ passExecutionGraph },
         mDefaultRenderSurface{ defaultRenderSurface },
-        mDescriptorStorage{ descriptorStorage },
-        mSimultaneousFramesInFlight{ simultaneousFramesInFlight }/*,
+        mResourceProducer{ resourceProducer },
+        mDescriptorAllocator{ descriptorAllocator }/*,
         mGlobalRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload },
         mPerFrameRootConstantsBuffer{*device, 1, simultaneousFramesInFlight, 256, HAL::CPUAccessibleHeapType::Upload }*/
     {
         CreateDebugBuffers(passExecutionGraph);
     }
 
-    void PipelineResourceStorage::BeginFrame(uint64_t newFrameNumber)
-    {
-       /* for (auto& [passName, passObjects] : mPerPassObjects)
-        {
-            if (passObjects.PassConstantBuffer)
-            {
-                passObjects.PassConstantBuffer->PrepareMemoryForNewFrame(newFrameNumber);
-            }
-        }
-
-        mGlobalRootConstantsBuffer.PrepareMemoryForNewFrame(newFrameNumber);
-        mPerFrameRootConstantsBuffer.PrepareMemoryForNewFrame(newFrameNumber);*/
-    }
-
-    void PipelineResourceStorage::EndFrame(uint64_t completedFrameNumber)
-    {
-      /*  for (auto& [passName, passObjects] : mPerPassObjects)
-        {
-            if (passObjects.PassConstantBuffer)
-            {
-                passObjects.PassConstantBuffer->DiscardMemoryForCompletedFrames(completedFrameNumber);
-            }
-        }
-
-        mGlobalRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameNumber);
-        mPerFrameRootConstantsBuffer.DiscardMemoryForCompletedFrames(completedFrameNumber);*/
-    }
-
-    const HAL::RTDescriptor& PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName) const
+    const HAL::RTDescriptor& PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
     {
         const TexturePipelineResource* pipelineResource = GetPipelineTextureResource(resourceName);
-        assert_format(pipelineResource, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
-
-        std::optional<HAL::ColorFormat> format = std::nullopt;
+        assert_format(pipelineResource, "Resource ", resourceName.ToString(), " doesn't exist");
 
         auto perPassData = pipelineResource->GetMetadataForPass(mCurrentPassName);
-        if (perPassData) format = perPassData->ShaderVisibleFormat;
-
-        auto descriptor = mDescriptorStorage->GetRTDescriptor(pipelineResource->Resource.get(), format);
-
-        return *descriptor;
+        assert_format(perPassData && perPassData->IsRTDescriptorRequested, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
+        
+        return *pipelineResource->Resource->GetOrCreateRTDescriptor();
     }
 
-    const HAL::DSDescriptor& PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName) const
+    const HAL::DSDescriptor& PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
     {
         const TexturePipelineResource* pipelineResource = GetPipelineTextureResource(resourceName);
-        assert_format(pipelineResource, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
-        auto descriptor = mDescriptorStorage->GetDSDescriptor(pipelineResource->Resource.get());
-        return *descriptor;
-    }
+        assert_format(pipelineResource, "Resource ", resourceName.ToString(), " doesn't exist");
 
-    const HAL::UADescriptor& PipelineResourceStorage::GetUnorderedAccessDescriptor(Foundation::Name resourceName) const
-    {
-        const HAL::Resource* resource = GetResource(resourceName);
-        assert_format(resource, "Resource ", resourceName.ToString(), " was not scheduled to be used as unordered access resource");
-        auto descriptor = mDescriptorStorage->GetUADescriptor(resource);
-        return *descriptor;
+        auto perPassData = pipelineResource->GetMetadataForPass(mCurrentPassName);
+        assert_format(perPassData && perPassData->IsDSDescriptorRequested, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
+
+        return *pipelineResource->Resource->GetOrCreateDSDescriptor();
     }
 
     const HAL::RTDescriptor& PipelineResourceStorage::GetCurrentBackBufferDescriptor() const
@@ -104,18 +70,15 @@ namespace PathFinder
 
     void PipelineResourceStorage::AllocateScheduledResources()
     {
-        PrepareAllocationsForOptimization();
+        PrepareSchedulingInfoForOptimization();
 
         mStateOptimizer.Optimize();
 
-        auto RTDSHeapSize = mRTDSMemoryAliaser.Alias();
-        auto nonRTDSHeapSize = mNonRTDSMemoryAliaser.Alias();
-        auto bufferHeapSize = mBufferMemoryAliaser.Alias();
-
-        mRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, RTDSHeapSize, HAL::HeapAliasingGroup::RTDSTextures);
-        mNonRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, nonRTDSHeapSize, HAL::HeapAliasingGroup::NonRTDSTextures);
-        mBufferHeap = std::make_unique<HAL::Heap>(*mDevice, bufferHeapSize, HAL::HeapAliasingGroup::Buffers);
-
+        if (!mRTDSMemoryAliaser.IsEmpty()) mRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::RTDSTextures);
+        if (!mNonRTDSMemoryAliaser.IsEmpty()) mNonRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mNonRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::NonRTDSTextures);
+        if (!mBufferMemoryAliaser.IsEmpty()) mBufferHeap = std::make_unique<HAL::Heap>(*mDevice, mBufferMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Buffers);
+        if (!mUniversalMemoryAliaser.IsEmpty()) mUniversalHeap = std::make_unique<HAL::Heap>(*mDevice, mUniversalMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Universal);
+ 
         for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
         {
             resourceObjects.SchedulingInfo->AllocationAction();
@@ -128,7 +91,7 @@ namespace PathFinder
     {
         for (auto i = 0; i < swapChain.BackBuffers().size(); i++)
         {
-            mBackBufferDescriptors.push_back(mDescriptorStorage->EmplaceRTDescriptorIfNeeded(swapChain.BackBuffers()[i].get()));
+            //mBackBufferDescriptors.push_back(mDescriptorStorage->EmplaceRTDescriptorIfNeeded(swapChain.BackBuffers()[i].get()));
         }
     }
 
@@ -190,11 +153,12 @@ namespace PathFinder
             PipelineResourceSchedulingInfo* schedulingInfo = resourceObjects.SchedulingInfo.get();
             HAL::Heap* heap = nullptr;
 
-            switch (schedulingInfo->AliasingInfo.HeapAliasingGroup)
+            switch (schedulingInfo->ResourceFormat().ResourceAliasingGroup())
             {
             case HAL::HeapAliasingGroup::RTDSTextures: heap = mRTDSHeap.get(); break;
             case HAL::HeapAliasingGroup::NonRTDSTextures: heap = mNonRTDSHeap.get(); break;
-            default: assert_format(false, "Should never be hit"); return;
+            case HAL::HeapAliasingGroup::Buffers: heap = mBufferHeap.get(); break;
+            case HAL::HeapAliasingGroup::Universal: heap = mUniversalHeap.get(); break;
             }
 
             resourceObjects.Texture = std::make_unique<TexturePipelineResource>();
@@ -202,13 +166,19 @@ namespace PathFinder
             HAL::Texture::Properties completeProperties{ 
                 format, kind, dimensions, optimizedClearValue, schedulingInfo->InitialStates(), schedulingInfo->ExpectedStates(), mipCount };
 
-            resourceObjects.Texture->Resource = std::make_unique<HAL::Texture>(
-                *mDevice, *heap, schedulingInfo->AliasingInfo.HeapOffset, completeProperties);
-
-            resourceObjects.Texture->
+            resourceObjects.Texture->Resource = mResourceProducer->NewTexture(textureProperties, *heap, schedulingInfo->AliasingInfo.HeapOffset);
             resourceObjects.Texture->Resource->SetDebugName(resourceName.ToString());
 
-            CreateDescriptors(*resourceObjects.Texture, *schedulingInfo);
+            for (const auto& [passName, passMetadata] : schedulingInfo->AllPassesMetadata())
+            {
+                TexturePipelineResource::PassMetadata& newResourcePerPassData = resourceObjects.Texture->AllocateMetadateForPass(passName);
+                newResourcePerPassData.IsRTDescriptorRequested = passMetadata.CreateTextureRTDescriptor;
+                newResourcePerPassData.IsDSDescriptorRequested = passMetadata.CreateTextureDSDescriptor;
+                newResourcePerPassData.IsSRDescriptorRequested = passMetadata.CreateTextureSRDescriptor;
+                newResourcePerPassData.IsUADescriptorRequested = passMetadata.CreateTextureUADescriptor;
+                newResourcePerPassData.RequiredState = passMetadata.OptimizedState;
+                newResourcePerPassData.ShaderVisibleFormat = passMetadata.ShaderVisibleFormat;
+            }
         };
 
         return resourceObjects.SchedulingInfo.get();
@@ -238,64 +208,6 @@ namespace PathFinder
         return &it->second;
     }
 
-    void PipelineResourceStorage::CreateDescriptors(TexturePipelineResource& resource, const PipelineResourceSchedulingInfo& schedulingInfo)
-    {
-        for (const auto& [passName, passMetadata] : schedulingInfo.AllPassesMetadata())
-        {
-            TexturePipelineResource::PassMetadata& newResourcePerPassData = resource.AllocateMetadateForPass(passName);
-
-            if (passMetadata.CreateTextureRTDescriptor)
-            {
-                newResourcePerPassData.IsRTDescriptorRequested = true;
-                mDescriptorStorage->EmplaceRTDescriptorIfNeeded(resource.Resource.get(), passMetadata.ShaderVisibleFormat);
-            }
-
-            if (passMetadata.CreateTextureDSDescriptor)
-            {
-                newResourcePerPassData.IsDSDescriptorRequested = true;
-                mDescriptorStorage->EmplaceDSDescriptorIfNeeded(resource.Resource.get());
-            }
-
-            if (passMetadata.CreateTextureSRDescriptor)
-            {
-                newResourcePerPassData.IsSRDescriptorRequested = true;
-                mDescriptorStorage->EmplaceSRDescriptorIfNeeded(resource.Resource.get(), passMetadata.ShaderVisibleFormat);
-            }
-
-            if (passMetadata.CreateTextureUADescriptor)
-            {
-                newResourcePerPassData.IsUADescriptorRequested = true;
-                mDescriptorStorage->EmplaceUADescriptorIfNeeded(resource.Resource.get(), passMetadata.ShaderVisibleFormat);
-            }
-        }
-    }
-
-    void PipelineResourceStorage::CreateDescriptors(BufferPipelineResource& resource, const PipelineResourceSchedulingInfo& schedulingInfo, uint64_t explicitStride)
-    {
-        for (const auto& [passName, passMetadata] : schedulingInfo.AllPassesMetadata())
-        {
-            BufferPipelineResource::PassMetadata& newResourcePerPassData = resource.AllocateMetadateForPass(passName);
-
-            if (passMetadata.CreateBufferCBDescriptor)
-            {
-                newResourcePerPassData.IsCBDescriptorRequested = true;
-                mDescriptorStorage->EmplaceCBDescriptorIfNeeded(resource.Resource.get(), explicitStride);
-            }
-
-            if (passMetadata.CreateBufferSRDescriptor)
-            {
-                newResourcePerPassData.IsSRDescriptorRequested = true;
-                mDescriptorStorage->EmplaceSRDescriptorIfNeeded(resource.Resource.get(), explicitStride);
-            }
-
-            if (passMetadata.CreateBufferUADescriptor)
-            {
-                newResourcePerPassData.IsUADescriptorRequested = true;
-                mDescriptorStorage->EmplaceUADescriptorIfNeeded(resource.Resource.get(), explicitStride);
-            }
-        }
-    }
-
     void PipelineResourceStorage::CreateDebugBuffers(const RenderPassExecutionGraph* passExecutionGraph)
     {
         //for (const RenderPass* pass : passExecutionGraph->AllPasses())
@@ -316,39 +228,30 @@ namespace PathFinder
         //}
     }
 
-    void PipelineResourceStorage::PrepareAllocationsForOptimization()
+    void PipelineResourceStorage::PrepareSchedulingInfoForOptimization()
     {
         for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
         {
-            PipelineResourceSchedulingInfo* allocation = resourceObjects.SchedulingInfo.get();
-            
-            allocation->GatherExpectedStates();
+            PipelineResourceSchedulingInfo* schedulingInfo = resourceObjects.SchedulingInfo.get();
+
+            schedulingInfo->GatherExpectedStates();
             mStateOptimizer.AddSchedulingInfo(resourceObjects.SchedulingInfo.get());
 
-            // Dispatch allocations to correct aliasers
-            std::visit(Foundation::MakeVisitor(
-                [this, allocation](const HAL::BufferKind& kind)
-                {
-                    allocation->AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::Buffers;
-                    mBufferMemoryAliaser.AddAllocation(allocation);
-                },
-                [this, allocation](const HAL::TextureKind& kind)
-                {
-                    HAL::ResourceState expectedStates = allocation->ExpectedStates();
-
-                    if (EnumMaskBitSet(expectedStates, HAL::ResourceState::RenderTarget) ||
-                        EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthWrite) ||
-                        EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthRead))
-                    {
-                        allocation->AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
-                        mRTDSMemoryAliaser.AddAllocation(allocation);
-                    }
-                    else {
-                        allocation->AliasingInfo.HeapAliasingGroup = HAL::HeapAliasingGroup::NonRTDSTextures;
-                        mNonRTDSMemoryAliaser.AddAllocation(allocation);
-                    }
-                }),
-                allocation->ResourceFormat().Kind());
+            switch (schedulingInfo->ResourceFormat().ResourceAliasingGroup())
+            {
+            case HAL::HeapAliasingGroup::RTDSTextures: 
+                mRTDSMemoryAliaser.AddSchedulingInfo(schedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::NonRTDSTextures:
+                mNonRTDSMemoryAliaser.AddSchedulingInfo(schedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::Buffers:
+                mBufferMemoryAliaser.AddSchedulingInfo(schedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::Universal:
+                mUniversalMemoryAliaser.AddSchedulingInfo(schedulingInfo);
+                break;
+            }
         }
     }
 
@@ -356,14 +259,14 @@ namespace PathFinder
     {
         for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
         {
-            const HAL::Resource* resource = resourceObjects.GetResource();
+            const Memory::GPUResource* resource = resourceObjects.GetGPUResource();
             assert_format(resource, "Resource must be allocated before creating any transitions");
             
             // Create aliasing barriers
             if (resourceObjects.SchedulingInfo->AliasingInfo.NeedsAliasingBarrier)
             {
                 PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.SchedulingInfo->FirstPassName());
-                passObjects.AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource });
+                passObjects.AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource->HALResource() });
             }
 
             for (auto& [passName, passData] : resourceObjects.SchedulingInfo->AllPassesMetadata())
@@ -373,13 +276,13 @@ namespace PathFinder
                 // Create unordered access barriers
                 if (passData.NeedsUAVBarrier)
                 {
-                    passObjects.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resource });
+                    passObjects.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resource->HALResource() });
                 }
             }
         }
     }
 
-   /* HAL::Buffer<uint8_t>* PipelineResourceStorage::RootConstantBufferForCurrentPass() 
+    /* HAL::Buffer<uint8_t>* PipelineResourceStorage::RootConstantBufferForCurrentPass()
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
         return passObjects.PassConstantBuffer.get();
@@ -437,7 +340,7 @@ namespace PathFinder
         return resourceObjects->Buffer.get();
     }
 
-    const HAL::Resource* PipelineResourceStorage::GetResource(ResourceName resourceName) const
+    const Memory::GPUResource* PipelineResourceStorage::GetGPUResource(ResourceName resourceName) const
     {
         const PerResourceObjects* resourceObjects = GetPerResourceObjects(resourceName);
 
@@ -446,11 +349,11 @@ namespace PathFinder
             return nullptr;
         }
         else {
-            return resourceObjects->GetResource();
+            return resourceObjects->GetGPUResource();
         }
     }
 
-    const HAL::ResourceBarrierCollection& PipelineResourceStorage::TransitionAndAliasingBarriersForCurrentPass()
+    const HAL::ResourceBarrierCollection& PipelineResourceStorage::AliasingBarriersForCurrentPass()
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
         return passObjects.AliasingBarriers;
@@ -462,19 +365,9 @@ namespace PathFinder
         return passObjects.UAVBarriers;
     }
 
-    const HAL::ResourceBarrierCollection& PipelineResourceStorage::ReadbackBarriers()
-    {
-        return mReadbackBarriers;
-    }
-
     const Foundation::Name PipelineResourceStorage::CurrentPassName() const
     {
         return mCurrentPassName;
-    }
-
-    const PathFinder::ResourceDescriptorStorage* PipelineResourceStorage::DescriptorStorage() const
-    {
-        return mDescriptorStorage;
     }
 
     //void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const
@@ -485,7 +378,7 @@ namespace PathFinder
     //    }*/
     //}
 
-    const HAL::Resource* PipelineResourceStorage::PerResourceObjects::GetResource() const
+    const Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource() const
     {
         if (Texture) return Texture->Resource.get();
         else if (Buffer) return Buffer->Resource.get();

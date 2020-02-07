@@ -279,7 +279,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderSurfaceDescription.cpp" />
-    <ClCompile Include="Source\RenderPipeline\ResourceDescriptorStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\ShaderManager.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\CameraInteractor.cpp" />
@@ -443,7 +442,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\PipelineNames.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderSurfaceDescription.hpp" />
-    <ClInclude Include="Source\RenderPipeline\ResourceDescriptorStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceView.hpp" />
     <ClInclude Include="Source\RenderPipeline\ShaderManager.hpp" />
