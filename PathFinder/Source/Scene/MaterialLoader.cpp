@@ -3,7 +3,7 @@
 namespace PathFinder
 {
     
-    MaterialLoader::MaterialLoader(const std::filesystem::path& fileRoot, const HAL::Device* device, AssetResourceStorage* assetStorage)
+    MaterialLoader::MaterialLoader(const std::filesystem::path& fileRoot, const HAL::Device* device)
         : mDevice{ device }, mAssetStorage{ assetStorage }, mTextureLoader{ fileRoot, device } {}
 
     Material MaterialLoader::LoadMaterial(

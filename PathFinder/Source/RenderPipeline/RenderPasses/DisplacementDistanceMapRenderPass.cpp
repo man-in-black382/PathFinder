@@ -66,9 +66,9 @@ namespace PathFinder
                 return;
             }*/
 
-            float dispatchX = ceilf((float)material.DistanceAtlasIndirectionMap->Dimensions().Width / 8);
-            float dispatchY = ceilf((float)material.DistanceAtlasIndirectionMap->Dimensions().Height / 8);
-            float dispatchZ = ceilf((float)material.DistanceAtlasIndirectionMap->Dimensions().Depth / 8);
+            float dispatchX = ceilf((float)material.DistanceField->Dimensions().Width / 8);
+            float dispatchY = ceilf((float)material.DistanceField->Dimensions().Height / 8);
+            float dispatchZ = ceilf((float)material.DistanceField->Dimensions().Depth / 8);
 
             // Setup common CB data
           /*  cbContent->DisplacementMapSRVIndex = 
@@ -87,9 +87,9 @@ namespace PathFinder
             };
 
             cbContent->DistanceAtlasIndirectionMapSize = glm::uvec4{
-                material.DistanceAtlasIndirectionMap->Dimensions().Width,
-                material.DistanceAtlasIndirectionMap->Dimensions().Height,
-                material.DistanceAtlasIndirectionMap->Dimensions().Depth,
+                material.DistanceField->Dimensions().Width,
+                material.DistanceField->Dimensions().Height,
+                material.DistanceField->Dimensions().Depth,
                 0.0
             };
 
@@ -99,7 +99,7 @@ namespace PathFinder
             commandRecorder->BindBuffer(writeOnlyConesBufferName, 1, 0, HAL::ShaderRegister::UnorderedAccess);
             commandRecorder->Dispatch(dispatchX, dispatchY, dispatchZ);
 
-            uint64_t largestDimension = material.DistanceAtlasIndirectionMap->Dimensions().LargestDimension();
+            uint64_t largestDimension = material.DistanceField->Dimensions().LargestDimension();
             uint32_t jumpFloodingStepCount = log2(largestDimension);
             uint32_t step = largestDimension / 2;
 

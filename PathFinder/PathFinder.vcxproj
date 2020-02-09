@@ -248,7 +248,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Memory\PoolCommandListAllocator.cpp" />
     <ClCompile Include="Source\Memory\SegregatedPoolsResourceAllocator.cpp" />
     <ClCompile Include="Source\Memory\Texture.cpp" />
-    <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
@@ -397,7 +396,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Memory\SegregatedPools.hpp" />
     <ClInclude Include="Source\Memory\SegregatedPoolsResourceAllocator.hpp" />
     <ClInclude Include="Source\Memory\Texture.hpp" />
-    <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
@@ -946,9 +944,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\Memory\PoolCommandListAllocator.inl" />
     <None Include="Source\Memory\SegregatedPools.inl" />
     <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl">
-      <FileType>CppHeader</FileType>
-    </None>
-    <None Include="Source\RenderPipeline\AssetResourceStorage.inl">
       <FileType>CppHeader</FileType>
     </None>
     <None Include="Source\RenderPipeline\AsyncComputeDevice.inl">

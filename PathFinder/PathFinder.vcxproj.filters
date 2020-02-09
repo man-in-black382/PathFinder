@@ -288,9 +288,6 @@
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\AssetResourceStorage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Scene\TextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1937,9 +1934,6 @@
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.inl">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\AssetResourceStorage.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Scene\TextureLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2720,9 +2714,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\AsyncComputeDevice.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\RenderPipeline\AssetResourceStorage.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="packages.config" />
