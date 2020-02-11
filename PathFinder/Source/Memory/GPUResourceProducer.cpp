@@ -49,13 +49,17 @@ namespace Memory
     void GPUResourceProducer::SetCommandList(HAL::CopyCommandListBase* commandList)
     {
         mCommandList = commandList;
+
+        for (GPUResource* resource : mAllocatedResources)
+        {
+            resource->SetCommandList(mCommandList);
+        }
     }
 
     void GPUResourceProducer::BeginFrame(uint64_t frameNumber)
     {
         for (GPUResource* resource : mAllocatedResources)
         {
-            resource->SetCommandList(mCommandList);
             resource->BeginFrame(frameNumber);
         }
     }

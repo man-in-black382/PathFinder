@@ -18,14 +18,17 @@ namespace HAL
             ResourceState ExpectedStateMask;
             uint16_t MipCount;
 
-            Properties(HAL::ResourceFormat::FormatVariant format, HAL::TextureKind kind, const Geometry::Dimensions& dimensions,
-                const HAL::ClearValue& optimizedClearValue, HAL::ResourceState initialStateMask, HAL::ResourceState expectedStateMask, uint16_t mipCount = 1);
+            Properties(ResourceFormat::FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
+                const ClearValue& optimizedClearValue, ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount = 1);
 
-            Properties(HAL::ResourceFormat::FormatVariant format, HAL::TextureKind kind, const Geometry::Dimensions& dimensions,
-                const HAL::ClearValue& optimizedClearValue, HAL::ResourceState initialStateMask, uint16_t mipCount = 1);
+            Properties(ResourceFormat::FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
+                ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount = 1);
 
-            Properties(HAL::ResourceFormat::FormatVariant format, HAL::TextureKind kind, const Geometry::Dimensions& dimensions,
-                HAL::ResourceState initialStateMask, uint16_t mipCount = 1);
+            Properties(ResourceFormat::FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
+                const ClearValue& optimizedClearValue, ResourceState initialStateMask, uint16_t mipCount = 1);
+
+            Properties(ResourceFormat::FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
+                ResourceState initialStateMask, uint16_t mipCount = 1);
         };
 
         Texture(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);

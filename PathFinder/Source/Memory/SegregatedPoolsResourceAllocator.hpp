@@ -35,7 +35,7 @@ namespace Memory
 
         struct SlotUserData
         {
-            std::optional<HeapIterator> HeapListIterator = std::nullopt;
+            std::optional<uint64_t> HeapIndex = std::nullopt;
 
             // We only store buffers inside pool slots
             // to keep them alive and reuse on new buffer allocation requests.
@@ -47,7 +47,7 @@ namespace Memory
         struct BucketUserData
         {
             // List of heaps associated with a bucket
-            HeapList* HeapListPtr = nullptr;
+            std::optional<uint64_t> HeapListIndex = std::nullopt;
         };
 
         // We store actual heaps inside segregated pool buckets 
@@ -57,6 +57,13 @@ namespace Memory
         using PoolsAllocation = SegregatedPoolsAllocation<BucketUserData, SlotUserData>;
         using PoolsBucket = SegregatedPoolsBucket<BucketUserData, SlotUserData>;
 
+        struct Allocation
+        {
+            PoolsAllocation PoolAllocation; 
+            Pools* PoolsPtr;
+            HAL::Heap* HeapPtr;
+        };
+
         struct Deallocation
         {
             HAL::Resource* Resource = nullptr;
@@ -64,11 +71,12 @@ namespace Memory
             Pools* PoolsThatProducedAllocation;
         };
 
-        std::pair<PoolsAllocation, Pools*> FindOrAllocateMostFittingFreeSlot(
-            uint64_t alloctionSizeInBytes, const HAL::ResourceFormat& resourceFormat, std::optional<HAL::CPUAccessibleHeapType> cpuHeapType);
+        Allocation FindOrAllocateMostFittingFreeSlot(
+            uint64_t allocationSizeInBytes, 
+            const HAL::ResourceFormat& resourceFormat, 
+            std::optional<HAL::CPUAccessibleHeapType> cpuHeapType);
 
-        uint64_t AdjustMemoryOffsetToPointInsideHeap(const PoolsAllocation& allocation);
-        uint64_t TotalHeapsSizeInBytes(const PoolsBucket& bucket);
+        uint64_t AdjustMemoryOffsetToPointInsideHeap(const SegregatedPoolsResourceAllocator::Allocation& allocation);
         void ExecutePendingDeallocations(uint64_t frameIndex);
 
         const HAL::Device* mDevice = nullptr;
@@ -86,22 +94,25 @@ namespace Memory
 
         // Buffer only upload heaps
         Pools mUploadPools;
+        std::vector<HeapList> mUploadHeapLists;
 
         // Buffer only readback heaps
         Pools mReadbackPools;
+        std::vector<HeapList> mReadbackHeapLists;
 
         // Used for universal heaps when supported by hardware.
         // Used only for default memory buffer heaps otherwise.
         Pools mDefaultUniversalOrBufferPools;
+        std::vector<HeapList> mDefaultUniversalOrBufferHeapLists;
 
         // RT & DS texture only, default memory heaps. Unused when universal heaps are supported by HW.
         Pools mDefaultRTDSPools;
+        std::vector<HeapList> mDefaultRTDSHeapLists;
 
         // Other texture type, default memory heaps. Unused when universal heaps are supported by HW.
         Pools mDefaultNonRTDSPools;
-
-        std::vector<HeapList> mHeapLists;
-
+        std::vector<HeapList> mDefaultNonRTDSHeapLists;
+        
         std::vector<std::vector<Deallocation>> mPendingDeallocations;
     };
 

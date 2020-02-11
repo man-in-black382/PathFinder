@@ -27,19 +27,17 @@ namespace Memory
     SegregatedPoolsResourceAllocator::TexturePtr SegregatedPoolsResourceAllocator::AllocateTexture(const HAL::Texture::Properties& properties)
     {
         HAL::ResourceFormat format = HAL::Texture::ConstructResourceFormat(mDevice, properties);
-        auto [allocation, pools] = FindOrAllocateMostFittingFreeSlot(format.ResourceSizeInBytes(), format, std::nullopt);
-
-        std::optional<HeapIterator> heapIt = allocation.Slot.UserData.HeapListIterator;
-        assert_format(heapIt, "Heap reference is missing. It must be present.");
+        Allocation allocation = FindOrAllocateMostFittingFreeSlot(format.ResourceSizeInBytes(), format, std::nullopt);
+        PoolsAllocation& poolAllocation = allocation.PoolAllocation;
 
         auto offsetInHeap = AdjustMemoryOffsetToPointInsideHeap(allocation);
 
-        auto deallocationCallback = [this, pools, allocation](HAL::Texture* texture)
+        auto deallocationCallback = [this, poolAllocation, poolsThatProducedAllocation = allocation.PoolsPtr](HAL::Texture* texture)
         {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ texture, allocation, pools });
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ texture, poolAllocation, poolsThatProducedAllocation });
         };
 
-        HAL::Texture* texture = new HAL::Texture{ *mDevice, *(*heapIt), offsetInHeap, properties };
+        HAL::Texture* texture = new HAL::Texture{ *mDevice, *allocation.HeapPtr, offsetInHeap, properties };
 
         return TexturePtr{ texture, deallocationCallback };
     }
@@ -55,11 +53,11 @@ namespace Memory
         mRingFrameTracker.ReleaseCompletedFrames(frameNumber);
     }
 
-    std::pair<SegregatedPoolsResourceAllocator::PoolsAllocation, SegregatedPoolsResourceAllocator::Pools*>
-        SegregatedPoolsResourceAllocator::FindOrAllocateMostFittingFreeSlot(
-        uint64_t alloctionSizeInBytes, const HAL::ResourceFormat& resourceFormat, std::optional<HAL::CPUAccessibleHeapType> cpuHeapType)
+    SegregatedPoolsResourceAllocator::Allocation SegregatedPoolsResourceAllocator::FindOrAllocateMostFittingFreeSlot(
+        uint64_t allocationSizeInBytes, const HAL::ResourceFormat& resourceFormat, std::optional<HAL::CPUAccessibleHeapType> cpuHeapType)
     {
         Pools* pools = nullptr;
+        std::vector<HeapList>* heapLists = nullptr;
 
         if (cpuHeapType)
         {
@@ -67,10 +65,12 @@ namespace Memory
             {
             case HAL::CPUAccessibleHeapType::Upload:
                 pools = &mUploadPools;
+                heapLists = &mUploadHeapLists;
                 break;
 
             case HAL::CPUAccessibleHeapType::Readback:
                 pools = &mReadbackPools;
+                heapLists = &mReadbackHeapLists;
                 break;
             }
         }
@@ -81,68 +81,71 @@ namespace Memory
             case HAL::HeapAliasingGroup::Universal:
             case HAL::HeapAliasingGroup::Buffers:
                 pools = &mDefaultUniversalOrBufferPools;
+                heapLists = &mDefaultUniversalOrBufferHeapLists;
                 break;
 
             case HAL::HeapAliasingGroup::RTDSTextures:
                 pools = &mDefaultRTDSPools;
+                heapLists = &mDefaultRTDSHeapLists;
                 break;
 
             case HAL::HeapAliasingGroup::NonRTDSTextures:
                 pools = &mDefaultNonRTDSPools;
+                heapLists = &mDefaultNonRTDSHeapLists;
                 break;
             }
         }
 
-        PoolsAllocation allocation = pools->Allocate(alloctionSizeInBytes);
+        PoolsAllocation allocation = pools->Allocate(allocationSizeInBytes);
+        Pools::Bucket& bucket = pools->GetBucket(allocation.BucketIndex);
+
+        std::optional<uint64_t> heapListIndex = bucket.UserData.HeapListIndex;
 
         // No heap list is associated with a bucket yet. Create and associate one.
-        if (!allocation.Bucket->UserData.HeapListPtr)
+        if (!heapListIndex)
         {
-            allocation.Bucket->UserData.HeapListPtr = &mHeapLists.emplace_back();
+            heapLists->emplace_back();
+            heapListIndex = heapLists->size() - 1;
+            bucket.UserData.HeapListIndex = heapListIndex;
         }
+        
+        HeapList& heapsList = heapLists->at(*heapListIndex);
+        std::optional<uint64_t> heapIndex = allocation.Slot.UserData.HeapIndex;
 
-        HeapList* heapList = allocation.Bucket->UserData.HeapListPtr;
-        std::optional<HeapIterator> heapIt = allocation.Slot.UserData.HeapListIterator;
-
-        auto totalHeapsSize = TotalHeapsSizeInBytes(*allocation.Bucket);
+        auto totalHeapsSize = heapsList.size() * mOnGrowSlotCount * bucket.SlotSize();
 
         bool outOfAllocatedMemory = allocation.Slot.MemoryOffset >= totalHeapsSize;
-        bool existingHeapReferencePresent = heapIt != std::nullopt;
+        bool existingHeapIndexPresent = heapIndex != std::nullopt;
 
-        assert_format(!(outOfAllocatedMemory && existingHeapReferencePresent),
-            "Implementation error. Heap reference is present but memory offset indicates that a new heap is required.");
+        assert_format(!(outOfAllocatedMemory && existingHeapIndexPresent),
+            "Implementation error. Heap index is present but memory offset indicates that a new heap is required.");
 
         // Out of memory means we need to add another heap
         if (outOfAllocatedMemory)
         {
-            auto newHeapSize = mOnGrowSlotCount * allocation.Bucket->SlotSize();
-            heapList->emplace_back(*mDevice, newHeapSize, resourceFormat.ResourceAliasingGroup(), cpuHeapType);
+            auto newHeapSize = mOnGrowSlotCount * bucket.SlotSize();
+            heapsList.emplace_back(*mDevice, newHeapSize, resourceFormat.ResourceAliasingGroup(), cpuHeapType);
         }
 
-        // Heap definitely exists at this point but its reference is not recorded in the slot,
+        // Heap definitely exists at this point but its index is not recorded in the slot,
         // which means this slot has not ever been requested yet.
-        if (!existingHeapReferencePresent)
+        if (!existingHeapIndexPresent)
         {
-            allocation.Slot.UserData.HeapListIterator = std::prev(heapList->end());
+            allocation.Slot.UserData.HeapIndex = heapsList.size() - 1;
         }
 
-        return std::make_pair(std::move(allocation), pools);
+        return { allocation, pools, &heapsList[*allocation.Slot.UserData.HeapIndex] };
     }
 
-    uint64_t SegregatedPoolsResourceAllocator::AdjustMemoryOffsetToPointInsideHeap(const PoolsAllocation& allocation)
+    uint64_t SegregatedPoolsResourceAllocator::AdjustMemoryOffsetToPointInsideHeap(const SegregatedPoolsResourceAllocator::Allocation& allocation)
     {
         // One heap is created per OnGrowSlotCount slots in a bucket.
         // So we can calculate an offset local to a particular heap.
-        uint64_t bytesPerHeap = mOnGrowSlotCount * allocation.Bucket->SlotSize();
-        uint64_t allocationHeapIndex = allocation.Slot.MemoryOffset / bytesPerHeap;
-        uint64_t localOffset = allocation.Slot.MemoryOffset - allocationHeapIndex * bytesPerHeap;
+        uint64_t bytesPerHeap = mOnGrowSlotCount * allocation.PoolsPtr->SlotSizeInBucket(allocation.PoolAllocation.BucketIndex);
+        uint64_t allocationHeapIndex = allocation.PoolAllocation.Slot.MemoryOffset / bytesPerHeap;
+        uint64_t localOffset = allocation.PoolAllocation.Slot.MemoryOffset - allocationHeapIndex * bytesPerHeap;
 
         return localOffset;
-    }
-
-    uint64_t SegregatedPoolsResourceAllocator::TotalHeapsSizeInBytes(const PoolsBucket& bucket)
-    {
-        return bucket.UserData.HeapListPtr->size() * mOnGrowSlotCount * bucket.SlotSize();
     }
 
     void SegregatedPoolsResourceAllocator::ExecutePendingDeallocations(uint64_t frameIndex)

@@ -1,6 +1,6 @@
 #define DDSKTX_IMPLEMENT
 
-#include "TextureLoader.hpp"
+#include "ResourceLoader.hpp"
 
 #include "../Foundation/Assert.hpp"
 
@@ -11,10 +11,10 @@
 namespace PathFinder
 {
 
-    TextureLoader::TextureLoader(const std::filesystem::path& rootTexturePath, const HAL::Device* device)
-        : mRootPath{ rootTexturePath }, mDevice{ device } {}
+    ResourceLoader::ResourceLoader(const std::filesystem::path& rootTexturePath, Memory::GPUResourceProducer* resourceProducer)
+        : mRootPath{ rootTexturePath }, mResourceProducer{ resourceProducer } {}
 
-    std::shared_ptr<HAL::Texture> TextureLoader::Load(const std::string& relativeFilePath) const
+    Memory::GPUResourceProducer::TexturePtr ResourceLoader::LoadTexture(const std::string& relativeFilePath) const
     {
         std::filesystem::path fullPath = mRootPath;
         fullPath += relativeFilePath;
@@ -43,50 +43,52 @@ namespace PathFinder
 
         assert_format(textureInfo.num_layers == 1, "Texture array are not supported yet");
 
-        std::shared_ptr<HAL::Texture> texture = nullptr;// AllocateTexture(textureInfo);
-        //HAL::ResourceFootprint textureFootprint{ *texture };
+        auto texture = AllocateTexture(textureInfo);
+        HAL::ResourceFootprint textureFootprint{ *texture->HALTexture() };
 
-        //auto uploadBuffer = std::make_shared<HAL::Buffer<uint8_t>>(
-        //    *mDevice, textureFootprint.TotalSizeInBytes(), 1, HAL::CPUAccessibleHeapType::Upload);
+        texture->RequestWrite();
 
-        //uint64_t bufferMemoryOffset = 0;
+        uint64_t textureMemoryOffset = 0;
 
-        //for (int mip = 0; mip < textureInfo.num_mips; mip++)
-        //{
-        //    ddsktx_sub_data subData;
-        //    ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, 0, mip);
+        for (int mip = 0; mip < textureInfo.num_mips; mip++)
+        {
+            ddsktx_sub_data subData;
+            ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, 0, mip);
 
-        //    const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
+            const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
 
-        //    bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes;
+            bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes;
 
-        //    if (imageDataSatisfiesTextureRowAlignment)
-        //    {
-        //        // Copy whole subresource
-        //        uploadBuffer->Write(bufferMemoryOffset, (uint8_t*)subData.buff, subData.size_bytes);
-        //        bufferMemoryOffset += subData.size_bytes;
-        //    }
-        //    else {
-        //        // Have to copy row-by-row
-        //        uint8_t* rowData = (uint8_t*)subData.buff;
+            if (imageDataSatisfiesTextureRowAlignment)
+            {
+                // Copy whole subresource
+                texture->Write((uint8_t*)subData.buff, textureMemoryOffset, subData.size_bytes);
+                textureMemoryOffset += subData.size_bytes;
+            }
+            else {
+                // Have to copy row-by-row
+                uint8_t* rowData = (uint8_t*)subData.buff;
 
-        //        for (auto row = 0; row < subData.height; ++row)
-        //        {
-        //            uploadBuffer->Write(bufferMemoryOffset, (uint8_t*)subData.buff, subData.row_pitch_bytes);
-        //            bufferMemoryOffset += mipFootprint.RowPitch();
-        //        }
-        //    }  
-        //}
+                for (auto row = 0; row < subData.height; ++row)
+                {
+                    texture->Write((uint8_t*)subData.buff, textureMemoryOffset, subData.row_pitch_bytes);
+                    textureMemoryOffset += mipFootprint.RowPitch();
+                }
+            }  
+        }
 
-        //mCopyDevice->QueueBufferToTextureCopy(uploadBuffer, texture, textureFootprint);
-        //texture->SetDebugName(fullPath.filename().string());
-
-        //input.close();
+        texture->SetDebugName(fullPath.filename().string());
+        input.close();
         
         return std::move(texture);
     }
 
-    HAL::TextureKind TextureLoader::ToKind(const ddsktx_texture_info& textureInfo) const
+    void ResourceLoader::StoreResource(const Memory::GPUResource& resource, const std::string& relativeFilePath) const
+    {
+
+    }
+
+    HAL::TextureKind ResourceLoader::ToKind(const ddsktx_texture_info& textureInfo) const
     {
         bool isArray = textureInfo.num_layers > 1;
 
@@ -96,7 +98,7 @@ namespace PathFinder
         return HAL::TextureKind::Texture1D;
     }
 
-    HAL::ResourceFormat::FormatVariant TextureLoader::ToResourceFormat(const ddsktx_format& parserFormat) const
+    HAL::ResourceFormat::FormatVariant ResourceLoader::ToResourceFormat(const ddsktx_format& parserFormat) const
     {
         switch (parserFormat)
         {
@@ -151,22 +153,15 @@ namespace PathFinder
         }
     }
 
-    std::shared_ptr<HAL::Texture> TextureLoader::AllocateTexture(const ddsktx_texture_info& textureInfo) const
+    Memory::GPUResourceProducer::TexturePtr ResourceLoader::AllocateTexture(const ddsktx_texture_info& textureInfo) const
     {
         HAL::ResourceFormat::FormatVariant format = ToResourceFormat(textureInfo.format);
         Geometry::Dimensions dimensions(textureInfo.width, textureInfo.height, textureInfo.depth);
         HAL::TextureKind kind = ToKind(textureInfo);
-        HAL::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 0.0 };
 
-        return nullptr;
+        HAL::Texture::Properties properties{ format, kind, dimensions, HAL::ResourceState::Common, HAL::ResourceState::AnyShaderAccess, (uint16_t)textureInfo.num_mips };
 
-        /*return std::make_shared<HAL::Texture>(
-            *mDevice, format, kind, dimensions, clearValue,
-            HAL::ResourceState::Common,
-            HAL::ResourceState::PixelShaderAccess |
-            HAL::ResourceState::NonPixelShaderAccess |
-            HAL::ResourceState::CopyDestination,
-            textureInfo.num_mips);*/
+        return mResourceProducer->NewTexture(properties);
     }
 
 }

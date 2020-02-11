@@ -22,7 +22,6 @@ namespace PathFinder
         mResourceProducer{ &mDevice, &mResourceAllocator, &mStateTracker, &mDescriptorAllocator },
         mMeshStorage{ &mDevice, mSimultaneousFramesInFlight },
         mPipelineResourceStorage{ &mDevice, &mResourceProducer, &mDescriptorAllocator, mDefaultRenderSurface, mPassExecutionGraph },
-        mAssetResourceStorage{ &mDevice },
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage  },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
@@ -41,6 +40,9 @@ namespace PathFinder
         mScene{ scene }
     {
         mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);
+        mAsyncComputeDevice.AllocateNewCommandList();
+        mGraphicsDevice.AllocateNewCommandList();
+        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
     }
 
     void RenderEngine::ScheduleAndAllocatePipelineResources()
@@ -57,24 +59,15 @@ namespace PathFinder
         mPipelineStateManager.CompileStates();
     }
 
-    void RenderEngine::ProcessAndTransferAssets()
+    void RenderEngine::UploadProcessAndTransferAssets()
     {
-        mAsyncComputeFence.IncrementExpectedValue();
-        mGraphicsFence.IncrementExpectedValue();
-
-        NotifyStartFrame(mAsyncComputeFence.ExpectedValue());
-
-        // Allocate and transfer GPU memory, compile states, perform initial resource transitions
-        mMeshStorage.UploadVerticesAndQueueForCopy();
+        mMeshStorage.UploadVertices();
         mMeshStorage.CreateBottomAccelerationStructures();
-
-        //mUploadCopyDevice.ExecuteCommands(nullptr, &mUploadFence);
 
         // Run setup and asset-processing passes
         RunRenderPasses(mPassExecutionGraph->OneTimePasses());
 
-        // Transition resources after asset-processing passes completed their work
-        mGraphicsDevice.CommandList()->InsertBarriers(mAssetResourceStorage.AssetPostProcessingBarriers());
+        // Upload and process assets
         mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
 
         // Build BLASes once 
@@ -86,13 +79,22 @@ namespace PathFinder
         mAsyncComputeDevice.CommandList()->InsertBarriers(mMeshStorage.BottomASBuildBarriers());
         mAsyncComputeDevice.ExecuteCommands(&mGraphicsFence, &mAsyncComputeFence);
 
-        NotifyEndFrame(mAsyncComputeFence.ExpectedValue());
+        // Execute readback commands
+        mGraphicsFence.IncrementExpectedValue();
+        mAssetStorage.ReadbackAllAssets();
+        mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
+
+        // Wait until both devices are finished
+        mGraphicsFence.StallCurrentThreadUntilCompletion();
+        mAsyncComputeFence.StallCurrentThreadUntilCompletion();
+
+        mAssetStorage.ReportAllAssetsPostprocessed();
     }
 
     void RenderEngine::Render()
     {
         if (mPassExecutionGraph->DefaultPasses().empty()) return;
-                
+
         mAsyncComputeFence.IncrementExpectedValue();
         mGraphicsFence.IncrementExpectedValue();
         mUploadFence.IncrementExpectedValue();
@@ -140,6 +142,11 @@ namespace PathFinder
             mPipelineStateManager.RecompileModifiedStates();
         }
 
+        // Discard old command lists, get new ones, propagate to resources
+        mAsyncComputeDevice.AllocateNewCommandList();
+        mGraphicsDevice.AllocateNewCommandList();
+        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+
         MoveToNextFrame();
     }
 
@@ -160,12 +167,7 @@ namespace PathFinder
         mDescriptorAllocator.BeginFrame(newFrameNumber);
         mCommandListAllocator.BeginFrame(newFrameNumber);
         mShaderManager.BeginFrame();
-        mGraphicsDevice.BeginFrame(newFrameNumber);
-        mAsyncComputeDevice.BeginFrame(newFrameNumber);
-
-        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
         mResourceProducer.BeginFrame(newFrameNumber);
-
         mMeshStorage.BeginFrame(newFrameNumber);
         mUIStorage.BeginFrame(newFrameNumber);
     }
@@ -173,8 +175,6 @@ namespace PathFinder
     void RenderEngine::NotifyEndFrame(uint64_t completedFrameNumber)
     {
         mShaderManager.EndFrame();
-        mGraphicsDevice.EndFrame(completedFrameNumber);
-        mAsyncComputeDevice.EndFrame(completedFrameNumber);
         mMeshStorage.EndFrame(completedFrameNumber);
         mUIStorage.EndFrame(completedFrameNumber);
         mResourceProducer.EndFrame(completedFrameNumber);

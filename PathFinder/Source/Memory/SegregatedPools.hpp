@@ -37,7 +37,7 @@ namespace Memory
     template <class BucketUserData, class SlotUserData>
     struct SegregatedPoolsAllocation
     {
-        SegregatedPoolsBucket<BucketUserData, SlotUserData>* Bucket;
+        uint64_t BucketIndex;
         typename Pool<SlotUserData>::SlotType Slot;
     };
 
@@ -52,6 +52,9 @@ namespace Memory
         using Bucket = SegregatedPoolsBucket<BucketUserData, SlotUserData>;
 
         SegregatedPools(uint64_t minimumBucketSlotSize, uint64_t bucketGrowSlotCount);
+
+        uint64_t SlotSizeInBucket(uint64_t bucketIndex) const;
+        Bucket& GetBucket(uint64_t index);
 
         Allocation Allocate(uint64_t allocationSize);
         void Deallocate(const Allocation& allocation);

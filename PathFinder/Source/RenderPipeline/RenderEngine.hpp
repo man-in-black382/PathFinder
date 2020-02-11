@@ -20,7 +20,7 @@
 #include "RenderPass.hpp"
 #include "MeshGPUStorage.hpp"
 #include "PipelineResourceStorage.hpp"
-#include "AssetResourceStorage.hpp"
+#include "PreprocessableAssetStorage.hpp"
 #include "ResourceScheduler.hpp"
 #include "RootConstantsUpdater.hpp"
 #include "GraphicsDevice.hpp"
@@ -44,12 +44,12 @@ namespace PathFinder
         RenderEngine(HWND windowHandle, const CommandLineParser& commandLineParser, Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
 
         void ScheduleAndAllocatePipelineResources();
-        void ProcessAndTransferAssets();
+        void UploadProcessAndTransferAssets();
         void Render();
         void FlushAllQueuedFrames();
 
     private:
-        HAL::DisplayAdapter FetchDefaultDisplayAdapter() const; 
+        HAL::DisplayAdapter FetchDefaultDisplayAdapter() const;
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
@@ -77,7 +77,7 @@ namespace PathFinder
 
         MeshGPUStorage mMeshStorage;
         PipelineResourceStorage mPipelineResourceStorage;
-        AssetResourceStorage mAssetResourceStorage;
+        PreprocessableAssetStorage mAssetStorage;
         ResourceScheduler mResourceScheduler;
         ResourceProvider mResourceProvider;
         RootConstantsUpdater mRootConstantsUpdater;
@@ -88,7 +88,7 @@ namespace PathFinder
         AsyncComputeDevice<> mAsyncComputeDevice;
         GPUCommandRecorder mCommandRecorder;
         UIGPUStorage mUIStorage;
-        RenderContext mContext;  
+        RenderContext mContext;
 
         HAL::Fence mGraphicsFence;
         HAL::Fence mAsyncComputeFence;
@@ -103,7 +103,8 @@ namespace PathFinder
 
     public:
         inline MeshGPUStorage& VertexGPUStorage() { return mMeshStorage; }
-        inline AssetResourceStorage& AssetGPUStorage() { return mAssetResourceStorage; }
+        inline PreprocessableAssetStorage& AssetStorage() { return mAssetStorage; }
+        inline Memory::GPUResourceProducer& ResourceProducer() { return mResourceProducer; }
         inline HAL::Device& Device() { return mDevice; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }

@@ -109,15 +109,9 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandQueueT>::BeginFrame(uint64_t newFrameNumber)
+    void AsyncComputeDevice<CommandListT, CommandQueueT>::AllocateNewCommandList()
     {
         mCommandList = mCommandListAllocator->AllocateCommandList<CommandListT>();
-    }
-
-    template <class CommandListT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandQueueT>::EndFrame(uint64_t completedFrameNumber)
-    {
-        
     }
 
     template <class CommandListT, class CommandQueueT>

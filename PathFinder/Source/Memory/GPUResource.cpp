@@ -21,7 +21,7 @@ namespace Memory
     void GPUResource::RequestWrite()
     {
         // Upload is already requested in current frame
-        if (mUploadBuffers.back().second == mFrameNumber)
+        if (!mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber)
         {
             return;
         }
@@ -45,7 +45,7 @@ namespace Memory
         assert_format(mUploadStrategy != UploadStrategy::DirectAccess, "DirectAccess upload resource does not support reads");
 
         // Readback is already requested in current frame
-        if (mReadbackBuffers.back().second == mFrameNumber)
+        if (!mReadbackBuffers.empty() && mReadbackBuffers.back().second == mFrameNumber)
         {
             return;
         }
@@ -76,10 +76,9 @@ namespace Memory
 
     void GPUResource::EndFrame(uint64_t frameNumber)
     {
-        // Get freshest completed upload buffer. Discard the rest.
+        // Release upload buffers for completed frames
         while (!mUploadBuffers.empty() && mUploadBuffers.front().second <= frameNumber)
         {
-            mCompletedUploadBuffer = std::move(mUploadBuffers.front().first);
             mUploadBuffers.pop();
         }
 
@@ -106,10 +105,22 @@ namespace Memory
         return nullptr;
     }
 
-    const HAL::Buffer* GPUResource::CurrentFrameUploadBuffer() const
+    HAL::Buffer* GPUResource::CurrentFrameUploadBuffer()
     {
         return !mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber ? 
             mUploadBuffers.back().first.get() : nullptr;
+    }
+
+    const HAL::Buffer* GPUResource::CurrentFrameUploadBuffer() const
+    {
+        return !mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber ?
+            mUploadBuffers.back().first.get() : nullptr;
+    }
+
+    HAL::Buffer* GPUResource::CurrentFrameReadbackBuffer()
+    {
+        return !mReadbackBuffers.empty() && mReadbackBuffers.back().second == mFrameNumber ?
+            mReadbackBuffers.back().first.get() : nullptr;
     }
 
     const HAL::Buffer* GPUResource::CurrentFrameReadbackBuffer() const

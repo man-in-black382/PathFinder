@@ -23,6 +23,19 @@ namespace HAL
         MipCount{ mipCount } {}
 
     Texture::Properties::Properties(
+        ResourceFormat::FormatVariant format, 
+        TextureKind kind, 
+        const Geometry::Dimensions& dimensions, 
+        ResourceState initialStateMask, 
+        ResourceState expectedStateMask, 
+        uint16_t mipCount)
+        :
+        Texture::Properties(
+            format, kind, dimensions,
+            ColorClearValue{ 0, 0, 0, 0 },
+            initialStateMask, expectedStateMask, mipCount) {}
+ 
+    Texture::Properties::Properties(
         ResourceFormat::FormatVariant format,
         TextureKind kind,
         const Geometry::Dimensions& dimensions,

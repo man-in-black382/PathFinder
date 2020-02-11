@@ -75,7 +75,7 @@ namespace PathFinder
     }
 
     template <class Vertex>
-    void MeshGPUStorage::CopyBuffersToDefaultHeap()
+    void MeshGPUStorage::SubmitBuffersToGPU()
     {
       /*  auto& uploadBuffers = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
         auto& finalBuffers = std::get<FinalBufferPackage<Vertex>>(mFinalBuffers);
@@ -143,11 +143,11 @@ namespace PathFinder
         //mInstanceTable.DiscardMemoryForCompletedFrames(completedFrameNumber);
     }
 
-    void MeshGPUStorage::UploadVerticesAndQueueForCopy()
+    void MeshGPUStorage::UploadVertices()
     {
-        CopyBuffersToDefaultHeap<Vertex1P1N1UV1T1BT>();
+        /*CopyBuffersToDefaultHeap<Vertex1P1N1UV1T1BT>();
         CopyBuffersToDefaultHeap<Vertex1P1N1UV>();
-        CopyBuffersToDefaultHeap<Vertex1P3>();
+        CopyBuffersToDefaultHeap<Vertex1P3>();*/
     }
 
     void MeshGPUStorage::CreateBottomAccelerationStructures()
@@ -170,29 +170,29 @@ namespace PathFinder
         /*assert_format(mCurrentFrameInsertedInstanceCount < mInstanceTable.PerFrameCapacity(),
             "Buffer capacity is static in current implementation and you have reached a maximum amount of updates per frame");*/
 
-        GPUInstanceTableEntry instanceEntry{
-            instance.Transformation().ModelMatrix(),
-            instance.Transformation().NormalMatrix(),
-            instance.AssosiatedMaterial()->AlbedoMapSRVIndex,
-            instance.AssosiatedMaterial()->NormalMapSRVIndex,
-            instance.AssosiatedMaterial()->RoughnessMapSRVIndex,
-            instance.AssosiatedMaterial()->MetalnessMapSRVIndex,
-            instance.AssosiatedMaterial()->AOMapSRVIndex,
-            instance.AssosiatedMaterial()->DisplacementMapSRVIndex,
-            instance.AssosiatedMaterial()->DistanceAtlasIndirectionMapSRVIndex,
-            instance.AssosiatedMaterial()->DistanceAtlasSRVIndex,
-            instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
-            instance.AssosiatedMesh()->LocationInVertexStorage().IndexBufferOffset,
-            instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount
-        };
+        //GPUInstanceTableEntry instanceEntry{
+        //    instance.Transformation().ModelMatrix(),
+        //    instance.Transformation().NormalMatrix(),
+        //    instance.AssosiatedMaterial()->AlbedoMapSRVIndex,
+        //    instance.AssosiatedMaterial()->NormalMapSRVIndex,
+        //    instance.AssosiatedMaterial()->RoughnessMapSRVIndex,
+        //    instance.AssosiatedMaterial()->MetalnessMapSRVIndex,
+        //    instance.AssosiatedMaterial()->AOMapSRVIndex,
+        //    instance.AssosiatedMaterial()->DisplacementMapSRVIndex,
+        //    instance.AssosiatedMaterial()->DistanceAtlasIndirectionMapSRVIndex,
+        //    instance.AssosiatedMaterial()->DistanceAtlasSRVIndex,
+        //    instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
+        //    instance.AssosiatedMesh()->LocationInVertexStorage().IndexBufferOffset,
+        //    instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount
+        //};
 
-        GPUInstanceIndex instanceIndex = mCurrentFrameInsertedInstanceCount;
+        //GPUInstanceIndex instanceIndex = mCurrentFrameInsertedInstanceCount;
 
-        //mInstanceTable.Write(mCurrentFrameInsertedInstanceCount, &instanceEntry);
-        ++mCurrentFrameInsertedInstanceCount;
+        ////mInstanceTable.Write(mCurrentFrameInsertedInstanceCount, &instanceEntry);
+        //++mCurrentFrameInsertedInstanceCount;
 
-        mTopAccelerationStructure.AddInstance(blas, instanceIndex, instance.Transformation().ModelMatrix());
-        instance.SetGPUInstanceIndex(instanceIndex);
+        //mTopAccelerationStructure.AddInstance(blas, instanceIndex, instance.Transformation().ModelMatrix());
+        //instance.SetGPUInstanceIndex(instanceIndex);
     }
 
 }

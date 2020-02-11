@@ -59,7 +59,7 @@ namespace PathFinder
         void BeginFrame(uint64_t newFrameNumber);
         void EndFrame(uint64_t completedFrameNumber);
 
-        void UploadVerticesAndQueueForCopy();
+        void UploadVertices();
         void CreateBottomAccelerationStructures();
         void CreateTopAccelerationStructure();
 
@@ -80,7 +80,7 @@ namespace PathFinder
         };
 
         template <class Vertex>
-        void CopyBuffersToDefaultHeap();
+        void SubmitBuffersToGPU();
 
         template <class Vertex>
         void CreateBottomAccelerationStructuresInternal();

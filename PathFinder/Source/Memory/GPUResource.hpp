@@ -44,6 +44,9 @@ namespace Memory
         template <class T = uint8_t>
         T * Write();
 
+        template <class T = uint8_t>
+        void Write(const T* data, uint64_t startIndex, uint64_t objectCount, uint64_t objectAlignment = 1);
+
         virtual void RequestWrite();
         virtual void RequestRead();
 
@@ -63,6 +66,8 @@ namespace Memory
         inline PoolDescriptorAllocator* DescriptorAllocator() { return mDescriptorAllocator; }
         inline UploadStrategy CurrentUploadStrategy() { return mUploadStrategy; }
         
+        HAL::Buffer* CurrentFrameUploadBuffer();
+        HAL::Buffer* CurrentFrameReadbackBuffer();
         const HAL::Buffer* CurrentFrameUploadBuffer() const;
         const HAL::Buffer* CurrentFrameReadbackBuffer() const;
 
@@ -78,7 +83,6 @@ namespace Memory
         HAL::CopyCommandListBase* mCommandList;
 
         SegregatedPoolsResourceAllocator::BufferPtr mCompletedReadbackBuffer;
-        SegregatedPoolsResourceAllocator::BufferPtr mCompletedUploadBuffer;
 
         std::queue<BufferFrameNumberPair> mUploadBuffers;
         std::queue<BufferFrameNumberPair> mReadbackBuffers;

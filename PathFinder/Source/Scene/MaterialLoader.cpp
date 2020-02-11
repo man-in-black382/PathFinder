@@ -2,96 +2,56 @@
 
 namespace PathFinder
 {
-    
-    MaterialLoader::MaterialLoader(const std::filesystem::path& fileRoot, const HAL::Device* device)
-        : mDevice{ device }, mAssetStorage{ assetStorage }, mTextureLoader{ fileRoot, device } {}
+
+    MaterialLoader::MaterialLoader(const std::filesystem::path& fileRoot, PreprocessableAssetStorage* assetStorage, Memory::GPUResourceProducer* resourceProducer)
+        : mAssetStorage{ assetStorage }, mResourceLoader{ fileRoot, resourceProducer }, mResourceProducer{ resourceProducer } {}
 
     Material MaterialLoader::LoadMaterial(
-        const std::string& albedoMapRelativePath, 
-        const std::string& normalMapRelativePath, 
-        const std::string& roughnessMapRelativePath, 
+        const std::string& albedoMapRelativePath,
+        const std::string& normalMapRelativePath,
+        const std::string& roughnessMapRelativePath,
         const std::string& metalnessMapRelativePath,
         std::optional<std::string> displacementMapRelativePath,
-        std::optional<std::string> distanceMapRelativePath,
+        std::optional<std::string> distanceFieldRelativePath,
         std::optional<std::string> AOMapRelativePath)
     {
         Material material{};
 
-        if (auto texture = mTextureLoader.Load(albedoMapRelativePath)) 
+        material.AlbedoMap = mResourceLoader.LoadTexture(albedoMapRelativePath);
+        material.NormalMap = mResourceLoader.LoadTexture(normalMapRelativePath);
+        material.RoughnessMap = mResourceLoader.LoadTexture(roughnessMapRelativePath);
+        material.MetalnessMap = mResourceLoader.LoadTexture(metalnessMapRelativePath);
+
+        if (displacementMapRelativePath)
         {
-            material.AlbedoMap = texture.get();
-            material.AlbedoMapSRVIndex = mAssetStorage->StoreAsset(texture);
-        }
-            
-        if (auto texture = mTextureLoader.Load(normalMapRelativePath)) 
-        {
-            material.NormalMap = texture.get();
-            material.NormalMapSRVIndex = mAssetStorage->StoreAsset(texture);
+            material.DisplacementMap = mResourceLoader.LoadTexture(*displacementMapRelativePath);
         }
 
-        if (auto texture = mTextureLoader.Load(roughnessMapRelativePath)) 
+        if (AOMapRelativePath)
         {
-            material.RoughnessMap = texture.get();
-            material.RoughnessMapSRVIndex = mAssetStorage->StoreAsset(texture);
+            material.AOMap = mResourceLoader.LoadTexture(*AOMapRelativePath);
         }
 
-        if (auto texture = mTextureLoader.Load(metalnessMapRelativePath)) 
+        if (material.DisplacementMap && distanceFieldRelativePath)
         {
-            material.MetalnessMap = texture.get();
-            material.MetalnessMapSRVIndex = mAssetStorage->StoreAsset(texture);
-        }
+            material.DistanceField = mResourceLoader.LoadTexture(*distanceFieldRelativePath);
 
-        if (displacementMapRelativePath; auto texture = mTextureLoader.Load(*displacementMapRelativePath))
-        {
-            material.DisplacementMap = texture.get();
-            material.DisplacementMapSRVIndex = mAssetStorage->StoreAsset(texture);
-
-            if (distanceMapRelativePath; auto texture = mTextureLoader.Load(*distanceMapRelativePath))
+            if (!material.DistanceField)
             {
-                // Load from file
-            }
-            else {
-                auto iStates = HAL::ResourceState::UnorderedAccess;
-                auto eStates = HAL::ResourceState::CopySource | HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
+                HAL::Texture::Properties distFieldProperties{
+                    HAL::ColorFormat::RGBA32_Unsigned, HAL::TextureKind::Texture3D,
+                    DistanceFieldTextureSize, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::AnyShaderAccess };
 
-               /* auto distanceIndirectionMap = std::make_shared<HAL::Texture>(
-                    *mDevice, HAL::ColorFormat::R16_Float, HAL::TextureKind::Texture3D,
-                    UncompressedDistanceFieldSize, HAL::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
+                material.DistanceField = mResourceProducer->NewTexture(distFieldProperties);
 
-                auto distanceAtlas = std::make_shared<HAL::Texture>(
-                    *mDevice, HAL::ColorFormat::RGBA32_Unsigned, HAL::TextureKind::Texture3D,
-                    UncompressedDistanceFieldSize, HAL::ColorClearValue{ 0.0, 0.0, 0.0, 0.0 }, iStates, eStates);
-
-                auto atlasEntryCounter = std::make_shared<HAL::Buffer<uint32_t>>(
-                    *mDevice, 1, 1, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::CopySource);
-
-                distanceIndirectionMap->SetDebugName("DistanceIndirectionMap");
-                distanceAtlas->SetDebugName("DistanceAtlas");
-                atlasEntryCounter->SetDebugName("DistanceAtlasCounter");*/
-
-                /*    auto distanceIndirectionAsset = mAssetStorage->StorePreprocessableAsset(distanceIndirectionMap, true);
-                    auto distanceAtlasAsset = mAssetStorage->StorePreprocessableAsset(distanceAtlas, true);
-                    auto counterAsset = mAssetStorage->StorePreprocessableAsset(atlasEntryCounter, true);
-
-                    material.DistanceAtlasIndirectionMapSRVIndex = distanceIndirectionAsset.SRIndex;
-                    material.DistanceAtlasSRVIndex = distanceAtlasAsset.SRIndex;
-
-                    material.DistanceAtlasIndirectionMap = distanceIndirectionMap.get();
-                    material.DistanceAtlas = distanceAtlas.get();
-                    material.DistanceAtlasCounter = atlasEntryCounter.get();*/
+                mAssetStorage->PreprocessAsset(material.DistanceField.get(), [this, distanceFieldRelativePath](Memory::GPUResource* distanceField)
+                {
+                    mResourceLoader.StoreResource(*distanceField, *distanceFieldRelativePath);
+                });
             }
         }
 
-        if (AOMapRelativePath; auto texture = mTextureLoader.Load(*AOMapRelativePath)) {
-            material.AOMapSRVIndex = mAssetStorage->StoreAsset(texture);
-        }
-
-        return material;
-    }
-
-    void MaterialLoader::SerializePostprocessedTextures()
-    {
-
+        return std::move(material);
     }
 
 }

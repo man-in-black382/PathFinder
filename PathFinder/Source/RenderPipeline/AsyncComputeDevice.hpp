@@ -46,9 +46,7 @@ namespace PathFinder
 
         void ExecuteCommands(const HAL::Fence* fenceToWaitFor = nullptr, const HAL::Fence* fenceToSignal = nullptr);
         void ResetCommandList();
-
-        void BeginFrame(uint64_t newFrameNumber);
-        void EndFrame(uint64_t completedFrameNumber);
+        void AllocateNewCommandList();
 
     protected:
         virtual void ApplyStateIfNeeded(const HAL::ComputePipelineState* state);

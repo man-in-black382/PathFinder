@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Material.hpp"
-#include "TextureLoader.hpp"
+#include "ResourceLoader.hpp"
 
-#include "../RenderPipeline/AssetResourceStorage.hpp"
+#include "../RenderPipeline/PreprocessableAssetStorage.hpp"
 #include "../HardwareAbstractionLayer/Buffer.hpp"
+#include "../Memory/GPUResourceProducer.hpp"
 
 #include <filesystem>
 #include <string>
@@ -16,9 +17,9 @@ namespace PathFinder
     class MaterialLoader
     {
     public:
-        inline static const Geometry::Dimensions UncompressedDistanceFieldSize{ 128, 128, 64 };
+        inline static const Geometry::Dimensions DistanceFieldTextureSize{ 128, 128, 64 };
 
-        MaterialLoader(const std::filesystem::path& fileRoot, const HAL::Device* device,);
+        MaterialLoader(const std::filesystem::path& fileRoot, PreprocessableAssetStorage* assetStorage, Memory::GPUResourceProducer* resourceProducer);
 
         Material LoadMaterial(
             const std::string& albedoMapRelativePath,
@@ -29,8 +30,6 @@ namespace PathFinder
             std::optional<std::string> distanceMapRelativePath = std::nullopt,
             std::optional<std::string> AOMapRelativePath = std::nullopt);
 
-        void SerializePostprocessedTextures();
-
     private:
         struct SerializationData
         {
@@ -40,9 +39,9 @@ namespace PathFinder
             const HAL::Buffer* DistanceAtlasCounterBuffer;
         };
 
-        const HAL::Device* mDevice;
-        AssetResourceStorage* mAssetStorage;
-        TextureLoader mTextureLoader;
+        Memory::GPUResourceProducer* mResourceProducer;
+        PreprocessableAssetStorage* mAssetStorage;
+        ResourceLoader mResourceLoader;
     };
 
 }

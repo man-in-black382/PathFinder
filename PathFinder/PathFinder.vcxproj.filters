@@ -288,9 +288,6 @@
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Scene\TextureLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Scene\MaterialLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -406,6 +403,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Memory\PoolDescriptorAllocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PreprocessableAssetStorage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\ResourceLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1934,9 +1937,6 @@
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.inl">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Scene\TextureLoader.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Scene\MaterialLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2244,6 +2244,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Memory\PoolDescriptorAllocator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PreprocessableAssetStorage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\ResourceLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

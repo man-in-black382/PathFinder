@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::RenderEngine engine{ hwnd, cmdLineParser, &scene, &renderPassGraph };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/", &engine.VertexGPUStorage() };
-    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.Device(), &engine.AssetGPUStorage() };
+    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.AssetStorage(), &engine.ResourceProducer() };
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
@@ -108,13 +108,18 @@ int main(int argc, char** argv)
     input.SetInvertVerticalDelta(true);
 
     engine.ScheduleAndAllocatePipelineResources();
-    engine.ProcessAndTransferAssets();
 
-    materialLoader.SerializePostprocessedTextures();
+    bool resourcesAlreadyProcessed = false;
 
-    engine.PreRenderEvent() += { "UI.Update", []()
+    engine.PreRenderEvent() += { "UI.Update", [&resourcesAlreadyProcessed, &engine]()
     {
         ImGui::ShowDemoWindow();
+
+        if (!resourcesAlreadyProcessed)
+        {
+            engine.UploadProcessAndTransferAssets();
+            resourcesAlreadyProcessed = true;
+        }
     }};
 
     // Main loop

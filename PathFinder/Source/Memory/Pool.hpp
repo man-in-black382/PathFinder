@@ -13,14 +13,14 @@ namespace Memory
         template <class UserDataT>
         struct Slot
         {
-            uint64_t MemoryOffset;
+            uint64_t MemoryOffset = 0;
             UserDataT UserData;
         };
 
         template <>
         struct Slot<void>
         {
-            uint64_t MemoryOffset;
+            uint64_t MemoryOffset = 0;
         };
 
         using SlotType = Slot<SlotUserData>;
