@@ -24,6 +24,8 @@ namespace Memory
             auto frameIndex = frameAttributes.Tail - frameAttributes.Size;
             ExecutePendingDeallocations(frameIndex);
         });
+
+        mPendingDeallocations.resize(simultaneousFramesInFlight);
     }
 
     PoolDescriptorAllocator::RTDescriptorPtr PoolDescriptorAllocator::AllocateRTDescriptor(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat)
@@ -32,12 +34,12 @@ namespace Memory
 
         auto slot = mRTPool.Allocate();
         auto descriptor = mRTDescriptorHeap.EmplaceRTDescriptor(slot.MemoryOffset, *texture, shaderVisibleFormat);
-        auto descriptorIt = mAllocatedRTDescriptors.emplace_back(descriptor, slot);
-        auto deallocationCallback = [this, descriptorIt](HAL::RTDescriptor* descriptor) {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(descriptorIt.Slot, &mRTPool);
+        auto& allocation = mAllocatedRTDescriptors.emplace_back(descriptor, slot);
+        auto deallocationCallback = [this, &allocation](HAL::RTDescriptor* descriptor) {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mRTPool);
         };
 
-        return RTDescriptorPtr(&descriptorIt.Descriptor, deallocationCallback);
+        return RTDescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
     PoolDescriptorAllocator::DSDescriptorPtr PoolDescriptorAllocator::AllocateDSDescriptor(const HAL::Texture* texture)
@@ -46,12 +48,12 @@ namespace Memory
 
         auto slot = mDSPool.Allocate();
         auto descriptor = mDSDescriptorHeap.EmplaceDSDescriptor(slot.MemoryOffset, *texture);
-        auto descriptorIt = mAllocatedDSDescriptors.emplace_back(descriptor, slot);
-        auto deallocationCallback = [this, descriptorIt](HAL::DSDescriptor* descriptor) {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(descriptorIt.Slot, &mDSPool);
+        auto& allocation = mAllocatedDSDescriptors.emplace_back(descriptor, slot);
+        auto deallocationCallback = [this, &allocation](HAL::DSDescriptor* descriptor) {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mDSPool);
         };
 
-        return DSDescriptorPtr(&descriptorIt.Descriptor, deallocationCallback);
+        return DSDescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
     PoolDescriptorAllocator::SRDescriptorPtr PoolDescriptorAllocator::AllocateSRDescriptor(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat)
@@ -60,12 +62,12 @@ namespace Memory
 
         auto slot = mSRPool.Allocate();
         auto descriptor = mCBSRUADescriptorHeap.EmplaceSRDescriptor(slot.MemoryOffset, *texture, shaderVisibleFormat);
-        auto descriptorIt = mAllocatedSRDescriptors.emplace_back(descriptor, slot);
-        auto deallocationCallback = [this, descriptorIt](HAL::SRDescriptor* descriptor) {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(descriptorIt.Slot, &mSRPool);
+        auto& allocation = mAllocatedSRDescriptors.emplace_back(descriptor, slot);
+        auto deallocationCallback = [this, &allocation](HAL::SRDescriptor* descriptor) {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mSRPool);
         };
 
-        return SRDescriptorPtr(&descriptorIt.Descriptor, deallocationCallback);
+        return SRDescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
     PoolDescriptorAllocator::UADescriptorPtr PoolDescriptorAllocator::AllocateUADescriptor(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat)
@@ -74,48 +76,48 @@ namespace Memory
 
         auto slot = mUAPool.Allocate();
         auto descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(slot.MemoryOffset, *texture, shaderVisibleFormat);
-        auto descriptorIt = mAllocatedUADescriptors.emplace_back(descriptor, slot);
-        auto deallocationCallback = [this, descriptorIt](HAL::UADescriptor* descriptor) {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(descriptorIt.Slot, &mUAPool);
+        auto& allocation = mAllocatedUADescriptors.emplace_back(descriptor, slot);
+        auto deallocationCallback = [this, &allocation](HAL::UADescriptor* descriptor) {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mUAPool);
         };
 
-        return UADescriptorPtr(&descriptorIt.Descriptor, deallocationCallback);
+        return UADescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
     PoolDescriptorAllocator::SRDescriptorPtr PoolDescriptorAllocator::AllocateSRDescriptor(const HAL::Buffer* buffer, uint64_t stride)
     {
         auto slot = mSRPool.Allocate();
         auto descriptor = mCBSRUADescriptorHeap.EmplaceSRDescriptor(slot.MemoryOffset, *buffer, stride);
-        auto descriptorIt = mAllocatedSRDescriptors.emplace_back(descriptor, slot);
-        auto deallocationCallback = [this, descriptorIt](HAL::SRDescriptor* descriptor) {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(descriptorIt.Slot, &mSRPool);
+        auto& allocation = mAllocatedSRDescriptors.emplace_back(descriptor, slot);
+        auto deallocationCallback = [this, &allocation](HAL::SRDescriptor* descriptor) {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mSRPool);
         };
 
-        return SRDescriptorPtr(&descriptorIt.Descriptor, deallocationCallback);
+        return SRDescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
     PoolDescriptorAllocator::UADescriptorPtr PoolDescriptorAllocator::AllocateUADescriptor(const HAL::Buffer* buffer, uint64_t stride)
     {
         auto slot = mUAPool.Allocate();
         auto descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(slot.MemoryOffset, *buffer, stride);
-        auto descriptorIt = mAllocatedUADescriptors.emplace_back(descriptor, slot);
-        auto deallocationCallback = [this, descriptorIt](HAL::UADescriptor* descriptor) {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(descriptorIt.Slot, &mUAPool);
+        auto& allocation = mAllocatedUADescriptors.emplace_back(descriptor, slot);
+        auto deallocationCallback = [this, &allocation](HAL::UADescriptor* descriptor) {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mUAPool);
         };
 
-        return UADescriptorPtr(&descriptorIt.Descriptor, deallocationCallback);
+        return UADescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
     PoolDescriptorAllocator::CBDescriptorPtr PoolDescriptorAllocator::AllocateCBDescriptor(const HAL::Buffer* buffer, uint64_t stride)
     {
         auto slot = mCBPool.Allocate();
         auto descriptor = mCBSRUADescriptorHeap.EmplaceCBDescriptor(slot.MemoryOffset, *buffer, stride);
-        auto descriptorIt = mAllocatedCBDescriptors.emplace_back(descriptor, slot);
-        auto deallocationCallback = [this, descriptorIt](HAL::CBDescriptor* descriptor) {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(descriptorIt.Slot, &mCBPool);
+        auto& allocation = mAllocatedCBDescriptors.emplace_back(descriptor, slot);
+        auto deallocationCallback = [this, &allocation](HAL::CBDescriptor* descriptor) {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mCBPool);
         };
 
-        return CBDescriptorPtr(&descriptorIt.Descriptor, deallocationCallback);
+        return CBDescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
     void PoolDescriptorAllocator::BeginFrame(uint64_t frameNumber)

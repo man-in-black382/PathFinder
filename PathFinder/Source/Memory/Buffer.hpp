@@ -17,7 +17,7 @@ namespace Memory
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator, 
             PoolDescriptorAllocator* descriptorAllocator,
-            HAL::CopyCommandListBase* commandList
+            CopyCommandListProvider* commandListProvider
         );
 
         template <class Element>
@@ -26,7 +26,7 @@ namespace Memory
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
-            HAL::CopyCommandListBase* commandList,
+            CopyCommandListProvider* commandListProvider,
             const HAL::Device& device,
             const HAL::Heap& mainResourceExplicitHeap,
             uint64_t explicitHeapOffset

@@ -41,7 +41,6 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::DeferredLightingOutput);
         scheduler->ReadTexture(ResourceNames::GBufferRT0);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
-        scheduler->WillUseRootConstantBuffer<DeferredLightingCBContent>();
     }  
 
     void DeferredLightingRenderPass::Render(RenderContext* context)
@@ -55,10 +54,12 @@ namespace PathFinder
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DeferredLighting);
 
-        auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<DeferredLightingCBContent>();
-        cbContent->GBufferMaterialDataTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRT0);
-        cbContent->GBufferDepthTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferDepthStencil);
-        cbContent->OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingOutput);
+        DeferredLightingCBContent cbContent{};
+        cbContent.GBufferMaterialDataTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRT0);
+        cbContent.GBufferDepthTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingOutput);
+
+        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 
         auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(32, 32);
         context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);

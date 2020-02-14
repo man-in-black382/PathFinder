@@ -20,7 +20,7 @@ namespace PathFinder
         mCommandListAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mDescriptorAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mResourceProducer{ &mDevice, &mResourceAllocator, &mStateTracker, &mDescriptorAllocator },
-        mMeshStorage{ &mDevice, mSimultaneousFramesInFlight },
+        mMeshStorage{ &mDevice, &mResourceProducer },
         mPipelineResourceStorage{ &mDevice, &mResourceProducer, &mDescriptorAllocator, mDefaultRenderSurface, mPassExecutionGraph },
         mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
         mResourceProvider{ &mPipelineResourceStorage  },
@@ -40,8 +40,6 @@ namespace PathFinder
         mScene{ scene }
     {
         mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);
-        mAsyncComputeDevice.AllocateNewCommandList();
-        mGraphicsDevice.AllocateNewCommandList();
         mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
     }
 
@@ -61,8 +59,8 @@ namespace PathFinder
 
     void RenderEngine::UploadProcessAndTransferAssets()
     {
-        mMeshStorage.UploadVertices();
-        mMeshStorage.CreateBottomAccelerationStructures();
+        // Let resources record upload commands into graphics cmd list
+        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
 
         // Run setup and asset-processing passes
         RunRenderPasses(mPassExecutionGraph->OneTimePasses());
@@ -71,17 +69,24 @@ namespace PathFinder
         mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
 
         // Build BLASes once 
-        for (const HAL::RayTracingBottomAccelerationStructure& blas : mMeshStorage.BottomAccelerationStructures())
+        for (const BottomRTAS& blas : mMeshStorage.BottomAccelerationStructures())
         {
-            mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(blas);
+            mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(blas.HALAccelerationStructure());
         }
 
-        mAsyncComputeDevice.CommandList()->InsertBarriers(mMeshStorage.BottomASBuildBarriers());
+        mAsyncComputeDevice.CommandList()->InsertBarriers(mMeshStorage.BottomAccelerationStructureBarriers());
         mAsyncComputeDevice.ExecuteCommands(&mGraphicsFence, &mAsyncComputeFence);
 
         // Execute readback commands
         mGraphicsFence.IncrementExpectedValue();
+
+        // Let resources record readback commands into graphics cmd list
+        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+
+        // Read all requested to read resources
         mAssetStorage.ReadbackAllAssets();
+
+        // Perform readbacks
         mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
 
         // Wait until both devices are finished
@@ -95,25 +100,29 @@ namespace PathFinder
     {
         if (mPassExecutionGraph->DefaultPasses().empty()) return;
 
+        // Advance fences
         mAsyncComputeFence.IncrementExpectedValue();
         mGraphicsFence.IncrementExpectedValue();
         mUploadFence.IncrementExpectedValue();
 
+        // Notify internal listeners
         NotifyStartFrame(mGraphicsFence.ExpectedValue());
 
+        // Let resources record upload commands into graphics cmd list
+        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+
+        // Notify external listeners
         mPreRenderEvent.Raise();
 
-        mUIStorage.UploadUI();
+        // Upload all necessary data for the frame
         UploadCommonRootConstants();
-        UploadMeshInstanceData();
 
-        // Execute any pending upload commands 
+        // Execute any pending upload commands. Perform execution here because RT AS depends on resource uploads.
         mGraphicsDevice.ExecuteCommands(nullptr, &mUploadFence);
 
         // Build AS
-        mMeshStorage.CreateTopAccelerationStructure();
-        mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(mMeshStorage.TopAccelerationStructure());
-        mAsyncComputeDevice.CommandList()->InsertBarriers(mMeshStorage.TopASBuildBarriers());
+        mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(mMeshStorage.TopAccelerationStructure().HALAccelerationStructure());
+        mAsyncComputeDevice.CommandList()->InsertBarrier(mMeshStorage.TopAccelerationStructure().UABarrier());
         mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
 
         // Wait for TLAS build then execute render passes
@@ -121,31 +130,36 @@ namespace PathFinder
         HAL::ResourceTransitionBarrier preRenderBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer };
         HAL::ResourceTransitionBarrier postRenderBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer };
 
-        // Execute render passes
+        // Let resources record transfer (upload/readback) commands into graphics cmd list
+        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+
+        // Execute render passes that contain render work and may contain data transfers
         mGraphicsDevice.CommandList()->InsertBarrier(preRenderBarrier);
         RunRenderPasses(mPassExecutionGraph->DefaultPasses());
         mGraphicsDevice.CommandList()->InsertBarrier(postRenderBarrier);
 
+        // Execute all graphics work along with data transfers (upload/readback)
         mGraphicsDevice.ExecuteCommands(&mAsyncComputeFence, &mGraphicsFence);
+
+        // Put the picture on the screen
         mSwapChain.Present();
 
+        // Issue a CPU wait if necessary
         mGraphicsFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
+        // Notify listeners
         mPostRenderEvent.Raise();
         NotifyEndFrame(mGraphicsFence.CompletedValue());
 
+        // Readback data is ready
         GatherReadbackData();
 
+        // 
         if (mPipelineStateManager.HasModifiedStates())
         {
             FlushAllQueuedFrames();
             mPipelineStateManager.RecompileModifiedStates();
         }
-
-        // Discard old command lists, get new ones, propagate to resources
-        mAsyncComputeDevice.AllocateNewCommandList();
-        mGraphicsDevice.AllocateNewCommandList();
-        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
 
         MoveToNextFrame();
     }
@@ -168,14 +182,12 @@ namespace PathFinder
         mCommandListAllocator.BeginFrame(newFrameNumber);
         mShaderManager.BeginFrame();
         mResourceProducer.BeginFrame(newFrameNumber);
-        mMeshStorage.BeginFrame(newFrameNumber);
         mUIStorage.BeginFrame(newFrameNumber);
     }
 
     void RenderEngine::NotifyEndFrame(uint64_t completedFrameNumber)
     {
         mShaderManager.EndFrame();
-        mMeshStorage.EndFrame(completedFrameNumber);
         mUIStorage.EndFrame(completedFrameNumber);
         mResourceProducer.EndFrame(completedFrameNumber);
         mResourceAllocator.EndFrame(completedFrameNumber);
@@ -206,18 +218,6 @@ namespace PathFinder
         perFrameConstants->CameraInverseView = camera.InverseView();
         perFrameConstants->CameraInverseProjection = camera.InverseProjection();
         perFrameConstants->CameraInverseViewProjection = camera.InverseViewProjection();*/
-    }
-
-    void RenderEngine::UploadMeshInstanceData()
-    {
-        auto iterator = [&](MeshInstance& instance)
-        {
-            auto blasIndex = instance.AssosiatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex;
-            auto& blas = mMeshStorage.BottomAccelerationStructures()[blasIndex];
-            mMeshStorage.StoreMeshInstance(instance, blas);
-        };
-
-        mScene->IterateMeshInstances(iterator);
     }
 
     void RenderEngine::GatherReadbackData()

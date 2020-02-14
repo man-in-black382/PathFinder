@@ -34,6 +34,10 @@ namespace PathFinder
     public:
         inline Camera& MainCamera() { return mCamera; }
         inline const Camera& MainCamera() const { return mCamera; }
+        inline const auto& Meshes() const { return mMeshes; }
+        inline const auto& MeshInstances() const { return mMeshInstances; }
+        inline auto& Meshes() { return mMeshes; }
+        inline auto& MeshInstances() { return mMeshInstances; }
     };
 
 }

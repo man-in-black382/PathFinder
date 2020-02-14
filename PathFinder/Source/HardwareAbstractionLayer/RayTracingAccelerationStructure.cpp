@@ -14,56 +14,48 @@ namespace HAL
         mD3DInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
     }
 
-    void RayTracingAccelerationStructure::AllocateBuffersIfNeeded()
+    RayTracingAccelerationStructure::CommonMemoryRequirements RayTracingAccelerationStructure::QueryCommonMemoryRequirements() const
     {
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo{};
         mDevice->D3DDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&mD3DInputs, &prebuildInfo);
+        return { prebuildInfo.ResultDataMaxSizeInBytes, prebuildInfo.ScratchDataSizeInBytes, prebuildInfo.UpdateScratchDataSizeInBytes };
+    }
 
-        /*if (mBuildScratchBuffer == nullptr || mBuildScratchBuffer->TotalMemory() < prebuildInfo.ScratchDataSizeInBytes)
-        {
-            mBuildScratchBuffer = std::make_unique<Buffer>(
-                *mDevice, prebuildInfo.ScratchDataSizeInBytes,
-                ResourceState::UnorderedAccess, ResourceState::UnorderedAccess);
+    void RayTracingAccelerationStructure::SetBuffers(const Buffer* destinationBuffer, const Buffer* scratchBuffer, const Buffer* updateBuffer)
+    {
+        mFinalBuffer = destinationBuffer;
+        mBuildScratchBuffer = scratchBuffer;
+        mUpdateBuffer = updateBuffer;
 
-            mBuildScratchBuffer->SetDebugName(mDebugName + "_Scratch_Buffer");
-        }
+        if (mBuildScratchBuffer) mD3DAccelerationStructure.ScratchAccelerationStructureData = mBuildScratchBuffer->GPUVirtualAddress();
+        if (mFinalBuffer) mD3DAccelerationStructure.DestAccelerationStructureData = mFinalBuffer->GPUVirtualAddress();
+        if (mUpdateBuffer) mD3DAccelerationStructure.SourceAccelerationStructureData = mUpdateBuffer->GPUVirtualAddress();
 
-        if (mFinalBuffer == nullptr || mFinalBuffer->TotalMemory() < prebuildInfo.ResultDataMaxSizeInBytes)
-        {
-            mFinalBuffer = std::make_unique<Buffer>(
-                *mDevice, prebuildInfo.ResultDataMaxSizeInBytes,
-                ResourceState::RaytracingAccelerationStructure, ResourceState::UnorderedAccess);
-
-            mFinalBuffer->SetDebugName(mDebugName + "_Destination_Buffer");
-        }*/
-
-        mD3DAccelerationStructure.ScratchAccelerationStructureData = mBuildScratchBuffer->GPUVirtualAddress();
-        mD3DAccelerationStructure.DestAccelerationStructureData = mFinalBuffer->GPUVirtualAddress();
         mD3DAccelerationStructure.Inputs = mD3DInputs;
     }
 
-    void RayTracingAccelerationStructure::SetDebugName(const std::string& name)
+    void RayTracingAccelerationStructure::Clear()
     {
-        mDebugName = name;
-
-        if (mBuildScratchBuffer) mBuildScratchBuffer->SetDebugName(name + "_Scratch_Buffer");
-        if (mFinalBuffer) mFinalBuffer->SetDebugName(name + "_Destination_Buffer");
+        mBuildScratchBuffer = nullptr;
+        mFinalBuffer = nullptr;
+        mUpdateBuffer = nullptr;
     }
 
 
 
-    void RayTracingBottomAccelerationStructure::AllocateBuffersIfNeeded()
+    void RayTracingBottomAccelerationStructure::Clear()
+    {
+        RayTracingAccelerationStructure::Clear();
+        mD3DGeometries.clear();
+    }
+
+    void RayTracingBottomAccelerationStructure::SetBuffers(const Buffer* destinationBuffer, const Buffer* scratchBuffer, const Buffer* updateBuffer)
     {
         mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
         mD3DInputs.NumDescs = (UINT)mD3DGeometries.size();
         mD3DInputs.pGeometryDescs = mD3DGeometries.data();
 
-        RayTracingAccelerationStructure::AllocateBuffersIfNeeded();
-    }
-
-    void RayTracingBottomAccelerationStructure::ResetInputs()
-    {
-        mD3DGeometries.clear();
+        RayTracingAccelerationStructure::SetBuffers(destinationBuffer, scratchBuffer, updateBuffer);
     }
 
     void RayTracingBottomAccelerationStructure::AddGeometry(const RayTracingGeometry& geometry)
@@ -88,6 +80,16 @@ namespace HAL
         mD3DGeometries.push_back(d3dGeometry);
     }
 
+    RayTracingBottomAccelerationStructure::MemoryRequirements RayTracingBottomAccelerationStructure::QueryMemoryRequirements() const
+    {
+        CommonMemoryRequirements commonRequirements = QueryCommonMemoryRequirements();
+        return {
+            commonRequirements.DestinationBufferMaxSizeInBytes,
+            commonRequirements.BuildScratchBufferSizeInBytes,
+            commonRequirements.UpdateScratchBufferSizeInBytes
+        };
+    }
+
 
 
     void RayTracingTopAccelerationStructure::AddInstance(const RayTracingBottomAccelerationStructure& blas, uint32_t instanceId, const glm::mat4& transform)
@@ -110,25 +112,37 @@ namespace HAL
         mD3DInstances.push_back(instance);
     }
 
-    void RayTracingTopAccelerationStructure::AllocateBuffersIfNeeded()
+    RayTracingTopAccelerationStructure::MemoryRequirements RayTracingTopAccelerationStructure::QueryMemoryRequirements() const
     {
-      /*  if (mInstanceBuffer == nullptr || mInstanceBuffer->Capacity() < mD3DInstances.size())
-        {
-            mInstanceBuffer = std::make_unique<Buffer>(
-                *mDevice, mD3DInstances.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC), CPUAccessibleHeapType::Upload);
-        }*/
+        CommonMemoryRequirements commonRequirements = QueryCommonMemoryRequirements();
+        return {
+            commonRequirements.DestinationBufferMaxSizeInBytes, commonRequirements.BuildScratchBufferSizeInBytes,
+            commonRequirements.UpdateScratchBufferSizeInBytes, sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * mD3DInstances.size()
+        };
+    }
 
-        //mInstanceBuffer->Write(0, mD3DInstances.data(), mD3DInstances.size());
+    void RayTracingTopAccelerationStructure::SetBuffers(
+        uint8_t* instanceDataUploadPtr,
+        const Buffer* instanceBuffer, 
+        const Buffer* destinationBuffer,
+        const Buffer* scratchBuffer,
+        const Buffer* updateBuffer)
+    {
+        mInstanceBuffer = instanceBuffer;
+
+        memcpy(instanceDataUploadPtr, mD3DInstances.data(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * mD3DInstances.size());
 
         mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
         mD3DInputs.NumDescs = (UINT)mD3DInstances.size();
         mD3DInputs.InstanceDescs = mInstanceBuffer->GPUVirtualAddress();
 
-        RayTracingAccelerationStructure::AllocateBuffersIfNeeded();
+        RayTracingAccelerationStructure::SetBuffers(destinationBuffer, scratchBuffer, updateBuffer);
     }
 
-    void RayTracingTopAccelerationStructure::ResetInputs()
+    void RayTracingTopAccelerationStructure::Clear()
     {
+        RayTracingAccelerationStructure::Clear();
+        mInstanceBuffer = nullptr;
         mD3DInstances.clear();
     }
 

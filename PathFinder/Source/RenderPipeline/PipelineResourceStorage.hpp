@@ -21,6 +21,7 @@
 #include <functional>
 #include <tuple>
 #include <memory>
+#include <optional>
 
 namespace PathFinder
 {
@@ -37,7 +38,7 @@ namespace PathFinder
         struct PerPassObjects
         {
             // Constant buffers for each pass that require it.
-            //std::unique_ptr<HAL::RingBufferResource<uint8_t>> PassConstantBuffer;
+            Memory::GPUResourceProducer::BufferPtr PassConstantBuffer;
 
             //// Debug buffers for each pass.
             //std::unique_ptr<HAL::Buffer<float>> PassDebugBuffer;
@@ -58,9 +59,9 @@ namespace PathFinder
 
         struct PerResourceObjects
         {
-            std::unique_ptr<PipelineResourceSchedulingInfo> SchedulingInfo;
-            std::unique_ptr<TexturePipelineResource> Texture;
-            std::unique_ptr<BufferPipelineResource> Buffer;
+            std::optional<PipelineResourceSchedulingInfo> SchedulingInfo;
+            TexturePipelineResource PipelineTexture;
+            BufferPipelineResource PipelineBuffer;
 
             const Memory::GPUResource* GetGPUResource() const;
         };
@@ -85,15 +86,22 @@ namespace PathFinder
         void SetCurrentPassName(PassName passName);
         void AllocateScheduledResources();
         void CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain);
+        
+        template <class Constants> 
+        void UpdateGlobalRootConstants(const Constants& constants);
 
-     /*   GlobalRootConstants* GlobalRootConstantData();
-        PerFrameRootConstants* PerFrameRootConstantData();*/
+        template <class Constants>
+        void UpdateFrameRootConstants(const Constants& constants);
+
+        template <class Constants>
+        void UpdateCurrentPassRootConstants(const Constants& constants);
+
         template <class RootConstants> RootConstants* RootConstantDataForCurrentPass();
-        /*  HAL::Buffer<uint8_t>* RootConstantBufferForCurrentPass();
-          const HAL::Buffer<float>* DebugBufferForCurrentPass() const;
-          const HAL::RingBufferResource<float>* DebugReadbackBufferForCurrentPass() const;
-          const HAL::Buffer<GlobalRootConstants>& GlobalRootConstantsBuffer() const;
-          const HAL::Buffer<PerFrameRootConstants>& PerFrameRootConstantsBuffer() const;*/
+        /*const HAL::Buffer<float>* DebugBufferForCurrentPass() const;
+          const HAL::RingBufferResource<float>* DebugReadbackBufferForCurrentPass() const;*/
+        const Memory::Buffer* GlobalRootConstantsBuffer() const;
+        const Memory::Buffer* PerFrameRootConstantsBuffer() const;
+        const Memory::Buffer* RootConstantsBufferForCurrentPass() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
         const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
@@ -107,9 +115,6 @@ namespace PathFinder
         bool IsResourceAllocationScheduled(ResourceName name) const;
         void RegisterResourceNameForCurrentPass(ResourceName name);
         PipelineResourceSchedulingInfo* GetResourceSchedulingInfo(ResourceName name);
-
-        template <class BufferDataT>
-        void AllocateRootConstantBufferIfNeeded();
 
         PipelineResourceSchedulingInfo* QueueTextureAllocationIfNeeded(
             ResourceName resourceName,
@@ -164,10 +169,10 @@ namespace PathFinder
         std::vector<HAL::RTDescriptor> mBackBufferDescriptors;
 
         //// Constant buffer for global data that changes rarely
-        //HAL::RingBufferResource<GlobalRootConstants> mGlobalRootConstantsBuffer;
+        Memory::GPUResourceProducer::BufferPtr mGlobalRootConstantsBuffer;
 
         //// Constant buffer for data that changes every frame
-        //HAL::RingBufferResource<PerFrameRootConstants> mPerFrameRootConstantsBuffer;
+        Memory::GPUResourceProducer::BufferPtr mPerFrameRootConstantsBuffer;
 
         std::unordered_map<ResourceName, PerResourceObjects> mPerResourceObjects;
 

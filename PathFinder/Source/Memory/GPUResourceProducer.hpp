@@ -11,7 +11,7 @@
 namespace Memory
 {
 
-    class GPUResourceProducer
+    class GPUResourceProducer : public GPUResource::CopyCommandListProvider
     {
     public:
         using BufferPtr = std::unique_ptr<Buffer, std::function<void(Buffer*)>>;
@@ -36,6 +36,8 @@ namespace Memory
 
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);
+
+        HAL::CopyCommandListBase* CommandList() override;
 
     private:
         using ResourceSetIterator = std::unordered_set<GPUResource*>::iterator;

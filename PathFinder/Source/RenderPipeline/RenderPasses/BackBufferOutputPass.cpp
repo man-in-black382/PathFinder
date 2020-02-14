@@ -21,7 +21,6 @@ namespace PathFinder
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
-        scheduler->WillUseRootConstantBuffer<BackBufferOutputPassData>();
     } 
 
     void BackBufferOutputPass::Render(RenderContext* context)
@@ -29,9 +28,10 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::BackBufferOutput);
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
     
-        auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<BackBufferOutputPassData>();
-        cbContent->SourceTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::ToneMappingOutput);
+        BackBufferOutputPassData cbContent;
+        cbContent.SourceTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::ToneMappingOutput);
 
+        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Draw(DrawablePrimitive::Quad());
     }
 

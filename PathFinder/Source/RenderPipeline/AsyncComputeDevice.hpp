@@ -45,10 +45,10 @@ namespace PathFinder
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
         void ExecuteCommands(const HAL::Fence* fenceToWaitFor = nullptr, const HAL::Fence* fenceToSignal = nullptr);
-        void ResetCommandList();
-        void AllocateNewCommandList();
 
     protected:
+        void AllocateNewCommandList();
+
         virtual void ApplyStateIfNeeded(const HAL::ComputePipelineState* state);
         virtual void ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state);
 

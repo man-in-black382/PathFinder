@@ -87,10 +87,10 @@ namespace Memory
         uint64_t mCurrentFrameIndex = 0;
 
         // Minimum allocation size
-        uint64_t mMinimumSlotSize = 4096; 
+        uint64_t mMinimumSlotSize = 65536;
 
         // Amount of slots to allocate at once when out of allocated memory
-        uint32_t mOnGrowSlotCount = 10; 
+        uint32_t mOnGrowSlotCount = 1; 
 
         // Buffer only upload heaps
         Pools mUploadPools;

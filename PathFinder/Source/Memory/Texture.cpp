@@ -8,12 +8,12 @@ namespace Memory
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator,
-        HAL::CopyCommandListBase* commandList)
+        CopyCommandListProvider* commandListProvider)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandList),
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
         mTexturePtr{ resourceAllocator->AllocateTexture(properties) } 
     {
-        if (StateTracker()) StateTracker()->StartTrakingResource(HALTexture());
+        if (mStateTracker) mStateTracker->StartTrakingResource(HALTexture());
     }
 
     Texture::Texture(
@@ -21,12 +21,12 @@ namespace Memory
         ResourceStateTracker* stateTracker, 
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator, 
-        HAL::CopyCommandListBase* commandList,
+        CopyCommandListProvider* commandListProvider,
         const HAL::Device& device, 
         const HAL::Heap& mainResourceExplicitHeap, 
         uint64_t explicitHeapOffset)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandList)
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider)
     {
         mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{
            new HAL::Texture{ device, mainResourceExplicitHeap, explicitHeapOffset, properties },
@@ -36,30 +36,30 @@ namespace Memory
 
     Texture::~Texture()
     {
-        if (StateTracker()) StateTracker()->StopTrakingResource(HALTexture());
+        if (mStateTracker) mStateTracker->StopTrakingResource(HALTexture());
     }
 
     const HAL::RTDescriptor* Texture::GetOrCreateRTDescriptor()
     {
-        if (!mRTDescriptor) mRTDescriptor = DescriptorAllocator()->AllocateRTDescriptor(HALTexture());
+        if (!mRTDescriptor) mRTDescriptor = mDescriptorAllocator->AllocateRTDescriptor(HALTexture());
         return mRTDescriptor.get();
     }
 
     const HAL::DSDescriptor* Texture::GetOrCreateDSDescriptor()
     {
-        if (!mDSDescriptor) mDSDescriptor = DescriptorAllocator()->AllocateDSDescriptor(HALTexture());
+        if (!mDSDescriptor) mDSDescriptor = mDescriptorAllocator->AllocateDSDescriptor(HALTexture());
         return mDSDescriptor.get();
     }
 
     const HAL::SRDescriptor* Texture::GetOrCreateSRDescriptor()
     {
-        if (!mSRDescriptor) mSRDescriptor = DescriptorAllocator()->AllocateSRDescriptor(HALTexture());
+        if (!mSRDescriptor) mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(HALTexture());
         return mSRDescriptor.get();
     }
 
     const HAL::UADescriptor* Texture::GetOrCreateUADescriptor()
     {
-        if (!mUADescriptor) mUADescriptor = DescriptorAllocator()->AllocateUADescriptor(HALTexture());
+        if (!mUADescriptor) mUADescriptor = mDescriptorAllocator->AllocateUADescriptor(HALTexture());
         return mUADescriptor.get();
     }
 
@@ -71,7 +71,7 @@ namespace Memory
 
         for (const HAL::SubresourceFootprint& subresourceFootprint : footprint.SubresourceFootprints())
         {
-            CommandList()->CopyBufferToTexture(*CurrentFrameUploadBuffer(), *HALTexture(), subresourceFootprint);
+            mCommandListProvider->CommandList()->CopyBufferToTexture(*CurrentFrameUploadBuffer(), *HALTexture(), subresourceFootprint);
         }
     }
 
@@ -83,7 +83,7 @@ namespace Memory
 
         for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())
         {
-            CommandList()->CopyTextureToBuffer(*HALTexture(), *CurrentFrameReadbackBuffer(), subresourceFootprint);
+            mCommandListProvider->CommandList()->CopyTextureToBuffer(*HALTexture(), *CurrentFrameReadbackBuffer(), subresourceFootprint);
         }
     }
 

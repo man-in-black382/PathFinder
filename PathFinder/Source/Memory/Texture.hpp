@@ -15,14 +15,14 @@ namespace Memory
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
-            HAL::CopyCommandListBase* commandList);
+            CopyCommandListProvider* commandListProvider);
 
         Texture(
             const HAL::Texture::Properties& properties,
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
-            HAL::CopyCommandListBase* commandList,
+            CopyCommandListProvider* commandListProvider,
             const HAL::Device& device,
             const HAL::Heap& mainResourceExplicitHeap,
             uint64_t explicitHeapOffset);

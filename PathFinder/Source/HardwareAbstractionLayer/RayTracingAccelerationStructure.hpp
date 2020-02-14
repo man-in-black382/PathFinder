@@ -47,25 +47,33 @@ namespace HAL
     public:
         RayTracingAccelerationStructure(const Device* device);
 
-        virtual void AllocateBuffersIfNeeded() = 0;
-        virtual void ResetInputs() = 0;
-        virtual void SetDebugName(const std::string& name) override;
+        virtual void Clear() = 0;
+        virtual void SetBuffers(const Buffer* destinationBuffer, const Buffer* scratchBuffer, const Buffer* updateBuffer = nullptr);
 
     protected:
+        struct CommonMemoryRequirements
+        {
+            uint64_t DestinationBufferMaxSizeInBytes;
+            uint64_t BuildScratchBufferSizeInBytes;
+            uint64_t UpdateScratchBufferSizeInBytes;
+        };
+
+        CommonMemoryRequirements QueryCommonMemoryRequirements() const;
+
         const Device* mDevice;
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS mD3DInputs{};
     
     private:
         std::string mDebugName;
-        std::unique_ptr<Buffer> mBuildScratchBuffer;
-        std::unique_ptr<Buffer> mFinalBuffer;
-        // There could also be an Update Scratch Buffer. Isn't needed right now.
+        const Buffer* mBuildScratchBuffer = nullptr;
+        const Buffer* mFinalBuffer = nullptr;
+        const Buffer* mUpdateBuffer = nullptr;
 
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC mD3DAccelerationStructure{};
 
     public:
         inline const auto& D3DAccelerationStructure() const { return mD3DAccelerationStructure; }
-        inline const auto* FinalBuffer() const { return mFinalBuffer.get(); }
+        inline const auto* FinalBuffer() const { return mFinalBuffer; }
     };
 
 
@@ -73,12 +81,20 @@ namespace HAL
     class RayTracingBottomAccelerationStructure : public RayTracingAccelerationStructure
     {
     public:
+        struct MemoryRequirements
+        {
+            uint64_t DestinationBufferMaxSizeInBytes;
+            uint64_t BuildScratchBufferSizeInBytes;
+            uint64_t UpdateScratchBufferSizeInBytes;
+        };
+
         using RayTracingAccelerationStructure::RayTracingAccelerationStructure;
 
         void AddGeometry(const RayTracingGeometry& geometry);
+        MemoryRequirements QueryMemoryRequirements() const;
+        void SetBuffers(const Buffer* destinationBuffer, const Buffer* scratchBuffer, const Buffer* updateBuffer = nullptr) override;
 
-        virtual void AllocateBuffersIfNeeded() override;
-        virtual void ResetInputs() override;
+        virtual void Clear() override;
 
     private:
         std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> mD3DGeometries;
@@ -89,15 +105,31 @@ namespace HAL
     class RayTracingTopAccelerationStructure : public RayTracingAccelerationStructure
     {
     public:
+        struct MemoryRequirements
+        {
+            uint64_t DestinationBufferMaxSizeInBytes;
+            uint64_t BuildScratchBufferSizeInBytes;
+            uint64_t UpdateScratchBufferSizeInBytes;
+            uint64_t InstanceBufferSizeInBytes;
+        };
+
         using RayTracingAccelerationStructure::RayTracingAccelerationStructure;
 
         void AddInstance(const RayTracingBottomAccelerationStructure& blas, uint32_t instanceId, const glm::mat4& transform);
+        MemoryRequirements QueryMemoryRequirements() const;
 
-        virtual void AllocateBuffersIfNeeded() override;
-        virtual void ResetInputs() override;
+        void SetBuffers(
+            uint8_t* instanceDataUploadPtr,
+            const Buffer* instanceBuffer, 
+            const Buffer* destinationBuffer, 
+            const Buffer* scratchBuffer, 
+            const Buffer* updateBuffer = nullptr
+        );
+
+        virtual void Clear() override;
 
     private:
-        std::unique_ptr<Buffer> mInstanceBuffer;
+        const Buffer* mInstanceBuffer = nullptr;
         std::vector<D3D12_RAYTRACING_INSTANCE_DESC> mD3DInstances;
     };
 

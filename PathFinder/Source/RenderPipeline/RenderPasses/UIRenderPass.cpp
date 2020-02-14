@@ -31,7 +31,6 @@ namespace PathFinder
       
     void UIRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        scheduler->WillUseRootConstantBuffer<UICBContent>();
     }  
 
     void UIRenderPass::Render(RenderContext* context)
@@ -49,9 +48,11 @@ namespace PathFinder
             context->GetCommandRecorder()->BindExternalBuffer(*indexBuffer, 1, 0, HAL::ShaderRegister::ShaderResource);
         }
 */
-        UICBContent* cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<UICBContent>();
-        cbContent->ProjectionMatrix = context->GetUIStorage()->MVP();
-        cbContent->UITextureSRVIndex = context->GetUIStorage()->FontSRVIndex();
+        UICBContent cbContent{};
+        cbContent.ProjectionMatrix = context->GetUIStorage()->MVP();
+        cbContent.UITextureSRVIndex = context->GetUIStorage()->FontSRVIndex();
+
+        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 
         for (const UIGPUStorage::DrawCommand& drawCommand : context->GetUIStorage()->DrawCommands())
         {

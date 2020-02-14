@@ -3,8 +3,9 @@
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/CommandQueue.hpp"
 #include "../HardwareAbstractionLayer/Buffer.hpp"
-#include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
 #include "../HardwareAbstractionLayer/ResourceBarrier.hpp"
+
+#include "../Memory/GPUResourceProducer.hpp"
 
 #include "../Scene/Mesh.hpp"
 #include "../Scene/MeshInstance.hpp"
@@ -13,6 +14,8 @@
 #include "../Scene/Vertices/Vertex1P3.hpp"
 
 #include "VertexStorageLocation.hpp"
+#include "BottomRTAS.hpp"
+#include "TopRTAS.hpp"
 
 #include <vector>
 #include <memory>
@@ -31,8 +34,7 @@ namespace PathFinder
         uint32_t MetalnessMapIndex;
         uint32_t AOMapIndex;
         uint32_t DisplacementMapIndex;
-        uint32_t DistanceAtlasIndirectionMapIndex;
-        uint32_t DistanceAtlasIndex;
+        uint32_t DistanceFieldIndex;
         uint32_t UnifiedVertexBufferOffset;
         uint32_t UnifiedIndexBufferOffset;
         uint32_t IndexCount;
@@ -43,25 +45,13 @@ namespace PathFinder
     class MeshGPUStorage
     {
     public:
-        MeshGPUStorage(HAL::Device* device, uint8_t simultaneousFramesInFlight);
+        MeshGPUStorage(const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer);
 
-        void StoreMesh(Mesh& mesh);
-        void StoreMeshInstance(MeshInstance& instance, const HAL::RayTracingBottomAccelerationStructure& blas);
+        template < template < class ... > class Container, class ... Args >
+        void StoreMeshes(Container<Mesh, Args...>& meshes);
 
-      /*  const HAL::Buffer<Vertex1P1N1UV1T1BT>* UnifiedVertexBuffer_1P1N1UV1T1BT() const;
-        const HAL::Buffer<Vertex1P1N1UV>* UnifiedVertexBuffer_1P1N1UV() const;
-        const HAL::Buffer<Vertex1P3>* UnifiedVertexBuffer_1P() const;
-
-        const HAL::Buffer<uint32_t>* UnifiedIndexBuffer_1P1N1UV1T1BT() const;
-        const HAL::Buffer<uint32_t>* UnifiedIndexBuffer_1P1N1UV() const;
-        const HAL::Buffer<uint32_t>* UnifiedIndexBuffer_1P() const;*/
-
-        void BeginFrame(uint64_t newFrameNumber);
-        void EndFrame(uint64_t completedFrameNumber);
-
-        void UploadVertices();
-        void CreateBottomAccelerationStructures();
-        void CreateTopAccelerationStructure();
+        template < template < class ... > class Container, class ... Args >
+        void UpdateMeshInstanceTable(Container<MeshInstance, Args...>& meshInstances);
 
     private:
         template <class Vertex>
@@ -75,38 +65,39 @@ namespace PathFinder
         template <class Vertex>
         struct FinalBufferPackage
         {
-          /*  std::shared_ptr<HAL::Buffer<Vertex>> VertexBuffer;
-            std::shared_ptr<HAL::Buffer<uint32_t>> IndexBuffer;*/
+            Memory::GPUResourceProducer::BufferPtr VertexBuffer;
+            Memory::GPUResourceProducer::BufferPtr IndexBuffer;
         };
 
         template <class Vertex>
-        void SubmitBuffersToGPU();
+        void SubmitTemporaryBuffersToGPU();
 
         template <class Vertex>
-        void CreateBottomAccelerationStructuresInternal();
-
-        template <class Vertex>
-        VertexStorageLocation WriteToUploadBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
+        VertexStorageLocation WriteToTemporaryBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
 
         std::tuple<UploadBufferPackage<Vertex1P1N1UV1T1BT>, UploadBufferPackage<Vertex1P1N1UV>, UploadBufferPackage<Vertex1P3>> mUploadBuffers;
         std::tuple<FinalBufferPackage<Vertex1P1N1UV1T1BT>, FinalBufferPackage<Vertex1P1N1UV>, FinalBufferPackage<Vertex1P3>> mFinalBuffers;
 
-        std::vector<HAL::RayTracingBottomAccelerationStructure> mBottomAccelerationStructures;
-        HAL::RayTracingTopAccelerationStructure mTopAccelerationStructure;
-        HAL::ResourceBarrierCollection mTopASBuildBarriers;
-        HAL::ResourceBarrierCollection mBottomASBuildBarriers;
-        //HAL::RingBufferResource<GPUInstanceTableEntry> mInstanceTable;
-        
-        uint64_t mCurrentFrameInsertedInstanceCount = 0;
+        std::vector<BottomRTAS> mBottomAccelerationStructures;
+        TopRTAS mTopAccelerationStructure;
+        HAL::ResourceBarrierCollection mBottomASBarriers;
+        HAL::ResourceBarrierCollection mTopASBarriers;
 
-        HAL::Device* mDevice;
+        Memory::GPUResourceProducer::BufferPtr mInstanceTable;
+        
+        const HAL::Device* mDevice;
+        Memory::GPUResourceProducer* mResourceProducer;
 
     public:
-        //inline const auto& InstanceTable() const { return mInstanceTable; }
+        inline const auto UniversalVertexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get(); }
+        inline const auto UniversalIndexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBuffer.get(); }
+        inline const auto InstanceTable() const { return mInstanceTable.get(); }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
-        inline const auto& TopASBuildBarriers() const { return mTopASBuildBarriers; }
-        inline const auto& BottomASBuildBarriers() const { return mBottomASBuildBarriers; }
+        inline const auto& BottomAccelerationStructureBarriers() const { return mBottomASBarriers; }
+        inline const auto& TopAccelerationStructureBarriers() const { return mTopASBarriers; }
     };
 
 }
+
+#include "MeshGPUStorage.inl"

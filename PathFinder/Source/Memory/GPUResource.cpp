@@ -8,13 +8,13 @@ namespace Memory
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator,
         PoolDescriptorAllocator* descriptorAllocator,
-        HAL::CopyCommandListBase* commandList)
+        CopyCommandListProvider* commandListProvider)
         :
         mUploadStrategy{ uploadStrategy },
         mStateTracker{ uploadStrategy == UploadStrategy::DirectAccess ? nullptr : stateTracker },
         mResourceAllocator{ resourceAllocator },
         mDescriptorAllocator{ descriptorAllocator },
-        mCommandList{ commandList } {}
+        mCommandListProvider{ commandListProvider } {}
 
     GPUResource::~GPUResource() {}
 
@@ -29,13 +29,13 @@ namespace Memory
         HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
         mUploadBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
 
-        if (mStateTracker)
+        if (mStateTracker && mUploadStrategy != UploadStrategy::DirectAccess)
         {
             auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
 
             if (barrier)
             {
-                CommandList()->InsertBarrier(*barrier);
+                mCommandListProvider->CommandList()->InsertBarrier(*barrier);
             }
         }
     }
@@ -59,7 +59,7 @@ namespace Memory
 
             if (barrier)
             {
-                CommandList()->InsertBarrier(*barrier);
+                mCommandListProvider->CommandList()->InsertBarrier(*barrier);
             }
         }
     }
@@ -88,11 +88,6 @@ namespace Memory
             mCompletedReadbackBuffer = std::move(mReadbackBuffers.front().first);
             mReadbackBuffers.pop();
         }
-    }
-
-    void GPUResource::SetCommandList(HAL::CopyCommandListBase* commandList)
-    {
-        mCommandList = commandList;
     }
 
     void GPUResource::SetDebugName(const std::string& name)

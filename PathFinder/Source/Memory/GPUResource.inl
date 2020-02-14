@@ -5,7 +5,7 @@ namespace Memory
 {
 
     template <class T>
-    T* GPUResource::Write()
+    T* GPUResource::WriteOnlyPtr()
     {
         if (!CurrentFrameUploadBuffer())
         {
@@ -23,7 +23,7 @@ namespace Memory
         uint64_t byteOffset = startIndex * alignedObjectSizeInBytes;
         uint64_t copyRegionSizeInBytes = alignedObjectSizeInBytes * objectCount;
 
-        T* writeOnlyPtr = Write();
+        T* writeOnlyPtr = WriteOnlyPtr<T>();
 
         assert_format(writeOnlyPtr, "Need to request a write operation before trying to write data to resource");
 

@@ -16,6 +16,7 @@ namespace PathFinder
         const std::string& Name() const;
         const std::string& MaterialName() const;
         std::vector<Vertex1P1N1UV1T1BT>& Vertices();
+        const std::vector<Vertex1P1N1UV1T1BT>& Vertices() const;
         const std::vector<uint32_t>& Indices() const;
         const Geometry::AxisAlignedBox3D& BoundingBox() const;
         const VertexStorageLocation& LocationInVertexStorage() const;

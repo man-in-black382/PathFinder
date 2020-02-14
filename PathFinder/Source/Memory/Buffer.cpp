@@ -5,24 +5,28 @@ namespace Memory
 
     Buffer::~Buffer()
     {
-        if (StateTracker() && mBufferPtr) StateTracker()->StopTrakingResource(HALBuffer());
+        if (mStateTracker && mBufferPtr) mStateTracker->StopTrakingResource(HALBuffer());
     }
 
     void Buffer::RequestWrite()
     {
         GPUResource::RequestWrite();
-        CommandList()->CopyBufferRegion(*CurrentFrameUploadBuffer(), *HALBuffer(), 0, CurrentFrameUploadBuffer()->TotalMemory(), 0);
+
+        if (mUploadStrategy != GPUResource::UploadStrategy::DirectAccess)
+        {
+            mCommandListProvider->CommandList()->CopyBufferRegion(*CurrentFrameUploadBuffer(), *HALBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
+        }
     }
 
     void Buffer::RequestRead()
     {
         GPUResource::RequestRead();
-        CommandList()->CopyBufferRegion(*HALBuffer(), *CurrentFrameReadbackBuffer(), 0, HALBuffer()->TotalMemory(), 0);
+        mCommandListProvider->CommandList()->CopyBufferRegion(*HALBuffer(), *CurrentFrameReadbackBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
     }
 
     const HAL::Buffer* Buffer::HALBuffer() const
     {
-        return UploadStrategy() == GPUResource::UploadStrategy::Automatic ? 
+        return mUploadStrategy == GPUResource::UploadStrategy::Automatic ? 
             mBufferPtr.get() : CurrentFrameUploadBuffer();
     }
 

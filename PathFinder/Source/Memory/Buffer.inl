@@ -11,14 +11,20 @@ namespace Memory
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator,
-        HAL::CopyCommandListBase* commandList)
+        CopyCommandListProvider* commandListProvider)
         :
-        GPUResource(uploadStrategy, stateTracker, resourceAllocator, descriptorAllocator, commandList)
+        GPUResource(uploadStrategy, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider)
     {
-        mBufferPtr = uploadStrategy == GPUResource::UploadStrategy::Automatic ? // Skip allocating default memory buffer when direct access
-            resourceAllocator->AllocateBuffer(properties) : nullptr; // through persistent mapping is requested
+        if (uploadStrategy == GPUResource::UploadStrategy::Automatic)
+        {
+            mBufferPtr = resourceAllocator->AllocateBuffer(properties);
+        }
+        else
+        {
+            mUploadBuffers.emplace(resourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), 0);
+        }
 
-        if (StateTracker() && mBufferPtr) StateTracker()->StartTrakingResource(HALBuffer());
+        if (mStateTracker && mBufferPtr) mStateTracker->StartTrakingResource(HALBuffer());
     }
 
     template <class Element>
@@ -27,12 +33,12 @@ namespace Memory
         ResourceStateTracker* stateTracker, 
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator, 
-        HAL::CopyCommandListBase* commandList, 
+        CopyCommandListProvider* commandListProvider,
         const HAL::Device& device, 
         const HAL::Heap& mainResourceExplicitHeap, 
         uint64_t explicitHeapOffset)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandList)
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider)
     {
         mBufferPtr = SegregatedPoolsResourceAllocator::BufferPtr{
             new HAL::Buffer{ device, properties, mainResourceExplicitHeap, explicitHeapOffset },
@@ -40,18 +46,17 @@ namespace Memory
         };
     }
 
-
     template <class Element>
     const HAL::CBDescriptor* Buffer::GetOrCreateCBDescriptor(uint64_t elementAlignment)
     {
-        assert_format(CurrentUploadStrategy() != GPUResource::UploadStrategy::DirectAccess,
+        assert_format(mUploadStrategy != GPUResource::UploadStrategy::DirectAccess,
             "DirectAccess and descriptor creation are incompatible");
 
         auto stride = MemoryUtils::Align(sizeof(Element), elementAlignment);
 
         if (mCurrentCBDescriptorStride != stride || !mCBDescriptor)
         {
-            mCBDescriptor = DescriptorAllocator()->AllocateCBDescriptor(HALBuffer(), stride);
+            mCBDescriptor = mDescriptorAllocator->AllocateCBDescriptor(HALBuffer(), stride);
             mCurrentCBDescriptorStride = stride;
         }
     }
@@ -59,14 +64,14 @@ namespace Memory
     template <class Element>
     const HAL::UADescriptor* Buffer::GetOrCreateUADescriptor(uint64_t elementAlignment)
     {
-        assert_format(CurrentUploadStrategy() != GPUResource::UploadStrategy::DirectAccess,
+        assert_format(mUploadStrategy != GPUResource::UploadStrategy::DirectAccess,
             "DirectAccess and descriptor creation are incompatible");
 
         auto stride = MemoryUtils::Align(sizeof(Element), elementAlignment);
 
         if (mCurrentUADescriptorStride != stride || !mUADescriptor)
         {
-            mUADescriptor = DescriptorAllocator()->AllocateSRDescriptor(HALBuffer(), stride);
+            mUADescriptor = mDescriptorAllocator->AllocateSRDescriptor(HALBuffer(), stride);
             mCurrentUADescriptorStride = stride;
         }
     }
@@ -74,14 +79,14 @@ namespace Memory
     template <class Element>
     const HAL::SRDescriptor* Buffer::GetOrCreateSRDescriptor(uint64_t elementAlignment)
     {
-        assert_format(CurrentUploadStrategy() != GPUResource::UploadStrategy::DirectAccess,
+        assert_format(mUploadStrategy != GPUResource::UploadStrategy::DirectAccess,
             "DirectAccess and descriptor creation are incompatible");
 
         auto stride = MemoryUtils::Align(sizeof(Element), elementAlignment);
 
         if (mCurrentSRDescriptorStride != stride || !mSRDescriptor)
         {
-            mSRDescriptor = DescriptorAllocator()->AllocateSRDescriptor(HALBuffer(), stride);
+            mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(HALBuffer(), stride);
             mCurrentSRDescriptorStride = stride;
         }
     }

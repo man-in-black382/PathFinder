@@ -7,15 +7,13 @@ namespace PathFinder
 
     struct Material
     {
-        using TexturePtr = Memory::GPUResourceProducer::TexturePtr;
-
-        TexturePtr AlbedoMap;
-        TexturePtr NormalMap;
-        TexturePtr RoughnessMap;
-        TexturePtr MetalnessMap;
-        TexturePtr AOMap;
-        TexturePtr DisplacementMap;
-        TexturePtr DistanceField;
+        Memory::Texture* AlbedoMap = nullptr;
+        Memory::Texture* NormalMap = nullptr;
+        Memory::Texture* RoughnessMap = nullptr;
+        Memory::Texture* MetalnessMap = nullptr;
+        Memory::Texture* AOMap = nullptr;
+        Memory::Texture* DisplacementMap = nullptr;
+        Memory::Texture* DistanceField = nullptr;
     };
 
 }

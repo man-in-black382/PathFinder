@@ -39,6 +39,14 @@ namespace PathFinder
             const HAL::Buffer* DistanceAtlasCounterBuffer;
         };
 
+        Memory::Texture* GetOrAllocateTexture(const std::string& relativePath);
+        Memory::Texture* AllocateAndStoreTexture(const HAL::Texture::Properties& properties, const std::string& relativePath);
+
+        std::unordered_map<std::string, Memory::GPUResourceProducer::TexturePtr> mMaterialTextures;
+        Memory::GPUResourceProducer::TexturePtr m1x1Black2DTexture;
+        Memory::GPUResourceProducer::TexturePtr m1x1White2DTexture;
+        Memory::GPUResourceProducer::TexturePtr m1x1Black3DTexture;
+
         Memory::GPUResourceProducer* mResourceProducer;
         PreprocessableAssetStorage* mAssetStorage;
         ResourceLoader mResourceLoader;

@@ -20,6 +20,7 @@ namespace PathFinder
         mDefaultRenderSurface{ defaultRenderSurface }
     {
         mCommandQueue.SetDebugName("Async Compute Device Command Queue");
+        AllocateNewCommandList();
     }
 
     template <class CommandListT, class CommandQueueT>
@@ -115,12 +116,6 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandQueueT>::ResetCommandList()
-    {
-        mCommandList->Reset();
-    }
-
-    template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::ExecuteCommands(const HAL::Fence* fenceToWaitFor, const HAL::Fence* fenceToSignal)
     {
         if (fenceToWaitFor)
@@ -134,7 +129,9 @@ namespace PathFinder
         if (fenceToSignal)
         {
             mCommandQueue.SignalFence(*fenceToSignal);
-        }        
+        }   
+
+        AllocateNewCommandList();
     }
 
     template <class CommandListT, class CommandQueueT>

@@ -45,8 +45,6 @@ namespace PathFinder
 
         scheduler->NewBuffer(ResourceNames::JumpFloodingCones0, JFAConesBufferProps);
         scheduler->NewBuffer(ResourceNames::JumpFloodingCones1, JFAConesBufferProps);
-
-        scheduler->WillUseRootConstantBuffer<DisplacementDistanceMapGenerationCBContent>();
     } 
 
     void DisplacementDistanceMapRenderPass::Render(RenderContext* context)

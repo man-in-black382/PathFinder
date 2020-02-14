@@ -122,6 +122,12 @@ namespace HAL
 
     void ResourceFormat::DetermineAliasingGroup(ResourceState expectedStates)
     {
+        if (mDevice->SupportsUniversalHeaps())
+        {
+            mAliasingGroup = HeapAliasingGroup::Universal;
+            return;
+        }
+
         std::visit(Foundation::MakeVisitor(
             [this](const HAL::BufferKind& kind)
             {

@@ -58,9 +58,6 @@ namespace PathFinder
 
         ResourceScheduler(PipelineResourceStorage* manager, const RenderSurfaceDescription& defaultRenderSurface);
 
-        template <class BufferDataT>
-        void WillUseRootConstantBuffer();
-
         // Allocates new render target texture (Write Only)
         void NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt);
 

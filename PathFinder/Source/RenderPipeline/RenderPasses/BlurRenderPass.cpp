@@ -18,7 +18,6 @@ namespace PathFinder
 
     void BlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->WillUseRootConstantBuffer<BlurCBContent>();
         scheduler->ReadTexture(ResourceNames::GBufferRT0);
         scheduler->NewTexture(ResourceNames::BlurResult);
     }
@@ -27,14 +26,15 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::Blur);
 
-        auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<BlurCBContent>();
-        cbContent->BlurRadius = 20;
+        BlurCBContent cbContent{};
+        cbContent.BlurRadius = 20;
         auto kernel = Foundation::GaussianFunction::Produce1DKernel(20);
-        std::move(kernel.begin(), kernel.end(), cbContent->Weights.begin());
+        std::move(kernel.begin(), kernel.end(), cbContent.Weights.begin());
 
-        cbContent->InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRT0);
-        cbContent->OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
+        cbContent.InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRT0);
+        cbContent.OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BlurResult);
 
+        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Dispatch(5, 720, 1);
     }
 

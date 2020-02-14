@@ -21,7 +21,6 @@ namespace PathFinder
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
-        scheduler->WillUseRootConstantBuffer<BackBufferOutputPassData>();
     } 
 
     void BackBufferOutputPass::Render(RenderContext* context)

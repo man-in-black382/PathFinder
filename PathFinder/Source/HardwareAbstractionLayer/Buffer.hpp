@@ -37,6 +37,9 @@ namespace HAL
 
         virtual uint32_t SubresourceCount() const override;
 
+        template <class Element = uint8_t>
+        uint64_t ElementCapacity(uint64_t elementAlignment = 1) const;
+
         template <class Element>
         static ResourceFormat ConstructResourceFormat(const Device* device, const Properties<Element>& properties);
 
@@ -44,7 +47,11 @@ namespace HAL
         bool CanImplicitlyDecayToCommonStateFromState(ResourceState state) const override;
 
     private:
+        template <class Element>
+        static uint64_t WidthFromProperties(const Properties<Element>& properties);
+
         uint8_t* mMappedMemory = nullptr;
+        uint64_t mRequestedSizeInBytes = 0;
         std::optional<CPUAccessibleHeapType> mCPUAccessibleHeapType = std::nullopt;
 
     public:

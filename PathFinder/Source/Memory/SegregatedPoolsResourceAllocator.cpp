@@ -15,6 +15,7 @@ namespace Memory
         mDefaultRTDSPools{ mMinimumSlotSize, mOnGrowSlotCount },
         mDefaultNonRTDSPools{ mMinimumSlotSize, mOnGrowSlotCount }
     {
+        mMinimumSlotSize = device->MinimumHeapSize() / mOnGrowSlotCount;
         mPendingDeallocations.resize(simultaneousFramesInFlight);
 
         mRingFrameTracker.SetDeallocationCallback([this](const Ring::FrameTailAttributes& frameAttributes)
@@ -31,6 +32,8 @@ namespace Memory
         PoolsAllocation& poolAllocation = allocation.PoolAllocation;
 
         auto offsetInHeap = AdjustMemoryOffsetToPointInsideHeap(allocation);
+
+        OutputDebugString(StringFormat("Allocated Texture of %d bytes, offset %d \n", format.ResourceSizeInBytes(), offsetInHeap).c_str());
 
         auto deallocationCallback = [this, poolAllocation, poolsThatProducedAllocation = allocation.PoolsPtr](HAL::Texture* texture)
         {

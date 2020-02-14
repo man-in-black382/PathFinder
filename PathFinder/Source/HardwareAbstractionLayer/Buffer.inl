@@ -24,12 +24,20 @@ namespace HAL
     template <class Element>
     Buffer::Buffer(const Device& device, const Properties<Element>& properties, const Heap& heap, uint64_t heapOffset)
         : Resource(device, heap, heapOffset, ConstructResourceFormat(&device, properties), properties.InitialState, properties.ExpectedStates),
-        mCPUAccessibleHeapType{ heap.CPUAccessibleType() } {}
+        mCPUAccessibleHeapType{ heap.CPUAccessibleType() },
+        mRequestedSizeInBytes{ WidthFromProperties(properties) } {}
 
     template <class Element>
     Buffer::Buffer(const Device& device, const Properties<Element>& properties, std::optional<CPUAccessibleHeapType> heapType)
         : Resource(device, ConstructResourceFormat(&device, properties), heapType),
-        mCPUAccessibleHeapType{ heapType } {}
+        mCPUAccessibleHeapType{ heapType },
+        mRequestedSizeInBytes{ WidthFromProperties(properties) } {}
+
+    template <class Element>
+    uint64_t Buffer::ElementCapacity(uint64_t elementAlignment) const
+    {
+        return mRequestedSizeInBytes / Foundation::MemoryUtils::Align(sizeof(Element), elementAlignment);
+    }
 
 
 
@@ -38,12 +46,18 @@ namespace HAL
     {
         ResourceFormat format{
             device, std::nullopt, BufferKind::Buffer,
-            Geometry::Dimensions{ Foundation::MemoryUtils::Align(sizeof(Element), properties.ElementAlighnment) * properties.ElementCapacity }
+            Geometry::Dimensions{ WidthFromProperties(properties) }
         };
 
         format.SetExpectedStates(properties.InitialState | properties.ExpectedStates);
 
         return format;
+    }
+
+    template <class Element>
+    uint64_t Buffer::WidthFromProperties(const Properties<Element>& properties)
+    {
+        return Foundation::MemoryUtils::Align(sizeof(Element), properties.ElementAlighnment) * properties.ElementCapacity;
     }
 
 }

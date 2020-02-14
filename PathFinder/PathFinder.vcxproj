@@ -248,6 +248,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Memory\PoolCommandListAllocator.cpp" />
     <ClCompile Include="Source\Memory\SegregatedPoolsResourceAllocator.cpp" />
     <ClCompile Include="Source\Memory\Texture.cpp" />
+    <ClCompile Include="Source\RenderPipeline\BottomRTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
@@ -271,6 +272,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceStateTracker.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RTAS.cpp" />
+    <ClCompile Include="Source\RenderPipeline\TopRTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\UIGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateManager.cpp" />
@@ -398,6 +401,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Memory\SegregatedPoolsResourceAllocator.hpp" />
     <ClInclude Include="Source\Memory\Texture.hpp" />
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
+    <ClInclude Include="Source\RenderPipeline\BottomRTAS.hpp" />
     <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
@@ -431,8 +435,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\ResourceStateTracker.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RTAS.hpp" />
     <ClInclude Include="Source\RenderPipeline\SFLGPUAllocator.hpp" />
     <ClInclude Include="Source\RenderPipeline\ShaderFileNames.hpp" />
+    <ClInclude Include="Source\RenderPipeline\TopRTAS.hpp" />
     <ClInclude Include="Source\RenderPipeline\UIGPUStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\MeshGPUStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateManager.hpp" />
@@ -957,6 +963,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\RenderPipeline\GraphicsDevice.inl">
       <FileType>CppHeader</FileType>
     </None>
+    <None Include="Source\RenderPipeline\MeshGPUStorage.inl" />
     <None Include="Source\RenderPipeline\PipelineResource.inl">
       <FileType>CppHeader</FileType>
     </None>

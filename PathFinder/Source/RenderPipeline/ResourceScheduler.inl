@@ -1,12 +1,6 @@
 namespace PathFinder
 {
 
-    template <class BufferDataT>
-    void ResourceScheduler::WillUseRootConstantBuffer()
-    {
-        mResourceStorage->AllocateRootConstantBufferIfNeeded<BufferDataT>();
-    }
-
     template <class T>
     void ResourceScheduler::NewBuffer(Foundation::Name resourceName, const NewBufferProperties<T>& bufferProperties)
     {

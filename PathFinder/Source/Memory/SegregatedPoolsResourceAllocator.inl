@@ -12,6 +12,8 @@ namespace Memory
 
         auto offsetInHeap = AdjustMemoryOffsetToPointInsideHeap(allocation);
 
+        OutputDebugString(StringFormat("Allocated Buffer of %d bytes, offset %d \n", format.ResourceSizeInBytes(), offsetInHeap).c_str());
+
         // If CPU accessible buffer is requested
         if (heapType)
         {

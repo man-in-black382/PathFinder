@@ -30,7 +30,7 @@ namespace HAL
     {
         mDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
         mDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        mDesc.UAV.pResource = resource->D3DResource();
+        mDesc.UAV.pResource = resource ? resource->D3DResource() : nullptr;
     }
 
     void ResourceBarrierCollection::AddBarrier(const ResourceBarrier& barrier)

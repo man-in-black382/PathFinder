@@ -54,7 +54,6 @@ namespace PathFinder
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
         void UploadCommonRootConstants();
-        void UploadMeshInstanceData();
         void GatherReadbackData();
 
         void RunRenderPasses(const std::list<RenderPass*>& passes);
@@ -102,8 +101,9 @@ namespace PathFinder
         Event mPostRenderEvent;
 
     public:
-        inline MeshGPUStorage& VertexGPUStorage() { return mMeshStorage; }
+        inline MeshGPUStorage& MeshStorage() { return mMeshStorage; }
         inline PreprocessableAssetStorage& AssetStorage() { return mAssetStorage; }
+        inline UIGPUStorage& UIStorage() { return mUIStorage; }
         inline Memory::GPUResourceProducer& ResourceProducer() { return mResourceProducer; }
         inline HAL::Device& Device() { return mDevice; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }

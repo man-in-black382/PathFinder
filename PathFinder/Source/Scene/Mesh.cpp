@@ -20,6 +20,11 @@ namespace PathFinder
         return mVertices;
     }
 
+    const std::vector<Vertex1P1N1UV1T1BT>& Mesh::Vertices() const
+    {
+        return mVertices;
+    }
+
     const std::vector<uint32_t>& Mesh::Indices() const
     {
         return mIndices;

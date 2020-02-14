@@ -16,7 +16,7 @@ namespace Memory
 
     GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::Texture::Properties& properties)
     {
-        Texture* texture = new Texture{ properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, mCommandList };
+        Texture* texture = new Texture{ properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, this };
         auto [iter, success] = mAllocatedResources.insert(texture);
 
         auto deallocationCallback = [this, iter](Texture* texture)
@@ -32,7 +32,7 @@ namespace Memory
     {
         Texture* texture = new Texture{
             properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, 
-            mCommandList, *mDevice, explicitHeap, heapOffset 
+            this, *mDevice, explicitHeap, heapOffset 
         };
 
         auto [iter, success] = mAllocatedResources.insert(texture);
@@ -49,11 +49,6 @@ namespace Memory
     void GPUResourceProducer::SetCommandList(HAL::CopyCommandListBase* commandList)
     {
         mCommandList = commandList;
-
-        for (GPUResource* resource : mAllocatedResources)
-        {
-            resource->SetCommandList(mCommandList);
-        }
     }
 
     void GPUResourceProducer::BeginFrame(uint64_t frameNumber)
@@ -70,6 +65,11 @@ namespace Memory
         {
             resource->EndFrame(frameNumber);
         }
+    }
+
+    HAL::CopyCommandListBase* GPUResourceProducer::CommandList()
+    {
+        return mCommandList;
     }
 
 }

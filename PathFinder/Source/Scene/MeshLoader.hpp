@@ -30,7 +30,7 @@ namespace PathFinder
     class MeshLoader
     {
     public:
-        MeshLoader(const std::filesystem::path& fileRoot, MeshGPUStorage* gpuVertexStorage);
+        MeshLoader(const std::filesystem::path& fileRoot);
 
         std::vector<Mesh> Load(const std::string& fileName);
 
@@ -41,7 +41,6 @@ namespace PathFinder
 
         std::vector<Mesh> mLoadedMeshes;
         std::filesystem::path mRootPath;
-        MeshGPUStorage* mVertexStorage;
     };
 
 }

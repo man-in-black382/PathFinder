@@ -9,9 +9,9 @@ namespace PathFinder
         : mRenderPassGraph{ renderPassGraph },
         mSchedulingInfos{ &AliasingMetadata::SortDescending } {}
 
-    void PipelineResourceMemoryAliaser::AddSchedulingInfo(PipelineResourceSchedulingInfo* allocation)
+    void PipelineResourceMemoryAliaser::AddSchedulingInfo(PipelineResourceSchedulingInfo* scheudlingInfo)
     {
-        mSchedulingInfos.emplace(GetTimeline(allocation), allocation);
+        mSchedulingInfos.emplace(GetTimeline(scheudlingInfo), scheudlingInfo);
     }
 
     uint64_t PipelineResourceMemoryAliaser::Alias()

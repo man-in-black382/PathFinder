@@ -11,6 +11,8 @@ namespace Memory
             auto frameIndex = frameAttributes.Tail - frameAttributes.Size;
             ExecutePendingDealloactions(frameIndex);
         });
+
+        mPendingDeallocations.resize(simultaneousFramesInFlight);
     }
 
     PoolCommandListAllocator::~PoolCommandListAllocator()

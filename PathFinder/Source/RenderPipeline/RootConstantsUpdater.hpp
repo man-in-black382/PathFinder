@@ -11,16 +11,16 @@ namespace PathFinder
         RootConstantsUpdater(PipelineResourceStorage* storage);
 
         template <class RootCBufferContent>
-        RootCBufferContent* UpdateRootConstantBuffer();
+        void UpdateRootConstantBuffer(const RootCBufferContent& data);
 
     private:
         PipelineResourceStorage* mResourceStorage;
     };
 
-    template <class RootCBufferData>
-    RootCBufferData* RootConstantsUpdater::UpdateRootConstantBuffer()
+    template <class RootCBufferContent>
+    void RootConstantsUpdater::UpdateRootConstantBuffer(const RootCBufferContent& data)
     {
-        return mResourceStorage->RootConstantDataForCurrentPass<RootCBufferData>();
+        return mResourceStorage->UpdateCurrentPassRootConstants(data);
     }
 
 }

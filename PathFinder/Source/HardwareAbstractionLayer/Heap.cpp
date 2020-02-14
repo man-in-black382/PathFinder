@@ -6,12 +6,12 @@ namespace HAL
 {
 
     Heap::Heap(const Device& device, uint64_t size, HeapAliasingGroup aliasingGroup, std::optional<CPUAccessibleHeapType> cpuAccessibleType)
-        : mAlighnedSize{ Foundation::MemoryUtils::Align(size, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT) }, mCPUAccessibleType{ cpuAccessibleType }
+        : mAlighnedSize{ Foundation::MemoryUtils::Align(size, device.MandatoryHeapAlignment()) }, mCPUAccessibleType{ cpuAccessibleType }
     {
         D3D12_HEAP_DESC desc{};
 
         desc.Flags = D3D12_HEAP_FLAG_NONE;
-        desc.Alignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+        desc.Alignment = device.MandatoryHeapAlignment();
         desc.SizeInBytes = mAlighnedSize;
 
         desc.Properties.CreationNodeMask = 0;
