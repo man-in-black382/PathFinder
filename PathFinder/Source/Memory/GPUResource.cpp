@@ -26,14 +26,12 @@ namespace Memory
             return;
         }
 
-        HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
+        HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
         mUploadBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
 
-        if (mStateTracker && mUploadStrategy != UploadStrategy::DirectAccess)
+        if (mStateTracker)
         {
-            auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
-
-            if (barrier)
+            if (auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination))
             {
                 mCommandListProvider->CommandList()->InsertBarrier(*barrier);
             }
@@ -50,14 +48,12 @@ namespace Memory
             return;
         }
 
-        HAL::Buffer::Properties properties{ HALResource()->TotalMemory() };
+        HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
         mReadbackBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
 
         if (mStateTracker)
         {
-            auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopySource);
-
-            if (barrier)
+            if (auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopySource))
             {
                 mCommandListProvider->CommandList()->InsertBarrier(*barrier);
             }
@@ -72,6 +68,21 @@ namespace Memory
     void GPUResource::BeginFrame(uint64_t frameNumber)
     {
         mFrameNumber = frameNumber;
+
+        if (mUploadStrategy == UploadStrategy::DirectAccess && mCompletedUploadBuffer)
+        {
+            // Direct upload resources must have at least one upload buffer at all times
+            mUploadBuffers.emplace(std::move(mCompletedUploadBuffer), mFrameNumber);
+        }
+        else
+        {
+            // For other upload strategies we can get rid of the memory until a write operation is requested
+            mCompletedUploadBuffer = nullptr;
+        }
+        
+        // Readback memory we just free unconditionally since reading upload only resources is not permitted in the first place.
+        // A window to read back the data is after frame end but before new frame start.
+        mCompletedReadbackBuffer = nullptr;
     }
 
     void GPUResource::EndFrame(uint64_t frameNumber)
@@ -79,6 +90,7 @@ namespace Memory
         // Release upload buffers for completed frames
         while (!mUploadBuffers.empty() && mUploadBuffers.front().second <= frameNumber)
         {
+            mCompletedUploadBuffer = std::move(mUploadBuffers.front().first);
             mUploadBuffers.pop();
         }
 

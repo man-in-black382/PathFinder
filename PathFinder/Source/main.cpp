@@ -18,6 +18,8 @@
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
+#include "RenderPipeline/GlobalRootConstants.hpp"
+#include "RenderPipeline/PerFrameRootConstants.hpp"
 
 #include "IO/CommandLineParser.hpp"
 #include "IO/Input.hpp"
@@ -111,14 +113,33 @@ int main(int argc, char** argv)
 
     engine.MeshStorage().StoreMeshes(scene.Meshes());
 
-    engine.UploadProcessAndTransferAssets();
+    //engine.UploadProcessAndTransferAssets();
     engine.ScheduleAndAllocatePipelineResources();
 
     engine.PreRenderEvent() += { "UI.Update", [&]()
     {
+       /* engine.UIStorage().StartNewFrame();
         ImGui::ShowDemoWindow();
         engine.UIStorage().UploadUI();
         engine.MeshStorage().UpdateMeshInstanceTable(scene.MeshInstances());
+
+        PathFinder::GlobalRootConstants globalConstants;
+        PathFinder::PerFrameRootConstants perFrameConstants;
+
+        globalConstants.PipelineRTResolution = { engine.RenderSurface().Dimensions().Width, engine.RenderSurface().Dimensions().Height };
+        
+        const PathFinder::Camera& camera = scene.MainCamera();
+
+        perFrameConstants.CameraPosition = glm::vec4{ camera.Position(), 1.0 };
+        perFrameConstants.CameraView = camera.View();
+        perFrameConstants.CameraProjection = camera.Projection();
+        perFrameConstants.CameraViewProjection = camera.ViewProjection();
+        perFrameConstants.CameraInverseView = camera.InverseView();
+        perFrameConstants.CameraInverseProjection = camera.InverseProjection();
+        perFrameConstants.CameraInverseViewProjection = camera.InverseViewProjection(); 
+
+        engine.SetGlobalRootConstants(globalConstants);
+        engine.SetFrameRootConstants(perFrameConstants);*/
     }};
 
     // Main loop

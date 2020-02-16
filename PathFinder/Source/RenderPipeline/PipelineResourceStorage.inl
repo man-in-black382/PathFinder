@@ -3,27 +3,12 @@
 namespace PathFinder
 {
 
-    template <class RootConstants>
-    RootConstants* PipelineResourceStorage::RootConstantDataForCurrentPass()
-    {
-        /*PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
-
-        if (!passObjects.PassConstantBuffer)
-        {
-            return nullptr;
-        }
-
-        return reinterpret_cast<RootConstants *>(passObjects.PassConstantBuffer->At(0));*/
-
-        return nullptr;
-    }
-
     template <class Constants>
     void PipelineResourceStorage::UpdateFrameRootConstants(const Constants& constants)
     {
         constexpr uint64_t Alignment = 256;
 
-        if (!mPerFrameRootConstantsBuffer || mPerFrameRootConstantsBuffer->HALBuffer()->ElementCapacity<Constants>(Alignment) < 1)
+        if (!mPerFrameRootConstantsBuffer || mPerFrameRootConstantsBuffer->ElementCapacity<Constants>(Alignment) < 1)
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
@@ -38,7 +23,7 @@ namespace PathFinder
     {
         constexpr uint64_t Alignment = 256;
 
-        if (!mGlobalRootConstantsBuffer || mGlobalRootConstantsBuffer->HALBuffer()->ElementCapacity<Constants>(Alignment) < 1)
+        if (!mGlobalRootConstantsBuffer || mGlobalRootConstantsBuffer->ElementCapacity<Constants>(Alignment) < 1)
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             mGlobalRootConstantsBuffer = mResourceProducer->NewBuffer(properties);
@@ -55,14 +40,14 @@ namespace PathFinder
 
         constexpr uint64_t Alignment = 256;
 
-        if (!passObjects.PassConstantBuffer || passObjects.PassConstantBuffer->HALBuffer()->ElementCapacity<Constants>(Alignment) < 1)
+        if (!passObjects.PassConstantBuffer || passObjects.PassConstantBuffer->ElementCapacity<Constants>(Alignment) < 1)
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             passObjects.PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
         }
 
-        mGlobalRootConstantsBuffer->RequestWrite();
-        mGlobalRootConstantsBuffer->Write(&constants, 0, 1, Alignment);
+        passObjects.PassConstantBuffer->RequestWrite();
+        passObjects.PassConstantBuffer->Write(&constants, 0, 1, Alignment);
     }
 
     template <class BufferDataT>
@@ -94,18 +79,8 @@ namespace PathFinder
             }
 
             HAL::Buffer::Properties<BufferDataT> finalProperties{ capacity, perElementAlignment, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates() };
-            resourceObjects.PipelineBuffer.Resource = mResourceProducer->NewBuffer(finalProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset);
-            resourceObjects.PipelineBuffer.Resource->SetDebugName(resourceName.ToString());
-
-            for (const auto& [passName, passMetadata] : schedulingInfo.AllPassesMetadata())
-            {
-                BufferPipelineResource::PassMetadata& newResourcePerPassData = resourceObjects.PipelineBuffer.AllocateMetadateForPass(passName);
-                newResourcePerPassData.IsCBDescriptorRequested = passMetadata.CreateBufferCBDescriptor;
-                newResourcePerPassData.IsSRDescriptorRequested = passMetadata.CreateBufferSRDescriptor;
-                newResourcePerPassData.IsUADescriptorRequested = passMetadata.CreateBufferUADescriptor;
-                newResourcePerPassData.RequiredState = passMetadata.OptimizedState;
-                newResourcePerPassData.ShaderVisibleFormat = passMetadata.ShaderVisibleFormat;
-            }
+            resourceObjects.Buffer = mResourceProducer->NewBuffer(finalProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset);
+            resourceObjects.Buffer->SetDebugName(resourceName.ToString());
         };
 
         return &(resourceObjects.SchedulingInfo.value());

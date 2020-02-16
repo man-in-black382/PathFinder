@@ -46,8 +46,14 @@ namespace Memory
         void RequestWrite() override;
         void RequestRead() override;
 
+        template <class Element = uint8_t>
+        uint64_t ElementCapacity(uint64_t elementAlignment = 1) const;
+
         const HAL::Buffer* HALBuffer() const;
         const HAL::Resource* HALResource() const override;
+
+    protected:
+        virtual uint64_t ResourceSizeInBytes() const override;
 
     private:
         uint64_t mCurrentSRDescriptorStride = 1;

@@ -79,12 +79,15 @@ namespace Memory
         const HAL::Buffer* CurrentFrameUploadBuffer() const;
         const HAL::Buffer* CurrentFrameReadbackBuffer() const;
 
+        virtual uint64_t ResourceSizeInBytes() const = 0;
+
         std::queue<BufferFrameNumberPair> mUploadBuffers;
         std::queue<BufferFrameNumberPair> mReadbackBuffers;
 
     private:
         uint64_t mFrameNumber = 0;
         SegregatedPoolsResourceAllocator::BufferPtr mCompletedReadbackBuffer;
+        SegregatedPoolsResourceAllocator::BufferPtr mCompletedUploadBuffer;
     };
 
 }

@@ -12,7 +12,10 @@
 
 namespace HAL
 {
-    enum class BackBufferingStrategy: uint8_t { Double = 2, Triple = 3 };
+    enum class BackBufferingStrategy: uint8_t
+    { 
+        Double = 2, Triple = 3 
+    };
 
     class SwapChain
     {

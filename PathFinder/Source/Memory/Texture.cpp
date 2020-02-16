@@ -32,6 +32,8 @@ namespace Memory
            new HAL::Texture{ device, mainResourceExplicitHeap, explicitHeapOffset, properties },
            [](HAL::Texture* texture) { delete texture; }
         };
+
+        if (mStateTracker) mStateTracker->StartTrakingResource(HALTexture());
     }
 
     Texture::~Texture()
@@ -41,25 +43,25 @@ namespace Memory
 
     const HAL::RTDescriptor* Texture::GetOrCreateRTDescriptor()
     {
-        if (!mRTDescriptor) mRTDescriptor = mDescriptorAllocator->AllocateRTDescriptor(HALTexture());
+        if (!mRTDescriptor) mRTDescriptor = mDescriptorAllocator->AllocateRTDescriptor(*HALTexture());
         return mRTDescriptor.get();
     }
 
     const HAL::DSDescriptor* Texture::GetOrCreateDSDescriptor()
     {
-        if (!mDSDescriptor) mDSDescriptor = mDescriptorAllocator->AllocateDSDescriptor(HALTexture());
+        if (!mDSDescriptor) mDSDescriptor = mDescriptorAllocator->AllocateDSDescriptor(*HALTexture());
         return mDSDescriptor.get();
     }
 
     const HAL::SRDescriptor* Texture::GetOrCreateSRDescriptor()
     {
-        if (!mSRDescriptor) mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(HALTexture());
+        if (!mSRDescriptor) mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(*HALTexture());
         return mSRDescriptor.get();
     }
 
     const HAL::UADescriptor* Texture::GetOrCreateUADescriptor()
     {
-        if (!mUADescriptor) mUADescriptor = mDescriptorAllocator->AllocateUADescriptor(HALTexture());
+        if (!mUADescriptor) mUADescriptor = mDescriptorAllocator->AllocateUADescriptor(*HALTexture());
         return mUADescriptor.get();
     }
 
@@ -95,6 +97,11 @@ namespace Memory
     const HAL::Resource* Texture::HALResource() const
     {
         return mTexturePtr.get();
+    }
+
+    uint64_t Texture::ResourceSizeInBytes() const
+    {
+        return mTexturePtr->TotalMemory();
     }
 
 }

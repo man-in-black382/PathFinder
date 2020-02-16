@@ -25,10 +25,12 @@ namespace HAL
             assert_format(std::holds_alternative<ColorFormat>(texture.Format()), "Texture format is not suited for render targets");
         }
 
-        D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(d3dDesc);
-        mDevice->D3DDevice()->CreateRenderTargetView(texture.D3DResource(), &rtvDesc, range.StartCPUHandle);
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeap, 0) };
 
-        return RTDescriptor{ { range.StartCPUHandle.ptr + indexInHeap * mIncrementSize } };
+        D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(d3dDesc);
+        mDevice->D3DDevice()->CreateRenderTargetView(texture.D3DResource(), &rtvDesc, cpuHandle);
+
+        return RTDescriptor{ cpuHandle };
     }
 
     D3D12_RENDER_TARGET_VIEW_DESC RTDescriptorHeap::ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const
@@ -97,10 +99,12 @@ namespace HAL
 
         assert_format(std::holds_alternative<DepthStencilFormat>(texture.Format()), "Texture is not of depth-stencil format");
 
-        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = ResourceToDSVDescription(texture.D3DDescription());
-        mDevice->D3DDevice()->CreateDepthStencilView(texture.D3DResource(), &dsvDesc, range.StartCPUHandle);
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeap, 0) };
 
-        return DSDescriptor{ { range.StartCPUHandle.ptr + indexInHeap * mIncrementSize } };;
+        D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = ResourceToDSVDescription(texture.D3DDescription());
+        mDevice->D3DDevice()->CreateDepthStencilView(texture.D3DResource(), &dsvDesc, cpuHandle);
+
+        return DSDescriptor{ cpuHandle };
     }
 
     D3D12_DEPTH_STENCIL_VIEW_DESC DSDescriptorHeap::ResourceToDSVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const
@@ -290,36 +294,28 @@ namespace HAL
 
     const SRDescriptor CBSRUADescriptorHeap::EmplaceSRDescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
     {
-        auto index = std::underlying_type_t<Range>(Range::ShaderResource);
-        RangeAllocationInfo& range = GetRange(index);
-
         assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
 
-        D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
-        mDevice->D3DDevice()->CreateShaderResourceView(texture.D3DResource(), &desc, range.StartCPUHandle);
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::ShaderResource)) };
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{ GetGPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::ShaderResource)) };
 
-        return SRDescriptor{
-            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            indexInHeapRange
-        };
+        D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
+        mDevice->D3DDevice()->CreateShaderResourceView(texture.D3DResource(), &desc, cpuHandle);
+
+        return SRDescriptor{ cpuHandle, gpuHandle, indexInHeapRange };
     }
 
     const UADescriptor CBSRUADescriptorHeap::EmplaceUADescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
     {
-        auto index = std::underlying_type_t<Range>(Range::UnorderedAccess);
-        RangeAllocationInfo& range = GetRange(index);
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::UnorderedAccess)) };
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{ GetGPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::UnorderedAccess)) };
 
         assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
-        mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DResource(), nullptr, &desc, range.StartCPUHandle);
+        mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DResource(), nullptr, &desc, cpuHandle);
 
-        return UADescriptor{
-            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            indexInHeapRange
-        };
+        return UADescriptor{ cpuHandle, gpuHandle, indexInHeapRange };
     }
 
     DescriptorAddress CBSRUADescriptorHeap::RangeStartGPUAddress(Range range) const
@@ -331,47 +327,35 @@ namespace HAL
 
     const CBDescriptor CBSRUADescriptorHeap::EmplaceCBDescriptor(uint64_t indexInHeapRange, const Buffer& buffer, uint64_t stride)
     {
-        auto index = std::underlying_type_t<Range>(Range::ConstantBuffer);
-        RangeAllocationInfo& range = GetRange(index);
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::ConstantBuffer)) };
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{ GetGPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::ConstantBuffer)) };
 
         D3D12_CONSTANT_BUFFER_VIEW_DESC desc{ buffer.GPUVirtualAddress(), (UINT)stride };
-        mDevice->D3DDevice()->CreateConstantBufferView(&desc, range.StartCPUHandle);
+        mDevice->D3DDevice()->CreateConstantBufferView(&desc, cpuHandle);
 
-        return CBDescriptor{
-            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            indexInHeapRange
-        };
+        return CBDescriptor{ cpuHandle, gpuHandle, indexInHeapRange };
     }
 
     const SRDescriptor CBSRUADescriptorHeap::EmplaceSRDescriptor(uint64_t indexInHeapRange, const Buffer& buffer, uint64_t stride)
     {
-        auto index = std::underlying_type_t<Range>(Range::ShaderResource);
-        RangeAllocationInfo& range = GetRange(index);
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::ShaderResource)) };
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{ GetGPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::ShaderResource)) };
 
         D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(buffer.D3DDescription(), stride);
-        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DResource(), &desc, range.StartCPUHandle);
+        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DResource(), &desc, cpuHandle);
 
-        return SRDescriptor{
-            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            indexInHeapRange
-        };
+        return SRDescriptor{ cpuHandle, gpuHandle, indexInHeapRange };
     }
 
     const UADescriptor CBSRUADescriptorHeap::EmplaceUADescriptor(uint64_t indexInHeapRange, const Buffer& buffer, uint64_t stride)
     {
-        auto index = std::underlying_type_t<Range>(Range::UnorderedAccess);
-        RangeAllocationInfo& range = GetRange(index);
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::UnorderedAccess)) };
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{ GetGPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::UnorderedAccess)) };
 
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(buffer.D3DDescription(), stride);
-        mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DResource(), nullptr, &desc, range.StartCPUHandle);
+        mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DResource(), nullptr, &desc, cpuHandle);
 
-        return UADescriptor{
-            { range.StartCPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            { range.StartGPUHandle.ptr + indexInHeapRange * mIncrementSize },
-            indexInHeapRange
-        };
+        return UADescriptor{ cpuHandle, gpuHandle, indexInHeapRange };
     }
 
  }

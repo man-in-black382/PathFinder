@@ -43,9 +43,9 @@ namespace PathFinder
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
 
         // Use vertex and index buffers as normal structured buffers
-       /* context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedVertexBuffer_1P1N1UV1T1BT(), 0, 0, HAL::ShaderRegister::ShaderResource);
-        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedIndexBuffer_1P1N1UV1T1BT(), 1, 0, HAL::ShaderRegister::ShaderResource);*/
-        //context->GetCommandRecorder()->BindExternalBuffer(context->GetMeshStorage()->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedVertexBuffer(), 0, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedIndexBuffer(), 1, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
 
         context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {

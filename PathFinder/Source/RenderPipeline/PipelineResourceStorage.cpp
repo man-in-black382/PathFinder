@@ -13,47 +13,54 @@ namespace PathFinder
         HAL::Device* device, 
         Memory::GPUResourceProducer* resourceProducer,
         Memory::PoolDescriptorAllocator* descriptorAllocator,
+        Memory::ResourceStateTracker* stateTracker,
         const RenderSurfaceDescription& defaultRenderSurface,
         const RenderPassExecutionGraph* passExecutionGraph)
         :
         mDevice{ device },
         mStateOptimizer{ passExecutionGraph },
+        mResourceStateTracker{ stateTracker },
         mRTDSMemoryAliaser{ passExecutionGraph },
         mNonRTDSMemoryAliaser{ passExecutionGraph },
         mUniversalMemoryAliaser{ passExecutionGraph },
         mBufferMemoryAliaser{ passExecutionGraph },
         mDefaultRenderSurface{ defaultRenderSurface },
         mResourceProducer{ resourceProducer },
-        mDescriptorAllocator{ descriptorAllocator }
+        mDescriptorAllocator{ descriptorAllocator },
+        mPassExecutionGraph{ passExecutionGraph }
     {
         CreateDebugBuffers(passExecutionGraph);
     }
 
     const HAL::RTDescriptor& PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
     {
-        const TexturePipelineResource* pipelineResource = GetPipelineTextureResource(resourceName);
-        assert_format(pipelineResource, "Resource ", resourceName.ToString(), " doesn't exist");
+        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
-        auto perPassData = pipelineResource->GetMetadataForPass(mCurrentPassName);
-        assert_format(perPassData && perPassData->IsRTDescriptorRequested, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
+        Memory::Texture* texture = resourceObjects.Texture.get();
+        assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
+
+        auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentPassName);
+        assert_format(perPassData && perPassData->CreateTextureRTDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
         
-        return *pipelineResource->Resource->GetOrCreateRTDescriptor();
+        return *texture->GetOrCreateRTDescriptor();
     }
 
     const HAL::DSDescriptor& PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
     {
-        const TexturePipelineResource* pipelineResource = GetPipelineTextureResource(resourceName);
-        assert_format(pipelineResource, "Resource ", resourceName.ToString(), " doesn't exist");
+        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
-        auto perPassData = pipelineResource->GetMetadataForPass(mCurrentPassName);
-        assert_format(perPassData && perPassData->IsDSDescriptorRequested, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
+        Memory::Texture* texture = resourceObjects.Texture.get();
+        assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
-        return *pipelineResource->Resource->GetOrCreateDSDescriptor();
+        auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentPassName);
+        assert_format(perPassData && perPassData->CreateTextureDSDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
+
+        return *texture->GetOrCreateDSDescriptor();
     }
 
     const HAL::RTDescriptor& PipelineResourceStorage::GetCurrentBackBufferDescriptor() const
     {
-        return mBackBufferDescriptors[mCurrentBackBufferIndex];
+        return *mBackBufferDescriptors[mCurrentBackBufferIndex];
     }
 
     void PipelineResourceStorage::SetCurrentBackBufferIndex(uint8_t index)
@@ -89,19 +96,9 @@ namespace PathFinder
     {
         for (auto i = 0; i < swapChain.BackBuffers().size(); i++)
         {
-            //mBackBufferDescriptors.push_back(mDescriptorStorage->EmplaceRTDescriptorIfNeeded(swapChain.BackBuffers()[i].get()));
+            mBackBufferDescriptors.push_back(mDescriptorAllocator->AllocateRTDescriptor(*swapChain.BackBuffers()[i]));
         }
     }
-
- /*   GlobalRootConstants* PipelineResourceStorage::GlobalRootConstantData()
-    {
-        return mGlobalRootConstantsBuffer.At(0);
-    }
-
-    PerFrameRootConstants* PipelineResourceStorage::PerFrameRootConstantData()
-    {
-        return mPerFrameRootConstantsBuffer.At(0);
-    }*/
 
     bool PipelineResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
     {
@@ -161,19 +158,8 @@ namespace PathFinder
             HAL::Texture::Properties completeProperties{ 
                 format, kind, dimensions, optimizedClearValue, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates(), mipCount };
 
-            resourceObjects.PipelineTexture.Resource = mResourceProducer->NewTexture(completeProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset);
-            resourceObjects.PipelineTexture.Resource->SetDebugName(resourceName.ToString());
-
-            for (const auto& [passName, passMetadata] : schedulingInfo.AllPassesMetadata())
-            {
-                TexturePipelineResource::PassMetadata& newResourcePerPassData = resourceObjects.PipelineTexture.AllocateMetadateForPass(passName);
-                newResourcePerPassData.IsRTDescriptorRequested = passMetadata.CreateTextureRTDescriptor;
-                newResourcePerPassData.IsDSDescriptorRequested = passMetadata.CreateTextureDSDescriptor;
-                newResourcePerPassData.IsSRDescriptorRequested = passMetadata.CreateTextureSRDescriptor;
-                newResourcePerPassData.IsUADescriptorRequested = passMetadata.CreateTextureUADescriptor;
-                newResourcePerPassData.RequiredState = passMetadata.OptimizedState;
-                newResourcePerPassData.ShaderVisibleFormat = passMetadata.ShaderVisibleFormat;
-            }
+            resourceObjects.Texture = mResourceProducer->NewTexture(completeProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset);
+            resourceObjects.Texture->SetDebugName(resourceName.ToString());
         };
 
         return &(resourceObjects.SchedulingInfo.value());
@@ -275,6 +261,18 @@ namespace PathFinder
         }
     }
 
+    void PipelineResourceStorage::TransitionResourcesToCurrentPassStates()
+    {
+        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
+        for (ResourceName resourceName : passObjects.ScheduledResourceNames)
+        {
+            PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
+            resourceObjects.GetGPUResource()->RequestNewState(resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentPassName)->OptimizedState);
+        }
+        
+        passObjects.TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions();
+    }
+
     const Memory::Buffer* PipelineResourceStorage::GlobalRootConstantsBuffer() const
     {
         return mGlobalRootConstantsBuffer.get();
@@ -297,50 +295,37 @@ namespace PathFinder
         return passObjects.ScheduledResourceNames;
     }
 
-    const TexturePipelineResource* PipelineResourceStorage::GetPipelineTextureResource(ResourceName resourceName) const
+    const Memory::Texture* PipelineResourceStorage::GetTextureResource(ResourceName resourceName) const
     {
         const PerResourceObjects* resourceObjects = GetPerResourceObjects(resourceName);
-
-        if (!resourceObjects || !resourceObjects->PipelineTexture.Resource)
-        {
-            return nullptr;
-        }
-
-        return &resourceObjects->PipelineTexture;
+        return resourceObjects ? resourceObjects->Texture.get() : nullptr;
     }
 
-    const BufferPipelineResource* PipelineResourceStorage::GetPipelineBufferResource(ResourceName resourceName) const
+    const Memory::Buffer* PipelineResourceStorage::GetBufferResource(ResourceName resourceName) const
     {
         const PerResourceObjects* resourceObjects = GetPerResourceObjects(resourceName);
-
-        if (!resourceObjects || !resourceObjects->PipelineBuffer.Resource)
-        {
-            return nullptr;
-        }
-
-        return &resourceObjects->PipelineBuffer;
+        return resourceObjects ? resourceObjects->Buffer.get() : nullptr;
     }
 
     const Memory::GPUResource* PipelineResourceStorage::GetGPUResource(ResourceName resourceName) const
     {
         const PerResourceObjects* resourceObjects = GetPerResourceObjects(resourceName);
-
-        if (!resourceObjects)
-        {
-            return nullptr;
-        }
-        else {
-            return resourceObjects->GetGPUResource();
-        }
+        return resourceObjects ? resourceObjects->GetGPUResource() : nullptr;
     }
 
-    const HAL::ResourceBarrierCollection& PipelineResourceStorage::AliasingBarriersForCurrentPass()
+    const HAL::ResourceBarrierCollection& PipelineResourceStorage::AliasingBarriersForCurrentPass() 
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
         return passObjects.AliasingBarriers;
     }
 
-    const HAL::ResourceBarrierCollection& PipelineResourceStorage::UnorderedAccessBarriersForCurrentPass()
+    const HAL::ResourceBarrierCollection& PipelineResourceStorage::TransitionBarriersForCurrentPass() 
+    {
+        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
+        return passObjects.TransitionBarriers;
+    }
+
+    const HAL::ResourceBarrierCollection& PipelineResourceStorage::UnorderedAccessBarriersForCurrentPass() 
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
         return passObjects.UAVBarriers;
@@ -361,8 +346,15 @@ namespace PathFinder
 
     const Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource() const
     {
-        if (PipelineTexture.Resource) return PipelineTexture.Resource.get();
-        else if (PipelineBuffer.Resource) return PipelineBuffer.Resource.get();
+        if (Texture) return Texture.get();
+        else if (Buffer) return Buffer.get();
+        else return nullptr;
+    }
+
+    Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource()
+    {
+        if (Texture) return Texture.get();
+        else if (Buffer) return Buffer.get();
         else return nullptr;
     }
 

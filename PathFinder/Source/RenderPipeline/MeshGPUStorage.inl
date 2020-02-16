@@ -23,7 +23,7 @@ namespace PathFinder
     {
         uint8_t alignment = 128;
 
-        if (!mInstanceTable || mInstanceTable->HALBuffer()->ElementCapacity<GPUInstanceTableEntry>(alignment) < meshInstances.size())
+        if (!mInstanceTable || mInstanceTable->ElementCapacity<GPUInstanceTableEntry>(alignment) < meshInstances.size())
         {
             HAL::Buffer::Properties<GPUInstanceTableEntry> props{ meshInstances.size(), alignment };
             mInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);

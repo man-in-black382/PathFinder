@@ -10,14 +10,14 @@ namespace PathFinder
 
     void RTAS::AllocateBuffersForBuildIfNeeded(uint64_t destinationBufferSize, uint64_t scratchBufferSize)
     {
-        if (!mDestinationBuffer || mDestinationBuffer->HALBuffer()->TotalMemory() < destinationBufferSize)
+        if (!mDestinationBuffer || mDestinationBuffer->ElementCapacity() < destinationBufferSize)
         {
             HAL::Buffer::Properties properties{ destinationBufferSize, 1, HAL::ResourceState::RaytracingAccelerationStructure, HAL::ResourceState::UnorderedAccess };
             mDestinationBuffer = mResourceProducer->NewBuffer(properties);
             mUABarrier = HAL::UnorderedAccessResourceBarrier{ mDestinationBuffer->HALBuffer() };
         }
 
-        if (!mScratchBuffer || mScratchBuffer->HALBuffer()->TotalMemory() < scratchBufferSize)
+        if (!mScratchBuffer || mScratchBuffer->ElementCapacity() < scratchBufferSize)
         {
             HAL::Buffer::Properties properties{ scratchBufferSize, 1, HAL::ResourceState::UnorderedAccess };
             mScratchBuffer = mResourceProducer->NewBuffer(properties);
@@ -35,14 +35,14 @@ namespace PathFinder
         // Use last destination buffer as a source of update
         mUpdateSourceBuffer = std::move(mDestinationBuffer);
 
-        if (!mDestinationBuffer || mDestinationBuffer->HALBuffer()->TotalMemory() < destinationBufferSize)
+        if (!mDestinationBuffer || mDestinationBuffer->ElementCapacity() < destinationBufferSize)
         {
             HAL::Buffer::Properties properties{ destinationBufferSize, 1, HAL::ResourceState::RaytracingAccelerationStructure, HAL::ResourceState::UnorderedAccess };
             mDestinationBuffer = mResourceProducer->NewBuffer(properties);
             mUABarrier = HAL::UnorderedAccessResourceBarrier{ mDestinationBuffer->HALBuffer() };
         }
 
-        if (!mScratchBuffer || mScratchBuffer->HALBuffer()->TotalMemory() < scratchBufferSize)
+        if (!mScratchBuffer || mScratchBuffer->ElementCapacity() < scratchBufferSize)
         {
             HAL::Buffer::Properties properties{ scratchBufferSize, 1, HAL::ResourceState::UnorderedAccess };
             mScratchBuffer = mResourceProducer->NewBuffer(properties);

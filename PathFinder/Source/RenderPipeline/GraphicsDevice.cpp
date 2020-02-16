@@ -97,9 +97,6 @@ namespace PathFinder
         mCommandList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
         // Look at PipelineStateManager for base root signature parameter ordering
-        //mCommandList->SetGraphicsRootConstantBuffer(mResourceStorage->GlobalRootConstantsBuffer(), 0);
-        //mCommandList->SetGraphicsRootConstantBuffer(mResourceStorage->PerFrameRootConstantsBuffer(), 1);
-
         HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
         HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
 
@@ -117,12 +114,34 @@ namespace PathFinder
         mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 12);
     }
 
-    void GraphicsDevice::BindCurrentPassBuffersGraphics()
+    void GraphicsDevice::BindConstantBuffersGraphics()
     {
-       /* if (auto buffer = mResourceStorage->RootConstantBufferForCurrentPass())
+        if (auto buffer = mResourceStorage->GlobalRootConstantsBuffer(); 
+            buffer && 
+            mBoundGlobalConstantBufferGraphics &&
+            buffer->HALBuffer() != mBoundGlobalConstantBufferGraphics)
         {
-            mCommandList->SetGraphicsRootConstantBuffer(*buffer, 2);
-        }*/
+            mBoundGlobalConstantBufferGraphics = buffer->HALBuffer();
+            mCommandList->SetGraphicsRootConstantBuffer(*mBoundGlobalConstantBufferGraphics, 0);
+        }
+
+        if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer(); 
+            buffer && 
+            mBoundFrameConstantBufferGraphics &&
+            buffer->HALBuffer() != mBoundFrameConstantBufferGraphics)
+        {
+            mBoundFrameConstantBufferGraphics = buffer->HALBuffer();
+            mCommandList->SetGraphicsRootConstantBuffer(*mBoundFrameConstantBufferGraphics, 1);
+        }
+
+        if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass(); 
+            buffer && 
+            mBoundPassConstantBufferGraphics &&
+            buffer->HALBuffer() != mBoundPassConstantBufferGraphics)
+        {
+            mBoundPassConstantBufferGraphics = buffer->HALBuffer();
+            mCommandList->SetGraphicsRootConstantBuffer(*mBoundPassConstantBufferGraphics, 2);
+        }
 
         //mCommandList->SetGraphicsRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);
     }
@@ -162,21 +181,19 @@ namespace PathFinder
         //
         if (graphicsStateApplied && mAppliedGraphicsState == state) return;
 
-        // Set RT state
+        // Set Graphics state
         mCommandList->SetPipelineState(*state);
         mCommandList->SetPrimitiveTopology(state->GetPrimitiveTopology());
 
-        // Same root signature is already applied as a graphics signature
+        // If root signature has changed we need to rebind common bindings
         //
-        if (graphicsStateApplied && state->GetRootSignature() == mAppliedGraphicsRootSignature)
+        if (state->GetRootSignature() != mAppliedGraphicsRootSignature)
         {
-            BindCurrentPassBuffersGraphics();
-            return;
+            mCommandList->SetGraphicsRootSignature(*state->GetRootSignature());
+            ApplyCommonGraphicsResourceBindings(); 
         }
 
-        mCommandList->SetGraphicsRootSignature(*state->GetRootSignature());
-        ApplyCommonGraphicsResourceBindings();
-        BindCurrentPassBuffersGraphics();
+        BindConstantBuffersGraphics();
 
         // Nullify cached states and signatures
         mAppliedComputeState = nullptr;
@@ -213,23 +230,21 @@ namespace PathFinder
         // Set RT state
         //mCommandList->SetPipelineState(*pso);
 
-        // Same root signature is already applied as a graphics signature
+        // If root signature has changed we need to rebind common bindings
         //
-        if (rayTracingStateApplied && state->GetGlobalRootSignature() == mAppliedGraphicsRootSignature)
+        if (state->GetGlobalRootSignature() != mAppliedGraphicsRootSignature)
         {
-            BindCurrentPassBuffersGraphics();
-            return;
+            mCommandList->SetGraphicsRootSignature(*state->GetGlobalRootSignature());
+            ApplyCommonGraphicsResourceBindings();
         }
 
-        mCommandList->SetGraphicsRootSignature(*state->GetGlobalRootSignature());
-        ApplyCommonGraphicsResourceBindings();
-        BindCurrentPassBuffersGraphics();
+        BindConstantBuffersGraphics();
 
         // Nullify cached states and signatures
         mAppliedGraphicsState = nullptr;
         mAppliedComputeState = nullptr;
         mAppliedComputeRootSignature = nullptr;
-        
+
         // Cache RT state and signature as graphics signature
         mAppliedRayTracingState = state;
         mAppliedGraphicsRootSignature = state->GetGlobalRootSignature();

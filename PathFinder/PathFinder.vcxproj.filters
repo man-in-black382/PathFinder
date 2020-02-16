@@ -1958,9 +1958,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderSurfaceDescription.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\PipelineResource.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2728,9 +2725,6 @@
     <None Include="Source\RenderPipeline\ResourceScheduler.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\RenderPipeline\PipelineResource.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Source\RenderPipeline\GPUCommandRecorder.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -2766,6 +2760,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\MeshGPUStorage.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\RenderEngine.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -13,7 +13,7 @@ namespace PathFinder
     public:
         ResourceProvider(const PipelineResourceStorage* storage);
        
-        uint32_t GetTextureDescriptorTableIndex(Foundation::Name resourceName) const;
+        uint32_t GetTextureDescriptorTableIndex(Foundation::Name resourceName);
 
     private:
         const PipelineResourceStorage* mResourceStorage;

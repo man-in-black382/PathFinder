@@ -56,6 +56,7 @@ namespace HAL
 
     public:
         inline auto HeapType() const { return mCPUAccessibleHeapType; }
+        inline auto RequestedMemory() const { return mRequestedSizeInBytes; }
     };
 
 }

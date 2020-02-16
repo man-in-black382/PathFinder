@@ -410,7 +410,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\PerFrameRootConstants.hpp" />
-    <ClInclude Include="Source\RenderPipeline\PipelineResource.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStateOptimizer.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateCreator.hpp" />
@@ -964,9 +963,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <FileType>CppHeader</FileType>
     </None>
     <None Include="Source\RenderPipeline\MeshGPUStorage.inl" />
-    <None Include="Source\RenderPipeline\PipelineResource.inl">
-      <FileType>CppHeader</FileType>
-    </None>
+    <None Include="Source\RenderPipeline\RenderEngine.inl" />
     <None Include="Source\RenderPipeline\ResourceScheduler.inl">
       <FileType>CppHeader</FileType>
     </None>

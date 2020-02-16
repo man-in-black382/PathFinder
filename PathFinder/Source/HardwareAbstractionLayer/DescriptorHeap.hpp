@@ -38,6 +38,8 @@ namespace HAL
     protected:        
         RangeAllocationInfo& GetRange(uint32_t rangeIndex);
         const RangeAllocationInfo& GetRange(uint32_t rangeIndex) const;
+        DescriptorAddress GetCPUAddress(uint64_t indexInRange, uint64_t rangeIndex) const;
+        DescriptorAddress GetGPUAddress(uint64_t indexInRange, uint64_t rangeIndex) const;
 
         const Device* mDevice = nullptr;
         uint32_t mIncrementSize = 0;

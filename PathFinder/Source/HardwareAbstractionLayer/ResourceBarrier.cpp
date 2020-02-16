@@ -38,5 +38,10 @@ namespace HAL
         mD3DBarriers.push_back(barrier.D3DBarrier());
     }
 
+    void ResourceBarrierCollection::AddBarriers(const ResourceBarrierCollection& barriers)
+    {
+        mD3DBarriers.insert(mD3DBarriers.end(), barriers.mD3DBarriers.begin(), barriers.mD3DBarriers.end());
+    }
+
 }
 

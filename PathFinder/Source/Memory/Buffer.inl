@@ -18,13 +18,12 @@ namespace Memory
         if (uploadStrategy == GPUResource::UploadStrategy::Automatic)
         {
             mBufferPtr = resourceAllocator->AllocateBuffer(properties);
+            if (mStateTracker) mStateTracker->StartTrakingResource(HALBuffer());
         }
         else
         {
             mUploadBuffers.emplace(resourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), 0);
         }
-
-        if (mStateTracker && mBufferPtr) mStateTracker->StartTrakingResource(HALBuffer());
     }
 
     template <class Element>
@@ -44,6 +43,16 @@ namespace Memory
             new HAL::Buffer{ device, properties, mainResourceExplicitHeap, explicitHeapOffset },
             [](HAL::Buffer* buffer) { delete buffer; }
         };
+
+        if (mStateTracker) mStateTracker->StartTrakingResource(HALBuffer());
+    }
+
+    template <class Element>
+    uint64_t Buffer::ElementCapacity(uint64_t elementAlignment) const
+    {
+        return mBufferPtr ?
+            mBufferPtr->ElementCapacity<Element>(elementAlignment) :
+            mUploadBuffers.front().first->ElementCapacity<Element>(elementAlignment);
     }
 
     template <class Element>
@@ -56,7 +65,7 @@ namespace Memory
 
         if (mCurrentCBDescriptorStride != stride || !mCBDescriptor)
         {
-            mCBDescriptor = mDescriptorAllocator->AllocateCBDescriptor(HALBuffer(), stride);
+            mCBDescriptor = mDescriptorAllocator->AllocateCBDescriptor(*HALBuffer(), stride);
             mCurrentCBDescriptorStride = stride;
         }
     }
@@ -71,7 +80,7 @@ namespace Memory
 
         if (mCurrentUADescriptorStride != stride || !mUADescriptor)
         {
-            mUADescriptor = mDescriptorAllocator->AllocateSRDescriptor(HALBuffer(), stride);
+            mUADescriptor = mDescriptorAllocator->AllocateSRDescriptor(*HALBuffer(), stride);
             mCurrentUADescriptorStride = stride;
         }
     }
@@ -86,7 +95,7 @@ namespace Memory
 
         if (mCurrentSRDescriptorStride != stride || !mSRDescriptor)
         {
-            mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(HALBuffer(), stride);
+            mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(*HALBuffer(), stride);
             mCurrentSRDescriptorStride = stride;
         }
     }

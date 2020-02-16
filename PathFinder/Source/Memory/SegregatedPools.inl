@@ -64,6 +64,11 @@ namespace Memory
                 auto& bucket = mBuckets.emplace_back(slotSize, mGrowSlotCount);
                 bucket.mBucketIndex = newBucketIndex;
                 bucket.mSlotSize = slotSize;
+
+                if (newBucketIndex > 50)
+                {
+                    printf("");
+                }
             }
         }
 

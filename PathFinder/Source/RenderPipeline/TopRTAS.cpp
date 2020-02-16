@@ -52,7 +52,7 @@ namespace PathFinder
 
     void TopRTAS::AllocateInstanceBufferIfNeeded(uint64_t bufferSize)
     {
-        if (!mInstanceBuffer || mInstanceBuffer->HALBuffer()->TotalMemory() < bufferSize)
+        if (!mInstanceBuffer || mInstanceBuffer->ElementCapacity() < bufferSize)
         {
             HAL::Buffer::Properties properties{ bufferSize };
             mInstanceBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);

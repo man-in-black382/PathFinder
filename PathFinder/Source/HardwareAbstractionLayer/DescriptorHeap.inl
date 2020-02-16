@@ -54,5 +54,19 @@ namespace HAL
         return mRanges.at(rangeIndex);
     }
 
+    template <class DescriptorT>
+    DescriptorAddress DescriptorHeap<DescriptorT>::GetGPUAddress(uint64_t indexInRange, uint64_t rangeIndex) const
+    {
+        const RangeAllocationInfo& range = GetRange(rangeIndex);
+        return range.StartGPUHandle.ptr + indexInRange * mIncrementSize;
+    }
+
+    template <class DescriptorT>
+    DescriptorAddress DescriptorHeap<DescriptorT>::GetCPUAddress(uint64_t indexInRange, uint64_t rangeIndex) const
+    {
+        const RangeAllocationInfo& range = GetRange(rangeIndex);
+        return range.StartCPUHandle.ptr + indexInRange * mIncrementSize;
+    }
+
 }
 

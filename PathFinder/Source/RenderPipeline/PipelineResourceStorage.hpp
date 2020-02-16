@@ -4,7 +4,6 @@
 #include "RenderSurfaceDescription.hpp"
 #include "GlobalRootConstants.hpp"
 #include "PerFrameRootConstants.hpp"
-#include "PipelineResource.hpp"
 #include "PipelineResourceSchedulingInfo.hpp"
 #include "PipelineResourceMemoryAliaser.hpp"
 #include "PipelineResourceStateOptimizer.hpp"
@@ -14,6 +13,7 @@
 #include "../Foundation/MemoryUtils.hpp"
 #include "../Memory/GPUResourceProducer.hpp"
 #include "../Memory/PoolDescriptorAllocator.hpp"
+#include "../Memory/ResourceStateTracker.hpp"
 
 #include <vector>
 #include <unordered_map>
@@ -49,27 +49,32 @@ namespace PathFinder
             // Resource names scheduled for each pass
             std::unordered_set<ResourceName> ScheduledResourceNames;
 
-            // Resource transition and aliasing barriers for each pass
+            // Resource aliasing barriers for the pass
             HAL::ResourceBarrierCollection AliasingBarriers;
 
             // UAV barriers to be applied after each draw/dispatch in
             // a pass that makes unordered accesses to resources
             HAL::ResourceBarrierCollection UAVBarriers;
+
+            // State transition barriers for the pass
+            HAL::ResourceBarrierCollection TransitionBarriers;
         };
 
         struct PerResourceObjects
         {
             std::optional<PipelineResourceSchedulingInfo> SchedulingInfo;
-            TexturePipelineResource PipelineTexture;
-            BufferPipelineResource PipelineBuffer;
+            Memory::GPUResourceProducer::TexturePtr Texture;
+            Memory::GPUResourceProducer::BufferPtr Buffer;
 
             const Memory::GPUResource* GetGPUResource() const;
+            Memory::GPUResource* GetGPUResource();
         };
 
         PipelineResourceStorage(
             HAL::Device* device,
             Memory::GPUResourceProducer* resourceProducer,
             Memory::PoolDescriptorAllocator* descriptorAllocator,
+            Memory::ResourceStateTracker* stateTracker,
             const RenderSurfaceDescription& defaultRenderSurface,
             const RenderPassExecutionGraph* passExecutionGraph
         );
@@ -86,6 +91,7 @@ namespace PathFinder
         void SetCurrentPassName(PassName passName);
         void AllocateScheduledResources();
         void CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain);
+        void TransitionResourcesToCurrentPassStates();
         
         template <class Constants> 
         void UpdateGlobalRootConstants(const Constants& constants);
@@ -96,19 +102,24 @@ namespace PathFinder
         template <class Constants>
         void UpdateCurrentPassRootConstants(const Constants& constants);
 
-        template <class RootConstants> RootConstants* RootConstantDataForCurrentPass();
         /*const HAL::Buffer<float>* DebugBufferForCurrentPass() const;
           const HAL::RingBufferResource<float>* DebugReadbackBufferForCurrentPass() const;*/
         const Memory::Buffer* GlobalRootConstantsBuffer() const;
         const Memory::Buffer* PerFrameRootConstantsBuffer() const;
         const Memory::Buffer* RootConstantsBufferForCurrentPass() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
-        const TexturePipelineResource* GetPipelineTextureResource(ResourceName resourceName) const;
-        const BufferPipelineResource* GetPipelineBufferResource(ResourceName resourceName) const;
+        const Memory::Texture* GetTextureResource(ResourceName resourceName) const;
+        const Memory::Buffer* GetBufferResource(ResourceName resourceName) const;
         const Memory::GPUResource* GetGPUResource(ResourceName resourceName) const;
         const HAL::ResourceBarrierCollection& AliasingBarriersForCurrentPass();
+        const HAL::ResourceBarrierCollection& TransitionBarriersForCurrentPass();
         const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();
         const Foundation::Name CurrentPassName() const;
+
+        PerPassObjects& GetPerPassObjects(PassName name);
+        PerResourceObjects& GetPerResourceObjects(ResourceName name);
+        const PerPassObjects* GetPerPassObjects(PassName name) const;
+        const PerResourceObjects* GetPerResourceObjects(ResourceName name) const;
 
         //void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
@@ -133,11 +144,6 @@ namespace PathFinder
         );
 
     private:
-        PerPassObjects& GetPerPassObjects(PassName name);
-        PerResourceObjects& GetPerResourceObjects(ResourceName name);
-        const PerPassObjects* GetPerPassObjects(PassName name) const;
-        const PerResourceObjects* GetPerResourceObjects(ResourceName name) const;
-
         void CreateDebugBuffers(const RenderPassExecutionGraph* passExecutionGraph);
         void PrepareSchedulingInfoForOptimization();
         void CreateAliasingAndUAVBarriers();
@@ -145,6 +151,8 @@ namespace PathFinder
         HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;
         Memory::PoolDescriptorAllocator* mDescriptorAllocator;
+        Memory::ResourceStateTracker* mResourceStateTracker;
+        const RenderPassExecutionGraph* mPassExecutionGraph;
 
         std::unique_ptr<HAL::Heap> mRTDSHeap;
         std::unique_ptr<HAL::Heap> mNonRTDSHeap;
@@ -166,7 +174,7 @@ namespace PathFinder
 
         // Dedicated storage for back buffer descriptors.
         // No fancy management is required.
-        std::vector<HAL::RTDescriptor> mBackBufferDescriptors;
+        std::vector<Memory::PoolDescriptorAllocator::RTDescriptorPtr> mBackBufferDescriptors;
 
         //// Constant buffer for global data that changes rarely
         Memory::GPUResourceProducer::BufferPtr mGlobalRootConstantsBuffer;

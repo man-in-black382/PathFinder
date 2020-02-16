@@ -77,6 +77,7 @@ namespace HAL
     {
     public:
         void AddBarrier(const ResourceBarrier& barrier);
+        void AddBarriers(const ResourceBarrierCollection& barriers);
 
     private:
         std::vector<D3D12_RESOURCE_BARRIER> mD3DBarriers;

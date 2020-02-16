@@ -87,6 +87,11 @@ namespace HAL
 
     void ResourceFormat::QueryAllocationInfo()
     {
+        if (mDescription.Width == 0)
+        {
+            return;
+        }
+
         UINT GPUMask = 0;
         D3D12_RESOURCE_ALLOCATION_INFO allocInfo = mDevice->D3DDevice()->GetResourceAllocationInfo(GPUMask, 1, &mDescription);
 

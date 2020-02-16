@@ -52,10 +52,13 @@ namespace PathFinder
         virtual void ApplyStateIfNeeded(const HAL::ComputePipelineState* state);
         virtual void ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state);
 
-        const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap;
-        const HAL::ComputePipelineState* mAppliedComputeState;
-        const HAL::RayTracingPipelineState* mAppliedRayTracingState;
-        const HAL::RootSignature* mAppliedComputeRootSignature;
+        const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap = nullptr;
+        const HAL::ComputePipelineState* mAppliedComputeState = nullptr;
+        const HAL::RayTracingPipelineState* mAppliedRayTracingState = nullptr;
+        const HAL::RootSignature* mAppliedComputeRootSignature = nullptr;
+        const HAL::Buffer* mBoundGlobalConstantBufferCompute = nullptr;
+        const HAL::Buffer* mBoundFrameConstantBufferCompute = nullptr;
+        const HAL::Buffer* mBoundPassConstantBufferCompute = nullptr;
 
         Memory::PoolCommandListAllocator* mCommandListAllocator;
         PipelineResourceStorage* mResourceStorage;
@@ -67,7 +70,7 @@ namespace PathFinder
 
     private:
         void ApplyCommonComputeResourceBindings();
-        void BindCurrentPassBuffersCompute();
+        void BindConstantBuffersCompute();
 
     public:
         inline CommandListT* CommandList() { return mCommandList.get(); }

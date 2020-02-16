@@ -48,12 +48,17 @@ namespace PathFinder
         void Render();
         void FlushAllQueuedFrames();
 
+        template <class Constants>
+        void SetGlobalRootConstants(const Constants& constants);
+
+        template <class Constants>
+        void SetFrameRootConstants(const Constants& constants);
+
     private:
         HAL::DisplayAdapter FetchDefaultDisplayAdapter() const;
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
-        void UploadCommonRootConstants();
         void GatherReadbackData();
 
         void RunRenderPasses(const std::list<RenderPass*>& passes);
@@ -64,14 +69,14 @@ namespace PathFinder
         uint8_t mSimultaneousFramesInFlight = 2;
         uint64_t mFrameNumber = 0;
 
-        RenderSurfaceDescription mDefaultRenderSurface;
+        RenderSurfaceDescription mRenderSurfaceDescription;
 
         HAL::Device mDevice;
 
         Memory::SegregatedPoolsResourceAllocator mResourceAllocator;
         Memory::PoolCommandListAllocator mCommandListAllocator;
         Memory::PoolDescriptorAllocator mDescriptorAllocator;
-        Memory::ResourceStateTracker mStateTracker;
+        Memory::ResourceStateTracker mResourceStateTracker;
         Memory::GPUResourceProducer mResourceProducer;
 
         MeshGPUStorage mMeshStorage;
@@ -104,6 +109,7 @@ namespace PathFinder
         inline MeshGPUStorage& MeshStorage() { return mMeshStorage; }
         inline PreprocessableAssetStorage& AssetStorage() { return mAssetStorage; }
         inline UIGPUStorage& UIStorage() { return mUIStorage; }
+        inline const RenderSurfaceDescription& RenderSurface() const { return mRenderSurfaceDescription; }
         inline Memory::GPUResourceProducer& ResourceProducer() { return mResourceProducer; }
         inline HAL::Device& Device() { return mDevice; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
@@ -111,3 +117,5 @@ namespace PathFinder
     };
 
 }
+
+#include "RenderEngine.inl"

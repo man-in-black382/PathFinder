@@ -7,24 +7,23 @@ namespace PathFinder
     ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage)
         : mResourceStorage{ storage } {}
 
-    uint32_t ResourceProvider::GetTextureDescriptorTableIndex(Foundation::Name resourceName) const
+    uint32_t ResourceProvider::GetTextureDescriptorTableIndex(Foundation::Name resourceName)
     {
-        const TexturePipelineResource* resource = mResourceStorage->GetPipelineTextureResource(resourceName);
-        assert_format(resource != nullptr, "Resource ", resourceName.ToString(), " does not exist");
+        auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
+        Memory::Texture* resource = resourceObjects->Texture.get();
+        assert_format(resource, "Resource ", resourceName.ToString(), " does not exist");
 
-        auto perPassData = resource->GetMetadataForPass(mResourceStorage->CurrentPassName());
+        const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassName());
         assert_format(perPassData, "Resource ", resourceName.ToString(), " was not scheduled to be used in this pass");
 
-        if (perPassData->IsSRDescriptorRequested)
+        if (perPassData->CreateTextureSRDescriptor)
         {
-            auto srDescriptor = resource->Resource->GetOrCreateSRDescriptor();
-            return srDescriptor->IndexInHeapRange();
+            return resource->GetOrCreateSRDescriptor()->IndexInHeapRange();
         } 
 
-        if (perPassData->IsUADescriptorRequested)
+        if (perPassData->CreateTextureUADescriptor)
         {
-            auto uaDescriptor = resource->Resource->GetOrCreateUADescriptor();
-            return uaDescriptor->IndexInHeapRange();
+            return resource->GetOrCreateUADescriptor()->IndexInHeapRange();
         }
 
         assert_format(perPassData, "Resource ", resourceName.ToString(), " was not scheduled for reading in this pass");

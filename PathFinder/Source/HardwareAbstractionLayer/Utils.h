@@ -13,7 +13,8 @@ namespace HAL
 #define ThrowIfFailed(x)                                              \
 {                                                                     \
     HRESULT hr__ = (x);                                               \
-    assert_format(!FAILED(hr__), _com_error{ hr__ }.ErrorMessage()); \
+    _com_error comError{ hr__ };                                      \
+    assert_format(!FAILED(hr__), comError.ErrorMessage()); \
 }
 #endif
 

@@ -40,6 +40,9 @@ namespace Memory
         const HAL::Texture* HALTexture() const;
         const HAL::Resource* HALResource() const override;
 
+    protected:
+        virtual uint64_t ResourceSizeInBytes() const override;
+
     private:
         SegregatedPoolsResourceAllocator::TexturePtr mTexturePtr;
         PoolDescriptorAllocator::RTDescriptorPtr mRTDescriptor;

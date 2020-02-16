@@ -35,4 +35,9 @@ namespace Memory
         return HALBuffer();
     }
 
+    uint64_t Buffer::ResourceSizeInBytes() const
+    {
+        return mBufferPtr ? mBufferPtr->TotalMemory() : mUploadBuffers.front().first->TotalMemory();
+    }
+
 }

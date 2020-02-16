@@ -14,29 +14,29 @@ namespace PathFinder
         const RenderPassExecutionGraph* passExecutionGraph)
         : 
         mPassExecutionGraph{ passExecutionGraph },
-        mDefaultRenderSurface{ { 1920, 1080 }, HAL::ColorFormat::RGBA16_Float, HAL::DepthStencilFormat::Depth32_Float },
+        mRenderSurfaceDescription{ { 1920, 1080 }, HAL::ColorFormat::RGBA16_Float, HAL::DepthStencilFormat::Depth32_Float },
         mDevice{ FetchDefaultDisplayAdapter() },
         mResourceAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mCommandListAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mDescriptorAllocator{ &mDevice, mSimultaneousFramesInFlight },
-        mResourceProducer{ &mDevice, &mResourceAllocator, &mStateTracker, &mDescriptorAllocator },
+        mResourceProducer{ &mDevice, &mResourceAllocator, &mResourceStateTracker, &mDescriptorAllocator },
         mMeshStorage{ &mDevice, &mResourceProducer },
-        mPipelineResourceStorage{ &mDevice, &mResourceProducer, &mDescriptorAllocator, mDefaultRenderSurface, mPassExecutionGraph },
-        mResourceScheduler{ &mPipelineResourceStorage, mDefaultRenderSurface },
+        mPipelineResourceStorage{ &mDevice, &mResourceProducer, &mDescriptorAllocator, &mResourceStateTracker, mRenderSurfaceDescription, mPassExecutionGraph },
+        mResourceScheduler{ &mPipelineResourceStorage, mRenderSurfaceDescription },
         mResourceProvider{ &mPipelineResourceStorage  },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
         mShaderManager{ commandLineParser },
-        mPipelineStateManager{ &mDevice, &mShaderManager, mDefaultRenderSurface },
+        mPipelineStateManager{ &mDevice, &mShaderManager, mRenderSurfaceDescription },
         mPipelineStateCreator{ &mPipelineStateManager },
-        mGraphicsDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface },
-        mAsyncComputeDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mDefaultRenderSurface },
+        mGraphicsDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
+        mAsyncComputeDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
         mCommandRecorder{ &mGraphicsDevice },
-        mUIStorage{ &mDevice, mSimultaneousFramesInFlight },
-        mContext{ scene, &mMeshStorage, &mUIStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mDefaultRenderSurface },
+        mUIStorage{ &mResourceProducer },
+        mContext{ scene, &mMeshStorage, &mUIStorage, &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mRenderSurfaceDescription },
         mAsyncComputeFence{ mDevice },
         mGraphicsFence{ mDevice },
         mUploadFence{ mDevice },
-        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ColorFormat::RGBA8_Usigned_Norm, mDefaultRenderSurface.Dimensions() },
+        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ColorFormat::RGBA8_Usigned_Norm, mRenderSurfaceDescription.Dimensions() },
         mScene{ scene }
     {
         mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);
@@ -114,16 +114,13 @@ namespace PathFinder
         // Notify external listeners
         mPreRenderEvent.Raise();
 
-        // Upload all necessary data for the frame
-        UploadCommonRootConstants();
-
         // Execute any pending upload commands. Perform execution here because RT AS depends on resource uploads.
         mGraphicsDevice.ExecuteCommands(nullptr, &mUploadFence);
 
-        // Build AS
-        mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(mMeshStorage.TopAccelerationStructure().HALAccelerationStructure());
-        mAsyncComputeDevice.CommandList()->InsertBarrier(mMeshStorage.TopAccelerationStructure().UABarrier());
-        mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
+        //// Build AS
+        //mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(mMeshStorage.TopAccelerationStructure().HALAccelerationStructure());
+        //mAsyncComputeDevice.CommandList()->InsertBarrier(mMeshStorage.TopAccelerationStructure().UABarrier());
+        //mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
 
         // Wait for TLAS build then execute render passes
         HAL::Texture* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
@@ -135,11 +132,11 @@ namespace PathFinder
 
         // Execute render passes that contain render work and may contain data transfers
         mGraphicsDevice.CommandList()->InsertBarrier(preRenderBarrier);
-        RunRenderPasses(mPassExecutionGraph->DefaultPasses());
+        //RunRenderPasses(mPassExecutionGraph->DefaultPasses());
         mGraphicsDevice.CommandList()->InsertBarrier(postRenderBarrier);
 
         // Execute all graphics work along with data transfers (upload/readback)
-        mGraphicsDevice.ExecuteCommands(&mAsyncComputeFence, &mGraphicsFence);
+        //mGraphicsDevice.ExecuteCommands(&mAsyncComputeFence, &mGraphicsFence);
 
         // Put the picture on the screen
         mSwapChain.Present();
@@ -147,9 +144,11 @@ namespace PathFinder
         // Issue a CPU wait if necessary
         mGraphicsFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
-        // Notify listeners
-        mPostRenderEvent.Raise();
+        // Notify internal listeners
         NotifyEndFrame(mGraphicsFence.CompletedValue());
+
+        // Notify external listeners
+        mPostRenderEvent.Raise();
 
         // Readback data is ready
         GatherReadbackData();
@@ -177,18 +176,16 @@ namespace PathFinder
 
     void RenderEngine::NotifyStartFrame(uint64_t newFrameNumber)
     {
+        mShaderManager.BeginFrame();
         mResourceAllocator.BeginFrame(newFrameNumber);
         mDescriptorAllocator.BeginFrame(newFrameNumber);
         mCommandListAllocator.BeginFrame(newFrameNumber);
-        mShaderManager.BeginFrame();
         mResourceProducer.BeginFrame(newFrameNumber);
-        mUIStorage.BeginFrame(newFrameNumber);
     }
 
     void RenderEngine::NotifyEndFrame(uint64_t completedFrameNumber)
     {
         mShaderManager.EndFrame();
-        mUIStorage.EndFrame(completedFrameNumber);
         mResourceProducer.EndFrame(completedFrameNumber);
         mResourceAllocator.EndFrame(completedFrameNumber);
         mDescriptorAllocator.EndFrame(completedFrameNumber);
@@ -200,24 +197,6 @@ namespace PathFinder
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % (uint8_t)mSwapChain.BackBuffers().size();
         mPipelineResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
         mFrameNumber++;
-    }
-
-    void RenderEngine::UploadCommonRootConstants()
-    {
-      /*  GlobalRootConstants* globalConstants = mPipelineResourceStorage.GlobalRootConstantData();
-        PerFrameRootConstants* perFrameConstants = mPipelineResourceStorage.PerFrameRootConstantData();
-
-        globalConstants->PipelineRTResolution = { mDefaultRenderSurface.Dimensions().Width, mDefaultRenderSurface.Dimensions().Height };
-
-        const Camera& camera = mScene->MainCamera();
-
-        perFrameConstants->CameraPosition = glm::vec4{ camera.Position(), 1.0 };
-        perFrameConstants->CameraView = camera.View();
-        perFrameConstants->CameraProjection = camera.Projection();
-        perFrameConstants->CameraViewProjection = camera.ViewProjection();
-        perFrameConstants->CameraInverseView = camera.InverseView();
-        perFrameConstants->CameraInverseProjection = camera.InverseProjection();
-        perFrameConstants->CameraInverseViewProjection = camera.InverseViewProjection();*/
     }
 
     void RenderEngine::GatherReadbackData()
@@ -240,7 +219,13 @@ namespace PathFinder
         {
             mGraphicsDevice.ResetViewportToDefault();
             mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
-            mGraphicsDevice.CommandList()->InsertBarriers(mPipelineResourceStorage.AliasingBarriersForCurrentPass());
+            mPipelineResourceStorage.TransitionResourcesToCurrentPassStates();
+
+            HAL::ResourceBarrierCollection barriers{};
+            barriers.AddBarriers(mPipelineResourceStorage.AliasingBarriersForCurrentPass());
+            barriers.AddBarriers(mPipelineResourceStorage.TransitionBarriersForCurrentPass());
+
+            mGraphicsDevice.CommandList()->InsertBarriers(barriers);
 
             passPtr->Render(&mContext);
 

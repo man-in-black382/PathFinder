@@ -28,14 +28,14 @@ namespace Memory
         using UADescriptorPtr = DescriptorPtr<HAL::UADescriptor>;
         using CBDescriptorPtr = DescriptorPtr<HAL::CBDescriptor>;
 
-        RTDescriptorPtr AllocateRTDescriptor(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
-        DSDescriptorPtr AllocateDSDescriptor(const HAL::Texture* texture);
-        SRDescriptorPtr AllocateSRDescriptor(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
-        UADescriptorPtr AllocateUADescriptor(const HAL::Texture* texture, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
+        RTDescriptorPtr AllocateRTDescriptor(const HAL::Texture& texture, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
+        DSDescriptorPtr AllocateDSDescriptor(const HAL::Texture& texture);
+        SRDescriptorPtr AllocateSRDescriptor(const HAL::Texture& texture, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
+        UADescriptorPtr AllocateUADescriptor(const HAL::Texture& texture, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
 
-        SRDescriptorPtr AllocateSRDescriptor(const HAL::Buffer* buffer, uint64_t stride);
-        UADescriptorPtr AllocateUADescriptor(const HAL::Buffer* buffer, uint64_t stride);
-        CBDescriptorPtr AllocateCBDescriptor(const HAL::Buffer* buffer, uint64_t stride);
+        SRDescriptorPtr AllocateSRDescriptor(const HAL::Buffer& buffer, uint64_t stride);
+        UADescriptorPtr AllocateUADescriptor(const HAL::Buffer& buffer, uint64_t stride);
+        CBDescriptorPtr AllocateCBDescriptor(const HAL::Buffer& buffer, uint64_t stride);
 
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);

@@ -23,6 +23,7 @@ namespace PathFinder
         }     
 
         mAllPasses.push_back(pass);
+        pass->SetIndexInGraph(mAllPasses.size() - 1);
     }
 
     uint32_t RenderPassExecutionGraph::IndexOfPass(const RenderPass* pass) const

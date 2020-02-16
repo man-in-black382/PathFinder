@@ -14,4 +14,9 @@ namespace PathFinder
 
     void RenderPass::Render(RenderContext* context) {}
 
+    void RenderPass::SetIndexInGraph(uint64_t index)
+    {
+        mIndexInGraph = index;
+    }
+
 }
