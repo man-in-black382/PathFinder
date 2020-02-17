@@ -164,87 +164,87 @@ SamplingCorners BilinearPatchCorners(float2 cornerUV, float2 displacementMapSize
 
 VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, out bool patchIntersects, out float3 voxel)
 {
-    Texture3D distanceFieldAtlasIndirectionMap = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
-    Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
-    Texture3D<uint4> distanceFieldAtlas = UInt4_Textures3D[instanceData.DistanceAtlasIndex];
+    //Texture3D distanceFieldAtlasIndirectionMap = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
+    //Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
+    //Texture3D<uint4> distanceFieldAtlas = UInt4_Textures3D[instanceData.DistanceAtlasIndex];
 
-    uint atlasWidth;
-    uint atlasHeight;
-    uint atlasDepth;
+    //uint atlasWidth;
+    //uint atlasHeight;
+    //uint atlasDepth;
 
-    distanceFieldAtlas.GetDimensions(atlasWidth, atlasHeight, atlasDepth);
+    //distanceFieldAtlas.GetDimensions(atlasWidth, atlasHeight, atlasDepth);
 
-    uint displacementMapWidth;
-    uint displacementMapsHeight;
+    //uint displacementMapWidth;
+    //uint displacementMapsHeight;
 
-    displacementMap.GetDimensions(displacementMapWidth, displacementMapsHeight);
+    //displacementMap.GetDimensions(displacementMapWidth, displacementMapsHeight);
 
-    uint2 displacementMapSize = uint2(displacementMapWidth, displacementMapsHeight);
-    uint3 atlasSize = uint3(atlasWidth, atlasHeight, atlasDepth);
+    //uint2 displacementMapSize = uint2(displacementMapWidth, displacementMapsHeight);
+    //uint3 atlasSize = uint3(atlasWidth, atlasHeight, atlasDepth);
 
-    patchIntersects = true;
+    //patchIntersects = true;
 
-    // Scaling up Z is equivalent to scaling down values in the displacement map.
-    float POMScale = 20.0;
+    //// Scaling up Z is equivalent to scaling down values in the displacement map.
+    //float POMScale = 20.0;
 
-    float3 viewDir = originalVertexData.ViewDirectionTS;
-    viewDir.z *= POMScale;
-    viewDir = normalize(viewDir);
+    //float3 viewDir = originalVertexData.ViewDirectionTS;
+    //viewDir.z *= POMScale;
+    //viewDir = normalize(viewDir);
 
-    //viewDir = float3(0.0, 0.0, 1.0);
-    
-    Ray traversalRay = { float3(originalVertexData.UV, 1.0), -viewDir, 0.0, DistanceFieldMaxVoxelDistance };
-    float3 samplingPosition = traversalRay.Origin;
-    uint viewDirConeIndex = VectorOctant(traversalRay.Direction);
+    ////viewDir = float3(0.0, 0.0, 1.0);
+    //
+    //Ray traversalRay = { float3(originalVertexData.UV, 1.0), -viewDir, 0.0, DistanceFieldMaxVoxelDistance };
+    //float3 samplingPosition = traversalRay.Origin;
+    //uint viewDirConeIndex = VectorOctant(traversalRay.Direction);
    
-    static const uint MaxStepCount = 16;
+    //static const uint MaxStepCount = 16;
 
-    for (uint i = 0; i < MaxStepCount; ++i)
-    {
-        uint3 voxelIndex = UVWToVoxelIndex(samplingPosition, atlasSize);
-        DistanceFieldCones cones = UnpackConeData(distanceFieldAtlas.Load(int4(voxelIndex, 0)));
-        float safeTravelDistance = cones.Distances[viewDirConeIndex];
-        bool voxelIntersectedByDisplacementSurface = safeTravelDistance <= 0.0;
+    //for (uint i = 0; i < MaxStepCount; ++i)
+    //{
+    //    uint3 voxelIndex = UVWToVoxelIndex(samplingPosition, atlasSize);
+    //    DistanceFieldCones cones = UnpackConeData(distanceFieldAtlas.Load(int4(voxelIndex, 0)));
+    //    float safeTravelDistance = cones.Distances[viewDirConeIndex];
+    //    bool voxelIntersectedByDisplacementSurface = safeTravelDistance <= 0.0;
 
-        voxel = voxelIndex;
+    //    voxel = voxelIndex;
 
-        if (voxelIntersectedByDisplacementSurface)
-        {
-            // Construct a bilinear patch for interpolation
-            float3 voxelUVW = VoxelIndexToUVW(voxelIndex, atlasSize);
-            SamplingCorners bpCorners = BilinearPatchCorners(voxelUVW.xy, displacementMapSize, atlasSize);
+    //    if (voxelIntersectedByDisplacementSurface)
+    //    {
+    //        // Construct a bilinear patch for interpolation
+    //        float3 voxelUVW = VoxelIndexToUVW(voxelIndex, atlasSize);
+    //        SamplingCorners bpCorners = BilinearPatchCorners(voxelUVW.xy, displacementMapSize, atlasSize);
 
-            float3 pb0 = float3(bpCorners.UV0, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV0, 0).r);
-            float3 pb1 = float3(bpCorners.UV1, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV1, 0).r);
-            float3 pb2 = float3(bpCorners.UV2, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV2, 0).r);
-            float3 pb3 = float3(bpCorners.UV3, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV3, 0).r);
+    //        float3 pb0 = float3(bpCorners.UV0, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV0, 0).r);
+    //        float3 pb1 = float3(bpCorners.UV1, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV1, 0).r);
+    //        float3 pb2 = float3(bpCorners.UV2, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV2, 0).r);
+    //        float3 pb3 = float3(bpCorners.UV3, displacementMap.SampleLevel(PointClampSampler, bpCorners.UV3, 0).r);
 
-            BilinearPatch patch = { pb0, pb1, pb2, pb3 };
-            
-            float3 intersectionPoint;
-            if (IntersectPatch(patch, traversalRay, intersectionPoint))
-            {
-                // If we hit a patch, then we're done
-                originalVertexData.UV = intersectionPoint.xy;
-                return originalVertexData;
-            }
-            else
-            {
-                //return originalVertexData;
-                // Missed the patch. Go to the next voxel.
-                samplingPosition = VoxelWallIntersection(samplingPosition, atlasSize, traversalRay);
+    //        BilinearPatch patch = { pb0, pb1, pb2, pb3 };
+    //        
+    //        float3 intersectionPoint;
+    //        if (IntersectPatch(patch, traversalRay, intersectionPoint))
+    //        {
+    //            // If we hit a patch, then we're done
+    //            originalVertexData.UV = intersectionPoint.xy;
+    //            return originalVertexData;
+    //        }
+    //        else
+    //        {
+    //            //return originalVertexData;
+    //            // Missed the patch. Go to the next voxel.
+    //            samplingPosition = VoxelWallIntersection(samplingPosition, atlasSize, traversalRay);
 
-                voxelIndex = UVWToVoxelIndex(samplingPosition, atlasSize);
-                samplingPosition = VoxelIndexToUVW(voxelIndex, atlasSize);
-            }
-        }
-        else
-        {
-            samplingPosition += traversalRay.Direction * safeTravelDistance;
-        }
-    }
+    //            voxelIndex = UVWToVoxelIndex(samplingPosition, atlasSize);
+    //            samplingPosition = VoxelIndexToUVW(voxelIndex, atlasSize);
+    //        }
+    //    }
+    //    else
+    //    {
+    //        samplingPosition += traversalRay.Direction * safeTravelDistance;
+    //    }
+    //}
 
-    originalVertexData.UV = samplingPosition.xy;
+    //originalVertexData.UV = samplingPosition.xy;
     
     return originalVertexData;
 }
@@ -255,7 +255,7 @@ PixelOut PSMain(VertexOut pin)
 
     bool intersection;
     float3 voxel;
-    VertexOut displacedVertexData = DisplaceUV(pin, instanceData, intersection, voxel);
+    VertexOut displacedVertexData = pin;// DisplaceUV(pin, instanceData, intersection, voxel);
 
     GBufferCookTorrance gBufferData;
 

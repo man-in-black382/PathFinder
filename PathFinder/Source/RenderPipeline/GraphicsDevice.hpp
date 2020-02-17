@@ -50,7 +50,7 @@ namespace PathFinder
         void ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state) override;
 
         void ApplyCommonGraphicsResourceBindings();
-        void BindConstantBuffersGraphics();
+        void BindConstantBuffersGraphics(bool ignoreCachedBuffers);
         void ApplyDefaultViewportIfNeeded();
 
         const RenderPass* mCurrentRenderPass = nullptr;

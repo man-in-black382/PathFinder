@@ -38,6 +38,7 @@ namespace PathFinder
     void GBufferRenderPass::Render(RenderContext* context) 
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBuffer);
+
         context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::GBufferRT0, ResourceNames::GBufferDepthStencil);
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferRT0, Foundation::Color::Black());
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);

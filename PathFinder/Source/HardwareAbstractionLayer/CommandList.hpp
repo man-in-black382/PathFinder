@@ -31,7 +31,7 @@ namespace HAL
     class CommandList : public GraphicAPIObject
     {
     public:
-        CommandList(const Device& device, CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type);
+        CommandList(const Device& device, std::unique_ptr<CommandAllocator> allocator, D3D12_COMMAND_LIST_TYPE type);
         CommandList(CommandList&& that) = default;
         CommandList(const CommandList& that) = delete;
         CommandList& operator=(const CommandList& that) = delete;
@@ -41,7 +41,7 @@ namespace HAL
         void Close();
 
     protected:
-        CommandAllocator* mCommandAllocator;
+        std::unique_ptr<CommandAllocator> mCommandAllocator;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> mList;
 
     public:
@@ -118,13 +118,13 @@ namespace HAL
 
     class CopyCommandList : public CopyCommandListBase {
     public:
-        CopyCommandList(const Device& device, CopyCommandAllocator* allocator);
+        CopyCommandList(const Device& device);
         ~CopyCommandList() = default;
     };
 
     class ComputeCommandList : public ComputeCommandListBase {
     public:
-        ComputeCommandList(const Device& device, ComputeCommandAllocator* allocator);
+        ComputeCommandList(const Device& device);
         ~ComputeCommandList() = default;
 
         void BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as);
@@ -132,13 +132,13 @@ namespace HAL
     
     class BundleCommandList : public GraphicsCommandListBase {
     public:
-        BundleCommandList(const Device& device, BundleCommandAllocator* allocator);
+        BundleCommandList(const Device& device);
         ~BundleCommandList() = default;
     };
 
     class GraphicsCommandList : public GraphicsCommandListBase {
     public:
-        GraphicsCommandList(const Device& device, GraphicsCommandAllocator* allocator);
+        GraphicsCommandList(const Device& device);
         ~GraphicsCommandList() = default;
 
         void ExecuteBundle(const BundleCommandList& bundle);

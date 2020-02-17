@@ -9,7 +9,7 @@ namespace Memory
         mRingFrameTracker.SetDeallocationCallback([this](const Ring::FrameTailAttributes& frameAttributes)
         {
             auto frameIndex = frameAttributes.Tail - frameAttributes.Size;
-            ExecutePendingDealloactions(frameIndex);
+            ExecutePendingDeallocations(frameIndex);
         });
 
         mPendingDeallocations.resize(simultaneousFramesInFlight);
@@ -20,9 +20,6 @@ namespace Memory
         for (HAL::GraphicsCommandList* cmdList : mGraphicCommandLists) delete cmdList;
         for (HAL::ComputeCommandList* cmdList : mComputeCommandLists) delete cmdList;
         for (HAL::CopyCommandList* cmdList : mCopyCommandLists) delete cmdList;
-        for (HAL::GraphicsCommandAllocator* allocator : mGraphicCommandAllocators) delete allocator;
-        for (HAL::ComputeCommandAllocator* allocator : mComputeCommandAllocators) delete allocator;
-        for (HAL::CopyCommandAllocator* allocator : mCopyCommandAllocators) delete allocator;
     }
 
     void PoolCommandListAllocator::BeginFrame(uint64_t frameNumber)
@@ -38,58 +35,25 @@ namespace Memory
   
     PoolCommandListAllocator::GraphicsCommandListPtr PoolCommandListAllocator::AllocateGraphicsCommandList()
     {
-        return AllocateCommandList<
-            HAL::GraphicsCommandList, 
-            HAL::GraphicsCommandAllocator, 
-            std::function<void(HAL::GraphicsCommandList*)>>
-            (mGraphicsPool, mGraphicCommandLists, mGraphicCommandAllocators);
+        return AllocateCommandList<HAL::GraphicsCommandList, std::function<void(HAL::GraphicsCommandList*)>>(mGraphicsPool, mGraphicCommandLists);
     }
 
     PoolCommandListAllocator::ComputeCommandListPtr PoolCommandListAllocator::AllocateComputeCommandList()
     {
-        return AllocateCommandList<
-            HAL::ComputeCommandList,
-            HAL::ComputeCommandAllocator,
-            std::function<void(HAL::ComputeCommandList*)>>
-            (mComputePool, mComputeCommandLists, mComputeCommandAllocators);
+        return AllocateCommandList<HAL::ComputeCommandList, std::function<void(HAL::ComputeCommandList*)>>(mComputePool, mComputeCommandLists);
     }
 
     PoolCommandListAllocator::CopyCommandListPtr PoolCommandListAllocator::AllocateCopyCommandList()
     {
-        return AllocateCommandList<
-            HAL::CopyCommandList,
-            HAL::CopyCommandAllocator,
-            std::function<void(HAL::CopyCommandList*)>>
-            (mCopyPool, mCopyCommandLists, mCopyCommandAllocators);
+        return AllocateCommandList<HAL::CopyCommandList, std::function<void(HAL::CopyCommandList*)>>(mCopyPool, mCopyCommandLists);
     }
 
-    template <class CommandListT, class CommandAllocatorT, class DeleterT>
-    std::unique_ptr<CommandListT, DeleterT> PoolCommandListAllocator::AllocateCommandList(Pool<void>& pool, std::vector<CommandListT*>& cmdLists, std::vector<CommandAllocatorT*>& cmdAllocators)
-    {
-        Pool<void>::SlotType slot = pool.Allocate();
-        auto index = slot.MemoryOffset;
-
-        if (index >= cmdLists.size())
-        {
-            CommandAllocatorT* allocator = new CommandAllocatorT{ *mDevice };
-            cmdAllocators.emplace_back(allocator);
-            cmdLists.emplace_back(new CommandListT{ *mDevice, allocator });
-        }
-
-        auto deleter = [this, slot, &pool, cmdList = cmdLists[index], cmdAllocator = cmdAllocators[index]](CommandListT* cmdList)
-        {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ &pool, slot, cmdList });
-        };
-
-        return { cmdLists[index], deleter };
-    }
-
-    void PoolCommandListAllocator::ExecutePendingDealloactions(uint64_t frameIndex)
+    void PoolCommandListAllocator::ExecutePendingDeallocations(uint64_t frameIndex)
     {
         for (Deallocation& deallocation : mPendingDeallocations[frameIndex])
         {
-            deallocation.PoolThatProducedAllocation->Deallocate(deallocation.Slot);
             deallocation.CommandList->Reset();
+            deallocation.PoolThatProducedAllocation->Deallocate(deallocation.Slot);
         }
 
         mPendingDeallocations[frameIndex].clear();

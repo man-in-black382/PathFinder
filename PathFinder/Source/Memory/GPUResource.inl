@@ -20,14 +20,13 @@ namespace Memory
     void GPUResource::Write(const T* data, uint64_t startIndex, uint64_t objectCount, uint64_t objectAlignment)
     {
         uint64_t alignedObjectSizeInBytes = Foundation::MemoryUtils::Align(sizeof(T), objectAlignment);
-        uint64_t byteOffset = startIndex * alignedObjectSizeInBytes;
         uint64_t copyRegionSizeInBytes = alignedObjectSizeInBytes * objectCount;
 
         T* writeOnlyPtr = WriteOnlyPtr<T>();
 
         assert_format(writeOnlyPtr, "Need to request a write operation before trying to write data to resource");
 
-        memcpy(writeOnlyPtr + byteOffset, data, copyRegionSizeInBytes);
+        memcpy(writeOnlyPtr + startIndex, data, copyRegionSizeInBytes);
     }
 
     template <class T>

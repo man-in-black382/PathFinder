@@ -46,10 +46,10 @@ namespace Memory
             HAL::CommandList* CommandList;
         };
 
-        void ExecutePendingDealloactions(uint64_t frameIndex);
+        void ExecutePendingDeallocations(uint64_t frameIndex);
 
-        template <class CommandListT, class CommandAllocatorT, class DeleterT>
-        std::unique_ptr<CommandListT, DeleterT> AllocateCommandList(Pool<void>& pool, std::vector<CommandListT*>& cmdLists, std::vector<CommandAllocatorT*>& cmdAllocators);
+        template <class CommandListT, class DeleterT>
+        std::unique_ptr<CommandListT, DeleterT> AllocateCommandList(Pool<void>& pool, std::vector<CommandListT*>& cmdLists);
 
         const HAL::Device* mDevice = nullptr;
         Ring mRingFrameTracker;
@@ -62,10 +62,6 @@ namespace Memory
         std::vector<HAL::GraphicsCommandList*> mGraphicCommandLists;
         std::vector<HAL::ComputeCommandList*> mComputeCommandLists;
         std::vector<HAL::CopyCommandList*> mCopyCommandLists;
-
-        std::vector<HAL::GraphicsCommandAllocator*> mGraphicCommandAllocators;
-        std::vector<HAL::ComputeCommandAllocator*> mComputeCommandAllocators;
-        std::vector<HAL::CopyCommandAllocator*> mCopyCommandAllocators;
 
         std::vector<std::vector<Deallocation>> mPendingDeallocations;
     };

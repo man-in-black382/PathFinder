@@ -12,7 +12,6 @@ namespace PathFinder
                 mesh.Vertices().data(), mesh.Vertices().size(), mesh.Indices().data(), mesh.Indices().size());
 
             mesh.SetVertexStorageLocation(locationInStorage);
-            WriteToTemporaryBuffers(mesh.Vertices().data(), mesh.Vertices().size(), mesh.Indices().data(), mesh.Indices().size());
         }
         
         SubmitTemporaryBuffersToGPU<Vertex1P1N1UV1T1BT>();
@@ -107,7 +106,7 @@ namespace PathFinder
             HAL::Buffer::Properties<uint32_t> properties{ uploadBuffers.Indices.size() };
             finalBuffers.IndexBuffer = mResourceProducer->NewBuffer(properties);
             finalBuffers.IndexBuffer->RequestWrite();
-            finalBuffers.IndexBuffer->Write(uploadBuffers.Vertices.data(), 0, uploadBuffers.Vertices.size());
+            finalBuffers.IndexBuffer->Write(uploadBuffers.Indices.data(), 0, uploadBuffers.Indices.size());
             uploadBuffers.Indices.clear();
         }
 

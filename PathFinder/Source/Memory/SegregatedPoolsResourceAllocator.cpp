@@ -33,8 +33,6 @@ namespace Memory
 
         auto offsetInHeap = AdjustMemoryOffsetToPointInsideHeap(allocation);
 
-        OutputDebugString(StringFormat("Allocated Texture of %d bytes, offset %d \n", format.ResourceSizeInBytes(), offsetInHeap).c_str());
-
         auto deallocationCallback = [this, poolAllocation, poolsThatProducedAllocation = allocation.PoolsPtr](HAL::Texture* texture)
         {
             mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ texture, poolAllocation, poolsThatProducedAllocation });

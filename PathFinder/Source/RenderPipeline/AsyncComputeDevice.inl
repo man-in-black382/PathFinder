@@ -96,30 +96,24 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandQueueT>::BindConstantBuffersCompute()
+    void AsyncComputeDevice<CommandListT, CommandQueueT>::BindConstantBuffersCompute(bool ignoreCachedBuffers)
     {
         if (auto buffer = mResourceStorage->GlobalRootConstantsBuffer();
-            buffer && 
-            mBoundGlobalConstantBufferCompute &&
-            buffer->HALBuffer() != mBoundGlobalConstantBufferCompute)
+            buffer && (buffer->HALBuffer() != mBoundGlobalConstantBufferCompute || ignoreCachedBuffers))
         {
             mBoundGlobalConstantBufferCompute = buffer->HALBuffer();
             mCommandList->SetComputeRootConstantBuffer(*mBoundGlobalConstantBufferCompute, 0);
         }
 
         if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer(); 
-            buffer && 
-            mBoundFrameConstantBufferCompute &&
-            buffer->HALBuffer() != mBoundFrameConstantBufferCompute)
+            buffer && (buffer->HALBuffer() != mBoundFrameConstantBufferCompute || ignoreCachedBuffers))
         {
             mBoundFrameConstantBufferCompute = buffer->HALBuffer();
             mCommandList->SetComputeRootConstantBuffer(*mBoundFrameConstantBufferCompute, 1);
         }
 
         if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass(); 
-            buffer && 
-            mBoundPassConstantBufferCompute &&
-            buffer->HALBuffer() != mBoundPassConstantBufferCompute)
+            buffer && (buffer->HALBuffer() != mBoundPassConstantBufferCompute || ignoreCachedBuffers))
         {
             mBoundPassConstantBufferCompute = buffer->HALBuffer();
             mCommandList->SetComputeRootConstantBuffer(*mBoundPassConstantBufferCompute, 2);
@@ -188,15 +182,15 @@ namespace PathFinder
 
         mCommandList->SetPipelineState(*state);
 
-        if (state->GetRootSignature() != mAppliedComputeRootSignature)
+        bool rootSignatureChanged = state->GetRootSignature() != mAppliedComputeRootSignature;
+
+        if (rootSignatureChanged)
         {
             mCommandList->SetComputeRootSignature(*state->GetRootSignature());
             ApplyCommonComputeResourceBindings();
-
-            
         }
 
-        BindConstantBuffersCompute();
+        BindConstantBuffersCompute(rootSignatureChanged);
 
         mAppliedComputeRootSignature = state->GetRootSignature();
         mAppliedComputeState = state;
@@ -215,15 +209,17 @@ namespace PathFinder
         // Set RT state
         //mCommandList->SetPipelineState(*pso);
 
-        // Skip setting common bindings when workload type and root signature are not going to change
+        bool rootSignatureChanged = state->GetGlobalRootSignature() != mAppliedComputeRootSignature;
+
+        // When root signature changes we have to rebind everything
         //
-        if (state->GetGlobalRootSignature() != mAppliedComputeRootSignature)
+        if (rootSignatureChanged)
         {
             mCommandList->SetComputeRootSignature(*state->GetGlobalRootSignature());
             ApplyCommonComputeResourceBindings();
         }
 
-        BindConstantBuffersCompute();
+        BindConstantBuffersCompute(rootSignatureChanged);
 
         mAppliedComputeRootSignature = state->GetGlobalRootSignature();
         mAppliedRayTracingState = state;

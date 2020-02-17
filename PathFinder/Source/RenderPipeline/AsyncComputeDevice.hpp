@@ -70,7 +70,7 @@ namespace PathFinder
 
     private:
         void ApplyCommonComputeResourceBindings();
-        void BindConstantBuffersCompute();
+        void BindConstantBuffersCompute(bool ignoreCachedBuffers);
 
     public:
         inline CommandListT* CommandList() { return mCommandList.get(); }

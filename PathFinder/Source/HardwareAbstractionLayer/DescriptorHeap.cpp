@@ -320,7 +320,7 @@ namespace HAL
 
     DescriptorAddress CBSRUADescriptorHeap::RangeStartGPUAddress(Range range) const
     {
-        auto index = std::underlying_type_t<Range>(Range::UnorderedAccess);
+        auto index = std::underlying_type_t<Range>(range);
         const RangeAllocationInfo& allocInfo = GetRange(index);
         return allocInfo.StartGPUHandle.ptr;
     }

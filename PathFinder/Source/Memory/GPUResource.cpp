@@ -69,10 +69,20 @@ namespace Memory
     {
         mFrameNumber = frameNumber;
 
-        if (mUploadStrategy == UploadStrategy::DirectAccess && mCompletedUploadBuffer)
+        if (mUploadStrategy == UploadStrategy::DirectAccess)
         {
             // Direct upload resources must have at least one upload buffer at all times
-            mUploadBuffers.emplace(std::move(mCompletedUploadBuffer), mFrameNumber);
+            if (mCompletedUploadBuffer)
+            {
+                // Either reuse a completed upload buffers
+                mUploadBuffers.emplace(std::move(mCompletedUploadBuffer), mFrameNumber);
+            }
+            else 
+            {
+                // Or allocate a new one if none are completed yet
+                HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
+                mUploadBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
+            }  
         }
         else
         {

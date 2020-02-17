@@ -117,28 +117,28 @@ namespace PathFinder
         // Execute any pending upload commands. Perform execution here because RT AS depends on resource uploads.
         mGraphicsDevice.ExecuteCommands(nullptr, &mUploadFence);
 
-        //// Build AS
-        //mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(mMeshStorage.TopAccelerationStructure().HALAccelerationStructure());
-        //mAsyncComputeDevice.CommandList()->InsertBarrier(mMeshStorage.TopAccelerationStructure().UABarrier());
-        //mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
+        // Build AS
+        mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(mMeshStorage.TopAccelerationStructure().HALAccelerationStructure());
+        mAsyncComputeDevice.CommandList()->InsertBarrier(mMeshStorage.TopAccelerationStructure().UABarrier());
+        mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
 
-        // Wait for TLAS build then execute render passes
+        //// Wait for TLAS build then execute render passes
         HAL::Texture* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
         HAL::ResourceTransitionBarrier preRenderBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer };
         HAL::ResourceTransitionBarrier postRenderBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer };
 
-        // Let resources record transfer (upload/readback) commands into graphics cmd list
+        //// Let resources record transfer (upload/readback) commands into graphics cmd list
         mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
 
         // Execute render passes that contain render work and may contain data transfers
         mGraphicsDevice.CommandList()->InsertBarrier(preRenderBarrier);
-        //RunRenderPasses(mPassExecutionGraph->DefaultPasses());
+        RunRenderPasses(mPassExecutionGraph->DefaultPasses());
         mGraphicsDevice.CommandList()->InsertBarrier(postRenderBarrier);
 
-        // Execute all graphics work along with data transfers (upload/readback)
-        //mGraphicsDevice.ExecuteCommands(&mAsyncComputeFence, &mGraphicsFence);
+        //// Execute all graphics work along with data transfers (upload/readback)
+        mGraphicsDevice.ExecuteCommands(&mAsyncComputeFence, &mGraphicsFence);
 
-        // Put the picture on the screen
+        //// Put the picture on the screen
         mSwapChain.Present();
 
         // Issue a CPU wait if necessary

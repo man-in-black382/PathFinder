@@ -114,30 +114,26 @@ namespace PathFinder
         mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 12);
     }
 
-    void GraphicsDevice::BindConstantBuffersGraphics()
+    void GraphicsDevice::BindConstantBuffersGraphics(bool ignoreCachedBuffers)
     {
+        //
+
         if (auto buffer = mResourceStorage->GlobalRootConstantsBuffer(); 
-            buffer && 
-            mBoundGlobalConstantBufferGraphics &&
-            buffer->HALBuffer() != mBoundGlobalConstantBufferGraphics)
+            buffer && (buffer->HALBuffer() != mBoundGlobalConstantBufferGraphics || ignoreCachedBuffers))
         {
             mBoundGlobalConstantBufferGraphics = buffer->HALBuffer();
             mCommandList->SetGraphicsRootConstantBuffer(*mBoundGlobalConstantBufferGraphics, 0);
         }
 
         if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer(); 
-            buffer && 
-            mBoundFrameConstantBufferGraphics &&
-            buffer->HALBuffer() != mBoundFrameConstantBufferGraphics)
+            buffer && (buffer->HALBuffer() != mBoundFrameConstantBufferGraphics || ignoreCachedBuffers))
         {
             mBoundFrameConstantBufferGraphics = buffer->HALBuffer();
             mCommandList->SetGraphicsRootConstantBuffer(*mBoundFrameConstantBufferGraphics, 1);
         }
 
         if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass(); 
-            buffer && 
-            mBoundPassConstantBufferGraphics &&
-            buffer->HALBuffer() != mBoundPassConstantBufferGraphics)
+            buffer && (buffer->HALBuffer() != mBoundPassConstantBufferGraphics || ignoreCachedBuffers))
         {
             mBoundPassConstantBufferGraphics = buffer->HALBuffer();
             mCommandList->SetGraphicsRootConstantBuffer(*mBoundPassConstantBufferGraphics, 2);
@@ -185,15 +181,17 @@ namespace PathFinder
         mCommandList->SetPipelineState(*state);
         mCommandList->SetPrimitiveTopology(state->GetPrimitiveTopology());
 
+        bool rootSignatureChanged = state->GetRootSignature() != mAppliedGraphicsRootSignature;
+
         // If root signature has changed we need to rebind common bindings
         //
-        if (state->GetRootSignature() != mAppliedGraphicsRootSignature)
+        if (rootSignatureChanged)
         {
             mCommandList->SetGraphicsRootSignature(*state->GetRootSignature());
             ApplyCommonGraphicsResourceBindings(); 
         }
 
-        BindConstantBuffersGraphics();
+        BindConstantBuffersGraphics(rootSignatureChanged);
 
         // Nullify cached states and signatures
         mAppliedComputeState = nullptr;
@@ -230,15 +228,17 @@ namespace PathFinder
         // Set RT state
         //mCommandList->SetPipelineState(*pso);
 
+        bool rootSignatureChanged = state->GetGlobalRootSignature() != mAppliedGraphicsRootSignature;
+
         // If root signature has changed we need to rebind common bindings
         //
-        if (state->GetGlobalRootSignature() != mAppliedGraphicsRootSignature)
+        if (rootSignatureChanged)
         {
             mCommandList->SetGraphicsRootSignature(*state->GetGlobalRootSignature());
             ApplyCommonGraphicsResourceBindings();
         }
 
-        BindConstantBuffersGraphics();
+        BindConstantBuffersGraphics(rootSignatureChanged);
 
         // Nullify cached states and signatures
         mAppliedGraphicsState = nullptr;
