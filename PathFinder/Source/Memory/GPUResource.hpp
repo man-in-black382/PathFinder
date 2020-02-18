@@ -68,23 +68,29 @@ namespace Memory
     protected:
         using BufferFrameNumberPair = std::pair<SegregatedPoolsResourceAllocator::BufferPtr, uint64_t>;
 
-        UploadStrategy mUploadStrategy = UploadStrategy::Automatic;
-        ResourceStateTracker* mStateTracker;
-        SegregatedPoolsResourceAllocator* mResourceAllocator;
-        PoolDescriptorAllocator* mDescriptorAllocator;
-        CopyCommandListProvider* mCommandListProvider;
-        
         HAL::Buffer* CurrentFrameUploadBuffer();
         HAL::Buffer* CurrentFrameReadbackBuffer();
         const HAL::Buffer* CurrentFrameUploadBuffer() const;
         const HAL::Buffer* CurrentFrameReadbackBuffer() const;
 
+        virtual void ApplyDebugName();
         virtual uint64_t ResourceSizeInBytes() const = 0;
+
+        UploadStrategy mUploadStrategy = UploadStrategy::Automatic;
+        ResourceStateTracker* mStateTracker;
+        SegregatedPoolsResourceAllocator* mResourceAllocator;
+        PoolDescriptorAllocator* mDescriptorAllocator;
+        CopyCommandListProvider* mCommandListProvider;
 
         std::queue<BufferFrameNumberPair> mUploadBuffers;
         std::queue<BufferFrameNumberPair> mReadbackBuffers;
 
+        std::string mDebugName;
+
     private:
+        void AllocateNewUploadBuffer();
+        void AllocateNewReadbackBuffer();
+
         uint64_t mFrameNumber = 0;
         SegregatedPoolsResourceAllocator::BufferPtr mCompletedReadbackBuffer;
         SegregatedPoolsResourceAllocator::BufferPtr mCompletedUploadBuffer;

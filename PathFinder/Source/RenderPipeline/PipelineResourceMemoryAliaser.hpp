@@ -37,9 +37,9 @@ namespace PathFinder
         struct AliasingMetadata
         {
             Timeline ResourceTimeline;
-            PipelineResourceSchedulingInfo* Allocation;
+            PipelineResourceSchedulingInfo* SchedulingInfo;
 
-            AliasingMetadata(const Timeline& timeline, PipelineResourceSchedulingInfo* allocation);
+            AliasingMetadata(const Timeline& timeline, PipelineResourceSchedulingInfo* schedulingInfo);
     
             static bool SortAscending(const AliasingMetadata& first, const AliasingMetadata& second);
             static bool SortDescending(const AliasingMetadata& first, const AliasingMetadata& second);

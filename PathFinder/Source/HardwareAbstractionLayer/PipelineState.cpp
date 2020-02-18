@@ -372,8 +372,6 @@ namespace HAL
 
             mShaderTable.AddShader(*shaderExport.AssosiatedShader(), *shaderId, library.LocalRootSignature());
         }
-
-        mShaderTable.UploadToGPUMemory();
     }
 
 }

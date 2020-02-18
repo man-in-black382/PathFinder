@@ -38,23 +38,22 @@ namespace HAL
         mPerStageStrides[shader.PipelineStage()] = std::max(mPerStageStrides[shader.PipelineStage()], size);
     }
 
-    void ShaderTable::UploadToGPUMemory()
+    void ShaderTable::UploadToGPUMemory(uint8_t* uploadGPUMemory, const Buffer* gpuTableBuffer)
     {
-        //mGPUTable = std::make_unique<RingBufferResource<uint8_t>>(
-        //    *mDevice, mTableSize, mFrameCapacity, 1, CPUAccessibleHeapType::Upload);
+        assert_format(gpuTableBuffer->RequestedMemory() >= mTableSize,
+            "Buffer is not large enough to accommodate shader table. Query memory requirements first.");
 
-        //for (const auto& keyValue : mRecords)
-        //{
-        //    const auto& records = keyValue.second;
+        for (const auto& [shaderStage, records] : mRecords)
+        {
+            for (const Record& record : records)
+            {
+                memcpy(uploadGPUMemory + record.TableOffset, (uint8_t*)(&record.ID), sizeof(record.ID));
 
-        //    for (const Record& record : records)
-        //    {
-        //        // Write Shader ID
-        //        mGPUTable->Write(record.TableOffset, (uint8_t*)(&record.ID), sizeof(record.ID));
+                // TODO: Write local root signature arguments here ??? 
+            }
+        }
 
-        //        // TODO: Write local root signature arguments here ??? Probably not here
-        //    }
-        //}
+        mGPUTable = gpuTableBuffer;
     }
 
     void ShaderTable::Clear()
@@ -62,11 +61,17 @@ namespace HAL
         mRecords.clear();
         mPerStageStrides.clear();
         mTableSize = 0;
+        mGPUTable = nullptr;
     }
 
     RayDispatchInfo ShaderTable::GenerateRayDispatchInfo() const
     {
         return {};
+    }
+
+    ShaderTable::MemoryRequirements ShaderTable::GetMemoryRequirements() const
+    {
+        return { mTableSize };
     }
 
     //std::optional<D3D12_GPU_VIRTUAL_ADDRESS> ShaderTable::ShaderStageFirstRecordAddress(Shader::Stage stage)

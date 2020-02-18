@@ -104,4 +104,14 @@ namespace Memory
         return mTexturePtr->TotalMemory();
     }
 
+    void Texture::ApplyDebugName()
+    {
+        GPUResource::ApplyDebugName();
+
+        if (mTexturePtr)
+        {
+            mTexturePtr->SetDebugName(mDebugName);
+        }
+    }
+
 }

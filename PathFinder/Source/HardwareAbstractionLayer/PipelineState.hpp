@@ -208,6 +208,7 @@ namespace HAL
     public:
         inline ID3D12StateObject* D3DCompiledState() const { return mState.Get(); }
         inline const RootSignature* GetGlobalRootSignature() const { return mGlobalRootSignature; }
+        inline ShaderTable& GetShaderTable() { return mShaderTable; }
     };
 
 }

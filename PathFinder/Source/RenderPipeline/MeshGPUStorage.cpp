@@ -7,6 +7,9 @@ namespace PathFinder
 {
 
     MeshGPUStorage::MeshGPUStorage(const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer)
-        : mDevice{ device }, mResourceProducer{ resourceProducer }, mTopAccelerationStructure{ device, resourceProducer } {}        
+        : mDevice{ device }, mResourceProducer{ resourceProducer }, mTopAccelerationStructure{ device, resourceProducer } 
+    {
+        mTopAccelerationStructure.SetDebugName("All Meshes Top RT AS");
+    }        
 
 }

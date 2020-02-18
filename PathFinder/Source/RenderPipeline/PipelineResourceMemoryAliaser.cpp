@@ -22,15 +22,15 @@ namespace PathFinder
 
         if (mSchedulingInfos.size() == 1)
         {
-            mSchedulingInfos.begin()->Allocation->AliasingInfo.HeapOffset = 0;
-            optimalHeapSize = mSchedulingInfos.begin()->Allocation->ResourceFormat().ResourceSizeInBytes();
+            mSchedulingInfos.begin()->SchedulingInfo->AliasingInfo.HeapOffset = 0;
+            optimalHeapSize = mSchedulingInfos.begin()->SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
             return optimalHeapSize;
         }
 
         while (!mSchedulingInfos.empty())
         {
             auto largestAllocationIt = mSchedulingInfos.begin();
-            mAvailableMemory = largestAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes();
+            mAvailableMemory = largestAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
             optimalHeapSize += mAvailableMemory;
 
             for (auto allocationIt = largestAllocationIt; allocationIt != mSchedulingInfos.end(); ++allocationIt)
@@ -88,8 +88,8 @@ namespace PathFinder
         {
             if (TimelinesIntersect(alreadyAliasedAllocationIt->ResourceTimeline, nextAllocationIt->ResourceTimeline))
             {
-                uint64_t startByteIndex = alreadyAliasedAllocationIt->Allocation->AliasingInfo.HeapOffset;
-                uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() - 1;
+                uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset;
+                uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes() - 1;
 
                 mNonAliasableMemoryRegionStarts.insert(startByteIndex);
                 mNonAliasableMemoryRegionEnds.insert(endByteIndex);
@@ -99,9 +99,9 @@ namespace PathFinder
 
     bool PipelineResourceMemoryAliaser::AliasAsFirstAllocation(AliasingMetadataIterator nextAllocationIt)
     {
-        if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes() <= mAvailableMemory)
+        if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes() <= mAvailableMemory)
         {
-            nextAllocationIt->Allocation->AliasingInfo.HeapOffset = mGlobalStartOffset;
+            nextAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
             return true;
         }
@@ -113,7 +113,7 @@ namespace PathFinder
     {
         if (mNonAliasableMemoryRegionStarts.empty())
         {
-            nextAllocationIt->Allocation->AliasingInfo.HeapOffset = mGlobalStartOffset;
+            nextAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
             return true;
         }
@@ -121,22 +121,22 @@ namespace PathFinder
         return false;
     }
 
-    void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt)
+    void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextSchedulingInfoIt)
     {
         // Bail out if there is nothing to alias with
-        if (AliasAsFirstAllocation(nextAllocationIt)) return;
+        if (AliasAsFirstAllocation(nextSchedulingInfoIt)) return;
 
-        FindNonAliasableMemoryRegions(nextAllocationIt);
+        FindNonAliasableMemoryRegions(nextSchedulingInfoIt);
 
         // Bail out if there is no timeline conflicts with already aliased resources
-        if (AliasAsNonTimelineConflictingAllocation(nextAllocationIt)) return;
+        if (AliasAsNonTimelineConflictingAllocation(nextSchedulingInfoIt)) return;
 
         // Find memory regions in which we can place the next allocation based on previously found unavailable regions.
         // Pick the most fitting region. If next allocation cannot be fit in any free region, skip it.
 
         uint64_t localOffset = 0;
         uint16_t overlappingMemoryRegionsCount = 0;
-        uint64_t nextAllocationSize = nextAllocationIt->Allocation->ResourceFormat().ResourceSizeInBytes();
+        uint64_t nextAllocationSize = nextSchedulingInfoIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
 
         auto startIt = mNonAliasableMemoryRegionStarts.begin();
         auto endIt = mNonAliasableMemoryRegionEnds.begin();
@@ -207,7 +207,7 @@ namespace PathFinder
             //
             //nextAllocationIt->Allocation->AliasingSource = mAllocations.begin()->Allocation;
 
-            PipelineResourceSchedulingInfo::AliasingMetadata& aliasingInfo = nextAllocationIt->Allocation->AliasingInfo;
+            PipelineResourceSchedulingInfo::AliasingMetadata& aliasingInfo = nextSchedulingInfoIt->SchedulingInfo->AliasingInfo;
 
             aliasingInfo.HeapOffset = mGlobalStartOffset + mostFittingMemoryRegion.Offset;
             aliasingInfo.NeedsAliasingBarrier = true;
@@ -216,9 +216,9 @@ namespace PathFinder
             // so it's no longer a single occupant of this memory region, therefore it now
             // needs an aliasing barrier. If the first resource is a single resource on this
             // memory region then this code branch will never be hit and we will avoid a barrier for it.
-            mAlreadyAliasedAllocations.front()->Allocation->AliasingInfo.NeedsAliasingBarrier = true;
+            mAlreadyAliasedAllocations.front()->SchedulingInfo->AliasingInfo.NeedsAliasingBarrier = true;
 
-            mAlreadyAliasedAllocations.push_back(nextAllocationIt);
+            mAlreadyAliasedAllocations.push_back(nextSchedulingInfoIt);
         }
     }
 
@@ -232,17 +232,17 @@ namespace PathFinder
         mAlreadyAliasedAllocations.clear();
     }
 
-    PipelineResourceMemoryAliaser::AliasingMetadata::AliasingMetadata(const Timeline& timeline, PipelineResourceSchedulingInfo* allocation)
-        : ResourceTimeline{ timeline }, Allocation{ allocation } {}
+    PipelineResourceMemoryAliaser::AliasingMetadata::AliasingMetadata(const Timeline& timeline, PipelineResourceSchedulingInfo* schedulingInfo)
+        : ResourceTimeline{ timeline }, SchedulingInfo{ schedulingInfo } {}
 
     bool PipelineResourceMemoryAliaser::AliasingMetadata::SortAscending(const AliasingMetadata& first, const AliasingMetadata& second)
     {
-        return first.Allocation->ResourceFormat().ResourceSizeInBytes() < second.Allocation->ResourceFormat().ResourceSizeInBytes();
+        return first.SchedulingInfo->ResourceFormat().ResourceSizeInBytes() < second.SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
     }
 
     bool PipelineResourceMemoryAliaser::AliasingMetadata::SortDescending(const AliasingMetadata& first, const AliasingMetadata& second)
     {
-        return first.Allocation->ResourceFormat().ResourceSizeInBytes() > second.Allocation->ResourceFormat().ResourceSizeInBytes();
+        return first.SchedulingInfo->ResourceFormat().ResourceSizeInBytes() > second.SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
     }
 
 }

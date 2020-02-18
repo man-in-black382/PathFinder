@@ -162,18 +162,12 @@ namespace PathFinder
     template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::ApplyPipelineState(Foundation::Name psoName)
     {
-        const PipelineStateManager::PipelineStateVariant* state = mPipelineStateManager->GetPipelineState(psoName);
+        std::optional<PipelineStateManager::PipelineStateVariant> state = mPipelineStateManager->GetPipelineState(psoName);
         assert_format(state, "Pipeline state doesn't exist");
-        assert_format(!std::holds_alternative<HAL::GraphicsPipelineState>(*state), "Trying to apply graphics pipeline state to compute device");
+        assert_format(!state->GraphicPSO, "Trying to apply graphics pipeline state to compute device");
 
-        if (std::holds_alternative<HAL::ComputePipelineState>(*state))
-        {
-            ApplyStateIfNeeded(&std::get<HAL::ComputePipelineState>(*state));
-        }
-        else if (std::holds_alternative<HAL::RayTracingPipelineState>(*state))
-        {
-            ApplyStateIfNeeded(&std::get<HAL::RayTracingPipelineState>(*state));
-        } 
+        if (state->ComputePSO) ApplyStateIfNeeded(state->ComputePSO);
+        else if (state->RayTracingPSO) ApplyStateIfNeeded(state->RayTracingPSO);
     }
 
     template <class CommandListT, class CommandQueueT>

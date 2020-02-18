@@ -35,17 +35,13 @@ namespace PathFinder
         virtual void ScheduleResources(ResourceScheduler* scheduler);
         virtual void Render(RenderContext* context);
 
-        void SetIndexInGraph(uint64_t index);
-
     private:
         Foundation::Name mName;
         Purpose mPurpose = Purpose::Default;
-        uint64_t mIndexInGraph = 0;
 
     public:
         inline Foundation::Name Name() const { return mName; }
         inline Purpose PurposeInPipeline() const { return mPurpose; }
-        inline auto IndexInGraph() const { return mIndexInGraph; }
     };
 
 }
