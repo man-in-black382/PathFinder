@@ -139,7 +139,12 @@ namespace PathFinder
             mCommandList->SetGraphicsRootConstantBuffer(*mBoundPassConstantBufferGraphics, 2);
         }
 
-        //mCommandList->SetGraphicsRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);
+        if (auto buffer = mResourceStorage->DebugBufferForCurrentPass();
+            buffer && (buffer->HALBuffer() != mBoundPassDebugBufferGraphics || ignoreCachedBuffers))
+        {
+            mBoundPassDebugBufferGraphics = buffer->HALBuffer();
+            mCommandList->SetGraphicsRootUnorderedAccessResource(*mBoundPassDebugBufferGraphics, 13);
+        }
     }
 
     void GraphicsDevice::ApplyDefaultViewportIfNeeded()

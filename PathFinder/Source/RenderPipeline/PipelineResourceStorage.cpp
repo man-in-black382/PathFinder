@@ -27,10 +27,7 @@ namespace PathFinder
         mDefaultRenderSurface{ defaultRenderSurface },
         mResourceProducer{ resourceProducer },
         mDescriptorAllocator{ descriptorAllocator },
-        mPassExecutionGraph{ passExecutionGraph }
-    {
-        CreateDebugBuffers(passExecutionGraph);
-    }
+        mPassExecutionGraph{ passExecutionGraph } {}
 
     const HAL::RTDescriptor& PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
     {
@@ -89,6 +86,7 @@ namespace PathFinder
             resourceObjects.SchedulingInfo->AllocationAction();
         }
 
+        CreateDebugBuffers();
         CreateAliasingAndUAVBarriers();
     }
 
@@ -189,24 +187,18 @@ namespace PathFinder
         return &it->second;
     }
 
-    void PipelineResourceStorage::CreateDebugBuffers(const RenderPassExecutionGraph* passExecutionGraph)
+    void PipelineResourceStorage::CreateDebugBuffers()
     {
-        //for (const RenderPass* pass : passExecutionGraph->AllPasses())
-        //{
-        //    auto& passObjects = GetPerPassObjects(pass->Name());
+        for (auto& [resourceName, passObjects] : mPerPassObjects)
+        {
+            HAL::Buffer::Properties<float> properties{ 1024 };
+            passObjects.PassDebugBuffer = mResourceProducer->NewBuffer(properties);
+            passObjects.PassDebugBuffer->RequestWrite();
 
-        //    // Use Common to leverage automatic state promotion/decay for buffers when transitioning from/to readback and rendering
-        //    passObjects.PassDebugBuffer = std::make_unique<HAL::Buffer<float>>(
-        //        *mDevice, 512, 1, HAL::ResourceState::Common, HAL::ResourceState::UnorderedAccess);
-
-        //    passObjects.PassDebugReadbackBuffer = std::make_unique<HAL::RingBufferResource<float>>(
-        //        *mDevice, 512, mSimultaneousFramesInFlight, 1, HAL::CPUAccessibleHeapType::Readback);
-
-        //    passObjects.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ passObjects.PassDebugBuffer.get() });
-
-        //    passObjects.PassDebugBuffer->SetDebugName(StringFormat("System Memory Debug Buffer (%s)", pass->Name().ToString().c_str()));
-        //    passObjects.PassDebugReadbackBuffer->SetDebugName(StringFormat("Readback Memory Debug Buffer (%s)", pass->Name().ToString().c_str()));
-        //}
+            // Avoid garbage on first use
+            uint8_t* uploadMemory = passObjects.PassDebugBuffer->WriteOnlyPtr();
+            memset(uploadMemory, 0, sizeof(float) * 1024);
+        }
     }
 
     void PipelineResourceStorage::PrepareSchedulingInfoForOptimization()
@@ -273,6 +265,12 @@ namespace PathFinder
         passObjects.TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions();
     }
 
+    void PipelineResourceStorage::RequestCurrentPassDebugReadback()
+    {
+        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
+        passObjects.PassDebugBuffer->RequestRead();
+    }
+
     const Memory::Buffer* PipelineResourceStorage::GlobalRootConstantsBuffer() const
     {
         return mGlobalRootConstantsBuffer.get();
@@ -287,6 +285,12 @@ namespace PathFinder
     {
         const PerPassObjects* passObjects = GetPerPassObjects(mCurrentPassName);
         return passObjects->PassConstantBuffer.get();
+    }
+
+    const Memory::Buffer* PipelineResourceStorage::DebugBufferForCurrentPass() const
+    {
+        const PerPassObjects* passObjects = GetPerPassObjects(mCurrentPassName);
+        return passObjects->PassDebugBuffer.get();
     }
 
     const std::unordered_set<ResourceName>& PipelineResourceStorage::ScheduledResourceNamesForCurrentPass()
@@ -334,6 +338,11 @@ namespace PathFinder
     const Foundation::Name PipelineResourceStorage::CurrentPassName() const
     {
         return mCurrentPassName;
+    }
+
+    void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const
+    {
+
     }
 
     //void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const

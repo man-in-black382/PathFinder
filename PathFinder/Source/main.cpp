@@ -113,8 +113,8 @@ int main(int argc, char** argv)
 
     engine.MeshStorage().StoreMeshes(scene.Meshes());
 
-    engine.UploadProcessAndTransferAssets();
     engine.ScheduleAndAllocatePipelineResources();
+    engine.UploadProcessAndTransferAssets();
 
     engine.PreRenderEvent() += { "UI.Update", [&]()
     {

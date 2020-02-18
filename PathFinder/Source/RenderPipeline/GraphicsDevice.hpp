@@ -59,6 +59,7 @@ namespace PathFinder
         const HAL::Buffer* mBoundGlobalConstantBufferGraphics = nullptr;
         const HAL::Buffer* mBoundFrameConstantBufferGraphics = nullptr;
         const HAL::Buffer* mBoundPassConstantBufferGraphics = nullptr;
+        const HAL::Buffer* mBoundPassDebugBufferGraphics = nullptr;
         
         std::optional<HAL::Viewport> mCurrentPassViewport;
     };

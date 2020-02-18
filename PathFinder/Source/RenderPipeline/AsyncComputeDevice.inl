@@ -119,7 +119,12 @@ namespace PathFinder
             mCommandList->SetComputeRootConstantBuffer(*mBoundPassConstantBufferCompute, 2);
         }
 
-        //mCommandList->SetComputeRootUnorderedAccessResource(*mResourceStorage->DebugBufferForCurrentPass(), 13);
+        if (auto buffer = mResourceStorage->DebugBufferForCurrentPass();
+            buffer && (buffer->HALBuffer() != mBoundPassDebugBufferCompute || ignoreCachedBuffers))
+        {
+            mBoundPassDebugBufferCompute = buffer->HALBuffer();
+            mCommandList->SetComputeRootUnorderedAccessResource(*mBoundPassDebugBufferCompute, 13);
+        }
     }
 
     template <class CommandListT, class CommandQueueT>
