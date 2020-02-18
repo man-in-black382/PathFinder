@@ -37,7 +37,7 @@ namespace PathFinder
 
         PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format);
 
-        void GatherExpectedStates();
+        void FinishScheduling();
         const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;
         PassMetadata* GetMetadataForPass(Foundation::Name passName);
         PassMetadata& AllocateMetadataForPass(Foundation::Name passName);

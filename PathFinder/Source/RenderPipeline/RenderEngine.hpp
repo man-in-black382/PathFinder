@@ -61,7 +61,8 @@ namespace PathFinder
         void MoveToNextFrame();
         void GatherReadbackData();
 
-        void RunRenderPasses(const std::list<RenderPass*>& passes);
+        void RunAssetProcessingPasses();
+        void RunDefaultPasses();
 
         const RenderPassExecutionGraph* mPassExecutionGraph;
 

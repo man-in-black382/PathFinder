@@ -68,9 +68,10 @@ namespace PathFinder
         mCurrentBackBufferIndex = index;
     }
 
-    void PipelineResourceStorage::SetCurrentPassName(PassName passName)
+    void PipelineResourceStorage::SetCurrentPassName(PassName passName, bool isFirstInFrame)
     {
         mCurrentPassName = passName;
+        mIsCurrentPassFirstInFrame = isFirstInFrame;
     }
 
     void PipelineResourceStorage::AllocateScheduledResources()
@@ -213,7 +214,7 @@ namespace PathFinder
     {
         for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
         {
-            resourceObjects.SchedulingInfo->GatherExpectedStates();
+            resourceObjects.SchedulingInfo->FinishScheduling();
             mStateOptimizer.AddSchedulingInfo(&(*resourceObjects.SchedulingInfo));
 
             switch (resourceObjects.SchedulingInfo->ResourceFormat().ResourceAliasingGroup())
@@ -270,7 +271,7 @@ namespace PathFinder
             resourceObjects.GetGPUResource()->RequestNewState(resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentPassName)->OptimizedState);
         }
         
-        passObjects.TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions();
+        passObjects.TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions(mIsCurrentPassFirstInFrame);
     }
 
     const Memory::Buffer* PipelineResourceStorage::GlobalRootConstantsBuffer() const

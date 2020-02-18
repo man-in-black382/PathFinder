@@ -88,7 +88,7 @@ namespace PathFinder
         const HAL::RTDescriptor& GetCurrentBackBufferDescriptor() const;
         
         void SetCurrentBackBufferIndex(uint8_t index);
-        void SetCurrentPassName(PassName passName);
+        void SetCurrentPassName(PassName passName, bool isFirstInFrame = false);
         void AllocateScheduledResources();
         void CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain);
         void TransitionResourcesToCurrentPassStates();
@@ -171,6 +171,7 @@ namespace PathFinder
         // This class's logic works with 'the current' render pass.
         // Saves the user from passing current pass name in every possible API.
         PassName mCurrentPassName;
+        bool mIsCurrentPassFirstInFrame = false;
 
         // Dedicated storage for back buffer descriptors.
         // No fancy management is required.

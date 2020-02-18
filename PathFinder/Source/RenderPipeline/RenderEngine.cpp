@@ -62,8 +62,8 @@ namespace PathFinder
         // Let resources record upload commands into graphics cmd list
         mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
 
-        // Run setup and asset-processing passes
-        RunRenderPasses(mPassExecutionGraph->OneTimePasses());
+        // Run asset-processing passes
+        RunAssetProcessingPasses();
 
         // Upload and process assets
         mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
@@ -123,17 +123,13 @@ namespace PathFinder
         mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
 
         //// Wait for TLAS build then execute render passes
-        HAL::Texture* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
-        HAL::ResourceTransitionBarrier preRenderBarrier{ HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer };
-        HAL::ResourceTransitionBarrier postRenderBarrier{ HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer };
+       
 
         //// Let resources record transfer (upload/readback) commands into graphics cmd list
         mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
 
         // Execute render passes that contain render work and may contain data transfers
-        mGraphicsDevice.CommandList()->InsertBarrier(preRenderBarrier);
-        RunRenderPasses(mPassExecutionGraph->DefaultPasses());
-        mGraphicsDevice.CommandList()->InsertBarrier(postRenderBarrier);
+        RunDefaultPasses();
 
         //// Execute all graphics work along with data transfers (upload/readback)
         mGraphicsDevice.ExecuteCommands(&mAsyncComputeFence, &mGraphicsFence);
@@ -213,12 +209,14 @@ namespace PathFinder
         });*/
     }
 
-    void RenderEngine::RunRenderPasses(const std::list<RenderPass*>& passes)
+    void RenderEngine::RunAssetProcessingPasses()
     {
-        for (auto passPtr : passes)
+        auto& passes = mPassExecutionGraph->AssetProcessingPasses();
+
+        for (auto passIt = passes.begin(); passIt != passes.end(); ++passIt)
         {
             mGraphicsDevice.ResetViewportToDefault();
-            mPipelineResourceStorage.SetCurrentPassName(passPtr->Name());
+            mPipelineResourceStorage.SetCurrentPassName((*passIt)->Name());
             mPipelineResourceStorage.TransitionResourcesToCurrentPassStates();
 
             HAL::ResourceBarrierCollection barriers{};
@@ -227,13 +225,45 @@ namespace PathFinder
 
             mGraphicsDevice.CommandList()->InsertBarriers(barriers);
 
-            passPtr->Render(&mContext);
+            (*passIt)->Render(&mContext);
+        }
+    }
+
+    void RenderEngine::RunDefaultPasses()
+    {
+        HAL::Texture* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
+        auto& passes = mPassExecutionGraph->DefaultPasses();
+
+        for (auto passIt = passes.begin(); passIt != passes.end(); ++passIt)
+        {
+            bool firstPass = passIt == passes.begin();
+
+            mGraphicsDevice.ResetViewportToDefault();
+            mPipelineResourceStorage.SetCurrentPassName((*passIt)->Name(), firstPass);
+            mPipelineResourceStorage.TransitionResourcesToCurrentPassStates();
+
+            HAL::ResourceBarrierCollection barriers{};
+            barriers.AddBarriers(mPipelineResourceStorage.AliasingBarriersForCurrentPass());
+            barriers.AddBarriers(mPipelineResourceStorage.TransitionBarriersForCurrentPass());
+            
+            if (firstPass)
+            {
+                barriers.AddBarrier(HAL::ResourceTransitionBarrier{
+                    HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer });
+            }
+
+            mGraphicsDevice.CommandList()->InsertBarriers(barriers);
+
+            (*passIt)->Render(&mContext);
+        }
+
+        mGraphicsDevice.CommandList()->InsertBarrier(HAL::ResourceTransitionBarrier{
+            HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
 
             // Queue debug buffer read
           /*  auto debugBuffer = mPipelineResourceStorage.DebugBufferForCurrentPass();
             auto readackDebugBuffer = mPipelineResourceStorage.DebugReadbackBufferForCurrentPass();
             mReadbackCopyDevice.QueueBufferToBufferCopy(*debugBuffer, *readackDebugBuffer, 0, debugBuffer->Capacity(), readackDebugBuffer->CurrentFrameObjectOffset());*/
-        }
     }
 
 }

@@ -14,16 +14,15 @@ namespace PathFinder
             break;
 
         case RenderPass::Purpose::Setup:
-            mOneTimePasses.push_front(pass);
+            mSetupPasses.push_front(pass);
             break;
 
         case RenderPass::Purpose::AssetProcessing:
-            mOneTimePasses.push_back(pass);
+            mAssetProcessingPasses.push_back(pass);
             break;
         }     
 
         mAllPasses.push_back(pass);
-        pass->SetIndexInGraph(mAllPasses.size() - 1);
     }
 
     uint32_t RenderPassExecutionGraph::IndexOfPass(const RenderPass* pass) const

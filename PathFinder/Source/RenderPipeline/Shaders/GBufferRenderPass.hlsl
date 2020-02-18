@@ -265,7 +265,7 @@ PixelOut PSMain(VertexOut pin)
     gBufferData.Roughness = FetchRoughnessMap(displacedVertexData, instanceData);
     gBufferData.AO = FetchAOMap(displacedVertexData, instanceData);
 
-    gBufferData.Albedo = intersection ? FetchDisplacementMap(displacedVertexData, instanceData).xxx : 0.0;
+    //gBufferData.Albedo = intersection ? FetchDisplacementMap(displacedVertexData, instanceData).xxx : 0.0;
 
    /* if (voxel.x == 26 && voxel.y == 36)
     {

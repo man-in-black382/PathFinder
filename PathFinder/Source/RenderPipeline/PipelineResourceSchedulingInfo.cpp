@@ -6,7 +6,7 @@ namespace PathFinder
     PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format)
         : mResourceFormat{ format } {}
 
-    void PipelineResourceSchedulingInfo::GatherExpectedStates()
+    void PipelineResourceSchedulingInfo::FinishScheduling()
     {
         HAL::ResourceState expectedStates = HAL::ResourceState::Common;
 
