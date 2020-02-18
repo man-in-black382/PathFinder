@@ -59,7 +59,6 @@ namespace PathFinder
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
-        void GatherReadbackData();
 
         void RunAssetProcessingPasses();
         void RunDefaultPasses();

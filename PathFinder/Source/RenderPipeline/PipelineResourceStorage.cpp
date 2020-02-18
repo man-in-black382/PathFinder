@@ -69,11 +69,18 @@ namespace PathFinder
     {
         mCurrentPassName = passName;
         mIsCurrentPassFirstInFrame = isFirstInFrame;
+        mCurrentPassObjects = &GetPerPassObjects(mCurrentPassName);
     }
 
     void PipelineResourceStorage::AllocateScheduledResources()
     {
         PrepareSchedulingInfoForOptimization();
+
+        // Prepare empty per-pass objects
+        for (auto pass : mPassExecutionGraph->AllPasses())
+        {
+            mPerPassObjects.emplace(pass->Name(), PerPassObjects{});
+        }
 
         mStateOptimizer.Optimize();
 
@@ -113,7 +120,7 @@ namespace PathFinder
 
     void PipelineResourceStorage::RegisterResourceNameForCurrentPass(ResourceName name)
     {
-        GetPerPassObjects(mCurrentPassName).ScheduledResourceNames.insert(name);
+        mCurrentPassObjects->ScheduledResourceNames.insert(name);
     }
 
     PipelineResourceSchedulingInfo* PipelineResourceStorage::GetResourceSchedulingInfo(ResourceName name)
@@ -256,20 +263,18 @@ namespace PathFinder
 
     void PipelineResourceStorage::TransitionResourcesToCurrentPassStates()
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
-        for (ResourceName resourceName : passObjects.ScheduledResourceNames)
+        for (ResourceName resourceName : mCurrentPassObjects->ScheduledResourceNames)
         {
             PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
             resourceObjects.GetGPUResource()->RequestNewState(resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentPassName)->OptimizedState);
         }
         
-        passObjects.TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions(mIsCurrentPassFirstInFrame);
+        mCurrentPassObjects->TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions(mIsCurrentPassFirstInFrame);
     }
 
     void PipelineResourceStorage::RequestCurrentPassDebugReadback()
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
-        passObjects.PassDebugBuffer->RequestRead();
+        mCurrentPassObjects->PassDebugBuffer->RequestRead();
     }
 
     const Memory::Buffer* PipelineResourceStorage::GlobalRootConstantsBuffer() const
@@ -284,20 +289,17 @@ namespace PathFinder
 
     const Memory::Buffer* PipelineResourceStorage::RootConstantsBufferForCurrentPass() const
     {
-        const PerPassObjects* passObjects = GetPerPassObjects(mCurrentPassName);
-        return passObjects->PassConstantBuffer.get();
+        return mCurrentPassObjects->PassConstantBuffer.get();
     }
 
     const Memory::Buffer* PipelineResourceStorage::DebugBufferForCurrentPass() const
     {
-        const PerPassObjects* passObjects = GetPerPassObjects(mCurrentPassName);
-        return passObjects->PassDebugBuffer.get();
+        return mCurrentPassObjects->PassDebugBuffer.get();
     }
 
     const std::unordered_set<ResourceName>& PipelineResourceStorage::ScheduledResourceNamesForCurrentPass()
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
-        return passObjects.ScheduledResourceNames;
+        return mCurrentPassObjects->ScheduledResourceNames;
     }
 
     const Memory::Texture* PipelineResourceStorage::GetTextureResource(ResourceName resourceName) const
@@ -343,16 +345,14 @@ namespace PathFinder
 
     void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const
     {
-
+        for (auto& [resourceName, passObjects] : mPerPassObjects)
+        {
+            passObjects.PassDebugBuffer->Read<float>([&func, resourceName](const float* debugData)
+            {
+                func(resourceName, debugData);
+            });
+        }
     }
-
-    //void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const
-    //{
-    //    /*for (const auto& [passName, passObjects] : mPerPassObjects)
-    //    {
-    //        func(passName, passObjects.PassDebugBuffer.get(), passObjects.PassDebugReadbackBuffer.get());
-    //    }*/
-    //}
 
     const Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource() const
     {

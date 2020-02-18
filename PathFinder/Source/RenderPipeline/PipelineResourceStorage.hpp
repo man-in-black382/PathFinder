@@ -181,6 +181,7 @@ namespace PathFinder
         std::unordered_map<ResourceName, PerResourceObjects> mPerResourceObjects;
 
         std::unordered_map<ResourceName, PerPassObjects> mPerPassObjects;
+        PerPassObjects* mCurrentPassObjects = nullptr;
 
         // Transitions for resources scheduled for readback
         HAL::ResourceBarrierCollection mReadbackBarriers;

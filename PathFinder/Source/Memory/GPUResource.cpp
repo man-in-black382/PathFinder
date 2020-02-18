@@ -147,15 +147,6 @@ namespace Memory
 
     void GPUResource::ApplyDebugName()
     {
-        for (auto& [uploadBuffer, frameNumber] : mUploadBuffers._Get_container())
-        {
-            uploadBuffer->SetDebugName(StringFormat("%s Upload Buffer [Frame %d]", mDebugName.c_str(), frameNumber));
-        }
-
-        for (auto& [readbackBuffer, frameNumber] : mReadbackBuffers._Get_container())
-        {
-            readbackBuffer->SetDebugName(StringFormat("%s Readback Buffer [Frame %d]", mDebugName.c_str(), frameNumber));
-        }
     }
 
     void GPUResource::AllocateNewUploadBuffer()
@@ -169,7 +160,7 @@ namespace Memory
     {
         HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
         mReadbackBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
-        mUploadBuffers.back().first->SetDebugName(StringFormat("%s Readback Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
+        mReadbackBuffers.back().first->SetDebugName(StringFormat("%s Readback Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
     }
 
 }
