@@ -26,8 +26,7 @@ namespace Memory
             return;
         }
 
-        HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
-        mUploadBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
+        AllocateNewUploadBuffer();
 
         if (mStateTracker)
         {
@@ -48,8 +47,7 @@ namespace Memory
             return;
         }
 
-        HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
-        mReadbackBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
+        AllocateNewReadbackBuffer();
 
         if (mStateTracker)
         {
@@ -75,13 +73,13 @@ namespace Memory
             if (mCompletedUploadBuffer)
             {
                 // Either reuse a completed upload buffers
+                mCompletedUploadBuffer->SetDebugName(StringFormat("%s Upload Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
                 mUploadBuffers.emplace(std::move(mCompletedUploadBuffer), mFrameNumber);
             }
             else 
             {
                 // Or allocate a new one if none are completed yet
-                HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
-                mUploadBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
+                AllocateNewUploadBuffer();
             }  
         }
         else
@@ -114,7 +112,8 @@ namespace Memory
 
     void GPUResource::SetDebugName(const std::string& name)
     {
-        
+        mDebugName = name;
+        ApplyDebugName();
     }
 
     const HAL::Resource* GPUResource::HALResource() const
@@ -144,6 +143,33 @@ namespace Memory
     {
         return !mReadbackBuffers.empty() && mReadbackBuffers.back().second == mFrameNumber ?
             mReadbackBuffers.back().first.get() : nullptr;
+    }
+
+    void GPUResource::ApplyDebugName()
+    {
+        for (auto& [uploadBuffer, frameNumber] : mUploadBuffers._Get_container())
+        {
+            uploadBuffer->SetDebugName(StringFormat("%s Upload Buffer [Frame %d]", mDebugName.c_str(), frameNumber));
+        }
+
+        for (auto& [readbackBuffer, frameNumber] : mReadbackBuffers._Get_container())
+        {
+            readbackBuffer->SetDebugName(StringFormat("%s Readback Buffer [Frame %d]", mDebugName.c_str(), frameNumber));
+        }
+    }
+
+    void GPUResource::AllocateNewUploadBuffer()
+    {
+        HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
+        mUploadBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
+        mUploadBuffers.back().first->SetDebugName(StringFormat("%s Upload Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
+    }
+
+    void GPUResource::AllocateNewReadbackBuffer()
+    {
+        HAL::Buffer::Properties properties{ ResourceSizeInBytes() };
+        mReadbackBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
+        mUploadBuffers.back().first->SetDebugName(StringFormat("%s Readback Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
     }
 
 }

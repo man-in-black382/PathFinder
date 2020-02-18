@@ -26,6 +26,7 @@ namespace PathFinder
         {
             HAL::Buffer::Properties<GPUInstanceTableEntry> props{ meshInstances.size(), alignment };
             mInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mInstanceTable->SetDebugName("Mesh Instance Table");
         }
 
         mInstanceTable->RequestWrite();
@@ -82,6 +83,7 @@ namespace PathFinder
         std::copy(indices, indices + indexCount, std::back_inserter(package.Indices));
 
         mBottomAccelerationStructures.emplace_back(mDevice, mResourceProducer);
+        mBottomAccelerationStructures.back().SetDebugName("Mesh Bottom RT AS");
 
         return location;
     }
@@ -98,6 +100,7 @@ namespace PathFinder
             finalBuffers.VertexBuffer = mResourceProducer->NewBuffer(properties);
             finalBuffers.VertexBuffer->RequestWrite();
             finalBuffers.VertexBuffer->Write(uploadBuffers.Vertices.data(), 0, uploadBuffers.Vertices.size());
+            finalBuffers.VertexBuffer->SetDebugName("Unified Vertex Buffer");
             uploadBuffers.Vertices.clear();
         }
 
@@ -107,6 +110,7 @@ namespace PathFinder
             finalBuffers.IndexBuffer = mResourceProducer->NewBuffer(properties);
             finalBuffers.IndexBuffer->RequestWrite();
             finalBuffers.IndexBuffer->Write(uploadBuffers.Indices.data(), 0, uploadBuffers.Indices.size());
+            finalBuffers.IndexBuffer->SetDebugName("Unified Index Buffer");
             uploadBuffers.Indices.clear();
         }
 
@@ -123,9 +127,8 @@ namespace PathFinder
             };
 
             blas.AddGeometry(blasGeometry);
-            blas.SetDebugName("Mesh BottomAS");
-
             blas.Build();
+
             mBottomASBarriers.AddBarrier(blas.UABarrier());
         }
 

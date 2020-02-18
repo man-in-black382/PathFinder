@@ -8,6 +8,7 @@
 #include "RootSignature.hpp"
 #include "Shader.hpp"
 #include "RayDispatchInfo.hpp"
+#include "Buffer.hpp"
 
 namespace HAL
 {
@@ -17,13 +18,19 @@ namespace HAL
     public:
         using ShaderID = uint32_t;
 
+        struct MemoryRequirements
+        {
+            uint64_t TableSizeInBytes;
+        };
+
         ShaderTable(const Device* device, uint8_t frameCapacity = 1);
 
         void AddShader(const Shader& shader, ShaderID id, const RootSignature* localRootSignature = nullptr);
-        void UploadToGPUMemory();
+        void UploadToGPUMemory(uint8_t* uploadGPUMemory, const Buffer* gpuTableBuffer);
         void Clear();
 
         RayDispatchInfo GenerateRayDispatchInfo() const;
+        MemoryRequirements GetMemoryRequirements() const;
 
         //std::optional<D3D12_GPU_VIRTUAL_ADDRESS> ShaderStageFirstRecordAddress(Shader::Stage stage);
 
@@ -42,7 +49,7 @@ namespace HAL
         const Device* mDevice;
         uint8_t mFrameCapacity = 1;
         uint32_t mTableSize = 0;
-        //std::unique_ptr<RingBufferResource<uint8_t>> mGPUTable;
+        const Buffer* mGPUTable = nullptr;
         std::unordered_map<Shader::Stage, std::vector<Record>> mRecords;
 
         /// Shader table stride (maximum record size) for each RT shader type

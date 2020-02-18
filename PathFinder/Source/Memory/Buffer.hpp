@@ -53,7 +53,8 @@ namespace Memory
         const HAL::Resource* HALResource() const override;
 
     protected:
-        virtual uint64_t ResourceSizeInBytes() const override;
+        uint64_t ResourceSizeInBytes() const override;
+        void ApplyDebugName() override;
 
     private:
         uint64_t mCurrentSRDescriptorStride = 1;

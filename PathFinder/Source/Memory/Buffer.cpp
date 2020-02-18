@@ -40,4 +40,14 @@ namespace Memory
         return mBufferPtr ? mBufferPtr->TotalMemory() : mUploadBuffers.front().first->TotalMemory();
     }
 
+    void Buffer::ApplyDebugName()
+    {
+        GPUResource::ApplyDebugName();
+
+        if (mBufferPtr)
+        {
+            mBufferPtr->SetDebugName(mDebugName);
+        }
+    }
+
 }

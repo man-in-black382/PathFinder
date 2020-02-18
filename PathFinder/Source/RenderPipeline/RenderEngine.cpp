@@ -26,7 +26,7 @@ namespace PathFinder
         mResourceProvider{ &mPipelineResourceStorage  },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
         mShaderManager{ commandLineParser },
-        mPipelineStateManager{ &mDevice, &mShaderManager, mRenderSurfaceDescription },
+        mPipelineStateManager{ &mDevice, &mShaderManager, &mResourceProducer, mRenderSurfaceDescription },
         mPipelineStateCreator{ &mPipelineStateManager },
         mGraphicsDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
         mAsyncComputeDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
@@ -54,7 +54,7 @@ namespace PathFinder
         }
  
         mPipelineResourceStorage.AllocateScheduledResources();
-        mPipelineStateManager.CompileStates();
+        mPipelineStateManager.CompileSignaturesAndStates();
     }
 
     void RenderEngine::UploadProcessAndTransferAssets()
@@ -122,19 +122,17 @@ namespace PathFinder
         mAsyncComputeDevice.CommandList()->InsertBarrier(mMeshStorage.TopAccelerationStructure().UABarrier());
         mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
 
-        //// Wait for TLAS build then execute render passes
-       
-
-        //// Let resources record transfer (upload/readback) commands into graphics cmd list
+        // Let resources record transfer (upload/readback) commands into graphics cmd list
         mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
 
         // Execute render passes that contain render work and may contain data transfers
         RunDefaultPasses();
 
-        //// Execute all graphics work along with data transfers (upload/readback)
+        // Execute all graphics work along with data transfers (upload/readback)
+        // But wait for TLAS build first
         mGraphicsDevice.ExecuteCommands(&mAsyncComputeFence, &mGraphicsFence);
 
-        //// Put the picture on the screen
+        // Put the picture on the screen
         mSwapChain.Present();
 
         // Issue a CPU wait if necessary
