@@ -73,7 +73,7 @@ namespace PathFinder
 
         void ConfigureDefaultStates();
         void BuildBaseRootSignature(); 
-        void CompileRayTracingState(RayTracingStateWrapper& stateWrapper);
+        void CompileRayTracingState(RayTracingStateWrapper& stateWrapper, Foundation::Name psoName);
 
         ShaderManager* mShaderManager; 
         Memory::GPUResourceProducer* mResourceProducer;

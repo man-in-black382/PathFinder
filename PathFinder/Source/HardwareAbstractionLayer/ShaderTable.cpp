@@ -50,6 +50,8 @@ namespace HAL
                 memcpy(uploadGPUMemory + record.TableOffset, (uint8_t*)(&record.ID), sizeof(record.ID));
 
                 // TODO: Write local root signature arguments here ??? 
+                // Right now engine does not support local root signatures and arguments.
+                // It will stay that way until a real need arises.
             }
         }
 

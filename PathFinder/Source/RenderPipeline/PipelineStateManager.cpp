@@ -213,7 +213,7 @@ namespace PathFinder
             }
             else if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(&state))
             {
-                CompileRayTracingState(*psoWrapper);
+                CompileRayTracingState(*psoWrapper, name);
             }
         }
     }
@@ -232,7 +232,7 @@ namespace PathFinder
             }
             else if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(state))
             {
-                CompileRayTracingState(*psoWrapper);
+                CompileRayTracingState(*psoWrapper, "");
             }
         }
 
@@ -351,12 +351,13 @@ namespace PathFinder
         mBaseRootSignature.AddDescriptorParameter(debugBuffer);
     }
 
-    void PipelineStateManager::CompileRayTracingState(RayTracingStateWrapper& stateWrapper)
+    void PipelineStateManager::CompileRayTracingState(RayTracingStateWrapper& stateWrapper, Foundation::Name psoName)
     {
         stateWrapper.State.Compile();
         HAL::ShaderTable& shaderTable = stateWrapper.State.GetShaderTable();
         HAL::Buffer::Properties properties{ shaderTable.GetMemoryRequirements().TableSizeInBytes };
         stateWrapper.ShaderTableBuffer = mResourceProducer->NewBuffer(properties);
+        stateWrapper.ShaderTableBuffer->SetDebugName(StringFormat("%s Shader Table", psoName.ToString().c_str()));
         stateWrapper.ShaderTableBuffer->RequestWrite();
         shaderTable.UploadToGPUMemory(stateWrapper.ShaderTableBuffer->WriteOnlyPtr(), stateWrapper.ShaderTableBuffer->HALBuffer());
     }
