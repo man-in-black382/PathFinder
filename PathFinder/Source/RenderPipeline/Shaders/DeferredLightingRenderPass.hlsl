@@ -32,7 +32,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     encodedGBuffer.MaterialData = materialData.Load(loadCoords);
 
     GBufferCookTorrance gBufferCookTorrance = DecodeGBufferCookTorrance(encodedGBuffer);
-    DirectionalLight testLight = { float3(1, 1, 1), float3(0, 0, -1) };
+    DirectionalLight testLight = { 1000.xxx, float3(0, 0, -1) };
     float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0));
 
     float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
@@ -50,5 +50,5 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     float3 outgoingRadiance = CookTorranceBRDF(N, V, H, L, roughness2, gBufferCookTorrance.Albedo, gBufferCookTorrance.Metalness, testLight.RadiantFlux);
 
     RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
-    outputImage[dispatchThreadID.xy] = float4(gBufferCookTorrance.Albedo, 1.0);
+    outputImage[dispatchThreadID.xy] = float4(outgoingRadiance, 1.0);
 }

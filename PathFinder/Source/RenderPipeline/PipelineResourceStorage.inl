@@ -12,6 +12,7 @@ namespace PathFinder
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mPerFrameRootConstantsBuffer->SetDebugName("Frame Constant Buffer");
         }
 
         mPerFrameRootConstantsBuffer->RequestWrite();
@@ -27,6 +28,7 @@ namespace PathFinder
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             mGlobalRootConstantsBuffer = mResourceProducer->NewBuffer(properties);
+            mGlobalRootConstantsBuffer->SetDebugName("Global Constant Buffer");
         }
 
         mGlobalRootConstantsBuffer->RequestWrite();
@@ -44,6 +46,7 @@ namespace PathFinder
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             passObjects.PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            passObjects.PassConstantBuffer->SetDebugName(mCurrentPassName.ToString() + " Constant Buffer");
         }
 
         passObjects.PassConstantBuffer->RequestWrite();

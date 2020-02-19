@@ -11,6 +11,9 @@ namespace PathFinder
     {
         uint32_t InputTextureIndex;
         uint32_t OutputTextureIndex;   
+        uint32_t _Padding0;
+        uint32_t _Padding1;
+        // 16 byte boundary
         GTTonemappingParams TonemappingParams;
     };
 

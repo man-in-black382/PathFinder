@@ -197,10 +197,11 @@ namespace PathFinder
 
     void PipelineResourceStorage::CreateDebugBuffers()
     {
-        for (auto& [resourceName, passObjects] : mPerPassObjects)
+        for (auto& [passName, passObjects] : mPerPassObjects)
         {
             HAL::Buffer::Properties<float> properties{ 1024 };
             passObjects.PassDebugBuffer = mResourceProducer->NewBuffer(properties);
+            passObjects.PassDebugBuffer->SetDebugName(passName.ToString() + " Debug Constant Buffer");
             passObjects.PassDebugBuffer->RequestWrite();
 
             // Avoid garbage on first use
