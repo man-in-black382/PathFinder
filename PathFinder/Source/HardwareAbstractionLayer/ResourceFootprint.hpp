@@ -17,10 +17,20 @@ namespace HAL
     private:
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT mD3DFootprint;
         uint32_t mRowCount;
-        uint64_t mRowSizeInBytes;
         uint64_t mOffset;
-        uint64_t mRowPitch;
         uint16_t mSubresourceIndex;
+
+        // Actual number of 'useful' bytes in each row. 
+        // It tells us how much data is relevant.
+        uint64_t mRowSizeInBytes;
+
+        // The hardware requires a pitch alignment of N bytes, 
+        // while each row may have less.
+        uint64_t mRowPitch;
+
+        // Row size in bytes and Row pitch may differ in case of block compressed textures.
+        // In these cases, the number of rows in the texture is 1/4th the height of the texture 
+        // and the RowPitch tells you the number of bytes between two rows of 4x4 blocks.
 
     public:
         inline const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& D3DFootprint() const { return mD3DFootprint; }

@@ -29,6 +29,7 @@ namespace PathFinder
         ToneMappingCBContent cbContent{};
         cbContent.InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingOutput);
         cbContent.OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::ToneMappingOutput);
+        cbContent.TonemappingParams = context->GetScene()->TonemappingParams();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 

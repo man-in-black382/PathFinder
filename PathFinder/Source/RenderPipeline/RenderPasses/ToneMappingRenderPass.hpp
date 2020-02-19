@@ -11,6 +11,7 @@ namespace PathFinder
     {
         uint32_t InputTextureIndex;
         uint32_t OutputTextureIndex;   
+        GTTonemappingParams TonemappingParams;
     };
 
     class ToneMappingRenderPass : public RenderPass

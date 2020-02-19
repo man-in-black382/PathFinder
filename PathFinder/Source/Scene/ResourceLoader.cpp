@@ -41,38 +41,46 @@ namespace PathFinder
             return nullptr;
         }
 
-        assert_format(textureInfo.num_layers == 1, "Texture array are not supported yet");
+        assert_format(textureInfo.num_layers == 1, "Texture arrays are not supported yet");
 
         auto texture = AllocateTexture(textureInfo);
         HAL::ResourceFootprint textureFootprint{ *texture->HALTexture() };
 
         texture->RequestWrite();
 
-        uint64_t textureMemoryOffset = 0;
+        uint64_t uploadMemoryOffset = 0;
 
         for (int mip = 0; mip < textureInfo.num_mips; mip++)
         {
+            uint64_t readMemoryOffset = 0;
+
             ddsktx_sub_data subData;
             ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, 0, mip);
-
+            
             const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
 
-            bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes;
+            uploadMemoryOffset = mipFootprint.Offset();
+
+            assert_format(uploadMemoryOffset == mipFootprint.Offset(), "Memory offset is calculated incorrectly");
+
+            bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes == mipFootprint.RowSizeInBytes();
 
             if (imageDataSatisfiesTextureRowAlignment)
             {
                 // Copy whole subresource
-                texture->Write((uint8_t*)subData.buff, textureMemoryOffset, subData.size_bytes);
-                textureMemoryOffset += subData.size_bytes;
+                texture->Write((uint8_t*)subData.buff, uploadMemoryOffset, subData.size_bytes);
             }
             else {
                 // Have to copy row-by-row
                 uint8_t* rowData = (uint8_t*)subData.buff;
+                uint64_t rowReadCountAtOnce = mipFootprint.RowSizeInBytes() / subData.row_pitch_bytes;
 
-                for (auto row = 0; row < subData.height; ++row)
+                for (auto row = 0; row < subData.height; row += rowReadCountAtOnce)
                 {
-                    texture->Write((uint8_t*)subData.buff, textureMemoryOffset, subData.row_pitch_bytes);
-                    textureMemoryOffset += mipFootprint.RowPitch();
+                    uint64_t bytesToRead = subData.row_pitch_bytes * rowReadCountAtOnce;
+                    texture->Write((uint8_t*)subData.buff + readMemoryOffset, uploadMemoryOffset, bytesToRead);
+                    uploadMemoryOffset += mipFootprint.RowPitch();
+                    readMemoryOffset += bytesToRead;
                 }
             }  
         }
@@ -102,6 +110,7 @@ namespace PathFinder
     {
         switch (parserFormat)
         {
+            // Supported color formats
         case DDSKTX_FORMAT_R8:          return HAL::ColorFormat::R8_Usigned_Norm;
         case DDSKTX_FORMAT_RGBA8:       return HAL::ColorFormat::RGBA8_Usigned_Norm;
         case DDSKTX_FORMAT_RGBA8S:      return HAL::ColorFormat::RGBA8_Signed;
@@ -118,16 +127,19 @@ namespace PathFinder
         case DDSKTX_FORMAT_RG8S:        return HAL::ColorFormat::RG8_Signed;
         case DDSKTX_FORMAT_BGRA8:       return HAL::ColorFormat::BGRA8_Unsigned_Norm;
 
+            // Supported compressed formats
+        case DDSKTX_FORMAT_BC1:         return HAL::ColorFormat::BC1_Unsigned_Norm;
+        case DDSKTX_FORMAT_BC2:         return HAL::ColorFormat::BC2_Unsigned_Norm;
+        case DDSKTX_FORMAT_BC3:         return HAL::ColorFormat::BC3_Unsigned_Norm;
+        case DDSKTX_FORMAT_BC4:         return HAL::ColorFormat::BC4_Unsigned_Norm;
+        case DDSKTX_FORMAT_BC5:         return HAL::ColorFormat::BC5_Unsigned_Norm;
+        case DDSKTX_FORMAT_BC7:         return HAL::ColorFormat::BC7_Unsigned_Norm;
+
+            // Not yet supported formats
         case DDSKTX_FORMAT_RGB10A2:
         case DDSKTX_FORMAT_RG11B10F:
         case DDSKTX_FORMAT_A8:
-        case DDSKTX_FORMAT_BC1:         // DXT1
-        case DDSKTX_FORMAT_BC2:         // DXT3
-        case DDSKTX_FORMAT_BC3:         // DXT5
-        case DDSKTX_FORMAT_BC4:         // ATI1
-        case DDSKTX_FORMAT_BC5:         // ATI2
         case DDSKTX_FORMAT_BC6H:        // BC6H
-        case DDSKTX_FORMAT_BC7:         // BC7
         case DDSKTX_FORMAT_ETC1:        // ETC1 RGB8
         case DDSKTX_FORMAT_ETC2:        // ETC2 RGB8
         case DDSKTX_FORMAT_ETC2A:       // ETC2 RGBA8

@@ -46,7 +46,11 @@ namespace HAL
 
         R32_Float, RG32_Float, RGB32_Float, RGBA32_Float,
         R32_Signed, RG32_Signed, RGB32_Signed, RGBA32_Signed,
-        R32_Unsigned, RG32_Unsigned, RGB32_Unsigned, RGBA32_Unsigned
+        R32_Unsigned, RG32_Unsigned, RGB32_Unsigned, RGBA32_Unsigned,
+
+        // Compressed formats
+        BC1_Unsigned_Norm, BC2_Unsigned_Norm, BC3_Unsigned_Norm, BC4_Unsigned_Norm,
+        BC5_Unsigned_Norm, BC5_Signed_Norm, BC7_Unsigned_Norm
     };
 
     enum DepthStencilFormat

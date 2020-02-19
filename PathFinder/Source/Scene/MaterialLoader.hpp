@@ -24,8 +24,8 @@ namespace PathFinder
         Material LoadMaterial(
             const std::string& albedoMapRelativePath,
             const std::string& normalMapRelativePath,
-            const std::string& roughnessMapRelativePath,
-            const std::string& metalnessMapRelativePath,
+            std::optional<std::string> roughnessMapRelativePath = std::nullopt,
+            std::optional<std::string> metalnessMapRelativePath = std::nullopt,
             std::optional<std::string> displacementMapRelativePath = std::nullopt,
             std::optional<std::string> distanceMapRelativePath = std::nullopt,
             std::optional<std::string> AOMapRelativePath = std::nullopt);

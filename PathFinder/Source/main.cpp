@@ -85,16 +85,20 @@ int main(int argc, char** argv)
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
     PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.AssetStorage(), &engine.ResourceProducer() };
 
-    PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+  /*  PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
         "/Metal07/Metal07_met.dds", "/Metal07/Metal07_disp.dds"));
 
     PathFinder::Material& harshBricksMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/HarshBricks/harshbricks-albedo.dds", "/HarshBricks/harshbricks-normal.dds", "/HarshBricks/harshbricks-roughness.dds",
         "/HarshBricks/harshbricks-metalness.dds", "/HarshBricks/harshbricks-height.dds"));
+*/
+    PathFinder::Material& concrete19Material = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/Concrete19/Concrete19_col.dds", "/Concrete19/Concrete19_nrm.dds", "/Concrete19/Concrete19_rgh.dds",
+        std::nullopt, "/Concrete19/Concrete19_disp.dds"));
 
     PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &harshBricksMaterial });
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &concrete19Material });
 
     auto t = sphereInstance.Transformation();
     t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));

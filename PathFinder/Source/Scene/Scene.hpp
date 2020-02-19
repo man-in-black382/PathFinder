@@ -4,6 +4,7 @@
 #include "MeshInstance.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
+#include "GTTonemappingParameters.hpp"
 
 #include <functional>
 #include <list>
@@ -30,6 +31,7 @@ namespace PathFinder
         std::list<Material> mMaterials;
 
         Camera mCamera;
+        GTTonemappingParams mTonemappingParams;
 
     public:
         inline Camera& MainCamera() { return mCamera; }
@@ -38,6 +40,8 @@ namespace PathFinder
         inline const auto& MeshInstances() const { return mMeshInstances; }
         inline auto& Meshes() { return mMeshes; }
         inline auto& MeshInstances() { return mMeshInstances; }
+        inline auto& TonemappingParams() { return mTonemappingParams; }
+        inline const auto& TonemappingParams() const { return mTonemappingParams; }
     };
 
 }

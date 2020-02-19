@@ -35,8 +35,8 @@ namespace PathFinder
     Material MaterialLoader::LoadMaterial(
         const std::string& albedoMapRelativePath,
         const std::string& normalMapRelativePath,
-        const std::string& roughnessMapRelativePath,
-        const std::string& metalnessMapRelativePath,
+        std::optional<std::string> roughnessMapRelativePath,
+        std::optional<std::string> metalnessMapRelativePath,
         std::optional<std::string> displacementMapRelativePath,
         std::optional<std::string> distanceFieldRelativePath,
         std::optional<std::string> AOMapRelativePath)
@@ -45,18 +45,11 @@ namespace PathFinder
 
         material.AlbedoMap = GetOrAllocateTexture(albedoMapRelativePath);
         material.NormalMap = GetOrAllocateTexture(normalMapRelativePath);
-        material.RoughnessMap = GetOrAllocateTexture(roughnessMapRelativePath);
-        material.MetalnessMap = GetOrAllocateTexture(metalnessMapRelativePath);
 
-        if (displacementMapRelativePath)
-        {
-            material.DisplacementMap = GetOrAllocateTexture(*displacementMapRelativePath);
-        }
-
-        if (AOMapRelativePath)
-        {
-            material.AOMap = GetOrAllocateTexture(*AOMapRelativePath);
-        }
+        if (roughnessMapRelativePath) material.RoughnessMap = GetOrAllocateTexture(*roughnessMapRelativePath);
+        if (metalnessMapRelativePath) material.MetalnessMap = GetOrAllocateTexture(*metalnessMapRelativePath);
+        if (displacementMapRelativePath) material.DisplacementMap = GetOrAllocateTexture(*displacementMapRelativePath);
+        if (AOMapRelativePath) material.AOMap = GetOrAllocateTexture(*AOMapRelativePath);
 
         if (material.DisplacementMap && distanceFieldRelativePath)
         {

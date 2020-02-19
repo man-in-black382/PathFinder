@@ -218,6 +218,14 @@ namespace HAL
         case ColorFormat::RGB32_Unsigned:    return DXGI_FORMAT_R32G32B32_UINT;
         case ColorFormat::RGBA32_Unsigned:   return DXGI_FORMAT_R32G32B32A32_UINT;
 
+        case ColorFormat::BC1_Unsigned_Norm: return DXGI_FORMAT_BC1_UNORM;
+        case ColorFormat::BC2_Unsigned_Norm: return DXGI_FORMAT_BC2_UNORM;
+        case ColorFormat::BC3_Unsigned_Norm: return DXGI_FORMAT_BC3_UNORM;
+        case ColorFormat::BC4_Unsigned_Norm: return DXGI_FORMAT_BC4_UNORM;
+        case ColorFormat::BC5_Unsigned_Norm: return DXGI_FORMAT_BC5_UNORM;
+        case ColorFormat::BC5_Signed_Norm:   return DXGI_FORMAT_BC5_SNORM;
+        case ColorFormat::BC7_Unsigned_Norm: return DXGI_FORMAT_BC7_UNORM;
+
         default: assert_format("Should never be hit"); return DXGI_FORMAT_UNKNOWN;
         }
     }
@@ -300,6 +308,15 @@ namespace HAL
 
         case DXGI_FORMAT_D24_UNORM_S8_UINT: return DepthStencilFormat::Depth24_Float_Stencil8_Unsigned;
         case DXGI_FORMAT_D32_FLOAT: return DepthStencilFormat::Depth32_Float;
+
+            // Compressed formats
+        case DXGI_FORMAT_BC1_UNORM: return ColorFormat::BC1_Unsigned_Norm;
+        case DXGI_FORMAT_BC2_UNORM: return ColorFormat::BC2_Unsigned_Norm;
+        case DXGI_FORMAT_BC3_UNORM: return ColorFormat::BC3_Unsigned_Norm;
+        case DXGI_FORMAT_BC4_UNORM: return ColorFormat::BC4_Unsigned_Norm;
+        case DXGI_FORMAT_BC5_UNORM: return ColorFormat::BC5_Unsigned_Norm;
+        case DXGI_FORMAT_BC5_SNORM: return ColorFormat::BC5_Signed_Norm;
+        case DXGI_FORMAT_BC7_UNORM: return ColorFormat::BC7_Unsigned_Norm;
 
         default:
             assert_format(false, "Unsupported D3D format");

@@ -2267,6 +2267,9 @@
     <ClInclude Include="Source\Scene\MaterialLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Scene\GTTonemappingParameters.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2800,6 +2803,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\Geometry.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\MandatoryEntryPointInclude.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\UIRenderPass.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GTTonemapping.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">
