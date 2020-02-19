@@ -144,9 +144,6 @@ namespace PathFinder
         // Notify external listeners
         mPostRenderEvent.Raise();
 
-        // Readback data is ready
-        GatherReadbackData();
-
         // 
         if (mPipelineStateManager.HasModifiedStates())
         {
@@ -191,20 +188,6 @@ namespace PathFinder
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % (uint8_t)mSwapChain.BackBuffers().size();
         mPipelineResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
         mFrameNumber++;
-    }
-
-    void RenderEngine::GatherReadbackData()
-    {
-        // We can't touch read-back buffers until at least N first frames are complete
-        if (mFrameNumber < mSimultaneousFramesInFlight)
-        {
-            return;
-        }
-
-       /* mPipelineResourceStorage.IterateDebugBuffers([this](PassName passName, const HAL::Buffer<float>* debugBuffer, const HAL::RingBufferResource<float>* debugReadbackBuffer) 
-        {
-            mUIStorage.ReadbackPassDebugBuffer(passName, *debugReadbackBuffer);
-        });*/
     }
 
     void RenderEngine::RunAssetProcessingPasses()
@@ -253,15 +236,12 @@ namespace PathFinder
             mGraphicsDevice.CommandList()->InsertBarriers(barriers);
 
             (*passIt)->Render(&mContext);
+
+            mPipelineResourceStorage.RequestCurrentPassDebugReadback();
         }
 
         mGraphicsDevice.CommandList()->InsertBarrier(HAL::ResourceTransitionBarrier{
             HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
-
-            // Queue debug buffer read
-          /*  auto debugBuffer = mPipelineResourceStorage.DebugBufferForCurrentPass();
-            auto readackDebugBuffer = mPipelineResourceStorage.DebugReadbackBufferForCurrentPass();
-            mReadbackCopyDevice.QueueBufferToBufferCopy(*debugBuffer, *readackDebugBuffer, 0, debugBuffer->Capacity(), readackDebugBuffer->CurrentFrameObjectOffset());*/
     }
 
 }

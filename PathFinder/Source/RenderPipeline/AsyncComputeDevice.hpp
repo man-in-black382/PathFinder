@@ -59,6 +59,7 @@ namespace PathFinder
         const HAL::Buffer* mBoundGlobalConstantBufferCompute = nullptr;
         const HAL::Buffer* mBoundFrameConstantBufferCompute = nullptr;
         const HAL::Buffer* mBoundPassConstantBufferCompute = nullptr;
+        const HAL::Buffer* mBoundPassDebugBufferCompute = nullptr;
 
         Memory::PoolCommandListAllocator* mCommandListAllocator;
         PipelineResourceStorage* mResourceStorage;
