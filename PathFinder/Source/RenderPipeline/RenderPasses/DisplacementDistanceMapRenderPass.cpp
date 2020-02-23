@@ -5,7 +5,7 @@ namespace PathFinder
 {
 
     DisplacementDistanceMapRenderPass::DisplacementDistanceMapRenderPass()
-        : RenderPass("DistanceMapGeneration", Purpose::AssetProcessing) {}
+        : RenderPass("DistanceMapGeneration", RenderPassPurpose::AssetProcessing) {}
 
     void DisplacementDistanceMapRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {

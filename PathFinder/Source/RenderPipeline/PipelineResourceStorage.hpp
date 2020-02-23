@@ -26,7 +26,6 @@
 namespace PathFinder
 {
 
-    class RenderPass;
     class RenderPassExecutionGraph;
 
     using ResourceName = Foundation::Name;

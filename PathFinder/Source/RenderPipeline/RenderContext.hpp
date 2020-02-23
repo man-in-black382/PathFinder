@@ -13,32 +13,33 @@
 namespace PathFinder
 {
 
+    template <class ContentMediator>
     class RenderContext
     {
     public:
         RenderContext(
-            const Scene* scene, 
-            const MeshGPUStorage* meshStorage,
-            const UIGPUStorage* uiStorage,
             GPUCommandRecorder* graphicCommandRecorder, 
             RootConstantsUpdater* rootConstantsUpdater, 
             ResourceProvider* resourceProvider,
-            const RenderSurfaceDescription& defaultRenderSurface
-        );
+            const RenderSurfaceDescription& defaultRenderSurface)
+            :
+            mGrapicCommandRecorder{ graphicCommandRecorder },
+            mRootConstantsUpdater{ rootConstantsUpdater },
+            mResourceProvider{ resourceProvider },
+            mDefaultRenderSurface{ defaultRenderSurface } {}
+
+        void SetContentMediator(const ContentMediator* mediator) { mContent = mediator; }
 
     private:
-        const Scene* mScene;
-        const MeshGPUStorage* mMeshStorage;
-        const UIGPUStorage* mUIStorage;
+        const ContentMediator* mContent;
+
         GPUCommandRecorder* mGrapicCommandRecorder;
         RootConstantsUpdater* mRootConstantsUpdater;
         ResourceProvider* mResourceProvider;
         RenderSurfaceDescription mDefaultRenderSurface;
 
     public:
-        inline const Scene* GetScene() const { return mScene; }
-        inline const MeshGPUStorage* GetMeshStorage() const { return mMeshStorage; }
-        inline const UIGPUStorage* GetUIStorage() const { return mUIStorage; }
+        inline const ContentMediator* GetContent() const { return mContent; }
         inline GPUCommandRecorder* GetCommandRecorder() const { return mGrapicCommandRecorder; }
         inline RootConstantsUpdater* GetConstantsUpdater() const { return mRootConstantsUpdater; }
         inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }

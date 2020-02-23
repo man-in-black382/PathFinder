@@ -18,8 +18,10 @@
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/CommonSetupRenderPass.hpp"
 #include "RenderPipeline/GlobalRootConstants.hpp"
 #include "RenderPipeline/PerFrameRootConstants.hpp"
+#include "RenderPipeline/RenderPassContentMediator.hpp"
 
 #include "IO/CommandLineParser.hpp"
 #include "IO/Input.hpp"
@@ -55,35 +57,37 @@ int main(int argc, char** argv)
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
-    PathFinder::CommandLineParser cmdLineParser{ argc, argv };
+    PathFinder::CommandLineParser cmdLineParser{ argc, argv };    
 
-    auto displacementDistanceMapGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
-    auto gBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
-    auto deferredLightingPass = std::make_unique<PathFinder::DeferredLightingRenderPass>();
-    auto shadowsPass = std::make_unique<PathFinder::ShadowsRenderPass>();
-    auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
-    auto blurPass = std::make_unique<PathFinder::BlurRenderPass>();
-    auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
-    auto uiPass = std::make_unique<PathFinder::UIRenderPass>();
-
-    PathFinder::RenderPassExecutionGraph renderPassGraph;
-    renderPassGraph.AddPass(displacementDistanceMapGenerationPass.get());
-    renderPassGraph.AddPass(gBufferPass.get());
-    renderPassGraph.AddPass(deferredLightingPass.get());
-    renderPassGraph.AddPass(toneMappingPass.get());
-    //renderPassGraph.AddPass(shadowsPass.get());
-    //renderPassGraph.AddPass(blurPass.get());
-    renderPassGraph.AddPass(backBufferOutputPass.get());
-    renderPassGraph.AddPass(uiPass.get());
-
-    PathFinder::Scene scene{};
+    PathFinder::RenderEngine<PathFinder::RenderPassContentMediator> engine{ hwnd, cmdLineParser };
+    PathFinder::MeshGPUStorage meshStorage{ &engine.Device(), &engine.ResourceProducer() };
+    PathFinder::UIGPUStorage uiStorage{ &engine.ResourceProducer() };
+    PathFinder::Scene scene{ cmdLineParser.ExecutableFolderPath(), &engine.ResourceProducer() };
     PathFinder::Input input{};
     PathFinder::InputHandlerWindows windowsInputHandler{ &input, hwnd };
     PathFinder::UIInteractor uiInteractor{ hwnd, &input };
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
-    PathFinder::RenderEngine engine{ hwnd, cmdLineParser, &scene, &renderPassGraph };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
     PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.AssetStorage(), &engine.ResourceProducer() };
+
+    auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
+    auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
+    auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
+    auto deferredLightingPass = std::make_unique<PathFinder::DeferredLightingRenderPass>();
+    auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
+    auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
+    auto uiPass = std::make_unique<PathFinder::UIRenderPass>();
+
+    engine.AddRenderPass(commonSetupPass.get());
+    engine.AddRenderPass(distanceFieldGenerationPass.get());
+    engine.AddRenderPass(GBufferPass.get());
+    engine.AddRenderPass(deferredLightingPass.get());
+    engine.AddRenderPass(toneMappingPass.get());
+    engine.AddRenderPass(backBufferOutputPass.get());
+    engine.AddRenderPass(uiPass.get());
+
+    //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
+    //renderPassGraph.AddPass(blurPass.get());
 
   /*  PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
@@ -115,17 +119,17 @@ int main(int argc, char** argv)
 
     // ---------------------------------------------------------------------------- //
 
-    engine.MeshStorage().StoreMeshes(scene.Meshes());
+    meshStorage.StoreMeshes(scene.Meshes());
 
     engine.ScheduleAndAllocatePipelineResources();
     engine.UploadProcessAndTransferAssets();
 
     engine.PreRenderEvent() += { "UI.Update", [&]()
     {
-        engine.UIStorage().StartNewFrame();
+        uiStorage.StartNewFrame();
         ImGui::ShowDemoWindow();
-        engine.UIStorage().UploadUI();
-        engine.MeshStorage().UpdateMeshInstanceTable(scene.MeshInstances());
+        uiStorage.UploadUI();
+        meshStorage.UpdateMeshInstanceTable(scene.MeshInstances());
 
         PathFinder::GlobalRootConstants globalConstants;
         PathFinder::PerFrameRootConstants perFrameConstants;

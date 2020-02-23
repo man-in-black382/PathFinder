@@ -3,6 +3,13 @@
 namespace PathFinder 
 {
 
+    Scene::Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer)
+        : mResourceLoader{ executableFolder, resourceProducer }
+    {
+        mLTC_LUT0 = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT0.dds");
+        mLTC_LUT1 = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT1.dds");
+    }
+
     Mesh& Scene::AddMesh(Mesh&& mesh)
     {
         mMeshes.emplace_back(std::move(mesh));

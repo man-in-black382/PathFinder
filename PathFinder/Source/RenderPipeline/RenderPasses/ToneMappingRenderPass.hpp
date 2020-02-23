@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../RenderPass.hpp"
+#include "../RenderPassContentMediator.hpp"
 
 #include <glm/mat4x4.hpp>
 
@@ -17,7 +18,7 @@ namespace PathFinder
         GTTonemappingParams TonemappingParams;
     };
 
-    class ToneMappingRenderPass : public RenderPass
+    class ToneMappingRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
         ToneMappingRenderPass();
@@ -25,7 +26,7 @@ namespace PathFinder
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;
-        virtual void Render(RenderContext* context) override;
+        virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
     };
 
 }

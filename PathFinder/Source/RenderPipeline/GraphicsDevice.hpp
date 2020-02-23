@@ -53,7 +53,6 @@ namespace PathFinder
         void BindConstantBuffersGraphics(bool ignoreCachedBuffers);
         void ApplyDefaultViewportIfNeeded();
 
-        const RenderPass* mCurrentRenderPass = nullptr;
         const HAL::GraphicsPipelineState* mAppliedGraphicsState = nullptr;
         const HAL::RootSignature* mAppliedGraphicsRootSignature = nullptr;
         const HAL::Buffer* mBoundGlobalConstantBufferGraphics = nullptr;

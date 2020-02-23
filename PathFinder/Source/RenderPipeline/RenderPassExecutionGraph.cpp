@@ -5,36 +5,24 @@
 namespace PathFinder
 {
 
-    void RenderPassExecutionGraph::AddPass(RenderPass* pass)
+    void RenderPassExecutionGraph::AddPass(const RenderPassMetadata& passMetadata)
     {
-        switch (pass->PurposeInPipeline())
+        switch (passMetadata.Purpose)
         {
-        case RenderPass::Purpose::Default:
-            mDefaultPasses.push_back(pass); 
+        case RenderPassPurpose::Default:
+            mDefaultPasses.emplace_back(passMetadata, mDefaultPasses.size());
             break;
 
-        case RenderPass::Purpose::Setup:
-            mSetupPasses.push_front(pass);
+        case RenderPassPurpose::Setup:
+            mSetupPasses.emplace_back(passMetadata, mSetupPasses.size());
             break;
 
-        case RenderPass::Purpose::AssetProcessing:
-            mAssetProcessingPasses.push_back(pass);
+        case RenderPassPurpose::AssetProcessing:
+            mAssetProcessingPasses.emplace_back(passMetadata, mAssetProcessingPasses.size());
             break;
-        }     
+        }
 
-        mAllPasses.push_back(pass);
-    }
-
-    uint32_t RenderPassExecutionGraph::IndexOfPass(const RenderPass* pass) const
-    {
-        auto it = std::find(mDefaultPasses.cbegin(), mDefaultPasses.cend(), pass);
-        return std::distance(mDefaultPasses.cbegin(), it);
-    }
-
-    uint32_t RenderPassExecutionGraph::IndexOfPass(Foundation::Name passName) const
-    {
-        auto it = std::find_if(mDefaultPasses.cbegin(), mDefaultPasses.cend(), [&passName](auto pass) { return pass->Name() == passName; });
-        return std::distance(mDefaultPasses.cbegin(), it);
+        mAllPasses.emplace_back(passMetadata, mAllPasses.size());
     }
 
 }

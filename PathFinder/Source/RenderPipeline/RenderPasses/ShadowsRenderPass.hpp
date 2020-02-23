@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../RenderPass.hpp"
+#include "../RenderPassContentMediator.hpp"
 
 #include <glm/mat4x4.hpp>
 
 namespace PathFinder
 {
      
-    class ShadowsRenderPass : public RenderPass 
+    class ShadowsRenderPass : public RenderPass<RenderPassContentMediator>
     {
     public:
         ShadowsRenderPass();
@@ -15,7 +16,7 @@ namespace PathFinder
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 
-        virtual void Render(RenderContext* context) override;
+        virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
     };
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../RenderPass.hpp"
+#include "../RenderPassContentMediator.hpp"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
@@ -20,7 +21,7 @@ namespace PathFinder
         uint32_t FloodStep = 0;
     };
 
-    class DisplacementDistanceMapRenderPass : public RenderPass 
+    class DisplacementDistanceMapRenderPass : public RenderPass<RenderPassContentMediator>
     {
     public:
         DisplacementDistanceMapRenderPass();
@@ -28,7 +29,7 @@ namespace PathFinder
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 
-        virtual void Render(RenderContext* context) override;
+        virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
 
     private:
         struct JFACones

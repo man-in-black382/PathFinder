@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../RenderPass.hpp"
+#include "../RenderPassContentMediator.hpp"
 
 #include <glm/mat4x4.hpp>
 
 namespace PathFinder
 {
 
-    class CommonSetupRenderPass : public RenderPass
+    class CommonSetupRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
         CommonSetupRenderPass();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../RenderPass.hpp"
+#include "../RenderPassContentMediator.hpp"
 
 #include <glm/mat4x4.hpp>
 
@@ -14,7 +15,7 @@ namespace PathFinder
         uint32_t OutputTextureIndex;
     };
 
-    class DeferredLightingRenderPass : public RenderPass  
+    class DeferredLightingRenderPass : public RenderPass<RenderPassContentMediator>
     {
     public:
         DeferredLightingRenderPass();
@@ -22,7 +23,7 @@ namespace PathFinder
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 
-        virtual void Render(RenderContext* context) override; 
+        virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
     };
 
 }

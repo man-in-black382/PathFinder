@@ -1,37 +1,37 @@
 #pragma once
 
 #include "../Foundation/Name.hpp"
+#include "RenderPassMetadata.hpp"
 
 #include <list>
 
 namespace PathFinder
 {
-    class RenderPass;
     
     class RenderPassExecutionGraph
     {
     public:
-        //struct RenderPass
+        struct Node
+        {
+            RenderPassMetadata PassMetadata;
+            uint64_t ContextualExecutionIndex;
+        };
 
-        void AddPass(RenderPass* pass);
-        uint32_t IndexOfPass(const RenderPass* pass) const;
-        uint32_t IndexOfPass(Foundation::Name passName) const;
+        void AddPass(const RenderPassMetadata& passMetadata);
 
     private:
-        std::list<RenderPass*> mDefaultPasses;
-        std::list<RenderPass*> mSetupPasses;
-        std::list<RenderPass*> mAssetProcessingPasses;
-        std::list<RenderPass*> mAllPasses;
+        using RenderPassList = std::vector<Node>;
+
+        RenderPassList mDefaultPasses;
+        RenderPassList mSetupPasses;
+        RenderPassList mAssetProcessingPasses;
+        RenderPassList mAllPasses;
 
     public:
         inline const auto& DefaultPasses() const { return mDefaultPasses; }
-        inline auto& DefaultPasses() { return mDefaultPasses; }
         inline const auto& SetupPasses() const { return mSetupPasses; }
-        inline auto& SetupPasses() { return mSetupPasses; }
         inline const auto& AssetProcessingPasses() const { return mAssetProcessingPasses; }
-        inline auto& AssetProcessingPasses() { return mAssetProcessingPasses; }
         inline const auto& AllPasses() const { return mAllPasses; }
-        inline auto& AllPasses() { return mAllPasses; }
     };
 
 }

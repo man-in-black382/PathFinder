@@ -95,6 +95,7 @@
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
+xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
 xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
 xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </PostBuildEvent>
@@ -119,6 +120,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
+xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
 xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
 xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </PostBuildEvent>
@@ -144,6 +146,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
+xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
 xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
 xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </PostBuildEvent>
@@ -169,6 +172,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
+xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
 xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
 xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </PostBuildEvent>
@@ -251,6 +255,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\BottomRTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStateOptimizer.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateCreator.cpp" />
@@ -259,14 +264,12 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\DebugRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\UIRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp" />
-    <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
@@ -277,9 +280,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\UIGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateManager.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderContext.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderEngine.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderSurfaceDescription.cpp" />
     <ClCompile Include="Source\RenderPipeline\ShaderManager.cpp" />
@@ -417,10 +417,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\PreprocessableAssetStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassConfiguration.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassConfigurator.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPassContentMediator.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\DebugRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.hpp" />
@@ -428,6 +428,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\UIRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPassMetadata.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
@@ -964,6 +965,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <FileType>CppHeader</FileType>
     </None>
     <None Include="Source\RenderPipeline\MeshGPUStorage.inl" />
+    <None Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.inl" />
+    <None Include="Source\RenderPipeline\PipelineResourceStateOptimizer.inl" />
     <None Include="Source\RenderPipeline\RenderEngine.inl" />
     <None Include="Source\RenderPipeline\ResourceScheduler.inl">
       <FileType>CppHeader</FileType>
@@ -1435,6 +1438,32 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </EntryPointName>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableDebuggingInformation>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.2</ShaderModel>
+      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableUnboundedDescriptorTables>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\LTC.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">6.2</ShaderModel>
+      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableUnboundedDescriptorTables>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </EntryPointName>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DisableOptimizations>
+      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EnableDebuggingInformation>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">6.2</ShaderModel>
+      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EnableUnboundedDescriptorTables>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.2</ShaderModel>
+      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DisableOptimizations>
       <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableDebuggingInformation>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.2</ShaderModel>

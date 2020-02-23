@@ -17,7 +17,6 @@
 #include "../Memory/ResourceStateTracker.hpp"
 #include "../Memory/GPUResourceProducer.hpp"
 
-#include "RenderPass.hpp"
 #include "MeshGPUStorage.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "PreprocessableAssetStorage.hpp"
@@ -36,12 +35,18 @@
 namespace PathFinder
 {
 
+    template <class ContentMediator>
+    class RenderPass;
+
+    template <class ContentMediator>
     class RenderEngine
     {
     public:
-        using Event = Foundation::Event<RenderEngine, std::string, void()>;
+        using Event = Foundation::Event<RenderEngine<ContentMediator>, std::string, void()>;
 
-        RenderEngine(HWND windowHandle, const CommandLineParser& commandLineParser, Scene* scene, const RenderPassExecutionGraph* passExecutionGraph);
+        RenderEngine(HWND windowHandle, const CommandLineParser& commandLineParser);
+
+        void AddRenderPass(RenderPass<ContentMediator>* pass);
 
         void ScheduleAndAllocatePipelineResources();
         void UploadProcessAndTransferAssets();
@@ -63,7 +68,8 @@ namespace PathFinder
         void RunAssetProcessingPasses();
         void RunDefaultPasses();
 
-        const RenderPassExecutionGraph* mPassExecutionGraph;
+        RenderPassExecutionGraph mPassExecutionGraph;
+        std::unordered_map<PassName, RenderPass<ContentMediator>*> mRenderPasses;
 
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 2;
@@ -79,7 +85,6 @@ namespace PathFinder
         Memory::ResourceStateTracker mResourceStateTracker;
         Memory::GPUResourceProducer mResourceProducer;
 
-        MeshGPUStorage mMeshStorage;
         PipelineResourceStorage mPipelineResourceStorage;
         PreprocessableAssetStorage mAssetStorage;
         ResourceScheduler mResourceScheduler;
@@ -91,8 +96,7 @@ namespace PathFinder
         GraphicsDevice mGraphicsDevice;
         AsyncComputeDevice<> mAsyncComputeDevice;
         GPUCommandRecorder mCommandRecorder;
-        UIGPUStorage mUIStorage;
-        RenderContext mContext;
+        RenderContext<ContentMediator> mContext;
 
         HAL::Fence mGraphicsFence;
         HAL::Fence mAsyncComputeFence;
@@ -100,15 +104,11 @@ namespace PathFinder
 
         HAL::SwapChain mSwapChain;
 
-        Scene* mScene;
-
         Event mPreRenderEvent;
         Event mPostRenderEvent;
 
     public:
-        inline MeshGPUStorage& MeshStorage() { return mMeshStorage; }
         inline PreprocessableAssetStorage& AssetStorage() { return mAssetStorage; }
-        inline UIGPUStorage& UIStorage() { return mUIStorage; }
         inline const RenderSurfaceDescription& RenderSurface() const { return mRenderSurfaceDescription; }
         inline Memory::GPUResourceProducer& ResourceProducer() { return mResourceProducer; }
         inline HAL::Device& Device() { return mDevice; }

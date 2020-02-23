@@ -6,7 +6,7 @@ namespace PathFinder
 {
 
     CommonSetupRenderPass::CommonSetupRenderPass()
-        : RenderPass("CommonSetup", RenderPass::Purpose::Setup) {}
+        : RenderPass("CommonSetup", RenderPass::RenderPassPurpose::Setup) {}
 
     void CommonSetupRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {

@@ -5,8 +5,6 @@
 namespace PathFinder
 {
 
-    class RenderPass;
-
     struct RenderPassConfiguration
     {
         enum class DeviceType
@@ -15,7 +13,6 @@ namespace PathFinder
         };
 
         bool IsEnabled = true;
-        uint32_t InvocationsPerFrame = 1;
         DeviceType DeviceToBeInvokedOn = DeviceType::Graphics;
     };
 
