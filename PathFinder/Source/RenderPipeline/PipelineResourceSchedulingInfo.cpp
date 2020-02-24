@@ -33,22 +33,23 @@ namespace PathFinder
         return it != mPerPassData.end() ? &it->second : nullptr;
     }
 
-    PipelineResourceSchedulingInfo::PassMetadata& PipelineResourceSchedulingInfo::AllocateMetadataForPass(Foundation::Name passName)
+    PipelineResourceSchedulingInfo::PassMetadata& PipelineResourceSchedulingInfo::AllocateMetadataForPass(const RenderPassExecutionGraph::Node& passNode)
     {
-        if (!mFirstPassName.IsValid())
+        // Empty name means we have not set first pass node yet
+        if (!mFirstPassGraphNode.PassMetadata.Name.IsValid())
         {
-            mFirstPassName = passName;
+            mFirstPassGraphNode = passNode;
         }
 
-        mLastPassName = passName;
+        mLastPassGraphNode = passNode;
 
-        auto [iter, success] = mPerPassData.emplace(passName, PassMetadata{});
+        auto [iter, success] = mPerPassData.emplace(passNode.PassMetadata.Name, PassMetadata{});
         return iter->second;
     }
 
     HAL::ResourceState PipelineResourceSchedulingInfo::InitialStates() const
     {
-        auto firstPassMetadata = GetMetadataForPass(mFirstPassName);
+        auto firstPassMetadata = GetMetadataForPass(mFirstPassGraphNode.PassMetadata.Name);
         return firstPassMetadata->OptimizedState;
     }
 

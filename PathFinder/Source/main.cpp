@@ -69,6 +69,7 @@ int main(int argc, char** argv)
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
     PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.AssetStorage(), &engine.ResourceProducer() };
+    PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &meshStorage, &scene };
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
     auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
@@ -78,6 +79,7 @@ int main(int argc, char** argv)
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
     auto uiPass = std::make_unique<PathFinder::UIRenderPass>();
 
+    engine.SetContentMediator(&contentMediator);
     engine.AddRenderPass(commonSetupPass.get());
     engine.AddRenderPass(distanceFieldGenerationPass.get());
     engine.AddRenderPass(GBufferPass.get());

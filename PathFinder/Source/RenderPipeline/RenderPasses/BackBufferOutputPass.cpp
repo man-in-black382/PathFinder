@@ -23,7 +23,7 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
     } 
 
-    void BackBufferOutputPass::Render(RenderContext* context)
+    void BackBufferOutputPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::BackBufferOutput);
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();

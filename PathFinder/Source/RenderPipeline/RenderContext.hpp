@@ -28,10 +28,10 @@ namespace PathFinder
             mResourceProvider{ resourceProvider },
             mDefaultRenderSurface{ defaultRenderSurface } {}
 
-        void SetContentMediator(const ContentMediator* mediator) { mContent = mediator; }
+        void SetContentMediator(ContentMediator* mediator) { mContent = mediator; }
 
     private:
-        const ContentMediator* mContent;
+        ContentMediator* mContent;
 
         GPUCommandRecorder* mGrapicCommandRecorder;
         RootConstantsUpdater* mRootConstantsUpdater;
@@ -39,7 +39,7 @@ namespace PathFinder
         RenderSurfaceDescription mDefaultRenderSurface;
 
     public:
-        inline const ContentMediator* GetContent() const { return mContent; }
+        inline ContentMediator* GetContent() const { return mContent; }
         inline GPUCommandRecorder* GetCommandRecorder() const { return mGrapicCommandRecorder; }
         inline RootConstantsUpdater* GetConstantsUpdater() const { return mRootConstantsUpdater; }
         inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }

@@ -21,14 +21,16 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
     }  
 
-    void DeferredLightingRenderPass::Render(RenderContext* context)
+    void DeferredLightingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DeferredLighting);
 
-        DeferredLightingCBContent cbContent{};
+        DeferredLightingCBContent cbContent{}; 
         cbContent.GBufferMaterialDataTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRT0);
         cbContent.GBufferDepthTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferDepthStencil);
         cbContent.OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingOutput);
+        cbContent.LTC_LUT0_Index = context->GetContent()->GetScene()->LTC_LUT0()->GetOrCreateSRDescriptor()->IndexInHeapRange();
+        cbContent.LTC_LUT1_Index = context->GetContent()->GetScene()->LTC_LUT1()->GetOrCreateSRDescriptor()->IndexInHeapRange();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 

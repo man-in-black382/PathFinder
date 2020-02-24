@@ -13,7 +13,7 @@ namespace PathFinder
         Memory::Texture* resource = resourceObjects->Texture.get();
         assert_format(resource, "Resource ", resourceName.ToString(), " does not exist");
 
-        const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassName());
+        const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassGraphNode().PassMetadata.Name);
         assert_format(perPassData, "Resource ", resourceName.ToString(), " was not scheduled to be used in this pass");
 
         if (perPassData->CreateTextureSRDescriptor)

@@ -13,6 +13,8 @@ namespace PathFinder
         uint32_t GBufferMaterialDataTextureIndex;
         uint32_t GBufferDepthTextureIndex;
         uint32_t OutputTextureIndex;
+        uint32_t LTC_LUT0_Index;
+        uint32_t LTC_LUT1_Index;
     };
 
     class DeferredLightingRenderPass : public RenderPass<RenderPassContentMediator>

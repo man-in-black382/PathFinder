@@ -37,11 +37,11 @@ namespace PathFinder
         HAL::ResourceState readOnlyStateSequence = HAL::ResourceState::Common;
 
         // Build a list of passes this resource is scheduled for
-        for (const RenderPass* pass : mRenderPassGraph->AllPasses())
+        for (auto& passNode : mRenderPassGraph->AllPasses())
         {
-            if (schedulingInfo->GetMetadataForPass(pass->Name()))
+            if (schedulingInfo->GetMetadataForPass(passNode.PassMetadata.Name))
             {
-                relevantPassNames.push_back(pass->Name());
+                relevantPassNames.push_back(passNode.PassMetadata.Name);
             }
         }
 

@@ -22,9 +22,7 @@ namespace HAL
         if (EnumMaskBitSet(state, ResourceState::Present)) states |= D3D12_RESOURCE_STATE_PRESENT;
         if (EnumMaskBitSet(state, ResourceState::DepthRead)) states |= D3D12_RESOURCE_STATE_DEPTH_READ;
         if (EnumMaskBitSet(state, ResourceState::DepthWrite)) states |= D3D12_RESOURCE_STATE_DEPTH_WRITE;
-        if (EnumMaskBitSet(state, ResourceState::VertexBuffer)) states |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
         if (EnumMaskBitSet(state, ResourceState::ConstantBuffer)) states |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-        if (EnumMaskBitSet(state, ResourceState::IndexBuffer)) states |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
         return states;
     }
 
@@ -40,9 +38,7 @@ namespace HAL
             //(EnumMaskBitSet(state, ResourceState::ResolveSource)) ||
             (EnumMaskBitSet(state, ResourceState::Present)) ||
             (EnumMaskBitSet(state, ResourceState::DepthRead)) ||
-            (EnumMaskBitSet(state, ResourceState::VertexBuffer)) ||
-            (EnumMaskBitSet(state, ResourceState::ConstantBuffer)) ||
-            (EnumMaskBitSet(state, ResourceState::IndexBuffer));
+            (EnumMaskBitSet(state, ResourceState::ConstantBuffer));
 
     }
 

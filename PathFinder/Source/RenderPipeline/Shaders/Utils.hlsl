@@ -1,5 +1,20 @@
 static const float FloatMax = 3.402823466e+38;
 
+static const float3x3 Matrix3x3Identity = 
+{
+    float3(1, 0, 0),
+    float3(0, 1, 0),
+    float3(0, 0, 1)
+};
+
+static const float4x4 Matrix4x4Identity =
+{
+    float4(1, 0, 0, 0),
+    float4(0, 1, 0, 0),
+    float4(0, 0, 1, 0),
+    float4(0, 0, 0, 1)
+};
+
 float3x3 Matrix3x3ColumnMajor(float3 column0, float3 column1, float3 column2)
 {
     float3x3 M;

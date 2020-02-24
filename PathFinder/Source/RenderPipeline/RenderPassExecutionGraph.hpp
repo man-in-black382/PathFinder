@@ -3,7 +3,7 @@
 #include "../Foundation/Name.hpp"
 #include "RenderPassMetadata.hpp"
 
-#include <list>
+#include <vector>
 
 namespace PathFinder
 {

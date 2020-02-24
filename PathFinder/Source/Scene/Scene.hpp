@@ -51,6 +51,8 @@ namespace PathFinder
         inline auto& MeshInstances() { return mMeshInstances; }
         inline auto& TonemappingParams() { return mTonemappingParams; }
         inline const auto& TonemappingParams() const { return mTonemappingParams; }
+        inline Memory::Texture* LTC_LUT0() const { return mLTC_LUT0.get(); }
+        inline Memory::Texture* LTC_LUT1() const { return mLTC_LUT1.get(); }
     };
 
 }

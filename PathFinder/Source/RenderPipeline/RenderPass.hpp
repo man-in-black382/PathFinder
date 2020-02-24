@@ -34,4 +34,7 @@ namespace PathFinder
         inline const RenderPassMetadata& Metadata() const { return mMetadata; }
     };
 
+    template <class ContentMediator>
+    RenderPass<ContentMediator>::~RenderPass() {}
+
 }

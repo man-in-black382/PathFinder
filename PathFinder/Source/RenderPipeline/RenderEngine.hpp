@@ -53,6 +53,8 @@ namespace PathFinder
         void Render();
         void FlushAllQueuedFrames();
 
+        void SetContentMediator(ContentMediator* mediator);
+
         template <class Constants>
         void SetGlobalRootConstants(const Constants& constants);
 

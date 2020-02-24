@@ -11,13 +11,18 @@ namespace PathFinder
     struct RenderPassContentMediator
     {
     public:
-        RenderPassContentMediator(const UIGPUStorage* uiStorage, const MeshGPUStorage* meshStorage, const Scene* scene)
+        RenderPassContentMediator(UIGPUStorage* uiStorage, MeshGPUStorage* meshStorage, Scene* scene)
             : mUIStorage{ uiStorage }, mMeshStorage{ meshStorage }, mScene{ scene } {}
 
     private:
-        const UIGPUStorage* mUIStorage;
-        const MeshGPUStorage* mMeshStorage;
-        const Scene* mScene;
+        UIGPUStorage* mUIStorage;
+        MeshGPUStorage* mMeshStorage;
+        Scene* mScene;
+
+    public:
+        inline UIGPUStorage* GetUIStorage() const { return mUIStorage; };
+        inline MeshGPUStorage* GetMeshStorage() const { return mMeshStorage; };
+        inline Scene* GetScene() const { return mScene; };
     };
 
 }

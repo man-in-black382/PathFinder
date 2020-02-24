@@ -36,7 +36,7 @@ namespace PathFinder
         Memory::Texture* texture = resourceObjects.Texture.get();
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
-        auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentPassName);
+        auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name);
         assert_format(perPassData && perPassData->CreateTextureRTDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
         
         return *texture->GetOrCreateRTDescriptor();
@@ -49,7 +49,7 @@ namespace PathFinder
         Memory::Texture* texture = resourceObjects.Texture.get();
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
-        auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentPassName);
+        auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name);
         assert_format(perPassData && perPassData->CreateTextureDSDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
 
         return *texture->GetOrCreateDSDescriptor();
@@ -65,11 +65,10 @@ namespace PathFinder
         mCurrentBackBufferIndex = index;
     }
 
-    void PipelineResourceStorage::SetCurrentPassName(PassName passName, bool isFirstInFrame)
+    void PipelineResourceStorage::SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node)
     {
-        mCurrentPassName = passName;
-        mIsCurrentPassFirstInFrame = isFirstInFrame;
-        mCurrentPassObjects = &GetPerPassObjects(mCurrentPassName);
+        mCurrentRenderPassGraphNode = node;
+        mCurrentPassObjects = &GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
     }
 
     void PipelineResourceStorage::AllocateScheduledResources()
@@ -77,10 +76,10 @@ namespace PathFinder
         PrepareSchedulingInfoForOptimization();
 
         // Prepare empty per-pass objects
-        for (auto pass : mPassExecutionGraph->AllPasses())
+       /* for (auto pass : mPassExecutionGraph->AllPasses())
         {
             mPerPassObjects.emplace(pass->Name(), PerPassObjects{});
-        }
+        }*/
 
         mStateOptimizer.Optimize();
 
@@ -245,7 +244,7 @@ namespace PathFinder
             // Create aliasing barriers
             if (resourceObjects.SchedulingInfo->AliasingInfo.NeedsAliasingBarrier)
             {
-                PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.SchedulingInfo->FirstPassName());
+                PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.SchedulingInfo->FirstPassGraphNode().PassMetadata.Name);
                 passObjects.AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource->HALResource() });
             }
 
@@ -267,10 +266,12 @@ namespace PathFinder
         for (ResourceName resourceName : mCurrentPassObjects->ScheduledResourceNames)
         {
             PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
-            resourceObjects.GetGPUResource()->RequestNewState(resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentPassName)->OptimizedState);
+            HAL::ResourceState newState = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name)->OptimizedState;
+            resourceObjects.GetGPUResource()->RequestNewState(newState);
         }
         
-        mCurrentPassObjects->TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions(mIsCurrentPassFirstInFrame);
+        bool isFirst = mCurrentRenderPassGraphNode.ContextualExecutionIndex == 0;
+        mCurrentPassObjects->TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions(isFirst);
     }
 
     void PipelineResourceStorage::RequestCurrentPassDebugReadback()
@@ -323,25 +324,25 @@ namespace PathFinder
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::AliasingBarriersForCurrentPass() 
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
+        PerPassObjects& passObjects = GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
         return passObjects.AliasingBarriers;
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::TransitionBarriersForCurrentPass() 
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
+        PerPassObjects& passObjects = GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
         return passObjects.TransitionBarriers;
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::UnorderedAccessBarriersForCurrentPass() 
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
+        PerPassObjects& passObjects = GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
         return passObjects.UAVBarriers;
     }
 
-    const Foundation::Name PipelineResourceStorage::CurrentPassName() const
+    const RenderPassExecutionGraph::Node& PipelineResourceStorage::CurrentPassGraphNode() const
     {
-        return mCurrentPassName;
+        return mCurrentRenderPassGraphNode;
     }
 
     void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const

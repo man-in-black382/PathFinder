@@ -47,7 +47,7 @@ namespace PathFinder
         scheduler->NewBuffer(ResourceNames::JumpFloodingCones1, JFAConesBufferProps);
     } 
 
-    void DisplacementDistanceMapRenderPass::Render(RenderContext* context)
+    void DisplacementDistanceMapRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
 //        auto cbContent = context->GetConstantsUpdater()->UpdateRootConstantBuffer<DisplacementDistanceMapGenerationCBContent>();
 //

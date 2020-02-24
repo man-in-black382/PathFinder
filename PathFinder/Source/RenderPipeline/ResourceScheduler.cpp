@@ -28,7 +28,7 @@ namespace PathFinder
             resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount
         );
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.CreateTextureRTDescriptor = true;
 
@@ -53,7 +53,7 @@ namespace PathFinder
             resourceName, *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, 1
         );
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.CreateTextureDSDescriptor = true;
 
@@ -80,7 +80,7 @@ namespace PathFinder
             resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount
         );
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.CreateTextureUADescriptor = true;
 
@@ -104,7 +104,7 @@ namespace PathFinder
         assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
         passData.RequestedState = HAL::ResourceState::RenderTarget;
         passData.CreateTextureRTDescriptor = true;
 
@@ -123,7 +123,7 @@ namespace PathFinder
 
         assert_format(std::holds_alternative<HAL::DepthStencilFormat>(*schedulingInfo->ResourceFormat().DataType()), "Cannot reuse non-depth-stencil texture");
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
         passData.RequestedState = HAL::ResourceState::DepthWrite;
         passData.CreateTextureDSDescriptor = true;
 
@@ -143,7 +143,7 @@ namespace PathFinder
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
         passData.RequestedState = HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
         if (std::holds_alternative<HAL::DepthStencilFormat>(*schedulingInfo->ResourceFormat().DataType()))
@@ -170,7 +170,7 @@ namespace PathFinder
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.CreateTextureUADescriptor = true;
 

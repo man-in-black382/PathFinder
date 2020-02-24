@@ -10,19 +10,19 @@ namespace PathFinder
         switch (passMetadata.Purpose)
         {
         case RenderPassPurpose::Default:
-            mDefaultPasses.emplace_back(passMetadata, mDefaultPasses.size());
+            mDefaultPasses.emplace_back(Node{ passMetadata, mDefaultPasses.size() });
             break;
 
         case RenderPassPurpose::Setup:
-            mSetupPasses.emplace_back(passMetadata, mSetupPasses.size());
+            mSetupPasses.emplace_back(Node{ passMetadata, mSetupPasses.size() });
             break;
 
         case RenderPassPurpose::AssetProcessing:
-            mAssetProcessingPasses.emplace_back(passMetadata, mAssetProcessingPasses.size());
+            mAssetProcessingPasses.emplace_back(Node{ passMetadata, mAssetProcessingPasses.size() });
             break;
         }
 
-        mAllPasses.emplace_back(passMetadata, mAllPasses.size());
+        mAllPasses.emplace_back(Node{ passMetadata, mAllPasses.size() });
     }
 
 }

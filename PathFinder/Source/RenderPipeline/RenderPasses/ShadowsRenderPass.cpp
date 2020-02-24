@@ -27,7 +27,7 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::GBufferRenderTarget);*/
     } 
 
-    void ShadowsRenderPass::Render(RenderContext* context)
+    void ShadowsRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
 
     }

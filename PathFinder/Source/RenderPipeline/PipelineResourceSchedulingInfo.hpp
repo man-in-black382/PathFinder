@@ -4,6 +4,8 @@
 #include "../HardwareAbstractionLayer/ResourceState.hpp"
 #include "../HardwareAbstractionLayer/ResourceFormat.hpp"
 
+#include "RenderPassExecutionGraph.hpp"
+
 #include <functional>
 #include <optional>
 
@@ -40,7 +42,7 @@ namespace PathFinder
         void FinishScheduling();
         const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;
         PassMetadata* GetMetadataForPass(Foundation::Name passName);
-        PassMetadata& AllocateMetadataForPass(Foundation::Name passName);
+        PassMetadata& AllocateMetadataForPass(const RenderPassExecutionGraph::Node& passNode);
         HAL::ResourceState InitialStates() const;
 
         std::function<void()> AllocationAction;
@@ -48,15 +50,15 @@ namespace PathFinder
 
     private:
         std::unordered_map<Foundation::Name, PassMetadata> mPerPassData;
-        Foundation::Name mFirstPassName;
-        Foundation::Name mLastPassName;
+        RenderPassExecutionGraph::Node mFirstPassGraphNode;
+        RenderPassExecutionGraph::Node mLastPassGraphNode;
         HAL::ResourceFormat mResourceFormat;
-        HAL::ResourceState mExpectedStates;
+        HAL::ResourceState mExpectedStates = HAL::ResourceState::Common;
 
     public:
         inline const auto& AllPassesMetadata() const { return mPerPassData; }
-        inline Foundation::Name FirstPassName() const { return mFirstPassName; }
-        inline Foundation::Name LastPassName() const { return mLastPassName; }
+        inline const RenderPassExecutionGraph::Node& FirstPassGraphNode() const { return mFirstPassGraphNode; }
+        inline const RenderPassExecutionGraph::Node& LastPassGraphNode() const { return mLastPassGraphNode; }
         inline const HAL::ResourceFormat& ResourceFormat() const { return mResourceFormat; }
         inline HAL::ResourceState ExpectedStates() const { return mExpectedStates; }
     };

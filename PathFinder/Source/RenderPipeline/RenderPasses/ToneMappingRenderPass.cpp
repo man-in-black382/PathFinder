@@ -22,14 +22,14 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
     }
      
-    void ToneMappingRenderPass::Render(RenderContext* context)
+    void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
         cbContent.InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingOutput);
         cbContent.OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::ToneMappingOutput);
-        cbContent.TonemappingParams = context->GetScene()->TonemappingParams();
+        cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 

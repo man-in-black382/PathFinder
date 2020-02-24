@@ -22,7 +22,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::BlurResult);
     }
      
-    void BlurRenderPass::Render(RenderContext* context)
+    void BlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::Blur);
 

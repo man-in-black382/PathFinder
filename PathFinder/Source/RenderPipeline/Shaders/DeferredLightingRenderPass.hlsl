@@ -20,6 +20,7 @@ struct PassData
 #include "ColorConversion.hlsl"
 #include "CookTorrance.hlsl"
 #include "SpaceConversion.hlsl"
+#include "Utils.hlsl"
 
 // bind roughness   {label:"Roughness", default:0.25, min:0.001, max:1, step:0.001}
 // bind dcolor      {label:"Diffuse Color",  r:1.0, g:1.0, b:1.0}
@@ -45,11 +46,7 @@ struct LTCParams
     float rotz;
 
     bool groundTruth;
-
     bool twoSided;
-
-    float4x4 view;
-    float2 resolution;
     int sampleCount;
 };
 
@@ -115,27 +112,32 @@ float RayDiskIntersect(Ray ray, Disk disk)
 // Camera functions
 ///////////////////
 
-//Ray GenerateCameraRay()
-//{
-//    Ray ray;
+Ray GenerateCameraRay(float2 uv)
+{
+    float4x4 view = FrameDataCB.CameraView;
 
-//    float2 xy = 2.0 * gl_FragCoord.xy / resolution - float2(1.0);
+    Ray ray;
 
-//    ray.dir = normalize(float3(xy, 2.0));
+    float2 xy = 2.0 * uv - 1.0;
 
-//    float focalDistance = 2.0;
-//    float ft = focalDistance / ray.dir.z;
-//    float3 pFocus = ray.dir * ft;
+    ray.dir = normalize(float3(xy, 2.0));
 
-//    ray.origin = float3(0);
-//    ray.dir = normalize(pFocus - ray.origin);
+    float focalDistance = 2.0;
+    float ft = focalDistance / ray.dir.z;
+    float3 pFocus = ray.dir * ft;
 
-//    // Apply camera transform
-//    ray.origin = (view * float4(ray.origin, 1)).xyz;
-//    ray.dir = (view * float4(ray.dir, 0)).xyz;
+    ray.origin = float3(0, 0, 0);
+    ray.dir = normalize(pFocus - ray.origin);
 
-//    return ray;
-//}
+    // Apply camera transform
+    ray.origin = mul(view, float4(ray.origin, 1)).xyz;
+    ray.dir = mul(view, float4(ray.dir, 0)).xyz;
+
+   /* ray.origin = (view * float4(ray.origin, 1)).xyz;
+    ray.dir = (view * float4(ray.dir, 0)).xyz;*/
+
+    return ray;
+}
 
 // Matrix functions
 ///////////////////
@@ -456,78 +458,78 @@ float3 LTC_Evaluate(
     // use tabulated horizon-clipped sphere
     float2 uv = float2(avgDir.z * 0.5 + 0.5, formFactor);
     uv = uv * LUT_SCALE + LUT_BIAS;
-    float scale = LTC_LUT1.Sample(LinearClampSampler, uv).w;
+    float scale = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0).w;
 
     float spec = formFactor * scale;
 
-    if (params.groundTruth)
-    {
-        spec = 0.0;
+    //if (params.groundTruth)
+    //{
+    //    spec = 0.0;
 
-        float diskArea = pi * E1 * E2;
+    //    float diskArea = pi * E1 * E2;
 
-        // light sample
-        {
-            // random point on ellipse
-            float rad = sqrt(u1);
-            float phi = 2.0 * pi * u2;
-            float x = E1 * rad * cos(phi);
-            float y = E2 * rad * sin(phi);
+    //    // light sample
+    //    {
+    //        // random point on ellipse
+    //        float rad = sqrt(u1);
+    //        float phi = 2.0 * pi * u2;
+    //        float x = E1 * rad * cos(phi);
+    //        float y = E2 * rad * sin(phi);
 
-            float3 p = x * V1 + y * V2 + C;
-            float3 v = normalize(p);
+    //        float3 p = x * V1 + y * V2 + C;
+    //        float3 v = normalize(p);
 
-            float c2 = max(dot(V3, v), 0.0);
-            float solidAngle = max(c2 / dot(p, p), 1e-7);
-            float pdfLight = 1.0 / solidAngle / diskArea;
+    //        float c2 = max(dot(V3, v), 0.0);
+    //        float solidAngle = max(c2 / dot(p, p), 1e-7);
+    //        float pdfLight = 1.0 / solidAngle / diskArea;
 
-            float cosTheta = max(v.z, 0.0);
-            float brdf = 1.0 / pi;
-            float pdfBRDF = cosTheta / pi;
+    //        float cosTheta = max(v.z, 0.0);
+    //        float brdf = 1.0 / pi;
+    //        float pdfBRDF = cosTheta / pi;
 
-            if (cosTheta > 0.0)
-                spec += brdf * cosTheta / (pdfBRDF + pdfLight);
-        }
+    //        if (cosTheta > 0.0)
+    //            spec += brdf * cosTheta / (pdfBRDF + pdfLight);
+    //    }
 
-        // BRDF sample
-        {
-            // generate a cosine-distributed direction
-            float rad = sqrt(u1);
-            float phi = 2.0 * pi * u2;
-            float x = rad * cos(phi);
-            float y = rad * sin(phi);
-            float3 dir = float3(x, y, sqrt(1.0 - u1));
+    //    // BRDF sample
+    //    {
+    //        // generate a cosine-distributed direction
+    //        float rad = sqrt(u1);
+    //        float phi = 2.0 * pi * u2;
+    //        float x = rad * cos(phi);
+    //        float y = rad * sin(phi);
+    //        float3 dir = float3(x, y, sqrt(1.0 - u1));
 
-            Ray ray;
-            ray.origin = float3(0, 0, 0);
-            ray.dir = dir;
+    //        Ray ray;
+    //        ray.origin = float3(0, 0, 0);
+    //        ray.dir = dir;
 
-            Disk disk = InitDisk(C, V1, V2, E1, E2);
+    //        Disk disk = InitDisk(C, V1, V2, E1, E2);
 
-            float3 diskNormal = V3;
-            disk.plane = float4(diskNormal, -dot(diskNormal, disk.center));
+    //        float3 diskNormal = V3;
+    //        disk.plane = float4(diskNormal, -dot(diskNormal, disk.center));
 
-            float distToDisk = RayDiskIntersect(ray, disk);
-            bool intersect = distToDisk != NO_HIT;
+    //        float distToDisk = RayDiskIntersect(ray, disk);
+    //        bool intersect = distToDisk != NO_HIT;
 
-            float cosTheta = max(dir.z, 0.0);
-            float brdf = 1.0 / pi;
-            float pdfBRDF = cosTheta / pi;
+    //        float cosTheta = max(dir.z, 0.0);
+    //        float brdf = 1.0 / pi;
+    //        float pdfBRDF = cosTheta / pi;
 
-            float pdfLight = 0.0;
-            if (intersect)
-            {
-                float3 p = distToDisk * ray.dir;
-                float3 v = normalize(p);
-                float c2 = max(dot(V3, v), 0.0);
-                float solidAngle = max(c2 / dot(p, p), 1e-7);
-                pdfLight = 1.0 / solidAngle / diskArea;
-            }
+    //        float pdfLight = 0.0;
+    //        if (intersect)
+    //        {
+    //            float3 p = distToDisk * ray.dir;
+    //            float3 v = normalize(p);
+    //            float c2 = max(dot(V3, v), 0.0);
+    //            float solidAngle = max(c2 / dot(p, p), 1e-7);
+    //            pdfLight = 1.0 / solidAngle / diskArea;
+    //        }
 
-            if (intersect)
-                spec += brdf * cosTheta / (pdfBRDF + pdfLight);
-        }
-    }
+    //        if (intersect)
+    //            spec += brdf * cosTheta / (pdfBRDF + pdfLight);
+    //    }
+    //}
 
     Lo_i = float3(spec, spec, spec);
 
@@ -555,112 +557,134 @@ float3 ToLinear(float3 v)
 
 //out float4 FragColor;
 
-//void main()
-//{
-//    float ay = 2.0 * pi * roty;
-//    float az = 2.0 * pi * rotz;
-
-//    Disk disk = InitDisk(
-//        float3(0, 6, 32),
-//        rotation_yz(float3(1, 0, 0), ay, az),
-//        rotation_yz(float3(0, 1, 0), ay, az),
-//        0.5 * width,
-//        0.5 * height
-//    );
-
-//    float3 points[4];
-//    InitDiskPoints(disk, points);
-
-//    float4 floorPlane = float4(0, 1, 0, 0);
-
-//    float3 lcol = float3(intensity);
-//    float3 dcol = ToLinear(dcolor);
-//    float3 scol = ToLinear(scolor);
-
-//    float3 col = float3(0);
-
-//    Ray ray = GenerateCameraRay();
-
-//    float dist = RayPlaneIntersect(ray, floorPlane);
-
-//    float2 seq[NUM_SAMPLES];
-//    Halton2D(seq, sampleCount);
-
-//    float u1 = rand(gl_FragCoord.xy * 0.01);
-//    float u2 = rand(gl_FragCoord.yx * 0.01);
-
-//    u1 = fract(u1 + seq[0].x);
-//    u2 = fract(u2 + seq[0].y);
-
-//    if (dist != NO_HIT)
-//    {
-//        // Clamp distance to some sane maximum to prevent instability
-//        dist = min(dist, 10000.0);
-
-//        float3 pos = ray.origin + dist * ray.dir;
-
-//        float3 N = floorPlane.xyz;
-//        float3 V = -ray.dir;
-
-//        float ndotv = saturate(dot(N, V));
-//        float2 uv = float2(roughness, sqrt(1.0 - ndotv));
-//        uv = uv * LUT_SCALE + LUT_BIAS;
-
-//        float4 t1 = texture(ltc_1, uv);
-//        float4 t2 = texture(ltc_2, uv);
-
-//        float3x3 Minv = float3x3(
-//            float3(t1.x, 0, t1.y),
-//            float3(0, 1, 0),
-//            float3(t1.z, 0, t1.w)
-//        );
-
-//        float3 spec = LTC_Evaluate(N, V, pos, Minv, points, twoSided, u1, u2);
-//        // BRDF shadowing and Fresnel
-//        spec *= scol * t2.x + (1.0 - scol) * t2.y;
-
-//        float3 diff = LTC_Evaluate(N, V, pos, float3x3(1), points, twoSided, u1, u2);
-
-//        col = lcol * (spec + dcol * diff);
-//    }
-
-//    float distToDisk = RayDiskIntersect(ray, disk);
-//    if (distToDisk < dist)
-//        col = lcol;
-
-//    FragColor = float4(col, 1.0);
-//}
-
 [numthreads(32, 32, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
-    Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
-    
-    uint3 loadCoords = uint3(dispatchThreadID.xy, 0);
-    float2 UV = (float2(dispatchThreadID.xy) + 0.5) / GlobalDataCB.PipelineRTResolution;
+    Texture2D LTC_LUT0 = Textures2D[PassDataCB.LTC_LUT0_Index];
+    Texture2D LTC_LUT1 = Textures2D[PassDataCB.LTC_LUT1_Index];
 
-    GBufferEncoded encodedGBuffer;
-    encodedGBuffer.MaterialData = materialData.Load(loadCoords);
+    uint2 pixelIndex = dispatchThreadID.xy;
+    float2 centeredPixelIndex = float2(pixelIndex) + 0.5;
+    float2 UV = centeredPixelIndex / GlobalDataCB.PipelineRTResolution;
 
-    GBufferCookTorrance gBufferCookTorrance = DecodeGBufferCookTorrance(encodedGBuffer);
-    DirectionalLight testLight = { 1000.xxx, float3(0, 0, -1) };
-    float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0));
+    LTCParams params;
+    params.roughness = 0.25;
+    params.dcolor = float3(1.0, 1.0, 1.0);
+    params.scolor = float3(0.23, 0.23, 0.23);
+    params.intensity = 200.0;
+    params.width = 8;
+    params.height = 8;
+    params.roty = 0.0;
+    params.rotz = 0.0;
+    params.twoSided = true;
+    params.groundTruth = false;
+    params.sampleCount = 100;
 
-    float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
+    float ay = 2.0 * pi * params.roty;
+    float az = 2.0 * pi * params.rotz;
 
-    // Based on observations by Disney and adopted by Epic Games
-    // the lighting looks more correct squaring the roughness
-    // in both the geometry and normal distribution function.
-    float roughness2 = gBufferCookTorrance.Roughness * gBufferCookTorrance.Roughness;
+    Disk disk = InitDisk(
+        float3(0, 6, 32),
+        rotation_yz(float3(1, 0, 0), ay, az),
+        rotation_yz(float3(0, 1, 0), ay, az),
+        0.5 * params.width,
+        0.5 * params.height
+    );
 
-    float3 N = gBufferCookTorrance.Normal;
-    float3 V = normalize(FrameDataCB.CameraPosition - worldPosition);
-    float3 L = -normalize(testLight.Direction);
-    float3 H = normalize(L + V);
+    float3 points[4];
+    InitDiskPoints(disk, points);
 
-    float3 outgoingRadiance = CookTorranceBRDF(N, V, H, L, roughness2, gBufferCookTorrance.Albedo, gBufferCookTorrance.Metalness, testLight.RadiantFlux);
+    float4 floorPlane = float4(0, 1, 0, 0);
+
+    float3 lcol = params.intensity.xxx;
+    float3 dcol = /*ToLinear*/(params.dcolor);
+    float3 scol = /*ToLinear*/(params.scolor);
+
+    float3 col = float3(0, 0, 0);
+
+    Ray ray = GenerateCameraRay(UV);
+
+    float dist = RayPlaneIntersect(ray, floorPlane);
+
+    float2 seq[NUM_SAMPLES];
+    Halton2D(seq, params.sampleCount);
+
+    float u1 = rand(centeredPixelIndex.xy * 0.01);
+    float u2 = rand(centeredPixelIndex.yx * 0.01);
+
+    u1 = frac(u1 + seq[0].x);
+    u2 = frac(u2 + seq[0].y);
+
+    if (dist != NO_HIT)
+    {
+        // Clamp distance to some sane maximum to prevent instability
+        dist = min(dist, 10000.0);
+
+        float3 pos = ray.origin + dist * ray.dir;
+
+        float3 N = floorPlane.xyz;
+        float3 V = -ray.dir;
+
+        float ndotv = saturate(dot(N, V));
+        float2 uv = float2(params.roughness, sqrt(1.0 - ndotv));
+        uv = uv * LUT_SCALE + LUT_BIAS;
+
+        float4 t1 = LTC_LUT0.SampleLevel(LinearClampSampler, uv, 0);
+        float4 t2 = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0);
+
+        float3x3 Minv = float3x3(
+            float3(t1.x, 0, t1.y),
+            float3(0, 1, 0),
+            float3(t1.z, 0, t1.w)
+        );
+
+        float3 spec = LTC_Evaluate(N, V, pos, Minv, points, u1, u2, LTC_LUT1, params);
+        // BRDF shadowing and Fresnel
+        spec *= scol * t2.x + (1.0 - scol) * t2.y;
+
+        float3 diff = LTC_Evaluate(N, V, pos, Matrix3x3Identity, points, u1, u2, LTC_LUT1, params);
+
+        col = lcol * (spec + dcol * diff);
+    }
+
+    float distToDisk = RayDiskIntersect(ray, disk);
+    if (distToDisk < dist)
+        col = lcol;
 
     RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
-    outputImage[dispatchThreadID.xy] = float4(outgoingRadiance, 1.0);
+    outputImage[dispatchThreadID.xy] = float4(col, 1.0);
 }
+
+//[numthreads(32, 32, 1)]
+//void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
+//{
+//    Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
+//    Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
+//    
+//    uint3 loadCoords = uint3(dispatchThreadID.xy, 0);
+//    float2 UV = (float2(dispatchThreadID.xy) + 0.5) / GlobalDataCB.PipelineRTResolution;
+//
+//    GBufferEncoded encodedGBuffer;
+//    encodedGBuffer.MaterialData = materialData.Load(loadCoords);
+//
+//    GBufferCookTorrance gBufferCookTorrance = DecodeGBufferCookTorrance(encodedGBuffer);
+//    DirectionalLight testLight = { 1000.xxx, float3(0, 0, -1) };
+//    float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0));
+//
+//    float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
+//
+//    // Based on observations by Disney and adopted by Epic Games
+//    // the lighting looks more correct squaring the roughness
+//    // in both the geometry and normal distribution function.
+//    float roughness2 = gBufferCookTorrance.Roughness * gBufferCookTorrance.Roughness;
+//
+//    float3 N = gBufferCookTorrance.Normal;
+//    float3 V = normalize(FrameDataCB.CameraPosition - worldPosition);
+//    float3 L = -normalize(testLight.Direction);
+//    float3 H = normalize(L + V);
+//
+//    float3 outgoingRadiance = CookTorranceBRDF(N, V, H, L, roughness2, gBufferCookTorrance.Albedo, gBufferCookTorrance.Metalness, testLight.RadiantFlux);
+//
+//    RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
+//    outputImage[dispatchThreadID.xy] = float4(outgoingRadiance, 1.0);
+//}

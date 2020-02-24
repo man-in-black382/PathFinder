@@ -30,8 +30,8 @@ namespace PathFinder
 
         struct Timeline
         {
-            uint32_t Start;
-            uint32_t End;
+            uint64_t Start;
+            uint64_t End;
         };
 
         struct AliasingMetadata
@@ -58,8 +58,8 @@ namespace PathFinder
         void RemoveAliasedAllocationsFromOriginalList();
 
         // Containers to be used between function calls to avoid redundant memory allocations
-        std::set<uint32_t, std::less<uint32_t>> mNonAliasableMemoryRegionStarts;
-        std::set<uint32_t, std::less<uint32_t>> mNonAliasableMemoryRegionEnds;
+        std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionStarts;
+        std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionEnds;
         std::vector<AliasingMetadataIterator> mAlreadyAliasedAllocations;
         uint64_t mGlobalStartOffset = 0;
         uint64_t mAvailableMemory = 0;

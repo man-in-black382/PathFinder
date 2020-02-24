@@ -38,19 +38,17 @@ namespace PathFinder
     template <class Constants>
     void PipelineResourceStorage::UpdateCurrentPassRootConstants(const Constants& constants)
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentPassName);
-
         constexpr uint64_t Alignment = 256;
 
-        if (!passObjects.PassConstantBuffer || passObjects.PassConstantBuffer->ElementCapacity<Constants>(Alignment) < 1)
+        if (!mCurrentPassObjects->PassConstantBuffer || mCurrentPassObjects->PassConstantBuffer->ElementCapacity<Constants>(Alignment) < 1)
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
-            passObjects.PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
-            passObjects.PassConstantBuffer->SetDebugName(mCurrentPassName.ToString() + " Constant Buffer");
+            mCurrentPassObjects->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mCurrentPassObjects->PassConstantBuffer->SetDebugName(mCurrentRenderPassGraphNode.PassMetadata.Name.ToString() + " Constant Buffer");
         }
 
-        passObjects.PassConstantBuffer->RequestWrite();
-        passObjects.PassConstantBuffer->Write(&constants, 0, 1, Alignment);
+        mCurrentPassObjects->PassConstantBuffer->RequestWrite();
+        mCurrentPassObjects->PassConstantBuffer->Write(&constants, 0, 1, Alignment);
     }
 
     template <class BufferDataT>

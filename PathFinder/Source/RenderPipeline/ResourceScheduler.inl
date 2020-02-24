@@ -12,7 +12,7 @@ namespace PathFinder
             resourceName, bufferProperties.Capacity, bufferProperties.PerElementAlignment
         );
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassName());
+        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
         passData.RequestedState = HAL::ResourceState::UnorderedAccess;
         passData.CreateBufferUADescriptor = true;
 

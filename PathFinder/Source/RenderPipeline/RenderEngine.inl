@@ -41,13 +41,19 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
+    void RenderEngine<ContentMediator>::SetContentMediator(ContentMediator* mediator)
+    {
+        mContext.SetContentMediator(mediator);
+    }
+
+    template <class ContentMediator>
     void RenderEngine<ContentMediator>::ScheduleAndAllocatePipelineResources()
     {
         // Schedule resources and states
         for (auto passNode : mPassExecutionGraph.AllPasses())
         {
             auto pass = mRenderPasses[passNode.PassMetadata.Name];
-            mPipelineResourceStorage.SetCurrentPassName(passNode.PassMetadata.Name);
+            mPipelineResourceStorage.SetCurrentRenderPassGraphNode(passNode);
             pass->SetupPipelineStates(&mPipelineStateCreator);
             pass->ScheduleResources(&mResourceScheduler);
         }
@@ -204,7 +210,7 @@ namespace PathFinder
         for (auto nodeIt = nodes.begin(); nodeIt != nodes.end(); ++nodeIt)
         {
             mGraphicsDevice.ResetViewportToDefault();
-            mPipelineResourceStorage.SetCurrentPassName(nodeIt->PassMetadata.Name);
+            mPipelineResourceStorage.SetCurrentRenderPassGraphNode(*nodeIt);
             mPipelineResourceStorage.TransitionResourcesToCurrentPassStates();
     
             HAL::ResourceBarrierCollection barriers{};
@@ -228,7 +234,7 @@ namespace PathFinder
             bool firstPass = nodeIt == nodes.begin();
 
             mGraphicsDevice.ResetViewportToDefault();
-            mPipelineResourceStorage.SetCurrentPassName(nodeIt->PassMetadata.Name, firstPass);
+            mPipelineResourceStorage.SetCurrentRenderPassGraphNode(*nodeIt);
             mPipelineResourceStorage.TransitionResourcesToCurrentPassStates();
 
             HAL::ResourceBarrierCollection barriers{};
@@ -242,7 +248,7 @@ namespace PathFinder
             }
 
             mGraphicsDevice.CommandList()->InsertBarriers(barriers);
-            mRenderPasses[nodeIt->PassMetadata.Name]->Render(&mContext);
+            mRenderPasses[nodeIt->PassMetadata.Name]->Render(&mContext); 
             mPipelineResourceStorage.RequestCurrentPassDebugReadback();
         }
 

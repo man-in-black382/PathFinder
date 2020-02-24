@@ -58,9 +58,9 @@ namespace PathFinder
         return startIntersects || endIntersects;
     }
 
-    PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceSchedulingInfo* allocation) const
+    PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceSchedulingInfo* schedulingInfo) const
     {
-        return { mRenderPassGraph->IndexOfPass(allocation->FirstPassName()), mRenderPassGraph->IndexOfPass(allocation->LastPassName()) };
+        return { schedulingInfo->FirstPassGraphNode().ContextualExecutionIndex, schedulingInfo->LastPassGraphNode().ContextualExecutionIndex };
     }
 
     void PipelineResourceMemoryAliaser::FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const

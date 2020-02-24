@@ -28,9 +28,7 @@ namespace HAL
         Present                         = 1 << 14,
         DepthRead                       = 1 << 15,
         DepthWrite                      = 1 << 16,
-        VertexBuffer                    = 1 << 17,
         ConstantBuffer                  = 1 << 18,
-        IndexBuffer                     = 1 << 19,
 
         AnyShaderAccess = PixelShaderAccess | NonPixelShaderAccess
     };

@@ -35,7 +35,7 @@ namespace PathFinder
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
     }  
 
-    void GBufferRenderPass::Render(RenderContext* context) 
+    void GBufferRenderPass::Render(RenderContext<RenderPassContentMediator>* context) 
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBuffer);
 
@@ -44,11 +44,12 @@ namespace PathFinder
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
 
         // Use vertex and index buffers as normal structured buffers
-        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedVertexBuffer(), 0, 0, HAL::ShaderRegister::ShaderResource);
-        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->UnifiedIndexBuffer(), 1, 0, HAL::ShaderRegister::ShaderResource);
-        context->GetCommandRecorder()->BindExternalBuffer(*context->GetMeshStorage()->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
+        auto meshStorage = context->GetContent()->GetMeshStorage();
+        context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->UnifiedVertexBuffer(), 0, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->UnifiedIndexBuffer(), 1, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
 
-        context->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
+        context->GetContent()->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {
             context->GetCommandRecorder()->SetRootConstants(instance.GPUInstanceIndex(), 0, 0);
             context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount);
