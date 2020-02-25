@@ -4,8 +4,11 @@ float3 ReconstructWorldPosition(
     float4x4 inverseView, // Inverse camera view matrix
     float4x4 inverseProjection) // Inverse camera projection matrix
 {
+    // Have to invert Y due to DirectX convention for [0, 0] to be at the TOP left
+    float2 uv = float2(SSUV.x, 1.0 - SSUV.y); 
+
     float z = hyperbolicDepth;
-    float2 xy = SSUV * 2.0 - 1.0;
+    float2 xy = uv * 2.0 - 1.0;
 
     float4 clipSpacePosition = float4(xy, z, 1.0);
     float4 viewSpacePosition = mul(inverseProjection, clipSpacePosition);

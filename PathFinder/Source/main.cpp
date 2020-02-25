@@ -31,6 +31,8 @@
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
+#include <glm/common.hpp>
+
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -45,7 +47,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int main(int argc, char** argv)
 {
     using namespace HAL;
-    
+
     HICON iconHandle = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_ICON1));
 
     // Create application window
@@ -91,24 +93,24 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
     //renderPassGraph.AddPass(blurPass.get());
 
-  /*  PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+    PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
         "/Metal07/Metal07_met.dds", "/Metal07/Metal07_disp.dds"));
 
     PathFinder::Material& harshBricksMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/HarshBricks/harshbricks-albedo.dds", "/HarshBricks/harshbricks-normal.dds", "/HarshBricks/harshbricks-roughness.dds",
         "/HarshBricks/harshbricks-metalness.dds", "/HarshBricks/harshbricks-height.dds"));
-*/
+
     PathFinder::Material& concrete19Material = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Concrete19/Concrete19_col.dds", "/Concrete19/Concrete19_nrm.dds", "/Concrete19/Concrete19_rgh.dds",
         std::nullopt, "/Concrete19/Concrete19_disp.dds"));
 
-    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &concrete19Material });
+    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("sphere.obj").back()));
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
 
-    auto t = sphereInstance.Transformation();
-    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
-    sphereInstance.SetTransformation(t);
+    //auto t = sphereInstance.Transformation();
+    //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
+    //sphereInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);

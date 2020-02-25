@@ -118,7 +118,7 @@ Ray GenerateCameraRay(float2 uv)
 
     Ray ray;
 
-    float2 xy = 2.0 * uv - 1.0;
+    float2 xy = 2.0 * float2(uv.x, 1.0 - uv.y) - 1.0;
 
     ray.dir = normalize(float3(xy, 2.0));
 
@@ -458,6 +458,7 @@ float3 LTC_Evaluate(
     // use tabulated horizon-clipped sphere
     float2 uv = float2(avgDir.z * 0.5 + 0.5, formFactor);
     uv = uv * LUT_SCALE + LUT_BIAS;
+
     float scale = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0).w;
 
     float spec = formFactor * scale;
@@ -555,8 +556,6 @@ float3 ToLinear(float3 v)
     return Powfloat3(v, gamma);
 }
 
-//out float4 FragColor;
-
 [numthreads(32, 32, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {
@@ -569,14 +568,14 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 
     LTCParams params;
     params.roughness = 0.25;
-    params.dcolor = float3(1.0, 1.0, 1.0);
-    params.scolor = float3(0.23, 0.23, 0.23);
-    params.intensity = 200.0;
+    params.dcolor = float3(1.0, 2.0, 1.0);
+    params.scolor = float3(1.23, 0.23, 0.23);
+    params.intensity = 2.0;
     params.width = 8;
     params.height = 8;
     params.roty = 0.0;
     params.rotz = 0.0;
-    params.twoSided = true;
+    params.twoSided = false;
     params.groundTruth = false;
     params.sampleCount = 100;
 
@@ -660,7 +659,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 //{
 //    Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
 //    Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
-//    
+//
 //    uint3 loadCoords = uint3(dispatchThreadID.xy, 0);
 //    float2 UV = (float2(dispatchThreadID.xy) + 0.5) / GlobalDataCB.PipelineRTResolution;
 //
@@ -668,22 +667,17 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 //    encodedGBuffer.MaterialData = materialData.Load(loadCoords);
 //
 //    GBufferCookTorrance gBufferCookTorrance = DecodeGBufferCookTorrance(encodedGBuffer);
-//    DirectionalLight testLight = { 1000.xxx, float3(0, 0, -1) };
+//    DirectionalLight testLight = { 150.xxx, float3(1, -1, 0) };
 //    float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0));
 //
 //    float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
-//
-//    // Based on observations by Disney and adopted by Epic Games
-//    // the lighting looks more correct squaring the roughness
-//    // in both the geometry and normal distribution function.
-//    float roughness2 = gBufferCookTorrance.Roughness * gBufferCookTorrance.Roughness;
 //
 //    float3 N = gBufferCookTorrance.Normal;
 //    float3 V = normalize(FrameDataCB.CameraPosition - worldPosition);
 //    float3 L = -normalize(testLight.Direction);
 //    float3 H = normalize(L + V);
 //
-//    float3 outgoingRadiance = CookTorranceBRDF(N, V, H, L, roughness2, gBufferCookTorrance.Albedo, gBufferCookTorrance.Metalness, testLight.RadiantFlux);
+//    float3 outgoingRadiance = BRDF(N, V, H, L, gBufferCookTorrance.Roughness, gBufferCookTorrance.Albedo, gBufferCookTorrance.Metalness, testLight.RadiantFlux);
 //
 //    RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
 //    outputImage[dispatchThreadID.xy] = float4(outgoingRadiance, 1.0);
