@@ -133,25 +133,10 @@ Ray GenerateCameraRay(float2 uv)
     ray.origin = mul(view, float4(ray.origin, 1)).xyz;
     ray.dir = mul(view, float4(ray.dir, 0)).xyz;
 
-   /* ray.origin = (view * float4(ray.origin, 1)).xyz;
-    ray.dir = (view * float4(ray.dir, 0)).xyz;*/
-
     return ray;
 }
 
-// Matrix functions
-///////////////////
 
-//float3 mul(float3x3 m, float3 v)
-//{
-//    return mul() 
-//    m * v;
-//}
-
-//float3x3 mul(float3x3 m1, float3x3 m2)
-//{
-//    return m1 * m2;
-//}
 
 float mod(float x, float y)
 {
@@ -189,39 +174,6 @@ float3x3 float3x3_from_columns(float3 c0, float3 c1, float3 c2)
 
 // Sample generation
 ////////////////////
-
-float Halton(int index, float base)
-{
-    float result = 0.0;
-    float f = 1.0 / base;
-    float i = float(index);
-    for (int x = 0; x < 8; x++)
-    {
-        if (i <= 0.0)
-            break;
-
-        result += f * mod(i, base);
-        i = floor(i / base);
-        f = f / base;
-    }
-
-    return result;
-}
-
-void Halton2D(out float2 s[NUM_SAMPLES], int offset)
-{
-    for (int i = 0; i < NUM_SAMPLES; i++)
-    {
-        s[i].x = Halton(i + offset, 2.0);
-        s[i].y = Halton(i + offset, 3.0);
-    }
-}
-
-// TODO: replace this
-float rand(float2 co)
-{
-    return frac(sin(dot(co.xy, float2(12.9898, 78.233))) * 43758.5453);
-}
 
 // Scene helpers
 ////////////////
@@ -346,7 +298,7 @@ float3 SolveCubic(float4 Coefficient)
 ///////////////////////////////
 
 float3 LTC_Evaluate(
-    float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4], float u1, float u2, Texture2D LTC_LUT1, LTCParams params)
+    float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4], Texture2D LTC_LUT1, LTCParams params)
 {
     // construct orthonormal basis around N
     float3 T1, T2;
@@ -354,7 +306,7 @@ float3 LTC_Evaluate(
     T2 = cross(N, T1);
 
     // rotate area light in (T1, T2, N) basis
-    float3x3 R = transpose(float3x3(T1, T2, N));
+    float3x3 R = transpose(Matrix3x3ColumnMajor(T1, T2, N));
 
     // polygon (allocate 5 vertices for clipping)
     float3 L_[3];
@@ -427,8 +379,8 @@ float3 LTC_Evaluate(
     float x0 = dot(V1, C) / L;
     float y0 = dot(V2, C) / L;
 
-    float E1 = /*inversesqrt*/rsqrt(a);
-    float E2 = /*inversesqrt*/rsqrt(b);
+    float E1 = rsqrt(a);
+    float E2 = rsqrt(b);
 
     a *= L * L;
     b *= L * L;
@@ -445,7 +397,7 @@ float3 LTC_Evaluate(
 
     float3 avgDir = float3(a * x0 / (a - e2), b * y0 / (b - e2), 1.0);
 
-    float3x3 rotate = float3x3_from_columns(V1, V2, V3);
+    float3x3 rotate = Matrix3x3ColumnMajor(V1, V2, V3);
 
     avgDir = mul(rotate, avgDir);
     avgDir = normalize(avgDir);
@@ -453,7 +405,7 @@ float3 LTC_Evaluate(
     float L1 = sqrt(-e2 / e3);
     float L2 = sqrt(-e2 / e1);
 
-    float formFactor = L1 * L2 * /*inversesqrt*/rsqrt((1.0 + L1 * L1) * (1.0 + L2 * L2));
+    float formFactor = L1 * L2 * rsqrt((1.0 + L1 * L1) * (1.0 + L2 * L2));
 
     // use tabulated horizon-clipped sphere
     float2 uv = float2(avgDir.z * 0.5 + 0.5, formFactor);
@@ -462,99 +414,12 @@ float3 LTC_Evaluate(
     float scale = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0).w;
 
     float spec = formFactor * scale;
-
-    //if (params.groundTruth)
-    //{
-    //    spec = 0.0;
-
-    //    float diskArea = pi * E1 * E2;
-
-    //    // light sample
-    //    {
-    //        // random point on ellipse
-    //        float rad = sqrt(u1);
-    //        float phi = 2.0 * pi * u2;
-    //        float x = E1 * rad * cos(phi);
-    //        float y = E2 * rad * sin(phi);
-
-    //        float3 p = x * V1 + y * V2 + C;
-    //        float3 v = normalize(p);
-
-    //        float c2 = max(dot(V3, v), 0.0);
-    //        float solidAngle = max(c2 / dot(p, p), 1e-7);
-    //        float pdfLight = 1.0 / solidAngle / diskArea;
-
-    //        float cosTheta = max(v.z, 0.0);
-    //        float brdf = 1.0 / pi;
-    //        float pdfBRDF = cosTheta / pi;
-
-    //        if (cosTheta > 0.0)
-    //            spec += brdf * cosTheta / (pdfBRDF + pdfLight);
-    //    }
-
-    //    // BRDF sample
-    //    {
-    //        // generate a cosine-distributed direction
-    //        float rad = sqrt(u1);
-    //        float phi = 2.0 * pi * u2;
-    //        float x = rad * cos(phi);
-    //        float y = rad * sin(phi);
-    //        float3 dir = float3(x, y, sqrt(1.0 - u1));
-
-    //        Ray ray;
-    //        ray.origin = float3(0, 0, 0);
-    //        ray.dir = dir;
-
-    //        Disk disk = InitDisk(C, V1, V2, E1, E2);
-
-    //        float3 diskNormal = V3;
-    //        disk.plane = float4(diskNormal, -dot(diskNormal, disk.center));
-
-    //        float distToDisk = RayDiskIntersect(ray, disk);
-    //        bool intersect = distToDisk != NO_HIT;
-
-    //        float cosTheta = max(dir.z, 0.0);
-    //        float brdf = 1.0 / pi;
-    //        float pdfBRDF = cosTheta / pi;
-
-    //        float pdfLight = 0.0;
-    //        if (intersect)
-    //        {
-    //            float3 p = distToDisk * ray.dir;
-    //            float3 v = normalize(p);
-    //            float c2 = max(dot(V3, v), 0.0);
-    //            float solidAngle = max(c2 / dot(p, p), 1e-7);
-    //            pdfLight = 1.0 / solidAngle / diskArea;
-    //        }
-
-    //        if (intersect)
-    //            spec += brdf * cosTheta / (pdfBRDF + pdfLight);
-    //    }
-    //}
-
+    
     Lo_i = float3(spec, spec, spec);
-
+    
     return float3(Lo_i);
 }
 
-// Misc. helpers
-////////////////
-
-float saturate(float v)
-{
-    return clamp(v, 0.0, 1.0);
-}
-
-float3 Powfloat3(float3 v, float p)
-{
-    return float3(pow(v.x, p), pow(v.y, p), pow(v.z, p));
-}
-
-static const float gamma = 2.2;
-float3 ToLinear(float3 v)
-{
-    return Powfloat3(v, gamma);
-}
 
 [numthreads(32, 32, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
@@ -567,13 +432,13 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     float2 UV = centeredPixelIndex / GlobalDataCB.PipelineRTResolution;
 
     LTCParams params;
-    params.roughness = 0.25;
-    params.dcolor = float3(1.0, 2.0, 1.0);
-    params.scolor = float3(1.23, 0.23, 0.23);
-    params.intensity = 2.0;
+    params.roughness = 0.2;
+    params.dcolor = float3(1.0, 1.0, 1.0);
+    params.scolor = float3(1.0, 1.0, 1.0);
+    params.intensity = 1.0;
     params.width = 8;
     params.height = 8;
-    params.roty = 0.0;
+    params.roty = 0.2;
     params.rotz = 0.0;
     params.twoSided = false;
     params.groundTruth = false;
@@ -596,23 +461,14 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     float4 floorPlane = float4(0, 1, 0, 0);
 
     float3 lcol = params.intensity.xxx;
-    float3 dcol = /*ToLinear*/(params.dcolor);
-    float3 scol = /*ToLinear*/(params.scolor);
+    float3 dcol = (params.dcolor);
+    float3 scol = (params.scolor);
 
     float3 col = float3(0, 0, 0);
 
     Ray ray = GenerateCameraRay(UV);
 
     float dist = RayPlaneIntersect(ray, floorPlane);
-
-    float2 seq[NUM_SAMPLES];
-    Halton2D(seq, params.sampleCount);
-
-    float u1 = rand(centeredPixelIndex.xy * 0.01);
-    float u2 = rand(centeredPixelIndex.yx * 0.01);
-
-    u1 = frac(u1 + seq[0].x);
-    u2 = frac(u2 + seq[0].y);
 
     if (dist != NO_HIT)
     {
@@ -622,7 +478,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
         float3 pos = ray.origin + dist * ray.dir;
 
         float3 N = floorPlane.xyz;
-        float3 V = -ray.dir;
+        float3 V = normalize(-ray.dir);
 
         float ndotv = saturate(dot(N, V));
         float2 uv = float2(params.roughness, sqrt(1.0 - ndotv));
@@ -631,17 +487,17 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
         float4 t1 = LTC_LUT0.SampleLevel(LinearClampSampler, uv, 0);
         float4 t2 = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0);
 
-        float3x3 Minv = float3x3(
+        float3x3 Minv = Matrix3x3ColumnMajor(
             float3(t1.x, 0, t1.y),
             float3(0, 1, 0),
             float3(t1.z, 0, t1.w)
         );
 
-        float3 spec = LTC_Evaluate(N, V, pos, Minv, points, u1, u2, LTC_LUT1, params);
+        float3 spec = LTC_Evaluate(N, V, pos, Minv, points, LTC_LUT1, params);
         // BRDF shadowing and Fresnel
         spec *= scol * t2.x + (1.0 - scol) * t2.y;
 
-        float3 diff = LTC_Evaluate(N, V, pos, Matrix3x3Identity, points, u1, u2, LTC_LUT1, params);
+        float3 diff = LTC_Evaluate(N, V, pos, Matrix3x3Identity, points, LTC_LUT1, params);
 
         col = lcol * (spec + dcol * diff);
     }
