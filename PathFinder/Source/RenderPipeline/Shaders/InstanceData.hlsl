@@ -27,5 +27,6 @@ struct LightInstanceData
     float Radius;
     float4 Orientation;
     float4 Position;
+    float4 Color;
     uint LightType;
 };

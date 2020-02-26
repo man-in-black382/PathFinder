@@ -60,6 +60,9 @@ namespace PathFinder
         glm::vec4 Position;
         // 16 byte boundary
 
+        glm::vec4 Color;
+        // 16 byte boundary
+
         std::underlying_type_t<LightType> LightTypeRaw;
     };
 
@@ -126,7 +129,8 @@ namespace PathFinder
     public:
         inline const auto UnifiedVertexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get(); }
         inline const auto UnifiedIndexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBuffer.get(); }
-        inline const auto InstanceTable() const { return mMeshInstanceTable.get(); }
+        inline const auto MeshInstanceTable() const { return mMeshInstanceTable.get(); }
+        inline const auto LightInstanceTable() const { return mLightInstanceTable.get(); }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
         inline const auto& BottomAccelerationStructureBarriers() const { return mBottomASBarriers; }

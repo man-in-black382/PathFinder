@@ -22,7 +22,9 @@ namespace PathFinder
     {
         uint8_t alignment = 128;
 
-        if (!mMeshInstanceTable || mMeshInstanceTable->ElementCapacity<GPUMeshInstanceTableEntry>(alignment) < meshInstances.size())
+        auto requiredBufferSize = meshInstances.size() + mUploadedMeshInstances;
+
+        if (!mMeshInstanceTable || mMeshInstanceTable->ElementCapacity<GPUMeshInstanceTableEntry>(alignment) < requiredBufferSize)
         {
             HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ meshInstances.size(), alignment };
             mMeshInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
@@ -50,10 +52,10 @@ namespace PathFinder
             };
 
             BottomRTAS& blas = mBottomAccelerationStructures[instance.AssosiatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex];
-            mTopAccelerationStructure.AddInstance(blas, instanceIndex, instance.Transformation().ModelMatrix());
+            mTopAccelerationStructure.AddInstance(blas, mUploadedMeshInstances, instance.Transformation().ModelMatrix());
             instance.SetGPUInstanceIndex(mUploadedMeshInstances);
 
-            mMeshInstanceTable->Write(&instanceEntry, instanceIndex, 1, alignment);
+            mMeshInstanceTable->Write(&instanceEntry, mUploadedMeshInstances, 1, alignment);
             ++mUploadedMeshInstances;
         }
 
@@ -63,11 +65,13 @@ namespace PathFinder
     }
 
     template < template < class ... > class Container, class LightT, class ... Args >
-    void UploadLights(Container<LightT, Args...>& lights)
+    void SceneGPUStorage::UploadLights(Container<LightT, Args...>& lights)
     {
         uint8_t alignment = 128;
 
-        if (!mLightInstanceTable || mLightInstanceTable->ElementCapacity<GPULightInstanceTableEntry>(alignment) < lights.size())
+        auto requiredBufferSize = mUploadedLights + lights.size();
+
+        if (!mLightInstanceTable || mLightInstanceTable->ElementCapacity<GPULightInstanceTableEntry>(alignment) < requiredBufferSize)
         {
             HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ lights.size(), alignment };
             mLightInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
@@ -79,7 +83,7 @@ namespace PathFinder
         for (LightT& light : lights)
         {
             GPULightInstanceTableEntry lightEntry = CreateLightGPUTableEntry(light);
-            mLightInstanceTable->Write(&lightEntry, instanceIndex, 1, alignment);
+            mLightInstanceTable->Write(&lightEntry, mUploadedLights, 1, alignment);
             light.SetGPULightTableIndex(mUploadedLights);
             ++mUploadedLights;
         }

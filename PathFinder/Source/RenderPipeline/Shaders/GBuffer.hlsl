@@ -5,7 +5,7 @@ struct GBufferEncoded
     uint4 MaterialData;
 };
 
-struct GBufferCookTorrance
+struct GBuffer
 {
     float3 Albedo;
     float3 Normal;
@@ -29,7 +29,7 @@ struct GBufferCookTorrance
 // |______________________|______________________|_____________________________________________|
 // |________Third component of output UVEC4______|_______Fourth component of output UVEC4______|
 
-GBufferEncoded EncodeCookTorranceMaterial(GBufferCookTorrance gBuffer)
+GBufferEncoded EncodeCookTorranceMaterial(GBuffer gBuffer)
 {
     uint albedoRoughness = Encode8888(float4(gBuffer.Albedo, gBuffer.Roughness));
     uint metalnessAO = Encode8888(float4(gBuffer.Metalness, gBuffer.AO, 0.0, 0.0)); // Metalness and AO are packed to MSB
@@ -44,7 +44,7 @@ GBufferEncoded EncodeCookTorranceMaterial(GBufferCookTorrance gBuffer)
     return encoded;
 }
 
-// GBufferCookTorrance packing scheme
+// GBuffer packing scheme
 //
 // | Albedo R | Albedo G | Albedo B | Roughness | Metalness |    AO    |        Normal Z      |
 // |          |          |          |           |           |          |                      |
@@ -60,9 +60,9 @@ GBufferEncoded EncodeCookTorranceMaterial(GBufferCookTorrance gBuffer)
 // |________Third component of output UVEC3______|
 // 
 
-GBufferCookTorrance DecodeGBufferCookTorrance(GBufferEncoded encodedGBuffer)
+GBuffer DecodeGBuffer(GBufferEncoded encodedGBuffer)
 {
-     GBufferCookTorrance gBuffer;  
+     GBuffer gBuffer;  
 
      uint3 encoded = encodedGBuffer.MaterialData.xyz;      
      float4 albedoRoughness = Decode8888(encoded.x);
@@ -80,7 +80,7 @@ GBufferCookTorrance DecodeGBufferCookTorrance(GBufferEncoded encodedGBuffer)
      return gBuffer;
  }
 
-float3 DecodeGBufferCookTorranceNormal(GBufferEncoded encodedGBuffer)
+float3 DecodeGBufferNormal(GBufferEncoded encodedGBuffer)
 {
     uint3 encoded = encodedGBuffer.MaterialData.xyz;
     uint metalnessAONormalZ = encoded.y;

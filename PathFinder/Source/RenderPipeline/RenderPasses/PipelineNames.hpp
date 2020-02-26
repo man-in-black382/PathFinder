@@ -36,6 +36,7 @@ namespace PathFinder
     namespace RootSignatureNames
     {
         inline Foundation::Name GBuffer{ "GBuffer_Root_Sig" };
+        inline Foundation::Name DeferredLighting{ "Deferred_Lighting_Root_Sig" };
         inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
         inline Foundation::Name UI{ "UI_Root_Sig" };
         inline Foundation::Name DisplacementDistanceMapGeneration{ "Distance_Map_Generation_Root_Sig" };

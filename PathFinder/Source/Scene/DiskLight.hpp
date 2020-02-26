@@ -10,6 +10,8 @@ namespace PathFinder
     class DiskLight : public Light
     {
     public:
+        ~DiskLight() = default;
+
         void SetNormal(const glm::vec3& normal);
         void SetPosition(const glm::vec3& position);
         void SetWidth(float width);
@@ -20,8 +22,8 @@ namespace PathFinder
 
         glm::vec3 mNormal;
         glm::vec3 mPosition;
-        float mWidth;
-        float mHeight;
+        float mWidth = 0.0f;
+        float mHeight = 0.0f;
 
     public:
         inline const auto& Normal() const { return mNormal; }

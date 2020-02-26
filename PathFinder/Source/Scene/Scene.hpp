@@ -6,6 +6,10 @@
 #include "Material.hpp"
 #include "GTTonemappingParameters.hpp"
 #include "ResourceLoader.hpp"
+#include "DiskLight.hpp"
+#include "SphericalLight.hpp"
+#include "LineLight.hpp"
+#include "PolygonalLight.hpp"
 
 #include "../Memory/GPUResourceProducer.hpp"
 
@@ -19,11 +23,14 @@ namespace PathFinder
     class Scene 
     {
     public:
+        using DiskLightIt = std::list<DiskLight>::iterator;
+
         Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer);
 
         Mesh& AddMesh(Mesh&& mesh);
         MeshInstance& AddMeshInstance(MeshInstance&& instance);
         Material& AddMaterial(Material&& material);
+        DiskLightIt EmplaceDiskLight();
 
         void IterateMeshInstances(const std::function<void(const MeshInstance& instance)>& functor) const;
         void IterateMeshInstances(const std::function<void(MeshInstance & instance)>& functor);
@@ -36,6 +43,7 @@ namespace PathFinder
         std::list<Mesh> mMeshes;
         std::list<MeshInstance> mMeshInstances;
         std::list<Material> mMaterials;
+        std::list<DiskLight> mDiskLights;
 
         Camera mCamera;
         GTTonemappingParams mTonemappingParams;
@@ -49,6 +57,7 @@ namespace PathFinder
         inline const auto& MeshInstances() const { return mMeshInstances; }
         inline auto& Meshes() { return mMeshes; }
         inline auto& MeshInstances() { return mMeshInstances; }
+        inline auto& DiskLights() { return mDiskLights; }
         inline auto& TonemappingParams() { return mTonemappingParams; }
         inline const auto& TonemappingParams() const { return mTonemappingParams; }
         inline Memory::Texture* LTC_LUT0() const { return mLTC_LUT0.get(); }

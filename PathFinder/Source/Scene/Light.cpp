@@ -5,6 +5,8 @@
 namespace PathFinder
 {
 
+    Light::~Light() {}
+
     void Light::SetGPULightTableIndex(uint32_t index)
     {
         mGPULightTableIndex = index;

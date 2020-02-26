@@ -22,13 +22,19 @@ namespace PathFinder
         return mMeshInstances.back();
     }
 
-    PathFinder::Material& Scene::AddMaterial(Material&& material)
+    Material& Scene::AddMaterial(Material&& material)
     {
         mMaterials.emplace_back(std::move(material));
         return mMaterials.back();
     }
 
-    void Scene::IterateMeshInstances(const std::function<void(const MeshInstance& instance)>& functor) const
+    Scene::DiskLightIt Scene::EmplaceDiskLight()
+    {
+        mDiskLights.emplace_back();
+        return std::prev(mDiskLights.end());
+    }
+
+    void Scene::IterateMeshInstances(const std::function<void(const MeshInstance & instance)>& functor) const
     {
         for (const MeshInstance& instance : mMeshInstances)
         {

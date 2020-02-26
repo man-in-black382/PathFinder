@@ -93,6 +93,14 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
     //renderPassGraph.AddPass(blurPass.get());
 
+    PathFinder::Scene::DiskLightIt diskLight0 = scene.EmplaceDiskLight();
+    diskLight0->SetWidth(4);
+    diskLight0->SetHeight(4);
+    diskLight0->SetPosition({ 0.0, 10.0, 0.0 });
+    diskLight0->SetNormal({ 0.0, -1.0, 0.0 });
+    diskLight0->SetColor(Foundation::Color::White());
+    diskLight0->SetLuminousPower(10000);
+
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
         "/Metal07/Metal07_met.dds", "/Metal07/Metal07_disp.dds"));
@@ -105,12 +113,12 @@ int main(int argc, char** argv)
         "/Concrete19/Concrete19_col.dds", "/Concrete19/Concrete19_nrm.dds", "/Concrete19/Concrete19_rgh.dds",
         std::nullopt, "/Concrete19/Concrete19_disp.dds"));
 
-    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("sphere.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
+    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &concrete19Material });
 
-    //auto t = sphereInstance.Transformation();
-    //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
-    //sphereInstance.SetTransformation(t);
+    auto t = sphereInstance.Transformation();
+    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
+    sphereInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);
@@ -128,17 +136,24 @@ int main(int argc, char** argv)
     engine.ScheduleAndAllocatePipelineResources();
     engine.UploadProcessAndTransferAssets();
 
-    engine.PreRenderEvent() += { "UI.Update", [&]()
+    engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
         uiStorage.StartNewFrame();
         ImGui::ShowDemoWindow();
         uiStorage.UploadUI();
+
+        sceneStorage.ClearMeshInstanceTable();
+        sceneStorage.ClearLightInstanceTable();
         sceneStorage.UploadMeshInstances(scene.MeshInstances());
+        sceneStorage.UploadLights(scene.DiskLights());
 
         PathFinder::GlobalRootConstants globalConstants;
         PathFinder::PerFrameRootConstants perFrameConstants;
 
-        globalConstants.PipelineRTResolution = { engine.RenderSurface().Dimensions().Width, engine.RenderSurface().Dimensions().Height };
+        globalConstants.PipelineRTResolution = { 
+            engine.RenderSurface().Dimensions().Width, 
+            engine.RenderSurface().Dimensions().Height 
+        };
 
         const PathFinder::Camera& camera = scene.MainCamera();
 

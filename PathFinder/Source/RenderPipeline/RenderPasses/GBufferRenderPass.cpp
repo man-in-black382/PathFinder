@@ -47,7 +47,7 @@ namespace PathFinder
         auto meshStorage = context->GetContent()->GetSceneGPUStorage();
         context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->UnifiedVertexBuffer(), 0, 0, HAL::ShaderRegister::ShaderResource);
         context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->UnifiedIndexBuffer(), 1, 0, HAL::ShaderRegister::ShaderResource);
-        context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->InstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
+        context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->MeshInstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
 
         context->GetContent()->GetScene()->IterateMeshInstances([&](const MeshInstance& instance)
         {

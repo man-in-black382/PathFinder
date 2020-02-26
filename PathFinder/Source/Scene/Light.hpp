@@ -12,6 +12,8 @@ namespace PathFinder
     class Light
     {
     public:
+        virtual ~Light() = 0;
+
         void SetGPULightTableIndex(uint32_t index);
         void SetColor(const Foundation::Color& color);
         void SetColorTemperature(Kelvin temperature);
@@ -36,6 +38,7 @@ namespace PathFinder
         Candela LuminousIntensity() const { return mLuminousIntensity; }
         Nit Luminance() const { return mLuminance; }
         auto GPULightTableIndex() const { return mGPULightTableIndex; }
+        const Foundation::Color& Color() const { return mColor; }
     };
 
 }

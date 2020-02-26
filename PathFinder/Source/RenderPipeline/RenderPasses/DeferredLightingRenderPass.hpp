@@ -15,6 +15,7 @@ namespace PathFinder
         uint32_t OutputTextureIndex;
         uint32_t LTC_LUT0_Index;
         uint32_t LTC_LUT1_Index;
+        uint32_t LTC_LUT_Size;
     };
 
     class DeferredLightingRenderPass : public RenderPass<RenderPassContentMediator>

@@ -257,7 +257,7 @@ PixelOut PSMain(VertexOut pin)
     float3 voxel;
     VertexOut displacedVertexData = pin;// DisplaceUV(pin, instanceData, intersection, voxel);
 
-    GBufferCookTorrance gBufferData;
+    GBuffer gBufferData;
 
     gBufferData.Albedo = FetchAlbedoMap(displacedVertexData, instanceData);
     gBufferData.Normal = FetchNormalMap(displacedVertexData, instanceData);
