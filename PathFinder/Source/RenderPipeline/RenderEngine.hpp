@@ -17,7 +17,7 @@
 #include "../Memory/ResourceStateTracker.hpp"
 #include "../Memory/GPUResourceProducer.hpp"
 
-#include "MeshGPUStorage.hpp"
+#include "SceneGPUStorage.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "PreprocessableAssetStorage.hpp"
 #include "ResourceScheduler.hpp"

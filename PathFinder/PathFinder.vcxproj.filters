@@ -339,9 +339,6 @@
     <ClCompile Include="Source\Scene\CameraInteractor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\IO\InputHandlerWindows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -421,6 +418,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Scene\SphericalLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\SceneGPUStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2192,9 +2192,6 @@
     <ClInclude Include="Source\Scene\CameraInteractor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\MeshGPUStorage.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2291,7 +2288,7 @@
     <ClInclude Include="Source\Scene\SphericalLight.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Scene\CombinedLightParameters.hpp">
+    <ClInclude Include="Source\RenderPipeline\SceneGPUStorage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2786,9 +2783,6 @@
     <None Include="Source\Memory\PoolCommandListAllocator.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\RenderPipeline\MeshGPUStorage.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Source\RenderPipeline\RenderEngine.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -2796,6 +2790,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\SceneGPUStorage.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

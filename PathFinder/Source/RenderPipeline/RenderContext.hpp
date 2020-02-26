@@ -8,7 +8,7 @@
 #include "ResourceProvider.hpp"
 #include "RenderSurfaceDescription.hpp"
 #include "UIGPUStorage.hpp"
-#include "MeshGPUStorage.hpp"
+#include "SceneGPUStorage.hpp"
 
 namespace PathFinder
 {

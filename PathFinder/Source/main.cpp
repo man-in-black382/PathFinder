@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     PathFinder::CommandLineParser cmdLineParser{ argc, argv };    
 
     PathFinder::RenderEngine<PathFinder::RenderPassContentMediator> engine{ hwnd, cmdLineParser };
-    PathFinder::MeshGPUStorage meshStorage{ &engine.Device(), &engine.ResourceProducer() };
+    PathFinder::SceneGPUStorage sceneStorage{ &engine.Device(), &engine.ResourceProducer() };
     PathFinder::UIGPUStorage uiStorage{ &engine.ResourceProducer() };
     PathFinder::Scene scene{ cmdLineParser.ExecutableFolderPath(), &engine.ResourceProducer() };
     PathFinder::Input input{};
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
     PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.AssetStorage(), &engine.ResourceProducer() };
-    PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &meshStorage, &scene };
+    PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene };
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
     auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
 
     // ---------------------------------------------------------------------------- //
 
-    meshStorage.StoreMeshes(scene.Meshes());
+    sceneStorage.UploadMeshes(scene.Meshes());
 
     engine.ScheduleAndAllocatePipelineResources();
     engine.UploadProcessAndTransferAssets();
@@ -133,7 +133,7 @@ int main(int argc, char** argv)
         uiStorage.StartNewFrame();
         ImGui::ShowDemoWindow();
         uiStorage.UploadUI();
-        meshStorage.UpdateMeshInstanceTable(scene.MeshInstances());
+        sceneStorage.UploadMeshInstances(scene.MeshInstances());
 
         PathFinder::GlobalRootConstants globalConstants;
         PathFinder::PerFrameRootConstants perFrameConstants;

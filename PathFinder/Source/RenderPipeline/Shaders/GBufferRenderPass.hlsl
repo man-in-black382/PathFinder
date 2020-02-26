@@ -28,7 +28,7 @@ struct RootConstants
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t0);
 StructuredBuffer<IndexU32> UnifiedIndexBuffer : register(t1);
-StructuredBuffer<InstanceData> InstanceTable : register(t2);
+StructuredBuffer<MeshInstanceData> InstanceTable : register(t2);
 
 //------------------------  Vertex  ------------------------------//
 
@@ -40,7 +40,7 @@ struct VertexOut
     float3x3 TBN : TBN_MATRIX;
 };
 
-float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, InstanceData instanceData)
+float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, MeshInstanceData instanceData)
 {
     float3 N = mul(instanceData.ModelMatrix, float4(normalize(vertex.Normal), 0.0)).xyz;
     float3 T = mul(instanceData.ModelMatrix, float4(normalize(vertex.Tangent), 0.0)).xyz;
@@ -54,7 +54,7 @@ VertexOut VSMain(uint indexId : SV_VertexID)
 {
     VertexOut vout;
     
-    InstanceData instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
+    MeshInstanceData instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
 
     // Load index and vertex
     IndexU32 index = UnifiedIndexBuffer[instanceData.UnifiedIndexBufferOffset + indexId];
@@ -81,13 +81,13 @@ struct PixelOut
     uint4 MaterialData : SV_Target0;
 };
 
-float3 FetchAlbedoMap(VertexOut vertex, InstanceData instanceData)
+float3 FetchAlbedoMap(VertexOut vertex, MeshInstanceData instanceData)
 {
     Texture2D albedoMap = Textures2D[instanceData.AlbedoMapIndex];
     return LinearFromSRGB(albedoMap.Sample(AnisotropicClampSampler, vertex.UV).rgb);
 }
 
-float3 FetchNormalMap(VertexOut vertex, InstanceData instanceData)
+float3 FetchNormalMap(VertexOut vertex, MeshInstanceData instanceData)
 {
     Texture2D normalMap = Textures2D[instanceData.NormalMapIndex];
     
@@ -97,25 +97,25 @@ float3 FetchNormalMap(VertexOut vertex, InstanceData instanceData)
     return normalize(mul(vertex.TBN, normal));
 }
 
-float FetchMetallnessMap(VertexOut vertex, InstanceData instanceData)
+float FetchMetallnessMap(VertexOut vertex, MeshInstanceData instanceData)
 {
     Texture2D metalnessMap = Textures2D[instanceData.MetalnessMapIndex];
     return metalnessMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
-float FetchRoughnessMap(VertexOut vertex, InstanceData instanceData)
+float FetchRoughnessMap(VertexOut vertex, MeshInstanceData instanceData)
 {
     Texture2D roughnessMap = Textures2D[instanceData.RoughnessMapIndex];
     return roughnessMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
-float FetchAOMap(VertexOut vertex, InstanceData instanceData)
+float FetchAOMap(VertexOut vertex, MeshInstanceData instanceData)
 {
     Texture2D aoMap = Textures2D[instanceData.AOMapIndex];
     return aoMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
-float FetchDisplacementMap(VertexOut vertex, InstanceData instanceData)
+float FetchDisplacementMap(VertexOut vertex, MeshInstanceData instanceData)
 {
     Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
     return displacementMap.Sample(AnisotropicClampSampler, vertex.UV).r;
@@ -162,7 +162,7 @@ SamplingCorners BilinearPatchCorners(float2 cornerUV, float2 displacementMapSize
     return corners;
 }
 
-VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, out bool patchIntersects, out float3 voxel)
+VertexOut DisplaceUV(VertexOut originalVertexData, MeshInstanceData instanceData, out bool patchIntersects, out float3 voxel)
 {
     //Texture3D distanceFieldAtlasIndirectionMap = Textures3D[instanceData.DistanceAtlasIndirectionMapIndex];
     //Texture2D displacementMap = Textures2D[instanceData.DisplacementMapIndex];
@@ -251,7 +251,7 @@ VertexOut DisplaceUV(VertexOut originalVertexData, InstanceData instanceData, ou
 
 PixelOut PSMain(VertexOut pin)
 {
-    InstanceData instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
+    MeshInstanceData instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
 
     bool intersection;
     float3 voxel;

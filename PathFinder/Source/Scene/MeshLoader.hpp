@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../RenderPipeline/MeshGPUStorage.hpp"
-
 #include "Vertices/Vertex1P1N1UV1T1BT.hpp"
 #include "Mesh.hpp"
 

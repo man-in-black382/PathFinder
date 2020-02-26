@@ -5,6 +5,11 @@
 namespace PathFinder
 {
 
+    void Light::SetGPULightTableIndex(uint32_t index)
+    {
+        mGPULightTableIndex = index;
+    }
+
     void Light::SetColor(const Foundation::Color& color)
     {
         mColor = color;

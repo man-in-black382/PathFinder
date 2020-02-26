@@ -1,4 +1,4 @@
-struct InstanceData
+struct MeshInstanceData
 {
     float4x4 ModelMatrix;
     float4x4 NormalMatrix;
@@ -12,4 +12,20 @@ struct InstanceData
     uint UnifiedVertexBufferOffset;
     uint UnifiedIndexBufferOffset;
     uint IndexCount;
+};
+
+static const uint LightTypeDisk = 0;
+static const uint LightTypeSphere = 1;
+static const uint LightTypeLine = 2;
+static const uint LightTypePolygon = 3;
+
+struct LightInstanceData
+{
+    float LuminousIntensity;
+    float Width;
+    float Height;
+    float Radius;
+    float4 Orientation;
+    float4 Position;
+    uint LightType;
 };

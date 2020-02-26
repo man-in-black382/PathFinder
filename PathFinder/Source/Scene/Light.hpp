@@ -12,6 +12,7 @@ namespace PathFinder
     class Light
     {
     public:
+        void SetGPULightTableIndex(uint32_t index);
         void SetColor(const Foundation::Color& color);
         void SetColorTemperature(Kelvin temperature);
 
@@ -28,11 +29,13 @@ namespace PathFinder
         Nit mLuminance = 0.0;
         Foundation::Color mColor = Foundation::Color::White();
         float mArea = 0.0;
+        uint32_t mGPULightTableIndex;
 
     public:
         Lumen LuminousPower() const { return mLuminousPower; }
         Candela LuminousIntensity() const { return mLuminousIntensity; }
         Nit Luminance() const { return mLuminance; }
+        auto GPULightTableIndex() const { return mGPULightTableIndex; }
     };
 
 }

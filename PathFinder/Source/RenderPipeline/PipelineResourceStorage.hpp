@@ -170,10 +170,10 @@ namespace PathFinder
         // No fancy management is required.
         std::vector<Memory::PoolDescriptorAllocator::RTDescriptorPtr> mBackBufferDescriptors;
 
-        //// Constant buffer for global data that changes rarely
+        // Constant buffer for global data that changes rarely
         Memory::GPUResourceProducer::BufferPtr mGlobalRootConstantsBuffer;
 
-        //// Constant buffer for data that changes every frame
+        // Constant buffer for data that changes every frame
         Memory::GPUResourceProducer::BufferPtr mPerFrameRootConstantsBuffer;
 
         std::unordered_map<ResourceName, PerResourceObjects> mPerResourceObjects;

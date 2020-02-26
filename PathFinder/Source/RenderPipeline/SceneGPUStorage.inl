@@ -2,7 +2,7 @@ namespace PathFinder
 {
 
     template < template < class ... > class Container, class ... Args >
-    void MeshGPUStorage::StoreMeshes(Container<Mesh, Args...>& meshes)
+    void SceneGPUStorage::UploadMeshes(Container<Mesh, Args...>& meshes)
     {
         mBottomAccelerationStructures.clear();
 
@@ -18,25 +18,23 @@ namespace PathFinder
     }
 
     template < template < class ... > class Container, class ... Args >
-    void MeshGPUStorage::UpdateMeshInstanceTable(Container<MeshInstance, Args...>& meshInstances)
+    void SceneGPUStorage::UploadMeshInstances(Container<MeshInstance, Args...>& meshInstances)
     {
         uint8_t alignment = 128;
 
-        if (!mInstanceTable || mInstanceTable->ElementCapacity<GPUInstanceTableEntry>(alignment) < meshInstances.size())
+        if (!mMeshInstanceTable || mMeshInstanceTable->ElementCapacity<GPUMeshInstanceTableEntry>(alignment) < meshInstances.size())
         {
-            HAL::Buffer::Properties<GPUInstanceTableEntry> props{ meshInstances.size(), alignment };
-            mInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
-            mInstanceTable->SetDebugName("Mesh Instance Table");
+            HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ meshInstances.size(), alignment };
+            mMeshInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mMeshInstanceTable->SetDebugName("Mesh Instance Table");
         }
 
-        mInstanceTable->RequestWrite();
+        mMeshInstanceTable->RequestWrite();
         mTopAccelerationStructure.Clear();
-
-        GPUInstanceIndex instanceIndex = 0;
 
         for (MeshInstance& instance : meshInstances)
         {
-            GPUInstanceTableEntry instanceEntry{
+            GPUMeshInstanceTableEntry instanceEntry{
                 instance.Transformation().ModelMatrix(),
                 instance.Transformation().NormalMatrix(),
                 instance.AssosiatedMaterial()->AlbedoMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
@@ -53,10 +51,10 @@ namespace PathFinder
 
             BottomRTAS& blas = mBottomAccelerationStructures[instance.AssosiatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex];
             mTopAccelerationStructure.AddInstance(blas, instanceIndex, instance.Transformation().ModelMatrix());
-            instance.SetGPUInstanceIndex(instanceIndex);
+            instance.SetGPUInstanceIndex(mUploadedMeshInstances);
 
-            mInstanceTable->Write(&instanceEntry, instanceIndex, 1, alignment);
-            ++instanceIndex;
+            mMeshInstanceTable->Write(&instanceEntry, instanceIndex, 1, alignment);
+            ++mUploadedMeshInstances;
         }
 
         mTopAccelerationStructure.Build();
@@ -64,8 +62,31 @@ namespace PathFinder
         mTopASBarriers.AddBarrier(mTopAccelerationStructure.UABarrier());
     }
 
+    template < template < class ... > class Container, class LightT, class ... Args >
+    void UploadLights(Container<LightT, Args...>& lights)
+    {
+        uint8_t alignment = 128;
+
+        if (!mLightInstanceTable || mLightInstanceTable->ElementCapacity<GPULightInstanceTableEntry>(alignment) < lights.size())
+        {
+            HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ lights.size(), alignment };
+            mLightInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mLightInstanceTable->SetDebugName("Lights Instance Table");
+        }
+
+        mLightInstanceTable->RequestWrite();
+
+        for (LightT& light : lights)
+        {
+            GPULightInstanceTableEntry lightEntry = CreateLightGPUTableEntry(light);
+            mLightInstanceTable->Write(&lightEntry, instanceIndex, 1, alignment);
+            light.SetGPULightTableIndex(mUploadedLights);
+            ++mUploadedLights;
+        }
+    }
+
     template <class Vertex>
-    VertexStorageLocation MeshGPUStorage::WriteToTemporaryBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
+    VertexStorageLocation SceneGPUStorage::WriteToTemporaryBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices, uint32_t indexCount)
     {
         auto& package = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
         auto vertexStartIndex = package.Vertices.size();
@@ -89,7 +110,7 @@ namespace PathFinder
     }
 
     template <class Vertex>
-    void MeshGPUStorage::SubmitTemporaryBuffersToGPU()
+    void SceneGPUStorage::SubmitTemporaryBuffersToGPU()
     {
         auto& uploadBuffers = std::get<UploadBufferPackage<Vertex>>(mUploadBuffers);
         auto& finalBuffers = std::get<FinalBufferPackage<Vertex>>(mFinalBuffers);

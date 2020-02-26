@@ -12,6 +12,7 @@
 #include "../Scene/Vertices/Vertex1P1N1UV1T1BT.hpp"
 #include "../Scene/Vertices/Vertex1P1N1UV.hpp"
 #include "../Scene/Vertices/Vertex1P3.hpp"
+#include "../Scene/DiskLight.hpp"
 
 #include "VertexStorageLocation.hpp"
 #include "BottomRTAS.hpp"
@@ -24,7 +25,7 @@
 namespace PathFinder
 {
 
-    struct GPUInstanceTableEntry
+    struct GPUMeshInstanceTableEntry
     {
         glm::mat4 InstanceWorldMatrix;
         glm::mat4 InstanceNormalMatrix;
@@ -40,18 +41,46 @@ namespace PathFinder
         uint32_t IndexCount;
     };
 
+    struct GPULightInstanceTableEntry
+    {
+        enum class LightType : uint32_t
+        {
+            Disk = 0, Sphere = 1, Line = 2, Polygon = 3
+        };
+
+        float LuminousIntensity;
+        float Width;
+        float Height;
+        float Radius;
+        // 16 byte boundary
+
+        glm::vec4 Orientation;
+        // 16 byte boundary
+
+        glm::vec4 Position;
+        // 16 byte boundary
+
+        std::underlying_type_t<LightType> LightTypeRaw;
+    };
+
     using GPUInstanceIndex = uint64_t;
 
-    class MeshGPUStorage
+    class SceneGPUStorage
     {
     public:
-        MeshGPUStorage(const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer);
+        SceneGPUStorage(const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer);
 
         template < template < class ... > class Container, class ... Args >
-        void StoreMeshes(Container<Mesh, Args...>& meshes);
+        void UploadMeshes(Container<Mesh, Args...>& meshes);
 
         template < template < class ... > class Container, class ... Args >
-        void UpdateMeshInstanceTable(Container<MeshInstance, Args...>& meshInstances);
+        void UploadMeshInstances(Container<MeshInstance, Args...>& meshInstances);
+
+        template < template < class ... > class Container, class LightT, class ... Args >
+        void UploadLights(Container<LightT, Args...>& lights);
+
+        void ClearMeshInstanceTable();
+        void ClearLightInstanceTable();
 
     private:
         template <class Vertex>
@@ -72,6 +101,8 @@ namespace PathFinder
         template <class Vertex>
         void SubmitTemporaryBuffersToGPU();
 
+        GPULightInstanceTableEntry CreateLightGPUTableEntry(const DiskLight& light) const;
+
         template <class Vertex>
         VertexStorageLocation WriteToTemporaryBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
 
@@ -83,15 +114,19 @@ namespace PathFinder
         HAL::ResourceBarrierCollection mBottomASBarriers;
         HAL::ResourceBarrierCollection mTopASBarriers;
 
-        Memory::GPUResourceProducer::BufferPtr mInstanceTable;
+        Memory::GPUResourceProducer::BufferPtr mMeshInstanceTable;
+        Memory::GPUResourceProducer::BufferPtr mLightInstanceTable;
         
         const HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;
 
+        uint64_t mUploadedMeshInstances = 0;
+        uint64_t mUploadedLights = 0;
+
     public:
         inline const auto UnifiedVertexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get(); }
         inline const auto UnifiedIndexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBuffer.get(); }
-        inline const auto InstanceTable() const { return mInstanceTable.get(); }
+        inline const auto InstanceTable() const { return mMeshInstanceTable.get(); }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
         inline const auto& BottomAccelerationStructureBarriers() const { return mBottomASBarriers; }
@@ -100,4 +135,4 @@ namespace PathFinder
 
 }
 
-#include "MeshGPUStorage.inl"
+#include "SceneGPUStorage.inl"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "UIGPUStorage.hpp"
-#include "MeshGPUStorage.hpp"
+#include "SceneGPUStorage.hpp"
 
 #include "../Scene/Scene.hpp"
 
@@ -11,17 +11,17 @@ namespace PathFinder
     struct RenderPassContentMediator
     {
     public:
-        RenderPassContentMediator(UIGPUStorage* uiStorage, MeshGPUStorage* meshStorage, Scene* scene)
-            : mUIStorage{ uiStorage }, mMeshStorage{ meshStorage }, mScene{ scene } {}
+        RenderPassContentMediator(UIGPUStorage* uiStorage, SceneGPUStorage* meshStorage, Scene* scene)
+            : mUIStorage{ uiStorage }, mSceneStorage{ meshStorage }, mScene{ scene } {}
 
     private:
         UIGPUStorage* mUIStorage;
-        MeshGPUStorage* mMeshStorage;
+        SceneGPUStorage* mSceneStorage;
         Scene* mScene;
 
     public:
-        inline UIGPUStorage* GetUIStorage() const { return mUIStorage; };
-        inline MeshGPUStorage* GetMeshStorage() const { return mMeshStorage; };
+        inline UIGPUStorage* GetUIGPUStorage() const { return mUIStorage; };
+        inline SceneGPUStorage* GetSceneGPUStorage() const { return mSceneStorage; };
         inline Scene* GetScene() const { return mScene; };
     };
 

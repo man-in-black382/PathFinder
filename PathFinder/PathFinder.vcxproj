@@ -278,7 +278,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\TopRTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\UIGPUStorage.cpp" />
-    <ClCompile Include="Source\RenderPipeline\MeshGPUStorage.cpp" />
+    <ClCompile Include="Source\RenderPipeline\SceneGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateManager.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderSurfaceDescription.cpp" />
@@ -445,7 +445,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\ShaderFileNames.hpp" />
     <ClInclude Include="Source\RenderPipeline\TopRTAS.hpp" />
     <ClInclude Include="Source\RenderPipeline\UIGPUStorage.hpp" />
-    <ClInclude Include="Source\RenderPipeline\MeshGPUStorage.hpp" />
+    <ClInclude Include="Source\RenderPipeline\SceneGPUStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderContext.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderEngine.hpp" />
@@ -459,7 +459,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\VertexStorageLocation.hpp" />
     <ClInclude Include="Source\Scene\Camera.hpp" />
     <ClInclude Include="Source\Scene\CameraInteractor.hpp" />
-    <ClInclude Include="Source\Scene\CombinedLightParameters.hpp" />
     <ClInclude Include="Source\Scene\DiskLight.hpp" />
     <ClInclude Include="Source\Scene\GTTonemappingParameters.hpp" />
     <ClInclude Include="Source\Scene\Light.hpp" />
@@ -975,7 +974,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\RenderPipeline\GraphicsDevice.inl">
       <FileType>CppHeader</FileType>
     </None>
-    <None Include="Source\RenderPipeline\MeshGPUStorage.inl" />
+    <None Include="Source\RenderPipeline\SceneGPUStorage.inl" />
     <None Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.inl" />
     <None Include="Source\RenderPipeline\PipelineResourceStateOptimizer.inl" />
     <None Include="Source\RenderPipeline\RenderEngine.inl" />

@@ -38,23 +38,23 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::UI);
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
 
-        if (auto vertexBuffer = context->GetContent()->GetUIStorage()->VertexBuffer())
+        if (auto vertexBuffer = context->GetContent()->GetUIGPUStorage()->VertexBuffer())
         {
             context->GetCommandRecorder()->BindExternalBuffer(*vertexBuffer, 0, 0, HAL::ShaderRegister::ShaderResource);
         }
 
-        if (auto indexBuffer = context->GetContent()->GetUIStorage()->IndexBuffer())
+        if (auto indexBuffer = context->GetContent()->GetUIGPUStorage()->IndexBuffer())
         {
             context->GetCommandRecorder()->BindExternalBuffer(*indexBuffer, 1, 0, HAL::ShaderRegister::ShaderResource);
         }
 
         UICBContent cbContent{};
-        cbContent.ProjectionMatrix = context->GetContent()->GetUIStorage()->MVP();
-        cbContent.UITextureSRVIndex = context->GetContent()->GetUIStorage()->FontTexture()->GetOrCreateSRDescriptor()->IndexInHeapRange();
+        cbContent.ProjectionMatrix = context->GetContent()->GetUIGPUStorage()->MVP();
+        cbContent.UITextureSRVIndex = context->GetContent()->GetUIGPUStorage()->FontTexture()->GetOrCreateSRDescriptor()->IndexInHeapRange();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 
-        for (const UIGPUStorage::DrawCommand& drawCommand : context->GetContent()->GetUIStorage()->DrawCommands())
+        for (const UIGPUStorage::DrawCommand& drawCommand : context->GetContent()->GetUIGPUStorage()->DrawCommands())
         {
             UIRootConstants offsets;
             offsets.VertexBufferOffset = drawCommand.VertexBufferOffset;
