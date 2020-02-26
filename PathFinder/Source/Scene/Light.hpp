@@ -1,0 +1,38 @@
+#pragma once
+
+#include "../Foundation/Color.hpp"
+
+namespace PathFinder 
+{
+    using Lumen = float;
+    using Nit = float;
+    using Kelvin = float;
+    using Candela = float;
+
+    class Light
+    {
+    public:
+        void SetColor(const Foundation::Color& color);
+        void SetColorTemperature(Kelvin temperature);
+
+        /// Sets Luminous Power a.k.a Luminous Flux.
+        /// Measure of the perceived power of light.
+        void SetLuminousPower(Lumen luminousPower);
+
+    protected:
+        void SetArea(float area);
+
+    private:
+        Lumen mLuminousPower = 0.0;
+        Candela mLuminousIntensity = 0.0;
+        Nit mLuminance = 0.0;
+        Foundation::Color mColor = Foundation::Color::White();
+        float mArea = 0.0;
+
+    public:
+        Lumen LuminousPower() const { return mLuminousPower; }
+        Candela LuminousIntensity() const { return mLuminousIntensity; }
+        Nit Luminance() const { return mLuminance; }
+    };
+
+}

@@ -3,25 +3,23 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-namespace Foundation {
+namespace Foundation 
+{
 
-    struct Color {
+    struct Color 
+    {
     public:
-        enum class Space {
+        enum class Space 
+        {
             Linear, sRGB, YCoCg
         };
 
     public:
         static const Color &White();
-
         static const Color &Black();
-
         static const Color &Gray();
-
         static const Color &Red();
-
         static const Color &Blue();
-
         static const Color &Green();
 
         Color(float red, float green, float blue, float alpha, Space space = Space::Linear);

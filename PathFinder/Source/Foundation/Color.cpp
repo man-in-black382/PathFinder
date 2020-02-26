@@ -54,12 +54,14 @@ namespace Foundation
     Color Color::ToLinear() const
     {
         switch (mSpace) {
-        case Color::Space::sRGB: {
+        case Color::Space::sRGB: 
+        {
             float power = 2.2f;
             return { std::pow(mR, power), std::pow(mG, power), std::pow(mB, power), mA };
         }
 
-        case Color::Space::YCoCg: {
+        case Color::Space::YCoCg: 
+        {
             float t = mR - mB;
             float g = mR + mB;
             float b = t - mG;
@@ -67,7 +69,8 @@ namespace Foundation
             return { r, g, b, mA };
         }
 
-        case Color::Space::Linear: {
+        case Color::Space::Linear: 
+        {
             return *this;
         }
 
