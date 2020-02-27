@@ -1,3 +1,7 @@
+#ifndef _BRDF__
+#define _BRDF__
+
+
 static const float PI = 3.1415926535897932384626433832795;
 
 // The Fresnel equation describes the ratio of surface reflection at different surface angles.
@@ -120,3 +124,5 @@ float3 BRDF(float3 N, float3 V, float3 H, float3 L, float roughness, float3 albe
 
     return (diffuse + specular) * cosineWeightedRadiance;
 }
+
+#endif

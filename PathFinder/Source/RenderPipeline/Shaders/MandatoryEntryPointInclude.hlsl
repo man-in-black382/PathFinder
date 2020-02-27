@@ -1,3 +1,6 @@
+#ifndef _MandatoryEntryPointInclude__
+#define _MandatoryEntryPointInclude__
+
 // The maximum size of a root signature is 64 DWORDs :
 // Descriptor tables cost 1 DWORD each.
 // Root constants cost 1 DWORD each, since they are 32 - bit values.
@@ -79,3 +82,4 @@ void DebugOut(float value, uint2 currentPixel, uint2 targetPixel)
     DebugBufferWriteIndex += 1;
 }
 
+#endif

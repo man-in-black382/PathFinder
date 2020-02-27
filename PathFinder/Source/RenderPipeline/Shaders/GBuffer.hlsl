@@ -1,3 +1,6 @@
+#ifndef _GBuffer__
+#define _GBuffer__
+
 #include "Packing.hlsl"
 
 struct GBufferEncoded
@@ -88,3 +91,5 @@ float3 DecodeGBufferNormal(GBufferEncoded encodedGBuffer)
     float2 normalXY = UnpackSnorm2x16(encoded.z, 1.0);
     return float3(normalXY, normalZ);
 }
+
+#endif

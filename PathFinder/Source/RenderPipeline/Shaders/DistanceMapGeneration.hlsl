@@ -1,3 +1,6 @@
+#ifndef _DistanceMapGeneration__
+#define _DistanceMapGeneration__
+
 #include "DistanceMapCommon.hlsl"
 
 // Jump Flooding Algorithm
@@ -111,3 +114,5 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
         }
     }
 }
+
+#endif

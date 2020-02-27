@@ -9,7 +9,7 @@ namespace PathFinder
     void DeferredLightingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         HAL::RootSignature deferedLightingSinature = stateCreator->CloneBaseRootSignature();
-        deferedLightingSinature.AddConstantsParameter(HAL::RootConstantsParameter{ 1, 0, 0 }); // 1 uint light index
+        deferedLightingSinature.AddConstantsParameter(HAL::RootConstantsParameter{ 1, 0, 0 }); // 1 uint TOtal number of lights
         deferedLightingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 }); // Lights buffer
         stateCreator->StoreRootSignature(RootSignatureNames::DeferredLighting, std::move(deferedLightingSinature));
 
@@ -59,12 +59,10 @@ namespace PathFinder
 
         auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(32, 32);
 
-        for (const DiskLight& light : scene->FlatLights())
-        {
-            context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
-            context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);
-        }
-        
+        uint32_t lightCount = scene->FlatLights().size() + scene->SphericalLights().size();
+
+        context->GetCommandRecorder()->SetRootConstants(lightCount, 0, 0);
+        context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);
     }
 
 }

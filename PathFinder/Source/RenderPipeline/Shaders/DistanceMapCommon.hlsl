@@ -1,3 +1,6 @@
+#ifndef _DistanceMapCommon__
+#define _DistanceMapCommon__
+
 struct PassData
 {
     uint4 DisplacementMapSize;
@@ -83,3 +86,5 @@ VoxelIntersectionInfo VoxelIntersectsDisplacementMap(Texture2D displacementMap, 
 
     return intersectionInfo;
 }
+
+#endif

@@ -3,7 +3,6 @@
 #include "Light.hpp"
 
 #include <glm/vec3.hpp>
-#include <array>
 
 namespace PathFinder 
 {

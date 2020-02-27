@@ -1,3 +1,6 @@
+#ifndef _BlurRenderPass__
+#define _BlurRenderPass__
+
 static const int MaximumRadius = 64;
 static const int GroupSize = 256;
 static const int GroupSharedBufferSize = GroupSize + 2 * MaximumRadius;
@@ -72,3 +75,5 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     destination[dispatchThreadID.xy] = float4(color, 1.0);
 }
+
+#endif

@@ -28,18 +28,31 @@ namespace PathFinder
 
         switch (light.LightType())
         {
-        case FlatLight::Type::Disk:
+        case FlatLight::Type::Disk: lightType = GPULightInstanceTableEntry::LightType::Disk; break;
+        case FlatLight::Type::Rectangle: lightType = GPULightInstanceTableEntry::LightType::Rectangle; break;
         }
 
         return{
                 light.LuminousIntensity(),
                 light.Width(),
                 light.Height(),
-                0.0f, // 0 radius for disk lights: unused
+                std::underlying_type_t<GPULightInstanceTableEntry::LightType>(lightType),
                 glm::vec4(light.Normal(), 0.0f),
-                glm::vec4(light.Position(), 0.0f),
-                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f),
-                std::underlying_type_t<GPULightInstanceTableEntry::LightType>(GPULightInstanceTableEntry::LightType::Disk)
+                glm::vec4(light.Position(), 1.0f),
+                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f)
+        };
+    }
+
+    PathFinder::GPULightInstanceTableEntry SceneGPUStorage::CreateLightGPUTableEntry(const SphericalLight& light) const
+    {
+        return{
+                light.LuminousIntensity(),
+                light.Radius(),
+                light.Radius(),
+                std::underlying_type_t<GPULightInstanceTableEntry::LightType>(GPULightInstanceTableEntry::LightType::Sphere),
+                glm::vec4(0.0f), // No orientation required for spherical lights
+                glm::vec4(light.Position(), 1.0f),
+                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f)
         };
     }
 

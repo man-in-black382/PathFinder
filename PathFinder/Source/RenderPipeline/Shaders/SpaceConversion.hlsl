@@ -1,3 +1,6 @@
+#ifndef _SpaceConversion__
+#define _SpaceConversion__
+
 float3 ReconstructWorldPosition(
     float hyperbolicDepth, // Depth value after viewport transformation in [0; 1] range
     float2 SSUV, // Normalized screen-space (texture) coordinates [0; 1]
@@ -20,3 +23,5 @@ float3 ReconstructWorldPosition(
 
     return worldSpacePosition.xyz;
 }
+
+#endif

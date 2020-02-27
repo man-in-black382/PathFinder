@@ -12,7 +12,8 @@
 #include "../Scene/Vertices/Vertex1P1N1UV1T1BT.hpp"
 #include "../Scene/Vertices/Vertex1P1N1UV.hpp"
 #include "../Scene/Vertices/Vertex1P3.hpp"
-#include "../Scene/DiskLight.hpp"
+#include "../Scene/FlatLight.hpp"
+#include "../Scene/SphericalLight.hpp"
 
 #include "VertexStorageLocation.hpp"
 #include "BottomRTAS.hpp"
@@ -45,13 +46,13 @@ namespace PathFinder
     {
         enum class LightType : uint32_t
         {
-            Disk = 0, Sphere = 1, Line = 2, Polygon = 3
+            Disk = 0, Sphere = 1, Rectangle = 2
         };
 
         float LuminousIntensity;
         float Width;
         float Height;
-        float Radius;
+        std::underlying_type_t<LightType> LightTypeRaw;
         // 16 byte boundary
 
         glm::vec4 Orientation;
@@ -62,8 +63,6 @@ namespace PathFinder
 
         glm::vec4 Color;
         // 16 byte boundary
-
-        std::underlying_type_t<LightType> LightTypeRaw;
     };
 
     using GPUInstanceIndex = uint64_t;
@@ -105,6 +104,7 @@ namespace PathFinder
         void SubmitTemporaryBuffersToGPU();
 
         GPULightInstanceTableEntry CreateLightGPUTableEntry(const FlatLight& light) const;
+        GPULightInstanceTableEntry CreateLightGPUTableEntry(const SphericalLight& light) const;
 
         template <class Vertex>
         VertexStorageLocation WriteToTemporaryBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);

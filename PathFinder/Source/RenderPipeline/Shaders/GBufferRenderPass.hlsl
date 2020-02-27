@@ -1,3 +1,6 @@
+#ifndef _GBufferRenderPass__
+#define _GBufferRenderPass__
+
 static const float DistanceFieldMaxVoxelDistance = sqrt(3.0);
 
 struct DistanceFieldCones
@@ -297,3 +300,5 @@ PixelOut PSMain(VertexOut pin)
 
     return pixelOut;
 }
+
+#endif

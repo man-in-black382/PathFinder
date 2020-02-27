@@ -1,3 +1,6 @@
+#ifndef _Vertices__
+#define _Vertices__
+
 struct Vertex1P1N1UV
 {
     float4 Position;
@@ -18,3 +21,5 @@ struct IndexU32
 {
     uint Index;
 };
+
+#endif

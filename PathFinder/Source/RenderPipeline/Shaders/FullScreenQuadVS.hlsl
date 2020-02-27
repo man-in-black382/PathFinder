@@ -1,3 +1,6 @@
+#ifndef _FullScreenQuadVS__
+#define _FullScreenQuadVS__
+
 struct VertexOut
 {
     float4 Position : SV_POSITION;
@@ -22,3 +25,5 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
 
     return output;
 }
+
+#endif

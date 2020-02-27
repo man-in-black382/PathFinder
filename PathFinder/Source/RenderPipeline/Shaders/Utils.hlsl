@@ -1,4 +1,8 @@
+#ifndef _Utils__
+#define _Utils__
+
 static const float FloatMax = 3.402823466e+38;
+static const float Pi = 3.14159265358979323846;
 
 float Square(float v)
 {
@@ -79,3 +83,4 @@ uint3 UVWToVoxelIndex(float3 uvw, uint3 textureSize)
     return clamp(uvw * textureSize, 0.xxx, textureSize - 1);
 }
 
+#endif

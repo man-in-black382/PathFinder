@@ -93,13 +93,19 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
     //renderPassGraph.AddPass(blurPass.get());
 
-    PathFinder::Scene::FlatLightIt diskLight0 = scene.EmplaceFlatLight();
+    auto diskLight0 = scene.EmplaceFlatLight(PathFinder::FlatLight::Type::Rectangle);
     diskLight0->SetWidth(4);
     diskLight0->SetHeight(4);
-    diskLight0->SetPosition({ 0.0, 12.0, 0.0 });
+    diskLight0->SetPosition({ -10.0, 12.0, 0.0 });
     diskLight0->SetNormal({ 0.0, -1.0, 0.0 });
     diskLight0->SetColor(Foundation::Color::White());
     diskLight0->SetLuminousPower(50000);
+
+    auto sphereLight0 = scene.EmplaceSphericalLight();
+    sphereLight0->SetRadius(6);
+    sphereLight0->SetPosition({ 10.0, 12.0, 0.0 });
+    sphereLight0->SetColor(Foundation::Color::White());
+    sphereLight0->SetLuminousPower(50000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
@@ -146,6 +152,7 @@ int main(int argc, char** argv)
         sceneStorage.ClearLightInstanceTable();
         sceneStorage.UploadMeshInstances(scene.MeshInstances());
         sceneStorage.UploadLights(scene.FlatLights());
+        sceneStorage.UploadLights(scene.SphericalLights());
 
         PathFinder::GlobalRootConstants globalConstants;
         PathFinder::PerFrameRootConstants perFrameConstants;

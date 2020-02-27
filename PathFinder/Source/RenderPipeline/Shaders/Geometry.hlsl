@@ -1,3 +1,6 @@
+#ifndef _Geometry__
+#define _Geometry__
+
 #include "Utils.hlsl"
 
 struct Ray
@@ -163,3 +166,4 @@ float3 VoxelWallIntersection(float3 voxelUVW, uint3 voxelGridResolution, Ray ray
     return voxelUVW + ray.Direction * (d + Epsilon); // Add e to make sure we step into neighbor voxel
 }
 
+#endif

@@ -1,3 +1,6 @@
+#ifndef _ToneMappingRenderPass__
+#define _ToneMappingRenderPass__
+
 #include "GTTonemapping.hlsl"
 
 struct PassData
@@ -32,3 +35,5 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     outputImage[dispatchThreadID.xy] = float4(SRGBFromLinear(tonemappedColor), 1.0);
 }
+
+#endif

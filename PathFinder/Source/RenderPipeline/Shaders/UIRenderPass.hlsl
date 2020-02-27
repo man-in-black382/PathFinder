@@ -1,3 +1,6 @@
+#ifndef _UIRenderPass__
+#define _UIRenderPass__
+
 struct PassData
 {
     float4x4 ProjectionMatrix;
@@ -57,3 +60,5 @@ float4 PSMain(PS_INPUT input) : SV_TARGET
     Texture2D uiTexture = Textures2D[PassDataCB.UITextureSRVIndex];
     return uiTexture.Sample(LinearClampSampler, input.uv).aaaa * input.col;
 };
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef _Shadows__
+#define _Shadows__
+
 struct ShadowRayPayload
 {
     float ShadowFactor;
@@ -50,3 +53,5 @@ void RayMiss(inout ShadowRayPayload payload)
 {
     payload.ShadowFactor = 0.0;
 }
+
+#endif

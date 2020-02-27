@@ -22,6 +22,7 @@ namespace PathFinder
     {
     public:
         using FlatLightIt = std::list<FlatLight>::iterator;
+        using SphericalLightIt = std::list<SphericalLight>::iterator;
 
         Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer);
 
@@ -29,6 +30,7 @@ namespace PathFinder
         MeshInstance& AddMeshInstance(MeshInstance&& instance);
         Material& AddMaterial(Material&& material);
         FlatLightIt EmplaceFlatLight(FlatLight::Type type);
+        SphericalLightIt EmplaceSphericalLight();
 
         void IterateMeshInstances(const std::function<void(const MeshInstance& instance)>& functor) const;
         void IterateMeshInstances(const std::function<void(MeshInstance & instance)>& functor);
@@ -42,6 +44,7 @@ namespace PathFinder
         std::list<MeshInstance> mMeshInstances;
         std::list<Material> mMaterials;
         std::list<FlatLight> mFlatLights;
+        std::list<SphericalLight> mSphericalLights;
 
         Camera mCamera;
         GTTonemappingParams mTonemappingParams;
@@ -56,6 +59,7 @@ namespace PathFinder
         inline auto& Meshes() { return mMeshes; }
         inline auto& MeshInstances() { return mMeshInstances; }
         inline auto& FlatLights() { return mFlatLights; }
+        inline auto& SphericalLights() { return mSphericalLights; }
         inline auto& TonemappingParams() { return mTonemappingParams; }
         inline const auto& TonemappingParams() const { return mTonemappingParams; }
         inline Memory::Texture* LTC_LUT0() const { return mLTC_LUT0.get(); }

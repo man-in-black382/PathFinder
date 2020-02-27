@@ -1,3 +1,6 @@
+#ifndef _InstanceData__
+#define _InstanceData__
+
 struct MeshInstanceData
 {
     float4x4 ModelMatrix;
@@ -16,22 +19,22 @@ struct MeshInstanceData
 
 static const uint LightTypeDisk = 0;
 static const uint LightTypeSphere = 1;
-static const uint LightTypeLine = 2;
-static const uint LightTypePolygon = 3;
+static const uint LightTypeRectangle = 2;
 
 struct LightInstanceData
 {
     float LuminousIntensity;
     float Width;
     float Height;
-    float Radius;
+    uint LightType;
     float4 Orientation;
     float4 Position;
     float4 Color;
-    uint LightType;
 };
 
 struct DiskLightPoints
 {
     float3 Points[4];
 };
+
+#endif

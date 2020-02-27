@@ -1,3 +1,6 @@
+#ifndef _GTTonemapping__
+#define _GTTonemapping__
+
 //
 // http://cdn2.gran-turismo.com/data/www/pdi_publications/PracticalHDRandWCGinGTS.pdf
 // https://www.desmos.com/calculator/gslcdxvipg
@@ -48,3 +51,5 @@ float GTToneMap(float x, GTTonemappingParams params)
     // Will have to make it condinional if HDR output will be implemented.
     return (Tx * w0x + Lx * w1x + Sx * w2x) / P; 
 }
+
+#endif

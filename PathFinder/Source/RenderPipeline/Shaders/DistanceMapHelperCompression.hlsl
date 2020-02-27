@@ -1,3 +1,6 @@
+#ifndef _DistanceMapHelperCompression__
+#define _DistanceMapHelperCompression__
+
 #include "DistanceMapCommon.hlsl"
 #include "Packing.hlsl"
 
@@ -24,3 +27,5 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     DistanceFieldCones cones = ReadOnlyConesBuffer[flatIndex];
     distanceAtlas[dispatchThreadID] = PackConeData(cones);
 }
+
+#endif

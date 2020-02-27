@@ -1,3 +1,6 @@
+#ifndef _Matrix__
+#define _Matrix__
+
 static const float3 UpY = float3(0.0, 1.0, 0.0);
 static const float3 UpZ = float3(0.0, 0.0, 1.0);
 
@@ -72,3 +75,5 @@ float4x4 LookAtMatrix(float3 at, float3 eye, float3 up)
 
     return AxisMatrix(xaxis, yaxis, zaxis);
 }
+
+#endif

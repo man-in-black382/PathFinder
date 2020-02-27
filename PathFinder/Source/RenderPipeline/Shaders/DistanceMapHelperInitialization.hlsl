@@ -1,3 +1,6 @@
+#ifndef _DistanceMapHelperInitialization__
+#define _DistanceMapHelperInitialization__
+
 #include "DistanceMapCommon.hlsl"
 
 [numthreads(8, 8, 8)]
@@ -34,3 +37,5 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     ReadOnlyConesBuffer[bufferIndex] = cones;
     WriteOnlyConesBuffer[bufferIndex] = cones;
 }
+
+#endif

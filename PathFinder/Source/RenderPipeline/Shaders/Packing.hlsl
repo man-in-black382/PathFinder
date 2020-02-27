@@ -1,3 +1,6 @@
+#ifndef _Packing__
+#define _Packing__
+
 uint PackSnorm2x16(float first, float second, float range)
 {
     static const float base = 32767.0;
@@ -104,3 +107,5 @@ uint Encode8888(float4 vec)
     uint(vec.w * 255.0);
     return rgba;
 }
+
+#endif
