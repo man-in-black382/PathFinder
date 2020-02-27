@@ -93,7 +93,7 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
     //renderPassGraph.AddPass(blurPass.get());
 
-    PathFinder::Scene::DiskLightIt diskLight0 = scene.EmplaceDiskLight();
+    PathFinder::Scene::FlatLightIt diskLight0 = scene.EmplaceFlatLight();
     diskLight0->SetWidth(4);
     diskLight0->SetHeight(4);
     diskLight0->SetPosition({ 0.0, 12.0, 0.0 });
@@ -145,7 +145,7 @@ int main(int argc, char** argv)
         sceneStorage.ClearMeshInstanceTable();
         sceneStorage.ClearLightInstanceTable();
         sceneStorage.UploadMeshInstances(scene.MeshInstances());
-        sceneStorage.UploadLights(scene.DiskLights());
+        sceneStorage.UploadLights(scene.FlatLights());
 
         PathFinder::GlobalRootConstants globalConstants;
         PathFinder::PerFrameRootConstants perFrameConstants;

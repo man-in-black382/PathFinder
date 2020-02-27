@@ -28,10 +28,10 @@ namespace PathFinder
         return mMaterials.back();
     }
 
-    Scene::DiskLightIt Scene::EmplaceDiskLight()
+    Scene::FlatLightIt Scene::EmplaceFlatLight(FlatLight::Type type)
     {
-        mDiskLights.emplace_back();
-        return std::prev(mDiskLights.end());
+        mFlatLights.emplace_back(type);
+        return std::prev(mFlatLights.end());
     }
 
     void Scene::IterateMeshInstances(const std::function<void(const MeshInstance & instance)>& functor) const

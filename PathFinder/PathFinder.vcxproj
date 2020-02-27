@@ -285,7 +285,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\ShaderManager.cpp" />
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\CameraInteractor.cpp" />
-    <ClCompile Include="Source\Scene\DiskLight.cpp" />
+    <ClCompile Include="Source\Scene\FlatLight.cpp" />
     <ClCompile Include="Source\Scene\Light.cpp" />
     <ClCompile Include="Source\Scene\LineLight.cpp" />
     <ClCompile Include="Source\Scene\Material.cpp" />
@@ -459,7 +459,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\VertexStorageLocation.hpp" />
     <ClInclude Include="Source\Scene\Camera.hpp" />
     <ClInclude Include="Source\Scene\CameraInteractor.hpp" />
-    <ClInclude Include="Source\Scene\DiskLight.hpp" />
+    <ClInclude Include="Source\Scene\FlatLight.hpp" />
     <ClInclude Include="Source\Scene\GTTonemappingParameters.hpp" />
     <ClInclude Include="Source\Scene\Light.hpp" />
     <ClInclude Include="Source\Scene\LineLight.hpp" />

@@ -59,7 +59,7 @@ namespace PathFinder
 
         auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(32, 32);
 
-        for (const DiskLight& light : scene->DiskLights())
+        for (const DiskLight& light : scene->FlatLights())
         {
             context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
             context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);

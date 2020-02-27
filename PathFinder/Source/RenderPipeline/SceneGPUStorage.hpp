@@ -104,7 +104,7 @@ namespace PathFinder
         template <class Vertex>
         void SubmitTemporaryBuffersToGPU();
 
-        GPULightInstanceTableEntry CreateLightGPUTableEntry(const DiskLight& light) const;
+        GPULightInstanceTableEntry CreateLightGPUTableEntry(const FlatLight& light) const;
 
         template <class Vertex>
         VertexStorageLocation WriteToTemporaryBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
