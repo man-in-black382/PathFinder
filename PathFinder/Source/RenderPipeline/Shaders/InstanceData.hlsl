@@ -30,3 +30,8 @@ struct LightInstanceData
     float4 Color;
     uint LightType;
 };
+
+struct DiskLightPoints
+{
+    float3 Points[4];
+};

@@ -24,6 +24,7 @@ struct RootConstants
 #include "ColorConversion.hlsl"
 #include "Vertices.hlsl"
 #include "Geometry.hlsl"
+#include "Matrix.hlsl"
 
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t0);

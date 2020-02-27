@@ -2832,6 +2832,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\UIRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GTTonemapping.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\LTC.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Matrix.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

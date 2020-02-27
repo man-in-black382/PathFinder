@@ -27,54 +27,13 @@ struct RootConstants
 #include "CookTorrance.hlsl"
 #include "SpaceConversion.hlsl"
 #include "Utils.hlsl"
+#include "Matrix.hlsl"
 #include "InstanceData.hlsl"
 
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<LightInstanceData> LightInstanceTable : register(t0);
 
-static const float LUT_SIZE = 64.0;
-static const float LUT_SCALE = (LUT_SIZE - 1.0) / LUT_SIZE;
-static const float LUT_BIAS = 0.5 / LUT_SIZE;
-
-static const int NUM_SAMPLES = 1;
 static const float pi = 3.14159265;
-static const float NO_HIT = 1e9;
-
-// Sample generation
-////////////////////
-
-// Scene helpers
-////////////////
-
-Disk InitDisk(float3 center, float3 dirx, float3 diry, float halfx, float halfy)
-{
-    Disk disk;
-
-    disk.center = center;
-    disk.dirx = dirx;
-    disk.diry = diry;
-    disk.halfx = halfx;
-    disk.halfy = halfy;
-
-    float3 diskNormal = cross(disk.dirx, disk.diry);
-    disk.plane = float4(diskNormal, -dot(diskNormal, disk.center));
-
-    return disk;
-}
-
-void InitDiskPoints(Disk disk, out float3 points[4])
-{
-    float3 ex = disk.halfx * disk.dirx;
-    float3 ey = disk.halfy * disk.diry;
-
-    points[0] = disk.center - ex - ey;
-    points[1] = disk.center + ex - ey;
-    points[2] = disk.center + ex + ey;
-    points[3] = disk.center - ex + ey;
-}
-
-// Misc.
-////////
 
 // An extended version of the implementation from
 // "How to solve a cubic equation, revisited"
@@ -166,7 +125,7 @@ float3 SolveCubic(float4 Coefficient)
 ///////////////////////////////
 
 float3 LTC_Evaluate(
-    float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4], Texture2D LTC_LUT1)
+    float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4], Texture2D LTC_LUT1, float2 LUTSize)
 {
     // construct orthonormal basis around N
     float3 T1, T2;
@@ -207,8 +166,8 @@ float3 LTC_Evaluate(
         det = sqrt(det);
         float u = 0.5 * sqrt(tr - 2.0 * det);
         float v = 0.5 * sqrt(tr + 2.0 * det);
-        float e_max = sqr(u + v);
-        float e_min = sqr(u - v);
+        float e_max = Square(u + v);
+        float e_min = Square(u - v);
 
         float3 V1_, V2_;
 
@@ -274,42 +233,57 @@ float3 LTC_Evaluate(
 
     // use tabulated horizon-clipped sphere
     float2 uv = float2(avgDir.z * 0.5 + 0.5, formFactor);
-    uv = uv * LUT_SCALE + LUT_BIAS;
+    uv = Refit0to1ValuesToTexelCenter(uv, LUTSize);
 
     float scale = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0).w;
-
     float spec = formFactor * scale;
-    
+
     Lo_i = float3(spec, spec, spec);
     
     return float3(Lo_i);
 }
 
-float3 EvaluateDiskLight(LightInstanceData light, float3 V, float3 surfaceWPos, GBuffer gBuffer, Texture2D LTC_LUT0, Texture2D LTC_LUT1)
+DiskLightPoints GetDiskLightPoints(LightInstanceData light)
 {
-    float3 diskPoints[4];
-    
+    DiskLightPoints points;
+
     float halfWidth = light.Width * 0.5;
     float halfHeight = light.Height * 0.5;
-    
-    float3 ex = halfWidth * light.Orientation.x;
-    float3 ey = halfHeight * light.Orientation.y;
 
     float3 position = light.Position.xyz;
-    
-    diskPoints[0] = position - ex - ey;
-    diskPoints[1] = position + ex - ey;
-    diskPoints[2] = position + ex + ey;
-    diskPoints[3] = position - ex + ey;
-    
-    diskPoints[0] = float3(-4.0, 10.0, -4.0);
-    diskPoints[1] = float3(4.0, 10.0, -4.0);
-    diskPoints[2] = float3(-4.0, 10.0, 4.0);
-    diskPoints[3] = float3(4.0, 10.0, 4.0);
-    
+    float3 orientation = light.Orientation.xyz;
+
+    // Get billboard points at the origin
+    float4 p0 = float4(-halfWidth, -halfHeight, 0.0, 0.0);
+    float4 p1 = float4(halfWidth, -halfHeight, 0.0, 0.0);
+    float4 p2 = float4(halfWidth, halfHeight, 0.0, 0.0);
+    float4 p3 = float4(-halfWidth, halfHeight, 0.0, 0.0);
+
+    float4x4 diskRotation = LookAtMatrix(orientation, GetUpVectorForOrientaion(orientation));
+
+    // Rotate around origin
+    p0 = mul(diskRotation, p0);
+    p1 = mul(diskRotation, p1);
+    p2 = mul(diskRotation, p2);
+    p3 = mul(diskRotation, p3);
+
+    // Move points to disk light's location
+    // Order of points is picked to match LTC convention
+    points.Points[1] = p0.xyz + light.Position.xyz;
+    points.Points[0] = p1.xyz + light.Position.xyz;
+    points.Points[2] = p2.xyz + light.Position.xyz;
+    points.Points[3] = p3.xyz + light.Position.xyz;
+
+    return points;
+}
+
+float3 EvaluateDiskLight(LightInstanceData light, float3 V, float3 surfaceWPos, GBuffer gBuffer, Texture2D LTC_LUT0, Texture2D LTC_LUT1, float2 LUTSize)
+{
+    DiskLightPoints diskPoints = GetDiskLightPoints(light);
+
     float NdotV = saturate(dot(gBuffer.Normal, V));
     float2 uv = float2(gBuffer.Roughness, sqrt(1.0 - NdotV));
-    uv = uv * LUT_SCALE + LUT_BIAS;
+    uv = Refit0to1ValuesToTexelCenter(uv, LUTSize);
 
     float4 t1 = LTC_LUT0.SampleLevel(LinearClampSampler, uv, 0);
     float4 t2 = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0);
@@ -320,15 +294,16 @@ float3 EvaluateDiskLight(LightInstanceData light, float3 V, float3 surfaceWPos, 
         float3(t1.z, 0, t1.w)
     );
 
-    float3 specular = LTC_Evaluate(N, V, surfaceWPos, Minv, diskPoints, LTC_LUT1);
+    float geometryMasking = t2.x;
+    float fresnel = t2.y;
+
+    float3 specular = LTC_Evaluate(gBuffer.Normal, V, surfaceWPos, Minv, diskPoints.Points, LTC_LUT1, LUTSize);
     // BRDF shadowing and Fresnel
     float3 f90 = lerp(0.04, gBuffer.Albedo, gBuffer.Metalness);
-    specular *= f90 * t2.x + (1.0 - f90) * t2.y;
+    specular *= f90 * geometryMasking + (1.0 - f90) * fresnel;
     
-    float3 diffuse = LTC_Evaluate(N, V, surfaceWPos, Matrix3x3Identity, diskPoints, LTC_LUT1) 
-    * gBuffer.Albedo 
-    * (1.0 - gBuffer.Metalness) // No diffuse for metalls
-    * (1.0 - t2.y); // Preserve energy by accounting for specular part
+    float3 diffuse = LTC_Evaluate(gBuffer.Normal, V, surfaceWPos, Matrix3x3Identity, diskPoints.Points, LTC_LUT1, LUTSize);
+    diffuse *= gBuffer.Albedo * (1.0 - gBuffer.Metalness) * (1.0 - fresnel);
 
     return (specular + diffuse) * light.Color.rgb * light.LuminousIntensity;
 }
@@ -336,11 +311,12 @@ float3 EvaluateDiskLight(LightInstanceData light, float3 V, float3 surfaceWPos, 
 float3 EvaluateDirectLighting(LightInstanceData light, float3 V, float3 surfaceWPos, GBuffer gBuffer, Texture2D LTC_LUT0, Texture2D LTC_LUT1)
 {
     float3 integrationResult = 0.0.xxx;
+    float2 LUTSize = float2(PassDataCB.LTC_LUT_Size, PassDataCB.LTC_LUT_Size);
     
     switch (light.LightType)
     {
         case LightTypeDisk:
-            integrationResult = EvaluateDiskLight(light, V, surfaceWPos, gBuffer, LTC_LUT0, LTC_LUT1);
+            integrationResult = EvaluateDiskLight(light, V, surfaceWPos, gBuffer, LTC_LUT0, LTC_LUT1, LUTSize);
             break;
         default:
             integrationResult = float3(1.0, 0.0, 0.0);
@@ -360,20 +336,24 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     LightInstanceData light = LightInstanceTable[RootConstantBuffer.LightInstanceTableIndex];
 
     uint2 pixelIndex = dispatchThreadID.xy;
-    float2 centeredPixelIndex = float2(pixelIndex) + 0.5;
-    float2 UV = centeredPixelIndex / GlobalDataCB.PipelineRTResolution;
+    float2 UV = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
 
     GBufferEncoded encodedGBuffer;
     encodedGBuffer.MaterialData = materialData.Load(uint3(pixelIndex, 0));
     
     GBuffer gBuffer = DecodeGBuffer(encodedGBuffer);
 
-    float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0));
+    float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0)).r;
     float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
-    float3 V = normalize(FrameDataCB.CameraPosition - worldPosition);
+    float3 V = normalize(FrameDataCB.CameraPosition.xyz - worldPosition);
 
     float3 outgoingRadiance = EvaluateDirectLighting(light, V, worldPosition, gBuffer, LTC_LUT0, LTC_LUT1);
     
+    float3 L = float3(0.0, 1.0, 0.0);
+    float3 H = normalize(L + V);
+
+    //float3 outgoingRadiance = BRDF(gBuffer.Normal, V, H, L, gBuffer.Roughness, gBuffer.Albedo, gBuffer.Metalness, 250.xxx);
+
     RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
     outputImage[dispatchThreadID.xy] = float4(outgoingRadiance, 1.0);
 }

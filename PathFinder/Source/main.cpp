@@ -96,10 +96,10 @@ int main(int argc, char** argv)
     PathFinder::Scene::DiskLightIt diskLight0 = scene.EmplaceDiskLight();
     diskLight0->SetWidth(4);
     diskLight0->SetHeight(4);
-    diskLight0->SetPosition({ 0.0, 10.0, 0.0 });
+    diskLight0->SetPosition({ 0.0, 12.0, 0.0 });
     diskLight0->SetNormal({ 0.0, -1.0, 0.0 });
     diskLight0->SetColor(Foundation::Color::White());
-    diskLight0->SetLuminousPower(10000);
+    diskLight0->SetLuminousPower(50000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
         std::nullopt, "/Concrete19/Concrete19_disp.dds"));
 
     PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &concrete19Material });
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
 
     auto t = sphereInstance.Transformation();
     t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
