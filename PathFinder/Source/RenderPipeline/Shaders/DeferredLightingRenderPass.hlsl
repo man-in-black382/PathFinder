@@ -6,9 +6,6 @@ struct PassData
     uint GBufferMaterialDataTextureIndex;
     uint GBufferDepthTextureIndex;
     uint OutputTextureIndex;
-    uint LTC_LUT0_Index;
-    uint LTC_LUT1_Index;
-    uint LTC_LUT_Size;
 };
 
 #define PassDataType PassData
@@ -29,9 +26,10 @@ struct RootConstants
 #include "LTC.hlsl"
 
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
-StructuredBuffer<LightInstanceData> LightInstanceTable : register(t0);
+StructuredBuffer<Light> LightTable : register(t0);
+StructuredBuffer<Material> MaterialTable : register(t1);
 
-DiskLightPoints GetFlatLightPoints(LightInstanceData light)
+DiskLightPoints GetFlatLightPoints(Light light)
 {
     DiskLightPoints points;
 
@@ -64,17 +62,16 @@ DiskLightPoints GetFlatLightPoints(LightInstanceData light)
     return points;
 }
 
-float3 EvaluateDirectLighting(LightInstanceData light, float3 V, float3 surfaceWPos, GBuffer gBuffer, Texture2D LTC_LUT0, Texture2D LTC_LUT1)
+float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBuffer gBuffer, Texture2D LTC_LUT0, Texture2D LTC_LUT1, float2 LTC_LUT_Size)
 {
     // Integrate area light
-    float2 LUTSize = float2(PassDataCB.LTC_LUT_Size, PassDataCB.LTC_LUT_Size);
     float3 specular = 0.0.xxx;
     float3 diffuse = 0.0.xxx;
     
     // Fetch precomputed matrices and fresnel/shadowing terms
     float NdotV = saturate(dot(gBuffer.Normal, V));
     float2 uv = float2(gBuffer.Roughness, sqrt(1.0 - NdotV));
-    uv = Refit0to1ValuesToTexelCenter(uv, LUTSize);
+    uv = Refit0to1ValuesToTexelCenter(uv, LTC_LUT_Size);
 
     float4 t1 = LTC_LUT0.SampleLevel(LinearClampSampler, uv, 0);
     float4 t2 = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0);
@@ -101,8 +98,8 @@ float3 EvaluateDirectLighting(LightInstanceData light, float3 V, float3 surfaceW
         case LightTypeDisk:
         {
             DiskLightPoints diskPoints = GetFlatLightPoints(light); 
-            specular = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, Minv, diskPoints.Points, LTC_LUT1, LUTSize, LinearClampSampler);
-            diffuse = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, Matrix3x3Identity, diskPoints.Points, LTC_LUT1, LUTSize, LinearClampSampler);
+            specular = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, Minv, diskPoints.Points, LTC_LUT1, LTC_LUT_Size, LinearClampSampler);
+            diffuse = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, Matrix3x3Identity, diskPoints.Points, LTC_LUT1, LTC_LUT_Size, LinearClampSampler);
             break;
         }
             
@@ -131,20 +128,33 @@ float3 EvaluateDirectLighting(LightInstanceData light, float3 V, float3 surfaceW
 [numthreads(32, 32, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {   
-    Texture2D LTC_LUT0 = Textures2D[PassDataCB.LTC_LUT0_Index];
-    Texture2D LTC_LUT1 = Textures2D[PassDataCB.LTC_LUT1_Index];
+    RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
+
     Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
     Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
 
     uint2 pixelIndex = dispatchThreadID.xy;
     float2 UV = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
+    float depth = depthTexture.Load(uint3(pixelIndex, 0)).r;
+
+    // Skip empty areas
+    if (depth >= 1.0)
+    {
+        outputImage[dispatchThreadID.xy] = float4(0.0, 0.0, 0.0, 1.0);
+        return;
+    }
 
     GBufferEncoded encodedGBuffer;
     encodedGBuffer.MaterialData = materialData.Load(uint3(pixelIndex, 0));
     
     GBuffer gBuffer = DecodeGBuffer(encodedGBuffer);
 
-    float depth = depthTexture.Load(uint3(dispatchThreadID.xy, 0)).r;
+    Material material = MaterialTable[gBuffer.MaterialIndex];
+
+    Texture2D LTC_LUT0 = Textures2D[material.LTC_LUT_0_Specular_Index];
+    Texture2D LTC_LUT1 = Textures2D[material.LTC_LUT_1_Specular_Index];
+    float2 LTC_LUT_Size = float2(material.LTC_LUT_TextureSize, material.LTC_LUT_TextureSize);
+
     float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
     float3 V = normalize(FrameDataCB.CameraPosition.xyz - worldPosition);
 
@@ -152,11 +162,10 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     
     for (uint lightIdx = 0; lightIdx < RootConstantBuffer.TotalLightCount; ++lightIdx)
     {
-        LightInstanceData light = LightInstanceTable[lightIdx];
-        outgoingRadiance += EvaluateDirectLighting(light, V, worldPosition, gBuffer, LTC_LUT0, LTC_LUT1);
+        Light light = LightTable[lightIdx];
+        outgoingRadiance += EvaluateDirectLighting(light, V, worldPosition, gBuffer, LTC_LUT0, LTC_LUT1, LTC_LUT_Size);
     }
 
-    RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
     outputImage[dispatchThreadID.xy] = float4(outgoingRadiance, 1.0);
 }
 

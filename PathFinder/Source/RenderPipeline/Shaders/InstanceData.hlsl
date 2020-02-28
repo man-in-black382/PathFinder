@@ -1,10 +1,18 @@
 #ifndef _InstanceData__
 #define _InstanceData__
 
-struct MeshInstanceData
+struct MeshInstance
 {
     float4x4 ModelMatrix;
     float4x4 NormalMatrix;
+    uint MaterialIndex;
+    uint UnifiedVertexBufferOffset;
+    uint UnifiedIndexBufferOffset;
+    uint IndexCount;
+};
+
+struct Material
+{
     uint AlbedoMapIndex;
     uint NormalMapIndex;
     uint RoughnessMapIndex;
@@ -12,16 +20,16 @@ struct MeshInstanceData
     uint AOMapIndex;
     uint DisplacementMapIndex;
     uint DistanceFieldIndex;
-    uint UnifiedVertexBufferOffset;
-    uint UnifiedIndexBufferOffset;
-    uint IndexCount;
+    uint LTC_LUT_0_Specular_Index;
+    uint LTC_LUT_1_Specular_Index;
+    uint LTC_LUT_TextureSize;
 };
 
 static const uint LightTypeDisk = 0;
 static const uint LightTypeSphere = 1;
 static const uint LightTypeRectangle = 2;
 
-struct LightInstanceData
+struct Light
 {
     float LuminousIntensity;
     float Width;

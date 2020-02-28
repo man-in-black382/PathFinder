@@ -29,7 +29,17 @@ namespace PathFinder
     struct GPUMeshInstanceTableEntry
     {
         glm::mat4 InstanceWorldMatrix;
+        // 16 byte boundary
         glm::mat4 InstanceNormalMatrix;
+        // 16 byte boundary
+        uint32_t MaterialIndex;
+        uint32_t UnifiedVertexBufferOffset;
+        uint32_t UnifiedIndexBufferOffset;
+        uint32_t IndexCount;
+    };
+
+    struct GPUMaterialTableEntry
+    {
         uint32_t AlbedoMapIndex;
         uint32_t NormalMapIndex;
         uint32_t RoughnessMapIndex;
@@ -37,12 +47,12 @@ namespace PathFinder
         uint32_t AOMapIndex;
         uint32_t DisplacementMapIndex;
         uint32_t DistanceFieldIndex;
-        uint32_t UnifiedVertexBufferOffset;
-        uint32_t UnifiedIndexBufferOffset;
-        uint32_t IndexCount;
+        uint32_t LTC_LUT_0_Specular_Index;
+        uint32_t LTC_LUT_1_Specular_Index;
+        uint32_t LTC_LUT_TextureSize;
     };
 
-    struct GPULightInstanceTableEntry
+    struct GPULightTableEntry
     {
         enum class LightType : uint32_t
         {
@@ -76,6 +86,9 @@ namespace PathFinder
         void UploadMeshes(Container<Mesh, Args...>& meshes);
 
         template < template < class ... > class Container, class ... Args >
+        void UploadMaterials(Container<Material, Args...>& materials);
+
+        template < template < class ... > class Container, class ... Args >
         void UploadMeshInstances(Container<MeshInstance, Args...>& meshInstances);
 
         template < template < class ... > class Container, class LightT, class ... Args >
@@ -103,8 +116,8 @@ namespace PathFinder
         template <class Vertex>
         void SubmitTemporaryBuffersToGPU();
 
-        GPULightInstanceTableEntry CreateLightGPUTableEntry(const FlatLight& light) const;
-        GPULightInstanceTableEntry CreateLightGPUTableEntry(const SphericalLight& light) const;
+        GPULightTableEntry CreateLightGPUTableEntry(const FlatLight& light) const;
+        GPULightTableEntry CreateLightGPUTableEntry(const SphericalLight& light) const;
 
         template <class Vertex>
         VertexStorageLocation WriteToTemporaryBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);
@@ -118,7 +131,8 @@ namespace PathFinder
         HAL::ResourceBarrierCollection mTopASBarriers;
 
         Memory::GPUResourceProducer::BufferPtr mMeshInstanceTable;
-        Memory::GPUResourceProducer::BufferPtr mLightInstanceTable;
+        Memory::GPUResourceProducer::BufferPtr mLightTable;
+        Memory::GPUResourceProducer::BufferPtr mMaterialTable;
         
         const HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;
@@ -130,7 +144,8 @@ namespace PathFinder
         inline const auto UnifiedVertexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get(); }
         inline const auto UnifiedIndexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).IndexBuffer.get(); }
         inline const auto MeshInstanceTable() const { return mMeshInstanceTable.get(); }
-        inline const auto LightInstanceTable() const { return mLightInstanceTable.get(); }
+        inline const auto LightTable() const { return mLightTable.get(); }
+        inline const auto MaterialTable() const { return mMaterialTable.get(); }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
         inline const auto& BottomAccelerationStructureBarriers() const { return mBottomASBarriers; }

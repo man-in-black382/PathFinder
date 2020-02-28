@@ -18,9 +18,55 @@ namespace PathFinder
     }
 
     template < template < class ... > class Container, class ... Args >
+    void SceneGPUStorage::UploadMaterials(Container<Material, Args...>& materials)
+    {
+        uint8_t alignment = 1;
+
+        if (!mMaterialTable || mMaterialTable->ElementCapacity<GPUMaterialTableEntry>(alignment) < materials.size())
+        {
+            HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ materials.size(), alignment };
+            mMaterialTable = mResourceProducer->NewBuffer(props);
+            mMaterialTable->SetDebugName("Material Table");
+        }
+
+        mMaterialTable->RequestWrite();
+
+        uint64_t materialIndex = 0;
+
+        for (Material& material : materials)
+        {
+            auto lut0SpecularSize = material.LTC_LUT_0_Specular->HALTexture()->Dimensions();
+            auto lut1SpecularSize = material.LTC_LUT_1_Specular->HALTexture()->Dimensions();
+
+            assert_format(lut0SpecularSize.Width == lut0SpecularSize.Height &&
+                lut0SpecularSize.Width == lut1SpecularSize.Height &&
+                lut0SpecularSize.Width == lut1SpecularSize.Width,
+                "LUTs should be square and equal size");
+
+            GPUMaterialTableEntry materialEntry{
+                material.AlbedoMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.NormalMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.RoughnessMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.MetalnessMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.AOMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.DisplacementMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.DistanceField->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.LTC_LUT_0_Specular->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.LTC_LUT_1_Specular->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                lut0SpecularSize.Width
+            };
+
+            material.GPUMaterialTableIndex = materialIndex;
+
+            mMaterialTable->Write(&materialEntry, materialIndex, 1, alignment);
+            ++materialIndex;
+        }
+    }
+
+    template < template < class ... > class Container, class ... Args >
     void SceneGPUStorage::UploadMeshInstances(Container<MeshInstance, Args...>& meshInstances)
     {
-        uint8_t alignment = 128;
+        uint8_t alignment = 1;
 
         auto requiredBufferSize = meshInstances.size() + mUploadedMeshInstances;
 
@@ -39,13 +85,7 @@ namespace PathFinder
             GPUMeshInstanceTableEntry instanceEntry{
                 instance.Transformation().ModelMatrix(),
                 instance.Transformation().NormalMatrix(),
-                instance.AssosiatedMaterial()->AlbedoMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                instance.AssosiatedMaterial()->NormalMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                instance.AssosiatedMaterial()->RoughnessMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                instance.AssosiatedMaterial()->MetalnessMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                instance.AssosiatedMaterial()->AOMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                instance.AssosiatedMaterial()->DisplacementMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                instance.AssosiatedMaterial()->DistanceField->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                instance.AssosiatedMaterial()->GPUMaterialTableIndex,
                 instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
                 instance.AssosiatedMesh()->LocationInVertexStorage().IndexBufferOffset,
                 instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount
@@ -67,23 +107,23 @@ namespace PathFinder
     template < template < class ... > class Container, class LightT, class ... Args >
     void SceneGPUStorage::UploadLights(Container<LightT, Args...>& lights)
     {
-        uint8_t alignment = 128;
+        uint8_t alignment = 1;
 
         auto requiredBufferSize = mUploadedLights + lights.size();
 
-        if (!mLightInstanceTable || mLightInstanceTable->ElementCapacity<GPULightInstanceTableEntry>(alignment) < requiredBufferSize)
+        if (!mLightTable || mLightTable->ElementCapacity<GPULightTableEntry>(alignment) < requiredBufferSize)
         {
             HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ lights.size(), alignment };
-            mLightInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
-            mLightInstanceTable->SetDebugName("Lights Instance Table");
+            mLightTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mLightTable->SetDebugName("Lights Instance Table");
         }
 
-        mLightInstanceTable->RequestWrite();
+        mLightTable->RequestWrite();
 
         for (LightT& light : lights)
         {
-            GPULightInstanceTableEntry lightEntry = CreateLightGPUTableEntry(light);
-            mLightInstanceTable->Write(&lightEntry, mUploadedLights, 1, alignment);
+            GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
+            mLightTable->Write(&lightEntry, mUploadedLights, 1, alignment);
             light.SetGPULightTableIndex(mUploadedLights);
             ++mUploadedLights;
         }

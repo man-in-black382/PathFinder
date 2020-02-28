@@ -24,8 +24,6 @@ namespace PathFinder
         using FlatLightIt = std::list<FlatLight>::iterator;
         using SphericalLightIt = std::list<SphericalLight>::iterator;
 
-        Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer);
-
         Mesh& AddMesh(Mesh&& mesh);
         MeshInstance& AddMeshInstance(MeshInstance&& instance);
         Material& AddMaterial(Material&& material);
@@ -38,8 +36,6 @@ namespace PathFinder
         void IterateMaterials(const std::function<void(const Material& material)>& functor) const;
 
     private:
-        ResourceLoader mResourceLoader;
-
         std::list<Mesh> mMeshes;
         std::list<MeshInstance> mMeshInstances;
         std::list<Material> mMaterials;
@@ -48,8 +44,6 @@ namespace PathFinder
 
         Camera mCamera;
         GTTonemappingParams mTonemappingParams;
-        Memory::GPUResourceProducer::TexturePtr mLTC_LUT0;
-        Memory::GPUResourceProducer::TexturePtr mLTC_LUT1;
 
     public:
         inline Camera& MainCamera() { return mCamera; }
@@ -58,12 +52,11 @@ namespace PathFinder
         inline const auto& MeshInstances() const { return mMeshInstances; }
         inline auto& Meshes() { return mMeshes; }
         inline auto& MeshInstances() { return mMeshInstances; }
+        inline auto& Materials() { return mMaterials; }
         inline auto& FlatLights() { return mFlatLights; }
         inline auto& SphericalLights() { return mSphericalLights; }
         inline auto& TonemappingParams() { return mTonemappingParams; }
         inline const auto& TonemappingParams() const { return mTonemappingParams; }
-        inline Memory::Texture* LTC_LUT0() const { return mLTC_LUT0.get(); }
-        inline Memory::Texture* LTC_LUT1() const { return mLTC_LUT1.get(); }
     };
 
 }

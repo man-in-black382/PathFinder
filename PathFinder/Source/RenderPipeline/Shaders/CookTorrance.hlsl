@@ -73,7 +73,7 @@ float GeometrySmithGGXCorrelated(float NdotL, float NdotV, float alphaG)
     // G_SmithGGXCorrelated = 1 / (1 + lambda_v + lambda_l); 
     // V_SmithGGXCorrelated = G_SmithGGXCorrelated / (4.0f * NdotL * NdotV); 
 
-    // This is the optimized version 
+      // This is the optimized version 
     float alphaG2 = alphaG * alphaG;
     // Caution: the "NdotL *" and "NdotV *" are explicitely inversed , this is not a mistake. 
     float Lambda_GGXV = NdotL * sqrt((-NdotV * alphaG2 + NdotV) * NdotV + alphaG2);

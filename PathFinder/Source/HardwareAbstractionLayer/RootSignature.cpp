@@ -36,7 +36,7 @@ namespace HAL
         mD3DStaticSamplers.push_back(sampler.D3DStaticSampler());
     }
 
-    RootSignature RootSignature::Clone() const
+    RootSignature RootSignature::Clone() const 
     {
         RootSignature newSignature = *this;
         newSignature.mSignature = nullptr;

@@ -19,7 +19,7 @@ namespace PathFinder
     public:
         inline static const Geometry::Dimensions DistanceFieldTextureSize{ 128, 128, 64 };
 
-        MaterialLoader(const std::filesystem::path& fileRoot, PreprocessableAssetStorage* assetStorage, Memory::GPUResourceProducer* resourceProducer);
+        MaterialLoader(const std::filesystem::path& executableFolder, PreprocessableAssetStorage* assetStorage, Memory::GPUResourceProducer* resourceProducer);
 
         Material LoadMaterial(
             const std::string& albedoMapRelativePath,
@@ -42,10 +42,19 @@ namespace PathFinder
         Memory::Texture* GetOrAllocateTexture(const std::string& relativePath);
         Memory::Texture* AllocateAndStoreTexture(const HAL::Texture::Properties& properties, const std::string& relativePath);
 
+        void CreateDefaultTextures();
+        void LoadLTCLookupTables();
+
         std::unordered_map<std::string, Memory::GPUResourceProducer::TexturePtr> mMaterialTextures;
         Memory::GPUResourceProducer::TexturePtr m1x1Black2DTexture;
         Memory::GPUResourceProducer::TexturePtr m1x1White2DTexture;
         Memory::GPUResourceProducer::TexturePtr m1x1Black3DTexture;
+
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_0_GGXCorrelated;
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_1_GGXCorrelated;
+
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_0_DisneyDiffuseNormalized;
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_1_DisneyDiffuseNormalized;
 
         Memory::GPUResourceProducer* mResourceProducer;
         PreprocessableAssetStorage* mAssetStorage;

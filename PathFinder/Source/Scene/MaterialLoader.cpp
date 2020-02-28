@@ -5,31 +5,11 @@
 namespace PathFinder
 {
 
-    MaterialLoader::MaterialLoader(const std::filesystem::path& fileRoot, PreprocessableAssetStorage* assetStorage, Memory::GPUResourceProducer* resourceProducer)
-        : mAssetStorage{ assetStorage }, mResourceLoader{ fileRoot, resourceProducer }, mResourceProducer{ resourceProducer }
+    MaterialLoader::MaterialLoader(const std::filesystem::path& executableFolder, PreprocessableAssetStorage* assetStorage, Memory::GPUResourceProducer* resourceProducer)
+        : mAssetStorage{ assetStorage }, mResourceLoader{ executableFolder, resourceProducer }, mResourceProducer{ resourceProducer }
     {
-        HAL::Texture::Properties dummy2DTextureProperties{ 
-            HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture2D, 
-            Geometry::Dimensions{1, 1}, HAL::ResourceState::AnyShaderAccess };
-
-        HAL::Texture::Properties dummy3DTextureProperties{
-            HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture3D,
-            Geometry::Dimensions{1, 1}, HAL::ResourceState::AnyShaderAccess };
-
-        m1x1Black2DTexture = mResourceProducer->NewTexture(dummy2DTextureProperties);
-        m1x1White2DTexture = mResourceProducer->NewTexture(dummy2DTextureProperties);
-        m1x1Black3DTexture = mResourceProducer->NewTexture(dummy3DTextureProperties);
-
-        m1x1Black2DTexture->RequestWrite();
-        m1x1White2DTexture->RequestWrite();
-        m1x1Black3DTexture->RequestWrite();
-
-        glm::u8vec4 black{ 0, 0, 0, 0 };
-        glm::u8vec4 white{ 1, 1, 1, 1 };
-
-        m1x1Black2DTexture->Write(&black, 0, 1);
-        m1x1White2DTexture->Write(&white, 0, 1);
-        m1x1Black3DTexture->Write(&black, 0, 1);
+        CreateDefaultTextures();
+        LoadLTCLookupTables();
     }
 
     Material MaterialLoader::LoadMaterial(
@@ -78,6 +58,9 @@ namespace PathFinder
         if (!material.AOMap) material.AOMap = m1x1White2DTexture.get();
         if (!material.DistanceField) material.DistanceField = m1x1Black3DTexture.get();
 
+        material.LTC_LUT_0_Specular = mLTC_LUT_0_GGXCorrelated.get();
+        material.LTC_LUT_1_Specular = mLTC_LUT_1_GGXCorrelated.get();
+
         return material;
     }
 
@@ -100,6 +83,40 @@ namespace PathFinder
     {
         auto [iter, success] = mMaterialTextures.emplace(relativePath, mResourceProducer->NewTexture(properties));
         return iter->second.get();
+    }
+
+    void MaterialLoader::CreateDefaultTextures()
+    {
+        HAL::Texture::Properties dummy2DTextureProperties{
+            HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture2D,
+            Geometry::Dimensions{1, 1}, HAL::ResourceState::AnyShaderAccess };
+
+        HAL::Texture::Properties dummy3DTextureProperties{
+            HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture3D,
+            Geometry::Dimensions{1, 1}, HAL::ResourceState::AnyShaderAccess };
+
+        m1x1Black2DTexture = mResourceProducer->NewTexture(dummy2DTextureProperties);
+        m1x1White2DTexture = mResourceProducer->NewTexture(dummy2DTextureProperties);
+        m1x1Black3DTexture = mResourceProducer->NewTexture(dummy3DTextureProperties);
+
+        m1x1Black2DTexture->RequestWrite();
+        m1x1White2DTexture->RequestWrite();
+        m1x1Black3DTexture->RequestWrite();
+
+        glm::u8vec4 black{ 0, 0, 0, 0 };
+        glm::u8vec4 white{ 1, 1, 1, 1 };
+
+        m1x1Black2DTexture->Write(&black, 0, 1);
+        m1x1White2DTexture->Write(&white, 0, 1);
+        m1x1Black3DTexture->Write(&black, 0, 1);
+    }
+
+    void MaterialLoader::LoadLTCLookupTables()
+    {
+        mLTC_LUT_0_GGXCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGX_Correlated_0.dds");
+        mLTC_LUT_1_GGXCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGX_Correlated_1.dds");
+        mLTC_LUT_0_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_0.dds");
+        mLTC_LUT_1_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_1.dds");
     }
 
 }

@@ -11,7 +11,7 @@ struct ShadowRayPayload
 #include "Vertices.hlsl"
 
 RaytracingAccelerationStructure SceneBVH : register(t0, space0);
-StructuredBuffer<MeshInstanceData> InstanceTable : register(t1, space0);
+StructuredBuffer<MeshInstance> InstanceTable : register(t1, space0);
 StructuredBuffer<Vertex1P1N1UV1T1BT> Unified1P1N1UV1T1BTVertexBuffer : register(t2, space0);
 StructuredBuffer<IndexU32> Unified1P1N1UV1T1BTIndexBuffer : register(t3, space0);
 

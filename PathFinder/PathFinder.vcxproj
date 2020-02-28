@@ -255,6 +255,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\BottomRTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp" />
     <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
+    <ClCompile Include="Source\RenderPipeline\PipelineBindingCache.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStateOptimizer.cpp" />
@@ -413,6 +414,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\PerFrameRootConstants.hpp" />
+    <ClInclude Include="Source\RenderPipeline\PipelineBindingCache.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStateOptimizer.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateCreator.hpp" />

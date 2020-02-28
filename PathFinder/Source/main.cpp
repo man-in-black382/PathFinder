@@ -64,13 +64,13 @@ int main(int argc, char** argv)
     PathFinder::RenderEngine<PathFinder::RenderPassContentMediator> engine{ hwnd, cmdLineParser };
     PathFinder::SceneGPUStorage sceneStorage{ &engine.Device(), &engine.ResourceProducer() };
     PathFinder::UIGPUStorage uiStorage{ &engine.ResourceProducer() };
-    PathFinder::Scene scene{ cmdLineParser.ExecutableFolderPath(), &engine.ResourceProducer() };
+    PathFinder::Scene scene{};
     PathFinder::Input input{};
     PathFinder::InputHandlerWindows windowsInputHandler{ &input, hwnd };
     PathFinder::UIInteractor uiInteractor{ hwnd, &input };
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
-    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Textures/", &engine.AssetStorage(), &engine.ResourceProducer() };
+    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath(), &engine.AssetStorage(), &engine.ResourceProducer() };
     PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene };
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
@@ -108,16 +108,25 @@ int main(int argc, char** argv)
     sphereLight0->SetLuminousPower(50000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
-        "/Metal07/Metal07_col.dds", "/Metal07/Metal07_nrm.dds", "/Metal07/Metal07_rgh.dds",
-        "/Metal07/Metal07_met.dds", "/Metal07/Metal07_disp.dds"));
+        "/MediaResources/Textures/Metal07/Metal07_col.dds",
+        "/MediaResources/Textures/Metal07/Metal07_nrm.dds", 
+        "/MediaResources/Textures/Metal07/Metal07_rgh.dds",
+        "/MediaResources/Textures/Metal07/Metal07_met.dds",
+        "/MediaResources/Textures/Metal07/Metal07_disp.dds"));
 
     PathFinder::Material& harshBricksMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
-        "/HarshBricks/harshbricks-albedo.dds", "/HarshBricks/harshbricks-normal.dds", "/HarshBricks/harshbricks-roughness.dds",
-        "/HarshBricks/harshbricks-metalness.dds", "/HarshBricks/harshbricks-height.dds"));
+        "/MediaResources/Textures/HarshBricks/harshbricks-albedo.dds",
+        "/MediaResources/Textures/HarshBricks/harshbricks-normal.dds", 
+        "/MediaResources/Textures/HarshBricks/harshbricks-roughness.dds",
+        "/MediaResources/Textures/HarshBricks/harshbricks-metalness.dds", 
+        "/MediaResources/Textures/HarshBricks/harshbricks-height.dds"));
 
     PathFinder::Material& concrete19Material = scene.AddMaterial(materialLoader.LoadMaterial(
-        "/Concrete19/Concrete19_col.dds", "/Concrete19/Concrete19_nrm.dds", "/Concrete19/Concrete19_rgh.dds",
-        std::nullopt, "/Concrete19/Concrete19_disp.dds"));
+        "/MediaResources/Textures/Concrete19/Concrete19_col.dds",
+        "/MediaResources/Textures/Concrete19/Concrete19_nrm.dds", 
+        "/MediaResources/Textures/Concrete19/Concrete19_rgh.dds",
+        std::nullopt,
+        "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
 
     PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
     PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
@@ -138,6 +147,7 @@ int main(int argc, char** argv)
     // ---------------------------------------------------------------------------- //
 
     sceneStorage.UploadMeshes(scene.Meshes());
+    sceneStorage.UploadMaterials(scene.Materials());
 
     engine.ScheduleAndAllocatePipelineResources();
     engine.UploadProcessAndTransferAssets();
