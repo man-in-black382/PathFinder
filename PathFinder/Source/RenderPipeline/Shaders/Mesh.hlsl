@@ -1,5 +1,5 @@
-#ifndef _InstanceData__
-#define _InstanceData__
+#ifndef _Mesh__
+#define _Mesh__
 
 struct MeshInstance
 {
@@ -10,6 +10,9 @@ struct MeshInstance
     uint UnifiedIndexBufferOffset;
     uint IndexCount;
 };
+
+static const uint MaterialTypeCookTorrance = 0;
+static const uint MaterialTypeEmissive = 1;
 
 struct Material
 {
@@ -23,26 +26,6 @@ struct Material
     uint LTC_LUT_0_Specular_Index;
     uint LTC_LUT_1_Specular_Index;
     uint LTC_LUT_TextureSize;
-};
-
-static const uint LightTypeDisk = 0;
-static const uint LightTypeSphere = 1;
-static const uint LightTypeRectangle = 2;
-
-struct Light
-{
-    float LuminousIntensity;
-    float Width;
-    float Height;
-    uint LightType;
-    float4 Orientation;
-    float4 Position;
-    float4 Color;
-};
-
-struct DiskLightPoints
-{
-    float3 Points[4];
 };
 
 #endif

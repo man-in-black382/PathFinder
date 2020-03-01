@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <functional>
 #include <filesystem>
+#include <chrono>
 
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
@@ -76,6 +77,8 @@ namespace PathFinder
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 2;
         uint64_t mFrameNumber = 0;
+        std::chrono::time_point<std::chrono::steady_clock> mFrameStartTimestamp;
+        std::chrono::microseconds mFrameDuration = std::chrono::microseconds::zero();
 
         RenderSurfaceDescription mRenderSurfaceDescription;
 
@@ -116,6 +119,7 @@ namespace PathFinder
         inline HAL::Device& Device() { return mDevice; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }
+        inline uint64_t FrameDurationMicroseconds() const { return mFrameDuration.count(); }
     };
 
 }

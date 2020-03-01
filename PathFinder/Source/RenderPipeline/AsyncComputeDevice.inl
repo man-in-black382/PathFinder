@@ -73,58 +73,59 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandQueueT>::ApplyCommonComputeResourceBindings()
+    void AsyncComputeDevice<CommandListT, CommandQueueT>::ApplyCommonComputeResourceBindingsIfNeeded()
     {
         mCommandList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
-        // Look at PipelineStateManager for base root signature parameter ordering
-        HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
-        HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
+        if (mRebindingAfterSignatureChangeRequired)
+        {
+            // Look at PipelineStateManager for base root signature parameter ordering
+            HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
+            HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
 
-        // Alias different registers to one GPU address
-        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 3);
-        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 4);
-        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 5);
-        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 6);
-        mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 7);
+            // Alias different registers to one GPU address
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 3);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 4);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 5);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 6);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 7);
 
-        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 8);
-        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 9);
-        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 10);
-        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 11);
-        mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 12);
-    }
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 8);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 9);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 10);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 11);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 12);
+        }
 
-    template <class CommandListT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandQueueT>::BindConstantBuffersCompute(bool ignoreCachedBuffers)
-    {
         if (auto buffer = mResourceStorage->GlobalRootConstantsBuffer();
-            buffer && (buffer->HALBuffer() != mBoundGlobalConstantBufferCompute || ignoreCachedBuffers))
+            buffer && (buffer->HALBuffer() != mBoundGlobalConstantBufferCompute || mRebindingAfterSignatureChangeRequired))
         {
             mBoundGlobalConstantBufferCompute = buffer->HALBuffer();
             mCommandList->SetComputeRootConstantBuffer(*mBoundGlobalConstantBufferCompute, 0);
         }
 
-        if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer(); 
-            buffer && (buffer->HALBuffer() != mBoundFrameConstantBufferCompute || ignoreCachedBuffers))
+        if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer();
+            buffer && (buffer->HALBuffer() != mBoundFrameConstantBufferCompute || mRebindingAfterSignatureChangeRequired))
         {
             mBoundFrameConstantBufferCompute = buffer->HALBuffer();
             mCommandList->SetComputeRootConstantBuffer(*mBoundFrameConstantBufferCompute, 1);
         }
 
-        if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass(); 
-            buffer && (buffer->HALBuffer() != mBoundPassConstantBufferCompute || ignoreCachedBuffers))
+        if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass();
+            buffer && (buffer->HALBuffer() != mBoundPassConstantBufferCompute || mRebindingAfterSignatureChangeRequired))
         {
             mBoundPassConstantBufferCompute = buffer->HALBuffer();
             mCommandList->SetComputeRootConstantBuffer(*mBoundPassConstantBufferCompute, 2);
         }
 
         if (auto buffer = mResourceStorage->DebugBufferForCurrentPass();
-            buffer && (buffer->HALBuffer() != mBoundPassDebugBufferCompute || ignoreCachedBuffers))
+            buffer && (buffer->HALBuffer() != mBoundPassDebugBufferCompute || mRebindingAfterSignatureChangeRequired))
         {
             mBoundPassDebugBufferCompute = buffer->HALBuffer();
             mCommandList->SetComputeRootUnorderedAccessResource(*mBoundPassDebugBufferCompute, 13);
         }
+
+        mRebindingAfterSignatureChangeRequired = false;
     }
 
     template <class CommandListT, class CommandQueueT>
@@ -155,6 +156,8 @@ namespace PathFinder
     template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
+        ApplyCommonComputeResourceBindingsIfNeeded();
+
         mCommandList->Dispatch(groupCountX, groupCountY, groupCountZ);
         mCommandList->InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
@@ -181,15 +184,12 @@ namespace PathFinder
 
         mCommandList->SetPipelineState(*state);
 
-        bool rootSignatureChanged = state->GetRootSignature() != mAppliedComputeRootSignature;
+        mRebindingAfterSignatureChangeRequired = state->GetRootSignature() != mAppliedComputeRootSignature;
 
-        if (rootSignatureChanged)
+        if (mRebindingAfterSignatureChangeRequired)
         {
             mCommandList->SetComputeRootSignature(*state->GetRootSignature());
-            ApplyCommonComputeResourceBindings();
         }
-
-        BindConstantBuffersCompute(rootSignatureChanged);
 
         mAppliedComputeRootSignature = state->GetRootSignature();
         mAppliedComputeState = state;
@@ -208,17 +208,12 @@ namespace PathFinder
         // Set RT state
         //mCommandList->SetPipelineState(*pso);
 
-        bool rootSignatureChanged = state->GetGlobalRootSignature() != mAppliedComputeRootSignature;
+        mRebindingAfterSignatureChangeRequired = state->GetGlobalRootSignature() != mAppliedComputeRootSignature;
 
-        // When root signature changes we have to rebind everything
-        //
-        if (rootSignatureChanged)
+        if (mRebindingAfterSignatureChangeRequired)
         {
             mCommandList->SetComputeRootSignature(*state->GetGlobalRootSignature());
-            ApplyCommonComputeResourceBindings();
         }
-
-        BindConstantBuffersCompute(rootSignatureChanged);
 
         mAppliedComputeRootSignature = state->GetGlobalRootSignature();
         mAppliedRayTracingState = state;

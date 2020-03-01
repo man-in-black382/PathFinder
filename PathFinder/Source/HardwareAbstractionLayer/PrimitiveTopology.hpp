@@ -6,7 +6,8 @@
 namespace HAL
 {
    
-    enum class PrimitiveTopology {
+    enum class PrimitiveTopology
+    {
         LineList, PointList, TriangleList, TriangleStrip
     };
 

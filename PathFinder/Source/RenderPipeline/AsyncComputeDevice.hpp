@@ -70,8 +70,9 @@ namespace PathFinder
         CommandListPtr mCommandList;
 
     private:
-        void ApplyCommonComputeResourceBindings();
-        void BindConstantBuffersCompute(bool ignoreCachedBuffers);
+        void ApplyCommonComputeResourceBindingsIfNeeded();
+
+        bool mRebindingAfterSignatureChangeRequired = false;
 
     public:
         inline CommandListT* CommandList() { return mCommandList.get(); }

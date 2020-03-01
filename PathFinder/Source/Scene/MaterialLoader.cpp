@@ -113,6 +113,8 @@ namespace PathFinder
 
     void MaterialLoader::LoadLTCLookupTables()
     {
+        /*mLTC_LUT_0_GGXCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT0.dds");
+        mLTC_LUT_1_GGXCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT1.dds");*/
         mLTC_LUT_0_GGXCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGX_Correlated_0.dds");
         mLTC_LUT_1_GGXCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGX_Correlated_1.dds");
         mLTC_LUT_0_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_0.dds");

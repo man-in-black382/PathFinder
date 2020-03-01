@@ -94,18 +94,18 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(blurPass.get());
 
     auto diskLight0 = scene.EmplaceFlatLight(PathFinder::FlatLight::Type::Rectangle);
-    diskLight0->SetWidth(4);
-    diskLight0->SetHeight(4);
-    diskLight0->SetPosition({ -10.0, 12.0, 0.0 });
-    diskLight0->SetNormal({ 0.0, -1.0, 0.0 });
+    diskLight0->SetWidth(2);
+    diskLight0->SetHeight(2);
+    diskLight0->SetPosition({ -5.0, 0.0, 0.0 });
+    diskLight0->SetNormal({ 0.0, 0.0, 1.0 });
     diskLight0->SetColor(Foundation::Color::White());
-    diskLight0->SetLuminousPower(50000);
+    diskLight0->SetLuminousPower(1000);
 
     auto sphereLight0 = scene.EmplaceSphericalLight();
-    sphereLight0->SetRadius(6);
-    sphereLight0->SetPosition({ 10.0, 12.0, 0.0 });
+    sphereLight0->SetRadius(3);
+    sphereLight0->SetPosition({ 5.0, 0.0, 0.0 });
     sphereLight0->SetColor(Foundation::Color::White());
-    sphereLight0->SetLuminousPower(50000);
+    sphereLight0->SetLuminousPower(1000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
@@ -129,10 +129,11 @@ int main(int argc, char** argv)
         "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
 
     PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &harshBricksMaterial });
 
     auto t = sphereInstance.Transformation();
-    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
+    //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
+    t.Translation = glm::vec3{ 0.0, -6.0, 0.0 };
     sphereInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
@@ -213,7 +214,7 @@ int main(int argc, char** argv)
         }
 
         uiInteractor.PollInputs();
-        cameraInteractor.PollInputs();
+        cameraInteractor.PollInputs(engine.FrameDurationMicroseconds());
         engine.Render();
         windowsInputHandler.EndFrame();
     }

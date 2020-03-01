@@ -33,28 +33,4 @@ namespace PathFinder
         return std::prev(mSphericalLights.end());
     }
 
-    void Scene::IterateMeshInstances(const std::function<void(const MeshInstance & instance)>& functor) const
-    {
-        for (const MeshInstance& instance : mMeshInstances)
-        {
-            functor(instance);
-        }
-    }
-
-    void Scene::IterateMeshInstances(const std::function<void(MeshInstance & instance)>& functor)
-    {
-        for (MeshInstance& instance : mMeshInstances)
-        {
-            functor(instance);
-        }
-    }
-
-    void Scene::IterateMaterials(const std::function<void(const Material& material)>& functor) const
-    {
-        for (const Material& material : mMaterials)
-        {
-            functor(material);
-        }
-    }
-
 }

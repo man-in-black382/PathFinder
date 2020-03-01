@@ -23,6 +23,10 @@ namespace PathFinder
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
+
+    private:
+        void RenderMeshes(RenderContext<RenderPassContentMediator>* context);
+        void RenderLights(RenderContext<RenderPassContentMediator>* context);
     };
 
 }

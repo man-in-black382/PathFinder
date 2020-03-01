@@ -1,6 +1,9 @@
 #include "CameraInteractor.hpp"
 #include "../Foundation/Pi.hpp"
 
+#include <windows.h>
+#include "../Foundation/StringUtils.hpp"
+
 #include <glm/gtc/epsilon.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
@@ -46,7 +49,7 @@ namespace PathFinder
 
     void CameraInteractor::HandleMouseDrag()
     {
-        glm::vec2 mouseDirection = mUserInput->MouseDelta() * mInputScale.MouseMovementScale;
+        glm::vec2 mouseDirection = mUserInput->MouseDelta() * mInputScaleTimeAdjusted.MouseMovementScale;
 
         if (mUserInput->IsMouseButtonPressed(0) && mUserInput->IsMouseButtonPressed(1)) 
         {
@@ -85,8 +88,8 @@ namespace PathFinder
     void CameraInteractor::HandleMouseScroll()
     {
         glm::vec2 scrollDelta = mUserInput->ScrollDelta();
-        glm::vec3 front = mCamera->Front() * scrollDelta.y * -mInputScale.MouseMovementScale;
-        glm::vec3 right = mCamera->Right() * scrollDelta.x * mInputScale.MouseMovementScale;
+        glm::vec3 front = mCamera->Front() * scrollDelta.y * -mInputScaleTimeAdjusted.MouseMovementScale;
+        glm::vec3 right = mCamera->Right() * scrollDelta.x * mInputScaleTimeAdjusted.MouseMovementScale;
         mMouseMoveDirection = front + right;
     }
 
@@ -100,8 +103,17 @@ namespace PathFinder
         return glm::angle(mouseDirection, glm::vec2(-1.0, 0.0)) < M_PI_4 || glm::angle(mouseDirection, glm::vec2(1.0, 0.0)) < M_PI_4;
     }
 
-    void CameraInteractor::PollInputs()
+    void CameraInteractor::PollInputs(uint64_t frameDeltaTimeMicroseconds)
     {
+        if (frameDeltaTimeMicroseconds == 0)
+        {
+            return;
+        }
+
+        mInputScaleTimeAdjusted = mInputScale;
+        /*  mInputScaleTimeAdjusted.KeyboardMovementScale /= frameDeltaTimeMicroseconds / 1000;
+          mInputScaleTimeAdjusted.MouseMovementScale /= frameDeltaTimeMicroseconds / 1000;*/
+
         if (mIsEnabled) 
         {
             HandleMouseDrag();

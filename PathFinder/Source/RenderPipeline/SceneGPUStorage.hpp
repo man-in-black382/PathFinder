@@ -59,12 +59,6 @@ namespace PathFinder
             Disk = 0, Sphere = 1, Rectangle = 2
         };
 
-        float LuminousIntensity;
-        float Width;
-        float Height;
-        std::underlying_type_t<LightType> LightTypeRaw;
-        // 16 byte boundary
-
         glm::vec4 Orientation;
         // 16 byte boundary
 
@@ -72,6 +66,13 @@ namespace PathFinder
         // 16 byte boundary
 
         glm::vec4 Color;
+        // 16 byte boundary
+
+        float LuminousIntensity;
+        float Luminance;
+        float Width;
+        float Height;
+        std::underlying_type_t<LightType> LightTypeRaw;
         // 16 byte boundary
     };
 

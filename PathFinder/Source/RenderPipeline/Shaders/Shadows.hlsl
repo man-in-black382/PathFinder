@@ -7,7 +7,7 @@ struct ShadowRayPayload
 };
 
 #include "MandatoryEntryPointInclude.hlsl"
-#include "InstanceData.hlsl"
+#include "Mesh.hlsl"
 #include "Vertices.hlsl"
 
 RaytracingAccelerationStructure SceneBVH : register(t0, space0);

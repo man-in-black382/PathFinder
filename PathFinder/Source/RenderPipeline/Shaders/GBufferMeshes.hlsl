@@ -1,5 +1,5 @@
-#ifndef _GBufferRenderPass__
-#define _GBufferRenderPass__
+#ifndef _GBufferMeshes__
+#define _GBufferMeshes__
 
 static const float DistanceFieldMaxVoxelDistance = sqrt(3.0);
 
@@ -21,13 +21,13 @@ struct RootConstants
     uint InstanceTableIndex;
 };
 
-#include "InstanceData.hlsl"
 #include "MandatoryEntryPointInclude.hlsl"
 #include "GBuffer.hlsl"
 #include "ColorConversion.hlsl"
 #include "Vertices.hlsl"
 #include "Geometry.hlsl"
 #include "Matrix.hlsl"
+#include "Mesh.hlsl"
 
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t0);
@@ -51,7 +51,6 @@ float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, MeshInstance instanceData)
     float3 T = mul(instanceData.ModelMatrix, float4(normalize(vertex.Tangent), 0.0)).xyz;
     float3 B = normalize(cross(N, T));
 
-    // Negate B to achieve correct behavior for SOME FUCKING REASON. Shouldn't be needed, but it is.
     return Matrix3x3ColumnMajor(T, B, N);
 }
 
@@ -80,11 +79,6 @@ VertexOut VSMain(uint indexId : SV_VertexID)
 }
 
 //------------------------  Pixel  ------------------------------//
-
-struct PixelOut
-{
-    uint4 MaterialData : SV_Target0;
-};
 
 float3 FetchAlbedoMap(VertexOut vertex, Material material)
 {
@@ -254,17 +248,13 @@ VertexOut DisplaceUV(VertexOut originalVertexData, MeshInstance instanceData, ou
     return originalVertexData;
 }
 
-PixelOut PSMain(VertexOut pin)
+GBufferPixelOut PSMain(VertexOut pin)
 {
     MeshInstance instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
-
-    bool intersection;
-    float3 voxel;
-    VertexOut displacedVertexData = pin;// DisplaceUV(pin, instanceData, intersection, voxel);
-
+    VertexOut displacedVertexData = pin;
     Material material = MaterialTable[instanceData.MaterialIndex];
 
-    GBuffer gBufferData;
+    GBufferStandard gBufferData;
 
     gBufferData.Albedo = FetchAlbedoMap(displacedVertexData, material);
     gBufferData.Normal = FetchNormalMap(displacedVertexData, material);
@@ -273,29 +263,9 @@ PixelOut PSMain(VertexOut pin)
     gBufferData.AO = FetchAOMap(displacedVertexData, material);
     gBufferData.MaterialIndex = instanceData.MaterialIndex;
 
-    //gBufferData.Albedo = intersection ? FetchDisplacementMap(displacedVertexData, instanceData).xxx : 0.0;
-
-   /* if (voxel.x == 26 && voxel.y == 36)
-    {
-        gBufferData.Albedo = float3(0.0, 0.0, 1.0);
-    }
-    else
-    {
-        gBufferData.Albedo = float3(0.0, voxel.z / 64, 0.0);
-    }*/
-
-    //Ray testRay = { float3(0.5, 0.5, 0.5), float3(-1, -1, 0), 0, 0 };
-    //float3 newPos = VoxelWallIntersection(testRay.Origin, float3(5, 5, 5), testRay);
-    //uint3 i = UVWToVoxelIndex(newPos, uint3(5, 5, 5));
-
-    //if (all(i == uint3(1, 1, 2)))
-    //{
-    //    gBufferData.Albedo = float3(0.0, voxel.z / 64, 0.0);
-    //}
-
     GBufferEncoded encoded = EncodeGBuffer(gBufferData);
 
-    PixelOut pixelOut;
+    GBufferPixelOut pixelOut;
     pixelOut.MaterialData = encoded.MaterialData;
 
     //DebugOut(123.0, pin.Position.xy, uint2(1000, 500));

@@ -182,6 +182,8 @@ namespace PathFinder
         mDescriptorAllocator.BeginFrame(newFrameNumber);
         mCommandListAllocator.BeginFrame(newFrameNumber);
         mResourceProducer.BeginFrame(newFrameNumber);
+
+        mFrameStartTimestamp = std::chrono::steady_clock::now();
     }
 
     template <class ContentMediator>
@@ -192,6 +194,9 @@ namespace PathFinder
         mResourceAllocator.EndFrame(completedFrameNumber);
         mDescriptorAllocator.EndFrame(completedFrameNumber);
         mCommandListAllocator.EndFrame(completedFrameNumber);
+
+        using namespace std::chrono;
+        mFrameDuration = duration_cast<microseconds>(steady_clock::now() - mFrameStartTimestamp);
     }
 
     template <class ContentMediator>

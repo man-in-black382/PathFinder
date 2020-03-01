@@ -47,7 +47,7 @@ namespace PathFinder
         template <class T>
         struct NewBufferProperties
         {
-            NewBufferProperties(uint64_t capacity = 1, uint64_t perElementAlignment = 256)
+            NewBufferProperties(uint64_t capacity = 1, uint64_t perElementAlignment = 1)
                 : Capacity{ capacity }, PerElementAlignment{ perElementAlignment } {}
 
             uint64_t Capacity;

@@ -25,7 +25,8 @@ namespace PathFinder
         inline Foundation::Name DistanceMapHelperCompression{ "PSO_DistanceMapHelperCompression" };
         inline Foundation::Name DistanceMapGeneration{ "PSO_DistanceMapGeneration" };
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
-        inline Foundation::Name GBuffer{ "PSO_GBuffer" };
+        inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
+        inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name Blur{ "PSO_Blur" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
@@ -35,7 +36,8 @@ namespace PathFinder
    
     namespace RootSignatureNames
     {
-        inline Foundation::Name GBuffer{ "GBuffer_Root_Sig" };
+        inline Foundation::Name GBufferMeshes{ "GBuffer_Meshes_Root_Sig" };
+        inline Foundation::Name GBufferLights{ "GBuffer_Lights_Root_Sig" };
         inline Foundation::Name DeferredLighting{ "Deferred_Lighting_Root_Sig" };
         inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
         inline Foundation::Name UI{ "UI_Root_Sig" };

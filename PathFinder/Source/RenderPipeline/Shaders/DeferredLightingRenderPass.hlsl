@@ -22,47 +22,15 @@ struct RootConstants
 #include "SpaceConversion.hlsl"
 #include "Utils.hlsl"
 #include "Matrix.hlsl"
-#include "InstanceData.hlsl"
+#include "Mesh.hlsl"
+#include "Light.hlsl"
 #include "LTC.hlsl"
 
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Light> LightTable : register(t0);
 StructuredBuffer<Material> MaterialTable : register(t1);
 
-DiskLightPoints GetFlatLightPoints(Light light)
-{
-    DiskLightPoints points;
-
-    float halfWidth = light.Width * 0.5;
-    float halfHeight = light.Height * 0.5;
-
-    float3 position = light.Position.xyz;
-    float3 orientation = light.Orientation.xyz;
-
-    // Get billboard points at the origin
-    float4 p0 = float4(-halfWidth, -halfHeight, 0.0, 0.0);
-    float4 p1 = float4(halfWidth, -halfHeight, 0.0, 0.0);
-    float4 p2 = float4(halfWidth, halfHeight, 0.0, 0.0);
-    float4 p3 = float4(-halfWidth, halfHeight, 0.0, 0.0);
-
-    float4x4 diskRotation = LookAtMatrix(orientation, GetUpVectorForOrientaion(orientation));
-
-    // Rotate around origin
-    p0 = mul(diskRotation, p0);
-    p1 = mul(diskRotation, p1);
-    p2 = mul(diskRotation, p2);
-    p3 = mul(diskRotation, p3);
-
-    // Move points to light's location
-    points.Points[0] = p0.xyz + light.Position.xyz;
-    points.Points[1] = p1.xyz + light.Position.xyz;
-    points.Points[2] = p2.xyz + light.Position.xyz;
-    points.Points[3] = p3.xyz + light.Position.xyz;
-
-    return points;
-}
-
-float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBuffer gBuffer, Texture2D LTC_LUT0, Texture2D LTC_LUT1, float2 LTC_LUT_Size)
+float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBufferStandard gBuffer, Texture2D LTC_LUT0, Texture2D LTC_LUT1, float2 LTC_LUT_Size)
 {
     // Integrate area light
     float3 specular = 0.0.xxx;
@@ -97,7 +65,7 @@ float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBuffer
         
         case LightTypeDisk:
         {
-            DiskLightPoints diskPoints = GetFlatLightPoints(light); 
+            DiskLightPoints diskPoints = GetLightPointsWS(light);
             specular = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, Minv, diskPoints.Points, LTC_LUT1, LTC_LUT_Size, LinearClampSampler);
             diffuse = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, Matrix3x3Identity, diskPoints.Points, LTC_LUT1, LTC_LUT_Size, LinearClampSampler);
             break;
@@ -105,7 +73,7 @@ float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBuffer
             
         case LightTypeRectangle:
         {
-            DiskLightPoints diskPoints = GetFlatLightPoints(light);
+            DiskLightPoints diskPoints = GetLightPointsWS(light);
             specular = LTCEvaluateRectangle(gBuffer.Normal, V, surfaceWPos, Minv, diskPoints.Points);
             diffuse = LTCEvaluateRectangle(gBuffer.Normal, V, surfaceWPos, Matrix3x3Identity, diskPoints.Points);
             break;
@@ -123,6 +91,33 @@ float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBuffer
     diffuse *= gBuffer.Albedo * (1.0 - gBuffer.Metalness) * (1.0 - fresnel);
 
     return (specular + diffuse) * light.Color.rgb * light.LuminousIntensity;
+}
+
+float3 EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, float depth)
+{
+    Material material = MaterialTable[gBuffer.MaterialIndex];
+
+    Texture2D LTC_LUT0 = Textures2D[material.LTC_LUT_0_Specular_Index];
+    Texture2D LTC_LUT1 = Textures2D[material.LTC_LUT_1_Specular_Index];
+    float2 LTC_LUT_Size = float2(material.LTC_LUT_TextureSize, material.LTC_LUT_TextureSize);
+
+    float3 worldPosition = ReconstructWorldPosition(depth, uv, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
+    float3 V = normalize(FrameDataCB.CameraPosition.xyz - worldPosition);
+
+    float3 outgoingRadiance = 0.xxx;
+
+    for (uint lightIdx = 0; lightIdx < RootConstantBuffer.TotalLightCount; ++lightIdx)
+    {
+        Light light = LightTable[lightIdx];
+        outgoingRadiance += EvaluateDirectLighting(light, V, worldPosition, gBuffer, LTC_LUT0, LTC_LUT1, LTC_LUT_Size);
+    }
+
+    return outgoingRadiance;
+}
+
+float3 EvaluateEmissiveGBufferLighting(GBufferEmissive gBuffer)
+{
+    return gBuffer.LuminousIntensity;
 }
 
 [numthreads(32, 32, 1)]
@@ -146,27 +141,22 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 
     GBufferEncoded encodedGBuffer;
     encodedGBuffer.MaterialData = materialData.Load(uint3(pixelIndex, 0));
-    
-    GBuffer gBuffer = DecodeGBuffer(encodedGBuffer);
 
-    Material material = MaterialTable[gBuffer.MaterialIndex];
+    uint gBufferType = DecodeGBufferType(encodedGBuffer);
+    float3 outgoingLuminance = 0.xxx;
 
-    Texture2D LTC_LUT0 = Textures2D[material.LTC_LUT_0_Specular_Index];
-    Texture2D LTC_LUT1 = Textures2D[material.LTC_LUT_1_Specular_Index];
-    float2 LTC_LUT_Size = float2(material.LTC_LUT_TextureSize, material.LTC_LUT_TextureSize);
-
-    float3 worldPosition = ReconstructWorldPosition(depth, UV, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
-    float3 V = normalize(FrameDataCB.CameraPosition.xyz - worldPosition);
-
-    float3 outgoingRadiance = 0.xxx;
-    
-    for (uint lightIdx = 0; lightIdx < RootConstantBuffer.TotalLightCount; ++lightIdx)
+    switch (gBufferType)
     {
-        Light light = LightTable[lightIdx];
-        outgoingRadiance += EvaluateDirectLighting(light, V, worldPosition, gBuffer, LTC_LUT0, LTC_LUT1, LTC_LUT_Size);
+    case GBufferTypeStandard: 
+        outgoingLuminance = EvaluateStandardGBufferLighting(DecodeGBufferStandard(encodedGBuffer), UV, depth); 
+        break;
+
+    case GBufferTypeEmissive:
+        outgoingLuminance = EvaluateEmissiveGBufferLighting(DecodeGBufferEmissive(encodedGBuffer));
+        break;
     }
 
-    outputImage[dispatchThreadID.xy] = float4(outgoingRadiance, 1.0);
+    outputImage[dispatchThreadID.xy] = float4(outgoingLuminance, 1.0);
 }
 
 #endif

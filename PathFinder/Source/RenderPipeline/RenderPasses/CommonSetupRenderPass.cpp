@@ -22,7 +22,6 @@ namespace PathFinder
 
     void CommonSetupRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->NewBuffer(ResourceNames::UAVCounterBuffer, ResourceScheduler::NewByteBufferProperties{});
     }
 
 }

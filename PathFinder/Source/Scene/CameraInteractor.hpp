@@ -24,7 +24,7 @@ namespace PathFinder
         bool IsEnabled() const;
         void SetIsEnabled(bool enabled);
         void SetViewportSize(const Geometry::Dimensions& viewportSize);
-        void PollInputs();
+        void PollInputs(uint64_t frameDeltaTime);
 
     private:
         void HandleKeyDown();
@@ -42,6 +42,7 @@ namespace PathFinder
         glm::vec3 mKeyboardMoveDirection;
         glm::vec2 mMouseLockDirection;
         InputScale mInputScale;
+        InputScale mInputScaleTimeAdjusted;
 
         bool mIsEnabled = true;
     };

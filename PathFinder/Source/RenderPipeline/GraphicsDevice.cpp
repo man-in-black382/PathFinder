@@ -74,6 +74,7 @@ namespace PathFinder
 
     void GraphicsDevice::Draw(uint32_t vertexCount, uint32_t instanceCount)
     {
+        ApplyCommonGraphicsResourceBindingsIfNeeded();
         ApplyDefaultViewportIfNeeded();
         mCommandList->Draw(vertexCount, 0);
         mCommandList->InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
@@ -81,6 +82,7 @@ namespace PathFinder
     
     void GraphicsDevice::Draw(const DrawablePrimitive& primitive)
     {
+        ApplyCommonGraphicsResourceBindingsIfNeeded();
         ApplyDefaultViewportIfNeeded();
         mCommandList->SetPrimitiveTopology(primitive.Topology());
         mCommandList->Draw(primitive.VertexCount(), 0);
@@ -92,59 +94,59 @@ namespace PathFinder
         mCurrentPassViewport = std::nullopt;
     }
 
-    void GraphicsDevice::ApplyCommonGraphicsResourceBindings()
+    void GraphicsDevice::ApplyCommonGraphicsResourceBindingsIfNeeded()
     {   
         mCommandList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
 
-        // Look at PipelineStateManager for base root signature parameter ordering
-        HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
-        HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
+        if (mRebindingAfterSignatureChangeRequired)
+        {
+            // Look at PipelineStateManager for base root signature parameter ordering
+            HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
+            HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
 
-        // Alias different registers to one GPU address
-        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 3);
-        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 4);
-        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 5);
-        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 6);
-        mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 7);
+            // Alias different registers to one GPU address
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 3);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 4);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 5);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 6);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 7);
 
-        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 8);
-        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 9);
-        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 10);
-        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 11);
-        mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 12);
-    }
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 8);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 9);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 10);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 11);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 12);
+        }
 
-    void GraphicsDevice::BindConstantBuffersGraphics(bool ignoreCachedBuffers)
-    {
-        //
-
-        if (auto buffer = mResourceStorage->GlobalRootConstantsBuffer(); 
-            buffer && (buffer->HALBuffer() != mBoundGlobalConstantBufferGraphics || ignoreCachedBuffers))
+        if (auto buffer = mResourceStorage->GlobalRootConstantsBuffer();
+            buffer && (buffer->HALBuffer() != mBoundGlobalConstantBufferGraphics || mRebindingAfterSignatureChangeRequired))
         {
             mBoundGlobalConstantBufferGraphics = buffer->HALBuffer();
             mCommandList->SetGraphicsRootConstantBuffer(*mBoundGlobalConstantBufferGraphics, 0);
         }
 
-        if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer(); 
-            buffer && (buffer->HALBuffer() != mBoundFrameConstantBufferGraphics || ignoreCachedBuffers))
+        if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer();
+            buffer && (buffer->HALBuffer() != mBoundFrameConstantBufferGraphics || mRebindingAfterSignatureChangeRequired))
         {
             mBoundFrameConstantBufferGraphics = buffer->HALBuffer();
             mCommandList->SetGraphicsRootConstantBuffer(*mBoundFrameConstantBufferGraphics, 1);
         }
 
-        if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass(); 
-            buffer && (buffer->HALBuffer() != mBoundPassConstantBufferGraphics || ignoreCachedBuffers))
+        if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass();
+            buffer && (buffer->HALBuffer() != mBoundPassConstantBufferGraphics || mRebindingAfterSignatureChangeRequired))
         {
             mBoundPassConstantBufferGraphics = buffer->HALBuffer();
             mCommandList->SetGraphicsRootConstantBuffer(*mBoundPassConstantBufferGraphics, 2);
         }
 
         if (auto buffer = mResourceStorage->DebugBufferForCurrentPass();
-            buffer && (buffer->HALBuffer() != mBoundPassDebugBufferGraphics || ignoreCachedBuffers))
+            buffer && (buffer->HALBuffer() != mBoundPassDebugBufferGraphics || mRebindingAfterSignatureChangeRequired))
         {
             mBoundPassDebugBufferGraphics = buffer->HALBuffer();
             mCommandList->SetGraphicsRootUnorderedAccessResource(*mBoundPassDebugBufferGraphics, 13);
         }
+
+        mRebindingAfterSignatureChangeRequired = false;
     }
 
     void GraphicsDevice::ApplyDefaultViewportIfNeeded()
@@ -177,17 +179,14 @@ namespace PathFinder
         mCommandList->SetPipelineState(*state);
         mCommandList->SetPrimitiveTopology(state->GetPrimitiveTopology());
 
-        bool rootSignatureChanged = state->GetRootSignature() != mAppliedGraphicsRootSignature;
+        mRebindingAfterSignatureChangeRequired = state->GetRootSignature() != mAppliedGraphicsRootSignature;
 
         // If root signature has changed we need to rebind common bindings
         //
-        if (rootSignatureChanged)
+        if (mRebindingAfterSignatureChangeRequired)
         {
             mCommandList->SetGraphicsRootSignature(*state->GetRootSignature());
-            ApplyCommonGraphicsResourceBindings(); 
         }
-
-        BindConstantBuffersGraphics(rootSignatureChanged);
 
         // Nullify cached states and signatures
         mAppliedComputeState = nullptr;
@@ -224,17 +223,14 @@ namespace PathFinder
         // Set RT state
         //mCommandList->SetPipelineState(*pso);
 
-        bool rootSignatureChanged = state->GetGlobalRootSignature() != mAppliedGraphicsRootSignature;
+        mRebindingAfterSignatureChangeRequired = state->GetGlobalRootSignature() != mAppliedGraphicsRootSignature;
 
         // If root signature has changed we need to rebind common bindings
         //
-        if (rootSignatureChanged)
+        if (mRebindingAfterSignatureChangeRequired)
         {
             mCommandList->SetGraphicsRootSignature(*state->GetGlobalRootSignature());
-            ApplyCommonGraphicsResourceBindings();
         }
-
-        BindConstantBuffersGraphics(rootSignatureChanged);
 
         // Nullify cached states and signatures
         mAppliedGraphicsState = nullptr;

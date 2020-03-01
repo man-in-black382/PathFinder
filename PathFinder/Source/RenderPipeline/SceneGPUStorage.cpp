@@ -33,26 +33,28 @@ namespace PathFinder
         }
 
         return{
-                light.LuminousIntensity(),
-                light.Width(),
-                light.Height(),
-                std::underlying_type_t<GPULightTableEntry::LightType>(lightType),
                 glm::vec4(light.Normal(), 0.0f),
                 glm::vec4(light.Position(), 1.0f),
-                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f)
+                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f),
+                light.LuminousIntensity(),
+                light.Luminance(),
+                light.Width(),
+                light.Height(),
+                std::underlying_type_t<GPULightTableEntry::LightType>(lightType)
         };
     }
 
     GPULightTableEntry SceneGPUStorage::CreateLightGPUTableEntry(const SphericalLight& light) const
     {
         return{
-                light.LuminousIntensity(),
-                light.Radius(),
-                light.Radius(),
-                std::underlying_type_t<GPULightTableEntry::LightType>(GPULightTableEntry::LightType::Sphere),
                 glm::vec4(0.0f), // No orientation required for spherical lights
                 glm::vec4(light.Position(), 1.0f),
-                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f)
+                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f),
+                light.LuminousIntensity(),
+                light.Luminance(),
+                light.Radius(),
+                light.Radius(),
+                std::underlying_type_t<GPULightTableEntry::LightType>(GPULightTableEntry::LightType::Sphere)
         };
     }
 

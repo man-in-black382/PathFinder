@@ -417,9 +417,6 @@
     <ClCompile Include="Source\Scene\FlatLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\PipelineBindingCache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2282,9 +2279,6 @@
     <ClInclude Include="Source\Scene\FlatLight.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\PipelineBindingCache.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2804,10 +2798,8 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GBuffer.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Packing.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ColorConversion.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\GBufferRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BackBufferOutput.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\InstanceData.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BlurRenderPass.hlsl" />
@@ -2826,6 +2818,10 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GTTonemapping.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\LTC.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Matrix.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GBufferMeshes.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Light.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Mesh.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GBufferLights.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

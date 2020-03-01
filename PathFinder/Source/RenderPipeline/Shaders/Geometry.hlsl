@@ -166,4 +166,14 @@ float3 VoxelWallIntersection(float3 voxelUVW, uint3 voxelGridResolution, Ray ray
     return voxelUVW + ray.Direction * (d + Epsilon); // Add e to make sure we step into neighbor voxel
 }
 
+bool IsPointInsideEllipse(float2 p, float2 ellipseCenter, float width, float height)
+{
+    float hw = width * 0.5;
+    float hh = height * 0.5;
+    float dx = p.x - ellipseCenter.x;
+    float dy = p.y - ellipseCenter.y;
+
+    return (dx * dx) / (hw * hw) + (dy * dy) / (hh * hh) <= 1.0;
+}
+
 #endif

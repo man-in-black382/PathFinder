@@ -27,6 +27,9 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     uint3 loadCoords = uint3(dispatchThreadID.xy, 0);
     float3 color = inputImage.Load(loadCoords).rgb;
 
+    float exposition = 16.0;
+    color *= exposition;
+
     float3 tonemappedColor = float3(
         GTToneMap(color.r, PassDataCB.TonemappingParams),
         GTToneMap(color.g, PassDataCB.TonemappingParams),

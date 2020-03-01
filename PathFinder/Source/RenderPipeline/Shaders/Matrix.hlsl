@@ -57,12 +57,11 @@ float4x4 AxisMatrix(float3 right, float3 up, float3 forward)
     );
 }
 
-// http://stackoverflow.com/questions/349050/calculating-a-lookat-matrix
 float4x4 LookAtMatrix(float3 forward, float3 up)
 {
-    float3 xaxis = normalize(cross(forward, up));
-    float3 yaxis = up;
     float3 zaxis = forward;
+    float3 xaxis = normalize(cross(up, zaxis));
+    float3 yaxis = cross(zaxis, xaxis);
 
     return AxisMatrix(xaxis, yaxis, zaxis);
 }

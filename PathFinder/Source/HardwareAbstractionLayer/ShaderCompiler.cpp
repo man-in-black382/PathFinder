@@ -81,6 +81,8 @@ namespace HAL
 
     ShaderCompiler::CompilationResult ShaderCompiler::Compile(const std::filesystem::path& path, Shader::Stage stage, bool debugBuild)
     {
+        assert_format(std::filesystem::exists(path), "Shader file ", path.filename(), " doesn't exist");
+
         CompilerInputs inputs{ stage, Shader::Profile::P6_3 };
 
         std::vector<std::wstring> arguments;
@@ -116,8 +118,6 @@ namespace HAL
             nullptr, 0,                         // name/value defines and their count
             &reader,                            // handler for #include directives
             result.GetAddressOf()); 
-
-        result->GetStatus(&hrCompilation);
 
         if (SUCCEEDED(hrCompilation))
         {
