@@ -21,7 +21,7 @@ static const float4x4 Matrix4x4Identity =
 
 float3 GetUpVectorForOrientaion(float3 orientation)
 {
-    return abs(dot(orientation, UpY)) < 0.9999 ? UpY : UpZ; 
+    return abs(dot(orientation, UpY)) < 0.999 ? UpY : UpZ; 
 }
 
 float3x3 Matrix3x3ColumnMajor(float3 column0, float3 column1, float3 column2)

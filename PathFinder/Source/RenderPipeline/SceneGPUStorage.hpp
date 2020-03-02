@@ -49,6 +49,8 @@ namespace PathFinder
         uint32_t DistanceFieldIndex;
         uint32_t LTC_LUT_0_Specular_Index;
         uint32_t LTC_LUT_1_Specular_Index;
+        uint32_t LTC_LUT_0_Diffuse_Index;
+        uint32_t LTC_LUT_1_Diffuse_Index;
         uint32_t LTC_LUT_TextureSize;
     };
 

@@ -28,8 +28,8 @@ DiskLightPoints GetLightPointsWS(Light light)
 {
     DiskLightPoints points;
 
-    float halfWidth = light.Width * 0.5;
-    float halfHeight = light.Height * 0.5;
+    float halfWidth = light.Width * 0.5; 
+    float halfHeight = light.Height * 0.5; 
 
     float3 position = light.Position.xyz;
     float3 orientation = light.Orientation.xyz;
@@ -50,10 +50,10 @@ DiskLightPoints GetLightPointsWS(Light light)
 
     // Move points to light's location
     // Clockwise to match LTC convention
-    points.Points[3] = p0.xyz + light.Position.xyz;
-    points.Points[2] = p1.xyz + light.Position.xyz;
-    points.Points[1] = p2.xyz + light.Position.xyz;
     points.Points[0] = p3.xyz + light.Position.xyz;
+    points.Points[1] = p2.xyz + light.Position.xyz;
+    points.Points[2] = p1.xyz + light.Position.xyz;
+    points.Points[3] = p0.xyz + light.Position.xyz;
 
     return points;
 }

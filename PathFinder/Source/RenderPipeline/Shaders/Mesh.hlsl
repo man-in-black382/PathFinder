@@ -25,6 +25,8 @@ struct Material
     uint DistanceFieldIndex;
     uint LTC_LUT_0_Specular_Index;
     uint LTC_LUT_1_Specular_Index;
+    uint LTC_LUT_0_Diffuse_Index;
+    uint LTC_LUT_1_Diffuse_Index;
     uint LTC_LUT_TextureSize;
 };
 

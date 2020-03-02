@@ -157,6 +157,12 @@ float3 LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 point
     V1 = mul(Minv, V1);
     V2 = mul(Minv, V2);
 
+    // Clip back side
+    if (dot(cross(V1, V2), C) < 0.0)
+    {
+        return float3(0.0, 0.0, 0.0);
+    }
+
     // compute eigenvectors of ellipse
     float a, b;
     float d11 = dot(V1, V1);
@@ -223,6 +229,11 @@ float3 LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 point
     float e1 = roots.x;
     float e2 = roots.y;
     float e3 = roots.z;
+
+    if (any(isnan(e3)))
+    {
+        return float3(1000, 0, 0);
+    }
 
     float3 avgDir = float3(a * x0 / (a - e2), b * y0 / (b - e2), 1.0);
 

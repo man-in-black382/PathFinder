@@ -30,65 +30,90 @@ ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Light> LightTable : register(t0);
 StructuredBuffer<Material> MaterialTable : register(t1);
 
-float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBufferStandard gBuffer, Texture2D LTC_LUT0, Texture2D LTC_LUT1, float2 LTC_LUT_Size)
+float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBufferStandard gBuffer, Material material)
 {
     // Integrate area light
     float3 specular = 0.0.xxx;
     float3 diffuse = 0.0.xxx;
-    
+
+    Texture2D LTC_LUT_Specular_0 = Textures2D[material.LTC_LUT_0_Specular_Index];
+    Texture2D LTC_LUT_Specular_1 = Textures2D[material.LTC_LUT_1_Specular_Index];
+
+    Texture2D LTC_LUT_Diffuse_0 = Textures2D[material.LTC_LUT_0_Diffuse_Index];
+    Texture2D LTC_LUT_Diffuse_1 = Textures2D[material.LTC_LUT_1_Diffuse_Index];
+
+    float2 LTC_LUT_Size = float2(material.LTC_LUT_TextureSize, material.LTC_LUT_TextureSize);
+
     // Fetch precomputed matrices and fresnel/shadowing terms
     float NdotV = saturate(dot(gBuffer.Normal, V));
     float2 uv = float2(gBuffer.Roughness, sqrt(1.0 - NdotV));
     uv = Refit0to1ValuesToTexelCenter(uv, LTC_LUT_Size);
 
-    float4 t1 = LTC_LUT0.SampleLevel(LinearClampSampler, uv, 0);
-    float4 t2 = LTC_LUT1.SampleLevel(LinearClampSampler, uv, 0);
+    float4 matrixComponentsSpecular = LTC_LUT_Specular_0.SampleLevel(LinearClampSampler, uv, 0);
+    float4 maskingFresnelAndScaleSpecular = LTC_LUT_Specular_1.SampleLevel(LinearClampSampler, uv, 0);
 
-    float3x3 Minv = Matrix3x3ColumnMajor(
-        float3(t1.x, 0, t1.y),
+    float3x3 MinvSpecular = Matrix3x3ColumnMajor(
+        float3(matrixComponentsSpecular.x, 0, matrixComponentsSpecular.y),
         float3(0, 1, 0),
-        float3(t1.z, 0, t1.w)
+        float3(matrixComponentsSpecular.z, 0, matrixComponentsSpecular.w)
     );
 
-    float geometryMasking = t2.x;
-    float fresnel = t2.y;
-    
+    float4 matrixComponentsDiffuse = LTC_LUT_Diffuse_0.SampleLevel(LinearClampSampler, uv, 0);
+
+    float3x3 MinvDiffuse = Matrix3x3ColumnMajor(
+        float3(matrixComponentsDiffuse.x, 0, matrixComponentsDiffuse.y),
+        float3(0, 1, 0),
+        float3(matrixComponentsDiffuse.z, 0, matrixComponentsDiffuse.w)
+    );
+
+    float geometryMasking = maskingFresnelAndScaleSpecular.x;
+    float fresnel = maskingFresnelAndScaleSpecular.y;
+
     // Integrate area lights
     switch (light.LightType)
     {  
         case LightTypeSphere:
         {
             // Spherical light is just a disk light always oriented towards surface
-            light.Orientation = float4(0.0, -1.0, 0.0, 0.0);// float4(normalize(surfaceWPos - light.Position.xyz), 0.0);
+            light.Orientation = float4(normalize(surfaceWPos - light.Position.xyz), 0.0);
             // Proceed to disk integration
         }
         
         case LightTypeDisk:
         {
+            // Add a small value so that width and height is never truly equal.
+            // LTC disk evaluation code has nasty numerical errors (NaNs) in a corner case 
+            // when width and height are fully equal and disk is rotated
+            // strictly toward the surface point.
+            // A slightly more wide light is almost imperceptible, so I guess it will have to do.
+            //
+            light.Width += 0.1;
+
             DiskLightPoints diskPoints = GetLightPointsWS(light);
-            specular = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, Minv, diskPoints.Points, LTC_LUT1, LTC_LUT_Size, LinearClampSampler);
-            diffuse = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, Matrix3x3Identity, diskPoints.Points, LTC_LUT1, LTC_LUT_Size, LinearClampSampler);
+
+            specular = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, MinvSpecular, diskPoints.Points, LTC_LUT_Specular_1, LTC_LUT_Size, LinearClampSampler);
+            diffuse = LTCEvaluateDisk(gBuffer.Normal, V, surfaceWPos, MinvDiffuse, diskPoints.Points, LTC_LUT_Diffuse_1, LTC_LUT_Size, LinearClampSampler);
             break;
         }
             
         case LightTypeRectangle:
         {
             DiskLightPoints diskPoints = GetLightPointsWS(light);
-            specular = LTCEvaluateRectangle(gBuffer.Normal, V, surfaceWPos, Minv, diskPoints.Points);
-            diffuse = LTCEvaluateRectangle(gBuffer.Normal, V, surfaceWPos, Matrix3x3Identity, diskPoints.Points);
+            specular = LTCEvaluateRectangle(gBuffer.Normal, V, surfaceWPos, MinvSpecular, diskPoints.Points);
+            diffuse = LTCEvaluateRectangle(gBuffer.Normal, V, surfaceWPos, MinvDiffuse, diskPoints.Points);
             break;
         }
 
         default:
-            return float3(1.0, 0.0, 0.0);
+            break;
     }
     
     // BRDF shadowing and Fresnel
     float3 f90 = lerp(0.04, gBuffer.Albedo, gBuffer.Metalness);
     specular *= f90 * geometryMasking + (1.0 - f90) * fresnel;
     
-    //  
-    diffuse *= gBuffer.Albedo * (1.0 - gBuffer.Metalness) * (1.0 - fresnel);
+    // Light that is not reflected is absorbed by conductors, so no diffuse term for them
+    diffuse *= gBuffer.Albedo * (1.0 - gBuffer.Metalness);
 
     return (specular + diffuse) * light.Color.rgb * light.LuminousIntensity;
 }
@@ -96,11 +121,6 @@ float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBuffer
 float3 EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, float depth)
 {
     Material material = MaterialTable[gBuffer.MaterialIndex];
-
-    Texture2D LTC_LUT0 = Textures2D[material.LTC_LUT_0_Specular_Index];
-    Texture2D LTC_LUT1 = Textures2D[material.LTC_LUT_1_Specular_Index];
-    float2 LTC_LUT_Size = float2(material.LTC_LUT_TextureSize, material.LTC_LUT_TextureSize);
-
     float3 worldPosition = ReconstructWorldPosition(depth, uv, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
     float3 V = normalize(FrameDataCB.CameraPosition.xyz - worldPosition);
 
@@ -109,7 +129,7 @@ float3 EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, float
     for (uint lightIdx = 0; lightIdx < RootConstantBuffer.TotalLightCount; ++lightIdx)
     {
         Light light = LightTable[lightIdx];
-        outgoingRadiance += EvaluateDirectLighting(light, V, worldPosition, gBuffer, LTC_LUT0, LTC_LUT1, LTC_LUT_Size);
+        outgoingRadiance += EvaluateDirectLighting(light, V, worldPosition, gBuffer, material);
     }
 
     return outgoingRadiance;

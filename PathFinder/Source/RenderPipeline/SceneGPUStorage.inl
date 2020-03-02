@@ -53,6 +53,8 @@ namespace PathFinder
                 material.DistanceField->GetOrCreateSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_0_Specular->GetOrCreateSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_1_Specular->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.LTC_LUT_0_Diffuse->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.LTC_LUT_1_Diffuse->GetOrCreateSRDescriptor()->IndexInHeapRange(),
                 lut0SpecularSize.Width
             };
 

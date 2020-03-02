@@ -16,6 +16,8 @@ namespace PathFinder
         Memory::Texture* DistanceField = nullptr;
         Memory::Texture* LTC_LUT_0_Specular = nullptr;
         Memory::Texture* LTC_LUT_1_Specular = nullptr;
+        Memory::Texture* LTC_LUT_0_Diffuse = nullptr;
+        Memory::Texture* LTC_LUT_1_Diffuse = nullptr;
 
         uint32_t GPUMaterialTableIndex = 0;
     };

@@ -108,7 +108,7 @@ namespace HAL
 
         reader.LoadSource(path.filename().wstring().c_str(), source.GetAddressOf());
   
-        HRESULT hrCompilation = mCompiler->Compile(
+        mCompiler->Compile(
             source.Get(),                       // program text
             path.filename().wstring().c_str(),  // file name, mostly for error messages
             inputs.EntryPoint.c_str(),          // entry point function
@@ -118,6 +118,9 @@ namespace HAL
             nullptr, 0,                         // name/value defines and their count
             &reader,                            // handler for #include directives
             result.GetAddressOf()); 
+
+        HRESULT hrCompilation{};
+        result->GetStatus(&hrCompilation);
 
         if (SUCCEEDED(hrCompilation))
         {

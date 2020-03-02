@@ -60,7 +60,7 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
 
 GBufferPixelOut PSMain(VertexOut pin)
 {
-    bool pixelOutsideLightRadius = !IsPointInsideEllipse(pin.LocalSpacePosition, 0.xx, pin.LightSize, pin.LightSize);
+    bool pixelOutsideLightRadius = !IsPointInsideEllipse(pin.LocalSpacePosition, 0.xx, pin.LightSize);
     
     if (pixelOutsideLightRadius) 
     {
