@@ -8,17 +8,6 @@ namespace PathFinder
     PipelineStateCreator::PipelineStateCreator(PipelineStateManager* manager)
         : mPipelineStateManager{ manager } {}
 
-    HAL::RootSignature PipelineStateCreator::CloneBaseRootSignature()
-    {
-        return mPipelineStateManager->BaseRootSignature().Clone();
-    }
-
-    void PipelineStateCreator::StoreRootSignature(RootSignatureName name, HAL::RootSignature&& signature)
-    {
-        signature.SetDebugName(name.ToString());
-        mPipelineStateManager->StoreRootSignature(name, std::move(signature)); 
-    }
-
     void PipelineStateCreator::CreateGraphicsState(PSOName name, const PipelineStateManager::GraphicsStateConfigurator& configurator)
     {
         mPipelineStateManager->CreateGraphicsState(name, configurator);

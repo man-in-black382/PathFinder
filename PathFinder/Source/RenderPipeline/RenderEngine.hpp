@@ -29,6 +29,7 @@
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
 #include "PipelineStateCreator.hpp"
+#include "RootSignatureCreator.hpp"
 #include "RenderPassExecutionGraph.hpp"
 #include "GPUCommandRecorder.hpp"
 #include "UIGPUStorage.hpp"
@@ -98,6 +99,7 @@ namespace PathFinder
         ShaderManager mShaderManager;
         PipelineStateManager mPipelineStateManager;
         PipelineStateCreator mPipelineStateCreator;
+        RootSignatureCreator mRootSignatureCreator;
         GraphicsDevice mGraphicsDevice;
         AsyncComputeDevice<> mAsyncComputeDevice;
         GPUCommandRecorder mCommandRecorder;

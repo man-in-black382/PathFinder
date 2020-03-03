@@ -7,31 +7,31 @@ namespace PathFinder
     DisplacementDistanceMapRenderPass::DisplacementDistanceMapRenderPass()
         : RenderPass("DistanceMapGeneration", RenderPassPurpose::AssetProcessing) {}
 
-    void DisplacementDistanceMapRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void DisplacementDistanceMapRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
-        HAL::RootSignature signature = stateCreator->CloneBaseRootSignature();
-        signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 0, 0 }); // Read Only Cones Buffer | u0 - s0
-        signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 1, 0 }); // Write Only Cones Buffer | u1 - s0
+        //HAL::RootSignature signature = stateCreator->CloneBaseRootSignature();
+        //signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 0, 0 }); // Read Only Cones Buffer | u0 - s0
+        //signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 1, 0 }); // Write Only Cones Buffer | u1 - s0
 
-        stateCreator->StoreRootSignature(RootSignatureNames::DisplacementDistanceMapGeneration, std::move(signature));
+        //stateCreator->StoreRootSignature(RootSignatureNames::DisplacementDistanceMapGeneration, std::move(signature));
 
-        stateCreator->CreateComputeState(PSONames::DistanceMapHelperInitialization, [](ComputeStateProxy& state)
-        {
-            state.ShaderFileNames.ComputeShaderFileName = L"DistanceMapHelperInitialization.hlsl";
-            state.RootSignatureName = RootSignatureNames::DisplacementDistanceMapGeneration;
-        });
+        //stateCreator->CreateComputeState(PSONames::DistanceMapHelperInitialization, [](ComputeStateProxy& state)
+        //{
+        //    state.ShaderFileNames.ComputeShaderFileName = L"DistanceMapHelperInitialization.hlsl";
+        //    state.RootSignatureName = RootSignatureNames::DisplacementDistanceMapGeneration;
+        //});
 
-        stateCreator->CreateComputeState(PSONames::DistanceMapGeneration, [](ComputeStateProxy& state)
-        {
-            state.ShaderFileNames.ComputeShaderFileName = L"DistanceMapGeneration.hlsl";
-            state.RootSignatureName = RootSignatureNames::DisplacementDistanceMapGeneration;
-        });
+        //stateCreator->CreateComputeState(PSONames::DistanceMapGeneration, [](ComputeStateProxy& state)
+        //{
+        //    state.ShaderFileNames.ComputeShaderFileName = L"DistanceMapGeneration.hlsl";
+        //    state.RootSignatureName = RootSignatureNames::DisplacementDistanceMapGeneration;
+        //});
 
-        stateCreator->CreateComputeState(PSONames::DistanceMapHelperCompression, [](ComputeStateProxy& state)
-        {
-            state.ShaderFileNames.ComputeShaderFileName = L"DistanceMapHelperCompression.hlsl";
-            state.RootSignatureName = RootSignatureNames::DisplacementDistanceMapGeneration;
-        });
+        //stateCreator->CreateComputeState(PSONames::DistanceMapHelperCompression, [](ComputeStateProxy& state)
+        //{
+        //    state.ShaderFileNames.ComputeShaderFileName = L"DistanceMapHelperCompression.hlsl";
+        //    state.RootSignatureName = RootSignatureNames::DisplacementDistanceMapGeneration;
+        //});
     }
      
     void DisplacementDistanceMapRenderPass::ScheduleResources(ResourceScheduler* scheduler)

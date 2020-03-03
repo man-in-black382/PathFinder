@@ -18,6 +18,7 @@ namespace HAL
 
     public:
         inline const auto& CPUHandle() const { return mCPUHandle; }
+        inline const auto& CPUAddress() const { return mCPUHandle.ptr; }
     };
 
     class GPUDescriptor : public CPUDescriptor {
@@ -31,6 +32,7 @@ namespace HAL
 
     public:
         inline const auto& GPUHandle() const { return mGPUHandle; }
+        inline const auto& GPUAddress() const { return mGPUHandle.ptr; }
         inline const auto& IndexInHeapRange() const { return mIndexInHeapRange; }
     };
 

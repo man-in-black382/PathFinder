@@ -96,8 +96,6 @@ namespace PathFinder
 
     void GraphicsDevice::ApplyCommonGraphicsResourceBindingsIfNeeded()
     {   
-        mCommandList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
-
         if (mRebindingAfterSignatureChangeRequired)
         {
             // Look at PipelineStateManager for base root signature parameter ordering
@@ -242,7 +240,7 @@ namespace PathFinder
         mAppliedGraphicsRootSignature = state->GetGlobalRootSignature();
     }
     
-    void GraphicsDevice::BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+    void GraphicsDevice::BindExternalBuffer(Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         if (mAppliedComputeState)
         {
@@ -255,16 +253,19 @@ namespace PathFinder
 
             auto index = signature->GetParameterIndex({ shaderRegister, registerSpace, registerType });
 
-            assert_format(index, "Root signature parameter doesn't exist");
-
-            // Will be changed if I'll see render passes that require a lot of buffers. 
-            assert_format(!index->IsIndirect, "Descriptor tables for buffers are not supported. Bind buffers directly instead.");
+            assert_format(index, "Root signature parameter doesn't exist. It either wasn't created or register/space/type aren't correctly specified.");
 
             switch (registerType)
             {
-            case HAL::ShaderRegister::ShaderResource: mCommandList->SetGraphicsRootShaderResource(*buffer.HALBuffer(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::ConstantBuffer: mCommandList->SetGraphicsRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::UnorderedAccess: mCommandList->SetGraphicsRootUnorderedAccessResource(*buffer.HALBuffer(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::ConstantBuffer:
+                mCommandList->SetGraphicsRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature);
+                break;
+            case HAL::ShaderRegister::ShaderResource:
+                mCommandList->SetGraphicsRootDescriptorTable(buffer.GetOrCreateSRDescriptor()->GPUAddress(), index->IndexInSignature);
+                break;
+            case HAL::ShaderRegister::UnorderedAccess:
+                mCommandList->SetGraphicsRootDescriptorTable(buffer.GetOrCreateUADescriptor()->GPUAddress(), index->IndexInSignature);
+                break;
             case HAL::ShaderRegister::Sampler:
                 assert_format(false, "Incompatible register type");
             }

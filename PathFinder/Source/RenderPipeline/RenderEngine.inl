@@ -20,6 +20,7 @@ namespace PathFinder
         mShaderManager{ commandLineParser },
         mPipelineStateManager{ &mDevice, &mShaderManager, &mResourceProducer, mRenderSurfaceDescription },
         mPipelineStateCreator{ &mPipelineStateManager },
+        mRootSignatureCreator{ &mPipelineStateManager },
         mGraphicsDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
         mAsyncComputeDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
         mCommandRecorder{ &mGraphicsDevice },
@@ -54,7 +55,7 @@ namespace PathFinder
         {
             auto pass = mRenderPasses[passNode.PassMetadata.Name];
             mPipelineResourceStorage.SetCurrentRenderPassGraphNode(passNode);
-            pass->SetupPipelineStates(&mPipelineStateCreator);
+            pass->SetupPipelineStates(&mPipelineStateCreator, &mRootSignatureCreator);
             pass->ScheduleResources(&mResourceScheduler);
         }
 

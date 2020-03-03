@@ -8,6 +8,7 @@
 #include "GraphicsDevice.hpp"
 #include "RenderContext.hpp"
 #include "PipelineStateCreator.hpp"
+#include "RootSignatureCreator.hpp"
 
 #include "RenderPasses/PipelineNames.hpp"
 
@@ -23,7 +24,7 @@ namespace PathFinder
 
         virtual ~RenderPass() = 0;
 
-        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) {};
+        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) {};
         virtual void ScheduleResources(ResourceScheduler* scheduler) {};
         virtual void Render(RenderContext<ContentMediator>* context) {};
 

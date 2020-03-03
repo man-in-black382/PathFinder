@@ -34,14 +34,9 @@ namespace Memory
 
         ~Buffer();
 
-        template <class Element = uint8_t> 
-        const HAL::SRDescriptor* GetOrCreateSRDescriptor(uint64_t elementAlignment = 1);
-
-        template <class Element = uint8_t> 
-        const HAL::UADescriptor* GetOrCreateUADescriptor(uint64_t elementAlignment = 1);
-
-        template <class Element = uint8_t> 
-        const HAL::CBDescriptor* GetOrCreateCBDescriptor(uint64_t elementAlignment = 1);
+        const HAL::SRDescriptor* GetOrCreateSRDescriptor();
+        const HAL::UADescriptor* GetOrCreateUADescriptor();
+        const HAL::CBDescriptor* GetOrCreateCBDescriptor();
 
         void RequestWrite() override;
         void RequestRead() override;
@@ -57,9 +52,7 @@ namespace Memory
         void ApplyDebugName() override;
 
     private:
-        uint64_t mCurrentSRDescriptorStride = 1;
-        uint64_t mCurrentUADescriptorStride = 1;
-        uint64_t mCurrentCBDescriptorStride = 1;
+        uint64_t mRequstedStride = 1;
 
         SegregatedPoolsResourceAllocator::BufferPtr mBufferPtr;
 

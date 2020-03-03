@@ -21,7 +21,7 @@ namespace PathFinder
         DeferredLightingRenderPass();
         ~DeferredLightingRenderPass() = default;
 
-        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
+        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override; 
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
     };

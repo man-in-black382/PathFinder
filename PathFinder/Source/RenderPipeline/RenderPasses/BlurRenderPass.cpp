@@ -8,7 +8,7 @@ namespace PathFinder
     BlurRenderPass::BlurRenderPass()
         : RenderPass("Blur") {}
 
-    void BlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void BlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
         stateCreator->CreateComputeState(PSONames::Blur, [](ComputeStateProxy& state)
         {

@@ -7,6 +7,7 @@
 #include "ShaderManager.hpp"
 #include "RenderSurfaceDescription.hpp"
 #include "PipelineStateProxy.hpp"
+#include "RootSignatureProxy.hpp"
 #include "ShaderFileNames.hpp"
 
 #include <unordered_map>
@@ -19,6 +20,7 @@ namespace PathFinder
     class PipelineStateManager
     {
     public:
+        using RootSignatureConfigurator = std::function<void(RootSignatureProxy&)>;
         using GraphicsStateConfigurator = std::function<void(GraphicsStateProxy&)>;
         using ComputeStateConfigurator = std::function<void(ComputeStateProxy&)>;
         using RayTracingStateConfigurator = std::function<void(RayTracingStateProxy&)>;
@@ -41,7 +43,7 @@ namespace PathFinder
             const RenderSurfaceDescription& defaultRenderSurface
         );
 
-        void StoreRootSignature(RootSignatureName name, HAL::RootSignature&& signature);
+        void CreateRootSignature(RootSignatureName name, const RootSignatureConfigurator& configurator);
         void CreateGraphicsState(PSOName name, const GraphicsStateConfigurator& configurator);
         void CreateComputeState(PSOName name, const ComputeStateConfigurator& configurator);
         void CreateRayTracingState(PSOName name, const RayTracingStateConfigurator& configurator);

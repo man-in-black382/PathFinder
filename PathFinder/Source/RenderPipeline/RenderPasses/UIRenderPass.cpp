@@ -8,13 +8,14 @@ namespace PathFinder
     UIRenderPass::UIRenderPass()
         : RenderPass("UI") {}
 
-    void UIRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void UIRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
-        HAL::RootSignature UISinature = stateCreator->CloneBaseRootSignature();
-        UISinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 }); // UI Vertex Buffer
-        UISinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 }); // UI Index Buffer
-        UISinature.AddConstantsParameter(HAL::RootConstantsParameter{ 2, 0, 0 }); // Vertex/Index offsets. 2 root constants
-        stateCreator->StoreRootSignature(RootSignatureNames::UI, std::move(UISinature));
+        rootSignatureCreator->CreateRootSignature(RootSignatureNames::UI, [](RootSignatureProxy& signatureProxy)
+        {
+            signatureProxy.AddRootConstantsParameter<UIRootConstants>(0, 0); // Vertex/Index offsets. 2 root constants
+            signatureProxy.AddShaderResourceBufferParameter(0, 0); // UI Vertex Buffer
+            signatureProxy.AddShaderResourceBufferParameter(1, 0); // UI Index Buffer
+        });
 
         stateCreator->CreateGraphicsState(PSONames::UI, [](GraphicsStateProxy& state)
         {

@@ -6,20 +6,22 @@ namespace PathFinder
     GBufferRenderPass::GBufferRenderPass()
         : RenderPass("GBuffer") {}
 
-    void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
-        HAL::RootSignature GBufferMeshesSinature = stateCreator->CloneBaseRootSignature();
-        GBufferMeshesSinature.AddConstantsParameter(HAL::RootConstantsParameter{ 1, 0, 0 }); // Mesh instance table index
-        GBufferMeshesSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 }); // Unified vertex buffer
-        GBufferMeshesSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 }); // Unified index buffer
-        GBufferMeshesSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 2, 0 }); // Instance data buffer
-        GBufferMeshesSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 3, 0 }); // Material data buffer
-        stateCreator->StoreRootSignature(RootSignatureNames::GBufferMeshes, std::move(GBufferMeshesSinature));
+        rootSignatureCreator->CreateRootSignature(RootSignatureNames::GBufferMeshes, [](RootSignatureProxy& signatureProxy)
+        {
+            signatureProxy.AddRootConstantsParameter<uint32_t>(0, 0); // Mesh instance table index
+            signatureProxy.AddShaderResourceBufferParameter(0, 0); // Unified vertex buffer
+            signatureProxy.AddShaderResourceBufferParameter(1, 0); // Unified index buffer
+            signatureProxy.AddShaderResourceBufferParameter(2, 0); // Instance data buffer
+            signatureProxy.AddShaderResourceBufferParameter(3, 0); // Material data buffer
+        });
 
-        HAL::RootSignature GBufferLightsSinature = stateCreator->CloneBaseRootSignature();
-        GBufferLightsSinature.AddConstantsParameter(HAL::RootConstantsParameter{ 1, 0, 0 }); // Lights table index
-        GBufferLightsSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 }); // Lights table
-        stateCreator->StoreRootSignature(RootSignatureNames::GBufferLights, std::move(GBufferLightsSinature));
+        rootSignatureCreator->CreateRootSignature(RootSignatureNames::GBufferLights, [](RootSignatureProxy& signatureProxy)
+        {
+            signatureProxy.AddRootConstantsParameter<uint32_t>(0, 0); // Lights table index
+            signatureProxy.AddShaderResourceBufferParameter(0, 0); // Lights table
+        });
 
         stateCreator->CreateGraphicsState(PSONames::GBufferMeshes, [](GraphicsStateProxy& state) 
         {

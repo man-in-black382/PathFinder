@@ -6,13 +6,14 @@ namespace PathFinder
     DeferredLightingRenderPass::DeferredLightingRenderPass()
         : RenderPass("DeferredLighting") {}
 
-    void DeferredLightingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void DeferredLightingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
-        HAL::RootSignature deferedLightingSinature = stateCreator->CloneBaseRootSignature();
-        deferedLightingSinature.AddConstantsParameter(HAL::RootConstantsParameter{ 1, 0, 0 }); // 1 uint TOtal number of lights
-        deferedLightingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 0, 0 }); // Light table
-        deferedLightingSinature.AddDescriptorParameter(HAL::RootShaderResourceParameter{ 1, 0 }); // Material table
-        stateCreator->StoreRootSignature(RootSignatureNames::DeferredLighting, std::move(deferedLightingSinature));
+        rootSignatureCreator->CreateRootSignature(RootSignatureNames::DeferredLighting, [](RootSignatureProxy& signatureProxy)
+        {
+            signatureProxy.AddRootConstantsParameter<uint32_t>(0, 0); // 1 uint Total number of lights
+            signatureProxy.AddShaderResourceBufferParameter(0, 0); // Light table
+            signatureProxy.AddShaderResourceBufferParameter(1, 0); // Material table
+        });
 
         stateCreator->CreateComputeState(PSONames::DeferredLighting, [](ComputeStateProxy& state)
         {

@@ -24,14 +24,12 @@ namespace HAL
     RootDescriptorTableParameter::RootDescriptorTableParameter()
         : RootParameter(D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {}
 
-    RootDescriptorTableParameter::RootDescriptorTableParameter(const RootDescriptorTableParameter& that)
-        : RootDescriptorTableParameter()
+    RootDescriptorTableParameter::RootDescriptorTableParameter(const RootDescriptorTableParameter& that) : RootParameter(that)
     {
         *this = that;
     }
 
-    RootDescriptorTableParameter::RootDescriptorTableParameter(RootDescriptorTableParameter&& that) 
-        : RootDescriptorTableParameter()
+    RootDescriptorTableParameter::RootDescriptorTableParameter(RootDescriptorTableParameter&& that) : RootParameter(std::move(that))
     {
         *this = std::move(that);
     }

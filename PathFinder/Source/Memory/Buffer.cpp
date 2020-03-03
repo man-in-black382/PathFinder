@@ -8,6 +8,39 @@ namespace Memory
         if (mStateTracker && mBufferPtr) mStateTracker->StopTrakingResource(HALBuffer());
     }
 
+    const HAL::CBDescriptor* Buffer::GetOrCreateCBDescriptor()
+    {
+        if (!mCBDescriptor || !mBufferPtr)
+        {
+            mCBDescriptor = mDescriptorAllocator->AllocateCBDescriptor(*HALBuffer(), mRequstedStride);
+        }
+
+        return mCBDescriptor.get();
+    }
+
+    const HAL::UADescriptor* Buffer::GetOrCreateUADescriptor()
+    {
+        assert_format(mUploadStrategy != GPUResource::UploadStrategy::DirectAccess,
+            "Direct Access buffers cannot have Unordered Access descriptors since they're always in GenericRead state");
+
+        if (!mUADescriptor)
+        {
+            mUADescriptor = mDescriptorAllocator->AllocateUADescriptor(*HALBuffer(), mRequstedStride);
+        }
+
+        return mUADescriptor.get();
+    }
+
+    const HAL::SRDescriptor* Buffer::GetOrCreateSRDescriptor()
+    {
+        if (!mSRDescriptor || !mBufferPtr)
+        {
+            mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(*HALBuffer(), mRequstedStride);
+        }
+
+        return mSRDescriptor.get();
+    }
+
     void Buffer::RequestWrite()
     {
         GPUResource::RequestWrite();

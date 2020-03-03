@@ -417,6 +417,12 @@
     <ClCompile Include="Source\Scene\FlatLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RootSignatureProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RootSignatureCreator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2279,6 +2285,12 @@
     <ClInclude Include="Source\Scene\FlatLight.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RootSignatureProxy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RootSignatureCreator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2781,6 +2793,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\SceneGPUStorage.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\RootSignatureProxy.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

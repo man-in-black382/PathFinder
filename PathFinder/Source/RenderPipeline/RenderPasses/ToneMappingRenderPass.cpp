@@ -8,7 +8,7 @@ namespace PathFinder
     ToneMappingRenderPass::ToneMappingRenderPass()
         : RenderPass("ToneMapping") {}
 
-    void ToneMappingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void ToneMappingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
         stateCreator->CreateComputeState(PSONames::ToneMapping, [](ComputeStateProxy& state)
         {

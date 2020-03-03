@@ -304,22 +304,22 @@ namespace PathFinder
         return mCurrentPassObjects->ScheduledResourceNames;
     }
 
-    const Memory::Texture* PipelineResourceStorage::GetTextureResource(ResourceName resourceName) const
+    Memory::Texture* PipelineResourceStorage::GetTextureResource(ResourceName resourceName)
     {
-        const PerResourceObjects* resourceObjects = GetPerResourceObjects(resourceName);
-        return resourceObjects ? resourceObjects->Texture.get() : nullptr;
+        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
+        return resourceObjects.Texture.get();
     }
 
-    const Memory::Buffer* PipelineResourceStorage::GetBufferResource(ResourceName resourceName) const
+    Memory::Buffer* PipelineResourceStorage::GetBufferResource(ResourceName resourceName)
     {
-        const PerResourceObjects* resourceObjects = GetPerResourceObjects(resourceName);
-        return resourceObjects ? resourceObjects->Buffer.get() : nullptr;
+        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
+        return resourceObjects.Buffer.get();
     }
 
-    const Memory::GPUResource* PipelineResourceStorage::GetGPUResource(ResourceName resourceName) const
+    Memory::GPUResource* PipelineResourceStorage::GetGPUResource(ResourceName resourceName)
     {
-        const PerResourceObjects* resourceObjects = GetPerResourceObjects(resourceName);
-        return resourceObjects ? resourceObjects->GetGPUResource() : nullptr;
+        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
+        return resourceObjects.GetGPUResource();
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::AliasingBarriersForCurrentPass() 

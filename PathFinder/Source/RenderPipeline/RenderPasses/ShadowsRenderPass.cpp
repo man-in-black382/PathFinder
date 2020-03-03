@@ -6,7 +6,7 @@ namespace PathFinder
     ShadowsRenderPass::ShadowsRenderPass()
         : RenderPass("Shadows") {}
 
-    void ShadowsRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void ShadowsRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
         stateCreator->CreateRayTracingState(PSONames::BackBufferOutput, [](RayTracingStateProxy& state)
         {

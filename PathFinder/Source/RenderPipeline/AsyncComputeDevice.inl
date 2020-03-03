@@ -20,14 +20,14 @@ namespace PathFinder
         mDefaultRenderSurface{ defaultRenderSurface }
     {
         mCommandQueue.SetDebugName("Async Compute Device Command Queue");
-        AllocateNewCommandList();
+        AllocateNewCommandList(); 
     }
 
     template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::BindBuffer(
         Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
-        const Memory::Buffer* resource = mResourceStorage->GetBufferResource(resourceName);
+        Memory::Buffer* resource = mResourceStorage->GetBufferResource(resourceName);
         assert_format(resource, "Buffer ' ", resourceName.ToString(), "' doesn't exist");
 
         BindExternalBuffer(*resource, shaderRegister, registerSpace, registerType);
@@ -35,22 +35,25 @@ namespace PathFinder
 
     template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::BindExternalBuffer(
-        const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+        Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         if (mAppliedComputeState || mAppliedRayTracingState)
         {
             auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, registerType });
 
-            assert_format(index, "Root signature parameter doesn't exist");
-
-            // Will be changed if I'll see render passes that require a lot of buffers. 
-            assert_format(!index->IsIndirect, "Descriptor tables for buffers are not supported. Bind buffers directly instead.");
+            assert_format(index, "Root signature parameter doesn't exist. It either wasn't created or register/space/type aren't correctly specified.");
 
             switch (registerType)
             {
-            case HAL::ShaderRegister::ShaderResource: mCommandList->SetComputeRootShaderResource(*buffer.HALBuffer(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::ConstantBuffer: mCommandList->SetComputeRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::UnorderedAccess: mCommandList->SetComputeRootUnorderedAccessResource(*buffer.HALBuffer(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::ConstantBuffer: 
+                mCommandList->SetComputeRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature);
+                break;
+            case HAL::ShaderRegister::ShaderResource: 
+                mCommandList->SetComputeRootDescriptorTable(buffer.GetOrCreateSRDescriptor()->GPUAddress(), index->IndexInSignature); 
+                break;
+            case HAL::ShaderRegister::UnorderedAccess:
+                mCommandList->SetComputeRootDescriptorTable(buffer.GetOrCreateUADescriptor()->GPUAddress(), index->IndexInSignature);
+                break;
             case HAL::ShaderRegister::Sampler:
                 assert_format(false, "Incompatible register type");
             }
@@ -67,7 +70,7 @@ namespace PathFinder
     void AsyncComputeDevice<CommandListT, CommandQueueT>::SetRootConstants(
         const T& constants, uint16_t shaderRegister, uint16_t registerSpace)
     {
-        auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({shaderRegister, registerSpace,  HAL::ShaderRegister::ConstantBuffer });
+        auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
         assert_format(index, "Root signature parameter doesn't exist");
         mCommandList->SetComputeRootConstants(constants, index->IndexInSignature);
     }
@@ -75,8 +78,6 @@ namespace PathFinder
     template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::ApplyCommonComputeResourceBindingsIfNeeded()
     {
-        mCommandList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
-
         if (mRebindingAfterSignatureChangeRequired)
         {
             // Look at PipelineStateManager for base root signature parameter ordering
@@ -132,6 +133,7 @@ namespace PathFinder
     void AsyncComputeDevice<CommandListT, CommandQueueT>::AllocateNewCommandList()
     {
         mCommandList = mCommandListAllocator->AllocateCommandList<CommandListT>();
+        mCommandList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
     }
 
     template <class CommandListT, class CommandQueueT>

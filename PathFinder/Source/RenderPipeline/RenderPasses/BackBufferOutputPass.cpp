@@ -6,7 +6,7 @@ namespace PathFinder
     BackBufferOutputPass::BackBufferOutputPass()
         : RenderPass("BackBufferOutput") {}
 
-    void BackBufferOutputPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void BackBufferOutputPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
         stateCreator->CreateGraphicsState(PSONames::BackBufferOutput, [](GraphicsStateProxy& state)
         {

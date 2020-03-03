@@ -102,9 +102,9 @@ namespace PathFinder
         const Memory::Buffer* RootConstantsBufferForCurrentPass() const;
         const Memory::Buffer* DebugBufferForCurrentPass() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
-        const Memory::Texture* GetTextureResource(ResourceName resourceName) const;
-        const Memory::Buffer* GetBufferResource(ResourceName resourceName) const;
-        const Memory::GPUResource* GetGPUResource(ResourceName resourceName) const;
+        Memory::Texture* GetTextureResource(ResourceName resourceName);
+        Memory::Buffer* GetBufferResource(ResourceName resourceName);
+        Memory::GPUResource* GetGPUResource(ResourceName resourceName);
         const HAL::ResourceBarrierCollection& AliasingBarriersForCurrentPass();
         const HAL::ResourceBarrierCollection& TransitionBarriersForCurrentPass();
         const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();

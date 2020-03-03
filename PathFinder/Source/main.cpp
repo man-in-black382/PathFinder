@@ -97,7 +97,7 @@ int main(int argc, char** argv)
     diskLight0->SetWidth(2);
     diskLight0->SetHeight(2);
     diskLight0->SetPosition({ -5.0, 0.0, 0.0 });
-    diskLight0->SetNormal({ 0.0, -1.0, 0.0 });
+    diskLight0->SetNormal({ 0.0, .0, 1.0 });
     diskLight0->SetColor(Foundation::Color::White());
     diskLight0->SetLuminousPower(1000);
 

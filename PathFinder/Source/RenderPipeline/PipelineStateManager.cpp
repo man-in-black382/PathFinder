@@ -44,9 +44,30 @@ namespace PathFinder
         });
     }
 
-    void PipelineStateManager::StoreRootSignature(RootSignatureName name, HAL::RootSignature&& signature)
+    void PipelineStateManager::CreateRootSignature(RootSignatureName name, const RootSignatureConfigurator& configurator)
     {
-        mRootSignatures.emplace(name, std::move(signature));
+        assert_format(GetRootSignature(name) == nullptr, "Redefinition of Root Signature. ", name.ToString(), " already exists.");
+
+        HAL::RootSignature newSignature = mBaseRootSignature.Clone();
+        RootSignatureProxy signatureProxy{};
+        configurator(signatureProxy);
+
+        for (const HAL::RootConstantsParameter& parameter : signatureProxy.RootConstantsParameters())
+        {
+            newSignature.AddConstantsParameter(parameter);
+        }
+
+        for (const HAL::RootConstantBufferParameter& parameter : signatureProxy.RootConstantBufferParameters())
+        {
+            newSignature.AddDescriptorParameter(parameter);
+        }
+
+        for (const HAL::RootDescriptorTableParameter& parameter : signatureProxy.RootDescriptorTableParameters())
+        {
+            newSignature.AddDescriptorTableParameter(parameter);
+        }
+
+        mRootSignatures.emplace(name, std::move(newSignature));
     }
 
     void PipelineStateManager::CreateGraphicsState(PSOName name, const GraphicsStateConfigurator& configurator)

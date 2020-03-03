@@ -116,7 +116,7 @@ namespace PathFinder
         if (!mLightTable || mLightTable->ElementCapacity<GPULightTableEntry>(alignment) < requiredBufferSize)
         {
             HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ lights.size(), alignment };
-            mLightTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mLightTable = mResourceProducer->NewBuffer(props/*, Memory::GPUResource::UploadStrategy::DirectAccess*/);
             mLightTable->SetDebugName("Lights Instance Table");
         }
 
