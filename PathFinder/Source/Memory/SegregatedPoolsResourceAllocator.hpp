@@ -69,6 +69,7 @@ namespace Memory
             HAL::Resource* Resource = nullptr;
             PoolsAllocation Allocation;
             Pools* PoolsThatProducedAllocation;
+            bool ResourceWillBeReused = false;
         };
 
         Allocation FindOrAllocateMostFittingFreeSlot(

@@ -5,14 +5,19 @@ namespace Memory
 
     Buffer::~Buffer()
     {
-        if (mStateTracker && mBufferPtr) mStateTracker->StopTrakingResource(HALBuffer());
+        if (mStateTracker && mBufferPtr) mStateTracker->StopTrakingResource(mBufferPtr.get());
     }
 
     const HAL::CBDescriptor* Buffer::GetOrCreateCBDescriptor()
     {
-        if (!mCBDescriptor || !mBufferPtr)
+        // Descriptor needs to be created either if it does not exist yet
+        // or we're only using upload buffers (Direct Access) and no descriptors were 
+        // created for upload buffer of this frame
+        //
+        if (!mCBDescriptor || (!mBufferPtr && mCBDescriptorRequestFrameNumber != mFrameNumber))
         {
             mCBDescriptor = mDescriptorAllocator->AllocateCBDescriptor(*HALBuffer(), mRequstedStride);
+            mCBDescriptorRequestFrameNumber = mFrameNumber;
         }
 
         return mCBDescriptor.get();
@@ -33,9 +38,14 @@ namespace Memory
 
     const HAL::SRDescriptor* Buffer::GetOrCreateSRDescriptor()
     {
-        if (!mSRDescriptor || !mBufferPtr)
+        // Descriptor needs to be created either if it does not exist yet
+        // or we're only using upload buffers (Direct Access) and no descriptors were 
+        // created for upload buffer of this frame
+        //
+        if (!mSRDescriptor || (!mBufferPtr && mSRDescriptorRequestFrameNumber != mFrameNumber))
         {
             mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(*HALBuffer(), mRequstedStride);
+            mSRDescriptorRequestFrameNumber = mFrameNumber;
         }
 
         return mSRDescriptor.get();

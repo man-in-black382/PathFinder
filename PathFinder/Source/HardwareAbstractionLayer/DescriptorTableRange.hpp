@@ -32,24 +32,21 @@ namespace HAL
     class CBDescriptorTableRange : public RootDescriprorTableRange 
     {
     public:
-        CBDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace);
-        CBDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t descriptorIndexOffsetFromTableStart, uint32_t rangeSize);
+        CBDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize = UnboundedRangeSize);
         ~CBDescriptorTableRange() = default;
     };
 
     class SRDescriptorTableRange : public RootDescriprorTableRange 
     {
     public:
-        SRDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace);
-        SRDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t descriptorIndexOffsetFromTableStart, uint32_t rangeSize);
+        SRDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize = UnboundedRangeSize);
         ~SRDescriptorTableRange() = default;
     };
 
     class UADescriptorTableRange : public RootDescriprorTableRange
     {
     public:
-        UADescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace);
-        UADescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t descriptorIndexOffsetFromTableStart, uint32_t rangeSize);
+        UADescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize = UnboundedRangeSize);
         ~UADescriptorTableRange() = default;
     };
 

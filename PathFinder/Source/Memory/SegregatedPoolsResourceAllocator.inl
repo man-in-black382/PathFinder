@@ -28,7 +28,7 @@ namespace Memory
             auto deallocationCallback = [this, poolAllocation, poolsThatProducedAllocation = allocation.PoolsPtr](HAL::Buffer* buffer)
             {
                 // Do not pass cpu accessible resource for deallocation. We can reuse it later.
-                mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ nullptr, poolAllocation, poolsThatProducedAllocation });
+                mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ buffer, poolAllocation, poolsThatProducedAllocation, true });
             };
 
             // Create unique_ptr with already existing buffer ptr that's being reused
@@ -38,7 +38,7 @@ namespace Memory
         {
             auto deallocationCallback = [this, poolAllocation, poolsThatProducedAllocation = allocation.PoolsPtr](HAL::Buffer* buffer)
             {
-                mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ buffer, poolAllocation, poolsThatProducedAllocation });
+                mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ buffer, poolAllocation, poolsThatProducedAllocation, false });
             };
 
             HAL::Buffer* buffer = new HAL::Buffer{ *mDevice, properties, *allocation.HeapPtr, offsetInHeap };

@@ -86,12 +86,12 @@ namespace Memory
         std::queue<BufferFrameNumberPair> mReadbackBuffers;
 
         std::string mDebugName;
+        uint64_t mFrameNumber = 0;
 
     private:
         void AllocateNewUploadBuffer();
         void AllocateNewReadbackBuffer();
 
-        uint64_t mFrameNumber = 0;
         SegregatedPoolsResourceAllocator::BufferPtr mCompletedReadbackBuffer;
         SegregatedPoolsResourceAllocator::BufferPtr mCompletedUploadBuffer;
     };

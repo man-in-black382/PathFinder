@@ -35,7 +35,7 @@ namespace Memory
 
         auto deallocationCallback = [this, poolAllocation, poolsThatProducedAllocation = allocation.PoolsPtr](HAL::Texture* texture)
         {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ texture, poolAllocation, poolsThatProducedAllocation });
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ texture, poolAllocation, poolsThatProducedAllocation, false });
         };
 
         HAL::Texture* texture = new HAL::Texture{ *mDevice, *allocation.HeapPtr, offsetInHeap, properties };
@@ -155,10 +155,15 @@ namespace Memory
     {
         for (Deallocation& deallocation : mPendingDeallocations[frameIndex])
         {
-            if (deallocation.Resource)
+            if (!deallocation.ResourceWillBeReused)
             {
                 delete deallocation.Resource;
             }
+            else
+            {
+                deallocation.Resource->SetDebugName("Resource Allocator Free Memory");
+            }
+
             deallocation.PoolsThatProducedAllocation->Deallocate(deallocation.Allocation);
         }
         mPendingDeallocations[frameIndex].clear();

@@ -19,7 +19,7 @@ namespace Memory
         if (uploadStrategy == GPUResource::UploadStrategy::Automatic)
         {
             mBufferPtr = resourceAllocator->AllocateBuffer(properties);
-            if (mStateTracker) mStateTracker->StartTrakingResource(HALBuffer());
+            if (mStateTracker) mStateTracker->StartTrakingResource(mBufferPtr.get());
         }
         else
         {
@@ -46,7 +46,7 @@ namespace Memory
             [](HAL::Buffer* buffer) { delete buffer; }
         };
 
-        if (mStateTracker) mStateTracker->StartTrakingResource(HALBuffer());
+        if (mStateTracker) mStateTracker->StartTrakingResource(mBufferPtr.get());
     }
 
     template <class Element>

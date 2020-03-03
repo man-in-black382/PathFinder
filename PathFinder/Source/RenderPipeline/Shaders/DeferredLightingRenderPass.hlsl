@@ -176,7 +176,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
         break;
     }
 
-    outputImage[dispatchThreadID.xy] = float4(1.0, 0.0, 0.0/*outgoingLuminance*/, 1.0);
+    outputImage[dispatchThreadID.xy] = float4(outgoingLuminance, 1.0);
 }
 
 #endif

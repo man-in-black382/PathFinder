@@ -53,6 +53,8 @@ namespace Memory
 
     private:
         uint64_t mRequstedStride = 1;
+        uint64_t mCBDescriptorRequestFrameNumber = 0;
+        uint64_t mSRDescriptorRequestFrameNumber = 0;
 
         SegregatedPoolsResourceAllocator::BufferPtr mBufferPtr;
 

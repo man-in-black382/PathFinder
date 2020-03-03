@@ -230,11 +230,6 @@ float3 LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 point
     float e2 = roots.y;
     float e3 = roots.z;
 
-    if (any(isnan(e3)))
-    {
-        return float3(1000, 0, 0);
-    }
-
     float3 avgDir = float3(a * x0 / (a - e2), b * y0 / (b - e2), 1.0);
 
     float3x3 rotate = Matrix3x3ColumnMajor(V1, V2, V3);

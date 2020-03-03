@@ -76,7 +76,7 @@ namespace Memory
                 mCompletedUploadBuffer->SetDebugName(StringFormat("%s Upload Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
                 mUploadBuffers.emplace(std::move(mCompletedUploadBuffer), mFrameNumber);
             }
-            else 
+            else if (!mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber)
             {
                 // Or allocate a new one if none are completed yet
                 AllocateNewUploadBuffer();
