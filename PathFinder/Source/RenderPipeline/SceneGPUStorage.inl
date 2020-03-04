@@ -20,11 +20,9 @@ namespace PathFinder
     template < template < class ... > class Container, class ... Args >
     void SceneGPUStorage::UploadMaterials(Container<Material, Args...>& materials)
     {
-        uint8_t alignment = 1;
-
-        if (!mMaterialTable || mMaterialTable->ElementCapacity<GPUMaterialTableEntry>(alignment) < materials.size())
+        if (!mMaterialTable || mMaterialTable->ElementCapacity<GPUMaterialTableEntry>() < materials.size())
         {
-            HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ materials.size(), alignment };
+            HAL::Buffer::Properties<GPUMaterialTableEntry> props{ materials.size() };
             mMaterialTable = mResourceProducer->NewBuffer(props);
             mMaterialTable->SetDebugName("Material Table");
         }
@@ -60,7 +58,7 @@ namespace PathFinder
 
             material.GPUMaterialTableIndex = materialIndex;
 
-            mMaterialTable->Write(&materialEntry, materialIndex, 1, alignment);
+            mMaterialTable->Write(&materialEntry, materialIndex, 1);
             ++materialIndex;
         }
     }
@@ -68,13 +66,11 @@ namespace PathFinder
     template < template < class ... > class Container, class ... Args >
     void SceneGPUStorage::UploadMeshInstances(Container<MeshInstance, Args...>& meshInstances)
     {
-        uint8_t alignment = 1;
-
         auto requiredBufferSize = meshInstances.size() + mUploadedMeshInstances;
 
-        if (!mMeshInstanceTable || mMeshInstanceTable->ElementCapacity<GPUMeshInstanceTableEntry>(alignment) < requiredBufferSize)
+        if (!mMeshInstanceTable || mMeshInstanceTable->ElementCapacity<GPUMeshInstanceTableEntry>() < requiredBufferSize)
         {
-            HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ requiredBufferSize, alignment };
+            HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ requiredBufferSize };
             mMeshInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
             mMeshInstanceTable->SetDebugName("Mesh Instance Table");
         }
@@ -97,7 +93,7 @@ namespace PathFinder
             mTopAccelerationStructure.AddInstance(blas, mUploadedMeshInstances, instance.Transformation().ModelMatrix());
             instance.SetGPUInstanceIndex(mUploadedMeshInstances);
 
-            mMeshInstanceTable->Write(&instanceEntry, mUploadedMeshInstances, 1, alignment);
+            mMeshInstanceTable->Write(&instanceEntry, mUploadedMeshInstances, 1);
             ++mUploadedMeshInstances;
         }
 
@@ -107,13 +103,11 @@ namespace PathFinder
     template < template < class ... > class Container, class LightT, class ... Args >
     void SceneGPUStorage::UploadLights(Container<LightT, Args...>& lights)
     {
-        uint8_t alignment = 1;
-
         auto requiredBufferSize = mUploadedLights + lights.size();
 
-        if (!mLightTable || mLightTable->ElementCapacity<GPULightTableEntry>(alignment) < requiredBufferSize)
+        if (!mLightTable || mLightTable->ElementCapacity<GPULightTableEntry>() < requiredBufferSize)
         {
-            HAL::Buffer::Properties<GPULightTableEntry> props{ requiredBufferSize, alignment };
+            HAL::Buffer::Properties<GPULightTableEntry> props{ requiredBufferSize };
             mLightTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
             mLightTable->SetDebugName("Lights Instance Table");
         }
@@ -123,7 +117,7 @@ namespace PathFinder
         for (LightT& light : lights)
         {
             GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
-            mLightTable->Write(&lightEntry, mUploadedLights, 1, alignment);
+            mLightTable->Write(&lightEntry, mUploadedLights, 1);
             light.SetGPULightTableIndex(mUploadedLights);
             ++mUploadedLights;
         }

@@ -171,7 +171,7 @@ namespace PathFinder
         Geometry::Dimensions dimensions(textureInfo.width, textureInfo.height, textureInfo.depth);
         HAL::TextureKind kind = ToKind(textureInfo);
 
-        HAL::Texture::Properties properties{ format, kind, dimensions, HAL::ResourceState::Common, HAL::ResourceState::AnyShaderAccess, (uint16_t)textureInfo.num_mips };
+        HAL::Texture::Properties properties{ format, kind, dimensions, HAL::ResourceState::AnyShaderAccess, (uint16_t)textureInfo.num_mips };
 
         return mResourceProducer->NewTexture(properties);
     }

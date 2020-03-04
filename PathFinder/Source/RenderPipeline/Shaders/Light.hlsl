@@ -17,6 +17,10 @@ struct Light
     float Width;
     float Height;
     uint LightType;
+
+    uint Pad0__;
+    uint Pad1__;
+    uint Pad2__;
 };
 
 struct DiskLightPoints

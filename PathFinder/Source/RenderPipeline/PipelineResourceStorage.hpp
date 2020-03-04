@@ -76,12 +76,9 @@ namespace PathFinder
 
         const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName);
         const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName);
-        const HAL::RTDescriptor& GetCurrentBackBufferDescriptor() const;
         
-        void SetCurrentBackBufferIndex(uint8_t index);
         void SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node);
         void AllocateScheduledResources();
-        void CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain);
         void RequestResourceTransitionsToCurrentPassStates();
         void RequestCurrentPassDebugReadback();
         
@@ -162,10 +159,6 @@ namespace PathFinder
         // Saves the user from passing current pass name in every possible API.
         RenderPassExecutionGraph::Node mCurrentRenderPassGraphNode;
 
-        // Dedicated storage for back buffer descriptors.
-        // No fancy management is required.
-        std::vector<Memory::PoolDescriptorAllocator::RTDescriptorPtr> mBackBufferDescriptors;
-
         // Constant buffer for global data that changes rarely
         Memory::GPUResourceProducer::BufferPtr mGlobalRootConstantsBuffer;
 
@@ -179,8 +172,6 @@ namespace PathFinder
 
         // Transitions for resources scheduled for readback
         HAL::ResourceBarrierCollection mReadbackBarriers;
-
-        uint8_t mCurrentBackBufferIndex = 0;
     };
 
 }

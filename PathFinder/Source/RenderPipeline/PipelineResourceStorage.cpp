@@ -55,16 +55,6 @@ namespace PathFinder
         return *texture->GetOrCreateDSDescriptor();
     }
 
-    const HAL::RTDescriptor& PipelineResourceStorage::GetCurrentBackBufferDescriptor() const
-    {
-        return *mBackBufferDescriptors[mCurrentBackBufferIndex];
-    }
-
-    void PipelineResourceStorage::SetCurrentBackBufferIndex(uint8_t index)
-    {
-        mCurrentBackBufferIndex = index;
-    }
-
     void PipelineResourceStorage::SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node)
     {
         mCurrentRenderPassGraphNode = node;
@@ -76,10 +66,10 @@ namespace PathFinder
         PrepareSchedulingInfoForOptimization();
 
         // Prepare empty per-pass objects
-       /* for (auto pass : mPassExecutionGraph->AllPasses())
+        for (auto& passNode : mPassExecutionGraph->AllPasses())
         {
-            mPerPassObjects.emplace(pass->Name(), PerPassObjects{});
-        }*/
+            mPerPassObjects.emplace(passNode.PassMetadata.Name, PerPassObjects{});
+        }
 
         mStateOptimizer.Optimize();
 
@@ -95,14 +85,6 @@ namespace PathFinder
 
         CreateDebugBuffers();
         CreateAliasingAndUAVBarriers();
-    }
-
-    void PipelineResourceStorage::CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain)
-    {
-        for (auto i = 0; i < swapChain.BackBuffers().size(); i++)
-        {
-            mBackBufferDescriptors.push_back(mDescriptorAllocator->AllocateRTDescriptor(*swapChain.BackBuffers()[i]));
-        }
     }
 
     bool PipelineResourceStorage::IsResourceAllocationScheduled(ResourceName name) const

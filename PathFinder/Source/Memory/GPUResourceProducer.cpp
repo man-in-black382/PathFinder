@@ -46,6 +46,20 @@ namespace Memory
         return TexturePtr{ texture, deallocationCallback };
     }
 
+    GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(HAL::Texture* existingTexture)
+    {
+        Texture* texture = new Texture{ mStateTracker, mResourceAllocator, mDescriptorAllocator, this, existingTexture };
+        auto [iter, success] = mAllocatedResources.insert(texture);
+
+        auto deallocationCallback = [this, iter](Texture* texture)
+        {
+            mAllocatedResources.erase(iter);
+            delete texture;
+        };
+
+        return TexturePtr{ texture, deallocationCallback };
+    }
+
     void GPUResourceProducer::SetCommandList(HAL::CopyCommandListBase* commandList)
     {
         mCommandList = commandList;

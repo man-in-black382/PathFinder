@@ -36,6 +36,7 @@ namespace PathFinder
         uint32_t UnifiedVertexBufferOffset;
         uint32_t UnifiedIndexBufferOffset;
         uint32_t IndexCount;
+        // 16 byte boundary
     };
 
     struct GPUMaterialTableEntry
@@ -44,14 +45,17 @@ namespace PathFinder
         uint32_t NormalMapIndex;
         uint32_t RoughnessMapIndex;
         uint32_t MetalnessMapIndex;
+        // 16 byte boundary
         uint32_t AOMapIndex;
         uint32_t DisplacementMapIndex;
         uint32_t DistanceFieldIndex;
         uint32_t LTC_LUT_0_Specular_Index;
+        // 16 byte boundary
         uint32_t LTC_LUT_1_Specular_Index;
         uint32_t LTC_LUT_0_Diffuse_Index;
         uint32_t LTC_LUT_1_Diffuse_Index;
         uint32_t LTC_LUT_TextureSize;
+        // 16 byte boundary
     };
 
     struct GPULightTableEntry
@@ -74,7 +78,12 @@ namespace PathFinder
         float Luminance;
         float Width;
         float Height;
+        // 16 byte boundary
+
         std::underlying_type_t<LightType> LightTypeRaw;
+        uint32_t Pad0__;
+        uint32_t Pad1__;
+        uint32_t Pad2__;
         // 16 byte boundary
     };
 

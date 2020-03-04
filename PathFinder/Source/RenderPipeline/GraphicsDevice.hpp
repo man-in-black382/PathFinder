@@ -45,6 +45,8 @@ namespace PathFinder
         template <class T>
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
+        void SetBackBuffer(Memory::Texture* backBuffer);
+
     private:
         void ApplyStateIfNeeded(const HAL::GraphicsPipelineState* state);
         void ApplyStateIfNeeded(const HAL::ComputePipelineState* state) override;
@@ -62,6 +64,7 @@ namespace PathFinder
         
         bool mRebindingAfterSignatureChangeRequired = false;
         std::optional<HAL::Viewport> mCurrentPassViewport;
+        Memory::Texture* mBackBuffer = nullptr;
     };
 
 }

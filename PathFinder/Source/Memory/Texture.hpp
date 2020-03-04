@@ -27,6 +27,13 @@ namespace Memory
             const HAL::Heap& mainResourceExplicitHeap,
             uint64_t explicitHeapOffset);
 
+        Texture(
+            ResourceStateTracker* stateTracker,
+            SegregatedPoolsResourceAllocator* resourceAllocator,
+            PoolDescriptorAllocator* descriptorAllocator,
+            CopyCommandListProvider* commandListProvider,
+            HAL::Texture* existingTexture);
+
         ~Texture();
 
         const HAL::RTDescriptor* GetOrCreateRTDescriptor();

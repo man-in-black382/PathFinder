@@ -13,7 +13,7 @@ namespace Memory
         GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
         mTexturePtr{ resourceAllocator->AllocateTexture(properties) } 
     {
-        if (mStateTracker) mStateTracker->StartTrakingResource(HALTexture());
+        if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
     }
 
     Texture::Texture(
@@ -33,12 +33,25 @@ namespace Memory
            [](HAL::Texture* texture) { delete texture; }
         };
 
-        if (mStateTracker) mStateTracker->StartTrakingResource(HALTexture());
+        if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
+    }
+
+    Texture::Texture(
+        ResourceStateTracker* stateTracker, 
+        SegregatedPoolsResourceAllocator* resourceAllocator, 
+        PoolDescriptorAllocator* descriptorAllocator, 
+        CopyCommandListProvider* commandListProvider, 
+        HAL::Texture* existingTexture)
+        :
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider)
+    {
+        mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{ existingTexture, [](HAL::Texture* texture) {} };
+        if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
     }
 
     Texture::~Texture()
     {
-        if (mStateTracker) mStateTracker->StopTrakingResource(HALTexture());
+        if (mStateTracker) mStateTracker->StopTrakingResource(mTexturePtr.get());
     }
 
     const HAL::RTDescriptor* Texture::GetOrCreateRTDescriptor()

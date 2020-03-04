@@ -21,12 +21,13 @@ namespace Memory
     {
         uint64_t alignedObjectSizeInBytes = Foundation::MemoryUtils::Align(sizeof(T), objectAlignment);
         uint64_t copyRegionSizeInBytes = alignedObjectSizeInBytes * objectCount;
+        uint64_t byteOffset = alignedObjectSizeInBytes * startIndex;
 
-        T* writeOnlyPtr = WriteOnlyPtr<T>();
+        uint8_t* writeOnlyPtr = WriteOnlyPtr<uint8_t>();
 
         assert_format(writeOnlyPtr, "Need to request a write operation before trying to write data to resource");
 
-        memcpy(writeOnlyPtr + startIndex, data, copyRegionSizeInBytes);
+        memcpy(writeOnlyPtr + byteOffset, data, copyRegionSizeInBytes);
     }
 
     template <class T>

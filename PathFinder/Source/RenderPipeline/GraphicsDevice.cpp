@@ -35,13 +35,10 @@ namespace PathFinder
     {
         if (depthStencilResourceName)
         {
-            mCommandList->SetRenderTarget(
-                mResourceStorage->GetCurrentBackBufferDescriptor(),
-                mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName)
-            );
+            mCommandList->SetRenderTarget(*mBackBuffer->GetOrCreateRTDescriptor(), mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName));
         }
         else {
-            mCommandList->SetRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor());
+            mCommandList->SetRenderTarget(*mBackBuffer->GetOrCreateRTDescriptor());
         }
     }
 
@@ -64,7 +61,7 @@ namespace PathFinder
     {
         // Clear operation requires correct states same as a dispatch or a draw
         InsertResourceTransitionsIfNeeded();
-        mCommandList->ClearRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor(), color);
+        mCommandList->ClearRenderTarget(*mBackBuffer->GetOrCreateRTDescriptor(), color);
     }
 
     void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)
@@ -283,6 +280,11 @@ namespace PathFinder
         else {
             assert_format(false, "No pipeline state applied");
         }
+    }
+
+    void GraphicsDevice::SetBackBuffer(Memory::Texture* backBuffer)
+    {
+        mBackBuffer = backBuffer;
     }
 
 }

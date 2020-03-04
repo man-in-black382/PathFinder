@@ -30,7 +30,11 @@ namespace PathFinder
         mUploadFence{ mDevice },
         mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ColorFormat::RGBA8_Usigned_Norm, mRenderSurfaceDescription.Dimensions() }
     {
-        mPipelineResourceStorage.CreateSwapChainBackBufferDescriptors(mSwapChain);
+        for (auto& backBufferPtr : mSwapChain.BackBuffers())
+        {
+            mBackBuffers.emplace_back(mResourceProducer.NewTexture(backBufferPtr.get()));
+        }
+
         mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
     }
 
@@ -116,6 +120,9 @@ namespace PathFinder
         mGraphicsFence.IncrementExpectedValue();
         mUploadFence.IncrementExpectedValue();
 
+        // Update Graphics device with current frame back buffer
+        mGraphicsDevice.SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
+
         // Notify internal listeners
         NotifyStartFrame(mGraphicsFence.ExpectedValue());
 
@@ -153,7 +160,7 @@ namespace PathFinder
         // Notify external listeners
         mPostRenderEvent.Raise();
 
-        // 
+        // Recompile states that were modified, but after a pipeline flush
         if (mPipelineStateManager.HasModifiedStates())
         {
             FlushAllQueuedFrames();
@@ -197,9 +204,6 @@ namespace PathFinder
         mDescriptorAllocator.EndFrame(completedFrameNumber);
         mCommandListAllocator.EndFrame(completedFrameNumber);
 
-        mBottomRTASes.clear();
-        mTopRTASes.clear();
-
         using namespace std::chrono;
         mFrameDuration = duration_cast<microseconds>(steady_clock::now() - mFrameStartTimestamp);
     }
@@ -207,29 +211,38 @@ namespace PathFinder
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::MoveToNextFrame()
     {
-        mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % (uint8_t)mSwapChain.BackBuffers().size();
-        mPipelineResourceStorage.SetCurrentBackBufferIndex(mCurrentBackBufferIndex);
+        mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % (uint8_t)mBackBuffers.size();
         mFrameNumber++;
+
+        mBottomRTASes.clear();
+        mTopRTASes.clear();
     }
 
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::BuildAccelerationStructures(HAL::Fence& fenceToWaitFor, HAL::Fence& fenceToSignal)
     {
-        HAL::ResourceBarrierCollection rtasUABarriers{};
+        HAL::ResourceBarrierCollection bottomRTASUABarriers{};
 
         for (const BottomRTAS* blas : mBottomRTASes)
         {
-            rtasUABarriers.AddBarrier(blas->UABarrier());
+            bottomRTASUABarriers.AddBarrier(blas->UABarrier());
             mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(blas->HALAccelerationStructure());
         }
 
+        // Top RTAS needs to wait for Bottom RTAS
+        mAsyncComputeDevice.CommandList()->InsertBarriers(bottomRTASUABarriers);
+
+        HAL::ResourceBarrierCollection topRTASUABarriers{};
+
         for (const TopRTAS* tlas : mTopRTASes)
         {
-            rtasUABarriers.AddBarrier(tlas->UABarrier());
+            topRTASUABarriers.AddBarrier(tlas->UABarrier());
             mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(tlas->HALAccelerationStructure());
         }
 
-        mAsyncComputeDevice.CommandList()->InsertBarriers(rtasUABarriers);
+        // Make the rest of the pipeline wait for Top RTAS build
+        mAsyncComputeDevice.CommandList()->InsertBarriers(topRTASUABarriers);
+
         mAsyncComputeDevice.ExecuteCommands(&fenceToWaitFor, &fenceToSignal);
     }
 
@@ -249,33 +262,27 @@ namespace PathFinder
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::RunDefaultPasses()
     {
-        HAL::Texture* currentBackBuffer = mSwapChain.BackBuffers()[mCurrentBackBufferIndex].get();
+        Memory::Texture* currentBackBuffer = mBackBuffers[mCurrentBackBufferIndex].get();
         auto& nodes = mPassExecutionGraph.DefaultPasses();
+
+        // This transition will be picked up automatically
+        // by the first draw/dispatch in any of the render passes
+        currentBackBuffer->RequestNewState(HAL::ResourceState::RenderTarget);
 
         for (auto nodeIt = nodes.begin(); nodeIt != nodes.end(); ++nodeIt)
         {
-            bool firstPass = nodeIt == nodes.begin();
-
-            auto name = nodeIt->PassMetadata.Name.ToString();
-
             mGraphicsDevice.ResetViewportToDefault();
             mPipelineResourceStorage.SetCurrentRenderPassGraphNode(*nodeIt);
-
-            HAL::ResourceBarrierCollection barriers{};
-
-            if (firstPass)
-            {
-                barriers.AddBarrier(HAL::ResourceTransitionBarrier{
-                    HAL::ResourceState::Present, HAL::ResourceState::RenderTarget, currentBackBuffer });
-            }
-
-            mGraphicsDevice.CommandList()->InsertBarriers(barriers);
             mRenderPasses[nodeIt->PassMetadata.Name]->Render(&mContext); 
             mPipelineResourceStorage.RequestCurrentPassDebugReadback();
         }
 
-        mGraphicsDevice.CommandList()->InsertBarrier(HAL::ResourceTransitionBarrier{
-            HAL::ResourceState::RenderTarget, HAL::ResourceState::Present, currentBackBuffer });
+        // This is a special case when a transition needs to be manually extracted from state tracker
+        // and then executed, because no more dispatches/draws will be executed in this frame,
+        // therefore no transitions will be performed automatically, but Swap Chain Present requires 
+        // back buffer to be in Present state
+        currentBackBuffer->RequestNewState(HAL::ResourceState::Present);
+        mGraphicsDevice.CommandList()->InsertBarriers(mResourceStateTracker.ApplyRequestedTransitions());
     }
 
     template <class ContentMediator> 

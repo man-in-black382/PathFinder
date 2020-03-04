@@ -121,6 +121,7 @@ namespace PathFinder
 
         std::vector<const TopRTAS*> mTopRTASes;
         std::vector<const BottomRTAS*> mBottomRTASes;
+        std::vector<Memory::GPUResourceProducer::TexturePtr> mBackBuffers;
 
     public:
         inline PreprocessableAssetStorage& AssetStorage() { return mAssetStorage; }

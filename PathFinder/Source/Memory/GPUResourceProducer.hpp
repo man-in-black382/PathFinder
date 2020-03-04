@@ -31,6 +31,8 @@ namespace Memory
         template <class Element>
         BufferPtr NewBuffer(const HAL::Buffer::Properties<Element>& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
         TexturePtr NewTexture(const HAL::Texture::Properties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
+
+        TexturePtr NewTexture(HAL::Texture* existingTexture);
         
         void SetCommandList(HAL::CopyCommandListBase* commandList);
 
