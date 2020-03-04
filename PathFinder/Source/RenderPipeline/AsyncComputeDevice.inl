@@ -240,13 +240,6 @@ namespace PathFinder
             mResourceStorage->RequestResourceTransitionsToCurrentPassStates();
             barriers.AddBarriers(mResourceStorage->AliasingBarriersForCurrentPass());
         }
-        else
-        {
-            // We only use UA barriers of current pass for second draw/dispatch and onwards
-            // First draw/dispatch uses UA barriers from the previous render pass
-            // so that transition and UA barriers could be merged correctly into one graphics API call
-            mUABarriersToApply = mResourceStorage->UnorderedAccessBarriersForCurrentPass();
-        }
 
         // Add any transitions that may have been requested for external resources (assets)
         // for example copy dest. to srv or cbv 
@@ -256,6 +249,11 @@ namespace PathFinder
         mCommandList->InsertBarriers(barriers);
 
         mLastDetectedPassName = passNode.PassMetadata.Name;
+
+        // We only use UA barriers of current pass for second draw/dispatch and onwards.
+        // First draw/dispatch uses UA barriers from the previous render pass
+        // so that transition and UA barriers could be merged correctly into one graphics API call
+        mUABarriersToApply = mResourceStorage->UnorderedAccessBarriersForCurrentPass();
     }
 
 }
