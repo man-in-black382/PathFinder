@@ -13,6 +13,7 @@
 #include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
 #include "../Memory/PoolCommandListAllocator.hpp"
 #include "../Memory/GPUResource.hpp"
+#include "../Memory/ResourceStateTracker.hpp"
 
 namespace PathFinder
 {
@@ -30,6 +31,7 @@ namespace PathFinder
             const HAL::Device& device,
             const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
             Memory::PoolCommandListAllocator* commandListAllocator,
+            Memory::ResourceStateTracker* resourceStateTracker,
             PipelineResourceStorage* resourceStorage,
             PipelineStateManager* pipelineStateManager,
             const RenderSurfaceDescription& defaultRenderSurface
@@ -40,14 +42,14 @@ namespace PathFinder
         virtual void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         void BindExternalBuffer(Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
-
-        template <class T>
+        template <class T> 
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
         void ExecuteCommands(const HAL::Fence* fenceToWaitFor = nullptr, const HAL::Fence* fenceToSignal = nullptr);
 
     protected:
         void AllocateNewCommandList();
+        void InsertResourceTransitionsIfNeeded();
 
         virtual void ApplyStateIfNeeded(const HAL::ComputePipelineState* state);
         virtual void ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state);
@@ -62,6 +64,7 @@ namespace PathFinder
         const HAL::Buffer* mBoundPassDebugBufferCompute = nullptr;
 
         Memory::PoolCommandListAllocator* mCommandListAllocator;
+        Memory::ResourceStateTracker* mResourceStateTracker;
         PipelineResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
         RenderSurfaceDescription mDefaultRenderSurface;
@@ -73,6 +76,8 @@ namespace PathFinder
         void ApplyCommonComputeResourceBindingsIfNeeded();
 
         bool mRebindingAfterSignatureChangeRequired = false;
+        HAL::ResourceBarrierCollection mUABarriersToApply;
+        Foundation::Name mLastDetectedPassName;
 
     public:
         inline CommandListT* CommandList() { return mCommandList.get(); }

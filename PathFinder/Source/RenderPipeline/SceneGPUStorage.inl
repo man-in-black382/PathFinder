@@ -102,8 +102,6 @@ namespace PathFinder
         }
 
         mTopAccelerationStructure.Build();
-        mTopASBarriers = {};
-        mTopASBarriers.AddBarrier(mTopAccelerationStructure.UABarrier());
     }
 
     template < template < class ... > class Container, class LightT, class ... Args >
@@ -181,8 +179,6 @@ namespace PathFinder
             uploadBuffers.Indices.clear();
         }
 
-        mBottomASBarriers = {};
-
         for (const VertexStorageLocation& location : uploadBuffers.Locations)
         {
             BottomRTAS& blas = mBottomAccelerationStructures[location.BottomAccelerationStructureIndex];
@@ -195,8 +191,6 @@ namespace PathFinder
 
             blas.AddGeometry(blasGeometry);
             blas.Build();
-
-            mBottomASBarriers.AddBarrier(blas.UABarrier());
         }
 
         uploadBuffers.Locations.clear();

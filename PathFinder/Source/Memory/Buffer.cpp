@@ -51,22 +51,6 @@ namespace Memory
         return mSRDescriptor.get();
     }
 
-    void Buffer::RequestWrite()
-    {
-        GPUResource::RequestWrite();
-
-        if (mUploadStrategy != GPUResource::UploadStrategy::DirectAccess)
-        {
-            mCommandListProvider->CommandList()->CopyBufferRegion(*CurrentFrameUploadBuffer(), *HALBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
-        }
-    }
-
-    void Buffer::RequestRead()
-    {
-        GPUResource::RequestRead();
-        mCommandListProvider->CommandList()->CopyBufferRegion(*HALBuffer(), *CurrentFrameReadbackBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
-    }
-
     const HAL::Buffer* Buffer::HALBuffer() const
     {
         return mUploadStrategy == GPUResource::UploadStrategy::Automatic ? 
@@ -91,6 +75,19 @@ namespace Memory
         {
             mBufferPtr->SetDebugName(mDebugName);
         }
+    }
+
+    void Buffer::RecordUploadCommands()
+    {
+        if (mUploadStrategy != GPUResource::UploadStrategy::DirectAccess)
+        {
+            mCommandListProvider->CommandList()->CopyBufferRegion(*CurrentFrameUploadBuffer(), *HALBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
+        }
+    }
+
+    void Buffer::RecordReadbackCommands()
+    {
+        mCommandListProvider->CommandList()->CopyBufferRegion(*HALBuffer(), *CurrentFrameReadbackBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
     }
 
 }

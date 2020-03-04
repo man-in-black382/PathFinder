@@ -34,15 +34,14 @@ namespace Memory
         const HAL::SRDescriptor* GetOrCreateSRDescriptor();
         const HAL::UADescriptor* GetOrCreateUADescriptor();
 
-        void RequestWrite() override;
-        void RequestRead() override;
-
         const HAL::Texture* HALTexture() const;
         const HAL::Resource* HALResource() const override;
 
     protected:
         uint64_t ResourceSizeInBytes() const override;
         void ApplyDebugName() override;
+        void RecordUploadCommands() override;
+        void RecordReadbackCommands() override;
 
     private:
         SegregatedPoolsResourceAllocator::TexturePtr mTexturePtr;

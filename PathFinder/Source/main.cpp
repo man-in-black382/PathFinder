@@ -129,7 +129,7 @@ int main(int argc, char** argv)
         "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
 
     PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &concrete19Material });
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
 
     auto t = sphereInstance.Transformation();
     //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
@@ -153,6 +153,12 @@ int main(int argc, char** argv)
     engine.ScheduleAndAllocatePipelineResources();
     engine.UploadProcessAndTransferAssets();
 
+    // Build bottom AS only once. A production-level application would build every frame
+    for (const PathFinder::BottomRTAS& bottomRTAS : sceneStorage.BottomAccelerationStructures())
+    {
+        engine.AddBottomRayTracingAccelerationStructure(&bottomRTAS);
+    }
+
     engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
         uiStorage.StartNewFrame();
@@ -164,6 +170,9 @@ int main(int argc, char** argv)
         sceneStorage.UploadMeshInstances(scene.MeshInstances());
         sceneStorage.UploadLights(scene.FlatLights());
         sceneStorage.UploadLights(scene.SphericalLights());
+
+        // Top RT needs to be rebuilt every frame
+        engine.AddTopRayTracingAccelerationStructure(&sceneStorage.TopAccelerationStructure());
 
         PathFinder::GlobalRootConstants globalConstants;
         PathFinder::PerFrameRootConstants perFrameConstants;

@@ -28,11 +28,18 @@ namespace Memory
 
         AllocateNewUploadBuffer();
 
-        if (mStateTracker)
+        if (mUploadStrategy != UploadStrategy::DirectAccess)
         {
             if (auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination))
             {
+                HAL::ResourceState oldStates = barrier->BeforeStates();
                 mCommandListProvider->CommandList()->InsertBarrier(*barrier);
+                RecordUploadCommands();
+                RequestNewState(oldStates);
+            }
+            else
+            {
+                RecordUploadCommands();
             }
         }
     }
@@ -49,12 +56,18 @@ namespace Memory
 
         AllocateNewReadbackBuffer();
 
-        if (mStateTracker)
+        if (auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopySource))
         {
-            if (auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopySource))
-            {
-                mCommandListProvider->CommandList()->InsertBarrier(*barrier);
-            }
+            HAL::ResourceState oldStates = barrier->BeforeStates();
+            mCommandListProvider->CommandList()->InsertBarrier(*barrier);
+            RecordReadbackCommands();
+            // Request to apply old state after copy
+            RequestNewState(oldStates);
+        }
+        else
+        {
+            // Just run readback commands
+            RecordReadbackCommands();
         }
     }
 

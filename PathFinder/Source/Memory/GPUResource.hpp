@@ -53,14 +53,11 @@ namespace Memory
         template <class T = uint8_t>
         void Write(const T* data, uint64_t startIndex, uint64_t objectCount, uint64_t objectAlignment = 1);
 
-        virtual void RequestWrite();
-        virtual void RequestRead();
-
+        void RequestWrite();
+        void RequestRead();
         void RequestNewState(HAL::ResourceState newState);
-
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);
-
         void SetDebugName(const std::string& name);
 
         virtual const HAL::Resource* HALResource() const;
@@ -75,6 +72,8 @@ namespace Memory
 
         virtual void ApplyDebugName();
         virtual uint64_t ResourceSizeInBytes() const = 0;
+        virtual void RecordUploadCommands() = 0;
+        virtual void RecordReadbackCommands() = 0;
 
         UploadStrategy mUploadStrategy = UploadStrategy::Automatic;
         ResourceStateTracker* mStateTracker;

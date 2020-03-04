@@ -33,6 +33,8 @@
 #include "RenderPassExecutionGraph.hpp"
 #include "GPUCommandRecorder.hpp"
 #include "UIGPUStorage.hpp"
+#include "BottomRTAS.hpp"
+#include "TopRTAS.hpp"
 
 namespace PathFinder
 {
@@ -55,6 +57,9 @@ namespace PathFinder
         void Render();
         void FlushAllQueuedFrames();
 
+        void AddBottomRayTracingAccelerationStructure(const BottomRTAS* bottomRTAS);
+        void AddTopRayTracingAccelerationStructure(const TopRTAS* topRTAS);
+
         void SetContentMediator(ContentMediator* mediator);
 
         template <class Constants>
@@ -68,7 +73,7 @@ namespace PathFinder
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
-
+        void BuildAccelerationStructures(HAL::Fence& fenceToWaitFor, HAL::Fence& fenceToSignal);
         void RunAssetProcessingPasses();
         void RunDefaultPasses();
 
@@ -113,6 +118,9 @@ namespace PathFinder
 
         Event mPreRenderEvent;
         Event mPostRenderEvent;
+
+        std::vector<const TopRTAS*> mTopRTASes;
+        std::vector<const BottomRTAS*> mBottomRTASes;
 
     public:
         inline PreprocessableAssetStorage& AssetStorage() { return mAssetStorage; }

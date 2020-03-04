@@ -130,8 +130,6 @@ namespace PathFinder
 
         std::vector<BottomRTAS> mBottomAccelerationStructures;
         TopRTAS mTopAccelerationStructure;
-        HAL::ResourceBarrierCollection mBottomASBarriers;
-        HAL::ResourceBarrierCollection mTopASBarriers;
 
         Memory::GPUResourceProducer::BufferPtr mMeshInstanceTable;
         Memory::GPUResourceProducer::BufferPtr mLightTable;
@@ -151,8 +149,6 @@ namespace PathFinder
         inline const auto MaterialTable() const { return mMaterialTable.get(); }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
-        inline const auto& BottomAccelerationStructureBarriers() const { return mBottomASBarriers; }
-        inline const auto& TopAccelerationStructureBarriers() const { return mTopASBarriers; }
     };
 
 }

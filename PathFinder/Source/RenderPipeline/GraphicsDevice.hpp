@@ -20,6 +20,7 @@ namespace PathFinder
             const HAL::Device& device,
             const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
             Memory::PoolCommandListAllocator* commandListAllocator,
+            Memory::ResourceStateTracker* resourceStateTracker,
             PipelineResourceStorage* resourceStorage,
             PipelineStateManager* pipelineStateManager,
             const RenderSurfaceDescription& defaultRenderSurface

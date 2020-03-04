@@ -9,6 +9,7 @@ namespace PathFinder
         const HAL::Device& device, 
         const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
         Memory::PoolCommandListAllocator* commandListAllocator,
+        Memory::ResourceStateTracker* resourceStateTracker,
         PipelineResourceStorage* resourceStorage,
         PipelineStateManager* pipelineStateManager,
         const RenderSurfaceDescription& defaultRenderSurface)
@@ -17,6 +18,7 @@ namespace PathFinder
             device, 
             universalGPUDescriptorHeap, 
             commandListAllocator, 
+            resourceStateTracker,
             resourceStorage, 
             pipelineStateManager, 
             defaultRenderSurface)
@@ -53,16 +55,22 @@ namespace PathFinder
 
     void GraphicsDevice::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)
     {
+        // Clear operation requires correct states same as a dispatch or a draw
+        InsertResourceTransitionsIfNeeded();
         mCommandList->ClearRenderTarget(mResourceStorage->GetRenderTargetDescriptor(resourceName), color);
     }
 
     void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
     {
+        // Clear operation requires correct states same as a dispatch or a draw
+        InsertResourceTransitionsIfNeeded();
         mCommandList->ClearRenderTarget(mResourceStorage->GetCurrentBackBufferDescriptor(), color);
     }
 
     void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)
     {
+        // Clear operation requires correct states same as a dispatch or a draw
+        InsertResourceTransitionsIfNeeded();
         mCommandList->CleadDepthStencil(mResourceStorage->GetDepthStencilDescriptor(resourceName), depthValue);
     }
 
@@ -76,17 +84,19 @@ namespace PathFinder
     {
         ApplyCommonGraphicsResourceBindingsIfNeeded();
         ApplyDefaultViewportIfNeeded();
+        InsertResourceTransitionsIfNeeded();
+
         mCommandList->Draw(vertexCount, 0);
-        mCommandList->InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
     
     void GraphicsDevice::Draw(const DrawablePrimitive& primitive)
     {
         ApplyCommonGraphicsResourceBindingsIfNeeded();
         ApplyDefaultViewportIfNeeded();
+        InsertResourceTransitionsIfNeeded();
+
         mCommandList->SetPrimitiveTopology(primitive.Topology());
         mCommandList->Draw(primitive.VertexCount(), 0);
-        mCommandList->InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
 
     void GraphicsDevice::ResetViewportToDefault()

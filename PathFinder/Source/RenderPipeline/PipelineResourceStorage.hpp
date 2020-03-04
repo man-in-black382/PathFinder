@@ -51,9 +51,6 @@ namespace PathFinder
             // UAV barriers to be applied after each draw/dispatch in
             // a pass that makes unordered accesses to resources
             HAL::ResourceBarrierCollection UAVBarriers;
-
-            // State transition barriers for the pass
-            HAL::ResourceBarrierCollection TransitionBarriers;
         };
 
         struct PerResourceObjects
@@ -85,7 +82,7 @@ namespace PathFinder
         void SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node);
         void AllocateScheduledResources();
         void CreateSwapChainBackBufferDescriptors(const HAL::SwapChain& swapChain);
-        void TransitionResourcesToCurrentPassStates();
+        void RequestResourceTransitionsToCurrentPassStates();
         void RequestCurrentPassDebugReadback();
         
         template <class Constants> 
@@ -106,7 +103,6 @@ namespace PathFinder
         Memory::Buffer* GetBufferResource(ResourceName resourceName);
         Memory::GPUResource* GetGPUResource(ResourceName resourceName);
         const HAL::ResourceBarrierCollection& AliasingBarriersForCurrentPass();
-        const HAL::ResourceBarrierCollection& TransitionBarriersForCurrentPass();
         const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();
         const RenderPassExecutionGraph::Node& CurrentPassGraphNode() const;
 

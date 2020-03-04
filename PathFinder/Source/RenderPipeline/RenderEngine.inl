@@ -21,8 +21,8 @@ namespace PathFinder
         mPipelineStateManager{ &mDevice, &mShaderManager, &mResourceProducer, mRenderSurfaceDescription },
         mPipelineStateCreator{ &mPipelineStateManager },
         mRootSignatureCreator{ &mPipelineStateManager },
-        mGraphicsDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
-        mAsyncComputeDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
+        mGraphicsDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mResourceStateTracker, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
+        mAsyncComputeDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mResourceStateTracker, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
         mCommandRecorder{ &mGraphicsDevice },
         mContext{ &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mRenderSurfaceDescription },
         mAsyncComputeFence{ mDevice },
@@ -39,6 +39,18 @@ namespace PathFinder
     {
         mPassExecutionGraph.AddPass(pass->Metadata());
         mRenderPasses.emplace(pass->Metadata().Name, pass);
+    }
+
+    template <class ContentMediator>
+    void RenderEngine<ContentMediator>::AddTopRayTracingAccelerationStructure(const TopRTAS* topRTAS)
+    {
+        mTopRTASes.push_back(topRTAS);
+    }
+
+    template <class ContentMediator>
+    void RenderEngine<ContentMediator>::AddBottomRayTracingAccelerationStructure(const BottomRTAS* bottomRTAS)
+    {
+        mBottomRTASes.push_back(bottomRTAS);
     }
 
     template <class ContentMediator>
@@ -74,15 +86,6 @@ namespace PathFinder
 
         // Upload and process assets
         mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
-
-        // Build BLASes once 
-    /*    for (const BottomRTAS& blas : mMeshStorage.BottomAccelerationStructures())
-        {
-            mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(blas.HALAccelerationStructure());
-        }
-
-        mAsyncComputeDevice.CommandList()->InsertBarriers(mMeshStorage.BottomAccelerationStructureBarriers());*/
-        mAsyncComputeDevice.ExecuteCommands(&mGraphicsFence, &mAsyncComputeFence);
 
         // Execute readback commands
         mGraphicsFence.IncrementExpectedValue();
@@ -126,9 +129,7 @@ namespace PathFinder
         mGraphicsDevice.ExecuteCommands(nullptr, &mUploadFence);
 
         // Build AS
-        /*mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(mMeshStorage.TopAccelerationStructure().HALAccelerationStructure());
-        mAsyncComputeDevice.CommandList()->InsertBarrier(mMeshStorage.TopAccelerationStructure().UABarrier());*/
-        mAsyncComputeDevice.ExecuteCommands(&mUploadFence, &mAsyncComputeFence);
+        BuildAccelerationStructures(mUploadFence, mAsyncComputeFence);
 
         // Let resources record transfer (upload/readback) commands into graphics cmd list
         mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
@@ -196,6 +197,9 @@ namespace PathFinder
         mDescriptorAllocator.EndFrame(completedFrameNumber);
         mCommandListAllocator.EndFrame(completedFrameNumber);
 
+        mBottomRTASes.clear();
+        mTopRTASes.clear();
+
         using namespace std::chrono;
         mFrameDuration = duration_cast<microseconds>(steady_clock::now() - mFrameStartTimestamp);
     }
@@ -209,6 +213,27 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
+    void RenderEngine<ContentMediator>::BuildAccelerationStructures(HAL::Fence& fenceToWaitFor, HAL::Fence& fenceToSignal)
+    {
+        HAL::ResourceBarrierCollection rtasUABarriers{};
+
+        for (const BottomRTAS* blas : mBottomRTASes)
+        {
+            rtasUABarriers.AddBarrier(blas->UABarrier());
+            mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(blas->HALAccelerationStructure());
+        }
+
+        for (const TopRTAS* tlas : mTopRTASes)
+        {
+            rtasUABarriers.AddBarrier(tlas->UABarrier());
+            mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(tlas->HALAccelerationStructure());
+        }
+
+        mAsyncComputeDevice.CommandList()->InsertBarriers(rtasUABarriers);
+        mAsyncComputeDevice.ExecuteCommands(&fenceToWaitFor, &fenceToSignal);
+    }
+
+    template <class ContentMediator>
     void RenderEngine<ContentMediator>::RunAssetProcessingPasses()
     {
         auto& nodes = mPassExecutionGraph.AssetProcessingPasses();
@@ -217,14 +242,6 @@ namespace PathFinder
         {
             mGraphicsDevice.ResetViewportToDefault();
             mPipelineResourceStorage.SetCurrentRenderPassGraphNode(*nodeIt);
-            mPipelineResourceStorage.TransitionResourcesToCurrentPassStates();
-    
-            HAL::ResourceBarrierCollection barriers{};
-            barriers.AddBarriers(mPipelineResourceStorage.AliasingBarriersForCurrentPass());
-            barriers.AddBarriers(mPipelineResourceStorage.TransitionBarriersForCurrentPass());
-
-            mGraphicsDevice.CommandList()->InsertBarriers(barriers);
-
             mRenderPasses[nodeIt->PassMetadata.Name]->Render(&mContext);
         }
     }
@@ -239,13 +256,12 @@ namespace PathFinder
         {
             bool firstPass = nodeIt == nodes.begin();
 
+            auto name = nodeIt->PassMetadata.Name.ToString();
+
             mGraphicsDevice.ResetViewportToDefault();
             mPipelineResourceStorage.SetCurrentRenderPassGraphNode(*nodeIt);
-            mPipelineResourceStorage.TransitionResourcesToCurrentPassStates();
 
             HAL::ResourceBarrierCollection barriers{};
-            barriers.AddBarriers(mPipelineResourceStorage.AliasingBarriersForCurrentPass());
-            barriers.AddBarriers(mPipelineResourceStorage.TransitionBarriersForCurrentPass());
 
             if (firstPass)
             {

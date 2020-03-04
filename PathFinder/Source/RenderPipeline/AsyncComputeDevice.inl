@@ -8,6 +8,7 @@ namespace PathFinder
         const HAL::Device& device,
         const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
         Memory::PoolCommandListAllocator* commandListAllocator,
+        Memory::ResourceStateTracker* resourceStateTracker,
         PipelineResourceStorage* resourceStorage, 
         PipelineStateManager* pipelineStateManager,
         const RenderSurfaceDescription& defaultRenderSurface)
@@ -15,6 +16,7 @@ namespace PathFinder
         mCommandQueue{ device },
         mUniversalGPUDescriptorHeap{ universalGPUDescriptorHeap },
         mCommandListAllocator{ commandListAllocator },
+        mResourceStateTracker{ resourceStateTracker },
         mResourceStorage{ resourceStorage },
         mPipelineStateManager{ pipelineStateManager },
         mDefaultRenderSurface{ defaultRenderSurface }
@@ -159,9 +161,9 @@ namespace PathFinder
     void AsyncComputeDevice<CommandListT, CommandQueueT>::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
         ApplyCommonComputeResourceBindingsIfNeeded();
-
+        InsertResourceTransitionsIfNeeded();
+        
         mCommandList->Dispatch(groupCountX, groupCountY, groupCountZ);
-        mCommandList->InsertBarriers(mResourceStorage->UnorderedAccessBarriersForCurrentPass());
     }
 
     template <class CommandListT, class CommandQueueT>
@@ -220,6 +222,40 @@ namespace PathFinder
         mAppliedComputeRootSignature = state->GetGlobalRootSignature();
         mAppliedRayTracingState = state;
         mAppliedComputeState = nullptr;
+    }
+
+    template <class CommandListT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandQueueT>::InsertResourceTransitionsIfNeeded()
+    {
+        auto& passNode = mResourceStorage->CurrentPassGraphNode();
+        bool passChanged = !(mLastDetectedPassName == passNode.PassMetadata.Name);
+        
+        HAL::ResourceBarrierCollection barriers{};
+
+        auto passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name.ToString();
+
+        if (passChanged)
+        {
+            // In case pass had changed, we gather resource transitions to be applied for new pass
+            mResourceStorage->RequestResourceTransitionsToCurrentPassStates();
+            barriers.AddBarriers(mResourceStorage->AliasingBarriersForCurrentPass());
+        }
+        else
+        {
+            // We only use UA barriers of current pass for second draw/dispatch and onwards
+            // First draw/dispatch uses UA barriers from the previous render pass
+            // so that transition and UA barriers could be merged correctly into one graphics API call
+            mUABarriersToApply = mResourceStorage->UnorderedAccessBarriersForCurrentPass();
+        }
+
+        // Add any transitions that may have been requested for external resources (assets)
+        // for example copy dest. to srv or cbv 
+        bool isFirstPass = passNode.ContextualExecutionIndex == 0;
+        barriers.AddBarriers(mResourceStateTracker->ApplyRequestedTransitions(isFirstPass));
+        barriers.AddBarriers(mUABarriersToApply);
+        mCommandList->InsertBarriers(barriers);
+
+        mLastDetectedPassName = passNode.PassMetadata.Name;
     }
 
 }

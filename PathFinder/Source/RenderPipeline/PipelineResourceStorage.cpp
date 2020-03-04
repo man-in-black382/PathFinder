@@ -261,7 +261,7 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::TransitionResourcesToCurrentPassStates()
+    void PipelineResourceStorage::RequestResourceTransitionsToCurrentPassStates()
     {
         for (ResourceName resourceName : mCurrentPassObjects->ScheduledResourceNames)
         {
@@ -269,9 +269,6 @@ namespace PathFinder
             HAL::ResourceState newState = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name)->OptimizedState;
             resourceObjects.GetGPUResource()->RequestNewState(newState);
         }
-        
-        bool isFirst = mCurrentRenderPassGraphNode.ContextualExecutionIndex == 0;
-        mCurrentPassObjects->TransitionBarriers = mResourceStateTracker->ApplyRequestedTransitions(isFirst);
     }
 
     void PipelineResourceStorage::RequestCurrentPassDebugReadback()
@@ -326,12 +323,6 @@ namespace PathFinder
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
         return passObjects.AliasingBarriers;
-    }
-
-    const HAL::ResourceBarrierCollection& PipelineResourceStorage::TransitionBarriersForCurrentPass() 
-    {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
-        return passObjects.TransitionBarriers;
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::UnorderedAccessBarriersForCurrentPass() 

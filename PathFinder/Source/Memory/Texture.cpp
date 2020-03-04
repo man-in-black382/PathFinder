@@ -65,30 +65,6 @@ namespace Memory
         return mUADescriptor.get();
     }
 
-    void Texture::RequestWrite()
-    {
-        GPUResource::RequestWrite();
-
-        HAL::ResourceFootprint footprint{ *HALTexture() };
-
-        for (const HAL::SubresourceFootprint& subresourceFootprint : footprint.SubresourceFootprints())
-        {
-            mCommandListProvider->CommandList()->CopyBufferToTexture(*CurrentFrameUploadBuffer(), *HALTexture(), subresourceFootprint);
-        }
-    }
-
-    void Texture::RequestRead()
-    {
-        GPUResource::RequestRead();
-
-        HAL::ResourceFootprint textureFootprint{ *HALTexture() };
-
-        for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())
-        {
-            mCommandListProvider->CommandList()->CopyTextureToBuffer(*HALTexture(), *CurrentFrameReadbackBuffer(), subresourceFootprint);
-        }
-    }
-
     const HAL::Texture* Texture::HALTexture() const
     {
         return mTexturePtr.get();
@@ -111,6 +87,26 @@ namespace Memory
         if (mTexturePtr)
         {
             mTexturePtr->SetDebugName(mDebugName);
+        }
+    }
+
+    void Texture::RecordUploadCommands()
+    {
+        HAL::ResourceFootprint footprint{ *HALTexture() };
+
+        for (const HAL::SubresourceFootprint& subresourceFootprint : footprint.SubresourceFootprints())
+        {
+            mCommandListProvider->CommandList()->CopyBufferToTexture(*CurrentFrameUploadBuffer(), *HALTexture(), subresourceFootprint);
+        }
+    }
+
+    void Texture::RecordReadbackCommands()
+    {
+        HAL::ResourceFootprint textureFootprint{ *HALTexture() };
+
+        for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())
+        {
+            mCommandListProvider->CommandList()->CopyTextureToBuffer(*HALTexture(), *CurrentFrameReadbackBuffer(), subresourceFootprint);
         }
     }
 

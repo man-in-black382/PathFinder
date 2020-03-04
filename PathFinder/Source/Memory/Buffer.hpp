@@ -38,9 +38,6 @@ namespace Memory
         const HAL::UADescriptor* GetOrCreateUADescriptor();
         const HAL::CBDescriptor* GetOrCreateCBDescriptor();
 
-        void RequestWrite() override;
-        void RequestRead() override;
-
         template <class Element = uint8_t>
         uint64_t ElementCapacity(uint64_t elementAlignment = 1) const;
 
@@ -50,6 +47,8 @@ namespace Memory
     protected:
         uint64_t ResourceSizeInBytes() const override;
         void ApplyDebugName() override;
+        void RecordUploadCommands() override;
+        void RecordReadbackCommands() override;
 
     private:
         uint64_t mRequstedStride = 1;
