@@ -11,6 +11,8 @@ namespace Memory
     class ResourceStateTracker
     {
     public:
+        using TransitionResult = std::pair<std::optional<HAL::ResourceTransitionBarrier>, HAL::ResourceState>;
+
         void StartTrakingResource(const HAL::Resource* resource);
         void StopTrakingResource(const HAL::Resource* resource);
 
@@ -21,7 +23,7 @@ namespace Memory
         HAL::ResourceBarrierCollection ApplyRequestedTransitions(bool firstInCommandList = false);
 
         // Immediately record new state for a resource 
-        std::optional<HAL::ResourceTransitionBarrier> TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList = false);
+        TransitionResult TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList = false);
 
     private:
         using ResourceStateMap = std::unordered_map<const HAL::Resource*, HAL::ResourceState>;

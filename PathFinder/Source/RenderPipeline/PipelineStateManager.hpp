@@ -29,11 +29,13 @@ namespace PathFinder
         {
             PipelineStateVariant(const HAL::GraphicsPipelineState* graphicState) : GraphicPSO{ graphicState } {}
             PipelineStateVariant(const HAL::ComputePipelineState* computeState) : ComputePSO{ computeState } {}
-            PipelineStateVariant(const HAL::RayTracingPipelineState* rtState) : RayTracingPSO{ rtState } {}
+            PipelineStateVariant(const HAL::RayTracingPipelineState* rtState, const HAL::RayDispatchInfo* rayDispatchInfo) 
+                : RayTracingPSO{ rtState }, BaseRayDispatchInfo{ rayDispatchInfo } {}
 
             const HAL::GraphicsPipelineState* GraphicPSO = nullptr;
             const HAL::ComputePipelineState* ComputePSO = nullptr;
             const HAL::RayTracingPipelineState* RayTracingPSO = nullptr;
+            const HAL::RayDispatchInfo* BaseRayDispatchInfo = nullptr;
         };
 
         PipelineStateManager(
@@ -61,6 +63,11 @@ namespace PathFinder
         {
             HAL::RayTracingPipelineState State;
             Memory::GPUResourceProducer::BufferPtr ShaderTableBuffer;
+
+            // Dispatch info containing shader table memory layout
+            // but not actual dispatch dimensions. Clone this
+            // dispatch info and set dimensions for the copy.
+            std::optional<HAL::RayDispatchInfo> BaseRayDispatchInfo;
         };
 
         // Store graphic and compute states directly, but store ray tracing one in a wrapper because we need to manage and associate additional memory with it

@@ -167,6 +167,19 @@ namespace PathFinder
     }
 
     template <class CommandListT, class CommandQueueT>
+    void AsyncComputeDevice<CommandListT, CommandQueueT>::DispatchRays(uint32_t width, uint32_t height, uint32_t depth)
+    {
+        assert_format(mAppliedRayTracingState && mAppliedRayTracingDispatchInfo, "No Ray Tracing state / dispatch info were applied before Ray Dispatch");
+
+        HAL::RayDispatchInfo dispatchInfo = *mAppliedRayTracingDispatchInfo;
+        dispatchInfo.SetWidth(width);
+        dispatchInfo.SetHeight(height);
+        dispatchInfo.SetDepth(depth);
+
+        mCommandList->DispatchRays(dispatchInfo);
+    }
+
+    template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::ApplyPipelineState(Foundation::Name psoName)
     {
         std::optional<PipelineStateManager::PipelineStateVariant> state = mPipelineStateManager->GetPipelineState(psoName);
@@ -174,7 +187,7 @@ namespace PathFinder
         assert_format(!state->GraphicPSO, "Trying to apply graphics pipeline state to compute device");
 
         if (state->ComputePSO) ApplyStateIfNeeded(state->ComputePSO);
-        else if (state->RayTracingPSO) ApplyStateIfNeeded(state->RayTracingPSO);
+        else if (state->RayTracingPSO) ApplyStateIfNeeded(state->RayTracingPSO, state->BaseRayDispatchInfo);
     }
 
     template <class CommandListT, class CommandQueueT>
@@ -198,10 +211,11 @@ namespace PathFinder
         mAppliedComputeRootSignature = state->GetRootSignature();
         mAppliedComputeState = state;
         mAppliedRayTracingState = nullptr;
+        mAppliedRayTracingDispatchInfo = nullptr;
     }
 
     template <class CommandListT, class CommandQueueT>
-    void AsyncComputeDevice<CommandListT, CommandQueueT>::ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state)
+    void AsyncComputeDevice<CommandListT, CommandQueueT>::ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo)
     {
         bool rayTracingStateApplied = mAppliedRayTracingState != nullptr;
 
@@ -210,7 +224,7 @@ namespace PathFinder
         if (rayTracingStateApplied && mAppliedRayTracingState == state) return;
 
         // Set RT state
-        //mCommandList->SetPipelineState(*pso);
+        mCommandList->SetPipelineState(*state);
 
         mRebindingAfterSignatureChangeRequired = state->GetGlobalRootSignature() != mAppliedComputeRootSignature;
 
@@ -221,6 +235,7 @@ namespace PathFinder
 
         mAppliedComputeRootSignature = state->GetGlobalRootSignature();
         mAppliedRayTracingState = state;
+        mAppliedRayTracingDispatchInfo = dispatchInfo;
         mAppliedComputeState = nullptr;
     }
 

@@ -39,6 +39,7 @@ namespace PathFinder
 
         virtual void ApplyPipelineState(Foundation::Name psoName);
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
+        virtual void DispatchRays(uint32_t width, uint32_t height = 1, uint32_t depth = 1);
         virtual void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         void BindExternalBuffer(Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
@@ -52,11 +53,12 @@ namespace PathFinder
         void InsertResourceTransitionsIfNeeded();
 
         virtual void ApplyStateIfNeeded(const HAL::ComputePipelineState* state);
-        virtual void ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state);
+        virtual void ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo);
 
         const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap = nullptr;
         const HAL::ComputePipelineState* mAppliedComputeState = nullptr;
         const HAL::RayTracingPipelineState* mAppliedRayTracingState = nullptr;
+        const HAL::RayDispatchInfo* mAppliedRayTracingDispatchInfo = nullptr;
         const HAL::RootSignature* mAppliedComputeRootSignature = nullptr;
         const HAL::Buffer* mBoundGlobalConstantBufferCompute = nullptr;
         const HAL::Buffer* mBoundFrameConstantBufferCompute = nullptr;

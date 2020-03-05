@@ -79,6 +79,7 @@ namespace HAL
     public:
         using CopyCommandListBase::CopyCommandListBase;
 
+        void SetPipelineState(const RayTracingPipelineState& state);
         void SetPipelineState(const ComputePipelineState& state);
         void SetComputeRootSignature(const RootSignature& signature);
 
@@ -90,6 +91,7 @@ namespace HAL
         void SetComputeRootDescriptorTable(DescriptorAddress tableStartAddress, uint32_t rootParameterIndex);
         void SetDescriptorHeap(const CBSRUADescriptorHeap& heap);
         void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
+        void DispatchRays(const RayDispatchInfo& dispatchInfo);
     };
 
 
@@ -97,13 +99,14 @@ namespace HAL
     class GraphicsCommandListBase : public ComputeCommandListBase {
     public:
         using ComputeCommandListBase::ComputeCommandListBase;
+        using ComputeCommandListBase::SetPipelineState;
 
         void SetViewport(const Viewport& viewport);
         void SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor = std::nullopt);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
         void CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue);
         void SetPrimitiveTopology(PrimitiveTopology topology);
-        void SetPipelineState(const PipelineState& state);
+        void SetPipelineState(const GraphicsPipelineState& state);
         void SetGraphicsRootSignature(const RootSignature& signature);
 
         template <class T> void SetGraphicsRootConstants(const T& constants, uint32_t rootParameterIndex);

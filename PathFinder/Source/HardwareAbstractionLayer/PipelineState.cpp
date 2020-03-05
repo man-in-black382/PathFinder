@@ -134,7 +134,7 @@ namespace HAL
     // shader execution more efficiently and run workloads at higher occupancy.
     //
     RayTracingPipelineState::RayTracingPipelineState(const Device* device)
-        : mDevice{ device }, mShaderTable{ device } {}
+        : mDevice{ device } {}
 
     void RayTracingPipelineState::AddShaders(const RayTracingShaderBundle& bundle, const RayTracingShaderConfig& config, const RootSignature* localRootSignature)
     {
@@ -259,6 +259,14 @@ namespace HAL
         mDebugName = name;
     }
 
+    ShaderIdentifier RayTracingPipelineState::GetShaderIdentifier(const std::wstring& exportName)
+    {
+        uint8_t* rawID = reinterpret_cast<uint8_t*>(mProperties->GetShaderIdentifier(exportName.c_str()));
+        ShaderIdentifier identifier;
+        std::copy(identifier.RawData.begin(), identifier.RawData.end(), rawID);
+        return identifier;
+    }
+
     std::wstring RayTracingPipelineState::GenerateUniqueExportName(const Shader& shader)
     {
         mUniqueShaderExportID++;
@@ -281,11 +289,7 @@ namespace HAL
 
             if (closestHitLib || anyHitLib || intersectionLib)
             {
-                mHitGroups.emplace_back(
-                    closestHitLib ? &closestHitLib->Export() : nullptr,
-                    anyHitLib ? &anyHitLib->Export() : nullptr, 
-                    intersectionLib ? &intersectionLib->Export() : nullptr
-                );
+                mHitGroups.emplace_back(&closestHitLib->Export(), &anyHitLib->Export(), &intersectionLib->Export(), package.LocalRootSignature);
             }
         }
     }
@@ -366,11 +370,25 @@ namespace HAL
         for (const DXILLibrary& library : mLibraries)
         {
             const ShaderExport& shaderExport = library.Export();
+            Shader::Stage stage = shaderExport.AssosiatedShader()->PipelineStage();
 
-            auto shaderId = reinterpret_cast<ShaderTable::ShaderID*>(
-                mProperties->GetShaderIdentifier(shaderExport.ExportName().c_str()));
+            if (stage == Shader::Stage::RayGeneration)
+            {
+                ShaderIdentifier shaderId = GetShaderIdentifier(shaderExport.ExportName());
+                mShaderTable.SetRayGenerationShader(shaderId, library.LocalRootSignature());
+            }
 
-            mShaderTable.AddShader(*shaderExport.AssosiatedShader(), *shaderId, library.LocalRootSignature());
+            if (stage == Shader::Stage::RayMiss)
+            {
+                ShaderIdentifier shaderId = GetShaderIdentifier(shaderExport.ExportName());
+                mShaderTable.AddRayMissShader(shaderId, library.LocalRootSignature());
+            }
+        }
+
+        for (const RayTracingHitGroup& hitGroup : mHitGroups)
+        {
+            ShaderIdentifier shaderId = GetShaderIdentifier(hitGroup.ExportName());
+            mShaderTable.AddRayTracingHitGroupShaders(shaderId, nullptr);
         }
     }
 

@@ -178,7 +178,7 @@ namespace PathFinder
 
         if (auto pso = std::get_if<HAL::GraphicsPipelineState>(&it->second)) return { pso };
         else if (auto pso = std::get_if<HAL::ComputePipelineState>(&it->second)) return { pso };
-        else if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(&it->second)) return { &psoWrapper->State };
+        else if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(&it->second)) return PipelineStateVariant{ &psoWrapper->State, &(*psoWrapper->BaseRayDispatchInfo) };
 
         return std::nullopt;
     }
@@ -380,7 +380,7 @@ namespace PathFinder
         stateWrapper.ShaderTableBuffer = mResourceProducer->NewBuffer(properties);
         stateWrapper.ShaderTableBuffer->SetDebugName(StringFormat("%s Shader Table", psoName.ToString().c_str()));
         stateWrapper.ShaderTableBuffer->RequestWrite();
-        shaderTable.UploadToGPUMemory(stateWrapper.ShaderTableBuffer->WriteOnlyPtr(), stateWrapper.ShaderTableBuffer->HALBuffer());
+        stateWrapper.BaseRayDispatchInfo = shaderTable.UploadToGPUMemory(stateWrapper.ShaderTableBuffer->WriteOnlyPtr(), stateWrapper.ShaderTableBuffer->HALBuffer());
     }
 
 }

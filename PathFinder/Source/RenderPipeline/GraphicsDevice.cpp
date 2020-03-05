@@ -169,7 +169,7 @@ namespace PathFinder
 
         if (state->ComputePSO) ApplyStateIfNeeded(state->ComputePSO);
         else if (state->GraphicPSO) ApplyStateIfNeeded(state->GraphicPSO);
-        else if (state->RayTracingPSO) ApplyStateIfNeeded(state->RayTracingPSO);
+        else if (state->RayTracingPSO) ApplyStateIfNeeded(state->RayTracingPSO, state->BaseRayDispatchInfo);
     }
 
     void GraphicsDevice::ApplyStateIfNeeded(const HAL::GraphicsPipelineState* state)
@@ -196,6 +196,7 @@ namespace PathFinder
         // Nullify cached states and signatures
         mAppliedComputeState = nullptr;
         mAppliedRayTracingState = nullptr;
+        mAppliedRayTracingDispatchInfo = nullptr;
         mAppliedComputeRootSignature = nullptr;
 
         // Cache graphics state and signature as graphics signature
@@ -214,7 +215,7 @@ namespace PathFinder
         mAppliedGraphicsState = nullptr;
     }
 
-    void GraphicsDevice::ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state)
+    void GraphicsDevice::ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo)
     {
         // Ray tracing on graphics queue is a graphics workload, therefore we 
         // need to override base functionality that sees RT work as compute work
@@ -226,7 +227,7 @@ namespace PathFinder
         if (rayTracingStateApplied && mAppliedRayTracingState == state) return;
 
         // Set RT state
-        //mCommandList->SetPipelineState(*pso);
+        mCommandList->SetPipelineState(*state);
 
         mRebindingAfterSignatureChangeRequired = state->GetGlobalRootSignature() != mAppliedGraphicsRootSignature;
 
@@ -244,6 +245,7 @@ namespace PathFinder
 
         // Cache RT state and signature as graphics signature
         mAppliedRayTracingState = state;
+        mAppliedRayTracingDispatchInfo = dispatchInfo;
         mAppliedGraphicsRootSignature = state->GetGlobalRootSignature();
     }
     

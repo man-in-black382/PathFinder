@@ -26,7 +26,7 @@ namespace Memory
 
         for (auto& [resource, state] : mPendingResourceStates)
         {
-            auto barrier = TransitionToStateImmediately(resource, state, firstInCommandList);
+            auto [barrier, previousState] = TransitionToStateImmediately(resource, state, firstInCommandList);
             
             if (barrier)
             {
@@ -39,24 +39,26 @@ namespace Memory
         return barriers;
     }
 
-    std::optional<HAL::ResourceTransitionBarrier> ResourceStateTracker::TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList)
+    ResourceStateTracker::TransitionResult ResourceStateTracker::TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList)
     {
         ResourceStateIterator stateIt = GetCurrentStateForResource(resource);
 
+        HAL::ResourceState oldState = stateIt->second;
+
         if (IsNewStateRedundant(stateIt->second, newState))
         {
-            return std::nullopt;
+            return { std::nullopt, oldState };
         }
 
         if (CanTransitionToStateImplicitly(resource, stateIt->second, newState, firstInCommandList))
         {
             stateIt->second = newState;
-            return std::nullopt;
+            return { std::nullopt, oldState };
         }
 
         HAL::ResourceTransitionBarrier barrier{ stateIt->second, newState, resource };
         stateIt->second = newState;
-        return barrier;
+        return { barrier, oldState };
     }
 
     ResourceStateTracker::ResourceStateIterator ResourceStateTracker::GetCurrentStateForResource(const HAL::Resource* resource)

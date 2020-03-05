@@ -30,17 +30,17 @@ namespace Memory
 
         if (mUploadStrategy != UploadStrategy::DirectAccess)
         {
-            if (auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination))
+            auto [barrier, previousState] = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
+
+            if (barrier)
             {
                 HAL::ResourceState oldStates = barrier->BeforeStates();
                 mCommandListProvider->CommandList()->InsertBarrier(*barrier);
-                RecordUploadCommands();
-                RequestNewState(oldStates);
             }
-            else
-            {
-                RecordUploadCommands();
-            }
+            
+            RecordUploadCommands();
+            // Request to apply old state after copy
+            RequestNewState(previousState);
         }
     }
 
@@ -56,19 +56,17 @@ namespace Memory
 
         AllocateNewReadbackBuffer();
 
-        if (auto barrier = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopySource))
+        auto [barrier, previousState] = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopySource);
+
+        if (barrier)
         {
             HAL::ResourceState oldStates = barrier->BeforeStates();
             mCommandListProvider->CommandList()->InsertBarrier(*barrier);
-            RecordReadbackCommands();
-            // Request to apply old state after copy
-            RequestNewState(oldStates);
         }
-        else
-        {
-            // Just run readback commands
-            RecordReadbackCommands();
-        }
+        
+        RecordReadbackCommands();
+        // Request to apply old state after copy
+        RequestNewState(previousState);
     }
 
     void GPUResource::RequestNewState(HAL::ResourceState newState)

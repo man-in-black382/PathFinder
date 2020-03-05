@@ -170,6 +170,7 @@ namespace HAL
             const RootSignature* LocalRootSignature = nullptr;
         };
 
+        ShaderIdentifier GetShaderIdentifier(const std::wstring& exportName);
         std::wstring GenerateUniqueExportName(const Shader& shader);
         void GenerateLibrariesAndHitGroups();
         DXILLibrary& GenerateLibrary(const Shader* shader, const RootSignature* localRootSignature);

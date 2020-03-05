@@ -5,8 +5,8 @@
 namespace HAL
 {
 
-    RayTracingHitGroup::RayTracingHitGroup(const ShaderExport* closestHit, const ShaderExport* anyHit, const ShaderExport* intersection)
-        : mClosestHitExport{ closestHit }, mAnyHitExport{ anyHit }, mIntersectionExport{ intersection }
+    RayTracingHitGroup::RayTracingHitGroup(const ShaderExport* closestHit, const ShaderExport* anyHit, const ShaderExport* intersection, const RootSignature* localSignature)
+        : mClosestHitExport{ closestHit }, mAnyHitExport{ anyHit }, mIntersectionExport{ intersection }, mLocalRootSignature{ localSignature }
     {
         mName += L"HitGroup"; 
 

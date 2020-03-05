@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include <string>
+#include <array>
 #include <unordered_map>
 #include <filesystem>
 #include <dxcapi.h>
@@ -12,6 +13,17 @@
 namespace HAL
 {
     
+    struct ShaderIdentifier
+    {
+    public:
+        ShaderIdentifier()
+        {
+            RawData.fill(0);
+        }
+
+        std::array<uint8_t, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES> RawData;
+    };
+
     class Shader : public GraphicAPIObject
     {
     public:

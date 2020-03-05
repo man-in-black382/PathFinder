@@ -9,84 +9,115 @@
 namespace HAL
 {
 
-    ShaderTable::ShaderTable(const Device* device, uint8_t frameCapacity)
-        : mDevice{ device }, mFrameCapacity{ frameCapacity } {}
+    ShaderTable::ShaderRecord::ShaderRecord(const ShaderIdentifier& id, const RootSignature* signature, uint64_t size)
+        : ID{ id }, Signature{ signature }, SizeInBytes{ size } {}
 
-    void ShaderTable::AddShader(const Shader& shader, ShaderID id, const RootSignature* localRootSignature)
+    void ShaderTable::SetRayGenerationShader(const ShaderIdentifier& id, const RootSignature* localRootSignature)
     {
-        uint32_t newRecordOffset = mTableSize;
-
-        // Shader ID is always present in the table
-        mTableSize += sizeof(ShaderID);
+        uint64_t recordSize = sizeof(ShaderIdentifier);
 
         // Local root signature is optional
         if (localRootSignature)
         {
-            mTableSize += localRootSignature->ParameterCount() * sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
+            // TODO: Implement correct root signature size calculation inside RootSignature itself
+            //mTableSize += localRootSignature->ParameterCount() * sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
         }
 
-        uint32_t size = mTableSize - newRecordOffset;
+        mRayGenShaderRecord = { id, localRootSignature, recordSize };
+    }
 
-        mRecords[shader.PipelineStage()].emplace_back(id, localRootSignature, newRecordOffset, size);
+    void ShaderTable::AddRayMissShader(const ShaderIdentifier& id, const RootSignature* localRootSignature)
+    {
+        uint64_t recordSize = sizeof(ShaderIdentifier);
+
+        // Local root signature is optional
+        if (localRootSignature)
+        {
+            // TODO: Implement correct root signature size calculation inside RootSignature itself
+            //mTableSize += localRootSignature->ParameterCount() * sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
+        }
+
+        mRayMissShaderRecords.emplace_back(id, localRootSignature, recordSize);
 
         // We need to keep track of the largest shader record for it's stage, because DXR can only 
         // traverse table shaders of one type with a constant step (stride).
         // For example, if we have 3 miss shader records of size 40, 30 and 64 bytes, then the
         // stride should be 64 and all records must be aligned to 64 bytes when uploaded to GPU memory.
         // Each stage can have it's own stride though.
-        
-        mPerStageStrides[shader.PipelineStage()] = std::max(mPerStageStrides[shader.PipelineStage()], size);
+        mRayMissRecordStride = std::max(mRayMissRecordStride, recordSize);
     }
 
-    void ShaderTable::UploadToGPUMemory(uint8_t* uploadGPUMemory, const Buffer* gpuTableBuffer)
+    void ShaderTable::AddRayTracingHitGroupShaders(const ShaderIdentifier& hitGroupId, const RootSignature* localRootSignature)
     {
-        assert_format(gpuTableBuffer->RequestedMemory() >= mTableSize,
-            "Buffer is not large enough to accommodate shader table. Query memory requirements first.");
+        uint64_t recordSize = sizeof(ShaderIdentifier);
 
-        for (const auto& [shaderStage, records] : mRecords)
+        if (localRootSignature)
         {
-            for (const Record& record : records)
-            {
-                memcpy(uploadGPUMemory + record.TableOffset, (uint8_t*)(&record.ID), sizeof(record.ID));
+            // TODO: Implement correct root signature size calculation inside RootSignature itself
+            //mTableSize += localRootSignature->ParameterCount() * sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
+        }
 
-                // TODO: Write local root signature arguments here ??? 
-                // Right now engine does not support local root signatures and arguments.
-                // It will stay that way until a real need arises.
-            }
+        mRayHitGroupRecords.emplace_back(hitGroupId, localRootSignature, recordSize);
+        mRayHitGroupRecordStride = std::max(mRayHitGroupRecordStride, recordSize);
+    }
+
+    RayDispatchInfo ShaderTable::UploadToGPUMemory(uint8_t* uploadGPUMemory, const Buffer* gpuTableBuffer)
+    {
+        D3D12_DISPATCH_RAYS_DESC addresses{};
+
+        uint64_t recordAddressOffset = 0;
+
+        assert_format(mRayGenShaderRecord, "Ray Generation shader is mandatory");
+
+        // Upload ray generation table range
+        addresses.RayGenerationShaderRecord = { recordAddressOffset, mRayGenShaderRecord->SizeInBytes };
+        memcpy(uploadGPUMemory + recordAddressOffset, mRayGenShaderRecord->ID.RawData.data(), sizeof(mRayGenShaderRecord->ID.RawData));
+        recordAddressOffset += mRayGenShaderRecord->SizeInBytes;
+
+        // Upload miss shaders table region
+        uint64_t missShaderRegionSize = mRayMissShaderRecords.size() * mRayMissRecordStride;
+        addresses.MissShaderTable = { recordAddressOffset, missShaderRegionSize, mRayMissRecordStride };
+
+        for (const ShaderRecord& missRecord : mRayMissShaderRecords)
+        {
+            memcpy(uploadGPUMemory + recordAddressOffset, missRecord.ID.RawData.data(), sizeof(missRecord.ID.RawData));
+            recordAddressOffset += mRayMissRecordStride;
+        }
+
+        // Upload hit groups table region
+        uint64_t hitGroupRegionSize = mRayHitGroupRecords.size() * mRayHitGroupRecordStride;
+        addresses.HitGroupTable = { recordAddressOffset, hitGroupRegionSize, mRayHitGroupRecordStride };
+
+        for (const ShaderRecord& hitGroupRecord : mRayHitGroupRecords)
+        {
+            memcpy(uploadGPUMemory + recordAddressOffset, hitGroupRecord.ID.RawData.data(), sizeof(hitGroupRecord.ID.RawData));
+            recordAddressOffset += mRayHitGroupRecordStride;
         }
 
         mGPUTable = gpuTableBuffer;
+
+        // Callable shaders are not yet supported. TODO: Implement callable shaders
+
+        return RayDispatchInfo{ addresses };
     }
 
     void ShaderTable::Clear()
     {
-        mRecords.clear();
-        mPerStageStrides.clear();
-        mTableSize = 0;
+        mRayGenShaderRecord = std::nullopt;
+        mRayMissShaderRecords.clear();
+        mRayHitGroupRecords.clear();
+        mRayMissRecordStride = 0;
+        mRayHitGroupRecordStride = 0;
         mGPUTable = nullptr;
-    }
-
-    RayDispatchInfo ShaderTable::GenerateRayDispatchInfo() const
-    {
-        return {};
     }
 
     ShaderTable::MemoryRequirements ShaderTable::GetMemoryRequirements() const
     {
-        return { mTableSize };
+        auto tableSize = mRayGenShaderRecord->SizeInBytes + 
+            mRayMissRecordStride * mRayMissShaderRecords.size() +
+            mRayHitGroupRecordStride * mRayHitGroupRecords.size();
+
+        return { tableSize };
     }
-
-    //std::optional<D3D12_GPU_VIRTUAL_ADDRESS> ShaderTable::ShaderStageFirstRecordAddress(Shader::Stage stage)
-    //{
-    //    /*    if (!mGPUTable) return std::nullopt;
-
-    //        auto it = mRecords.find(stage);
-    //        if (it == mRecords.end()) return std::nullopt;
-
-    //        std::vector<Record>& records = it->second;
-    //        if (records.empty()) return std::nullopt;*/
-
-    //    return records.front().TableOffset * mGPUTable->GPUVirtualAddress();
-    //}
 
 }

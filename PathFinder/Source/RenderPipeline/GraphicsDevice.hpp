@@ -50,7 +50,7 @@ namespace PathFinder
     private:
         void ApplyStateIfNeeded(const HAL::GraphicsPipelineState* state);
         void ApplyStateIfNeeded(const HAL::ComputePipelineState* state) override;
-        void ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state) override;
+        void ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo) override;
 
         void ApplyCommonGraphicsResourceBindingsIfNeeded();
         void ApplyDefaultViewportIfNeeded();

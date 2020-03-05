@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ShaderExport.hpp"
+#include "RootSignature.hpp"
 
 namespace HAL
 {
@@ -8,7 +9,7 @@ namespace HAL
     class RayTracingHitGroup
     {
     public:
-        RayTracingHitGroup(const ShaderExport* closestHit, const ShaderExport* anyHit, const ShaderExport* intersection);
+        RayTracingHitGroup(const ShaderExport* closestHit, const ShaderExport* anyHit, const ShaderExport* intersection, const RootSignature* localSignature = nullptr);
 
         void SetExportName(const std::wstring& name);
 
@@ -18,6 +19,7 @@ namespace HAL
         const ShaderExport* mClosestHitExport;
         const ShaderExport* mAnyHitExport;
         const ShaderExport* mIntersectionExport;
+        const RootSignature* mLocalRootSignature = nullptr;
 
         D3D12_HIT_GROUP_DESC mHitGroup{};
 
@@ -27,6 +29,7 @@ namespace HAL
          const ShaderExport* ClosestHitExport() const { return mClosestHitExport; }
          const ShaderExport* AnyHitExport() const { return mAnyHitExport; }
          const ShaderExport* IntersectionExport() const { return mIntersectionExport; }
+         const RootSignature* LocalRootSignature() const { return mLocalRootSignature; }
     };
 
 }

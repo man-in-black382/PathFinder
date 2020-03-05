@@ -137,9 +137,19 @@ namespace HAL
         mList->Dispatch(groupCountX, groupCountY, groupCountZ);
     }
 
+    void ComputeCommandListBase::DispatchRays(const RayDispatchInfo& dispatchInfo)
+    {
+        mList->DispatchRays(&dispatchInfo.D3DDispatchInfo());
+    }
+
     void ComputeCommandListBase::SetPipelineState(const ComputePipelineState& state)
     {
         mList->SetPipelineState(state.D3DCompiledState());
+    }
+
+    void ComputeCommandListBase::SetPipelineState(const RayTracingPipelineState& state)
+    {
+        mList->SetPipelineState1(state.D3DCompiledState());
     }
 
     void ComputeCommandListBase::SetComputeRootSignature(const RootSignature& signature)
@@ -178,7 +188,7 @@ namespace HAL
         mList->IASetPrimitiveTopology(D3DPrimitiveTopology(topology));
     }
 
-    void GraphicsCommandListBase::SetPipelineState(const PipelineState& state)
+    void GraphicsCommandListBase::SetPipelineState(const GraphicsPipelineState& state)
     {
         mList->SetPipelineState(state.D3DCompiledState());
     }
