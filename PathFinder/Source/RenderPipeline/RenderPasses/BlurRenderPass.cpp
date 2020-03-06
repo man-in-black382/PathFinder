@@ -12,7 +12,7 @@ namespace PathFinder
     {
         stateCreator->CreateComputeState(PSONames::Blur, [](ComputeStateProxy& state)
         {
-            state.ShaderFileNames.ComputeShaderFileName = L"BlurRenderPass.hlsl";
+            state.ComputeShaderFileName = "BlurRenderPass.hlsl";
         });
     }
 

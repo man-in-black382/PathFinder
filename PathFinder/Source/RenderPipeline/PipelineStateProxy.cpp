@@ -5,12 +5,14 @@
 namespace PathFinder
 {
 
-    void RayTracingStateProxy::AddShaders(
-        const RayTracingShaderFileNames& shaderFileNames, 
-        const HAL::RayTracingShaderConfig& config,
-        std::optional<Foundation::Name> localRootSignatureName)
+    void RayTracingStateProxy::AddMissShader(const std::string& missShaderFileName, std::optional<Foundation::Name> localRootSignatureName)
     {
-        mShaderInfos.emplace_back(shaderFileNames, config, localRootSignatureName);
+        mMissShaders.emplace_back(MissShader{ missShaderFileName, localRootSignatureName });
+    }
+
+    void RayTracingStateProxy::AddHitGroupShaders(const HitGroupShaderFileNames& fileNames, std::optional<Foundation::Name> localRootSignatureName)
+    {
+        mHitGroups.emplace_back(HitGroup{ fileNames, localRootSignatureName });
     }
 
 }

@@ -12,30 +12,9 @@ namespace PathFinder
         mFileWatcher.addWatch(mShaderRootPath.string(), this, true);
     }
 
-    HAL::GraphicsShaderBundle ShaderManager::LoadShaders(const GraphicsShaderFileNames& fileNames)
+    HAL::Shader* ShaderManager::LoadShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath)
     {
-        return {
-            GetShader(HAL::Shader::Stage::Vertex, fileNames.VertexShaderFileName),
-            GetShader(HAL::Shader::Stage::Pixel, fileNames.PixelShaderFileName),
-            nullptr, nullptr,
-            fileNames.GeometryShaderFileName ? GetShader(HAL::Shader::Stage::Geometry, *fileNames.GeometryShaderFileName) : nullptr
-        };
-    }
-
-    HAL::ComputeShaderBundle ShaderManager::LoadShaders(const ComputeShaderFileNames& fileNames)
-    {
-        return { GetShader(HAL::Shader::Stage::Compute, fileNames.ComputeShaderFileName) };
-    }
-
-    HAL::RayTracingShaderBundle ShaderManager::LoadShaders(const RayTracingShaderFileNames& fileNames)
-    {
-        return {
-            GetShader(HAL::Shader::Stage::RayGeneration, fileNames.RayGenShaderFileName),
-            fileNames.ClosestHitShaderFileName ? GetShader(HAL::Shader::Stage::RayClosestHit, *fileNames.ClosestHitShaderFileName) : nullptr,
-            fileNames.AnyHitShaderFileName ? GetShader(HAL::Shader::Stage::RayAnyHit, *fileNames.AnyHitShaderFileName) : nullptr,
-            fileNames.MissShaderFileName ? GetShader(HAL::Shader::Stage::RayMiss, *fileNames.MissShaderFileName) : nullptr,
-            fileNames.IntersectionShaderFileName ? GetShader(HAL::Shader::Stage::RayIntersection, *fileNames.IntersectionShaderFileName) : nullptr
-        };
+        return GetShader(pipelineStage, relativePath);
     }
 
     void ShaderManager::SetShaderRecompilationCallback(const ShaderRecompilationCallback& callback)

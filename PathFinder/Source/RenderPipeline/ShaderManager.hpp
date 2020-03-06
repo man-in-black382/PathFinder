@@ -5,8 +5,6 @@
 
 #include "../IO/CommandLineParser.hpp"
 
-#include "ShaderFileNames.hpp"
-
 #include <vector>
 #include <list>
 #include <unordered_map>
@@ -25,9 +23,7 @@ namespace PathFinder
 
         ShaderManager(const CommandLineParser& commandLineParser);
 
-        HAL::GraphicsShaderBundle LoadShaders(const GraphicsShaderFileNames& fileNames);
-        HAL::ComputeShaderBundle LoadShaders(const ComputeShaderFileNames& fileNames);
-        HAL::RayTracingShaderBundle LoadShaders(const RayTracingShaderFileNames& fileNames);
+        HAL::Shader* LoadShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
 
         void SetShaderRecompilationCallback(const ShaderRecompilationCallback& callback);
 

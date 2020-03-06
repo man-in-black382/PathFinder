@@ -4,11 +4,9 @@ namespace HAL
 {
 
     RayTracingPipelineConfig::RayTracingPipelineConfig(uint32_t maxTracingRecursionDepth)
+        : mMaxTracingRecursionDepth{ maxTracingRecursionDepth }
     {
         mConfig.MaxTraceRecursionDepth = maxTracingRecursionDepth;
     }
-
-    RayTracingPipelineConfig::RayTracingPipelineConfig()
-        : RayTracingPipelineConfig(1) {}
 
 }

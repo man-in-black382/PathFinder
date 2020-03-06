@@ -17,7 +17,7 @@ namespace PathFinder
 
         stateCreator->CreateComputeState(PSONames::DeferredLighting, [](ComputeStateProxy& state)
         {
-            state.ShaderFileNames.ComputeShaderFileName = L"DeferredLightingRenderPass.hlsl";
+            state.ComputeShaderFileName = "DeferredLightingRenderPass.hlsl";
             state.RootSignatureName = RootSignatureNames::DeferredLighting;
         });
     }

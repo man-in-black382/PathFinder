@@ -25,8 +25,8 @@ namespace PathFinder
 
         stateCreator->CreateGraphicsState(PSONames::GBufferMeshes, [](GraphicsStateProxy& state) 
         {
-            state.ShaderFileNames.VertexShaderFileName = L"GBufferMeshes.hlsl";
-            state.ShaderFileNames.PixelShaderFileName = L"GBufferMeshes.hlsl";
+            state.VertexShaderFileName = "GBufferMeshes.hlsl";
+            state.PixelShaderFileName = "GBufferMeshes.hlsl";
             state.RenderTargetFormats = { HAL::ColorFormat::RGBA32_Unsigned };
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::GBufferMeshes;
@@ -35,8 +35,8 @@ namespace PathFinder
 
         stateCreator->CreateGraphicsState(PSONames::GBufferLights, [](GraphicsStateProxy& state)
         {
-            state.ShaderFileNames.VertexShaderFileName = L"GBufferLights.hlsl";
-            state.ShaderFileNames.PixelShaderFileName = L"GBufferLights.hlsl";
+            state.VertexShaderFileName = "GBufferLights.hlsl";
+            state.PixelShaderFileName = "GBufferLights.hlsl";
             state.RenderTargetFormats = { HAL::ColorFormat::RGBA32_Unsigned };
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::GBufferLights;

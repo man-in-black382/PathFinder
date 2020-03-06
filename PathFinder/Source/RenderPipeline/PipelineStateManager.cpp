@@ -86,6 +86,9 @@ namespace PathFinder
 
         configurator(proxy);
 
+        assert_format(!proxy.VertexShaderFileName.empty(), "Vertex shader is missing");
+        assert_format(!proxy.PixelShaderFileName.empty(), "Pixel shader is missing");
+
         if (proxy.RenderTargetFormats.empty())
         {
             proxy.RenderTargetFormats.push_back(mDefaultRenderSurfaceDesc.RenderTargetFormat());
@@ -116,15 +119,24 @@ namespace PathFinder
             proxy.RenderTargetFormats.size() > 7 ? std::optional(proxy.RenderTargetFormats[7]) : std::nullopt
         );
 
-        HAL::GraphicsShaderBundle shaders = mShaderManager->LoadShaders(proxy.ShaderFileNames);
+        HAL::Shader* vertexShader = mShaderManager->LoadShader(HAL::Shader::Stage::Vertex, proxy.VertexShaderFileName);
+        HAL::Shader* pixelShader = mShaderManager->LoadShader(HAL::Shader::Stage::Pixel, proxy.PixelShaderFileName);
+        HAL::Shader* geometryShader = proxy.GeometryShaderFileName ? mShaderManager->LoadShader(HAL::Shader::Stage::Geometry, *proxy.GeometryShaderFileName) : nullptr;
+        
+        newState.SetVertexShader(vertexShader);
+        newState.SetPixelShader(pixelShader);
+
+        if (geometryShader) newState.SetGeometryShader(geometryShader);
 
         newState.SetRootSignature(GetNamedRootSignatureOrDefault(proxy.RootSignatureName));
-        newState.SetShaders(shaders);
         newState.SetDebugName(name.ToString());
 
         auto [iter, success] = mPipelineStates.emplace(name, std::move(newState));
 
-        AssociateStateWithShaders(&iter->second, shaders);
+        AssociateStateWithShader(&iter->second, vertexShader);
+        AssociateStateWithShader(&iter->second, vertexShader);
+
+        if (geometryShader) AssociateStateWithShader(&iter->second, geometryShader);
     }
 
     void PipelineStateManager::CreateComputeState(PSOName name, const ComputeStateConfigurator& configurator)
@@ -134,17 +146,19 @@ namespace PathFinder
         ComputeStateProxy proxy{};
         configurator(proxy);
 
+        assert_format(!proxy.ComputeShaderFileName.empty(), "Compute shader is missing");
+
         HAL::ComputePipelineState newState{ mDevice };
 
-        HAL::ComputeShaderBundle shaders = mShaderManager->LoadShaders(proxy.ShaderFileNames);
+        HAL::Shader* computeShader = mShaderManager->LoadShader(HAL::Shader::Stage::Compute, proxy.ComputeShaderFileName);
 
         newState.SetRootSignature(GetNamedRootSignatureOrDefault(proxy.RootSignatureName));
-        newState.SetShaders(shaders);
+        newState.SetComputeShader(computeShader);
         newState.SetDebugName(name.ToString());
 
         auto [iter, success] = mPipelineStates.emplace(name, std::move(newState));
 
-        AssociateStateWithShaders(&iter->second, shaders);
+        AssociateStateWithShader(&iter->second, computeShader);
     }
 
     void PipelineStateManager::CreateRayTracingState(PSOName name, const RayTracingStateConfigurator& configurator)
@@ -154,19 +168,53 @@ namespace PathFinder
         RayTracingStateProxy proxy{};
         configurator(proxy);
 
+        assert_format(!proxy.RayGenerationShaderFileName.empty(), "Ray generation shader is missing");
+        assert_format(proxy.PipelineConfig.MaxTracingRecursionDepth() > 0, "Pipeline config was not set");
+        assert_format(proxy.ShaderConfig.MaxPayloadSize() > 0, "Shader config was not set");
+
         auto [iter, success] = mPipelineStates.emplace(name, RayTracingStateWrapper{ HAL::RayTracingPipelineState{ mDevice }, nullptr });
         RayTracingStateWrapper& newStateWrapper = std::get<RayTracingStateWrapper>(iter->second);
 
-        for (const RayTracingStateProxy::ShaderInfo& shaderInfo : proxy.ShaderInfos())
-        {
-            HAL::RayTracingShaderBundle rtShaders = mShaderManager->LoadShaders(shaderInfo.ShaderFileNames);
-            const HAL::RootSignature* localRootSig = GetNamedRootSignatureOrNull(shaderInfo.LocalRootSignatureName);
+        HAL::Shader* rayGenShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayGeneration, proxy.RayGenerationShaderFileName);
+        newStateWrapper.State.SetRayGenerationShader({ rayGenShader, GetNamedRootSignatureOrNull(proxy.RayGenerationLocalRootSignatureName) });
+        AssociateStateWithShader(&iter->second, rayGenShader);
 
-            newStateWrapper.State.AddShaders(rtShaders, shaderInfo.Config, localRootSig);
-            AssociateStateWithShaders(&iter->second, rtShaders);
+        for (const RayTracingStateProxy::MissShader& missShaderInfo : proxy.MissShaders())
+        {
+            HAL::Shader* missShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayMiss, missShaderInfo.MissShaderFileName);
+            newStateWrapper.State.AddMissShader({ missShader, GetNamedRootSignatureOrNull(missShaderInfo.LocalRootSignatureName) });
+            AssociateStateWithShader(&iter->second, missShader);
         }
 
-        newStateWrapper.State.SetConfig(proxy.PipelineConfig);
+        for (const RayTracingStateProxy::HitGroup& hitGroupInfo : proxy.HitGroups())
+        {
+            HAL::RayTracingPipelineState::HitGroupShaders shaders{};
+
+            if (auto fileName = hitGroupInfo.ShaderFileNames.AnyHitShaderFileName)
+            {
+                shaders.AnyHitShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayAnyHit, *fileName);
+                AssociateStateWithShader(&iter->second, shaders.AnyHitShader);
+            }
+
+            if (auto fileName = hitGroupInfo.ShaderFileNames.ClosestHitShaderFileName)
+            {
+                shaders.ClosestHitShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayClosestHit, *fileName);
+                AssociateStateWithShader(&iter->second, shaders.ClosestHitShader);
+            }
+
+            if (auto fileName = hitGroupInfo.ShaderFileNames.IntersectionShaderFileName)
+            {
+                shaders.IntersectionShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayIntersection, *fileName);
+                AssociateStateWithShader(&iter->second, shaders.IntersectionShader);
+            }
+
+            shaders.LocalRootSignature = GetNamedRootSignatureOrNull(hitGroupInfo.LocalRootSignatureName);
+
+            newStateWrapper.State.AddHitGroupShaders(shaders);
+        }
+
+        newStateWrapper.State.SetPipelineConfig(proxy.PipelineConfig);
+        newStateWrapper.State.SetShaderConfig(proxy.ShaderConfig);
         newStateWrapper.State.SetGlobalRootSignature(GetNamedRootSignatureOrDefault(proxy.GlobalRootSignatureName));
         newStateWrapper.State.SetDebugName(name.ToString());
     }
@@ -265,27 +313,9 @@ namespace PathFinder
         return !mStatesToRecompile.empty();
     }
 
-    void PipelineStateManager::AssociateStateWithShaders(PipelineStateVariantInternal* state, const HAL::GraphicsShaderBundle& shaders)
+    void PipelineStateManager::AssociateStateWithShader(PipelineStateVariantInternal* state, const HAL::Shader* shader)
     {
-        if (shaders.VertexShader()) mShaderToPSOAssociations[shaders.VertexShader()].insert(state);
-        if (shaders.PixelShader()) mShaderToPSOAssociations[shaders.PixelShader()].insert(state);
-        if (shaders.HullShader()) mShaderToPSOAssociations[shaders.HullShader()].insert(state);
-        if (shaders.DomainShader()) mShaderToPSOAssociations[shaders.DomainShader()].insert(state);
-        if (shaders.GeometryShader()) mShaderToPSOAssociations[shaders.GeometryShader()].insert(state);
-    }
-
-    void PipelineStateManager::AssociateStateWithShaders(PipelineStateVariantInternal* state, const HAL::ComputeShaderBundle& shaders)
-    {
-        if (shaders.ComputeShader()) mShaderToPSOAssociations[shaders.ComputeShader()].insert(state);
-    }
-
-    void PipelineStateManager::AssociateStateWithShaders(PipelineStateVariantInternal* state, const HAL::RayTracingShaderBundle& shaders)
-    {
-        if (shaders.RayGenerationShader()) mShaderToPSOAssociations[shaders.RayGenerationShader()].insert(state);
-        if (shaders.ClosestHitShader()) mShaderToPSOAssociations[shaders.ClosestHitShader()].insert(state);
-        if (shaders.AnyHitShader()) mShaderToPSOAssociations[shaders.AnyHitShader()].insert(state);
-        if (shaders.MissShader()) mShaderToPSOAssociations[shaders.MissShader()].insert(state);
-        if (shaders.IntersectionShader()) mShaderToPSOAssociations[shaders.IntersectionShader()].insert(state);
+        mShaderToPSOAssociations[shader].insert(state);
     }
 
     void PipelineStateManager::ConfigureDefaultStates()

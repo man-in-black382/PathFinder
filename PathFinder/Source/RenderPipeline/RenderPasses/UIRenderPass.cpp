@@ -19,8 +19,8 @@ namespace PathFinder
 
         stateCreator->CreateGraphicsState(PSONames::UI, [](GraphicsStateProxy& state)
         {
-            state.ShaderFileNames.VertexShaderFileName = L"UIRenderPass.hlsl";
-            state.ShaderFileNames.PixelShaderFileName = L"UIRenderPass.hlsl";
+            state.VertexShaderFileName = "UIRenderPass.hlsl";
+            state.PixelShaderFileName = "UIRenderPass.hlsl";
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::UI;
             state.DepthStencilState.SetDepthTestEnabled(false);

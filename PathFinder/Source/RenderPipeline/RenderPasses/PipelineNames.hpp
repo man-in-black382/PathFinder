@@ -27,6 +27,7 @@ namespace PathFinder
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
         inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
+        inline Foundation::Name Shadows{ "PSO_Shadows" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name Blur{ "PSO_Blur" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };

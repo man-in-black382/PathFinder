@@ -15,6 +15,18 @@ namespace HAL
 
     PipelineState::~PipelineState() {}
 
+    void PipelineState::SetDebugName(const std::string& name)
+    {
+        if (mState)
+        {
+            mState->SetName(StringToWString(name).c_str());
+        }
+
+        mDebugName = name;
+    }
+
+
+
     void GraphicsPipelineState::Compile()
     {
         D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
@@ -60,18 +72,6 @@ namespace HAL
         mState->SetName(StringToWString(mDebugName).c_str());
     }
 
-    void PipelineState::SetDebugName(const std::string& name)
-    {
-        if (mState)
-        {
-            mState->SetName(StringToWString(name).c_str());
-        }
-        
-        mDebugName = name;
-    }
-
-
-
     GraphicsPipelineState GraphicsPipelineState::Clone() const
     {
         GraphicsPipelineState newState = *this;
@@ -103,6 +103,8 @@ namespace HAL
         //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
 #endif
         ThrowIfFailed(mDevice->D3DDevice()->CreateComputePipelineState(&desc, IID_PPV_ARGS(&mState)));
+
+        mState->SetName(StringToWString(mDebugName).c_str());
     }
 
     ComputePipelineState ComputePipelineState::Clone() const
@@ -134,24 +136,34 @@ namespace HAL
     // shader execution more efficiently and run workloads at higher occupancy.
     //
     RayTracingPipelineState::RayTracingPipelineState(const Device* device)
-        : mDevice{ device } {}
+        : mDevice{ device }, mShaderConfig{ 4, 4 }, mPipelineConfig{ 1 } {}
 
-    void RayTracingPipelineState::AddShaders(const RayTracingShaderBundle& bundle, const RayTracingShaderConfig& config, const RootSignature* localRootSignature)
+    void RayTracingPipelineState::SetRayGenerationShader(const SingleRTShader& shader)
     {
-        mShaders.emplace_back(ConfiguredShaderPackage{ 
-            bundle.RayGenerationShader(),
-            bundle.ClosestHitShader(),
-            bundle.AnyHitShader(),
-            bundle.MissShader(),
-            bundle.IntersectionShader(),
-            config,
-            localRootSignature 
-        });
+        mRayGenerationShader = shader;
     }
 
-    void RayTracingPipelineState::SetConfig(const RayTracingPipelineConfig& config)
+    void RayTracingPipelineState::AddMissShader(const SingleRTShader& shader)
     {
-        mConfig = config;
+        mMissShaders.push_back(shader);
+    }
+
+    void RayTracingPipelineState::AddHitGroupShaders(const HitGroupShaders& hgShaders)
+    {
+        assert_format(hgShaders.AnyHitShader || hgShaders.ClosestHitShader || hgShaders.IntersectionShader,
+            "At least one hit group shader must exist");
+
+        mHitGroupShaders.push_back(hgShaders);
+    }
+
+    void RayTracingPipelineState::SetPipelineConfig(const RayTracingPipelineConfig& config)
+    {
+        mPipelineConfig = config;
+    }
+
+    void RayTracingPipelineState::SetShaderConfig(const RayTracingShaderConfig& config)
+    {
+        mShaderConfig = config;
     }
 
     void RayTracingPipelineState::SetGlobalRootSignature(const RootSignature* signature)
@@ -161,36 +173,46 @@ namespace HAL
 
     void RayTracingPipelineState::ReplaceShader(const Shader* oldShader, const Shader* newShader)
     {
-        for (ConfiguredShaderPackage& shaders : mShaders)
+        if (mRayGenerationShader.RTShader == oldShader && 
+            newShader->PipelineStage() == Shader::Stage::RayGeneration)
         {
-            if (shaders.RayGenerationShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayGeneration)
-            {
-                shaders.RayGenerationShader = newShader;
-                break;
-            }
+            mRayGenerationShader.RTShader = newShader;
+            return;
+        }
 
-            if (shaders.ClosestHitShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayClosestHit)
+        if (newShader->PipelineStage() == Shader::Stage::RayMiss)
+        {
+            for (SingleRTShader& shader : mMissShaders)
             {
-                shaders.ClosestHitShader = newShader;
-                break;
+                if (shader.RTShader == oldShader)
+                {
+                    shader.RTShader = newShader;
+                    return;
+                }
             }
+        }
 
-            if (shaders.AnyHitShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayAnyHit)
+        for (HitGroupShaders& shaders : mHitGroupShaders)
+        {
+            if (shaders.AnyHitShader == oldShader &&
+                newShader->PipelineStage() == Shader::Stage::RayAnyHit)
             {
                 shaders.AnyHitShader = newShader;
-                break;
+                return;
             }
 
-            if (shaders.MissShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayMiss)
+            if (shaders.ClosestHitShader == oldShader && 
+                newShader->PipelineStage() == Shader::Stage::RayClosestHit)
             {
-                shaders.MissShader = newShader;
-                break;
+                shaders.ClosestHitShader = newShader;
+                return;
             }
 
-            if (shaders.IntersectionShader == oldShader && newShader->PipelineStage() == Shader::Stage::RayIntersection)
+            if (shaders.IntersectionShader == oldShader && 
+                newShader->PipelineStage() == Shader::Stage::RayIntersection)
             {
                 shaders.IntersectionShader = newShader;
-                break;
+                return;
             }
         }
     }
@@ -205,13 +227,13 @@ namespace HAL
 
         GenerateLibrariesAndHitGroups();
 
-        uint64_t subobjectsToReserve = 
-            mShaders.size() * 5 + // Each Association can produce up to 5 subobjects
+        uint64_t subobjectsToReserve =
+            mLibraries.size() * 5 + // Each Association can produce up to 5 subobjects
             mHitGroups.size() + // Each hit group produces 1 subobject
             2; // 1 global root sig subobject and 1 pipeline config subobject
 
-        uint64_t associationsToReserve =
-            mShaders.size() * 2; // Each Association can produce up to 2 association subobjects
+        // Each Association can produce up to 2 association subobjects
+        uint64_t associationsToReserve = mLibraries.size() * 2; 
             
         // Reserve vectors to avoid pointer invalidation on pushes and emplacements
         mSubobjects.reserve(subobjectsToReserve);
@@ -221,7 +243,7 @@ namespace HAL
         for (const DXILLibrary& library : mLibraries)
         {
             AssociateLibraryWithItsExport(library);
-            AssociateConfigWithExport(library.Config(), library.Export());
+            AssociateConfigWithExport(mShaderConfig, library.Export());
 
             if (library.LocalRootSignature())
             {
@@ -263,7 +285,7 @@ namespace HAL
     {
         uint8_t* rawID = reinterpret_cast<uint8_t*>(mProperties->GetShaderIdentifier(exportName.c_str()));
         ShaderIdentifier identifier;
-        std::copy(identifier.RawData.begin(), identifier.RawData.end(), rawID);
+        std::copy_n(rawID, identifier.RawData.size(), identifier.RawData.begin());
         return identifier;
     }
 
@@ -275,22 +297,29 @@ namespace HAL
 
     void RayTracingPipelineState::GenerateLibrariesAndHitGroups()
     {
-        for (ConfiguredShaderPackage& package : mShaders)
+        assert_format(mRayGenerationShader.RTShader, "Ray Generation shader is missing");
+
+        GenerateLibrary(mRayGenerationShader.RTShader, mRayGenerationShader.LocalRootSignature);
+
+        for (const SingleRTShader& missShader : mMissShaders)
+        {
+            GenerateLibrary(missShader.RTShader, missShader.LocalRootSignature);
+        }
+
+        for (const HitGroupShaders& shaders : mHitGroupShaders)
         {
             DXILLibrary* closestHitLib = nullptr;
             DXILLibrary* anyHitLib = nullptr;
             DXILLibrary* intersectionLib = nullptr;
-            
-            if (package.RayGenerationShader) GenerateLibrary(package.RayGenerationShader, package.LocalRootSignature);
-            if (package.MissShader) GenerateLibrary(package.MissShader, package.LocalRootSignature);
-            if (package.ClosestHitShader) closestHitLib = &GenerateLibrary(package.ClosestHitShader, package.LocalRootSignature);
-            if (package.AnyHitShader) anyHitLib = &GenerateLibrary(package.AnyHitShader, package.LocalRootSignature);
-            if (package.IntersectionShader) intersectionLib = &GenerateLibrary(package.IntersectionShader, package.LocalRootSignature);
 
-            if (closestHitLib || anyHitLib || intersectionLib)
-            {
-                mHitGroups.emplace_back(&closestHitLib->Export(), &anyHitLib->Export(), &intersectionLib->Export(), package.LocalRootSignature);
-            }
+            // Same local root signature for all hit group shaders
+            if (shaders.ClosestHitShader) closestHitLib = &GenerateLibrary(shaders.ClosestHitShader, shaders.LocalRootSignature);
+            if (shaders.AnyHitShader) anyHitLib = &GenerateLibrary(shaders.AnyHitShader, shaders.LocalRootSignature);
+            if (shaders.IntersectionShader) intersectionLib = &GenerateLibrary(shaders.IntersectionShader, shaders.LocalRootSignature);
+
+            assert_format(closestHitLib || anyHitLib || intersectionLib, "At least one hit group shader must exist");
+
+            mHitGroups.emplace_back(&closestHitLib->Export(), &anyHitLib->Export(), &intersectionLib->Export(), shaders.LocalRootSignature);
         }
     }
 
@@ -359,7 +388,7 @@ namespace HAL
 
     void RayTracingPipelineState::AddPipelineConfigSubobject()
     {
-        D3D12_STATE_SUBOBJECT configSubobject{ D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &mConfig.D3DConfig() };
+        D3D12_STATE_SUBOBJECT configSubobject{ D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG, &mPipelineConfig.D3DConfig() };
         mSubobjects.push_back(configSubobject);
     }
 
@@ -388,7 +417,7 @@ namespace HAL
         for (const RayTracingHitGroup& hitGroup : mHitGroups)
         {
             ShaderIdentifier shaderId = GetShaderIdentifier(hitGroup.ExportName());
-            mShaderTable.AddRayTracingHitGroupShaders(shaderId, nullptr);
+            mShaderTable.AddRayTracingHitGroupShaders(shaderId, hitGroup.LocalRootSignature());
         }
     }
 

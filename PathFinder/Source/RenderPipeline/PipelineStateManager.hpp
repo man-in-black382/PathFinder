@@ -8,7 +8,6 @@
 #include "RenderSurfaceDescription.hpp"
 #include "PipelineStateProxy.hpp"
 #include "RootSignatureProxy.hpp"
-#include "ShaderFileNames.hpp"
 
 #include <unordered_map>
 
@@ -76,9 +75,7 @@ namespace PathFinder
         const HAL::RootSignature* GetNamedRootSignatureOrDefault(std::optional<RootSignatureName> name) const;
         const HAL::RootSignature* GetNamedRootSignatureOrNull(std::optional<RootSignatureName> name) const;
 
-        void AssociateStateWithShaders(PipelineStateVariantInternal* state, const HAL::GraphicsShaderBundle& shaders);
-        void AssociateStateWithShaders(PipelineStateVariantInternal* state, const HAL::ComputeShaderBundle& shaders);
-        void AssociateStateWithShaders(PipelineStateVariantInternal* state, const HAL::RayTracingShaderBundle& shaders);
+        void AssociateStateWithShader(PipelineStateVariantInternal* state, const HAL::Shader* shader);
 
         void ConfigureDefaultStates();
         void BuildBaseRootSignature(); 

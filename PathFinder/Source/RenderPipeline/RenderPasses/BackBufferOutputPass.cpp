@@ -10,8 +10,8 @@ namespace PathFinder
     {
         stateCreator->CreateGraphicsState(PSONames::BackBufferOutput, [](GraphicsStateProxy& state)
         {
-            state.ShaderFileNames.VertexShaderFileName = L"BackBufferOutput.hlsl";
-            state.ShaderFileNames.PixelShaderFileName = L"BackBufferOutput.hlsl";
+            state.VertexShaderFileName = "BackBufferOutput.hlsl";
+            state.PixelShaderFileName = "BackBufferOutput.hlsl";
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleStrip;
             state.DepthStencilState.SetDepthTestEnabled(false);
             state.RenderTargetFormats = { HAL::ColorFormat::RGBA8_Usigned_Norm };

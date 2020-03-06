@@ -12,7 +12,7 @@ namespace PathFinder
     {
         stateCreator->CreateComputeState(PSONames::ToneMapping, [](ComputeStateProxy& state)
         {
-            state.ShaderFileNames.ComputeShaderFileName = L"ToneMappingRenderPass.hlsl";
+            state.ComputeShaderFileName = "ToneMappingRenderPass.hlsl";
         });
     }
 
