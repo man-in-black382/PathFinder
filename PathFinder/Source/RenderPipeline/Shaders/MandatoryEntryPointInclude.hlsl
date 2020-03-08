@@ -21,6 +21,7 @@ struct FrameData
     float4x4 CameraInverseView;
     float4x4 CameraInverseProjection;
     float4x4 CameraInverseViewProjection;
+    float CameraExposureValue100;
 }; 
 
 struct Dummy { int D; };

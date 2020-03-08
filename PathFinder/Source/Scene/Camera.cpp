@@ -99,69 +99,10 @@ namespace PathFinder
         mFarClipPlane = std::max(mNearClipPlane, farPlane);
     }
 
-    //Ray3D Camera::rayFromPointOnViewport(const glm::vec2 &point, const GLViewport *viewport) const {
-    //    glm::vec2 ndc = viewport->NDCFromPoint(point);
-    //    glm::mat4 inverseVP = glm::inverse(viewProjectionMatrix());
-
-    //    // -1.0 from NDC maps to near clip plane
-    //    glm::vec4 nearPlanePoint = glm::vec4(ndc.x, ndc.y, -1.0, 1.0);
-
-    //    // 1.0 from NDC maps to far clip plane
-    //    glm::vec4 farPlanePoint = glm::vec4(ndc.x, ndc.y, 1.0, 1.0);
-
-    //    glm::vec4 nearUntransformed = inverseVP * nearPlanePoint;
-    //    nearUntransformed /= nearUntransformed.w;
-
-    //    glm::vec4 farUntransformed = inverseVP * farPlanePoint;
-    //    farUntransformed /= farUntransformed.w;
-
-    //    return Ray3D(glm::vec3(nearUntransformed), glm::vec3(farUntransformed) - glm::vec3(nearUntransformed));
-    //}
-
     glm::vec3 Camera::WorldToNDC(const glm::vec3 &v) const
     {
         glm::vec4 clipSpaceVector = ViewProjection() * glm::vec4(v, 1.0);
         return fabs(clipSpaceVector.w) > std::numeric_limits<float>::epsilon() ? clipSpaceVector / clipSpaceVector.w : clipSpaceVector;
-    }
-
-    const glm::vec3 &Camera::Position() const
-    {
-        return mPosition;
-    }
-
-    const glm::vec3 &Camera::Front() const
-    {
-        return mFront;
-    }
-
-    const glm::vec3 &Camera::Right() const
-    {
-        return mRight;
-    }
-
-    const glm::vec3 &Camera::Up() const
-    {
-        return mUp;
-    }
-
-    float Camera::NearClipPlane() const
-    {
-        return mNearClipPlane;
-    }
-
-    float Camera::FarClipPlane() const
-    {
-        return mFarClipPlane;
-    }
-
-    float Camera::FOVH() const
-    {
-        return mFieldOfView;
-    }
-
-    float Camera::FOVV() const
-    {
-        return mFieldOfView / mViewportAspectRatio;
     }
 
     glm::mat4 Camera::ViewProjection() const
@@ -195,9 +136,36 @@ namespace PathFinder
         return glm::inverse(Projection());
     }
 
+    PathFinder::EV Camera::ExposureValue100() const
+    {
+        // EV number is defined as:
+        // 2^ EV_s = N^2 / t and EV_s = EV_100 + log2 (S /100)
+        // This gives
+        // EV_s = log2 (N^2 / t)
+        // EV_100 + log2 (S /100) = log2 (N^2 / t)
+        // EV_100 = log2 (N^2 / t) - log2 (S /100)
+        // EV_100 = log2 (N^2 / t . 100 / S)
+        return std::log2((mLenseAperture * mLenseAperture) / mShutterTime * 100.0 / mFilmSpeed);
+    }
+
     void Camera::SetViewportAspectRatio(float aspectRatio)
     {
         mViewportAspectRatio = aspectRatio;
+    }
+
+    void Camera::SetAperture(FStop aperture)
+    {
+        mLenseAperture = aperture;
+    }
+
+    void Camera::SetFilmSpeed(ISO filmSpeed)
+    {
+        mFilmSpeed = filmSpeed;
+    }
+
+    void Camera::SetShutterTime(float time)
+    {
+        mShutterTime = time;
     }
 
 }

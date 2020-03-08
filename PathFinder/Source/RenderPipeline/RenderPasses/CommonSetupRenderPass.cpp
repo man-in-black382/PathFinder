@@ -17,6 +17,11 @@ namespace PathFinder
             signatureProxy.AddShaderResourceBufferParameter(2, 0); // Unified Vertex Buffer | t2 - s0
             signatureProxy.AddShaderResourceBufferParameter(3, 0); // Unified Index Buffer | t3 - s0
         });
+
+        stateCreator->CreateComputeState(PSONames::GaussianBlur, [](ComputeStateProxy& state)
+        {
+            state.ComputeShaderFileName = "GaussianBlur.hlsl";
+        });
     }
 
     void CommonSetupRenderPass::ScheduleResources(ResourceScheduler* scheduler)

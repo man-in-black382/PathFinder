@@ -27,13 +27,21 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     uint3 loadCoords = uint3(dispatchThreadID.xy, 0);
     float3 color = inputImage.Load(loadCoords).rgb;
 
-    float exposition = 16.0;
-    color *= exposition;
+    /*if (any(color > 1.0))
+    {
+        outputImage[dispatchThreadID.xy] = float4(0.0, 1.0, 0.0, 1.0);
+        return;
+    }*/
+
+    GTTonemappingParams params = PassDataCB.TonemappingParams;
+    // Luminance was exposed using Saturation Based Sensitivity method 
+    // hence the 1.0 for maximum luminance
+    params.MaximumLuminance = 1.0; 
 
     float3 tonemappedColor = float3(
-        GTToneMap(color.r, PassDataCB.TonemappingParams),
-        GTToneMap(color.g, PassDataCB.TonemappingParams),
-        GTToneMap(color.b, PassDataCB.TonemappingParams)
+        GTToneMap(color.r, params),
+        GTToneMap(color.g, params),
+        GTToneMap(color.b, params)
     );
 
     outputImage[dispatchThreadID.xy] = float4(SRGBFromLinear(tonemappedColor), 1.0);

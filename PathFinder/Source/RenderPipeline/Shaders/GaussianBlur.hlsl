@@ -1,11 +1,11 @@
-#ifndef _BlurRenderPass__
-#define _BlurRenderPass__
+#ifndef _GaussianBlur__
+#define _GaussianBlur__
 
 static const int MaximumRadius = 64;
 static const int GroupSize = 256;
 static const int GroupSharedBufferSize = GroupSize + 2 * MaximumRadius;
 
-struct BlurPassData
+struct BlurParameters
 {
     // Packing into 4-component vectors 
     // to satisfy constant buffer alighnment rules
@@ -15,7 +15,7 @@ struct BlurPassData
     uint OutputTextureIndex;
 };
 
-#define PassDataType BlurPassData
+#define PassDataType BlurParameters
 
 #include "MandatoryEntryPointInclude.hlsl" 
 
@@ -56,7 +56,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     int2 xy = int2(min(dispatchThreadID.x, boundaries.x - 1), dispatchThreadID.y);
     gCache[groupThreadID.x + radius] = source[xy].rgb;
 
-    // Wait untill every thread in the group finishes writing to groupshared memory
+    // Wait until every thread in the group finishes writing to groupshared memory
     GroupMemoryBarrierWithGroupSync();
 
     // Blur using cached data

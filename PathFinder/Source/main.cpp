@@ -11,7 +11,6 @@
 
 #include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/BlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadowsRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DeferredLightingRenderPass.hpp"
@@ -101,13 +100,13 @@ int main(int argc, char** argv)
     diskLight0->SetPosition({ -5.0, 0.0, 0.0 });
     diskLight0->SetNormal({ 0.0, .0, 1.0 });
     diskLight0->SetColor(Foundation::Color::White());
-    diskLight0->SetLuminousPower(1000);
+    diskLight0->SetLuminousPower(15000);
 
     auto sphereLight0 = scene.EmplaceSphericalLight();
     sphereLight0->SetRadius(3);
     sphereLight0->SetPosition({ 5.0, 0.0, 0.0 });
     sphereLight0->SetColor(Foundation::Color::White());
-    sphereLight0->SetLuminousPower(1000);
+    sphereLight0->SetLuminousPower(25000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
@@ -131,7 +130,7 @@ int main(int argc, char** argv)
         "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
 
     PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &metalMaterial });
+    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &concrete19Material });
 
     auto t = sphereInstance.Transformation();
     //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
@@ -144,6 +143,9 @@ int main(int argc, char** argv)
     camera.MoveTo({ 0.0, 0.0f, 25.f });
     camera.LookAt({ 0.f, 0.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
+    camera.SetAperture(1.4);
+    camera.SetFilmSpeed(200);
+    camera.SetShutterTime(1.0 / 125.0);
 
     input.SetInvertVerticalDelta(true);
 
@@ -193,6 +195,7 @@ int main(int argc, char** argv)
         perFrameConstants.CameraInverseView = camera.InverseView();
         perFrameConstants.CameraInverseProjection = camera.InverseProjection();
         perFrameConstants.CameraInverseViewProjection = camera.InverseViewProjection();
+        perFrameConstants.CameraExposureValue100 = camera.ExposureValue100();
 
         engine.SetGlobalRootConstants(globalConstants);
         engine.SetFrameRootConstants(perFrameConstants);

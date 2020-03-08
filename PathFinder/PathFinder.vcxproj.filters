@@ -222,9 +222,6 @@
     <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -421,6 +418,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RootSignatureCreator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\BlurRenderHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1868,9 +1871,6 @@
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurRenderPass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Foundation\STDHelpers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2286,6 +2286,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RootSignatureCreator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurRenderHelper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2814,7 +2820,6 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\BlurRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLightingRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SpaceConversion.hlsl" />
@@ -2834,6 +2839,9 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\Light.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Mesh.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GBufferLights.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BloomDownscaling.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GaussianBlur.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Exposure.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

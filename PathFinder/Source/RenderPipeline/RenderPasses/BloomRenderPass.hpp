@@ -8,7 +8,7 @@
 namespace PathFinder
 {
 
-    struct BlurCBContent
+    struct BloomCBContent
     {
         static const int MaximumRadius = 64;
 
@@ -20,11 +20,11 @@ namespace PathFinder
         
     };
 
-    class BlurRenderPass : public RenderPass<RenderPassContentMediator>
+    class BloomRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
-        BlurRenderPass();
-        ~BlurRenderPass() = default;
+        BloomRenderPass();
+        ~BloomRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;

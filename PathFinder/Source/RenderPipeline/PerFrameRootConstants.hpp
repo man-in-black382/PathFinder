@@ -15,6 +15,7 @@ namespace PathFinder
         glm::mat4 CameraInverseView;
         glm::mat4 CameraInverseProjection;
         glm::mat4 CameraInverseViewProjection;
+        float CameraExposureValue100;
     };
 
 }

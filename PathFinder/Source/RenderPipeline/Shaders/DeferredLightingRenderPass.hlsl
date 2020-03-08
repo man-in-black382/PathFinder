@@ -5,7 +5,8 @@ struct PassData
 {
     uint GBufferMaterialDataTextureIndex;
     uint GBufferDepthTextureIndex;
-    uint OutputTextureIndex;
+    uint MainOutputTextureIndex;
+    uint OversaturatedOutputTextureIndex;
 };
 
 #define PassDataType PassData
@@ -13,6 +14,16 @@ struct PassData
 struct RootConstants
 {
     uint TotalLightCount;
+};
+
+struct ExposureOutput
+{
+    // Luminance value after exposition.
+    float3 ExposedLuminance;
+
+    // A luminance value that exceeded Saturation Based Sensitivity
+    // of our virtual camera's sensor. 0 if no oversaturation occured.
+    float3 OversaturatedLuminance;
 };
 
 #include "MandatoryEntryPointInclude.hlsl"
@@ -25,6 +36,7 @@ struct RootConstants
 #include "Mesh.hlsl"
 #include "Light.hlsl"
 #include "LTC.hlsl"
+#include "Exposure.hlsl"
 
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Light> LightTable : register(t0);
@@ -124,15 +136,15 @@ float3 EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, float
     float3 worldPosition = ReconstructWorldPosition(depth, uv, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
     float3 V = normalize(FrameDataCB.CameraPosition.xyz - worldPosition);
 
-    float3 outgoingRadiance = 0.xxx;
+    float3 outgoingLuminance = 0.xxx;
 
     for (uint lightIdx = 0; lightIdx < RootConstantBuffer.TotalLightCount; ++lightIdx)
     {
         Light light = LightTable[lightIdx];
-        outgoingRadiance += EvaluateDirectLighting(light, V, worldPosition, gBuffer, material);
+        outgoingLuminance += EvaluateDirectLighting(light, V, worldPosition, gBuffer, material);
     }
 
-    return outgoingRadiance;
+    return outgoingLuminance;
 }
 
 float3 EvaluateEmissiveGBufferLighting(GBufferEmissive gBuffer)
@@ -140,10 +152,27 @@ float3 EvaluateEmissiveGBufferLighting(GBufferEmissive gBuffer)
     return gBuffer.LuminousIntensity;
 }
 
+ExposureOutput ExposeOutgoingLuminance(float3 outgoingLuminance)
+{
+    float maxHsbsLuminance = ConvertEV100ToMaxHsbsLuminance(FrameDataCB.CameraExposureValue100);
+
+    float3 HSV = RGBtoHSV(outgoingLuminance);
+    HSV.z /= maxHsbsLuminance;
+
+    float3 RGB = HSVtoRGB(HSV);
+
+    ExposureOutput exposureOutput;
+    exposureOutput.ExposedLuminance = RGB;
+    exposureOutput.OversaturatedLuminance = HSV.z > 1.0 ? RGB : 0.0.xxx;
+
+    return exposureOutput;
+}
+
 [numthreads(32, 32, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {   
-    RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
+    RWTexture2D<float4> mainOutputImage = RW_Float4_Textures2D[PassDataCB.MainOutputTextureIndex];
+    RWTexture2D<float4> oversaturatedOutputImage = RW_Float4_Textures2D[PassDataCB.OversaturatedOutputTextureIndex];
 
     Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
     Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
@@ -155,7 +184,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     // Skip empty areas
     if (depth >= 1.0)
     {
-        outputImage[dispatchThreadID.xy] = float4(0.0, 0.0, 0.0, 1.0);
+        mainOutputImage[dispatchThreadID.xy] = float4(0.0, 0.0, 0.0, 1.0);
         return;
     }
 
@@ -176,7 +205,10 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
         break;
     }
 
-    outputImage[dispatchThreadID.xy] = float4(outgoingLuminance, 1.0);
+    ExposureOutput output = ExposeOutgoingLuminance(outgoingLuminance);
+
+    mainOutputImage[dispatchThreadID.xy] = float4(output.ExposedLuminance, 1.0);
+    oversaturatedOutputImage[dispatchThreadID.xy] = float4(output.OversaturatedLuminance, 1.0);
 }
 
 #endif

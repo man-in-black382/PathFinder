@@ -13,9 +13,12 @@ namespace PathFinder
         inline Foundation::Name JumpFloodingCones1{ "Resource_JumpFloodingConesBuffer1" };
         inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
         inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
-        inline Foundation::Name BlurResult{ "Resource_BlurResult" };
+        inline Foundation::Name BloomFullResolution{ "Resource_BloomFullResolution" };
+        inline Foundation::Name BloomHalfResolution{ "Resource_BloomHalfResolution" };
+        inline Foundation::Name BloomQuadResolution{ "Resource_BloomQuadResolution" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
-        inline Foundation::Name DeferredLightingOutput{ "Resource_DeferredLighting_Output" };
+        inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
+        inline Foundation::Name DeferredLightingOversaturatedOutput{ "Resource_DeferredLighting_Oversaturated_Output" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
     }
 
@@ -29,7 +32,8 @@ namespace PathFinder
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
         inline Foundation::Name Shadows{ "PSO_Shadows" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
-        inline Foundation::Name Blur{ "PSO_Blur" };
+        inline Foundation::Name GaussianBlur{ "PSO_GaussianBlur" };
+        inline Foundation::Name BloomDownscaling{ "PSO_BloomDownscaling" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
         inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
