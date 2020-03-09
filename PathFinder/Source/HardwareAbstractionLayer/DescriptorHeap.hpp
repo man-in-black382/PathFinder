@@ -60,10 +60,10 @@ namespace HAL
         RTDescriptorHeap(const Device* device, uint32_t capacity);
         ~RTDescriptorHeap() = default;
 
-        const RTDescriptor EmplaceRTDescriptor(uint64_t indexInHeap, const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat = std::nullopt);
+        const RTDescriptor EmplaceRTDescriptor(uint64_t indexInHeap, const Texture& texture, uint8_t mipLevel = 0, std::optional<ColorFormat> shaderVisibleFormat = std::nullopt);
 
     private:
-        D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const;
+        D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc, uint8_t mipLevel = 0) const;
     };
 
 
@@ -96,7 +96,7 @@ namespace HAL
         const UADescriptor EmplaceUADescriptor(uint64_t indexInHeapRange, const Buffer& buffer, uint64_t stride);
 
         const SRDescriptor EmplaceSRDescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> concreteFormat = std::nullopt);
-        const UADescriptor EmplaceUADescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> concreteFormat = std::nullopt);
+        const UADescriptor EmplaceUADescriptor(uint64_t indexInHeapRange, const Texture& texture, uint8_t mipLevel = 0, std::optional<ColorFormat> concreteFormat = std::nullopt);
 
         DescriptorAddress RangeStartGPUAddress(Range range) const;
 
@@ -109,6 +109,7 @@ namespace HAL
         D3D12_UNORDERED_ACCESS_VIEW_DESC ResourceToUAVDescription(
             const D3D12_RESOURCE_DESC& resourceDesc,
             uint64_t bufferStride,
+            uint8_t mipLevel = 0,
             std::optional<ColorFormat> explicitFormat = std::nullopt) const;
     };
 

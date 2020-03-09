@@ -36,10 +36,10 @@ namespace Memory
 
         ~Texture();
 
-        const HAL::RTDescriptor* GetOrCreateRTDescriptor();
+        const HAL::RTDescriptor* GetOrCreateRTDescriptor(uint8_t mipLevel = 0);
         const HAL::DSDescriptor* GetOrCreateDSDescriptor();
         const HAL::SRDescriptor* GetOrCreateSRDescriptor();
-        const HAL::UADescriptor* GetOrCreateUADescriptor();
+        const HAL::UADescriptor* GetOrCreateUADescriptor(uint8_t mipLevel = 0);
 
         const HAL::Texture* HALTexture() const;
         const HAL::Resource* HALResource() const override;
@@ -49,13 +49,15 @@ namespace Memory
         void ApplyDebugName() override;
         void RecordUploadCommands() override;
         void RecordReadbackCommands() override;
+        void ReserveDiscriptorArrays(uint8_t mipCount);
 
     private:
         SegregatedPoolsResourceAllocator::TexturePtr mTexturePtr;
-        PoolDescriptorAllocator::RTDescriptorPtr mRTDescriptor;
         PoolDescriptorAllocator::DSDescriptorPtr mDSDescriptor;
         PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;
-        PoolDescriptorAllocator::UADescriptorPtr mUADescriptor;
+
+        std::vector<PoolDescriptorAllocator::RTDescriptorPtr> mRTDescriptors;
+        std::vector<PoolDescriptorAllocator::UADescriptorPtr> mUADescriptors;
     };
 
 }

@@ -11,7 +11,7 @@ namespace HAL
 
 
 
-    const RTDescriptor RTDescriptorHeap::EmplaceRTDescriptor(uint64_t indexInHeap, const Texture& texture, std::optional<ColorFormat> shaderVisisbleFormat)
+    const RTDescriptor RTDescriptorHeap::EmplaceRTDescriptor(uint64_t indexInHeap, const Texture& texture, uint8_t mipLevel, std::optional<ColorFormat> shaderVisisbleFormat)
     {
         RangeAllocationInfo& range = GetRange(0);
         D3D12_RESOURCE_DESC d3dDesc = d3dDesc = texture.D3DDescription();
@@ -33,7 +33,7 @@ namespace HAL
         return RTDescriptor{ cpuHandle };
     }
 
-    D3D12_RENDER_TARGET_VIEW_DESC RTDescriptorHeap::ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc) const
+    D3D12_RENDER_TARGET_VIEW_DESC RTDescriptorHeap::ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc, uint8_t mipLevel) const
     {
         D3D12_RENDER_TARGET_VIEW_DESC desc{};
 
@@ -49,13 +49,13 @@ namespace HAL
             if (resourceDesc.DepthOrArraySize > 1)
             {
                 desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
-                desc.Texture1DArray.MipSlice = 0;
+                desc.Texture1DArray.MipSlice = mipLevel;
                 desc.Texture1DArray.FirstArraySlice = 0;
                 desc.Texture1DArray.ArraySize = resourceDesc.DepthOrArraySize;
             }
             else {
                 desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
-                desc.Texture1D.MipSlice = 0;
+                desc.Texture1D.MipSlice = mipLevel;
             }
             break;
 
@@ -63,21 +63,21 @@ namespace HAL
             if (resourceDesc.DepthOrArraySize > 1)
             {
                 desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
-                desc.Texture2DArray.MipSlice = 0;
+                desc.Texture2DArray.MipSlice = mipLevel;
                 desc.Texture2DArray.FirstArraySlice = 0;
                 desc.Texture2DArray.PlaneSlice = 0;
                 desc.Texture2DArray.ArraySize = resourceDesc.DepthOrArraySize;
             }
             else {
                 desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-                desc.Texture2D.MipSlice = 0;
+                desc.Texture2D.MipSlice = mipLevel;
                 desc.Texture2D.PlaneSlice = 0;
             }
             break;
 
         case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
             desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
-            desc.Texture3D.MipSlice = 0;
+            desc.Texture3D.MipSlice = mipLevel;
             desc.Texture3D.FirstWSlice = 0;
             desc.Texture3D.WSize = -1; // A value of - 1 indicates all of the slices along the w axis, starting from FirstWSlice.
             break;
@@ -236,6 +236,7 @@ namespace HAL
     D3D12_UNORDERED_ACCESS_VIEW_DESC CBSRUADescriptorHeap::ResourceToUAVDescription(
         const D3D12_RESOURCE_DESC& resourceDesc,
         uint64_t bufferStride,
+        uint8_t mipLevel,
         std::optional<ColorFormat> explicitFormat) const
     {
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc{};
@@ -253,13 +254,13 @@ namespace HAL
             if (resourceDesc.DepthOrArraySize > 1)
             {
                 desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
-                desc.Texture1DArray.MipSlice = 0;
+                desc.Texture1DArray.MipSlice = mipLevel;
                 desc.Texture1DArray.FirstArraySlice = 0;
                 desc.Texture1DArray.ArraySize = resourceDesc.DepthOrArraySize;
             }
             else {
                 desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
-                desc.Texture1D.MipSlice = 0;
+                desc.Texture1D.MipSlice = mipLevel;
             }
             break;
 
@@ -267,21 +268,21 @@ namespace HAL
             if (resourceDesc.DepthOrArraySize > 1)
             {
                 desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-                desc.Texture2DArray.MipSlice = 0;
+                desc.Texture2DArray.MipSlice = mipLevel;
                 desc.Texture2DArray.FirstArraySlice = 0;
                 desc.Texture2DArray.ArraySize = resourceDesc.DepthOrArraySize;
                 desc.Texture2DArray.PlaneSlice = 0;
             }
             else {
                 desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-                desc.Texture2D.MipSlice = 0;
+                desc.Texture2D.MipSlice = mipLevel;
                 desc.Texture2D.PlaneSlice = 0;
             }
             break;
 
         case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
             desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
-            desc.Texture3D.MipSlice = 0;
+            desc.Texture3D.MipSlice = mipLevel;
             desc.Texture3D.FirstWSlice = 0;
             desc.Texture3D.WSize = -1; // A value of - 1 indicates all of the slices along the w axis, starting from FirstWSlice.
             break;
@@ -305,14 +306,14 @@ namespace HAL
         return SRDescriptor{ cpuHandle, gpuHandle, indexInHeapRange };
     }
 
-    const UADescriptor CBSRUADescriptorHeap::EmplaceUADescriptor(uint64_t indexInHeapRange, const Texture& texture, std::optional<ColorFormat> shaderVisibleFormat)
+    const UADescriptor CBSRUADescriptorHeap::EmplaceUADescriptor(uint64_t indexInHeapRange, const Texture& texture, uint8_t mipLevel, std::optional<ColorFormat> shaderVisibleFormat)
     {
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::UnorderedAccess)) };
         D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{ GetGPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::UnorderedAccess)) };
 
         assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
 
-        D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), 1, shaderVisibleFormat);
+        D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), 1, mipLevel, shaderVisibleFormat);
         mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DResource(), nullptr, &desc, cpuHandle);
 
         return UADescriptor{ cpuHandle, gpuHandle, indexInHeapRange };

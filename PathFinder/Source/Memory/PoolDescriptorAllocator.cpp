@@ -28,12 +28,12 @@ namespace Memory
         mPendingDeallocations.resize(simultaneousFramesInFlight);
     }
 
-    PoolDescriptorAllocator::RTDescriptorPtr PoolDescriptorAllocator::AllocateRTDescriptor(const HAL::Texture& texture, std::optional<HAL::ColorFormat> shaderVisibleFormat)
+    PoolDescriptorAllocator::RTDescriptorPtr PoolDescriptorAllocator::AllocateRTDescriptor(const HAL::Texture& texture, uint8_t mipLevel, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
         ValidateRTFormatsCompatibility(texture.Format(), shaderVisibleFormat);
 
         auto slot = mRTPool.Allocate();
-        auto descriptor = mRTDescriptorHeap.EmplaceRTDescriptor(slot.MemoryOffset, texture, shaderVisibleFormat);
+        auto descriptor = mRTDescriptorHeap.EmplaceRTDescriptor(slot.MemoryOffset, texture, mipLevel, shaderVisibleFormat);
         auto& allocation = mAllocatedRTDescriptors.emplace_back(descriptor, slot);
         auto deallocationCallback = [this, &allocation](HAL::RTDescriptor* descriptor) {
             mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mRTPool);
@@ -70,12 +70,12 @@ namespace Memory
         return SRDescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
-    PoolDescriptorAllocator::UADescriptorPtr PoolDescriptorAllocator::AllocateUADescriptor(const HAL::Texture& texture, std::optional<HAL::ColorFormat> shaderVisibleFormat)
+    PoolDescriptorAllocator::UADescriptorPtr PoolDescriptorAllocator::AllocateUADescriptor(const HAL::Texture& texture, uint8_t mipLevel, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
         ValidateSRUAFormatsCompatibility(texture.Format(), shaderVisibleFormat);
 
         auto slot = mUAPool.Allocate();
-        auto descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(slot.MemoryOffset, texture, shaderVisibleFormat);
+        auto descriptor = mCBSRUADescriptorHeap.EmplaceUADescriptor(slot.MemoryOffset, texture, mipLevel, shaderVisibleFormat);
         auto& allocation = mAllocatedUADescriptors.emplace_back(descriptor, slot);
         auto deallocationCallback = [this, &allocation](HAL::UADescriptor* descriptor) {
             mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mUAPool);

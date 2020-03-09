@@ -14,6 +14,7 @@ namespace Memory
         mTexturePtr{ resourceAllocator->AllocateTexture(properties) } 
     {
         if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
+        ReserveDiscriptorArrays(properties.MipCount);
     }
 
     Texture::Texture(
@@ -34,6 +35,7 @@ namespace Memory
         };
 
         if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
+        ReserveDiscriptorArrays(properties.MipCount);
     }
 
     Texture::Texture(
@@ -47,6 +49,7 @@ namespace Memory
     {
         mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{ existingTexture, [](HAL::Texture* texture) {} };
         if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
+        ReserveDiscriptorArrays(1);
     }
 
     Texture::~Texture()
@@ -54,10 +57,16 @@ namespace Memory
         if (mStateTracker) mStateTracker->StopTrakingResource(mTexturePtr.get());
     }
 
-    const HAL::RTDescriptor* Texture::GetOrCreateRTDescriptor()
-    {
-        if (!mRTDescriptor) mRTDescriptor = mDescriptorAllocator->AllocateRTDescriptor(*HALTexture());
-        return mRTDescriptor.get();
+    const HAL::RTDescriptor* Texture::GetOrCreateRTDescriptor(uint8_t mipLevel)
+    {   
+        assert_format(mipLevel < mRTDescriptors.size(), "Requested RT descriptor mip exceeds texture's mount of mip levels");
+
+        if (!mRTDescriptors[mipLevel])
+        {
+            mRTDescriptors[mipLevel] = mDescriptorAllocator->AllocateRTDescriptor(*HALTexture(), mipLevel);
+        }
+            
+        return mRTDescriptors[mipLevel].get();
     }
 
     const HAL::DSDescriptor* Texture::GetOrCreateDSDescriptor()
@@ -68,14 +77,24 @@ namespace Memory
 
     const HAL::SRDescriptor* Texture::GetOrCreateSRDescriptor()
     {
-        if (!mSRDescriptor) mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(*HALTexture());
+        if (!mSRDescriptor)
+        {
+            mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(*HALTexture());
+        }
+
         return mSRDescriptor.get();
     }
 
-    const HAL::UADescriptor* Texture::GetOrCreateUADescriptor()
+    const HAL::UADescriptor* Texture::GetOrCreateUADescriptor(uint8_t mipLevel)
     {
-        if (!mUADescriptor) mUADescriptor = mDescriptorAllocator->AllocateUADescriptor(*HALTexture());
-        return mUADescriptor.get();
+        assert_format(mipLevel < mUADescriptors.size(), "Requested UA descriptor mip exceeds texture's mount of mip levels");
+
+        if (!mUADescriptors[mipLevel])
+        {
+            mUADescriptors[mipLevel] = mDescriptorAllocator->AllocateUADescriptor(*HALTexture(), mipLevel);
+        }
+
+        return mUADescriptors[mipLevel].get();
     }
 
     const HAL::Texture* Texture::HALTexture() const
@@ -121,6 +140,12 @@ namespace Memory
         {
             mCommandListProvider->CommandList()->CopyTextureToBuffer(*HALTexture(), *CurrentFrameReadbackBuffer(), subresourceFootprint);
         }
+    }
+
+    void Texture::ReserveDiscriptorArrays(uint8_t mipCount)
+    {
+        mRTDescriptors.resize(mipCount);
+        mUADescriptors.resize(mipCount);
     }
 
 }
