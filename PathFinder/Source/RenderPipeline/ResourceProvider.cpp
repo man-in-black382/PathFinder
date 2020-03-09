@@ -7,28 +7,28 @@ namespace PathFinder
     ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage)
         : mResourceStorage{ storage } {}
 
-    uint32_t ResourceProvider::GetTextureDescriptorTableIndex(Foundation::Name resourceName)
+    uint32_t ResourceProvider::GetUATextureIndex(Foundation::Name resourceName, uint8_t mipLevel)
     {
         auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
         Memory::Texture* resource = resourceObjects->Texture.get();
         assert_format(resource, "Resource ", resourceName.ToString(), " does not exist");
 
         const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassGraphNode().PassMetadata.Name);
-        assert_format(perPassData, "Resource ", resourceName.ToString(), " was not scheduled to be used in this pass");
+        assert_format(perPassData && perPassData->CreateTextureUADescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be accessed as Unordered Access resource");
 
-        if (perPassData->CreateTextureSRDescriptor)
-        {
-            return resource->GetOrCreateSRDescriptor()->IndexInHeapRange();
-        } 
+        return resource->GetOrCreateUADescriptor(mipLevel)->IndexInHeapRange();
+    }
 
-        if (perPassData->CreateTextureUADescriptor)
-        {
-            return resource->GetOrCreateUADescriptor()->IndexInHeapRange();
-        }
+    uint32_t ResourceProvider::GetSRTextureIndex(Foundation::Name resourceName)
+    {
+        auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
+        Memory::Texture* resource = resourceObjects->Texture.get();
+        assert_format(resource, "Resource ", resourceName.ToString(), " does not exist");
 
-        assert_format(perPassData, "Resource ", resourceName.ToString(), " was not scheduled for reading in this pass");
+        const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassGraphNode().PassMetadata.Name);
+        assert_format(perPassData && perPassData->CreateTextureSRDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be accessed as Shader Resource");
 
-        return 0;
+        return resource->GetOrCreateSRDescriptor()->IndexInHeapRange();
     }
 
 }

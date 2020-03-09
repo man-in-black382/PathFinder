@@ -28,4 +28,19 @@ namespace Geometry
         return Width == rhs.Width && Height == rhs.Height && Depth == rhs.Depth;
     }
 
+    Dimensions Dimensions::XMultiplied(float m) const
+    {
+        return { uint64_t(Width * m), Height, Depth };
+    }
+
+    Dimensions Dimensions::XYMultiplied(float m) const
+    {
+        return { uint64_t(Width * m), uint64_t(Height * m), Depth };
+    }
+
+    Dimensions Dimensions::XYZMultiplied(float m) const
+    {
+        return { uint64_t(Width * m), uint64_t(Height * m), uint64_t(Depth * m) };
+    }
+
 }

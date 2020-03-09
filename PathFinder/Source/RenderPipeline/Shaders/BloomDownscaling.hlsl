@@ -16,7 +16,7 @@ struct PassData
 groupshared float3 gTiles[64];
 
 [numthreads(8, 8, 1)]
-void main(uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : SV_DispatchThreadID)
+void CSMain(uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     Texture2D bloomInputTexture = Textures2D[PassDataCB.SourceTextureIndex];
     RWTexture2D<float4> halfSizeOutputImage = RW_Float4_Textures2D[PassDataCB.HalfSizeDestinationTextureIndex];

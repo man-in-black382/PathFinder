@@ -97,6 +97,9 @@ namespace PathFinder
 
         PipelineResourceStorage* mResourceStorage;
         RenderSurfaceDescription mDefaultRenderSurfaceDesc;
+
+    public:
+        const RenderSurfaceDescription& DefaultRenderSurfaceDesc() const { return mDefaultRenderSurfaceDesc; }
     };
 
 }

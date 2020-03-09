@@ -23,9 +23,9 @@ namespace PathFinder
     }
       
     void DeferredLightingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
-    { 
+    {
         scheduler->NewTexture(ResourceNames::DeferredLightingFullOutput);
-        scheduler->NewTexture(ResourceNames::DeferredLightingOversaturatedOutput);
+        scheduler->NewTexture(ResourceNames::DeferredLightingOverexposedOutput);
         scheduler->ReadTexture(ResourceNames::GBufferRT0);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
     }  
@@ -37,10 +37,10 @@ namespace PathFinder
         auto resourceProvider = context->GetResourceProvider();
 
         DeferredLightingCBContent cbContent{}; 
-        cbContent.GBufferMaterialDataTextureIndex = resourceProvider->GetTextureDescriptorTableIndex(ResourceNames::GBufferRT0);
-        cbContent.GBufferDepthTextureIndex = resourceProvider->GetTextureDescriptorTableIndex(ResourceNames::GBufferDepthStencil);
-        cbContent.MainOutputTextureIndex = resourceProvider->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingFullOutput);
-        cbContent.OversaturatedOutputTextureIndex = resourceProvider->GetTextureDescriptorTableIndex(ResourceNames::DeferredLightingOversaturatedOutput);
+        cbContent.GBufferMaterialDataTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferRT0);
+        cbContent.GBufferDepthTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingFullOutput);
+        cbContent.OverexposedOutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingOverexposedOutput);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 

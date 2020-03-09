@@ -8,8 +8,8 @@ namespace PathFinder
 
     glm::uvec2 RenderSurfaceDescription::DispatchDimensionsForGroupSize(uint32_t groupSizeX, uint32_t groupSizeY) const
     {
-        float x = ceilf((float)mDimensions.Width / 32);
-        float y = ceilf((float)mDimensions.Height / 32);
+        float x = ceilf((float)mDimensions.Width / groupSizeX);
+        float y = ceilf((float)mDimensions.Height / groupSizeY);
         return { x, y };
     }
 

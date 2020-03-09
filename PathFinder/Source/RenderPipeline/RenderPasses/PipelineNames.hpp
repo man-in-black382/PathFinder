@@ -13,12 +13,10 @@ namespace PathFinder
         inline Foundation::Name JumpFloodingCones1{ "Resource_JumpFloodingConesBuffer1" };
         inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
         inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
-        inline Foundation::Name BloomFullResolution{ "Resource_BloomFullResolution" };
-        inline Foundation::Name BloomHalfResolution{ "Resource_BloomHalfResolution" };
-        inline Foundation::Name BloomQuadResolution{ "Resource_BloomQuadResolution" };
+        inline Foundation::Name DeferredLightingOverexposedOutputDownscaled{ "Resource_DeferredLighting_Overexposed_Output_Downscaled" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
         inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
-        inline Foundation::Name DeferredLightingOversaturatedOutput{ "Resource_DeferredLighting_Oversaturated_Output" };
+        inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
     }
 

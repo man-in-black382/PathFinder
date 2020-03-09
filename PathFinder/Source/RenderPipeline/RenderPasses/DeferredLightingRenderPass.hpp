@@ -12,8 +12,8 @@ namespace PathFinder
     {
         uint32_t GBufferMaterialDataTextureIndex;
         uint32_t GBufferDepthTextureIndex;
-        uint32_t MainOutputTextureIndex;
-        uint32_t OversaturatedOutputTextureIndex;
+        uint32_t OutputTextureIndex;
+        uint32_t OverexposedOutputTextureIndex;
     };
 
     class DeferredLightingRenderPass : public RenderPass<RenderPassContentMediator>

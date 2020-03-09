@@ -59,7 +59,7 @@ namespace Memory
 
     const HAL::RTDescriptor* Texture::GetOrCreateRTDescriptor(uint8_t mipLevel)
     {   
-        assert_format(mipLevel < mRTDescriptors.size(), "Requested RT descriptor mip exceeds texture's mount of mip levels");
+        assert_format(mipLevel < mRTDescriptors.size(), "Requested RT descriptor mip exceeds texture's amount of mip levels");
 
         if (!mRTDescriptors[mipLevel])
         {
@@ -87,7 +87,7 @@ namespace Memory
 
     const HAL::UADescriptor* Texture::GetOrCreateUADescriptor(uint8_t mipLevel)
     {
-        assert_format(mipLevel < mUADescriptors.size(), "Requested UA descriptor mip exceeds texture's mount of mip levels");
+        assert_format(mipLevel < mUADescriptors.size(), "Requested UA descriptor mip exceeds texture's amount of mip levels");
 
         if (!mUADescriptors[mipLevel])
         {

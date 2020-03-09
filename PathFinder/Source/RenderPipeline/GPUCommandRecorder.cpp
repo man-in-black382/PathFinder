@@ -63,6 +63,15 @@ namespace PathFinder
         mGraphicsDevice->Dispatch(groupCountX, groupCountY, groupCountZ);
     }
 
+    void GPUCommandRecorder::Dispatch(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize)
+    {
+        float x = std::max(ceilf((float)viewportDimensions.Width / groupSize.Width), 1.f);
+        float y = std::max(ceilf((float)viewportDimensions.Height / groupSize.Height), 1.f);
+        float z = std::max(ceilf((float)viewportDimensions.Depth / groupSize.Depth), 1.f);
+        
+        Dispatch(x, y, z);
+    }
+
     void GPUCommandRecorder::BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         mGraphicsDevice->BindBuffer(resourceName, shaderRegister, registerSpace, registerType);

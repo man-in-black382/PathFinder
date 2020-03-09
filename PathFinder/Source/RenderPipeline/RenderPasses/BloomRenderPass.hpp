@@ -8,16 +8,12 @@
 namespace PathFinder
 {
 
-    struct BloomCBContent
+    struct BloomDownscalingCBContent
     {
-        static const int MaximumRadius = 64;
-
-        std::array<float, MaximumRadius> Weights;
-
-        uint32_t BlurRadius;
-        uint32_t InputTextureIndex;
-        uint32_t OutputTextureIndex;
-        
+        glm::vec2 SourceTextureInverseDimensions;
+        uint32_t SourceTextureSRIndex;
+        uint32_t HalfSizeDestinationTextureUAIndex;
+        uint32_t QuadSizeDestinationTextureUAIndex;
     };
 
     class BloomRenderPass : public RenderPass<RenderPassContentMediator>

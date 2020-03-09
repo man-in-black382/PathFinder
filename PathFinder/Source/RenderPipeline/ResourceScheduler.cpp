@@ -181,12 +181,12 @@ namespace PathFinder
 
     void ResourceScheduler::ReadBuffer(Foundation::Name resourceName, BufferReadContext readContext)
     {
-
+        assert_format(false, "Not implemented");
     }
 
     void ResourceScheduler::ReadWriteBuffer(Foundation::Name resourceName)
     {
-
+        assert_format(false, "Not implemented");
     }
 
     ResourceScheduler::NewTextureProperties ResourceScheduler::FillMissingFields(std::optional<NewTextureProperties> properties)
