@@ -2,6 +2,8 @@
 
 #include <limits>
 
+#include "../Foundation/StringUtils.hpp"
+
 namespace PathFinder
 {
 
@@ -33,9 +35,9 @@ namespace PathFinder
             mAvailableMemory = largestAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
             optimalHeapSize += mAvailableMemory;
 
-            for (auto allocationIt = largestAllocationIt; allocationIt != mSchedulingInfos.end(); ++allocationIt)
+            for (auto schedulingInfoIt = largestAllocationIt; schedulingInfoIt != mSchedulingInfos.end(); ++schedulingInfoIt)
             {
-                AliasWithAlreadyAliasedAllocations(allocationIt);
+                AliasWithAlreadyAliasedAllocations(schedulingInfoIt);
             }
 
             RemoveAliasedAllocationsFromOriginalList();
@@ -53,9 +55,7 @@ namespace PathFinder
 
     bool PipelineResourceMemoryAliaser::TimelinesIntersect(const PipelineResourceMemoryAliaser::Timeline& first, const PipelineResourceMemoryAliaser::Timeline& second) const
     {
-        bool startIntersects = first.Start >= second.Start && first.Start <= second.End;
-        bool endIntersects = first.End >= second.Start && first.End <= second.End;
-        return startIntersects || endIntersects;
+        return first.Start <= second.End && second.Start <= first.End;
     }
 
     PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceSchedulingInfo* schedulingInfo) const
@@ -77,7 +77,7 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceMemoryAliaser::FindNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt)
+    void PipelineResourceMemoryAliaser::FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt)
     {
         mNonAliasableMemoryRegionStarts.clear();
         mNonAliasableMemoryRegionEnds.clear();
@@ -88,7 +88,11 @@ namespace PathFinder
         {
             if (TimelinesIntersect(alreadyAliasedAllocationIt->ResourceTimeline, nextAllocationIt->ResourceTimeline))
             {
-                uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset;
+                // Heap offset stored in AliasingInfo.HeapOffset is relative to heap beginning, 
+                // but the algorithm requires non-aliasable memory region to be 
+                // relative to current global offset, which is an offset of the current memory bucket we're aliasing resources in,
+                // therefore we have to substract current global offset
+                uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset - mGlobalStartOffset;
                 uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes() - 1;
 
                 mNonAliasableMemoryRegionStarts.insert(startByteIndex);
@@ -126,7 +130,7 @@ namespace PathFinder
         // Bail out if there is nothing to alias with
         if (AliasAsFirstAllocation(nextSchedulingInfoIt)) return;
 
-        FindNonAliasableMemoryRegions(nextSchedulingInfoIt);
+        FindCurrentBucketNonAliasableMemoryRegions(nextSchedulingInfoIt);
 
         // Bail out if there is no timeline conflicts with already aliased resources
         if (AliasAsNonTimelineConflictingAllocation(nextSchedulingInfoIt)) return;
@@ -146,6 +150,7 @@ namespace PathFinder
         // Handle first free region from start of the bucket to first non-aliasable region if it exists
         if (!mNonAliasableMemoryRegionStarts.empty())
         {
+            // Consider first aliasable region size to be from 0 to first non-aliasable region start
             uint64_t regionSize = *startIt;
             MemoryRegion nextAliasableMemoryRegion{ 0, regionSize };
             FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
@@ -186,8 +191,10 @@ namespace PathFinder
         // Handle last free region from end of last non-aliasable region to bucket end
         if (!mNonAliasableMemoryRegionEnds.empty())
         {
-            auto lastNonAliasableRegionEndIt = --mNonAliasableMemoryRegionEnds.end();
+            auto lastNonAliasableRegionEndIt = std::prev(mNonAliasableMemoryRegionEnds.end());
 
+            // Check if a free, aliasable memory region exists after last non-aliasable memory region
+            // and before end of this memory bucket and whether that region can fit requested allocation.
             uint64_t lastEmptyRegionOffset = *lastNonAliasableRegionEndIt + 1; // One past the end offset of non-aliasable region
             uint64_t lastEmptyRegionSize = mAvailableMemory - lastEmptyRegionOffset;
             MemoryRegion nextAliasableMemoryRegion{ lastEmptyRegionOffset, lastEmptyRegionSize };
@@ -209,6 +216,8 @@ namespace PathFinder
 
             PipelineResourceSchedulingInfo::AliasingMetadata& aliasingInfo = nextSchedulingInfoIt->SchedulingInfo->AliasingInfo;
 
+            // Offset calculations were made in a frame relative to the current memory bucket.
+            // Now we need to adjust it to be relative to the heap start.
             aliasingInfo.HeapOffset = mGlobalStartOffset + mostFittingMemoryRegion.Offset;
             aliasingInfo.NeedsAliasingBarrier = true;
 

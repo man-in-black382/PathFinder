@@ -127,7 +127,7 @@ namespace PathFinder
 
         HAL::Texture::Properties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
 
-        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Texture::ConstructResourceFormat(mDevice, textureProperties) };
+        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Texture::ConstructResourceFormat(mDevice, textureProperties), resourceName };
 
         resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
         {

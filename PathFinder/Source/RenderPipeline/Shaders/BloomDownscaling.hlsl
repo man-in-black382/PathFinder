@@ -31,14 +31,14 @@ void CSMain(uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : SV_Dispatc
     gTiles[groupIndex] = avgPixel;
     halfSizeOutputImage[dispatchThreadID.xy].rgb = avgPixel;
 
-    GroupMemoryBarrierWithGroupSync();
+   /* GroupMemoryBarrierWithGroupSync();
 
     if ((parity & 1) == 0)
     {
         avgPixel = 0.25f * (avgPixel + gTiles[groupIndex + 1] + gTiles[groupIndex + 8] + gTiles[groupIndex + 9]);
         gTiles[groupIndex] = avgPixel;
         quadSizeOutputImage[dispatchThreadID.xy >> 1].rgb = avgPixel;
-    }
+    }*/
 }
 
 #endif

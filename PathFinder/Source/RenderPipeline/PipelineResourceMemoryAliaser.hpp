@@ -51,7 +51,7 @@ namespace PathFinder
         bool TimelinesIntersect(const Timeline& first, const Timeline& second) const;
         Timeline GetTimeline(const PipelineResourceSchedulingInfo* allocation) const;
         void FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const;
-        void FindNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt);
+        void FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt);
         bool AliasAsFirstAllocation(AliasingMetadataIterator nextAllocationIt);
         bool AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextAllocationIt);
         void AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt);
@@ -61,6 +61,8 @@ namespace PathFinder
         std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionStarts;
         std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionEnds;
         std::vector<AliasingMetadataIterator> mAlreadyAliasedAllocations;
+        
+        // Memory offset of the current bucket in which aliasing is performed
         uint64_t mGlobalStartOffset = 0;
         uint64_t mAvailableMemory = 0;
 

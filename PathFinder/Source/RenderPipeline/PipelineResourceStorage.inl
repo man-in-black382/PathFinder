@@ -63,7 +63,7 @@ namespace PathFinder
         
         HAL::Buffer::Properties<BufferDataT> properties{ capacity, perElementAlignment };
 
-        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Buffer::ConstructResourceFormat(mDevice, properties) };
+        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Buffer::ConstructResourceFormat(mDevice, properties), resourceName };
 
         resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
         {

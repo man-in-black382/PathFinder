@@ -3,8 +3,8 @@
 namespace PathFinder
 {
 
-    PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format)
-        : mResourceFormat{ format } {}
+    PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format, Foundation::Name resourceName)
+        : mResourceFormat{ format }, mResourceName{ resourceName } {}
 
     void PipelineResourceSchedulingInfo::FinishScheduling()
     {
