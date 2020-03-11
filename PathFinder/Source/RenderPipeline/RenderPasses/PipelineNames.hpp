@@ -17,6 +17,8 @@ namespace PathFinder
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
         inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
         inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
+        inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
+        inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
     }
 
@@ -32,6 +34,8 @@ namespace PathFinder
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name GaussianBlur{ "PSO_GaussianBlur" };
         inline Foundation::Name BloomDownscaling{ "PSO_BloomDownscaling" };
+        inline Foundation::Name BloomBlur{ "PSO_BloomBlur" };
+        inline Foundation::Name BloomComposition{ "PSO_BloomComposition" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
         inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };

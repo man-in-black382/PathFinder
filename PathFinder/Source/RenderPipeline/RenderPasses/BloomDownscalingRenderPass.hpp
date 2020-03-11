@@ -16,11 +16,11 @@ namespace PathFinder
         uint32_t QuadSizeDestinationTextureUAIndex;
     };
 
-    class BloomRenderPass : public RenderPass<RenderPassContentMediator>
+    class BloomDownscalingRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
-        BloomRenderPass();
-        ~BloomRenderPass() = default;
+        BloomDownscalingRenderPass();
+        ~BloomDownscalingRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;

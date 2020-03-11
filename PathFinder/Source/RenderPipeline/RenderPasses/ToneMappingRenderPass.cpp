@@ -18,7 +18,7 @@ namespace PathFinder
 
     void ToneMappingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->ReadTexture(ResourceNames::DeferredLightingFullOutput);
+        scheduler->ReadTexture(ResourceNames::BloomBlurOutput/*DeferredLightingFullOutput*/);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
     }
      
@@ -27,7 +27,7 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::DeferredLightingFullOutput);
+        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::BloomBlurOutput/*DeferredLightingFullOutput*/);
         cbContent.OutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
 

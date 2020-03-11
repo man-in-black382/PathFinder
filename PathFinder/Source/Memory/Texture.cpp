@@ -11,7 +11,8 @@ namespace Memory
         CopyCommandListProvider* commandListProvider)
         :
         GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
-        mTexturePtr{ resourceAllocator->AllocateTexture(properties) } 
+        mTexturePtr{ resourceAllocator->AllocateTexture(properties) },
+        mProperties{ properties }
     {
         if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
         ReserveDiscriptorArrays(properties.MipCount);
@@ -27,7 +28,8 @@ namespace Memory
         const HAL::Heap& mainResourceExplicitHeap, 
         uint64_t explicitHeapOffset)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider)
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
+        mProperties{ properties }
     {
         mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{
            new HAL::Texture{ device, mainResourceExplicitHeap, explicitHeapOffset, properties },
@@ -45,7 +47,12 @@ namespace Memory
         CopyCommandListProvider* commandListProvider, 
         HAL::Texture* existingTexture)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider)
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
+        mProperties{
+            existingTexture->Format(), existingTexture->Kind(),
+            existingTexture->Dimensions(), existingTexture->OptimizedClearValue(),
+            existingTexture->InitialStates(), existingTexture->ExpectedStates()
+        }
     {
         mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{ existingTexture, [](HAL::Texture* texture) {} };
         if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());

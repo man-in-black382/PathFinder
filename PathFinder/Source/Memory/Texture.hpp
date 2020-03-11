@@ -55,9 +55,13 @@ namespace Memory
         SegregatedPoolsResourceAllocator::TexturePtr mTexturePtr;
         PoolDescriptorAllocator::DSDescriptorPtr mDSDescriptor;
         PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;
+        HAL::Texture::Properties mProperties;
 
         std::vector<PoolDescriptorAllocator::RTDescriptorPtr> mRTDescriptors;
         std::vector<PoolDescriptorAllocator::UADescriptorPtr> mUADescriptors;
+
+    public:
+        inline const auto& Properties() const { return mProperties; }
     };
 
 }

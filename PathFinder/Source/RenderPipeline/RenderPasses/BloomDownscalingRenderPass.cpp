@@ -1,12 +1,12 @@
-#include "BloomRenderPass.hpp"
+#include "BloomDownscalingRenderPass.hpp"
 
 namespace PathFinder
 {
 
-    BloomRenderPass::BloomRenderPass()
-        : RenderPass("Bloom") {}
+    BloomDownscalingRenderPass::BloomDownscalingRenderPass()
+        : RenderPass("BloomDownscaling") {}
 
-    void BloomRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void BloomDownscalingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
         stateCreator->CreateComputeState(PSONames::BloomDownscaling, [](ComputeStateProxy& state)
         {
@@ -14,7 +14,7 @@ namespace PathFinder
         });
     }
 
-    void BloomRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void BloomDownscalingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         ResourceScheduler::NewTextureProperties bloomTextureProps{};
         bloomTextureProps.MipCount = 2; // To store half and quad versions of overexposed deferred lighting output
@@ -24,7 +24,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::DeferredLightingOverexposedOutputDownscaled, bloomTextureProps);
     }
      
-    void BloomRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
+    void BloomDownscalingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomDownscaling);
 
@@ -39,18 +39,7 @@ namespace PathFinder
         downscalingInputs.QuadSizeDestinationTextureUAIndex = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingOverexposedOutputDownscaled, 1);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(downscalingInputs);
-        context->GetCommandRecorder()->Dispatch(fullResDimensions.XYMultiplied(0.5), { 8, 8 });
-
-        /*BlurCBContent cbContent{};
-        cbContent.BlurRadius = 20;
-        auto kernel = Foundation::GaussianFunction::Produce1DKernel(20);
-        std::move(kernel.begin(), kernel.end(), cbContent.Weights.begin());
-
-        cbContent.InputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::GBufferRT0);
-        cbContent.OutputTextureIndex = context->GetResourceProvider()->GetTextureDescriptorTableIndex(ResourceNames::BloomFullResolution);
-
-        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(5, 720, 1);*/
+        //context->GetCommandRecorder()->Dispatch(fullResDimensions.XYMultiplied(0.5), { 8, 8 });
     }
 
 }

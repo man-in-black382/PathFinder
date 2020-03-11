@@ -31,4 +31,13 @@ namespace PathFinder
         return resource->GetOrCreateSRDescriptor()->IndexInHeapRange();
     }
 
+    const HAL::Texture::Properties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName)
+    {
+        auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
+        Memory::Texture* resource = resourceObjects->Texture.get();
+        assert_format(resource, "Resource ", resourceName.ToString(), " does not exist");
+
+        return resource->Properties();
+    }
+
 }

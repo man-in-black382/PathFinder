@@ -145,7 +145,7 @@ namespace PathFinder
             HAL::Texture::Properties completeProperties{ 
                 format, kind, dimensions, optimizedClearValue, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates(), mipCount };
 
-            resourceObjects.Texture = mResourceProducer->NewTexture(completeProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset);
+            resourceObjects.Texture = mResourceProducer->NewTexture(completeProperties/*, *heap, schedulingInfo.AliasingInfo.HeapOffset*/);
             resourceObjects.Texture->SetDebugName(resourceName.ToString());
         };
 

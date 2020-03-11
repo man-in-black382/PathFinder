@@ -420,10 +420,10 @@
     <ClCompile Include="Source\RenderPipeline\RootSignatureCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomRenderPass.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomDownscalingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\BlurRenderHelper.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurAndCompositionRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2288,10 +2288,10 @@
     <ClInclude Include="Source\RenderPipeline\RootSignatureCreator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomRenderPass.hpp">
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomDownscalingRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurRenderHelper.hpp">
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomBlurAndCompositionRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

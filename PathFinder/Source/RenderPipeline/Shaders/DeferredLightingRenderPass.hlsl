@@ -185,6 +185,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     if (depth >= 1.0)
     {
         mainOutputImage[dispatchThreadID.xy] = float4(0.0, 0.0, 0.0, 1.0);
+        oversaturatedOutputImage[dispatchThreadID.xy] = float4(0.0, 0.0, 0.0, 1.0);
         return;
     }
 
