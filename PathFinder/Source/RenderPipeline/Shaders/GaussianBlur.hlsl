@@ -1,32 +1,28 @@
 #ifndef _GaussianBlur__
 #define _GaussianBlur__
 
-static const int MaximumRadius = 64;
-static const int GroupSize = 256;
-static const int GroupSharedBufferSize = GroupSize + 2 * MaximumRadius;
+static const int GaussianBlurMaximumRadius = 64;
+static const int GaussianBlurGroupSize = 256;
+static const int GaussianBlurGroupSharedBufferSize = GaussianBlurGroupSize + 2 * GaussianBlurMaximumRadius;
 
 struct GaussianBlurParameters
 {
     // Packing into 4-component vectors 
     // to satisfy constant buffer alignment rules
-    float4 Weights[MaximumRadius / 4]; 
+    float4 Weights[GaussianBlurMaximumRadius / 4]; 
     float2 ImageSize;
     uint IsHorizontal;
     uint BlurRadius;
-    uint InputTextureIndex;
-    uint OutputTextureIndex;
 };
-
-#define PassDataType GaussianBlurParameters
 
 // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-attributes-numthreads
 
 // Groupshared memory is limited to 16KB per group.
 // A single thread is limited to a 256 byte region of groupshared memory for writing.
 
-groupshared float3 gCache[GroupSharedBufferSize]; // Around 5KB
+groupshared float3 gCache[GaussianBlurGroupSharedBufferSize]; // Around 5KB
 
-float3 BlurHorizontal(int2 dispatchThreadID, int2 groupThreadID, RWTexture2D<float4> source, RWTexture2D<float4> destination, GaussianBlurParameters parameters)
+float3 BlurGaussian(int2 dispatchThreadID, int2 groupThreadID, RWTexture2D<float4> source, GaussianBlurParameters parameters)
 {
     int radius = int(parameters.BlurRadius);
 
@@ -46,7 +42,7 @@ float3 BlurHorizontal(int2 dispatchThreadID, int2 groupThreadID, RWTexture2D<flo
 
     // Gather pixels needed for the (Radius) rightmost threads in the group
     // Clamp against image border if necessary
-    if (groupThreadID.x >= (GroupSize - radius))
+    if (groupThreadID.x >= (GaussianBlurGroupSize - radius))
     {
         int2 loadCoord = parameters.IsHorizontal ?
             int2(max(dispatchThreadID.x + radius, 0), dispatchThreadID.y) :

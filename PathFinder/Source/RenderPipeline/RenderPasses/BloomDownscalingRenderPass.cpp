@@ -39,7 +39,7 @@ namespace PathFinder
         downscalingInputs.QuadSizeDestinationTextureUAIndex = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingOverexposedOutputDownscaled, 1);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(downscalingInputs);
-        //context->GetCommandRecorder()->Dispatch(fullResDimensions.XYMultiplied(0.5), { 8, 8 });
+        context->GetCommandRecorder()->Dispatch(fullResDimensions.XYMultiplied(0.5), { 8, 8 });
     }
 
 }

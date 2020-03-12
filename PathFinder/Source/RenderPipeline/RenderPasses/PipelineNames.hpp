@@ -46,6 +46,7 @@ namespace PathFinder
         inline Foundation::Name GBufferMeshes{ "GBuffer_Meshes_Root_Sig" };
         inline Foundation::Name GBufferLights{ "GBuffer_Lights_Root_Sig" };
         inline Foundation::Name DeferredLighting{ "Deferred_Lighting_Root_Sig" };
+        inline Foundation::Name BloomBlurAndComposition{ "Deferred_BloomBlurAndCOmposition_Root_Sig" };
         inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
         inline Foundation::Name UI{ "UI_Root_Sig" };
         inline Foundation::Name DisplacementDistanceMapGeneration{ "Distance_Map_Generation_Root_Sig" };

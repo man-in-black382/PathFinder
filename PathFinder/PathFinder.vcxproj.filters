@@ -2842,6 +2842,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomDownscaling.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GaussianBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Exposure.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BloomBlur.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">
