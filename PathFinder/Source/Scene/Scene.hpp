@@ -5,6 +5,7 @@
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "GTTonemappingParameters.hpp"
+#include "BloomParameters.hpp"
 #include "ResourceLoader.hpp"
 #include "FlatLight.hpp"
 #include "SphericalLight.hpp"
@@ -38,7 +39,8 @@ namespace PathFinder
         std::list<SphericalLight> mSphericalLights;
 
         Camera mCamera;
-        GTTonemappingParams mTonemappingParams;
+        GTTonemappingParameterss mTonemappingParams;
+        BloomParameters mBloomParameters;
 
     public:
         inline Camera& MainCamera() { return mCamera; }
@@ -52,6 +54,7 @@ namespace PathFinder
         inline auto& SphericalLights() { return mSphericalLights; }
         inline auto& TonemappingParams() { return mTonemappingParams; }
         inline const auto& TonemappingParams() const { return mTonemappingParams; }
+        inline const auto& BloomParams() const { return mBloomParameters; }
     };
 
 }

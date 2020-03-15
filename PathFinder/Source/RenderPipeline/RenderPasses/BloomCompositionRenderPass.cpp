@@ -28,11 +28,16 @@ namespace PathFinder
         auto resourceProvider = context->GetResourceProvider();
         auto dimensions = context->GetDefaultRenderSurfaceDesc().Dimensions();
 
+        const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
+
         BloomCompositionCBContent inputs{};
         inputs.InverseTextureDimensions = { 1.0f / dimensions.Width, 1.0f / dimensions.Height };
         inputs.DeferredLightingOutputTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingFullOutput);
         inputs.BloomBlurOutputTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::BloomBlurOutput);
         inputs.CompositionOutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomCompositionOutput);
+        inputs.SmallBloomWeight = parameters.SmallBloomWeight;
+        inputs.MediumBloomWeight = parameters.MediumBloomWeight;
+        inputs.LargeBloomWeight = parameters.LargeBloomWeight;
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(inputs);
         context->GetCommandRecorder()->Dispatch(dimensions, { 32, 32 });

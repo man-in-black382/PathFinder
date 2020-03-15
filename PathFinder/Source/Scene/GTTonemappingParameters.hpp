@@ -3,7 +3,7 @@
 namespace PathFinder 
 {
 
-    struct GTTonemappingParams
+    struct GTTonemappingParameterss
     {
         float MaximumLuminance = 270.0; // Your typical SDR monitor max luminance
         float Contrast = 1.0;

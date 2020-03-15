@@ -18,7 +18,6 @@
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/CommonSetupRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/BloomDownscalingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BloomBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BloomCompositionRenderPass.hpp"
 #include "RenderPipeline/GlobalRootConstants.hpp"
@@ -79,7 +78,6 @@ int main(int argc, char** argv)
     auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
     auto deferredLightingPass = std::make_unique<PathFinder::DeferredLightingRenderPass>();
-    auto bloomDownscalingPass = std::make_unique<PathFinder::BloomDownscalingRenderPass>();
     auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
     auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
     auto shadowsPass = std::make_unique<PathFinder::ShadowsRenderPass>();
@@ -93,7 +91,6 @@ int main(int argc, char** argv)
     engine.AddRenderPass(GBufferPass.get());
     engine.AddRenderPass(deferredLightingPass.get());
     engine.AddRenderPass(shadowsPass.get());
-    engine.AddRenderPass(bloomDownscalingPass.get());
     engine.AddRenderPass(bloomBlurPass.get());
     engine.AddRenderPass(bloomCompositionPass.get());
     engine.AddRenderPass(toneMappingPass.get());
@@ -103,18 +100,18 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
     //renderPassGraph.AddPass(blurPass.get());
 
-    auto diskLight0 = scene.EmplaceFlatLight(PathFinder::FlatLight::Type::Rectangle);
-    diskLight0->SetWidth(2);
-    diskLight0->SetHeight(2);
-    diskLight0->SetPosition({ -5.0, 0.0, 0.0 });
-    diskLight0->SetNormal({ 0.0, .0, 1.0 });
-    diskLight0->SetColor(Foundation::Color::White());
-    diskLight0->SetLuminousPower(15000);
+    auto flatLight0 = scene.EmplaceFlatLight(PathFinder::FlatLight::Type::Rectangle);
+    flatLight0->SetWidth(2);
+    flatLight0->SetHeight(2);
+    flatLight0->SetPosition({ -5.0, 0.0, 0.0 });
+    flatLight0->SetNormal({ 0.0, .0, 1.0 });
+    flatLight0->SetColor({249.0 / 255, 215.0 / 255, 28.0 / 255 });
+    flatLight0->SetLuminousPower(2000);
 
     auto sphereLight0 = scene.EmplaceSphericalLight();
     sphereLight0->SetRadius(3);
     sphereLight0->SetPosition({ 5.0, 0.0, 0.0 });
-    sphereLight0->SetColor(Foundation::Color::White());
+    sphereLight0->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
     sphereLight0->SetLuminousPower(25000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
@@ -153,7 +150,7 @@ int main(int argc, char** argv)
     camera.LookAt({ 0.f, 0.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
     camera.SetAperture(1.4);
-    camera.SetFilmSpeed(200);
+    camera.SetFilmSpeed(400);
     camera.SetShutterTime(1.0 / 125.0);
 
     input.SetInvertVerticalDelta(true);
@@ -175,7 +172,7 @@ int main(int argc, char** argv)
     engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
         uiStorage.StartNewFrame();
-        ImGui::ShowDemoWindow();
+        //ImGui::ShowDemoWindow();
         uiStorage.UploadUI();
 
         sceneStorage.ClearMeshInstanceTable();

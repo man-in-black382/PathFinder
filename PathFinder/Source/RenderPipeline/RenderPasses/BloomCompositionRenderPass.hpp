@@ -14,6 +14,9 @@ namespace PathFinder
         uint32_t DeferredLightingOutputTextureIndex;
         uint32_t BloomBlurOutputTextureIndex;
         uint32_t CompositionOutputTextureIndex;
+        uint32_t SmallBloomWeight;
+        uint32_t MediumBloomWeight;
+        uint32_t LargeBloomWeight;
     };
 
     class BloomCompositionRenderPass : public RenderPass<RenderPassContentMediator>

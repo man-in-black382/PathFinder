@@ -15,7 +15,7 @@ namespace PathFinder
         uint32_t _Padding0;
         uint32_t _Padding1;
         // 16 byte boundary
-        GTTonemappingParams TonemappingParams;
+        GTTonemappingParameterss TonemappingParams;
     };
 
     class ToneMappingRenderPass : public RenderPass<RenderPassContentMediator>

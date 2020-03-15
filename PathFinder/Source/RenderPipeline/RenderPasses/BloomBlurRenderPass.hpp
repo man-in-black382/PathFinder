@@ -20,6 +20,12 @@ namespace PathFinder
         uint32_t OutputTextureIndex;
     };
 
+    struct BloomDownscalingCBContent
+    {
+        uint32_t FullResSourceTextureIndex;
+        uint32_t HalfResDestinationTextureIndex;
+    };
+
     class BloomBlurRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
@@ -32,12 +38,8 @@ namespace PathFinder
 
     private:
         void BlurFullResolution(RenderContext<RenderPassContentMediator>* context);
-        void BlurHalfResolution(RenderContext<RenderPassContentMediator>* context);
-        void BlurQuadResolution(RenderContext<RenderPassContentMediator>* context);
-
-        uint32_t mFullResBlurRadius = 8;
-        uint32_t mHalfResBlurRadius = 16;
-        uint32_t mQuadResBlurRadius = 32;
+        void DownscaleAndBlurHalfResolution(RenderContext<RenderPassContentMediator>* context);
+        void DownscaleAndBlurQuadResolution(RenderContext<RenderPassContentMediator>* context);
     };
 
 }

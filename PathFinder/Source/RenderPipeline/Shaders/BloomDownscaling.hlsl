@@ -3,42 +3,31 @@
 
 struct PassData
 {
-    float2 SourceInverseDimensions;
-    uint SourceTextureIndex;
-    uint HalfSizeDestinationTextureIndex;
-    uint QuadSizeDestinationTextureIndex;
+    uint FullResSourceTextureIndex;
+    uint HalfResDestinationTextureIndex;
 };
 
 #define PassDataType PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 
-groupshared float3 gTiles[64];
-
+// Should be dispatched with dimensions of destination texture
 [numthreads(8, 8, 1)]
 void CSMain(uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D bloomInputTexture = Textures2D[PassDataCB.SourceTextureIndex];
-    RWTexture2D<float4> halfSizeOutputImage = RW_Float4_Textures2D[PassDataCB.HalfSizeDestinationTextureIndex];
-    RWTexture2D<float4> quadSizeOutputImage = RW_Float4_Textures2D[PassDataCB.QuadSizeDestinationTextureIndex];
+    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.FullResSourceTextureIndex];
+    RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.HalfResDestinationTextureIndex];
 
-    // You can tell if both x and y are divisible by a power of two with this value
-    uint parity = dispatchThreadID.x | dispatchThreadID.y;
+    uint2 sourceCoord = dispatchThreadID.xy * 2;
 
-    float2 centerUV = (float2(dispatchThreadID.xy) * 2.0f + 1.0f) * PassDataCB.SourceInverseDimensions;
-    float3 avgPixel = bloomInputTexture.SampleLevel(LinearClampSampler, centerUV, 0.0f).rgb;
+    float3 color0 = source[sourceCoord].rgb;
+    float3 color1 = source[sourceCoord + uint2(1, 0)].rgb;
+    float3 color2 = source[sourceCoord + uint2(1, 1)].rgb;
+    float3 color3 = source[sourceCoord + uint2(0, 1)].rgb;
 
-    gTiles[groupIndex] = avgPixel;
-    halfSizeOutputImage[dispatchThreadID.xy].rgb = avgPixel;
+    float3 avgColor = (color0 + color1 + color2 + color3) * 0.25;
 
-    GroupMemoryBarrierWithGroupSync();
-
-    if ((parity & 1) == 0)
-    {
-        avgPixel = 0.25f * (avgPixel + gTiles[groupIndex + 1] + gTiles[groupIndex + 8] + gTiles[groupIndex + 9]);
-        gTiles[groupIndex] = avgPixel;
-        quadSizeOutputImage[dispatchThreadID.xy >> 1].rgb = avgPixel;
-    }
+    destination[dispatchThreadID.xy].rgb = avgColor;
 }
 
 #endif

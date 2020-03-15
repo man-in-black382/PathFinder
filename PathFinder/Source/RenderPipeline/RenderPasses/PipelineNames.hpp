@@ -13,7 +13,6 @@ namespace PathFinder
         inline Foundation::Name JumpFloodingCones1{ "Resource_JumpFloodingConesBuffer1" };
         inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
         inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
-        inline Foundation::Name DeferredLightingOverexposedOutputDownscaled{ "Resource_DeferredLighting_Overexposed_Output_Downscaled" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
         inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
         inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
@@ -47,7 +46,6 @@ namespace PathFinder
         inline Foundation::Name GBufferMeshes{ "GBuffer_Meshes_Root_Sig" };
         inline Foundation::Name GBufferLights{ "GBuffer_Lights_Root_Sig" };
         inline Foundation::Name DeferredLighting{ "Deferred_Lighting_Root_Sig" };
-        inline Foundation::Name BloomBlur{ "Deferred_BloomBlur_Root_Sig" };
         inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
         inline Foundation::Name UI{ "UI_Root_Sig" };
         inline Foundation::Name DisplacementDistanceMapGeneration{ "Distance_Map_Generation_Root_Sig" };

@@ -7,11 +7,15 @@ struct PassData
     uint DeferredLightingOutputTextureIndex;
     uint BloomBlurOutputTextureIndex;
     uint OutputTextureIndex;
+    uint SmallBloomWeight;
+    uint MediumBloomWeight;
+    uint LargeBloomWeight;
 };
 
 #define PassDataType PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
+#include "ColorConversion.hlsl"
 
 [numthreads(32, 32, 1)]
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
@@ -27,7 +31,11 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 color2 = bloomBlurOutput.SampleLevel(LinearClampSampler, centerUV, 1.0).rgb;
     float3 color3 = bloomBlurOutput.SampleLevel(LinearClampSampler, centerUV, 2.0).rgb;
 
-    float3 compositedColor = color0 + color1 + color2 + color3;
+    float totalWeight = PassDataCB.SmallBloomWeight + PassDataCB.MediumBloomWeight + PassDataCB.LargeBloomWeight;
+    float3 weights = float3(PassDataCB.SmallBloomWeight, PassDataCB.MediumBloomWeight, PassDataCB.LargeBloomWeight) / totalWeight;
+    float3 bloom = color1 * weights.x + color2 * weights.y + color3 * weights.z;
+    float bloomScale = 0.1; // Need to figure out a function that'll yield scale based on luminance
+    float3 compositedColor = color0 + bloom * bloomScale;
 
     compositionOutput[dispatchThreadID.xy] = float4(compositedColor, 1.0);
 }

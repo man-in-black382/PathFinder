@@ -420,9 +420,6 @@
     <ClCompile Include="Source\RenderPipeline\RootSignatureCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomDownscalingRenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2291,9 +2288,6 @@
     <ClInclude Include="Source\RenderPipeline\RootSignatureCreator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomDownscalingRenderPass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2301,6 +2295,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\Types.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\BloomParameters.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
