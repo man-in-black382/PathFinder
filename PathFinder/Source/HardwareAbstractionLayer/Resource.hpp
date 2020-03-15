@@ -13,6 +13,7 @@
 #include "ResourceFormat.hpp"
 #include "ResourceState.hpp"
 #include "Utils.h"
+#include "Types.hpp"
 
 #include "GraphicAPIObject.hpp"
 
@@ -35,7 +36,7 @@ namespace HAL
 
         virtual ~Resource() = 0;
 
-        virtual D3D12_GPU_VIRTUAL_ADDRESS GPUVirtualAddress() const;
+        virtual GPUAddress GPUVirtualAddress() const;
         virtual uint32_t SubresourceCount() const;
 
         virtual bool CanImplicitlyPromoteFromCommonStateToState(ResourceState state) const = 0;

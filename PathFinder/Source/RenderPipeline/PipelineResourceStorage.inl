@@ -42,13 +42,25 @@ namespace PathFinder
 
         if (!mCurrentPassObjects->PassConstantBuffer || mCurrentPassObjects->PassConstantBuffer->ElementCapacity<Constants>(Alignment) < 1)
         {
-            HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
+            HAL::Buffer::Properties<Constants> properties{ 1024, Alignment, HAL::ResourceState::ConstantBuffer };
             mCurrentPassObjects->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
             mCurrentPassObjects->PassConstantBuffer->SetDebugName(mCurrentRenderPassGraphNode.PassMetadata.Name.ToString() + " Constant Buffer");
         }
 
+        // Advance offset once if allowed and transition to non-allowed state
+        if (mCurrentPassObjects->IsAllowedToAdvanceConstantBufferOffset)
+        {
+            mCurrentPassObjects->PassConstantBufferMemoryOffset += mCurrentPassObjects->LastSetConstantBufferDataSize;
+            mCurrentPassObjects->IsAllowedToAdvanceConstantBufferOffset = false;
+        }
+
+        mCurrentPassObjects->LastSetConstantBufferDataSize = Foundation::MemoryUtils::Align(sizeof(Constants), Alignment);
+
+        // Interpret as raw bytes since one render pass can request to upload constants of different types
         mCurrentPassObjects->PassConstantBuffer->RequestWrite();
-        mCurrentPassObjects->PassConstantBuffer->Write(&constants, 0, 1, Alignment);
+        mCurrentPassObjects->PassConstantBuffer->Write(
+            reinterpret_cast<const uint8_t*>(&constants), mCurrentPassObjects->PassConstantBufferMemoryOffset, sizeof(Constants)
+        );
     }
 
     template <class BufferDataT>

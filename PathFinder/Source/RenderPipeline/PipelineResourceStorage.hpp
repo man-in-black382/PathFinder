@@ -39,6 +39,18 @@ namespace PathFinder
             // Constant buffers for each pass that require it.
             Memory::GPUResourceProducer::BufferPtr PassConstantBuffer;
 
+            // Memory offset for pass constant buffer in current frame.
+            // Used to place pass data in different memory locations
+            // as a versioning mechanism for multiple draws/dispatches in one render pass.
+            uint64_t PassConstantBufferMemoryOffset = 0;
+
+            // Size of data last uploaded to pass constant buffer. Used to offset 
+            // the constant buffer after a draw/dispatch.
+            uint64_t LastSetConstantBufferDataSize = 0;
+
+            // 
+            bool IsAllowedToAdvanceConstantBufferOffset = false;
+
             // Debug buffer for each pass.
             Memory::GPUResourceProducer::BufferPtr PassDebugBuffer;
 
@@ -81,6 +93,7 @@ namespace PathFinder
         void AllocateScheduledResources();
         void RequestResourceTransitionsToCurrentPassStates();
         void RequestCurrentPassDebugReadback();
+        void AllowCurrentPassConstantBufferSingleOffsetAdvancement();
         
         template <class Constants> 
         void UpdateGlobalRootConstants(const Constants& constants);
@@ -93,8 +106,8 @@ namespace PathFinder
 
         const Memory::Buffer* GlobalRootConstantsBuffer() const;
         const Memory::Buffer* PerFrameRootConstantsBuffer() const;
-        const Memory::Buffer* RootConstantsBufferForCurrentPass() const;
         const Memory::Buffer* DebugBufferForCurrentPass() const;
+        HAL::GPUAddress RootConstantsBufferAddressForCurrentPass() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         Memory::Texture* GetTextureResource(ResourceName resourceName);
         Memory::Buffer* GetBufferResource(ResourceName resourceName);

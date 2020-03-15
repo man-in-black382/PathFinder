@@ -59,6 +59,9 @@ namespace PathFinder
     {
         mCurrentRenderPassGraphNode = node;
         mCurrentPassObjects = &GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
+        mCurrentPassObjects->PassConstantBufferMemoryOffset = 0;
+        mCurrentPassObjects->LastSetConstantBufferDataSize = 0;
+        mCurrentPassObjects->IsAllowedToAdvanceConstantBufferOffset = false;
     }
 
     void PipelineResourceStorage::AllocateScheduledResources()
@@ -258,6 +261,11 @@ namespace PathFinder
         mCurrentPassObjects->PassDebugBuffer->RequestRead();
     }
 
+    void PipelineResourceStorage::AllowCurrentPassConstantBufferSingleOffsetAdvancement()
+    {
+        mCurrentPassObjects->IsAllowedToAdvanceConstantBufferOffset = true;
+    }
+
     const Memory::Buffer* PipelineResourceStorage::GlobalRootConstantsBuffer() const
     {
         return mGlobalRootConstantsBuffer.get();
@@ -268,14 +276,19 @@ namespace PathFinder
         return mPerFrameRootConstantsBuffer.get();
     }
 
-    const Memory::Buffer* PipelineResourceStorage::RootConstantsBufferForCurrentPass() const
-    {
-        return mCurrentPassObjects->PassConstantBuffer.get();
-    }
-
     const Memory::Buffer* PipelineResourceStorage::DebugBufferForCurrentPass() const
     {
         return mCurrentPassObjects->PassDebugBuffer.get();
+    }
+
+    HAL::GPUAddress PipelineResourceStorage::RootConstantsBufferAddressForCurrentPass() const
+    {
+        if (auto buffer = mCurrentPassObjects->PassConstantBuffer.get())
+        {
+            return buffer->HALBuffer()->GPUVirtualAddress() + mCurrentPassObjects->PassConstantBufferMemoryOffset;
+        }
+
+        return 0;
     }
 
     const std::unordered_set<ResourceName>& PipelineResourceStorage::ScheduledResourceNamesForCurrentPass()

@@ -62,8 +62,8 @@ namespace PathFinder
         const HAL::RootSignature* mAppliedComputeRootSignature = nullptr;
         const HAL::Buffer* mBoundGlobalConstantBufferCompute = nullptr;
         const HAL::Buffer* mBoundFrameConstantBufferCompute = nullptr;
-        const HAL::Buffer* mBoundPassConstantBufferCompute = nullptr;
         const HAL::Buffer* mBoundPassDebugBufferCompute = nullptr;
+        HAL::GPUAddress mBoundFrameConstantBufferAddressCompute = 0;
 
         Memory::PoolCommandListAllocator* mCommandListAllocator;
         Memory::ResourceStateTracker* mResourceStateTracker;

@@ -112,7 +112,7 @@ namespace HAL
         mDeallocationCallback = callback;
     }
 
-    D3D12_GPU_VIRTUAL_ADDRESS Resource::GPUVirtualAddress() const
+    GPUAddress Resource::GPUVirtualAddress() const
     {
         return mResource->GetGPUVirtualAddress();
     }

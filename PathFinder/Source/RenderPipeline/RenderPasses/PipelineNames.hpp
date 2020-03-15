@@ -19,6 +19,7 @@ namespace PathFinder
         inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
+        inline Foundation::Name BloomCompositionOutput{ "Resource_Bloom_Composition_Output" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
     }
 
@@ -46,7 +47,7 @@ namespace PathFinder
         inline Foundation::Name GBufferMeshes{ "GBuffer_Meshes_Root_Sig" };
         inline Foundation::Name GBufferLights{ "GBuffer_Lights_Root_Sig" };
         inline Foundation::Name DeferredLighting{ "Deferred_Lighting_Root_Sig" };
-        inline Foundation::Name BloomBlurAndComposition{ "Deferred_BloomBlurAndCOmposition_Root_Sig" };
+        inline Foundation::Name BloomBlur{ "Deferred_BloomBlur_Root_Sig" };
         inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
         inline Foundation::Name UI{ "UI_Root_Sig" };
         inline Foundation::Name DisplacementDistanceMapGeneration{ "Distance_Map_Generation_Root_Sig" };

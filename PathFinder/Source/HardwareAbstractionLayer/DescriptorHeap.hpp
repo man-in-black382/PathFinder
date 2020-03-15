@@ -13,10 +13,10 @@
 #include "Descriptor.hpp"
 #include "Device.hpp"
 #include "Utils.h"
+#include "Types.hpp"
 
 namespace HAL
 {
-    using DescriptorAddress = uint64_t;
 
     template <class DescriptorT>
     class DescriptorHeap : public GraphicAPIObject

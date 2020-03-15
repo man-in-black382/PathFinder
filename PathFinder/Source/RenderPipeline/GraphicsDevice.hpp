@@ -59,8 +59,8 @@ namespace PathFinder
         const HAL::RootSignature* mAppliedGraphicsRootSignature = nullptr;
         const HAL::Buffer* mBoundGlobalConstantBufferGraphics = nullptr;
         const HAL::Buffer* mBoundFrameConstantBufferGraphics = nullptr;
-        const HAL::Buffer* mBoundPassConstantBufferGraphics = nullptr;
         const HAL::Buffer* mBoundPassDebugBufferGraphics = nullptr;
+        HAL::GPUAddress mBoundFrameConstantBufferAddressGraphics = 0;
         
         bool mRebindingAfterSignatureChangeRequired = false;
         std::optional<HAL::Viewport> mCurrentPassViewport;

@@ -84,6 +84,7 @@ namespace PathFinder
         InsertResourceTransitionsIfNeeded();
 
         mCommandList->Draw(vertexCount, 0);
+        mResourceStorage->AllowCurrentPassConstantBufferSingleOffsetAdvancement();
     }
     
     void GraphicsDevice::Draw(const DrawablePrimitive& primitive)
@@ -94,6 +95,7 @@ namespace PathFinder
 
         mCommandList->SetPrimitiveTopology(primitive.Topology());
         mCommandList->Draw(primitive.VertexCount(), 0);
+        mResourceStorage->AllowCurrentPassConstantBufferSingleOffsetAdvancement();
     }
 
     void GraphicsDevice::ResetViewportToDefault()
@@ -137,11 +139,11 @@ namespace PathFinder
             mCommandList->SetGraphicsRootConstantBuffer(*mBoundFrameConstantBufferGraphics, 1);
         }
 
-        if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass();
-            buffer && (buffer->HALBuffer() != mBoundPassConstantBufferGraphics || mRebindingAfterSignatureChangeRequired))
+        if (auto address = mResourceStorage->RootConstantsBufferAddressForCurrentPass();
+            address != mBoundFrameConstantBufferAddressGraphics || mRebindingAfterSignatureChangeRequired)
         {
-            mBoundPassConstantBufferGraphics = buffer->HALBuffer();
-            mCommandList->SetGraphicsRootConstantBuffer(*mBoundPassConstantBufferGraphics, 2);
+            mBoundFrameConstantBufferAddressGraphics = address;
+            mCommandList->SetGraphicsRootConstantBuffer(address, 2);
         }
 
         if (auto buffer = mResourceStorage->DebugBufferForCurrentPass();

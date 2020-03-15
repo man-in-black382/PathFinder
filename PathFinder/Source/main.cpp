@@ -19,7 +19,8 @@
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/CommonSetupRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BloomDownscalingRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/BloomBlurAndCompositionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/BloomBlurRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/BloomCompositionRenderPass.hpp"
 #include "RenderPipeline/GlobalRootConstants.hpp"
 #include "RenderPipeline/PerFrameRootConstants.hpp"
 #include "RenderPipeline/RenderPassContentMediator.hpp"
@@ -79,7 +80,8 @@ int main(int argc, char** argv)
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
     auto deferredLightingPass = std::make_unique<PathFinder::DeferredLightingRenderPass>();
     auto bloomDownscalingPass = std::make_unique<PathFinder::BloomDownscalingRenderPass>();
-    auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurAndCompositionRenderPass>();
+    auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
+    auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
     auto shadowsPass = std::make_unique<PathFinder::ShadowsRenderPass>();
     auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
@@ -93,6 +95,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(shadowsPass.get());
     engine.AddRenderPass(bloomDownscalingPass.get());
     engine.AddRenderPass(bloomBlurPass.get());
+    engine.AddRenderPass(bloomCompositionPass.get());
     engine.AddRenderPass(toneMappingPass.get());
     engine.AddRenderPass(backBufferOutputPass.get());
     engine.AddRenderPass(uiPass.get());

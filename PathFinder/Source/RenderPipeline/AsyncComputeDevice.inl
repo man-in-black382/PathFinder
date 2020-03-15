@@ -114,11 +114,11 @@ namespace PathFinder
             mCommandList->SetComputeRootConstantBuffer(*mBoundFrameConstantBufferCompute, 1);
         }
 
-        if (auto buffer = mResourceStorage->RootConstantsBufferForCurrentPass();
-            buffer && (buffer->HALBuffer() != mBoundPassConstantBufferCompute || mRebindingAfterSignatureChangeRequired))
+        if (auto address = mResourceStorage->RootConstantsBufferAddressForCurrentPass();
+            address != mBoundFrameConstantBufferAddressCompute || mRebindingAfterSignatureChangeRequired)
         {
-            mBoundPassConstantBufferCompute = buffer->HALBuffer();
-            mCommandList->SetComputeRootConstantBuffer(*mBoundPassConstantBufferCompute, 2);
+            mBoundFrameConstantBufferAddressCompute = address;
+            mCommandList->SetComputeRootConstantBuffer(address, 2);
         }
 
         if (auto buffer = mResourceStorage->DebugBufferForCurrentPass();
@@ -164,6 +164,7 @@ namespace PathFinder
         InsertResourceTransitionsIfNeeded();
         
         mCommandList->Dispatch(groupCountX, groupCountY, groupCountZ);
+        mResourceStorage->AllowCurrentPassConstantBufferSingleOffsetAdvancement();
     }
 
     template <class CommandListT, class CommandQueueT>
@@ -177,6 +178,7 @@ namespace PathFinder
         dispatchInfo.SetDepth(depth);
 
         mCommandList->DispatchRays(dispatchInfo);
+        mResourceStorage->AllowCurrentPassConstantBufferSingleOffsetAdvancement();
     }
 
     template <class CommandListT, class CommandQueueT>

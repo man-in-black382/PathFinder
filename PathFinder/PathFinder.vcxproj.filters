@@ -423,7 +423,10 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomDownscalingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurAndCompositionRenderPass.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2291,7 +2294,13 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomDownscalingRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomBlurAndCompositionRenderPass.hpp">
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\Types.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2843,6 +2852,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GaussianBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Exposure.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomBlur.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

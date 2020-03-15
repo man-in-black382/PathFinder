@@ -106,6 +106,11 @@ namespace HAL
 
 
 
+    void ComputeCommandListBase::SetComputeRootConstantBuffer(GPUAddress bufferAddress, uint32_t rootParameterIndex)
+    {
+        mList->SetComputeRootConstantBufferView(rootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS{ bufferAddress });
+    }
+
     void ComputeCommandListBase::SetComputeRootConstantBuffer(const Buffer& cbResource, uint32_t rootParameterIndex)
     {
         mList->SetComputeRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());
@@ -197,7 +202,12 @@ namespace HAL
     {
         mList->SetGraphicsRootSignature(signature.D3DSignature());
     }
-    
+
+    void GraphicsCommandListBase::SetGraphicsRootConstantBuffer(GPUAddress bufferAddress, uint32_t rootParameterIndex)
+    {
+        mList->SetGraphicsRootConstantBufferView(rootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS{ bufferAddress });
+    }
+
     void GraphicsCommandListBase::SetGraphicsRootConstantBuffer(const Buffer& cbResource, uint32_t rootParameterIndex)
     {
         mList->SetGraphicsRootConstantBufferView(rootParameterIndex, cbResource.GPUVirtualAddress());

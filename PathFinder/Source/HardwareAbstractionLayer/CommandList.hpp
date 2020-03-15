@@ -17,6 +17,7 @@
 #include "RayTracingAccelerationStructure.hpp"
 #include "ResourceFootprint.hpp"
 #include "ShaderRegister.hpp"
+#include "Types.hpp"
 
 #include "../Foundation/Color.hpp"
 #include "../Geometry/Rect2D.hpp"
@@ -85,6 +86,7 @@ namespace HAL
 
         template <class T> void SetComputeRootConstants(const T& constants, uint32_t rootParameterIndex);
 
+        void SetComputeRootConstantBuffer(GPUAddress bufferAddress, uint32_t rootParameterIndex);
         void SetComputeRootConstantBuffer(const Buffer& cbResource, uint32_t rootParameterIndex);
         void SetComputeRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
@@ -111,6 +113,7 @@ namespace HAL
 
         template <class T> void SetGraphicsRootConstants(const T& constants, uint32_t rootParameterIndex);
 
+        void SetGraphicsRootConstantBuffer(GPUAddress bufferAddress, uint32_t rootParameterIndex);
         void SetGraphicsRootConstantBuffer(const Buffer& cbResource, uint32_t rootParameterIndex);
         void SetGraphicsRootShaderResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetGraphicsRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);

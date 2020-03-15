@@ -8,10 +8,6 @@ struct PassCBData
     // Packing into 4-component vectors 
     // to satisfy constant buffer alignment rules
     float4 Weights[GaussianBlurMaximumRadius / 4]; 
-};
-
-struct RootConstants
-{
     float2 ImageSize;
     uint IsHorizontal;
     uint BlurRadius;
@@ -23,23 +19,22 @@ struct RootConstants
 
 #include "MandatoryEntryPointInclude.hlsl"
 
-ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
-
 [numthreads(GaussianBlurGroupSize, 1, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
 {
-    RWTexture2D<float4> source = RW_Float4_Textures2D[RootConstantBuffer.InputTextureIndex];
-    RWTexture2D<float4> destination = RW_Float4_Textures2D[RootConstantBuffer.OutputTextureIndex];
+    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.InputTextureIndex];
+    RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
 
     GaussianBlurParameters parameters;
     parameters.Weights = PassDataCB.Weights;
-    parameters.ImageSize = RootConstantBuffer.ImageSize;
-    parameters.IsHorizontal = false;// RootConstantBuffer.IsHorizontal;
-    parameters.BlurRadius = RootConstantBuffer.BlurRadius;
+    parameters.ImageSize = PassDataCB.ImageSize;
+    parameters.IsHorizontal = PassDataCB.IsHorizontal;
+    parameters.BlurRadius = PassDataCB.BlurRadius;
 
-    float3 color = BlurGaussian(dispatchThreadID.yx, groupThreadID.xy, source, parameters);
+    int2 texelIndex = parameters.IsHorizontal ? dispatchThreadID.xy : dispatchThreadID.yx;
+    float3 color = BlurGaussian(texelIndex, groupThreadID.x, source, parameters);
 
-    destination[dispatchThreadID.xy] = float4(color, 1.0); 
+    destination[texelIndex] = float4(color, 1.0);
 }
 
 #endif
