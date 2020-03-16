@@ -26,7 +26,8 @@ namespace PathFinder
 
     void ShadowsRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::Shadows);
+        context->GetCommandRecorder()->DispatchRays(context->GetDefaultRenderSurfaceDesc().Dimensions());
     }
 
 }

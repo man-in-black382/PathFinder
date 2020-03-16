@@ -1,5 +1,7 @@
 #include "ShaderTable.hpp"
 
+#include "../Foundation/MemoryUtils.hpp"
+
 #include <d3d12.h>
 #include <limits>
 
@@ -23,6 +25,8 @@ namespace HAL
             //mTableSize += localRootSignature->ParameterCount() * sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
         }
 
+        recordSize = Foundation::MemoryUtils::Align(recordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+
         mRayGenShaderRecord = { id, localRootSignature, recordSize };
     }
 
@@ -36,6 +40,8 @@ namespace HAL
             // TODO: Implement correct root signature size calculation inside RootSignature itself
             //mTableSize += localRootSignature->ParameterCount() * sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
         }
+
+        recordSize = Foundation::MemoryUtils::Align(recordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
 
         mRayMissShaderRecords.emplace_back(id, localRootSignature, recordSize);
 
@@ -57,6 +63,8 @@ namespace HAL
             //mTableSize += localRootSignature->ParameterCount() * sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
         }
 
+        recordSize = Foundation::MemoryUtils::Align(recordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+
         mRayHitGroupRecords.emplace_back(hitGroupId, localRootSignature, recordSize);
         mRayHitGroupRecordStride = std::max(mRayHitGroupRecordStride, recordSize);
     }
@@ -70,27 +78,48 @@ namespace HAL
         assert_format(mRayGenShaderRecord, "Ray Generation shader is mandatory");
 
         // Upload ray generation table range
-        addresses.RayGenerationShaderRecord = { recordAddressOffset, mRayGenShaderRecord->SizeInBytes };
-        memcpy(uploadGPUMemory + recordAddressOffset, mRayGenShaderRecord->ID.RawData.data(), sizeof(mRayGenShaderRecord->ID.RawData));
-        recordAddressOffset += mRayGenShaderRecord->SizeInBytes;
+        auto rayGenTableStartFinalAddress = gpuTableBuffer->GPUVirtualAddress() + recordAddressOffset;
+        auto rayGenTableStartUploadAddress = uploadGPUMemory + recordAddressOffset;
 
-        // Upload miss shaders table region
-        uint64_t missShaderRegionSize = mRayMissShaderRecords.size() * mRayMissRecordStride;
-        addresses.MissShaderTable = { recordAddressOffset, missShaderRegionSize, mRayMissRecordStride };
+        addresses.RayGenerationShaderRecord = { rayGenTableStartFinalAddress, mRayGenShaderRecord->SizeInBytes };
+
+        memcpy(rayGenTableStartUploadAddress, mRayGenShaderRecord->ID.RawData.data(), sizeof(mRayGenShaderRecord->ID.RawData));
+
+        // Move address to Miss Table start and make sure it is aligned properly
+        recordAddressOffset += mRayGenShaderRecord->SizeInBytes;
+        recordAddressOffset = Foundation::MemoryUtils::Align(recordAddressOffset, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
+
+        if (!mRayMissShaderRecords.empty())
+        {
+            // Upload miss shaders table region
+            uint64_t missShaderRegionSize = mRayMissShaderRecords.size() * mRayMissRecordStride;
+            auto missTableStartFinalAddress = gpuTableBuffer->GPUVirtualAddress() + recordAddressOffset;
+            addresses.MissShaderTable = { missTableStartFinalAddress, missShaderRegionSize, mRayMissRecordStride };
+        }
 
         for (const ShaderRecord& missRecord : mRayMissShaderRecords)
         {
-            memcpy(uploadGPUMemory + recordAddressOffset, missRecord.ID.RawData.data(), sizeof(missRecord.ID.RawData));
+            auto missTableUploadAddress = uploadGPUMemory + recordAddressOffset;
+            memcpy(missTableUploadAddress, missRecord.ID.RawData.data(), sizeof(missRecord.ID.RawData));
             recordAddressOffset += mRayMissRecordStride;
         }
 
-        // Upload hit groups table region
-        uint64_t hitGroupRegionSize = mRayHitGroupRecords.size() * mRayHitGroupRecordStride;
-        addresses.HitGroupTable = { recordAddressOffset, hitGroupRegionSize, mRayHitGroupRecordStride };
+        // We're done with miss shaders, address has moved past the last miss shader.
+        // Now make sure it is properly aligned for Hit Group table records start
+        recordAddressOffset = Foundation::MemoryUtils::Align(recordAddressOffset, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
+
+        if (!mRayHitGroupRecords.empty())
+        {
+            // Upload hit groups table region
+            uint64_t hitGroupRegionSize = mRayHitGroupRecords.size() * mRayHitGroupRecordStride;
+            auto hitGroupTableStartFinalAddress = gpuTableBuffer->GPUVirtualAddress() + recordAddressOffset;
+            addresses.HitGroupTable = { hitGroupTableStartFinalAddress, hitGroupRegionSize, mRayHitGroupRecordStride };
+        }
 
         for (const ShaderRecord& hitGroupRecord : mRayHitGroupRecords)
         {
-            memcpy(uploadGPUMemory + recordAddressOffset, hitGroupRecord.ID.RawData.data(), sizeof(hitGroupRecord.ID.RawData));
+            auto hitGroupTableUploadAddress = uploadGPUMemory + recordAddressOffset;
+            memcpy(hitGroupTableUploadAddress, hitGroupRecord.ID.RawData.data(), sizeof(hitGroupRecord.ID.RawData));
             recordAddressOffset += mRayHitGroupRecordStride;
         }
 
@@ -113,9 +142,10 @@ namespace HAL
 
     ShaderTable::MemoryRequirements ShaderTable::GetMemoryRequirements() const
     {
-        auto tableSize = mRayGenShaderRecord->SizeInBytes + 
-            mRayMissRecordStride * mRayMissShaderRecords.size() +
-            mRayHitGroupRecordStride * mRayHitGroupRecords.size();
+        // Shader tables must be aligned
+        auto tableSize = Foundation::MemoryUtils::Align(mRayGenShaderRecord->SizeInBytes, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
+            Foundation::MemoryUtils::Align(mRayMissRecordStride * mRayMissShaderRecords.size(), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
+            Foundation::MemoryUtils::Align(mRayHitGroupRecordStride * mRayHitGroupRecords.size(), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
 
         return { tableSize };
     }

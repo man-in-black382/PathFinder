@@ -22,6 +22,7 @@ namespace PathFinder
         void Draw(uint32_t vertexCount, uint32_t instanceCount = 1);
         void Draw(const DrawablePrimitive& primitive);
         void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
+        void DispatchRays(const Geometry::Dimensions& dispatchDimensions);
         void Dispatch(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize);
 
         void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);

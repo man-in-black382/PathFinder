@@ -72,6 +72,11 @@ namespace PathFinder
         Dispatch(x, y, z);
     }
 
+    void GPUCommandRecorder::DispatchRays(const Geometry::Dimensions& dispatchDimensions)
+    {
+        mGraphicsDevice->DispatchRays(dispatchDimensions.Width, dispatchDimensions.Height, dispatchDimensions.Depth);
+    }
+
     void GPUCommandRecorder::BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         mGraphicsDevice->BindBuffer(resourceName, shaderRegister, registerSpace, registerType);
