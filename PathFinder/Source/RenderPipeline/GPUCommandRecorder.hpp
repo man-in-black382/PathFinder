@@ -26,7 +26,7 @@ namespace PathFinder
         void Dispatch(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize);
 
         void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
-        void BindExternalBuffer(Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         template <class T> void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
     private:

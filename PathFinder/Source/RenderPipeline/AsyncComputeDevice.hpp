@@ -42,7 +42,7 @@ namespace PathFinder
         virtual void DispatchRays(uint32_t width, uint32_t height = 1, uint32_t depth = 1);
         virtual void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
-        void BindExternalBuffer(Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         template <class T> 
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 

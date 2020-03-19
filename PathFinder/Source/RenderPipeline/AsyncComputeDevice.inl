@@ -37,11 +37,14 @@ namespace PathFinder
 
     template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::BindExternalBuffer(
-        Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+        const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         if (mAppliedComputeState || mAppliedRayTracingState)
         {
-            auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({ shaderRegister, registerSpace, registerType });
+            const HAL::RootSignature* signature = mAppliedComputeState ?
+                mAppliedComputeState->GetRootSignature() : mAppliedRayTracingState->GetGlobalRootSignature();
+
+            auto index = signature->GetParameterIndex({ shaderRegister, registerSpace, registerType });
 
             assert_format(index, "Root signature parameter doesn't exist. It either wasn't created or register/space/type aren't correctly specified.");
 
@@ -51,10 +54,10 @@ namespace PathFinder
                 mCommandList->SetComputeRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature);
                 break;
             case HAL::ShaderRegister::ShaderResource: 
-                mCommandList->SetComputeRootDescriptorTable(buffer.GetOrCreateSRDescriptor()->GPUAddress(), index->IndexInSignature); 
+                mCommandList->SetComputeRootDescriptorTable(buffer.GetSRDescriptor()->GPUAddress(), index->IndexInSignature); 
                 break;
             case HAL::ShaderRegister::UnorderedAccess:
-                mCommandList->SetComputeRootDescriptorTable(buffer.GetOrCreateUADescriptor()->GPUAddress(), index->IndexInSignature);
+                mCommandList->SetComputeRootDescriptorTable(buffer.GetUADescriptor()->GPUAddress(), index->IndexInSignature);
                 break;
             case HAL::ShaderRegister::Sampler:
                 assert_format(false, "Incompatible register type");
@@ -176,6 +179,9 @@ namespace PathFinder
         dispatchInfo.SetWidth(width);
         dispatchInfo.SetHeight(height);
         dispatchInfo.SetDepth(depth);
+
+        ApplyCommonComputeResourceBindingsIfNeeded();
+        InsertResourceTransitionsIfNeeded();
 
         mCommandList->DispatchRays(dispatchInfo);
         mResourceStorage->AllowCurrentPassConstantBufferSingleOffsetAdvancement();

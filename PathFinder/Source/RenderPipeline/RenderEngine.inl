@@ -164,6 +164,9 @@ namespace PathFinder
         if (mPipelineStateManager.HasModifiedStates())
         {
             FlushAllQueuedFrames();
+            // Since recompilation of ray tracing involves shader table upload
+            // we need to set correct command list to resource producer before recompilations
+            mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
             mPipelineStateManager.RecompileModifiedStates();
         }
 

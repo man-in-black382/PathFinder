@@ -8,6 +8,11 @@
 namespace PathFinder
 {
      
+    struct ShadowsCBContent
+    {
+        uint32_t ShadowMaskTextureIndex;
+    };
+
     class ShadowsRenderPass : public RenderPass<RenderPassContentMediator>
     {
     public:

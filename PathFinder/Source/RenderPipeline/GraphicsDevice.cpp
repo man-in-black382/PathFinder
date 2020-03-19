@@ -35,10 +35,10 @@ namespace PathFinder
     {
         if (depthStencilResourceName)
         {
-            mCommandList->SetRenderTarget(*mBackBuffer->GetOrCreateRTDescriptor(), mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName));
+            mCommandList->SetRenderTarget(*mBackBuffer->GetRTDescriptor(), mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName));
         }
         else {
-            mCommandList->SetRenderTarget(*mBackBuffer->GetOrCreateRTDescriptor());
+            mCommandList->SetRenderTarget(*mBackBuffer->GetRTDescriptor());
         }
     }
 
@@ -61,7 +61,7 @@ namespace PathFinder
     {
         // Clear operation requires correct states same as a dispatch or a draw
         InsertResourceTransitionsIfNeeded();
-        mCommandList->ClearRenderTarget(*mBackBuffer->GetOrCreateRTDescriptor(), color);
+        mCommandList->ClearRenderTarget(*mBackBuffer->GetRTDescriptor(), color);
     }
 
     void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)
@@ -219,48 +219,25 @@ namespace PathFinder
 
     void GraphicsDevice::ApplyStateIfNeeded(const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo)
     {
-        // Ray tracing on graphics queue is a graphics workload, therefore we 
-        // need to override base functionality that sees RT work as compute work
+        // Ray Tracing is a compute workload:
+        // reuse base class implementation
+        GraphicsDeviceBase::ApplyStateIfNeeded(state, dispatchInfo);
 
-        bool rayTracingStateApplied = mAppliedRayTracingState != nullptr;
-
-        // State is already applied
-        //
-        if (rayTracingStateApplied && mAppliedRayTracingState == state) return;
-
-        // Set RT state
-        mCommandList->SetPipelineState(*state);
-
-        mRebindingAfterSignatureChangeRequired = state->GetGlobalRootSignature() != mAppliedGraphicsRootSignature;
-
-        // If root signature has changed we need to rebind common bindings
-        //
-        if (mRebindingAfterSignatureChangeRequired)
-        {
-            mCommandList->SetGraphicsRootSignature(*state->GetGlobalRootSignature());
-        }
-
-        // Nullify cached states and signatures
+        // When RT state is applied we need to clear graphics state/signature cache
+        mAppliedGraphicsRootSignature = nullptr;
         mAppliedGraphicsState = nullptr;
-        mAppliedComputeState = nullptr;
-        mAppliedComputeRootSignature = nullptr;
-
-        // Cache RT state and signature as graphics signature
-        mAppliedRayTracingState = state;
-        mAppliedRayTracingDispatchInfo = dispatchInfo;
-        mAppliedGraphicsRootSignature = state->GetGlobalRootSignature();
     }
     
-    void GraphicsDevice::BindExternalBuffer(Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+    void GraphicsDevice::BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
-        if (mAppliedComputeState)
+        // Ray Tracing bindings go to compute 
+        if (mAppliedComputeState || mAppliedRayTracingState)
         {
             GraphicsDeviceBase::BindExternalBuffer(buffer, shaderRegister, registerSpace, registerType);
         }
-        else if (mAppliedGraphicsState || mAppliedRayTracingState)
+        else if (mAppliedGraphicsState)
         {
-            const HAL::RootSignature* signature = mAppliedGraphicsState ?
-                mAppliedGraphicsState->GetRootSignature() : mAppliedRayTracingState->GetGlobalRootSignature();
+            const HAL::RootSignature* signature = mAppliedGraphicsState->GetRootSignature();
 
             auto index = signature->GetParameterIndex({ shaderRegister, registerSpace, registerType });
 
@@ -272,10 +249,10 @@ namespace PathFinder
                 mCommandList->SetGraphicsRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature);
                 break;
             case HAL::ShaderRegister::ShaderResource:
-                mCommandList->SetGraphicsRootDescriptorTable(buffer.GetOrCreateSRDescriptor()->GPUAddress(), index->IndexInSignature);
+                mCommandList->SetGraphicsRootDescriptorTable(buffer.GetSRDescriptor()->GPUAddress(), index->IndexInSignature);
                 break;
             case HAL::ShaderRegister::UnorderedAccess:
-                mCommandList->SetGraphicsRootDescriptorTable(buffer.GetOrCreateUADescriptor()->GPUAddress(), index->IndexInSignature);
+                mCommandList->SetGraphicsRootDescriptorTable(buffer.GetUADescriptor()->GPUAddress(), index->IndexInSignature);
                 break;
             case HAL::ShaderRegister::Sampler:
                 assert_format(false, "Incompatible register type");

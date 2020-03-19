@@ -51,7 +51,7 @@ namespace PathFinder
 
         UICBContent cbContent{};
         cbContent.ProjectionMatrix = context->GetContent()->GetUIGPUStorage()->MVP();
-        cbContent.UITextureSRVIndex = context->GetContent()->GetUIGPUStorage()->FontTexture()->GetOrCreateSRDescriptor()->IndexInHeapRange();
+        cbContent.UITextureSRVIndex = context->GetContent()->GetUIGPUStorage()->FontTexture()->GetSRDescriptor()->IndexInHeapRange();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 

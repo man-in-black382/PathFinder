@@ -99,13 +99,20 @@ namespace HAL
         D3D12_RAYTRACING_INSTANCE_DESC instance{};
         instance.InstanceID = instanceId;
         instance.InstanceContributionToHitGroupIndex = 0; // Choose hit group shader
-        instance.InstanceMask = 1; // Bitwise AND with TraceRay() parameter
-        instance.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE; // Transparency? Culling?
+        instance.InstanceMask = 1; // Bitwise AND with TraceRay() parameter, has to be non-zero or else will never be hit by a ray
+        instance.Flags =
+            // Engine inverts Z direction and therefore vertex winding order is COUNTER CLOCKWISE for front face in rasterization.
+            // But, since no transformation is applied to bottom acceleration structures at build (at least in current implementation)
+            // vertex winding order must be set to CLOCKWISE for front face to make geometry processing consistent.
+            /*D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE |*/
+            D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE; // Right now, only opaque, for simplicity
+
         instance.AccelerationStructure = blas.FinalBuffer()->GPUVirtualAddress();
 
+        // A 3x4 transform matrix in row - major layout representing the instance - to - world transformation
         for (auto row = 0u; row < 3; row++) {
             for (auto column = 0u; column < 4; column++) {
-                instance.Transform[row][column] = transform[row][column];
+                instance.Transform[row][column] = transform[column][row];
             }
         }
 

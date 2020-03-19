@@ -109,7 +109,7 @@ int main(int argc, char** argv)
     flatLight0->SetLuminousPower(2000);
 
     auto sphereLight0 = scene.EmplaceSphericalLight();
-    sphereLight0->SetRadius(3);
+    sphereLight0->SetRadius(2);
     sphereLight0->SetPosition({ 5.0, 0.0, 0.0 });
     sphereLight0->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
     sphereLight0->SetLuminousPower(25000);

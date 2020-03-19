@@ -233,6 +233,15 @@ namespace HAL
         return desc;
     }
 
+    D3D12_SHADER_RESOURCE_VIEW_DESC CBSRUADescriptorHeap::BufferToAccelerationStructureDescription(const Buffer& buffer) const
+    {
+        D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
+        desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        desc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+        desc.RaytracingAccelerationStructure.Location = buffer.GPUVirtualAddress();
+        return desc;
+    }
+
     D3D12_UNORDERED_ACCESS_VIEW_DESC CBSRUADescriptorHeap::ResourceToUAVDescription(
         const D3D12_RESOURCE_DESC& resourceDesc,
         uint64_t bufferStride,
@@ -342,8 +351,20 @@ namespace HAL
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::ShaderResource)) };
         D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{ GetGPUAddress(indexInHeapRange, std::underlying_type_t<Range>(Range::ShaderResource)) };
 
-        D3D12_SHADER_RESOURCE_VIEW_DESC desc = ResourceToSRVDescription(buffer.D3DDescription(), stride);
-        mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DResource(), &desc, cpuHandle);
+        D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
+        
+        if (EnumMaskBitSet(buffer.InitialStates(), ResourceState::RaytracingAccelerationStructure) ||
+            EnumMaskBitSet(buffer.ExpectedStates(), ResourceState::RaytracingAccelerationStructure))
+        {
+            desc = BufferToAccelerationStructureDescription(buffer);
+            // Resource pointer is not required for AS SR view, 
+            // since its address is already encoded into VIEW_DESC structure
+            mDevice->D3DDevice()->CreateShaderResourceView(nullptr, &desc, cpuHandle);
+        }
+        else {
+            desc = ResourceToSRVDescription(buffer.D3DDescription(), stride);
+            mDevice->D3DDevice()->CreateShaderResourceView(buffer.D3DResource(), &desc, cpuHandle);
+        }
 
         return SRDescriptor{ cpuHandle, gpuHandle, indexInHeapRange };
     }

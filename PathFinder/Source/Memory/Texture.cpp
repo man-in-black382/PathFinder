@@ -64,7 +64,7 @@ namespace Memory
         if (mStateTracker) mStateTracker->StopTrakingResource(mTexturePtr.get());
     }
 
-    const HAL::RTDescriptor* Texture::GetOrCreateRTDescriptor(uint8_t mipLevel)
+    const HAL::RTDescriptor* Texture::GetRTDescriptor(uint8_t mipLevel) const
     {   
         assert_format(mipLevel < mRTDescriptors.size(), "Requested RT descriptor mip exceeds texture's amount of mip levels");
 
@@ -76,13 +76,13 @@ namespace Memory
         return mRTDescriptors[mipLevel].get();
     }
 
-    const HAL::DSDescriptor* Texture::GetOrCreateDSDescriptor()
+    const HAL::DSDescriptor* Texture::GetDSDescriptor() const
     {
         if (!mDSDescriptor) mDSDescriptor = mDescriptorAllocator->AllocateDSDescriptor(*HALTexture());
         return mDSDescriptor.get();
     }
 
-    const HAL::SRDescriptor* Texture::GetOrCreateSRDescriptor()
+    const HAL::SRDescriptor* Texture::GetSRDescriptor() const
     {
         if (!mSRDescriptor)
         {
@@ -92,7 +92,7 @@ namespace Memory
         return mSRDescriptor.get();
     }
 
-    const HAL::UADescriptor* Texture::GetOrCreateUADescriptor(uint8_t mipLevel)
+    const HAL::UADescriptor* Texture::GetUADescriptor(uint8_t mipLevel) const
     {
         assert_format(mipLevel < mUADescriptors.size(), "Requested UA descriptor mip exceeds texture's amount of mip levels");
 

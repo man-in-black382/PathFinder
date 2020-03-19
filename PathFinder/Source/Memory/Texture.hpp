@@ -36,10 +36,10 @@ namespace Memory
 
         ~Texture();
 
-        const HAL::RTDescriptor* GetOrCreateRTDescriptor(uint8_t mipLevel = 0);
-        const HAL::DSDescriptor* GetOrCreateDSDescriptor();
-        const HAL::SRDescriptor* GetOrCreateSRDescriptor();
-        const HAL::UADescriptor* GetOrCreateUADescriptor(uint8_t mipLevel = 0);
+        const HAL::RTDescriptor* GetRTDescriptor(uint8_t mipLevel = 0) const;
+        const HAL::DSDescriptor* GetDSDescriptor() const;
+        const HAL::SRDescriptor* GetSRDescriptor() const;
+        const HAL::UADescriptor* GetUADescriptor(uint8_t mipLevel = 0) const;
 
         const HAL::Texture* HALTexture() const;
         const HAL::Resource* HALResource() const override;
@@ -53,12 +53,12 @@ namespace Memory
 
     private:
         SegregatedPoolsResourceAllocator::TexturePtr mTexturePtr;
-        PoolDescriptorAllocator::DSDescriptorPtr mDSDescriptor;
-        PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;
         HAL::Texture::Properties mProperties;
 
-        std::vector<PoolDescriptorAllocator::RTDescriptorPtr> mRTDescriptors;
-        std::vector<PoolDescriptorAllocator::UADescriptorPtr> mUADescriptors;
+        mutable PoolDescriptorAllocator::DSDescriptorPtr mDSDescriptor;
+        mutable PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;
+        mutable std::vector<PoolDescriptorAllocator::RTDescriptorPtr> mRTDescriptors;
+        mutable std::vector<PoolDescriptorAllocator::UADescriptorPtr> mUADescriptors;
 
     public:
         inline const auto& Properties() const { return mProperties; }

@@ -106,6 +106,8 @@ namespace HAL
             uint64_t bufferStride,
             std::optional<ColorFormat> explicitFormat = std::nullopt) const;
 
+        D3D12_SHADER_RESOURCE_VIEW_DESC BufferToAccelerationStructureDescription(const Buffer& buffer) const;
+
         D3D12_UNORDERED_ACCESS_VIEW_DESC ResourceToUAVDescription(
             const D3D12_RESOURCE_DESC& resourceDesc,
             uint64_t bufferStride,

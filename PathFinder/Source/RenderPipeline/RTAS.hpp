@@ -44,6 +44,7 @@ namespace PathFinder
 
     public:
         inline const auto& UABarrier() const { return mUABarrier; }
+        inline const auto AccelerationStructureBuffer() const { return mDestinationBuffer.get(); }
     };
 
 }

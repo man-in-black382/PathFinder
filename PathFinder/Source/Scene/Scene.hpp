@@ -47,14 +47,18 @@ namespace PathFinder
         inline const Camera& MainCamera() const { return mCamera; }
         inline const auto& Meshes() const { return mMeshes; }
         inline const auto& MeshInstances() const { return mMeshInstances; }
+        inline const auto& Materials() const { return mMaterials; }
+        inline const auto& FlatLights() const { return mFlatLights; }
+        inline const auto& SphericalLights() const { return mSphericalLights; }
+        inline const auto& TonemappingParams() const { return mTonemappingParams; }
+        inline const auto& BloomParams() const { return mBloomParameters; }
+
         inline auto& Meshes() { return mMeshes; }
         inline auto& MeshInstances() { return mMeshInstances; }
         inline auto& Materials() { return mMaterials; }
         inline auto& FlatLights() { return mFlatLights; }
         inline auto& SphericalLights() { return mSphericalLights; }
         inline auto& TonemappingParams() { return mTonemappingParams; }
-        inline const auto& TonemappingParams() const { return mTonemappingParams; }
-        inline const auto& BloomParams() const { return mBloomParameters; }
     };
 
 }

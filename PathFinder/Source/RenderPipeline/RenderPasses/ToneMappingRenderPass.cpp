@@ -20,6 +20,9 @@ namespace PathFinder
     {
         scheduler->ReadTexture(ResourceNames::BloomCompositionOutput);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
+
+
+        scheduler->ReadTexture(ResourceNames::ShadowMask);
     }
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

@@ -82,7 +82,7 @@ namespace PathFinder
         mGraphicsDevice->BindBuffer(resourceName, shaderRegister, registerSpace, registerType);
     }
 
-    void GPUCommandRecorder::BindExternalBuffer(Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+    void GPUCommandRecorder::BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         mGraphicsDevice->BindExternalBuffer(buffer, shaderRegister, registerSpace, registerType);
     }

@@ -8,7 +8,7 @@ namespace Memory
         if (mStateTracker && mBufferPtr) mStateTracker->StopTrakingResource(mBufferPtr.get());
     }
 
-    const HAL::CBDescriptor* Buffer::GetOrCreateCBDescriptor()
+    const HAL::CBDescriptor* Buffer::GetCBDescriptor() const
     {
         // Descriptor needs to be created either if it does not exist yet
         // or we're only using upload buffers (Direct Access) and no descriptors were 
@@ -23,7 +23,7 @@ namespace Memory
         return mCBDescriptor.get();
     }
 
-    const HAL::UADescriptor* Buffer::GetOrCreateUADescriptor()
+    const HAL::UADescriptor* Buffer::GetUADescriptor() const
     {
         assert_format(mUploadStrategy != GPUResource::UploadStrategy::DirectAccess,
             "Direct Access buffers cannot have Unordered Access descriptors since they're always in GenericRead state");
@@ -36,7 +36,7 @@ namespace Memory
         return mUADescriptor.get();
     }
 
-    const HAL::SRDescriptor* Buffer::GetOrCreateSRDescriptor()
+    const HAL::SRDescriptor* Buffer::GetSRDescriptor() const
     {
         // Descriptor needs to be created either if it does not exist yet
         // or we're only using upload buffers (Direct Access) and no descriptors were 

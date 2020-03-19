@@ -24,4 +24,9 @@ float3 ReconstructWorldPosition(
     return worldSpacePosition.xyz;
 }
 
+float3 ComputeCameraRayWS(float2 centerUV, float3 cameraPosition, float4x4 inverseView, float4x4 inverseProjection)
+{
+    return normalize(ReconstructWorldPosition(1.0, centerUV, inverseView, inverseProjection).xyz - cameraPosition);
+}
+
 #endif

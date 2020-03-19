@@ -34,9 +34,9 @@ namespace Memory
 
         ~Buffer();
 
-        const HAL::SRDescriptor* GetOrCreateSRDescriptor();
-        const HAL::UADescriptor* GetOrCreateUADescriptor();
-        const HAL::CBDescriptor* GetOrCreateCBDescriptor();
+        const HAL::SRDescriptor* GetSRDescriptor() const;
+        const HAL::UADescriptor* GetUADescriptor() const;
+        const HAL::CBDescriptor* GetCBDescriptor() const;
 
         template <class Element = uint8_t>
         uint64_t ElementCapacity(uint64_t elementAlignment = 1) const;
@@ -52,14 +52,15 @@ namespace Memory
 
     private:
         uint64_t mRequstedStride = 1;
-        uint64_t mCBDescriptorRequestFrameNumber = 0;
-        uint64_t mSRDescriptorRequestFrameNumber = 0;
 
         SegregatedPoolsResourceAllocator::BufferPtr mBufferPtr;
 
-        PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;
-        PoolDescriptorAllocator::UADescriptorPtr mUADescriptor;
-        PoolDescriptorAllocator::CBDescriptorPtr mCBDescriptor;
+        // Cached values, to be mutated from getters
+        mutable uint64_t mCBDescriptorRequestFrameNumber = 0;
+        mutable uint64_t mSRDescriptorRequestFrameNumber = 0;
+        mutable PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;
+        mutable PoolDescriptorAllocator::UADescriptorPtr mUADescriptor;
+        mutable PoolDescriptorAllocator::CBDescriptorPtr mCBDescriptor;
     };
 
 }

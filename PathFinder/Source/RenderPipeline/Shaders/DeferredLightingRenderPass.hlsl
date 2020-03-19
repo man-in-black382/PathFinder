@@ -99,7 +99,7 @@ float3 EvaluateDirectLighting(Light light, float3 V, float3 surfaceWPos, GBuffer
             // strictly toward the surface point.
             // A slightly more wide light is almost imperceptible, so I guess it will have to do.
             //
-            light.Width += 0.1;
+            light.Width += 0.15;
 
             DiskLightPoints diskPoints = GetLightPointsWS(light);
 

@@ -44,8 +44,8 @@ namespace PathFinder
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 
-        Scene* scene = context->GetContent()->GetScene();
-        SceneGPUStorage* sceneGPUStorage = context->GetContent()->GetSceneGPUStorage();
+        const Scene* scene = context->GetContent()->GetScene();
+        const SceneGPUStorage* sceneGPUStorage = context->GetContent()->GetSceneGPUStorage();
 
         context->GetCommandRecorder()->BindExternalBuffer(*sceneGPUStorage->LightTable(), 0, 0, HAL::ShaderRegister::ShaderResource);
         context->GetCommandRecorder()->BindExternalBuffer(*sceneGPUStorage->MaterialTable(), 1, 0, HAL::ShaderRegister::ShaderResource);

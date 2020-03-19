@@ -42,17 +42,17 @@ namespace PathFinder
                 "LUTs should be square and equal size");
 
             GPUMaterialTableEntry materialEntry{
-                material.AlbedoMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.NormalMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.RoughnessMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.MetalnessMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.AOMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.DisplacementMap->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.DistanceField->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.LTC_LUT_0_Specular->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.LTC_LUT_1_Specular->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.LTC_LUT_0_Diffuse->GetOrCreateSRDescriptor()->IndexInHeapRange(),
-                material.LTC_LUT_1_Diffuse->GetOrCreateSRDescriptor()->IndexInHeapRange(),
+                material.AlbedoMap->GetSRDescriptor()->IndexInHeapRange(),
+                material.NormalMap->GetSRDescriptor()->IndexInHeapRange(),
+                material.RoughnessMap->GetSRDescriptor()->IndexInHeapRange(),
+                material.MetalnessMap->GetSRDescriptor()->IndexInHeapRange(),
+                material.AOMap->GetSRDescriptor()->IndexInHeapRange(),
+                material.DisplacementMap->GetSRDescriptor()->IndexInHeapRange(),
+                material.DistanceField->GetSRDescriptor()->IndexInHeapRange(),
+                material.LTC_LUT_0_Specular->GetSRDescriptor()->IndexInHeapRange(),
+                material.LTC_LUT_1_Specular->GetSRDescriptor()->IndexInHeapRange(),
+                material.LTC_LUT_0_Diffuse->GetSRDescriptor()->IndexInHeapRange(),
+                material.LTC_LUT_1_Diffuse->GetSRDescriptor()->IndexInHeapRange(),
                 lut0SpecularSize.Width
             };
 

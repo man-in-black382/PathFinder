@@ -16,7 +16,7 @@ namespace PathFinder
         const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassGraphNode().PassMetadata.Name);
         assert_format(perPassData && perPassData->CreateTextureUADescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be accessed as Unordered Access resource");
 
-        return resource->GetOrCreateUADescriptor(mipLevel)->IndexInHeapRange();
+        return resource->GetUADescriptor(mipLevel)->IndexInHeapRange();
     }
 
     uint32_t ResourceProvider::GetSRTextureIndex(Foundation::Name resourceName)
@@ -28,7 +28,7 @@ namespace PathFinder
         const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassGraphNode().PassMetadata.Name);
         assert_format(perPassData && perPassData->CreateTextureSRDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be accessed as Shader Resource");
 
-        return resource->GetOrCreateSRDescriptor()->IndexInHeapRange();
+        return resource->GetSRDescriptor()->IndexInHeapRange();
     }
 
     const HAL::Texture::Properties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName)

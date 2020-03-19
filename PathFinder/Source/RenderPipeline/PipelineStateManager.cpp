@@ -301,7 +301,7 @@ namespace PathFinder
             }
             else if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(state))
             {
-                CompileRayTracingState(*psoWrapper, "");
+                CompileRayTracingState(*psoWrapper, {});
             }
         }
 
@@ -408,9 +408,13 @@ namespace PathFinder
         HAL::ShaderTable& shaderTable = stateWrapper.State.GetShaderTable();
         HAL::Buffer::Properties properties{ shaderTable.GetMemoryRequirements().TableSizeInBytes };
         stateWrapper.ShaderTableBuffer = mResourceProducer->NewBuffer(properties);
-        stateWrapper.ShaderTableBuffer->SetDebugName(StringFormat("%s Shader Table", psoName.ToString().c_str()));
         stateWrapper.ShaderTableBuffer->RequestWrite();
         stateWrapper.BaseRayDispatchInfo = shaderTable.UploadToGPUMemory(stateWrapper.ShaderTableBuffer->WriteOnlyPtr(), stateWrapper.ShaderTableBuffer->HALBuffer());
+
+        if (psoName.IsValid())
+        {
+            stateWrapper.ShaderTableBuffer->SetDebugName(StringFormat("%s Shader Table", psoName.ToString().c_str()));
+        }
     }
 
 }
