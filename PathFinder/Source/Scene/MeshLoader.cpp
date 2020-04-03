@@ -1,5 +1,7 @@
 #include "MeshLoader.hpp"
 
+#include "../Foundation/Assert.hpp"
+
 namespace PathFinder
 {
 
@@ -9,7 +11,9 @@ namespace PathFinder
     std::vector<Mesh> MeshLoader::Load(const std::string& fileName)
     {
         Assimp::Importer importer;
-        std::string fullPath{ mRootPath.append(fileName).string() };
+        auto rootPath = mRootPath;
+
+        std::string fullPath{ rootPath.append(fileName).string() };
 
         auto postProcessSteps = (aiPostProcessSteps)(
             aiProcess_CalcTangentSpace | 
@@ -21,7 +25,7 @@ namespace PathFinder
 
         const aiScene* pScene = importer.ReadFile(fullPath, postProcessSteps);
 
-        if (!pScene) throw std::invalid_argument("Unable to read mesh file");
+        assert_format(pScene, "Unable to read mesh file");
 
         mLoadedMeshes.clear();
 

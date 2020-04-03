@@ -1,6 +1,6 @@
 #include "BloomBlurRenderPass.hpp"
 
-#include "../Foundation/GaussianFunction.hpp"
+#include "../Foundation/Gaussian.hpp"
 
 namespace PathFinder
 {
@@ -26,16 +26,16 @@ namespace PathFinder
         ResourceScheduler::NewTextureProperties blurTextureProps{};
         blurTextureProps.MipCount = 3; 
 
-        scheduler->ReadWriteTexture(ResourceNames::DeferredLightingOverexposedOutput);
+        //scheduler->ReadWriteTexture(ResourceNames::DeferredLightingOverexposedOutput);
         scheduler->NewTexture(ResourceNames::BloomBlurIntermediate, blurTextureProps);
         scheduler->NewTexture(ResourceNames::BloomBlurOutput, blurTextureProps);
     }
      
     void BloomBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        BlurFullResolution(context);
-        DownscaleAndBlurHalfResolution(context);
-        DownscaleAndBlurQuadResolution(context);
+        /* BlurFullResolution(context);
+         DownscaleAndBlurHalfResolution(context);
+         DownscaleAndBlurQuadResolution(context);*/
     }
 
     void BloomBlurRenderPass::BlurFullResolution(RenderContext<RenderPassContentMediator>* context)
@@ -50,7 +50,7 @@ namespace PathFinder
 
         // Blur horizontal
         const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
-        auto kernel = Foundation::GaussianFunction::Produce1DKernel(parameters.SmallBlurRadius, parameters.SmallBlurSigma);
+        auto kernel = Foundation::Gaussian::Kernel1D(parameters.SmallBlurRadius, parameters.SmallBlurSigma);
         std::move(kernel.begin(), kernel.end(), blurInputs.Weights.begin());
 
         blurInputs.IsHorizontal = true;
@@ -96,7 +96,7 @@ namespace PathFinder
 
         // Blur horizontal
         const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
-        auto kernel = Foundation::GaussianFunction::Produce1DKernel(parameters.MediumBlurRadius, parameters.MediumBlurSigma);
+        auto kernel = Foundation::Gaussian::Kernel1D(parameters.MediumBlurRadius, parameters.MediumBlurSigma);
         std::move(kernel.begin(), kernel.end(), blurInputs.Weights.begin());
 
         blurInputs.IsHorizontal = true;
@@ -142,7 +142,7 @@ namespace PathFinder
 
         // Blur horizontal
         const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
-        auto kernel = Foundation::GaussianFunction::Produce1DKernel(parameters.LargeBlurRadius, parameters.LargeBlurSigma);
+        auto kernel = Foundation::Gaussian::Kernel1D(parameters.LargeBlurRadius, parameters.LargeBlurSigma);
         std::move(kernel.begin(), kernel.end(), blurInputs.Weights.begin());
 
         blurInputs.IsHorizontal = true;

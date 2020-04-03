@@ -58,11 +58,13 @@ namespace PathFinder
         if (!material.AOMap) material.AOMap = m1x1White2DTexture.get();
         if (!material.DistanceField) material.DistanceField = m1x1Black3DTexture.get();
 
-        material.LTC_LUT_0_Specular = mLTC_LUT_0_GGXHeightCorrelated.get();
-        material.LTC_LUT_1_Specular = mLTC_LUT_1_GGXHeightCorrelated.get();
+        material.LTC_LUT_MatrixInverse_Specular = mLTC_LUT_MatrixInverse_GGXHeightCorrelated.get();
+        material.LTC_LUT_Matrix_Specular = mLTC_LUT_Matrix_GGXHeightCorrelated.get();
+        material.LTC_LUT_Terms_Specular = mLTC_LUT_Terms_GGXHeightCorrelated.get();
 
-        material.LTC_LUT_0_Diffuse = mLTC_LUT_0_DisneyDiffuseNormalized.get();
-        material.LTC_LUT_1_Diffuse = mLTC_LUT_1_DisneyDiffuseNormalized.get();
+        material.LTC_LUT_MatrixInverse_Diffuse = mLTC_LUT_MatrixInverse_DisneyDiffuseNormalized.get();
+        material.LTC_LUT_Matrix_Diffuse = mLTC_LUT_Matrix_DisneyDiffuseNormalized.get();
+        material.LTC_LUT_Terms_Diffuse = mLTC_LUT_Terms_DisneyDiffuseNormalized.get();
 
         return material;
     }
@@ -116,10 +118,13 @@ namespace PathFinder
 
     void MaterialLoader::LoadLTCLookupTables()
     {
-        mLTC_LUT_0_GGXHeightCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGXHeightCorrelated_0.dds");
-        mLTC_LUT_1_GGXHeightCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGXHeightCorrelated_1.dds");
-        mLTC_LUT_0_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_0.dds");
-        mLTC_LUT_1_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_1.dds");
+        mLTC_LUT_MatrixInverse_GGXHeightCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGXHeightCorrelated_Matrix_Inverse.dds");
+        mLTC_LUT_Matrix_GGXHeightCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGXHeightCorrelated_Matrix.dds");
+        mLTC_LUT_Terms_GGXHeightCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGXHeightCorrelated_Terms.dds");
+
+        mLTC_LUT_MatrixInverse_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_Matrix_Inverse.dds");
+        mLTC_LUT_Matrix_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_Matrix.dds");
+        mLTC_LUT_Terms_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_Terms.dds");
     }
 
 }

@@ -11,6 +11,12 @@ struct Ray
     float TMax;
 };
 
+struct Sphere
+{
+    float3 Center;
+    float Radius;
+};
+
 // q01 ----------- q10
 // |                 |
 // |                 |  
@@ -23,6 +29,29 @@ struct BilinearPatch
     float3 Q10;
     float3 Q11;
 };
+
+Sphere InitSphere(float3 center, float radius)
+{
+    Sphere sphere;
+    sphere.Center = center;
+    sphere.Radius = radius;
+    return sphere;
+}
+
+Ray InitRay(float3 origin, float3 direction, float tmin, float tmax)
+{
+    Ray ray;
+    ray.Origin = origin;
+    ray.Direction = direction;
+    ray.TMin = tmin;
+    ray.TMax = tmax;
+    return ray;
+}
+
+Ray InitRay(float3 origin, float3 direction)
+{
+    return InitRay(origin, direction, 0.0, FloatMax);
+}
 
 float3 InterpolatePatch(BilinearPatch patch, float2 uv)
 {
@@ -166,12 +195,58 @@ float3 VoxelWallIntersection(float3 voxelUVW, uint3 voxelGridResolution, Ray ray
     return voxelUVW + ray.Direction * (d + Epsilon); // Add e to make sure we step into neighbor voxel
 }
 
+bool IntersectSphere(Sphere sphere, Ray ray, out float3 intersectionPoint) 
+{
+    float3 oc = ray.Origin - sphere.Center;
+    float a = dot(ray.Direction, ray.Direction);
+    float b = 2.0 * dot(oc, ray.Direction);
+    float c = dot(oc, oc) - sphere.Radius * sphere.Radius;
+    float discriminant = b * b - 4.0 * a * c;
+
+    if (discriminant < 0.0)
+    {
+        return false;
+    }
+    else
+    {
+        float numerator = -b - sqrt(discriminant);
+
+        if (numerator <= 0.0)
+        {
+            numerator = -b + sqrt(discriminant);
+        }
+
+        if (numerator > 0.0)
+        {
+            intersectionPoint = ray.Origin + ray.Direction * (numerator / (2.0 * a));
+            return true;
+        }
+
+        return false;
+    }
+}
+
 bool IsPointInsideEllipse(float2 p, float2 ellipseCenter, float2 widthHeight)
 {
     float2 half = widthHeight * 0.5;
     float2 delta = p - ellipseCenter;
 
     return (delta.x * delta.x) / (half.x * half.x) + (delta.y * delta.y) / (half.y * half.y) <= 1.0;
+}
+
+float3 SphericalToCartesian(float theta, float phi)
+{
+    // theta - vertical angle
+    // phi - horizontal angle
+    
+    // Assuming sphere of unit radius
+    // and left-handed Cartesian coordinate system
+    float sinTheta = sin(theta);
+    float sinPhi = sin(phi);
+    float cosTheta = cos(theta);
+    float cosPhi = cos(phi);
+
+    return float3(sinTheta * sinPhi, sinTheta * cosPhi, cosTheta);
 }
 
 #endif

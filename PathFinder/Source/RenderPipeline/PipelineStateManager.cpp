@@ -134,7 +134,7 @@ namespace PathFinder
         auto [iter, success] = mPipelineStates.emplace(name, std::move(newState));
 
         AssociateStateWithShader(&iter->second, vertexShader);
-        AssociateStateWithShader(&iter->second, vertexShader);
+        AssociateStateWithShader(&iter->second, pixelShader);
 
         if (geometryShader) AssociateStateWithShader(&iter->second, geometryShader);
     }

@@ -3,6 +3,12 @@
 namespace PathFinder 
 {
 
+    Scene::Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer)
+        : mResourceLoader{ executableFolder, resourceProducer } 
+    {
+        LoadUtilityResources();
+    }
+
     Mesh& Scene::AddMesh(Mesh&& mesh)
     {
         mMeshes.emplace_back(std::move(mesh));
@@ -21,16 +27,27 @@ namespace PathFinder
         return mMaterials.back();
     }
 
-    Scene::FlatLightIt Scene::EmplaceFlatLight(FlatLight::Type type)
+    Scene::FlatLightIt Scene::EmplaceDiskLight()
     {
-        mFlatLights.emplace_back(type);
-        return std::prev(mFlatLights.end());
+        mDiskLights.emplace_back(FlatLight::Type::Disk);
+        return std::prev(mDiskLights.end());
+    }
+
+    Scene::FlatLightIt Scene::EmplaceRectangularLight()
+    {
+        mRectangularLights.emplace_back(FlatLight::Type::Rectangle);
+        return std::prev(mRectangularLights.end());
     }
 
     Scene::SphericalLightIt Scene::EmplaceSphericalLight()
     {
         mSphericalLights.emplace_back();
         return std::prev(mSphericalLights.end());
+    }
+
+    void Scene::LoadUtilityResources()
+    {
+        mBlueNoiseTexture = mResourceLoader.LoadTexture("/Precompiled/Blue_Noise_RGBA_0.dds");
     }
 
 }

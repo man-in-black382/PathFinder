@@ -16,14 +16,14 @@ namespace PathFinder
 
     void BloomCompositionRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->ReadTexture(ResourceNames::DeferredLightingFullOutput);
+        //scheduler->ReadTexture(ResourceNames::DeferredLightingFullOutput);
         scheduler->ReadTexture(ResourceNames::BloomBlurOutput);
         scheduler->NewTexture(ResourceNames::BloomCompositionOutput);
     }
      
     void BloomCompositionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomComposition);
+      /*  context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomComposition);
 
         auto resourceProvider = context->GetResourceProvider();
         auto dimensions = context->GetDefaultRenderSurfaceDesc().Dimensions();
@@ -40,7 +40,7 @@ namespace PathFinder
         inputs.LargeBloomWeight = parameters.LargeBloomWeight;
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(inputs);
-        context->GetCommandRecorder()->Dispatch(dimensions, { 32, 32 });
+        context->GetCommandRecorder()->Dispatch(dimensions, { 32, 32 });*/
     }
 
 }

@@ -1,6 +1,6 @@
 #include "ToneMappingRenderPass.hpp"
 
-#include "../Foundation/GaussianFunction.hpp"
+#include "../Foundation/Gaussian.hpp"
 
 namespace PathFinder
 {
@@ -22,7 +22,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
 
 
-        scheduler->ReadTexture(ResourceNames::ShadowMask);
+        scheduler->ReadTexture(ResourceNames::AnalyticalLuminanceOutput);
     }
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -30,7 +30,7 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::BloomCompositionOutput);
+        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::AnalyticalLuminanceOutput/*BloomCompositionOutput*/);
         cbContent.OutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
 

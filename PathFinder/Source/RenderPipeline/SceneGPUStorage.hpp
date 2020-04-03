@@ -7,6 +7,7 @@
 
 #include "../Memory/GPUResourceProducer.hpp"
 
+#include "../Scene/Scene.hpp"
 #include "../Scene/Mesh.hpp"
 #include "../Scene/MeshInstance.hpp"
 #include "../Scene/Vertices/Vertex1P1N1UV1T1BT.hpp"
@@ -49,13 +50,15 @@ namespace PathFinder
         uint32_t AOMapIndex;
         uint32_t DisplacementMapIndex;
         uint32_t DistanceFieldIndex;
-        uint32_t LTC_LUT_0_Specular_Index;
+        uint32_t LTC_LUT_MatrixInverse_Specular_Index;
         // 16 byte boundary
-        uint32_t LTC_LUT_1_Specular_Index;
-        uint32_t LTC_LUT_0_Diffuse_Index;
-        uint32_t LTC_LUT_1_Diffuse_Index;
+        uint32_t LTC_LUT_Matrix_Specular_Index;
+        uint32_t LTC_LUT_Terms_Specular_Index;
+        uint32_t LTC_LUT_MatrixInverse_Diffuse_Index;
+        uint32_t LTC_LUT_Matrix_Diffuse_Index;
+        // 16 byte boundary
+        uint32_t LTC_LUT_Terms_Diffuse_Index;
         uint32_t LTC_LUT_TextureSize;
-        // 16 byte boundary
     };
 
     struct GPULightTableEntry
@@ -87,27 +90,29 @@ namespace PathFinder
         // 16 byte boundary
     };
 
+    struct GPULightTablePartitionInfo
+    {
+        uint32_t SphericalLightsOffset = 0;
+        uint32_t DiskLightsOffset = 0;
+        uint32_t RectangularLightsOffset = 0;
+        uint32_t SphericalLightsCount = 0;
+        uint32_t DiskLightsCount = 0;
+        uint32_t RectangularLightsCount = 0;
+        uint32_t TotalLightsCount = 0;
+        uint32_t Pad1__;
+    };
+
     using GPUInstanceIndex = uint64_t;
 
     class SceneGPUStorage
     {
     public:
-        SceneGPUStorage(const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer);
+        SceneGPUStorage(Scene* scene, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer);
 
-        template < template < class ... > class Container, class ... Args >
-        void UploadMeshes(Container<Mesh, Args...>& meshes);
-
-        template < template < class ... > class Container, class ... Args >
-        void UploadMaterials(Container<Material, Args...>& materials);
-
-        template < template < class ... > class Container, class ... Args >
-        void UploadMeshInstances(Container<MeshInstance, Args...>& meshInstances);
-
-        template < template < class ... > class Container, class LightT, class ... Args >
-        void UploadLights(Container<LightT, Args...>& lights);
-
-        void ClearMeshInstanceTable();
-        void ClearLightInstanceTable();
+        void UploadMeshes();
+        void UploadMaterials();
+        void UploadMeshInstances();
+        void UploadLights();
 
     private:
         template <class Vertex>
@@ -143,12 +148,12 @@ namespace PathFinder
         Memory::GPUResourceProducer::BufferPtr mMeshInstanceTable;
         Memory::GPUResourceProducer::BufferPtr mLightTable;
         Memory::GPUResourceProducer::BufferPtr mMaterialTable;
+
+        GPULightTablePartitionInfo mLightTablePartitionInfo;
         
+        Scene* mScene;
         const HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;
-
-        uint64_t mUploadedMeshInstances = 0;
-        uint64_t mUploadedLights = 0;
 
     public:
         inline const auto UnifiedVertexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get(); }
@@ -156,6 +161,7 @@ namespace PathFinder
         inline const auto MeshInstanceTable() const { return mMeshInstanceTable.get(); }
         inline const auto LightTable() const { return mLightTable.get(); }
         inline const auto MaterialTable() const { return mMaterialTable.get(); }
+        inline const auto& LightTablePartitionInfo() const { return mLightTablePartitionInfo; }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
     };

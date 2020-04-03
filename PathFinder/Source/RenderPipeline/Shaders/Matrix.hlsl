@@ -43,36 +43,50 @@ float4x4 Matrix4x4ColumnMajor(float4 column0, float4 column1, float4 column2, fl
     return M;
 }
 
-float4x4 AxisMatrix(float3 right, float3 up, float3 forward)
-{
-    float3 xaxis = right;
-    float3 yaxis = up;
-    float3 zaxis = forward;
-
-    return float4x4(
-        xaxis.x, yaxis.x, zaxis.x, 0,
-        xaxis.y, yaxis.y, zaxis.y, 0,
-        xaxis.z, yaxis.z, zaxis.z, 0,
-        0, 0, 0, 1
-    );
-}
-
-float4x4 LookAtMatrix(float3 forward, float3 up)
+float4x4 LookAtMatrix4x4(float3 forward, float3 up)
 {
     float3 zaxis = forward;
     float3 xaxis = normalize(cross(up, zaxis));
     float3 yaxis = cross(zaxis, xaxis);
 
-    return AxisMatrix(xaxis, yaxis, zaxis);
+    return Matrix4x4ColumnMajor(
+        float4(xaxis, 0.0),
+        float4(yaxis, 0.0),
+        float4(zaxis, 0.0),
+        float4(0.0, 0.0, 0.0, 1.0)
+    );
 }
 
-float4x4 LookAtMatrix(float3 at, float3 eye, float3 up)
+float4x4 LookAtMatrix4x4(float3 at, float3 eye, float3 up)
 {
     float3 zaxis = normalize(at - eye);
     float3 xaxis = normalize(cross(up, zaxis));
     float3 yaxis = cross(zaxis, xaxis);
 
-    return AxisMatrix(xaxis, yaxis, zaxis);
+    return Matrix4x4ColumnMajor(
+        float4(xaxis, 0.0),
+        float4(yaxis, 0.0),
+        float4(zaxis, 0.0),
+        float4(0.0, 0.0, 0.0, 1.0)
+    );
+}
+
+float3x3 LookAtMatrix3x3(float3 forward, float3 up)
+{
+    float3 zaxis = forward;
+    float3 xaxis = normalize(cross(up, zaxis));
+    float3 yaxis = cross(zaxis, xaxis);
+
+    return Matrix3x3ColumnMajor(xaxis, yaxis, zaxis);
+}
+
+float3x3 LookAtMatrix3x3(float3 at, float3 eye, float3 up)
+{
+    float3 zaxis = normalize(at - eye);
+    float3 xaxis = normalize(cross(up, zaxis));
+    float3 yaxis = cross(zaxis, xaxis);
+
+    return Matrix3x3ColumnMajor(xaxis, yaxis, zaxis);
 }
 
 #endif

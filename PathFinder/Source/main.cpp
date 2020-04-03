@@ -12,8 +12,7 @@
 #include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
-#include "RenderPipeline/RenderPasses/ShadowsRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/DeferredLightingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
@@ -29,6 +28,9 @@
 #include "IO/InputHandlerWindows.hpp"
 
 #include "../resource.h"
+
+#include "../Foundation/Halton.hpp"
+#include "../Foundation/StringUtils.hpp"
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
@@ -63,9 +65,9 @@ int main(int argc, char** argv)
     PathFinder::CommandLineParser cmdLineParser{ argc, argv };    
 
     PathFinder::RenderEngine<PathFinder::RenderPassContentMediator> engine{ hwnd, cmdLineParser };
-    PathFinder::SceneGPUStorage sceneStorage{ &engine.Device(), &engine.ResourceProducer() };
+    PathFinder::Scene scene{ cmdLineParser.ExecutableFolderPath(), &engine.ResourceProducer() };
+    PathFinder::SceneGPUStorage sceneStorage{ &scene, &engine.Device(), &engine.ResourceProducer() };
     PathFinder::UIGPUStorage uiStorage{ &engine.ResourceProducer() };
-    PathFinder::Scene scene{};
     PathFinder::Input input{};
     PathFinder::InputHandlerWindows windowsInputHandler{ &input, hwnd };
     PathFinder::UIInteractor uiInteractor{ hwnd, &input };
@@ -77,10 +79,9 @@ int main(int argc, char** argv)
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
     auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
-    auto deferredLightingPass = std::make_unique<PathFinder::DeferredLightingRenderPass>();
     auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
     auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
-    auto shadowsPass = std::make_unique<PathFinder::ShadowsRenderPass>();
+    auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
     auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
     auto uiPass = std::make_unique<PathFinder::UIRenderPass>();
@@ -89,8 +90,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(commonSetupPass.get());
     engine.AddRenderPass(distanceFieldGenerationPass.get());
     engine.AddRenderPass(GBufferPass.get());
-    engine.AddRenderPass(deferredLightingPass.get());
-    engine.AddRenderPass(shadowsPass.get());
+    engine.AddRenderPass(shadingPass.get());
     engine.AddRenderPass(bloomBlurPass.get());
     engine.AddRenderPass(bloomCompositionPass.get());
     engine.AddRenderPass(toneMappingPass.get());
@@ -100,19 +100,19 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
     //renderPassGraph.AddPass(blurPass.get());
 
-    auto flatLight0 = scene.EmplaceFlatLight(PathFinder::FlatLight::Type::Rectangle);
+    auto flatLight0 = scene.EmplaceRectangularLight();
     flatLight0->SetWidth(2);
     flatLight0->SetHeight(2);
     flatLight0->SetPosition({ -5.0, 0.0, 0.0 });
     flatLight0->SetNormal({ 0.0, .0, 1.0 });
     flatLight0->SetColor({249.0 / 255, 215.0 / 255, 28.0 / 255 });
-    flatLight0->SetLuminousPower(2000);
+    flatLight0->SetLuminousPower(5000);
 
     auto sphereLight0 = scene.EmplaceSphericalLight();
     sphereLight0->SetRadius(2);
     sphereLight0->SetPosition({ 5.0, 0.0, 0.0 });
     sphereLight0->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
-    sphereLight0->SetLuminousPower(25000);
+    sphereLight0->SetLuminousPower(50000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
@@ -135,13 +135,21 @@ int main(int argc, char** argv)
         std::nullopt,
         "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
 
-    PathFinder::Mesh& sphere = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& sphereInstance = scene.AddMeshInstance({ &sphere, &concrete19Material });
+    PathFinder::Mesh& plane = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
+    PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &concrete19Material });
 
-    auto t = sphereInstance.Transformation();
+    PathFinder::Mesh& cube = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
+    PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &concrete19Material });
+
+    auto t = planeInstance.Transformation();
     //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
     t.Translation = glm::vec3{ 0.0, -6.0, 0.0 };
-    sphereInstance.SetTransformation(t);
+    planeInstance.SetTransformation(t);
+
+    t = cubeInstance.Transformation();
+    //t.Rotation = glm::angleAxis(glm::radians(90.0f), glm::normalize(glm::vec3(1.0, 1.0, 1.0)));
+    t.Translation = glm::vec3{ 0.0, -3.0, 4.0 };
+    cubeInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);
@@ -157,8 +165,8 @@ int main(int argc, char** argv)
 
     // ---------------------------------------------------------------------------- //
 
-    sceneStorage.UploadMeshes(scene.Meshes());
-    sceneStorage.UploadMaterials(scene.Materials());
+    sceneStorage.UploadMeshes();
+    sceneStorage.UploadMaterials();
 
     engine.ScheduleAndAllocatePipelineResources();
     engine.UploadProcessAndTransferAssets();
@@ -175,11 +183,8 @@ int main(int argc, char** argv)
         //ImGui::ShowDemoWindow();
         uiStorage.UploadUI();
 
-        sceneStorage.ClearMeshInstanceTable();
-        sceneStorage.ClearLightInstanceTable();
-        sceneStorage.UploadMeshInstances(scene.MeshInstances());
-        sceneStorage.UploadLights(scene.FlatLights());
-        sceneStorage.UploadLights(scene.SphericalLights());
+        sceneStorage.UploadMeshInstances();
+        sceneStorage.UploadLights();
 
         // Top RT needs to be rebuilt every frame
         engine.AddTopRayTracingAccelerationStructure(&sceneStorage.TopAccelerationStructure());

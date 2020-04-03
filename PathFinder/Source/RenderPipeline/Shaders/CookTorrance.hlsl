@@ -1,8 +1,7 @@
 #ifndef _BRDF__
 #define _BRDF__
 
-
-static const float PI = 3.1415926535897932384626433832795;
+#include "Constants.hlsl"
 
 // The Fresnel equation describes the ratio of surface reflection at different surface angles.
 // (This is an approximation of Fresnels' equation, called Fresnel-Schlick)
@@ -32,7 +31,7 @@ float NormalDistributionTrowbridgeReitzGGX(float NdotH, float roughness)
 
     float nom = a2;
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
+    denom = Pi * denom * denom;
 
     return nom / denom;
 }

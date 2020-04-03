@@ -11,8 +11,8 @@
 namespace PathFinder
 {
 
-    ResourceLoader::ResourceLoader(const std::filesystem::path& rootTexturePath, Memory::GPUResourceProducer* resourceProducer)
-        : mRootPath{ rootTexturePath }, mResourceProducer{ resourceProducer } {}
+    ResourceLoader::ResourceLoader(const std::filesystem::path& rootPath, Memory::GPUResourceProducer* resourceProducer)
+        : mRootPath{ rootPath }, mResourceProducer{ resourceProducer } {}
 
     Memory::GPUResourceProducer::TexturePtr ResourceLoader::LoadTexture(const std::string& relativeFilePath) const
     {
@@ -122,7 +122,7 @@ namespace PathFinder
         case DDSKTX_FORMAT_RG16F:       return HAL::ColorFormat::RG16_Float;
         case DDSKTX_FORMAT_RG16S:       return HAL::ColorFormat::RG16_Signed;
         case DDSKTX_FORMAT_RGBA16F:     return HAL::ColorFormat::RGBA16_Float;
-        case DDSKTX_FORMAT_RGBA16:      return HAL::ColorFormat::RGBA16_Unsigned;
+        case DDSKTX_FORMAT_RGBA16:      return HAL::ColorFormat::RGBA16_Unsigned_Norm;
         case DDSKTX_FORMAT_RG8:         return HAL::ColorFormat::RG8_Usigned_Norm;
         case DDSKTX_FORMAT_RG8S:        return HAL::ColorFormat::RG8_Signed;
         case DDSKTX_FORMAT_BGRA8:       return HAL::ColorFormat::BGRA8_Unsigned_Norm;

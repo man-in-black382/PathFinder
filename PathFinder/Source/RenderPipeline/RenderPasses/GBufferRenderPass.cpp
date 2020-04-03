@@ -89,7 +89,13 @@ namespace PathFinder
         auto lightStorage = context->GetContent()->GetSceneGPUStorage();
         context->GetCommandRecorder()->BindExternalBuffer(*lightStorage->LightTable(), 0, 0, HAL::ShaderRegister::ShaderResource);
 
-        for (const FlatLight& light : context->GetContent()->GetScene()->FlatLights())
+        for (const FlatLight& light : context->GetContent()->GetScene()->RectangularLights())
+        {
+            context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
+            context->GetCommandRecorder()->Draw(6); // Light is a rotated billboard: 2 triangles from 6 vertices
+        }
+
+        for (const FlatLight& light : context->GetContent()->GetScene()->DiskLights())
         {
             context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
             context->GetCommandRecorder()->Draw(6); // Light is a rotated billboard: 2 triangles from 6 vertices

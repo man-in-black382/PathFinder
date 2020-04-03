@@ -1,9 +1,7 @@
 #ifndef _Utils__
 #define _Utils__
 
-static const float FloatMax = 3.402823466e+38;
-static const uint UIntMax = 4294967295;
-static const float Pi = 3.14159265358979323846;
+#include "Constants.hlsl"
 
 float Square(float v)
 {

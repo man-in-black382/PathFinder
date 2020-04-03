@@ -225,9 +225,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Foundation\GaussianFunction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -288,13 +285,7 @@
     <ClCompile Include="Source\RenderPipeline\RenderSurfaceDescription.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\StaticSampler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.cpp">
@@ -424,6 +415,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ThirdParty\halton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Foundation\Halton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Foundation\Gaussian.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1889,9 +1892,6 @@
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Foundation\GaussianFunction.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1967,9 +1967,6 @@
     <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowsRenderPass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1980,9 +1977,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\StaticSampler.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.hpp">
@@ -2298,6 +2292,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scene\BloomParameters.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\halton.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Foundation\Halton.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Foundation\Gaussian.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2807,6 +2813,9 @@
     <None Include="Source\RenderPipeline\RootSignatureProxy.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Source\Foundation\Halton.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
@@ -2824,9 +2833,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\ColorConversion.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BackBufferOutput.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\Shadows.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLightingRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SpaceConversion.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMappingRenderPass.hlsl" />
@@ -2850,6 +2857,8 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\Exposure.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Constants.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadingRenderPass.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

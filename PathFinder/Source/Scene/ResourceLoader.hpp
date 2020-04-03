@@ -12,7 +12,7 @@ namespace PathFinder
     class ResourceLoader
     {
     public:
-        ResourceLoader(const std::filesystem::path& rootTexturePath, Memory::GPUResourceProducer* resourceProducer);
+        ResourceLoader(const std::filesystem::path& rootPath, Memory::GPUResourceProducer* resourceProducer);
 
         Memory::GPUResourceProducer::TexturePtr LoadTexture(const std::string& relativeFilePath) const;
         void StoreResource(const Memory::GPUResource& resource, const std::string& relativeFilePath) const;

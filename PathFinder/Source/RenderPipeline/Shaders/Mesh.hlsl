@@ -20,13 +20,18 @@ struct Material
     uint NormalMapIndex;
     uint RoughnessMapIndex;
     uint MetalnessMapIndex;
+    // 16 byte boundary
     uint AOMapIndex;
     uint DisplacementMapIndex;
     uint DistanceFieldIndex;
-    uint LTC_LUT_0_Specular_Index;
-    uint LTC_LUT_1_Specular_Index;
-    uint LTC_LUT_0_Diffuse_Index;
-    uint LTC_LUT_1_Diffuse_Index;
+    uint LTC_LUT_MatrixInverse_Specular_Index;
+    // 16 byte boundary
+    uint LTC_LUT_Matrix_Specular_Index;
+    uint LTC_LUT_Terms_Specular_Index;
+    uint LTC_LUT_MatrixInverse_Diffuse_Index;
+    uint LTC_LUT_Matrix_Diffuse_Index;
+    // 16 byte boundary
+    uint LTC_LUT_Terms_Diffuse_Index;
     uint LTC_LUT_TextureSize;
 };
 

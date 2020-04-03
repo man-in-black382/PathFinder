@@ -26,6 +26,30 @@ struct VertexOut
     float2 LightSize : LIGHT_SIZE;
 };
 
+void GetLightVertexWS(Light light, uint vertexId, out float3 worldSpaceCoord, out float2 localSpaceCoord)
+{
+    float halfWidth = light.Width * 0.5;
+    float halfHeight = light.Height * 0.5;
+
+    float3 position = light.Position.xyz;
+    float3 orientation = light.Orientation.xyz;
+
+    // Get billboard points at the origin
+    float dx = (vertexId == 0 || vertexId == 3) ? -halfWidth : halfWidth;
+    float dy = (vertexId == 0 || vertexId == 1) ? -halfHeight : halfHeight;
+
+    localSpaceCoord = float2(dx, dy);
+    float4 lightPoint = float4(dx, dy, 0.0f, 0.0f);
+
+    float4x4 diskRotation = LookAtMatrix4x4(orientation, GetUpVectorForOrientaion(orientation));
+
+    // Rotate around origin
+    lightPoint = mul(diskRotation, lightPoint);
+
+    // Move points to light's location
+    worldSpaceCoord = lightPoint.xyz + light.Position.xyz;
+}
+
 VertexOut VSMain(uint vertexId : SV_VertexID)
 {
     uint lightVertexIndex = vertexId;

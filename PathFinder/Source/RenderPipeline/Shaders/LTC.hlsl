@@ -130,21 +130,23 @@ float3 SolveCubic(float4 Coefficient)
 //                          DISK LIGHTS                          //
 ///////////////////////////////////////////////////////////////////
 
-float3 LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4], Texture2D LTC_LUT1, float2 LUTSize, sampler LTC_LUT_Sampler)
+float LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4], Texture2D LTC_LUT1, float2 LUTSize, sampler LTC_LUT_Sampler)
 {
-    // construct orthonormal basis around N
-    float3 T1, T2;
-    T1 = normalize(V - N * dot(V, N));
-    T2 = cross(N, T1);
-
+    // MInv matrix is expected to be multiplied by a World to Tangent space matrix 
+    // around surface's normal like so:
+    // float3 T1, T2;
+    // T1 = normalize(V - N * dot(V, N));
+    // T2 = cross(N, T1);
     // rotate area light in (T1, T2, N) basis
-    float3x3 R = transpose(Matrix3x3ColumnMajor(T1, T2, N));
+    // float3x3 R = transpose(Matrix3x3ColumnMajor(T1, T2, N));
+    // MInv = mul(R, MInv);
 
     // polygon (allocate 5 vertices for clipping)
     float3 L_[3];
-    L_[0] = mul(R, points[0] - P);
-    L_[1] = mul(R, points[1] - P);
-    L_[2] = mul(R, points[2] - P);
+
+    L_[0] = points[0] - P;
+    L_[1] = points[1] - P;
+    L_[2] = points[2] - P;
 
     float3 Lo_i = float3(0.0, 0.0, 0.0);
 
@@ -160,7 +162,7 @@ float3 LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 point
     // Clip back side
     if (dot(cross(V1, V2), C) < 0.0)
     {
-        return float3(0.0, 0.0, 0.0);
+        return 0.0;
     }
 
     // compute eigenvectors of ellipse
@@ -249,9 +251,7 @@ float3 LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 point
     float scale = LTC_LUT1.SampleLevel(LTC_LUT_Sampler, uv, 0).w;
     float spec = formFactor * scale;
 
-    Lo_i = float3(spec, spec, spec);
-    
-    return float3(Lo_i);
+    return spec;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -393,15 +393,16 @@ void ClipQuadToHorizon(inout float3 L[5], out int n)
 }
 
 
-float3 LTCEvaluateRectangle(float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4])
+float LTCEvaluateRectangle(float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4])
 {
-    // construct orthonormal basis around N
-    float3 T1, T2;
-    T1 = normalize(V - N * dot(V, N));
-    T2 = cross(N, T1);
-
+    // MInv matrix is expected to be multiplied by a World to Tangent space matrix 
+    // around surface's normal like so:
+    // float3 T1, T2;
+    // T1 = normalize(V - N * dot(V, N));
+    // T2 = cross(N, T1);
     // rotate area light in (T1, T2, N) basis
-    Minv = mul(Minv, transpose(Matrix3x3ColumnMajor(T1, T2, N)));
+    // float3x3 R = transpose(Matrix3x3ColumnMajor(T1, T2, N));
+    // MInv = mul(R, MInv);
 
     // polygon (allocate 5 vertices for clipping)
     float3 L[5];
@@ -417,7 +418,7 @@ float3 LTCEvaluateRectangle(float3 N, float3 V, float3 P, float3x3 Minv, float3 
     ClipQuadToHorizon(L, n);
 
     if (n == 0)
-        return float3(0, 0, 0);
+        return 0;
         // project onto sphere
     L[0] = normalize(L[0]);
     L[1] = normalize(L[1]);
@@ -436,9 +437,7 @@ float3 LTCEvaluateRectangle(float3 N, float3 V, float3 P, float3x3 Minv, float3 
 
     sum = max(0.0, sum);
 
-    float3 Lo_i = float3(sum, sum, sum);
-
-    return Lo_i;
+    return sum;
 }
 
 #endif

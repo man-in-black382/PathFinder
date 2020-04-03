@@ -50,11 +50,13 @@ namespace PathFinder
         Memory::GPUResourceProducer::TexturePtr m1x1White2DTexture;
         Memory::GPUResourceProducer::TexturePtr m1x1Black3DTexture;
 
-        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_0_GGXHeightCorrelated;
-        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_1_GGXHeightCorrelated;
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_MatrixInverse_GGXHeightCorrelated;
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_Matrix_GGXHeightCorrelated;
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_Terms_GGXHeightCorrelated;
 
-        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_0_DisneyDiffuseNormalized;
-        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_1_DisneyDiffuseNormalized;
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_MatrixInverse_DisneyDiffuseNormalized;
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_Matrix_DisneyDiffuseNormalized;
+        Memory::GPUResourceProducer::TexturePtr mLTC_LUT_Terms_DisneyDiffuseNormalized;
 
         Memory::GPUResourceProducer* mResourceProducer;
         PreprocessableAssetStorage* mAssetStorage;

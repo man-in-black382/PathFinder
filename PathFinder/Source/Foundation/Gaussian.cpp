@@ -1,11 +1,11 @@
-#include "GaussianFunction.hpp"
+#include "Gaussian.hpp"
 
 #include <cmath>
 
 namespace Foundation 
 {
 
-    namespace GaussianFunction
+    namespace Gaussian
     {
         float Gaussian(float x, float mu, float sigma)
         {
@@ -14,11 +14,11 @@ namespace Foundation
             return std::exp(-0.5 * a * a);
         }
 
-        Kernel1D Produce1DKernel(size_t radius, float sigma)
+        Kernel Kernel1D(size_t radius, float sigma)
         {
             float sum = 0;
 
-            Kernel1D kernel(radius + 1, 0.0);
+            Kernel kernel(radius + 1, 0.0);
 
             size_t kernelSize = 2 * radius + 1;
             size_t startIndex = kernelSize / 2;
@@ -39,9 +39,9 @@ namespace Foundation
             return kernel;
         }
 
-        Kernel1D Produce1DKernel(size_t radius)
+        Kernel Kernel1D(size_t radius)
         {
-            return Produce1DKernel(radius, radius / 2.0);
+            return Kernel(radius, radius / 2.0);
         }
     }
 

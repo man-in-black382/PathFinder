@@ -33,7 +33,7 @@ namespace HAL
 
     enum class ColorFormat
     {
-        R8_Usigned_Norm, RG8_Usigned_Norm, RGBA8_Usigned_Norm,
+        R8_Usigned_Norm, RG8_Usigned_Norm, RGBA8_Usigned_Norm, RGBA16_Unsigned_Norm,
 
         BGRA8_Unsigned_Norm,
 
