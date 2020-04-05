@@ -2306,6 +2306,12 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ThirdParty\optick\optick.config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\optick\optick.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2753,8 +2759,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.exp" />
-    <None Include="Libs\dxcompiler.dll" />
-    <None Include="Libs\dxil.dll" />
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
       <Filter>Header Files</Filter>
     </None>

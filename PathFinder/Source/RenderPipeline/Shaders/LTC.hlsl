@@ -400,7 +400,7 @@ float LTCEvaluateRectangle(float3 N, float3 V, float3 P, float3x3 Minv, float3 p
     // float3 T1, T2;
     // T1 = normalize(V - N * dot(V, N));
     // T2 = cross(N, T1);
-    // rotate area light in (T1, T2, N) basis
+    //// rotate area light in (T1, T2, N) basis
     // float3x3 R = transpose(Matrix3x3ColumnMajor(T1, T2, N));
     // MInv = mul(R, MInv);
 

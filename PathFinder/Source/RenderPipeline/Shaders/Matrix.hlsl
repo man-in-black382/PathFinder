@@ -43,7 +43,7 @@ float4x4 Matrix4x4ColumnMajor(float4 column0, float4 column1, float4 column2, fl
     return M;
 }
 
-float4x4 LookAtMatrix4x4(float3 forward, float3 up)
+float4x4 RotationMatrix4x4(float3 forward, float3 up)
 {
     float3 zaxis = forward;
     float3 xaxis = normalize(cross(up, zaxis));
@@ -57,22 +57,24 @@ float4x4 LookAtMatrix4x4(float3 forward, float3 up)
     );
 }
 
-float4x4 LookAtMatrix4x4(float3 at, float3 eye, float3 up)
-{
-    float3 zaxis = normalize(at - eye);
-    float3 xaxis = normalize(cross(up, zaxis));
-    float3 yaxis = cross(zaxis, xaxis);
+//float4x4 LookAtMatrix4x4(float3 at, float3 eye, float3 up)
+//{
+//    float3 zaxis = normalize(at - eye);
+//    float3 xaxis = normalize(cross(up, zaxis));
+//    float3 yaxis = cross(zaxis, xaxis);
+//
+//    return Matrix4x4ColumnMajor(
+//        float4(xaxis, 0.0),
+//        float4(yaxis, 0.0),
+//        float4(zaxis, 0.0),
+//        float4(0.0, 0.0, 0.0, 1.0)
+//    );
+//}
 
-    return Matrix4x4ColumnMajor(
-        float4(xaxis, 0.0),
-        float4(yaxis, 0.0),
-        float4(zaxis, 0.0),
-        float4(0.0, 0.0, 0.0, 1.0)
-    );
-}
-
-float3x3 LookAtMatrix3x3(float3 forward, float3 up)
+float3x3 RotationMatrix3x3(float3 forward)
 {
+    float3 up = GetUpVectorForOrientaion(forward);
+
     float3 zaxis = forward;
     float3 xaxis = normalize(cross(up, zaxis));
     float3 yaxis = cross(zaxis, xaxis);
@@ -80,13 +82,13 @@ float3x3 LookAtMatrix3x3(float3 forward, float3 up)
     return Matrix3x3ColumnMajor(xaxis, yaxis, zaxis);
 }
 
-float3x3 LookAtMatrix3x3(float3 at, float3 eye, float3 up)
-{
-    float3 zaxis = normalize(at - eye);
-    float3 xaxis = normalize(cross(up, zaxis));
-    float3 yaxis = cross(zaxis, xaxis);
-
-    return Matrix3x3ColumnMajor(xaxis, yaxis, zaxis);
-}
+//float3x3 RotationMatrix3x3(float3 at, float3 eye, float3 up)
+//{
+//    float3 zaxis = normalize(at - eye);
+//    float3 xaxis = normalize(cross(up, zaxis));
+//    float3 yaxis = cross(zaxis, xaxis);
+//
+//    return Matrix3x3ColumnMajor(xaxis, yaxis, zaxis);
+//}
 
 #endif

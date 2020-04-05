@@ -85,7 +85,7 @@ ShadingResult ZeroShadingResult()
     ShadingResult result;
     result.AnalyticalUnshadowedOutgoingLuminance = 0.xxx;
     result.StochasticShadowedOutgoingLuminance = 0.xxx;
-    result.StochasticUnshadowedOutgoingLuminance = 0.xxx;
+    result.StochasticUnshadowedOutgoingLuminance = 1e-05; // Avoid NaNs later
     return result;
 }
 
@@ -149,7 +149,7 @@ LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDi
 
     // Construct orthonormal basis around N
     // World to tangent matrix
-    float3x3 tangentToWorld = LookAtMatrix3x3(gBuffer.Normal, GetUpVectorForOrientaion(gBuffer.Normal));
+    float3x3 tangentToWorld = RotationMatrix3x3(gBuffer.Normal);
     float3x3 worldToTangent = transpose(tangentToWorld);
 
     LTCTerms terms;
@@ -179,7 +179,8 @@ float TraceShadowRay(Ray ray)
     dxrRay.TMin = ray.TMin + 1e-03;
     dxrRay.TMax = ray.TMax - 1e-03;
 
-    ShadowRayPayload shadowPayload = { 0.0f };
+    // Exactly 0 shadow value will cause divisions by 0
+    ShadowRayPayload shadowPayload = { 0.0 };
 
     TraceRay(SceneBVH,
         RAY_FLAG_CULL_BACK_FACING_TRIANGLES
@@ -195,6 +196,29 @@ float TraceShadowRay(Ray ray)
     return shadowPayload.ShadowFactor;
 }
 
+void EvaluateStochasticLightAndShadow(Light light, LTCTerms ltcTerms, LTCAnalyticalEvaluationResult directLightingEvaluationResult, LightSample lightSample, inout ShadingResult shadingResult)
+{
+    float3 surfaceToLightDir = -lightSample.LightToSurfaceRay.Direction;
+    LTCStochasticEvaluationResult brdfRayLightingEvaluationResult = EvaluateLTCLightingForSampleVector(light, ltcTerms, surfaceToLightDir, directLightingEvaluationResult.DiffuseProbability);
+    float misPDF = lerp(lightSample.PDF, brdfRayLightingEvaluationResult.PDF, directLightingEvaluationResult.BRDFProbability);
+
+    // This test should almost never fail because we just importance sampled from the BRDF.
+    // Only an all black BRDF or a precision issue could trigger this.
+    if (directLightingEvaluationResult.BRDFProbability > 0.0f)
+    {
+        // Stochastic estimate of incident light, without shadow
+        // Note: projection cosine dot(w_i, n) is baked into the LTC-based BRDF
+        float3 luminance = brdfRayLightingEvaluationResult.OutgoingLuminance / misPDF;
+        shadingResult.StochasticUnshadowedOutgoingLuminance += luminance;
+
+        if (lightSample.LightToSurfaceRay.TMax > 1e-04)
+        {
+            float shadow = TraceShadowRay(lightSample.LightToSurfaceRay);
+            shadingResult.StochasticShadowedOutgoingLuminance += luminance * shadow ;
+        }
+    }
+}
+
 ShadingResult ShadeWithSphericalLights(GBufferStandard gBuffer, LTCTerms ltcTerms, float4 blueNoise, float3 viewDirection, float3 surfacePosition)
 {
     uint lightsCount = PassDataCB.LightOffsets.SphericalLightsCount;
@@ -204,56 +228,69 @@ ShadingResult ShadeWithSphericalLights(GBufferStandard gBuffer, LTCTerms ltcTerm
     {
         uint lightTableOffset = lightIdx + PassDataCB.LightOffsets.SphericalLightsOffset;
 
-        Light light = LightTable[lightIdx];
+        Light light = LightTable[lightTableOffset];
         LightPoints lightPoints = ComputeLightPoints(light, surfacePosition);
         ShericalLightSamplingInputs samplingInputs = ComputeSphericalLightSamplingInputs(light, surfacePosition);
-        LTCEvaluationResult directLightingEvaluationResult = EvaluateDirectSphericalLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
+        LTCAnalyticalEvaluationResult directLightingEvaluationResult = EvaluateDirectSphericalLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
 
         for (uint rayIdx = 0; rayIdx < RaysPerLight; ++rayIdx)
         {
             float4 randomNumbers = RandomNumbersForLight(lightTableOffset, rayIdx, blueNoise);
-            
+
+            // Randomly pick specular or diffuse lobe based on diffuse probability
+            bool isSpecular = randomNumbers.z > directLightingEvaluationResult.DiffuseProbability;
+            float3x3 M = isSpecular ? ltcTerms.MSpecular : ltcTerms.MDiffuse;
+
             // Pick a light sampling vector based on probability of taking a vector from BRDF distribution
             // versus picking a direct vector to one of random points on the light's surface
-            float3 sampleVector = 0.0;
+            bool sampleBRDF = randomNumbers.w <= directLightingEvaluationResult.BRDFProbability;
 
-            // BRDF sample
-            if (randomNumbers.w <= directLightingEvaluationResult.BRDFProbability)
-            {
-                // Randomly pick specular or diffuse lobe based on diffuse probability
-                bool isSpecular = randomNumbers.z > directLightingEvaluationResult.DiffuseProbability;
-                // Importance sample the BRDF
-                float3x3 M = isSpecular ? ltcTerms.MSpecular : ltcTerms.MDiffuse;
-                sampleVector = LTCSampleVector(M, randomNumbers.x, randomNumbers.y);
-
-                //shadingResult.StochasticUnshadowedOutgoingLuminance = float3(0.0, 30.0, 0.0);
-            }
-            else // Light sample
-            {
-                sampleVector = SphereLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
-            }
+            float3 sampleVector = sampleBRDF ?
+                LTCSampleVector(M, randomNumbers.x, randomNumbers.y) :
+                SphericalLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
             LightSample lightSample = ZeroLightSample();
-            if (SampleSphereLight(light, samplingInputs, sampleVector, lightSample))
+            if (SampleSphericalLight(light, samplingInputs, sampleVector, lightSample))
             {
-                LTCSingleRayEvaluationResult brdfRayLightingEvaluationResult = EvaluateLTCLightingForSampleVector(light, ltcTerms, sampleVector, directLightingEvaluationResult.DiffuseProbability);
-                float misPDF = lerp(lightSample.PDF, brdfRayLightingEvaluationResult.PDF, directLightingEvaluationResult.BRDFProbability);
+                EvaluateStochasticLightAndShadow(light, ltcTerms, directLightingEvaluationResult, lightSample, shadingResult);
+            }
+        }
 
-                // This test should almost never fail because we just importance sampled from the BRDF.
-                // Only an all black BRDF or a precision issue could trigger this.
-                if (directLightingEvaluationResult.BRDFProbability > 0.0f)
-                {
-                    // Stochastic estimate of incident light, without shadow
-                    // Note: projection cosine dot(w_i, n) is baked into the LTC-based BRDF
-                    float3 luminance = brdfRayLightingEvaluationResult.OutgoingLuminance / misPDF;
-                    shadingResult.StochasticUnshadowedOutgoingLuminance += luminance;
+        shadingResult.AnalyticalUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance;
+    }
 
-                    if (lightSample.LightToSurfaceRay.TMax > 1e-05)
-                    {
-                        float shadow = TraceShadowRay(lightSample.LightToSurfaceRay);
-                        shadingResult.StochasticShadowedOutgoingLuminance += luminance * shadow;
-                    }  
-                }
+    return shadingResult;
+}
+
+ShadingResult ShadeWithRectangularLights(GBufferStandard gBuffer, LTCTerms ltcTerms, float4 blueNoise, float3 viewDirection, float3 surfacePosition)
+{
+    uint lightsCount = PassDataCB.LightOffsets.RectangularLightsCount;
+    ShadingResult shadingResult = ZeroShadingResult();
+
+    for (uint lightIdx = 0; lightIdx < lightsCount; ++lightIdx)
+    {
+        uint lightTableOffset = lightIdx + PassDataCB.LightOffsets.RectangularLightsOffset;
+
+        Light light = LightTable[lightTableOffset];
+        LightPoints lightPoints = ComputeLightPoints(light, surfacePosition);
+        RectangularLightSamplingInputs samplingInputs = ComputeRectangularLightSamplingInputs(lightPoints, surfacePosition);
+        LTCAnalyticalEvaluationResult directLightingEvaluationResult = EvaluateDirectRectangularLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
+
+        for (uint rayIdx = 0; rayIdx < RaysPerLight; ++rayIdx)
+        {
+            float4 randomNumbers = RandomNumbersForLight(lightTableOffset, rayIdx, blueNoise);
+            bool isSpecular = randomNumbers.z > directLightingEvaluationResult.DiffuseProbability;
+            float3x3 M = isSpecular ? ltcTerms.MSpecular : ltcTerms.MDiffuse;
+            bool sampleBRDF = randomNumbers.w <= directLightingEvaluationResult.BRDFProbability;
+
+            float3 sampleVector = sampleBRDF ? 
+                LTCSampleVector(M, randomNumbers.x, randomNumbers.y) :
+                RectangularLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
+
+            LightSample lightSample = ZeroLightSample();
+            if (SampleRectangularLight(light, samplingInputs, lightPoints, sampleVector, lightSample))
+            {
+                EvaluateStochasticLightAndShadow(light, ltcTerms, directLightingEvaluationResult, lightSample, shadingResult);
             }
         }
 
@@ -266,7 +303,6 @@ ShadingResult ShadeWithSphericalLights(GBufferStandard gBuffer, LTCTerms ltcTerm
 float3 EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, uint2 pixelIndex, float depth)
 {
     float3 output = 0.0;
-    float totalSampleCount = PassDataCB.LightOffsets.TotalLightsCount * RaysPerLight;
 
     Texture2D blueNoiseTexture = Textures2D[PassDataCB.BlueNoiseTextureIndex];
     Material material = MaterialTable[gBuffer.MaterialIndex];
@@ -278,14 +314,19 @@ float3 EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, uint2
     LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
 
     ShadingResult sphericalLightsShadingResult = ShadeWithSphericalLights(gBuffer, ltcTerms, blueNoise, viewDirection, surfacePosition);
+    ShadingResult rectangularLightsShadingResult = ShadeWithRectangularLights(gBuffer, ltcTerms, blueNoise, viewDirection, surfacePosition);
 
-    output += 
+    float3 a =
         sphericalLightsShadingResult.AnalyticalUnshadowedOutgoingLuminance *
-        sphericalLightsShadingResult.StochasticUnshadowedOutgoingLuminance /
-        sphericalLightsShadingResult.StochasticShadowedOutgoingLuminance;
-    output /= totalSampleCount;
+        sphericalLightsShadingResult.StochasticShadowedOutgoingLuminance /
+        sphericalLightsShadingResult.StochasticUnshadowedOutgoingLuminance;
 
-    return output;
+    float3 b =
+        rectangularLightsShadingResult.AnalyticalUnshadowedOutgoingLuminance *
+        rectangularLightsShadingResult.StochasticShadowedOutgoingLuminance /
+        rectangularLightsShadingResult.StochasticUnshadowedOutgoingLuminance;
+
+    return a + b;
 }
 
 float3 EvaluateEmissiveGBufferLighting(GBufferEmissive gBuffer)

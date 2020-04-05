@@ -949,6 +949,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\imgui\imstb_truetype.h" />
     <ClInclude Include="Source\ThirdParty\imgui\misc\cpp\imgui_stdlib.h" />
     <ClInclude Include="Source\ThirdParty\imgui\misc\freetype\imgui_freetype.h" />
+    <ClInclude Include="Source\ThirdParty\optick\optick.config.h" />
+    <ClInclude Include="Source\ThirdParty\optick\optick.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
@@ -960,8 +962,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.inl">
       <FileType>CppHeader</FileType>
     </ClInclude>
-    <None Include="Libs\dxcompiler.dll" />
-    <None Include="Libs\dxil.dll" />
     <None Include="packages.config" />
     <None Include="Source\Foundation\Halton.inl" />
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl" />

@@ -30,6 +30,17 @@ struct BilinearPatch
     float3 Q11;
 };
 
+struct Plane
+{
+    float3 Normal;
+    float Displacement;
+};
+
+struct Rectangle
+{
+    float3 Vertices[4];
+};
+
 Sphere InitSphere(float3 center, float radius)
 {
     Sphere sphere;
@@ -53,6 +64,31 @@ Ray InitRay(float3 origin, float3 direction)
     return InitRay(origin, direction, 0.0, FloatMax);
 }
 
+Plane InitPlane(float3 normal, float displacement)
+{
+    Plane plane;
+    plane.Normal = normal;
+    plane.Displacement = displacement;
+    return plane;
+}
+
+Rectangle InitRectangle(float3 p0, float3 p1, float3 p2, float3 p3)
+{
+    Rectangle rectangle;
+    rectangle.Vertices[0] = p0;
+    rectangle.Vertices[1] = p1;
+    rectangle.Vertices[2] = p2;
+    rectangle.Vertices[3] = p3;
+    return rectangle;
+}
+
+Rectangle InitRectangle(float3 vertices[4])
+{
+    Rectangle rectangle;
+    rectangle.Vertices = vertices;
+    return rectangle;
+}
+
 float3 InterpolatePatch(BilinearPatch patch, float2 uv)
 {
     return (1.0 - uv.x) * (1.0 - uv.y) * patch.Q00 +
@@ -63,7 +99,7 @@ float3 InterpolatePatch(BilinearPatch patch, float2 uv)
 
 // Ray Tracing Gems: A Geometric Approach to Ray/Bilinear Patch Intersections
 //
-bool IntersectPatch(BilinearPatch patch, Ray ray, out float3 intersectionPoint)
+bool RayBilinearPatchIntersection(BilinearPatch patch, Ray ray, out float3 intersectionPoint)
 {
     // 4 corners + "normal" qn 
     float3 q00 = patch.Q00;
@@ -135,17 +171,19 @@ bool IntersectPatch(BilinearPatch patch, Ray ray, out float3 intersectionPoint)
     }
 }
 
-bool IntersectPlane(float3 pointOnPlane, float3 planeNormal, float3 rayOrigin, float3 rayDirection, out float t) 
+bool RayPlaneIntersection(Plane plane, Ray ray, out float3 intersectionPoint) 
 {
     // Assuming float3s are all normalized
-    float denom = dot(planeNormal, rayDirection);
-    float3 p0l0 = pointOnPlane - rayOrigin;
-    t = dot(p0l0, planeNormal) / denom;
-    return (t >= 0);
+    float denom = dot(plane.Normal, ray.Direction);
+    float3 pointOnPlane = plane.Normal * plane.Displacement;
+    float3 p0l0 = pointOnPlane - ray.Origin;
+    float t = dot(p0l0, plane.Normal) / denom;
+    intersectionPoint = ray.Origin + ray.Direction * t;
+    return t >= 0;
 }
 
 // Triangle intersection. Returns { t, u, v }
-float3 triIntersect(float3 ro, float3 rd, float3 v0, float3 v1, float3 v2)
+float3 RayTriangleIntersection(float3 ro, float3 rd, float3 v0, float3 v1, float3 v2)
 {
     float3 v1v0 = v1 - v0;
     float3 v2v0 = v2 - v0;
@@ -195,7 +233,7 @@ float3 VoxelWallIntersection(float3 voxelUVW, uint3 voxelGridResolution, Ray ray
     return voxelUVW + ray.Direction * (d + Epsilon); // Add e to make sure we step into neighbor voxel
 }
 
-bool IntersectSphere(Sphere sphere, Ray ray, out float3 intersectionPoint) 
+bool RaySphereIntersection(Sphere sphere, Ray ray, out float3 intersectionPoint) 
 {
     float3 oc = ray.Origin - sphere.Center;
     float a = dot(ray.Direction, ray.Direction);
@@ -226,12 +264,31 @@ bool IntersectSphere(Sphere sphere, Ray ray, out float3 intersectionPoint)
     }
 }
 
+bool RayRectangleIntersection(Rectangle rectangle, Plane rectanglePlane, Ray ray, out float3 intersectionPoint)
+{
+    if (!RayPlaneIntersection(rectanglePlane, ray, intersectionPoint))
+    {
+        return false;
+    }
+
+    return true;
+
+    float3 pMin = min(rectangle.Vertices[0], rectangle.Vertices[1]);
+    pMin = min(pMin, rectangle.Vertices[2]);
+    pMin = min(pMin, rectangle.Vertices[3]);
+
+    float3 pMax = max(rectangle.Vertices[0], rectangle.Vertices[1]);
+    pMax = max(pMax, rectangle.Vertices[2]);
+    pMax = max(pMax, rectangle.Vertices[3]);
+
+    return all(intersectionPoint >= pMin) && all(intersectionPoint <= pMax);
+}
+
 bool IsPointInsideEllipse(float2 p, float2 ellipseCenter, float2 widthHeight)
 {
     float2 half = widthHeight * 0.5;
     float2 delta = p - ellipseCenter;
-
-    return (delta.x * delta.x) / (half.x * half.x) + (delta.y * delta.y) / (half.y * half.y) <= 1.0;
+    return ((delta.x * delta.x) / (half.x * half.x) + (delta.y * delta.y) / (half.y * half.y)) <= 1.0;
 }
 
 float3 SphericalToCartesian(float theta, float phi)

@@ -41,7 +41,7 @@ void GetLightVertexWS(Light light, uint vertexId, out float3 worldSpaceCoord, ou
     localSpaceCoord = float2(dx, dy);
     float4 lightPoint = float4(dx, dy, 0.0f, 0.0f);
 
-    float4x4 diskRotation = LookAtMatrix4x4(orientation, GetUpVectorForOrientaion(orientation));
+    float4x4 diskRotation = RotationMatrix4x4(orientation, GetUpVectorForOrientaion(orientation));
 
     // Rotate around origin
     lightPoint = mul(diskRotation, lightPoint);

@@ -6,7 +6,7 @@ namespace PathFinder
 {
 
     ShadingRenderPass::ShadingRenderPass()
-        : RenderPass("Shadows") {}
+        : RenderPass("Shading") {}
 
     void ShadingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
@@ -16,7 +16,7 @@ namespace PathFinder
             state.AddMissShader("ShadingRenderPass.hlsl");
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), 0 };
             state.GlobalRootSignatureName = RootSignatureNames::RayTracing;
-            state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
+            state.PipelineConfig = HAL::RayTracingPipelineConfig{ 2 };
         });
     }
      
