@@ -12,9 +12,9 @@ namespace PathFinder
         mFileWatcher.addWatch(mShaderRootPath.string(), this, true);
     }
 
-    HAL::Shader* ShaderManager::LoadShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath)
+    HAL::Shader* ShaderManager::LoadShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath)
     {
-        return GetShader(pipelineStage, relativePath);
+        return GetShader(pipelineStage, entryPoint, relativePath);
     }
 
     void ShaderManager::SetShaderRecompilationCallback(const ShaderRecompilationCallback& callback)
@@ -57,20 +57,20 @@ namespace PathFinder
         }
     }
 
-    HAL::Shader* ShaderManager::GetShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath)
+    HAL::Shader* ShaderManager::GetShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath)
     {
-        HAL::Shader* shader = FindCachedShader(pipelineStage, relativePath);
+        HAL::Shader* shader = FindCachedShader(entryPoint, relativePath);
 
         if (!shader)
         {
-            shader = LoadAndCacheShader(pipelineStage, relativePath);
+            shader = LoadAndCacheShader(pipelineStage, entryPoint, relativePath);
             assert_format(shader, "Failed to compile shader");
         }
 
         return shader;
     }
 
-    HAL::Shader* ShaderManager::FindCachedShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath)
+    HAL::Shader* ShaderManager::FindCachedShader(Foundation::Name entryPointName, const std::filesystem::path& relativePath)
     {
         auto shaderAssociationIt = mShaderEntryPointFilePathToShaderAssociations.find(relativePath.string());
         bool anyAssociationFound = shaderAssociationIt != mShaderEntryPointFilePathToShaderAssociations.end();
@@ -80,21 +80,23 @@ namespace PathFinder
             return nullptr;
         }
 
-        ShaderListIterator shaderIt = shaderAssociationIt->second.GetShader(pipelineStage);
+        ShaderBundle& shadersForFile = shaderAssociationIt->second;
+        auto bundleIt = shadersForFile.find(entryPointName);
 
-        if (shaderIt == mShaders.end())
+        if (bundleIt == shadersForFile.end())
         {
             return nullptr;
         }
 
+        ShaderListIterator shaderIt = bundleIt->second;
         return &(*shaderIt);
     }
 
-    HAL::Shader* ShaderManager::LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath)
+    HAL::Shader* ShaderManager::LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath)
     {
         auto fullPath = mShaderRootPath / relativePath;
 
-        HAL::ShaderCompiler::CompilationResult compilationResult = mCompiler.Compile(fullPath, pipelineStage, mCommandLineParser.ShouldBuildDebugShaders());
+        HAL::ShaderCompiler::CompilationResult compilationResult = mCompiler.Compile(fullPath, pipelineStage, entryPoint, mCommandLineParser.ShouldBuildDebugShaders());
         
         if (!compilationResult.CompiledShader.Blob())
         {
@@ -103,47 +105,20 @@ namespace PathFinder
 
         mShaders.emplace_back(std::move(compilationResult.CompiledShader));
         
+        std::string relativePathString = relativePath.filename().string();
         ShaderListIterator shaderIt = std::prev(mShaders.end());
-
-        GetShaderBundle(relativePath.filename().string()).SetShader(shaderIt);
+        
+        // Associate shader with a file it was loaded from and its entry point name
+        ShaderBundle& shadersForFile = mShaderEntryPointFilePathToShaderAssociations[relativePathString];
+        shadersForFile.emplace(shaderIt->EntryPointName(), shaderIt);
 
         for (auto& shaderFilePath : compilationResult.CompiledFileRelativePaths)
         {
             // Associate every file that took place in compilation with the root file that has shader's entry point
-            mShaderAnyFilePathToEntryPointFilePathAssociations[shaderFilePath].insert(relativePath.filename().string());
+            mShaderAnyFilePathToEntryPointFilePathAssociations[shaderFilePath].insert(relativePathString);
         }
 
         return &(*shaderIt);
-    }
-
-    ShaderManager::ShaderBundle& ShaderManager::GetShaderBundle(const std::string& entryPointShaderFile)
-    {
-        auto it = mShaderEntryPointFilePathToShaderAssociations.find(entryPointShaderFile);
-        auto shadersEndIt = mShaders.end();
-        
-        if (it == mShaderEntryPointFilePathToShaderAssociations.end())
-        {
-            ShaderBundle shaderBundle{};
-
-            shaderBundle.VertexShader = shadersEndIt;
-            shaderBundle.PixelShader = shadersEndIt;
-            shaderBundle.HullShader = shadersEndIt;
-            shaderBundle.DomainShader = shadersEndIt;
-            shaderBundle.GeometryShader = shadersEndIt;
-            shaderBundle.ComputeShader = shadersEndIt;
-            shaderBundle.RayGenShader = shadersEndIt;
-            shaderBundle.RayAnyHitShader = shadersEndIt;
-            shaderBundle.RayClosestHitShader = shadersEndIt;
-            shaderBundle.RayMissShader = shadersEndIt;
-            shaderBundle.RayIntersectionShader = shadersEndIt;
-
-            auto [iter, success] = mShaderEntryPointFilePathToShaderAssociations.emplace(entryPointShaderFile, shaderBundle);
-            return iter->second;
-        }
-        else 
-        {
-            return it->second;
-        }
     }
 
     std::filesystem::path ShaderManager::ConstructShaderRootPath(const CommandLineParser& commandLineParser) const
@@ -175,7 +150,7 @@ namespace PathFinder
         }
 
         HAL::Shader* oldShader = &(*oldShaderIt);
-        HAL::Shader* newShader = LoadAndCacheShader(oldShader->PipelineStage(), shaderFile);
+        HAL::Shader* newShader = LoadAndCacheShader(oldShader->PipelineStage(), oldShader->EntryPointName().ToString(), shaderFile);
 
         // Failed recompilation is OK
         if (!newShader)
@@ -196,58 +171,13 @@ namespace PathFinder
         {
             const ShaderBundle& shaderBundle = mShaderEntryPointFilePathToShaderAssociations[shaderFile];
 
-            RecompileShader(shaderBundle.VertexShader, shaderFile);
-            RecompileShader(shaderBundle.PixelShader, shaderFile);
-            RecompileShader(shaderBundle.HullShader, shaderFile);
-            RecompileShader(shaderBundle.DomainShader, shaderFile);
-            RecompileShader(shaderBundle.GeometryShader, shaderFile);
-            RecompileShader(shaderBundle.ComputeShader, shaderFile);
-            RecompileShader(shaderBundle.RayGenShader, shaderFile);
-            RecompileShader(shaderBundle.RayAnyHitShader, shaderFile);
-            RecompileShader(shaderBundle.RayClosestHitShader, shaderFile);
-            RecompileShader(shaderBundle.RayMissShader, shaderFile);
-            RecompileShader(shaderBundle.RayIntersectionShader, shaderFile);
+            for (auto& [entryPointName, shaderIterator] : shaderBundle)
+            {
+                RecompileShader(shaderIterator, shaderFile);
+            }
         }
 
         mEntryPointShaderFilesToRecompile.clear();
-    }
-
-    void ShaderManager::ShaderBundle::SetShader(ShaderListIterator it)
-    {
-        switch (it->PipelineStage())
-        {
-        case HAL::Shader::Stage::Vertex: VertexShader = it; break;
-        case HAL::Shader::Stage::Hull: HullShader = it; break;
-        case HAL::Shader::Stage::Domain: DomainShader = it; break;
-        case HAL::Shader::Stage::Geometry: GeometryShader = it; break;
-        case HAL::Shader::Stage::Pixel: PixelShader = it; break;
-        case HAL::Shader::Stage::Compute: ComputeShader = it; break;
-        case HAL::Shader::Stage::RayGeneration: RayGenShader = it; break;
-        case HAL::Shader::Stage::RayClosestHit: RayClosestHitShader = it; break;
-        case HAL::Shader::Stage::RayAnyHit: RayAnyHitShader = it; break;
-        case HAL::Shader::Stage::RayMiss: RayMissShader = it; break;
-        case HAL::Shader::Stage::RayIntersection: RayIntersectionShader = it; break;
-        default: break;
-        }
-    }
-
-    ShaderManager::ShaderListIterator ShaderManager::ShaderBundle::GetShader(HAL::Shader::Stage stage) const
-    {
-        switch (stage)
-        {
-        case HAL::Shader::Stage::Vertex: return VertexShader;
-        case HAL::Shader::Stage::Hull: return HullShader;
-        case HAL::Shader::Stage::Domain: return DomainShader;
-        case HAL::Shader::Stage::Geometry: return GeometryShader;
-        case HAL::Shader::Stage::Pixel: return PixelShader;
-        case HAL::Shader::Stage::Compute: return ComputeShader;
-        case HAL::Shader::Stage::RayGeneration: return RayGenShader;
-        case HAL::Shader::Stage::RayClosestHit: return RayClosestHitShader;
-        case HAL::Shader::Stage::RayAnyHit: return RayAnyHitShader;
-        case HAL::Shader::Stage::RayMiss: return RayMissShader;
-        case HAL::Shader::Stage::RayIntersection: return RayIntersectionShader;
-        default: return ShaderListIterator{};
-        }
     }
 
 }

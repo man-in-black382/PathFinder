@@ -15,9 +15,9 @@ namespace PathFinder
         glm::vec4 HaltonSequence[MaxSupportedLights];
         // 16 byte boundary
         uint32_t BlueNoiseTextureIndex;
-        uint32_t AnalyticalLuminanceOutputTextureIndex;
-        uint32_t StochasticUnshadowedLuminanceOutputTextureIndex;
-        uint32_t StochasticShadowedLuminanceOutputTextureIndex;
+        uint32_t AnalyticalOutputTextureIndex;
+        uint32_t StochasticUnshadowedOutputTextureIndex;
+        uint32_t StochasticShadowedOutputTextureIndex;
         // 16 byte boundary
         glm::uvec2 BlueNoiseTextureSize;
         uint32_t GBufferMaterialDataTextureIndex;
@@ -37,6 +37,8 @@ namespace PathFinder
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
 
     private:
+        uint32_t CompressLightPartitionInfo(const GPULightTablePartitionInfo& info) const;
+
         uint64_t mFrameNumber = 0;
     };
 

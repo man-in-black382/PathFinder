@@ -119,9 +119,9 @@ namespace PathFinder
             proxy.RenderTargetFormats.size() > 7 ? std::optional(proxy.RenderTargetFormats[7]) : std::nullopt
         );
 
-        HAL::Shader* vertexShader = mShaderManager->LoadShader(HAL::Shader::Stage::Vertex, proxy.VertexShaderFileName);
-        HAL::Shader* pixelShader = mShaderManager->LoadShader(HAL::Shader::Stage::Pixel, proxy.PixelShaderFileName);
-        HAL::Shader* geometryShader = proxy.GeometryShaderFileName ? mShaderManager->LoadShader(HAL::Shader::Stage::Geometry, *proxy.GeometryShaderFileName) : nullptr;
+        HAL::Shader* vertexShader = mShaderManager->LoadShader(HAL::Shader::Stage::Vertex, mDefaultVertexEntryPointName, proxy.VertexShaderFileName);
+        HAL::Shader* pixelShader = mShaderManager->LoadShader(HAL::Shader::Stage::Pixel, mDefaultPixelEntryPointName, proxy.PixelShaderFileName);
+        HAL::Shader* geometryShader = proxy.GeometryShaderFileName ? mShaderManager->LoadShader(HAL::Shader::Stage::Geometry, mDefaultGeometryEntryPointName, *proxy.GeometryShaderFileName) : nullptr;
         
         newState.SetVertexShader(vertexShader);
         newState.SetPixelShader(pixelShader);
@@ -150,7 +150,7 @@ namespace PathFinder
 
         HAL::ComputePipelineState newState{ mDevice };
 
-        HAL::Shader* computeShader = mShaderManager->LoadShader(HAL::Shader::Stage::Compute, proxy.ComputeShaderFileName);
+        HAL::Shader* computeShader = mShaderManager->LoadShader(HAL::Shader::Stage::Compute, mDefaultComputeEntryPointName, proxy.ComputeShaderFileName);
 
         newState.SetRootSignature(GetNamedRootSignatureOrDefault(proxy.RootSignatureName));
         newState.SetComputeShader(computeShader);
@@ -175,13 +175,13 @@ namespace PathFinder
         auto [iter, success] = mPipelineStates.emplace(name, RayTracingStateWrapper{ HAL::RayTracingPipelineState{ mDevice }, nullptr });
         RayTracingStateWrapper& newStateWrapper = std::get<RayTracingStateWrapper>(iter->second);
 
-        HAL::Shader* rayGenShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayGeneration, proxy.RayGenerationShaderFileName);
+        HAL::Shader* rayGenShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayGeneration, mDefaultRayGenerationEntryPointName, proxy.RayGenerationShaderFileName);
         newStateWrapper.State.SetRayGenerationShader({ rayGenShader, GetNamedRootSignatureOrNull(proxy.RayGenerationLocalRootSignatureName) });
         AssociateStateWithShader(&iter->second, rayGenShader);
 
         for (const RayTracingStateProxy::MissShader& missShaderInfo : proxy.MissShaders())
         {
-            HAL::Shader* missShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayMiss, missShaderInfo.MissShaderFileName);
+            HAL::Shader* missShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayMiss, mDefaultRayMissEntryPointName, missShaderInfo.MissShaderFileName);
             newStateWrapper.State.AddMissShader({ missShader, GetNamedRootSignatureOrNull(missShaderInfo.LocalRootSignatureName) });
             AssociateStateWithShader(&iter->second, missShader);
         }
@@ -192,19 +192,19 @@ namespace PathFinder
 
             if (auto fileName = hitGroupInfo.ShaderFileNames.AnyHitShaderFileName)
             {
-                shaders.AnyHitShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayAnyHit, *fileName);
+                shaders.AnyHitShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayAnyHit, mDefaultRayAnyHitEntryPointName, *fileName);
                 AssociateStateWithShader(&iter->second, shaders.AnyHitShader);
             }
 
             if (auto fileName = hitGroupInfo.ShaderFileNames.ClosestHitShaderFileName)
             {
-                shaders.ClosestHitShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayClosestHit, *fileName);
+                shaders.ClosestHitShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayClosestHit, mDefaultRayClosestHitEntryPointName, *fileName);
                 AssociateStateWithShader(&iter->second, shaders.ClosestHitShader);
             }
 
             if (auto fileName = hitGroupInfo.ShaderFileNames.IntersectionShaderFileName)
             {
-                shaders.IntersectionShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayIntersection, *fileName);
+                shaders.IntersectionShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayIntersection, mDefaultRayIntersectionEntryPointName, *fileName);
                 AssociateStateWithShader(&iter->second, shaders.IntersectionShader);
             }
 

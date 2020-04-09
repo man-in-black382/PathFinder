@@ -12,7 +12,7 @@ namespace PathFinder
     {
         stateCreator->CreateComputeState(PSONames::ToneMapping, [](ComputeStateProxy& state)
         {
-            state.ComputeShaderFileName = "ToneMappingRenderPass.hlsl";
+            state.ComputeShaderFileName = "ToneMapping.hlsl";
         });
     }
 
@@ -22,7 +22,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
 
 
-        scheduler->ReadTexture(ResourceNames::AnalyticalLuminanceOutput);
+        scheduler->ReadTexture(ResourceNames::ShadingAnalyticalOutput);
     }
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -30,7 +30,7 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::AnalyticalLuminanceOutput/*BloomCompositionOutput*/);
+        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ShadingAnalyticalOutput/*BloomCompositionOutput*/);
         cbContent.OutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
 

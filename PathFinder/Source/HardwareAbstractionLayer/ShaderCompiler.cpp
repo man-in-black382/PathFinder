@@ -79,15 +79,16 @@ namespace HAL
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(mCompiler.GetAddressOf()))); 
     }
 
-    ShaderCompiler::CompilationResult ShaderCompiler::Compile(const std::filesystem::path& path, Shader::Stage stage, bool debugBuild)
+    ShaderCompiler::CompilationResult ShaderCompiler::Compile(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild)
     {
         assert_format(std::filesystem::exists(path), "Shader file ", path.filename(), " doesn't exist");
 
-        CompilerInputs inputs{ stage, Shader::Profile::P6_3 };
+        std::wstring wEntryPoint = StringToWString(entryPoint);
+        std::wstring wProfile = ProfileString(stage, Shader::Profile::P6_3);
 
         std::vector<std::wstring> arguments;
         arguments.push_back(L"/all_resources_bound");
-        
+
         if (debugBuild)
         {
             arguments.push_back(L"/Zi");
@@ -111,8 +112,8 @@ namespace HAL
         mCompiler->Compile(
             source.Get(),                       // program text
             path.filename().wstring().c_str(),  // file name, mostly for error messages
-            inputs.EntryPoint.c_str(),          // entry point function
-            inputs.Profile.c_str(),             // target profile
+            wEntryPoint.c_str(),          // entry point function
+            wProfile.c_str(),             // target profile
             argumentPtrs.data(),                // compilation arguments
             argumentPtrs.size(),                // number of compilation arguments
             nullptr, 0,                         // name/value defines and their count
@@ -127,7 +128,7 @@ namespace HAL
             Microsoft::WRL::ComPtr<IDxcBlob> resultingBlob;
             result->GetResult(resultingBlob.GetAddressOf()); 
 
-            CompilationResult compilationResult{ Shader{ resultingBlob, inputs.EntryPoint, stage }, reader.AllReadFileRelativePaths() };
+            CompilationResult compilationResult{ Shader{ resultingBlob, wEntryPoint, stage }, reader.AllReadFileRelativePaths() };
             return compilationResult;
         }
         else {
@@ -144,33 +145,35 @@ namespace HAL
         }
     }
 
-    ShaderCompiler::CompilerInputs::CompilerInputs(Shader::Stage stage, Shader::Profile profile)
+    std::wstring ShaderCompiler::ProfileString(Shader::Stage stage, Shader::Profile profile)
     {
-        std::wstring profilePrefix;
+        std::wstring profileString;
 
-        switch (stage) 
+        switch (stage)
         {
-        case Shader::Stage::Vertex:		EntryPoint = L"VSMain"; profilePrefix = L"vs_"; break;
-        case Shader::Stage::Hull:		EntryPoint = L"HSMain"; profilePrefix = L"hs_"; break;
-        case Shader::Stage::Domain:		EntryPoint = L"DSMain"; profilePrefix = L"ds_"; break;
-        case Shader::Stage::Geometry:	EntryPoint = L"GSMain"; profilePrefix = L"gs_"; break;
-        case Shader::Stage::Pixel:		EntryPoint = L"PSMain"; profilePrefix = L"ps_"; break;
-        case Shader::Stage::Compute:	EntryPoint = L"CSMain"; profilePrefix = L"cs_"; break;
+        case Shader::Stage::Vertex: profileString = L"vs_"; break;
+        case Shader::Stage::Hull: profileString = L"hs_"; break;
+        case Shader::Stage::Domain:	profileString = L"ds_"; break;
+        case Shader::Stage::Geometry: profileString = L"gs_"; break;
+        case Shader::Stage::Pixel: profileString = L"ps_"; break;
+        case Shader::Stage::Compute: profileString = L"cs_"; break;
 
-        case Shader::Stage::RayGeneration:      EntryPoint = L"RayGeneration";   profilePrefix = L"lib_"; break;
-        case Shader::Stage::RayClosestHit:      EntryPoint = L"RayClosestHit";   profilePrefix = L"lib_"; break;
-        case Shader::Stage::RayAnyHit:          EntryPoint = L"RayAnyHit";       profilePrefix = L"lib_"; break;
-        case Shader::Stage::RayMiss:            EntryPoint = L"RayMiss";         profilePrefix = L"lib_"; break;
-        case Shader::Stage::RayIntersection:    EntryPoint = L"RayIntersection"; profilePrefix = L"lib_"; break;
+        case Shader::Stage::RayGeneration: profileString = L"lib_"; break;
+        case Shader::Stage::RayClosestHit: profileString = L"lib_"; break;
+        case Shader::Stage::RayAnyHit: profileString = L"lib_"; break;
+        case Shader::Stage::RayMiss: profileString = L"lib_"; break;
+        case Shader::Stage::RayIntersection: profileString = L"lib_"; break;
 
         default: break;
         }
 
         switch (profile)
         {
-        case Shader::Profile::P5_1: Profile = profilePrefix + L"5_1"; break;
-        case Shader::Profile::P6_3: Profile = profilePrefix + L"6_3"; break;
+        case Shader::Profile::P6_3: profileString += L"6_3"; break;
+        case Shader::Profile::P6_4: profileString += L"6_4"; break;
         }
+
+        return profileString;
     }
 
 }

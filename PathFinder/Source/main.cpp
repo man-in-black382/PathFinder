@@ -13,6 +13,7 @@
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/ShadowNoiseEstimationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
@@ -79,9 +80,10 @@ int main(int argc, char** argv)
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
     auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
+    auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
+    auto shadowNoiseEstimationPass = std::make_unique<PathFinder::ShadowNoiseEstimationRenderPass>();
     auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
     auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
-    auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
     auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
     auto uiPass = std::make_unique<PathFinder::UIRenderPass>();
@@ -91,6 +93,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(distanceFieldGenerationPass.get());
     engine.AddRenderPass(GBufferPass.get());
     engine.AddRenderPass(shadingPass.get());
+    engine.AddRenderPass(shadowNoiseEstimationPass.get());
     engine.AddRenderPass(bloomBlurPass.get());
     engine.AddRenderPass(bloomCompositionPass.get());
     engine.AddRenderPass(toneMappingPass.get());
@@ -100,19 +103,61 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
     //renderPassGraph.AddPass(blurPass.get());
 
-    auto flatLight0 = scene.EmplaceRectangularLight();
-    flatLight0->SetWidth(2);
-    flatLight0->SetHeight(2);
-    flatLight0->SetPosition({ -5.0, 0.0, 0.0 });
-    flatLight0->SetNormal({ 0.0, .0, 1.0 });
-    flatLight0->SetColor({249.0 / 255, 215.0 / 255, 28.0 / 255 });
-    flatLight0->SetLuminousPower(5000);
-
     auto sphereLight0 = scene.EmplaceSphericalLight();
     sphereLight0->SetRadius(2);
-    sphereLight0->SetPosition({ 5.0, 0.0, 0.0 });
+    sphereLight0->SetPosition({ 2.5, 0.0, 0.0 });
     sphereLight0->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
     sphereLight0->SetLuminousPower(50000);
+
+    auto sphereLight1 = scene.EmplaceSphericalLight();
+    sphereLight1->SetRadius(2);
+    sphereLight1->SetPosition({ -2.5, 0.0, 0.0 });
+    sphereLight1->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
+    sphereLight1->SetLuminousPower(50000);
+
+    //auto sphereLight2 = scene.EmplaceSphericalLight();
+    //sphereLight2->SetRadius(2);
+    //sphereLight2->SetPosition({ 7.5, 0.0, 0.0 });
+    //sphereLight2->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
+    //sphereLight2->SetLuminousPower(50000);
+
+    //auto sphereLight3 = scene.EmplaceSphericalLight();
+    //sphereLight3->SetRadius(2);
+    //sphereLight3->SetPosition({ -7.5, 0.0, 0.0 });
+    //sphereLight3->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
+    //sphereLight3->SetLuminousPower(50000);
+
+    //auto flatLight0 = scene.EmplaceRectangularLight();
+    //flatLight0->SetWidth(2);
+    //flatLight0->SetHeight(2);
+    //flatLight0->SetPosition({ 7.5, 0.0, 0.0 });
+    //flatLight0->SetNormal({ 0.0, .0, 1.0 });
+    //flatLight0->SetColor({ 249.0 / 255, 215.0 / 255, 28.0 / 255 });
+    //flatLight0->SetLuminousPower(5000);
+
+    //auto flatLight1 = scene.EmplaceRectangularLight();
+    //flatLight1->SetWidth(2);
+    //flatLight1->SetHeight(2);
+    //flatLight1->SetPosition({ -2.5, 0.0, 0.0 });
+    //flatLight1->SetNormal({ 0.0, .0, 1.0 });
+    //flatLight1->SetColor({ 125.0 / 255, 215.0 / 255, 28.0 / 255 });
+    //flatLight1->SetLuminousPower(5000);
+
+    /*auto flatLight2 = scene.EmplaceRectangularLight();
+    flatLight2->SetWidth(2);
+    flatLight2->SetHeight(2);
+    flatLight2->SetPosition({ -7.5, 0.0, 0.0 });
+    flatLight2->SetNormal({ 0.0, .0, 1.0 });
+    flatLight2->SetColor({ 201.0 / 255, 125.0 / 255, 255.0 / 255 });
+    flatLight2->SetLuminousPower(5000);
+
+    auto flatLight3 = scene.EmplaceRectangularLight();
+    flatLight3->SetWidth(2);
+    flatLight3->SetHeight(2);
+    flatLight3->SetPosition({ 2.5, 0.0, 0.0 });
+    flatLight3->SetNormal({ 0.0, .0, 1.0 });
+    flatLight3->SetColor({ 230.0 / 255, 215.0 / 255, 28.0 / 255 });
+    flatLight3->SetLuminousPower(5000);*/
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",

@@ -32,11 +32,11 @@ struct Light
 struct LightTablePartitionInfo
 {
     uint SphericalLightsOffset;
-    uint DiskLightsOffset;
     uint RectangularLightsOffset;
+    uint DiskLightsOffset;
     uint SphericalLightsCount;
-    uint DiskLightsCount;
     uint RectangularLightsCount;
+    uint DiskLightsCount;
     uint TotalLightsCount;
     uint Pad1__;
 };
@@ -57,7 +57,7 @@ struct LTCTerms
     sampler LUTSampler;
 };
 
-struct LTCAnalyticalEvaluationResult
+struct LTCAnalyticEvaluationResult
 {
     // Luminance outgoing from the surface point
     // in the view direction
@@ -90,8 +90,8 @@ struct LightPoints
 
 struct LightSample
 {
-    // Ray from surface to light
-    Ray LightToSurfaceRay;
+    // Ray-light intersection point
+    float3 IntersectionPoint;
 
     // Probability density function value
     // evaluated for surface-to-light vector.
@@ -124,14 +124,6 @@ struct ShericalLightSamplingInputs
     // Terms required for solid angle sampling
     float Q;
 };
-
-LightSample ZeroLightSample()
-{
-    LightSample lightSample;
-    lightSample.PDF = 0.0;
-    lightSample.LightToSurfaceRay = InitRay(0.xxx, 0.xxx, 0.0, 0.0);
-    return lightSample;
-}
 
 float LTCSampleVectorPDF(float3x3 MInv, float MDet, float3 L)
 {
@@ -168,7 +160,7 @@ LTCStochasticEvaluationResult EvaluateLTCLightingForSampleVector(Light light, LT
     return result;
 }
 
-LTCAnalyticalEvaluationResult ApplyMaterialAndLightingToLTCLobes(float specularLobe, float diffuseLobe, Light light, LTCTerms ltcTerms)
+LTCAnalyticEvaluationResult ApplyMaterialAndLightingToLTCLobes(float specularLobe, float diffuseLobe, Light light, LTCTerms ltcTerms)
 {
     float3 specular = specularLobe * ltcTerms.SurfaceSpecularAlbedo;
     float3 diffuse = diffuseLobe * ltcTerms.SurfaceDiffuseAlbedo;
@@ -176,7 +168,7 @@ LTCAnalyticalEvaluationResult ApplyMaterialAndLightingToLTCLobes(float specularL
     float specularMagnitude = CIELuminance(specular);
     float diffuseMagnitude = CIELuminance(diffuse);
 
-    LTCAnalyticalEvaluationResult evaluationResult;
+    LTCAnalyticEvaluationResult evaluationResult;
     evaluationResult.OutgoingLuminance = (diffuse + specular) * light.Color.rgb * light.LuminousIntensity;
     evaluationResult.DiffuseProbability = diffuseMagnitude / max(diffuseMagnitude + specularMagnitude, 1e-5);
     evaluationResult.BRDFProbability = lerp(specularLobe, diffuseLobe, evaluationResult.DiffuseProbability);
@@ -184,7 +176,7 @@ LTCAnalyticalEvaluationResult ApplyMaterialAndLightingToLTCLobes(float specularL
     return evaluationResult;
 }
 
-LTCAnalyticalEvaluationResult EvaluateDirectDiskLighting(
+LTCAnalyticEvaluationResult EvaluateDirectDiskLighting(
     Light light, 
     LightPoints lightPoints,
     GBufferStandard gBuffer,
@@ -198,7 +190,7 @@ LTCAnalyticalEvaluationResult EvaluateDirectDiskLighting(
     return ApplyMaterialAndLightingToLTCLobes(specularLobe, diffuseLobe, light, ltcTerms);
 }
 
-LTCAnalyticalEvaluationResult EvaluateDirectSphericalLighting(
+LTCAnalyticEvaluationResult EvaluateDirectSphericalLighting(
     Light light,
     LightPoints lightPoints,
     GBufferStandard gBuffer,
@@ -212,7 +204,7 @@ LTCAnalyticalEvaluationResult EvaluateDirectSphericalLighting(
     return ApplyMaterialAndLightingToLTCLobes(specularLobe, diffuseLobe, light, ltcTerms);
 }
 
-LTCAnalyticalEvaluationResult EvaluateDirectRectangularLighting(
+LTCAnalyticEvaluationResult EvaluateDirectRectangularLighting(
     Light light,
     LightPoints lightPoints,
     GBufferStandard gBuffer,
@@ -377,28 +369,24 @@ float3 RectangularLightSampleVector(RectangularLightSamplingInputs samplingInput
     return normalize(toLightVector);
 }
 
-bool SampleRectangularLight(Light light, RectangularLightSamplingInputs samplingInputs, LightPoints lightPoints, float3 samplingVector, out LightSample lightSample)
+LightSample SampleRectangularLight(Light light, RectangularLightSamplingInputs samplingInputs, LightPoints lightPoints, float3 samplingVector)
 {
     Ray ray = InitRay(samplingInputs.SurfacePoint, samplingVector);
     Rectangle rectangle = InitRectangle(lightPoints.Points);
     Plane plane = InitPlane(light.Orientation.xyz, -length(light.Position.xyz));
 
+    LightSample lightSample;
+    lightSample.IntersectionPoint = 0.xxx;
+    lightSample.PDF = -1.0;
+
     float3 xp;
     if (RayRectangleIntersection(rectangle, plane, ray, xp))
     {
-        // Light to surface instead of surface to light to account for 
-        // front faces when tracing shadow ray from light's perspective
-        float3 lightToSurface = samplingInputs.SurfacePoint - xp; 
-        float vLength = length(lightToSurface);
-        float3 direction = lightToSurface / vLength;
-        lightSample.LightToSurfaceRay = InitRay(xp, direction, 0.0, vLength);
-
+        lightSample.IntersectionPoint = xp;
         lightSample.PDF = 1.0f / samplingInputs.SolidAngle;
-
-        return true;
     }
 
-    return false;
+    return lightSample;
 }
 
 //-------------------------------------------------------------------------------//
@@ -438,27 +426,23 @@ float3 SphericalLightSampleVector(ShericalLightSamplingInputs samplingInputs, fl
     return worldSampleVector;
 }
 
-bool SampleSphericalLight(Light light, ShericalLightSamplingInputs samplingInputs, float3 samplingVector, out LightSample lightSample)
+LightSample SampleSphericalLight(Light light, ShericalLightSamplingInputs samplingInputs, float3 samplingVector)
 {
     Ray ray = InitRay(samplingInputs.SurfacePoint, samplingVector);
     Sphere sphere = InitSphere(light.Position.xyz, light.Width * 0.5);
 
+    LightSample lightSample;
+    lightSample.IntersectionPoint = 0.xxx;
+    lightSample.PDF = -1.0;
+
     float3 xp;
     if (RaySphereIntersection(sphere, ray, xp))
     {
-        // Light to surface instead of surface to light to account for 
-        // front faces when tracing shadow ray from light's perspective
-        float3 lightToSurface = samplingInputs.SurfacePoint - xp;
-        float vLength = length(lightToSurface);
-        float3 direction = lightToSurface / vLength;
-        lightSample.LightToSurfaceRay = InitRay(xp, direction, 0.0, vLength);
-
+        lightSample.IntersectionPoint = xp;
         lightSample.PDF = 1.0f / samplingInputs.SolidAngle;
-
-        return true;
     }
-    
-    return false;
+
+    return lightSample;
 }
 
 // Solid-angle sampling of spherical ellipsoids (disk lights) is described in the research below,

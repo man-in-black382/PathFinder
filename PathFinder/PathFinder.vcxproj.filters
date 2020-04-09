@@ -429,6 +429,9 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2312,6 +2315,9 @@
     <ClInclude Include="Source\ThirdParty\optick\optick.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2840,7 +2846,6 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SpaceConversion.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\ToneMappingRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapHelperCompression.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapHelperInitialization.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapGeneration.hlsl" />
@@ -2863,6 +2868,8 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Constants.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ShadingRenderPass.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimation.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ToneMapping.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

@@ -16,7 +16,10 @@ namespace PathFinder
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
         inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
         inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
-        inline Foundation::Name AnalyticalLuminanceOutput{ "Resource_Shading_Analytical_Luminance" };
+        inline Foundation::Name ShadingAnalyticalOutput{ "Resource_Shading_Analytical_Output" };
+        inline Foundation::Name ShadingStochasticShadowedOutput{ "Resource_Shading_Stochastic_Shadowed_Output" };
+        inline Foundation::Name ShadingStochasticUnshadowedOutput{ "Resource_Shading_Unstochastic_Shadowed_Output" };
+        inline Foundation::Name ShadowNoiseEstimationOutput{ "Resource_Shadow_Noise_Estimation_Output" };
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
         inline Foundation::Name BloomCompositionOutput{ "Resource_Bloom_Composition_Output" };
@@ -31,13 +34,14 @@ namespace PathFinder
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
         inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
-        inline Foundation::Name Shadows{ "PSO_Shadows" };
+        inline Foundation::Name Shading{ "PSO_Shading" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name GaussianBlur{ "PSO_GaussianBlur" };
         inline Foundation::Name BloomDownscaling{ "PSO_BloomDownscaling" };
         inline Foundation::Name BloomBlur{ "PSO_BloomBlur" };
         inline Foundation::Name BloomComposition{ "PSO_BloomComposition" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
+        inline Foundation::Name ShadowNoiseEstimation{ "PSO_ShadowNoiseEstimation" };
         inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
     }  

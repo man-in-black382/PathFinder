@@ -75,7 +75,10 @@ namespace PathFinder
     void AsyncComputeDevice<CommandListT, CommandQueueT>::SetRootConstants(
         const T& constants, uint16_t shaderRegister, uint16_t registerSpace)
     {
-        auto index = mAppliedComputeState->GetRootSignature()->GetParameterIndex({shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
+        const HAL::RootSignature* signature = mAppliedComputeState ?
+            mAppliedComputeState->GetRootSignature() : mAppliedRayTracingState->GetGlobalRootSignature();
+
+        auto index = signature->GetParameterIndex({shaderRegister, registerSpace, HAL::ShaderRegister::ConstantBuffer });
         assert_format(index, "Root signature parameter doesn't exist");
         mCommandList->SetComputeRootConstants(constants, index->IndexInSignature);
     }

@@ -46,16 +46,10 @@ namespace HAL
 
         ShaderCompiler();
 
-        CompilationResult Compile(const std::filesystem::path& path, Shader::Stage stage, bool debugBuild);
+        CompilationResult Compile(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild);
 
     private:
-        struct CompilerInputs
-        {
-            CompilerInputs(Shader::Stage stage, Shader::Profile profile);
-
-            std::wstring EntryPoint;
-            std::wstring Profile;
-        };
+        std::wstring ProfileString(Shader::Stage stage, Shader::Profile profile);
 
         Microsoft::WRL::ComPtr<IDxcLibrary> mLibrary;
         Microsoft::WRL::ComPtr<IDxcCompiler> mCompiler;

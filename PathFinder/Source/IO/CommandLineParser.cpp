@@ -29,6 +29,11 @@ namespace PathFinder
         {
             mUseShadersInProjectFolder = true;
         }
+
+        if (strcmp(argv, "-debug_layer") == 0)
+        {
+            mDebugLayerEnabled = true;
+        }
     }
 
 }

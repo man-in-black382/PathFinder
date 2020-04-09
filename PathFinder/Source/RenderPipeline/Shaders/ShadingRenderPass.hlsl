@@ -9,8 +9,11 @@
 #include "Light.hlsl"
 #include "GBuffer.hlsl"
 
+// Turing-level hardware can realistically work with 4 lights and 1 ray per light, per tile
+// We must forget about more to make space for other rendering workloads.
 static const uint MaxSupportedLights = 4;
 static const uint RaysPerLight = 1;
+static const float RaysPerLightInverse = 1.0 / RaysPerLight;
 
 struct ExposureOutput
 {
@@ -18,7 +21,7 @@ struct ExposureOutput
     float3 ExposedLuminance;
 
     // A luminance value that exceeded Saturation Based Sensitivity
-    // of our virtual camera's sensor. 0 if no oversaturation occurred.
+    // of our virtual camera's sensor. 0 if no over saturation occurred.
     float3 OversaturatedLuminance;
 };
 
@@ -29,38 +32,113 @@ struct ShadowRayPayload
 
 struct ShadingResult
 {
-    float3 AnalyticalUnshadowedOutgoingLuminance;
+    float3 AnalyticUnshadowedOutgoingLuminance;
     float3 StochasticUnshadowedOutgoingLuminance;
     float3 StochasticShadowedOutgoingLuminance;
+};
+
+// Store an absolute minimum of data required for ray tracing.
+// We must be very careful with how many registers we occupy.
+struct RTCache
+{
+    uint4 LightStatichticsData;
+    float3 LightIntersectionPoints[MaxSupportedLights * RaysPerLight];
 };
 
 struct PassData
 {
     // 1 4-component set of Halton numbers for rays of each light
-    float4 HaltonSequence[MaxSupportedLights];
+    float4 HaltonSequence[MaxSupportedLights * RaysPerLight];
     // 16 byte boundary
     uint BlueNoiseTextureIndex;
-    uint AnalyticalLuminanceOutputTextureIndex;
-    uint StochasticUnshadowedLuminanceOutputTextureIndex;
-    uint StochasticShadowedLuminanceOutputTextureIndex;
+    uint AnalyticOutputTextureIndex;
+    uint StochasticUnshadowedOutputTextureIndex;
+    uint StochasticShadowedOutputTextureIndex;
     // 16 byte boundary
     uint2 BlueNoiseTextureSize;
     uint GBufferMaterialDataTextureIndex;
     uint GBufferDepthTextureIndex;
-    // 16 byte boundary
-    LightTablePartitionInfo LightOffsets;
+};
+
+struct RootConstants
+{
+    uint CompressedLightPartitionInfo;
 };
 
 #define PassDataType PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 
+ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 RaytracingAccelerationStructure SceneBVH : register(t0, space0);
-StructuredBuffer<MeshInstance> InstanceTable : register(t1, space0);
-StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t2, space0);
-StructuredBuffer<IndexU32> UnifiedIndexBuffer : register(t3, space0);
-StructuredBuffer<Light> LightTable : register(t4, space0);
-StructuredBuffer<Material> MaterialTable : register(t5, space0);
+StructuredBuffer<Light> LightTable : register(t1, space0);
+StructuredBuffer<Material> MaterialTable : register(t2, space0);
+
+// An implementation of Combining Analytic Direct Illumination and Stochastic Shadows
+// http://casual-effects.com/research/Heitz2018Shadow/Heitz2018SIGGRAPHTalk.pdf
+// https://hal.archives-ouvertes.fr/hal-01761558/file/heitzI3D2018_slides.pdf
+// https://research.nvidia.com/sites/default/files/pubs/2018-05_Combining-Analytic-Direct//I3D2018_combining.pdf
+
+LightTablePartitionInfo DecompressLightPartitionInfo()
+{
+    // Light table offsets are supplied through root constants to speed up access
+    // Lights are expected to be placed in order: spherical -> rectangular -> disk
+    // Offsets are encoded in 8 bits each which means there can be no more than 256 lights total
+    uint compressed = RootConstantBuffer.CompressedLightPartitionInfo;
+    uint sphericalLightsOffset = (compressed >> 24) & 0xFF;
+    uint rectangularLightsOffset = (compressed >> 16) & 0xFF;
+    uint diskLightsOffset = (compressed >> 8) & 0xFF;    
+    uint totalLightsCount = compressed & 0xFF;
+
+    uint sphericalLightsCount = rectangularLightsOffset - sphericalLightsOffset;
+    uint rectangularLightsCount = diskLightsOffset - rectangularLightsOffset;
+    uint diskLightsCount = totalLightsCount - rectangularLightsCount - sphericalLightsCount;
+
+    LightTablePartitionInfo info;
+    info.DiskLightsCount = diskLightsCount;
+    info.DiskLightsOffset = diskLightsOffset;
+    info.RectangularLightsCount = rectangularLightsCount;
+    info.RectangularLightsOffset = rectangularLightsOffset;
+    info.SphericalLightsCount = sphericalLightsCount;
+    info.SphericalLightsOffset = sphericalLightsOffset;
+    info.TotalLightsCount = totalLightsCount;
+
+    return info;
+}
+
+RTCache ZeroRTCache()
+{
+    RTCache cache;
+
+    [unroll]
+    for (uint i = 0; i < RaysPerLight * MaxSupportedLights; ++i)
+    {
+        //cache.LightIntersectionPoints[i] = 0.xxx;
+        //cache.StochasticOutgoingLuminances[i] = 0.xxx;
+    }
+    return cache;
+}
+
+void SetRTCacheProbabilities(inout RTCache cache, uint lightIndex, float brdfProbability, float diffuseProbability, float lightSamplePDF)
+{
+    // Compress BRDF probability to 8 bits, diffuse prob. and light PDF to 12 bits each to pack them into a single UINT
+    // As PDFs and probabilities are linear normalized values they are good candidates for fixed-point compression
+    uint brdfProbabilityU8 = brdfProbability * U8Max;
+    uint diffuseProbabilityU12 = diffuseProbability * U12Max;
+    uint lightPDFU12 = lightSamplePDF * U12Max;
+
+    uint compressed = 0;
+    compressed |= brdfProbabilityU8 << 24;
+    compressed |= diffuseProbabilityU12 << 12;
+    compressed |= lightPDFU12;
+
+    cache.LightStatichticsData[lightIndex] = compressed;
+}
+
+void SetRTCacheLightIntersectinPoint(inout RTCache cache, uint lightIndex, float3 intersectionPoint)
+{
+    cache.LightIntersectionPoints[lightIndex] = intersectionPoint;
+}
 
 float4 RandomNumbersForLight(uint lightIndex, uint rayIndex, float4 blueNoise)
 {
@@ -83,9 +161,9 @@ float4 RandomNumbersForLight(uint lightIndex, uint rayIndex, float4 blueNoise)
 ShadingResult ZeroShadingResult()
 {
     ShadingResult result;
-    result.AnalyticalUnshadowedOutgoingLuminance = 0.xxx;
+    result.AnalyticUnshadowedOutgoingLuminance = 0.xxx;
     result.StochasticShadowedOutgoingLuminance = 0.xxx;
-    result.StochasticUnshadowedOutgoingLuminance = 1e-05; // Avoid NaNs later
+    result.StochasticUnshadowedOutgoingLuminance = 1e-05.xxx; // Avoid NaNs later
     return result;
 }
 
@@ -169,70 +247,47 @@ LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDi
     return terms;
 }
 
-float TraceShadowRay(Ray ray)
+float3 EvaluateStochasticLighting(Light light, LTCTerms ltcTerms, LTCAnalyticEvaluationResult directLightingEvaluationResult, LightSample lightSample, float3 surfacePosition)
 {
-    // Trace the ray.
-    // Set the ray's extents.
-    RayDesc dxrRay;
-    dxrRay.Origin = ray.Origin;
-    dxrRay.Direction = ray.Direction;
-    dxrRay.TMin = ray.TMin + 1e-03;
-    dxrRay.TMax = ray.TMax - 1e-03;
+    // PDF is expected to be negative for when the sample vector missed the light
+    if (lightSample.PDF < 0.0)
+    {
+        return 0.xxx;
+    }
 
-    // Exactly 0 shadow value will cause divisions by 0
-    ShadowRayPayload shadowPayload = { 0.0 };
-
-    TraceRay(SceneBVH,
-        RAY_FLAG_CULL_BACK_FACING_TRIANGLES
-        | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
-        | RAY_FLAG_FORCE_OPAQUE             // Skip any hit shaders
-        | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, // Skip closest hit shaders,
-        0xFF, // Instance mask
-        0, // Contribution to hit group index
-        0, // BLAS geometry multiplier for hit group index
-        0, // Miss shader index
-        dxrRay, shadowPayload);
-
-    return shadowPayload.ShadowFactor;
-}
-
-void EvaluateStochasticLightAndShadow(Light light, LTCTerms ltcTerms, LTCAnalyticalEvaluationResult directLightingEvaluationResult, LightSample lightSample, inout ShadingResult shadingResult)
-{
-    float3 surfaceToLightDir = -lightSample.LightToSurfaceRay.Direction;
+    float3 surfaceToLightDir = normalize(lightSample.IntersectionPoint.xyz - surfacePosition);
     LTCStochasticEvaluationResult brdfRayLightingEvaluationResult = EvaluateLTCLightingForSampleVector(light, ltcTerms, surfaceToLightDir, directLightingEvaluationResult.DiffuseProbability);
     float misPDF = lerp(lightSample.PDF, brdfRayLightingEvaluationResult.PDF, directLightingEvaluationResult.BRDFProbability);
 
     // This test should almost never fail because we just importance sampled from the BRDF.
     // Only an all black BRDF or a precision issue could trigger this.
-    if (directLightingEvaluationResult.BRDFProbability > 0.0f)
-    {
+    return directLightingEvaluationResult.BRDFProbability > 0.0f ? 
         // Stochastic estimate of incident light, without shadow
         // Note: projection cosine dot(w_i, n) is baked into the LTC-based BRDF
-        float3 luminance = brdfRayLightingEvaluationResult.OutgoingLuminance / misPDF;
-        shadingResult.StochasticUnshadowedOutgoingLuminance += luminance;
-
-        if (lightSample.LightToSurfaceRay.TMax > 1e-04)
-        {
-            float shadow = TraceShadowRay(lightSample.LightToSurfaceRay);
-            shadingResult.StochasticShadowedOutgoingLuminance += luminance * shadow ;
-        }
-    }
+        brdfRayLightingEvaluationResult.OutgoingLuminance / misPDF :
+        0.xxx;
 }
 
-ShadingResult ShadeWithSphericalLights(GBufferStandard gBuffer, LTCTerms ltcTerms, float4 blueNoise, float3 viewDirection, float3 surfacePosition)
+void ShadeWithSphericalLights(
+    GBufferStandard gBuffer, 
+    LTCTerms ltcTerms, 
+    LightTablePartitionInfo lightPartitionInfo, 
+    float4 blueNoise,
+    float3 viewDirection, 
+    float3 surfacePosition,
+    inout ShadingResult shadingResult,
+    inout RTCache cache)
 {
-    uint lightsCount = PassDataCB.LightOffsets.SphericalLightsCount;
-    ShadingResult shadingResult = ZeroShadingResult();
-
-    for (uint lightIdx = 0; lightIdx < lightsCount; ++lightIdx)
+    for (uint lightIdx = 0; lightIdx < lightPartitionInfo.SphericalLightsCount; ++lightIdx)
     {
-        uint lightTableOffset = lightIdx + PassDataCB.LightOffsets.SphericalLightsOffset;
+        uint lightTableOffset = lightIdx + lightPartitionInfo.SphericalLightsOffset;
 
         Light light = LightTable[lightTableOffset];
         LightPoints lightPoints = ComputeLightPoints(light, surfacePosition);
         ShericalLightSamplingInputs samplingInputs = ComputeSphericalLightSamplingInputs(light, surfacePosition);
-        LTCAnalyticalEvaluationResult directLightingEvaluationResult = EvaluateDirectSphericalLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
+        LTCAnalyticEvaluationResult directLightingEvaluationResult = EvaluateDirectSphericalLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
 
+        [unroll]
         for (uint rayIdx = 0; rayIdx < RaysPerLight; ++rayIdx)
         {
             float4 randomNumbers = RandomNumbersForLight(lightTableOffset, rayIdx, blueNoise);
@@ -249,33 +304,39 @@ ShadingResult ShadeWithSphericalLights(GBufferStandard gBuffer, LTCTerms ltcTerm
                 LTCSampleVector(M, randomNumbers.x, randomNumbers.y) :
                 SphericalLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
-            LightSample lightSample = ZeroLightSample();
-            if (SampleSphericalLight(light, samplingInputs, sampleVector, lightSample))
-            {
-                EvaluateStochasticLightAndShadow(light, ltcTerms, directLightingEvaluationResult, lightSample, shadingResult);
-            }
+            LightSample lightSample = SampleSphericalLight(light, samplingInputs, sampleVector);
+
+            //shadingResult.StochasticUnshadowedOutgoingLuminance += EvaluateStochasticLighting(light, ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition);
+            
+            uint index = lightTableOffset * RaysPerLight + rayIdx;
+            SetRTCacheProbabilities(cache, index, directLightingEvaluationResult.BRDFProbability, directLightingEvaluationResult.DiffuseProbability, lightSample.PDF);
+            SetRTCacheLightIntersectinPoint(cache, index, lightSample.IntersectionPoint);
         }
 
-        shadingResult.AnalyticalUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance;
+        shadingResult.AnalyticUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance;
     }
-
-    return shadingResult;
 }
 
-ShadingResult ShadeWithRectangularLights(GBufferStandard gBuffer, LTCTerms ltcTerms, float4 blueNoise, float3 viewDirection, float3 surfacePosition)
+void ShadeWithRectangularLights(
+    GBufferStandard gBuffer, 
+    LTCTerms ltcTerms,
+    LightTablePartitionInfo lightPartitionInfo,
+    float4 blueNoise,
+    float3 viewDirection,
+    float3 surfacePosition, 
+    inout ShadingResult shadingResult, 
+    inout RTCache cache)
 {
-    uint lightsCount = PassDataCB.LightOffsets.RectangularLightsCount;
-    ShadingResult shadingResult = ZeroShadingResult();
-
-    for (uint lightIdx = 0; lightIdx < lightsCount; ++lightIdx)
+    for (uint lightIdx = 0; lightIdx < lightPartitionInfo.RectangularLightsCount; ++lightIdx)
     {
-        uint lightTableOffset = lightIdx + PassDataCB.LightOffsets.RectangularLightsOffset;
+        uint lightTableOffset = lightIdx + lightPartitionInfo.RectangularLightsOffset;
 
         Light light = LightTable[lightTableOffset];
         LightPoints lightPoints = ComputeLightPoints(light, surfacePosition);
         RectangularLightSamplingInputs samplingInputs = ComputeRectangularLightSamplingInputs(lightPoints, surfacePosition);
-        LTCAnalyticalEvaluationResult directLightingEvaluationResult = EvaluateDirectRectangularLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
+        LTCAnalyticEvaluationResult directLightingEvaluationResult = EvaluateDirectRectangularLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
 
+        [unroll]
         for (uint rayIdx = 0; rayIdx < RaysPerLight; ++rayIdx)
         {
             float4 randomNumbers = RandomNumbersForLight(lightTableOffset, rayIdx, blueNoise);
@@ -287,51 +348,106 @@ ShadingResult ShadeWithRectangularLights(GBufferStandard gBuffer, LTCTerms ltcTe
                 LTCSampleVector(M, randomNumbers.x, randomNumbers.y) :
                 RectangularLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
-            LightSample lightSample = ZeroLightSample();
-            if (SampleRectangularLight(light, samplingInputs, lightPoints, sampleVector, lightSample))
-            {
-                EvaluateStochasticLightAndShadow(light, ltcTerms, directLightingEvaluationResult, lightSample, shadingResult);
-            }
+            LightSample lightSample = SampleRectangularLight(light, samplingInputs, lightPoints, sampleVector);
+            //shadingResult.StochasticUnshadowedOutgoingLuminance += EvaluateStochasticLighting(light, ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition);
+
+            uint index = lightTableOffset * RaysPerLight + rayIdx;
+            SetRTCacheProbabilities(cache, index, directLightingEvaluationResult.BRDFProbability, directLightingEvaluationResult.DiffuseProbability, lightSample.PDF);
+            SetRTCacheLightIntersectinPoint(cache, index, lightSample.IntersectionPoint);
         }
 
-        shadingResult.AnalyticalUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance;
+        shadingResult.AnalyticUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance;
     }
-
-    return shadingResult;
 }
 
-float3 EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, uint2 pixelIndex, float depth)
+float4 TraceShadows(RTCache cache, float3 surfacePosition, float2 uv)
 {
-    float3 output = 0.0;
+    // Shadow values for hard coded maximum of 4 lights
+    float4 shadowValues = 0.xxxx;
 
+    static const float3 Points[4] = { float3(10, 10, 10), float3 (-100, 0.83, 44), float3 (22, -90, 10), float3 (-8, 3, 32) };
+
+    [unroll]
+    for (uint i = 0; i < 2 /*MaxSupportedLights * RaysPerLight*/; ++i)
+    {
+        // Zero luminance indicates there is no light with index I or
+        // we actually calculated 0 luminance, in any case, ray tracing is not required
+       /* if (all(cache.StochasticOutgoingLuminances[i] <= 0.0))
+        {
+            continue;
+        }*/
+
+        float3 lightIntersectionPoint = cache.LightIntersectionPoints[i];
+        float3 lightToSurface = surfacePosition - lightIntersectionPoint;
+        float vectorLength = length(lightToSurface);
+        float tmax = vectorLength - 1e-03;
+        float tmin = 1e-03;
+
+        RayDesc dxrRay;
+        dxrRay.Origin = lightIntersectionPoint;
+        dxrRay.Direction = lightToSurface / vectorLength;
+        dxrRay.TMin = tmin;
+        dxrRay.TMax = tmax;
+
+        ShadowRayPayload shadowPayload = { 0.0 };
+
+        TraceRay(SceneBVH,
+            RAY_FLAG_CULL_BACK_FACING_TRIANGLES
+            | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
+            | RAY_FLAG_FORCE_OPAQUE             // Skip any hit shaders
+            | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, // Skip closest hit shaders,
+            0xFF, // Instance mask
+            0, // Contribution to hit group index
+            0, // BLAS geometry multiplier for hit group index
+            0, // Miss shader index
+            dxrRay, shadowPayload);
+
+        shadowValues[i] = shadowPayload.ShadowFactor;
+    }
+
+    return shadowValues;
+}
+
+void ShadowStochasticOutgoingLuminance(RTCache rtCache, float4 shadowValues, inout ShadingResult shadingResult)
+{
+    [unroll]
+    for (uint i = 0; i < MaxSupportedLights * RaysPerLight; ++i)
+    {
+        shadingResult.StochasticShadowedOutgoingLuminance += rtCache.LightIntersectionPoints[i] * shadowValues[i];
+    }
+}
+
+ShadingResult EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, uint2 pixelIndex, float depth)
+{
     Texture2D blueNoiseTexture = Textures2D[PassDataCB.BlueNoiseTextureIndex];
     Material material = MaterialTable[gBuffer.MaterialIndex];
+    LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
 
     float4 blueNoise = blueNoiseTexture.Load(uint3(pixelIndex % PassDataCB.BlueNoiseTextureSize, 0));
     float3 surfacePosition = ReconstructWorldPosition(depth, uv, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
     float3 viewDirection = normalize(FrameDataCB.CameraPosition.xyz - surfacePosition);
 
     LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
+    RTCache cache = ZeroRTCache();
+    ShadingResult shadingResult = ZeroShadingResult();
 
-    ShadingResult sphericalLightsShadingResult = ShadeWithSphericalLights(gBuffer, ltcTerms, blueNoise, viewDirection, surfacePosition);
-    ShadingResult rectangularLightsShadingResult = ShadeWithRectangularLights(gBuffer, ltcTerms, blueNoise, viewDirection, surfacePosition);
+    ShadeWithSphericalLights(gBuffer, ltcTerms, partitionInfo, blueNoise, viewDirection, surfacePosition, shadingResult, cache);
+    ShadeWithRectangularLights(gBuffer, ltcTerms, partitionInfo, blueNoise, viewDirection, surfacePosition, shadingResult, cache);
 
-    float3 a =
-        sphericalLightsShadingResult.AnalyticalUnshadowedOutgoingLuminance *
-        sphericalLightsShadingResult.StochasticShadowedOutgoingLuminance /
-        sphericalLightsShadingResult.StochasticUnshadowedOutgoingLuminance;
+    // Shadow values for 4 hard coded lights
+    float4 shadowValues = TraceShadows(cache, surfacePosition, uv);
+    ShadowStochasticOutgoingLuminance(cache, shadowValues, shadingResult);
 
-    float3 b =
-        rectangularLightsShadingResult.AnalyticalUnshadowedOutgoingLuminance *
-        rectangularLightsShadingResult.StochasticShadowedOutgoingLuminance /
-        rectangularLightsShadingResult.StochasticUnshadowedOutgoingLuminance;
-
-    return a + b;
+    return shadingResult;
 }
 
-float3 EvaluateEmissiveGBufferLighting(GBufferEmissive gBuffer)
+ShadingResult EvaluateEmissiveGBufferLighting(GBufferEmissive gBuffer)
 {
-    return gBuffer.LuminousIntensity;
+    ShadingResult result = ZeroShadingResult();
+    result.AnalyticUnshadowedOutgoingLuminance = gBuffer.LuminousIntensity;
+    result.StochasticShadowedOutgoingLuminance = gBuffer.LuminousIntensity;
+    result.StochasticUnshadowedOutgoingLuminance = gBuffer.LuminousIntensity;
+    return result;
 }
 
 ExposureOutput ExposeOutgoingLuminance(float3 outgoingLuminance)
@@ -350,12 +466,20 @@ ExposureOutput ExposeOutgoingLuminance(float3 outgoingLuminance)
     return exposureOutput;
 }
 
+[shader("miss")]
+void RayMiss(inout ShadowRayPayload payload)
+{
+    payload.ShadowFactor = 1.0;
+}
+
 [shader("raygeneration")]
 void RayGeneration()
 {
     Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
     Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
-    RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.AnalyticalLuminanceOutputTextureIndex];
+    RWTexture2D<float4> analyticOutputImage = RW_Float4_Textures2D[PassDataCB.AnalyticOutputTextureIndex];
+    RWTexture2D<float4> stochasticUnshadowedOutputImage = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTextureIndex];
+    RWTexture2D<float4> stochasticShadowedOutputImage = RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTextureIndex];
 
     uint2 pixelIndex = DispatchRaysIndex().xy;
     float2 currenPixelLocation = pixelIndex + float2(0.5f, 0.5f);
@@ -365,7 +489,7 @@ void RayGeneration()
     // Skip empty and emissive areas
     if (depth >= 1.0)
     {
-        outputImage[pixelIndex].rgb = 0.xxx;
+        analyticOutputImage[pixelIndex].rgb = 0.xxx;
         return;
     } 
 
@@ -373,31 +497,24 @@ void RayGeneration()
     encodedGBuffer.MaterialData = materialData.Load(uint3(pixelIndex, 0));
 
     uint gBufferType = DecodeGBufferType(encodedGBuffer);
-    float3 outgoingLuminance = 0.xxx;
+    ShadingResult shadingResult = ZeroShadingResult();
 
     switch (gBufferType)
     {
     case GBufferTypeStandard:
-        outgoingLuminance = EvaluateStandardGBufferLighting(DecodeGBufferStandard(encodedGBuffer), pixelCenterUV, pixelIndex, depth);
+        shadingResult = EvaluateStandardGBufferLighting(DecodeGBufferStandard(encodedGBuffer), pixelCenterUV, pixelIndex, depth);
         break;
 
     case GBufferTypeEmissive:
-        outgoingLuminance = EvaluateEmissiveGBufferLighting(DecodeGBufferEmissive(encodedGBuffer));
+        shadingResult = EvaluateEmissiveGBufferLighting(DecodeGBufferEmissive(encodedGBuffer));
         break;
     }
 
-    ExposureOutput output = ExposeOutgoingLuminance(outgoingLuminance);
+    ExposureOutput output = ExposeOutgoingLuminance(shadingResult.StochasticShadowedOutgoingLuminance);
 
-    outputImage[pixelIndex] = float4(output.ExposedLuminance, 1.0);
-
-    /*mainOutputImage[dispatchThreadID.xy] = float4(output.ExposedLuminance, 1.0);
-    oversaturatedOutputImage[dispatchThreadID.xy] = float4(output.OversaturatedLuminance, 1.0);*/
-}
-
-[shader("miss")]
-void RayMiss(inout ShadowRayPayload payload)
-{
-    payload.ShadowFactor = 1.0;
+    analyticOutputImage[pixelIndex] = float4(output.ExposedLuminance, 1.0);
+    stochasticUnshadowedOutputImage[pixelIndex] = float4(shadingResult.StochasticUnshadowedOutgoingLuminance, 1.0);
+    stochasticShadowedOutputImage[pixelIndex] = float4(shadingResult.StochasticShadowedOutgoingLuminance, 1.0);
 }
 
 #endif

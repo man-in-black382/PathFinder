@@ -4,14 +4,13 @@ namespace PathFinder
     template <class T>
     void GraphicsDevice::SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace)
     {
-        if (mAppliedComputeState)
+        if (mAppliedComputeState || mAppliedRayTracingState)
         {
             GraphicsDeviceBase::SetRootConstants(constants, shaderRegister, registerSpace);
         }
-        else if (mAppliedGraphicsState || mAppliedRayTracingState)
+        else if (mAppliedGraphicsState)
         {
-            const HAL::RootSignature* signature = mAppliedGraphicsState ?
-                mAppliedGraphicsState->GetRootSignature() : mAppliedRayTracingState->GetGlobalRootSignature();
+            const HAL::RootSignature* signature = mAppliedGraphicsState->GetRootSignature();
 
             auto index = signature->GetParameterIndex({ shaderRegister, registerSpace,  HAL::ShaderRegister::ConstantBuffer });
             assert_format(index, "Root signature parameter doesn't exist");

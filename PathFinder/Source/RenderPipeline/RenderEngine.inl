@@ -8,7 +8,7 @@ namespace PathFinder
     template <class ContentMediator>
     RenderEngine<ContentMediator>::RenderEngine(HWND windowHandle, const CommandLineParser& commandLineParser)
         : mRenderSurfaceDescription{ { 1920, 1080 }, HAL::ColorFormat::RGBA16_Float, HAL::DepthStencilFormat::Depth32_Float },
-        mDevice{ FetchDefaultDisplayAdapter() },
+        mDevice{ FetchDefaultDisplayAdapter(), commandLineParser.ShouldEnableDebugLayer() },
         mResourceAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mCommandListAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mDescriptorAllocator{ &mDevice, mSimultaneousFramesInFlight },

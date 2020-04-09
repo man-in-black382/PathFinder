@@ -93,6 +93,16 @@ namespace PathFinder
         std::unordered_map<RootSignatureName, HAL::RootSignature> mRootSignatures;
         std::unordered_map<const HAL::Shader*, std::unordered_set<PipelineStateVariantInternal*>> mShaderToPSOAssociations;
         std::unordered_set<PipelineStateVariantInternal*> mStatesToRecompile;
+
+        std::string mDefaultVertexEntryPointName = "VSMain";
+        std::string mDefaultPixelEntryPointName = "PSMain";
+        std::string mDefaultGeometryEntryPointName = "GSMain";
+        std::string mDefaultComputeEntryPointName = "CSMain";
+        std::string mDefaultRayGenerationEntryPointName = "RayGeneration";
+        std::string mDefaultRayMissEntryPointName = "RayMiss";
+        std::string mDefaultRayAnyHitEntryPointName = "RayAnyHit";
+        std::string mDefaultRayClosestHitEntryPointName = "RayClosestHit";
+        std::string mDefaultRayIntersectionEntryPointName = "RayIntersection";
     };
 
 }

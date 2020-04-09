@@ -51,4 +51,33 @@ float3 RGBtoHSV(float3 RGB)
     return float3(HCV.x, S, HCV.z);
 }
 
+// This function take a rgb color (best is to provide color in sRGB space)
+// and return a YCoCg color in [0..1] space for 8bit (An offset is apply in the function)
+// Ref: http://www.nvidia.com/object/real-time-ycocg-dxt-compression.html
+static const float YCOCG_ChromaBias = (128.0 / 255.0);
+
+float3 RGBToYCoCg(float3 rgb)
+{
+    float3 YCoCg;
+    YCoCg.x = dot(rgb, float3(0.25, 0.5, 0.25));
+    YCoCg.y = dot(rgb, float3(0.5, 0.0, -0.5)) + YCOCG_ChromaBias;
+    YCoCg.z = dot(rgb, float3(-0.25, 0.5, -0.25)) + YCOCG_ChromaBias;
+
+    return YCoCg;
+}
+
+float3 YCoCgToRGB(float3 YCoCg)
+{
+    float Y = YCoCg.x;
+    float Co = YCoCg.y - YCOCG_ChromaBias;
+    float Cg = YCoCg.z - YCOCG_ChromaBias;
+
+    float3 rgb;
+    rgb.r = Y + Co - Cg;
+    rgb.g = Y + Cg;
+    rgb.b = Y - Co - Cg;
+
+    return rgb;
+}
+
 #endif

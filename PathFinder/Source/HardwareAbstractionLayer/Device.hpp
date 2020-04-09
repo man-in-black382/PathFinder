@@ -11,7 +11,7 @@ namespace HAL
     class Device : public GraphicAPIObject
     {
     public:
-        Device(const DisplayAdapter& adapter);
+        Device(const DisplayAdapter& adapter, bool enableDebugLayer);
 
     private:
         Microsoft::WRL::ComPtr<ID3D12Device5> mDevice;

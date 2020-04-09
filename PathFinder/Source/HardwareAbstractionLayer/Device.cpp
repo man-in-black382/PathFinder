@@ -3,13 +3,14 @@
 
 namespace HAL
 {
-    Device::Device(const DisplayAdapter& adapter)
+    Device::Device(const DisplayAdapter& adapter, bool enableDebugLayer)
     {
-    #if defined(DEBUG) || defined(_DEBUG) 
-        Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
-        ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
-        debugController->EnableDebugLayer();
-    #endif
+        if (enableDebugLayer)
+        {
+            Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
+            ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
+            debugController->EnableDebugLayer();
+        }
 
         D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
         ThrowIfFailed(D3D12CreateDevice(adapter.D3DPtr(), featureLevel, IID_PPV_ARGS(&mDevice)));
@@ -26,5 +27,4 @@ namespace HAL
         default: mSupportsUniversalHeaps = true; break;
         }
     }
-
 }

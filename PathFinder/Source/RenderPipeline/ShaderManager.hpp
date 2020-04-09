@@ -23,7 +23,7 @@ namespace PathFinder
 
         ShaderManager(const CommandLineParser& commandLineParser);
 
-        HAL::Shader* LoadShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
+        HAL::Shader* LoadShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
 
         void SetShaderRecompilationCallback(const ShaderRecompilationCallback& callback);
 
@@ -31,29 +31,13 @@ namespace PathFinder
         void EndFrame();
 
     private:
+        using EntryPointName = Foundation::Name;
         using ShaderListIterator = std::list<HAL::Shader>::iterator;
+        using ShaderBundle = std::unordered_map<EntryPointName, ShaderListIterator>;
 
-        struct ShaderBundle
-        {
-            ShaderListIterator ComputeShader;
-            ShaderListIterator VertexShader;
-            ShaderListIterator PixelShader;
-            ShaderListIterator HullShader;
-            ShaderListIterator DomainShader;
-            ShaderListIterator GeometryShader;
-            ShaderListIterator RayGenShader;
-            ShaderListIterator RayClosestHitShader;
-            ShaderListIterator RayAnyHitShader;
-            ShaderListIterator RayMissShader;
-            ShaderListIterator RayIntersectionShader;
-
-            void SetShader(ShaderListIterator it);
-            ShaderListIterator GetShader(HAL::Shader::Stage stage) const;
-        };
-
-        HAL::Shader* GetShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
-        HAL::Shader* FindCachedShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
-        HAL::Shader* LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::filesystem::path& relativePath);
+        HAL::Shader* GetShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
+        HAL::Shader* FindCachedShader(Foundation::Name entryPointName, const std::filesystem::path& relativePath);
+        HAL::Shader* LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
         ShaderBundle& GetShaderBundle(const std::string& entryPointShaderFile);
 
         std::filesystem::path ConstructShaderRootPath(const CommandLineParser& commandLineParser) const;

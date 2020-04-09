@@ -10,6 +10,8 @@
 
 #include "GraphicAPIObject.hpp"
 
+#include "../Foundation/Name.hpp"
+
 namespace HAL
 {
     
@@ -33,12 +35,13 @@ namespace HAL
             RayGeneration, RayClosestHit, RayAnyHit, RayMiss, RayIntersection
         };
 
-        enum class Profile { P5_1, P6_3 };
+        enum class Profile { P6_3, P6_4 };
 
         Shader(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const std::wstring& entryPoint, Stage stage);
         
     private:
         std::wstring mEntryPoint;
+        Foundation::Name mEntryPointName;
         Stage mStage;
         Microsoft::WRL::ComPtr<IDxcBlob> mBlob;
 
@@ -46,6 +49,7 @@ namespace HAL
         inline const IDxcBlob* Blob() const { return mBlob.Get(); }
         inline D3D12_SHADER_BYTECODE D3DBytecode() const { return { mBlob->GetBufferPointer(), mBlob->GetBufferSize() }; }
         inline const std::wstring& EntryPoint() const { return mEntryPoint; }
+        inline Foundation::Name EntryPointName() { return mEntryPointName; }
         inline const Stage PipelineStage() const { return mStage; }
     };
 
