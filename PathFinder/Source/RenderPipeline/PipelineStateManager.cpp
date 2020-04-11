@@ -21,27 +21,8 @@ namespace PathFinder
         ConfigureDefaultStates();
         BuildBaseRootSignature();
 
-        mShaderManager->SetShaderRecompilationCallback([this](const HAL::Shader* oldShader, const HAL::Shader* newShader) 
-        {
-            auto associationsIt = mShaderToPSOAssociations.find(oldShader);
-            assert_format(associationsIt != mShaderToPSOAssociations.end(), "Cannot find PSOs after shader recompilation");
-
-            auto& statePtrs = associationsIt->second;
-
-            for (PipelineStateVariantInternal* stateVariant : statePtrs)
-            {
-                if (auto pso = std::get_if<HAL::GraphicsPipelineState>(stateVariant)) pso->ReplaceShader(oldShader, newShader);
-                else if (auto pso = std::get_if<HAL::ComputePipelineState>(stateVariant)) pso->ReplaceShader(oldShader, newShader);
-                else if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(stateVariant)) psoWrapper->State.ReplaceShader(oldShader, newShader);
-                    
-                mStatesToRecompile.insert(stateVariant);
-            }
-
-            // Re associate states 
-            auto nodeHandle = mShaderToPSOAssociations.extract(associationsIt);
-            nodeHandle.key() = newShader;
-            mShaderToPSOAssociations.insert(std::move(nodeHandle));
-        });
+        mShaderManager->ShaderRecompilationEvent() += { "shader.recompilation", this, &PipelineStateManager::RecompileStatesWithNewShader };
+        mShaderManager->LibraryRecompilationEvent() += { "library.recompilation", this, &PipelineStateManager::RecompileStatesWithNewLibrary };
     }
 
     void PipelineStateManager::CreateRootSignature(RootSignatureName name, const RootSignatureConfigurator& configurator)
@@ -175,15 +156,22 @@ namespace PathFinder
         auto [iter, success] = mPipelineStates.emplace(name, RayTracingStateWrapper{ HAL::RayTracingPipelineState{ mDevice }, nullptr });
         RayTracingStateWrapper& newStateWrapper = std::get<RayTracingStateWrapper>(iter->second);
 
-        HAL::Shader* rayGenShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayGeneration, mDefaultRayGenerationEntryPointName, proxy.RayGenerationShaderFileName);
-        newStateWrapper.State.SetRayGenerationShader({ rayGenShader, GetNamedRootSignatureOrNull(proxy.RayGenerationLocalRootSignatureName) });
-        AssociateStateWithShader(&iter->second, rayGenShader);
+        HAL::Library* rayGenLibrary = mShaderManager->LoadLibrary(proxy.RayGenerationShaderFileName);
+        newStateWrapper.State.SetRayGenerationShader({ rayGenLibrary, mDefaultRayGenerationEntryPointName, GetNamedRootSignatureOrNull(proxy.RayGenerationLocalRootSignatureName) });
+        AssociateStateWithLibrary(&iter->second, rayGenLibrary);
 
         for (const RayTracingStateProxy::MissShader& missShaderInfo : proxy.MissShaders())
         {
-            HAL::Shader* missShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayMiss, mDefaultRayMissEntryPointName, missShaderInfo.MissShaderFileName);
-            newStateWrapper.State.AddMissShader({ missShader, GetNamedRootSignatureOrNull(missShaderInfo.LocalRootSignatureName) });
-            AssociateStateWithShader(&iter->second, missShader);
+            HAL::Library* missLibrary = mShaderManager->LoadLibrary(missShaderInfo.MissShaderFileName);
+            newStateWrapper.State.AddMissShader({ missLibrary, mDefaultRayMissEntryPointName, GetNamedRootSignatureOrNull(missShaderInfo.LocalRootSignatureName) });
+            AssociateStateWithLibrary(&iter->second, missLibrary);
+        }
+
+        for (const RayTracingStateProxy::CallableShader& callableShaderInfo : proxy.CallableShaders())
+        {
+            HAL::Library* callableLibrary = mShaderManager->LoadLibrary(callableShaderInfo.ShaderFileName);
+            newStateWrapper.State.AddCallableShader({ callableLibrary, callableShaderInfo.EntryPointName, GetNamedRootSignatureOrNull(callableShaderInfo.LocalRootSignatureName) });
+            AssociateStateWithLibrary(&iter->second, callableLibrary);
         }
 
         for (const RayTracingStateProxy::HitGroup& hitGroupInfo : proxy.HitGroups())
@@ -192,20 +180,23 @@ namespace PathFinder
 
             if (auto fileName = hitGroupInfo.ShaderFileNames.AnyHitShaderFileName)
             {
-                shaders.AnyHitShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayAnyHit, mDefaultRayAnyHitEntryPointName, *fileName);
-                AssociateStateWithShader(&iter->second, shaders.AnyHitShader);
+                shaders.AnyHitLibrary = mShaderManager->LoadLibrary(*fileName);
+                shaders.AnyHitEntryPoint = mDefaultRayAnyHitEntryPointName;
+                AssociateStateWithLibrary(&iter->second, shaders.AnyHitLibrary);
             }
 
             if (auto fileName = hitGroupInfo.ShaderFileNames.ClosestHitShaderFileName)
             {
-                shaders.ClosestHitShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayClosestHit, mDefaultRayClosestHitEntryPointName, *fileName);
-                AssociateStateWithShader(&iter->second, shaders.ClosestHitShader);
+                shaders.ClosestHitLibrary = mShaderManager->LoadLibrary(*fileName);
+                shaders.ClosestHitEntryPoint = mDefaultRayClosestHitEntryPointName;
+                AssociateStateWithLibrary(&iter->second, shaders.ClosestHitLibrary);
             }
 
             if (auto fileName = hitGroupInfo.ShaderFileNames.IntersectionShaderFileName)
             {
-                shaders.IntersectionShader = mShaderManager->LoadShader(HAL::Shader::Stage::RayIntersection, mDefaultRayIntersectionEntryPointName, *fileName);
-                AssociateStateWithShader(&iter->second, shaders.IntersectionShader);
+                shaders.IntersectionLibrary = mShaderManager->LoadLibrary(*fileName);
+                shaders.IntersectionEntryPoint = mDefaultRayIntersectionEntryPointName;
+                AssociateStateWithLibrary(&iter->second, shaders.IntersectionLibrary);
             }
 
             shaders.LocalRootSignature = GetNamedRootSignatureOrNull(hitGroupInfo.LocalRootSignatureName);
@@ -318,6 +309,11 @@ namespace PathFinder
         mShaderToPSOAssociations[shader].insert(state);
     }
 
+    void PipelineStateManager::AssociateStateWithLibrary(PipelineStateVariantInternal* state, const HAL::Library* library)
+    {
+        mLibraryToPSOAssociations[library].insert(state);
+    }
+
     void PipelineStateManager::ConfigureDefaultStates()
     {
         mDefaultGraphicsState.GetBlendState().SetBlendingEnabled(false);
@@ -415,6 +411,49 @@ namespace PathFinder
         {
             stateWrapper.ShaderTableBuffer->SetDebugName(StringFormat("%s Shader Table", psoName.ToString().c_str()));
         }
+    }
+
+    void PipelineStateManager::RecompileStatesWithNewShader(const HAL::Shader* oldShader, const HAL::Shader* newShader)
+    {
+        auto associationsIt = mShaderToPSOAssociations.find(oldShader);
+        assert_format(associationsIt != mShaderToPSOAssociations.end(), "Cannot find PSOs after shader recompilation");
+
+        auto& statePtrs = associationsIt->second;
+
+        for (PipelineStateVariantInternal* stateVariant : statePtrs)
+        {
+            if (auto pso = std::get_if<HAL::GraphicsPipelineState>(stateVariant)) pso->ReplaceShader(oldShader, newShader);
+            else if (auto pso = std::get_if<HAL::ComputePipelineState>(stateVariant)) pso->ReplaceShader(oldShader, newShader);
+
+            mStatesToRecompile.insert(stateVariant);
+        }
+
+        // Re associate states 
+        auto nodeHandle = mShaderToPSOAssociations.extract(associationsIt);
+        nodeHandle.key() = newShader;
+        mShaderToPSOAssociations.insert(std::move(nodeHandle));
+    }
+
+    void PipelineStateManager::RecompileStatesWithNewLibrary(const HAL::Library* oldLibrary, const HAL::Library* newLibrary)
+    {
+        auto associationsIt = mLibraryToPSOAssociations.find(oldLibrary);
+        assert_format(associationsIt != mLibraryToPSOAssociations.end(), "Cannot find PSOs after library recompilation");
+
+        auto& statePtrs = associationsIt->second;
+
+        for (PipelineStateVariantInternal* stateVariant : statePtrs)
+        {
+            if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(stateVariant))
+            {
+                psoWrapper->State.ReplaceLibrary(oldLibrary, newLibrary);
+            }
+            mStatesToRecompile.insert(stateVariant);
+        }
+
+        // Re associate states 
+        auto nodeHandle = mLibraryToPSOAssociations.extract(associationsIt);
+        nodeHandle.key() = newLibrary;
+        mLibraryToPSOAssociations.insert(std::move(nodeHandle));
     }
 
 }

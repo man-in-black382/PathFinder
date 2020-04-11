@@ -234,12 +234,6 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\ShaderCompiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\ShaderExport.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\DXILLibrary.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingPipelineConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -250,9 +244,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\ShaderTable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingHitGroup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.cpp">
@@ -430,6 +421,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\LibraryExportsCollection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\LibraryExport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingHitGroupExport.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1904,12 +1904,6 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderCompiler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderExport.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\DXILLibrary.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingShaderConfig.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1920,9 +1914,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderTable.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingHitGroup.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.hpp">
@@ -2316,6 +2307,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\LibraryExportsCollection.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\LibraryExport.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingHitGroupExport.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Shader.hpp"
+#include "LibraryExportsCollection.hpp"
 
 #include <dxcapi.h>
 
@@ -38,18 +39,38 @@ namespace HAL
     class ShaderCompiler
     {
     public:
-        struct CompilationResult
+        enum class Profile
+        {
+            P6_3, P6_4
+        };
+
+        struct ShaderCompilationResult
         {
             Shader CompiledShader;
             std::vector<std::string> CompiledFileRelativePaths;
         };
 
+        struct LibraryCompilationResult
+        {
+            Library CompiledLibrary;
+            std::vector<std::string> CompiledFileRelativePaths;
+        };
+
         ShaderCompiler();
 
-        CompilationResult Compile(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild);
+        ShaderCompilationResult CompileShader(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild);
+        LibraryCompilationResult CompileLibrary(const std::filesystem::path& path, bool debugBuild);
 
     private:
-        std::wstring ProfileString(Shader::Stage stage, Shader::Profile profile);
+        struct BlobCompilationResult
+        {
+            Microsoft::WRL::ComPtr<IDxcBlob> Blob;
+            std::vector<std::string> CompiledFileRelativePaths;
+        };
+
+        std::string ProfileString(Shader::Stage stage, Profile profile);
+        std::string LibProfileString(Profile profile);
+        BlobCompilationResult CompileBlob(const std::filesystem::path& path, const std::string& profileString, const std::string& entryPoint, bool debugBuild);
 
         Microsoft::WRL::ComPtr<IDxcLibrary> mLibrary;
         Microsoft::WRL::ComPtr<IDxcCompiler> mCompiler;

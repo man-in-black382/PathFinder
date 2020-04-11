@@ -26,21 +26,20 @@ namespace HAL
         std::array<uint8_t, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES> RawData;
     };
 
+
+
     class Shader : public GraphicAPIObject
     {
     public:
         enum class Stage 
         {
-            Vertex, Hull, Domain, Geometry, Pixel, Compute,
-            RayGeneration, RayClosestHit, RayAnyHit, RayMiss, RayIntersection
+            Vertex, Hull, Domain, Geometry, Pixel, Compute
         };
 
-        enum class Profile { P6_3, P6_4 };
-
-        Shader(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const std::wstring& entryPoint, Stage stage);
+        Shader(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const std::string& entryPoint, Stage stage);
         
     private:
-        std::wstring mEntryPoint;
+        std::string mEntryPoint;
         Foundation::Name mEntryPointName;
         Stage mStage;
         Microsoft::WRL::ComPtr<IDxcBlob> mBlob;
@@ -48,9 +47,24 @@ namespace HAL
     public:
         inline const IDxcBlob* Blob() const { return mBlob.Get(); }
         inline D3D12_SHADER_BYTECODE D3DBytecode() const { return { mBlob->GetBufferPointer(), mBlob->GetBufferSize() }; }
-        inline const std::wstring& EntryPoint() const { return mEntryPoint; }
+        inline const std::string& EntryPoint() const { return mEntryPoint; }
         inline Foundation::Name EntryPointName() { return mEntryPointName; }
         inline const Stage PipelineStage() const { return mStage; }
+    };
+
+
+
+    class Library : public GraphicAPIObject
+    {
+    public:
+        Library(const Microsoft::WRL::ComPtr<IDxcBlob>& blob);
+
+    private:
+        Microsoft::WRL::ComPtr<IDxcBlob> mBlob;
+
+    public:
+        inline const IDxcBlob* Blob() const { return mBlob.Get(); }
+        inline D3D12_SHADER_BYTECODE D3DBytecode() const { return { mBlob->GetBufferPointer(), mBlob->GetBufferSize() }; }
     };
 
 }

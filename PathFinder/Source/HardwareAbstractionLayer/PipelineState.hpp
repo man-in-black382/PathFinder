@@ -11,8 +11,8 @@
 #include "ResourceFormat.hpp"
 #include "InputAssemblerLayout.hpp"
 #include "RenderTarget.hpp"
-#include "DXILLibrary.hpp"
-#include "RayTracingHitGroup.hpp"
+#include "LibraryExportsCollection.hpp"
+#include "RayTracingHitGroupExport.hpp"
 #include "RayTracingPipelineConfig.hpp"
 #include "RayTracingShaderConfig.hpp"
 #include "ShaderTable.hpp"
@@ -141,15 +141,25 @@ namespace HAL
     public:
         struct SingleRTShader
         {
-            const Shader* RTShader = nullptr;
+            const Library* ShaderLibrary = nullptr;
+            std::string EntryPoint;
             const RootSignature* LocalRootSignature = nullptr;
         };
 
         struct HitGroupShaders
         {
-            const Shader* ClosestHitShader = nullptr;
-            const Shader* AnyHitShader = nullptr;
-            const Shader* IntersectionShader = nullptr;
+            // Shader libraries containing RT shaders,
+            // could be the same library for all of them
+            const Library* ClosestHitLibrary = nullptr;
+            const Library* AnyHitLibrary = nullptr;
+            const Library* IntersectionLibrary = nullptr;
+
+            // Entry point names required to extract individual shaders
+            // from shader libraries using so-called library exports
+            std::string ClosestHitEntryPoint;
+            std::string AnyHitEntryPoint;
+            std::string IntersectionEntryPoint;
+
             const RootSignature* LocalRootSignature = nullptr;
         };
 
@@ -157,24 +167,37 @@ namespace HAL
 
         void SetRayGenerationShader(const SingleRTShader& shader);
         void AddMissShader(const SingleRTShader& shader);
+        void AddCallableShader(const SingleRTShader& shader);
         void AddHitGroupShaders(const HitGroupShaders& hgShaders);
         void SetPipelineConfig(const RayTracingPipelineConfig& config);
         void SetShaderConfig(const RayTracingShaderConfig& config);
         void SetGlobalRootSignature(const RootSignature* signature);
-        void ReplaceShader(const Shader* oldShader, const Shader* newShader);
+        void ReplaceLibrary(const Library* oldLibrary, const Library* newLibrary);
         void Compile();
 
         virtual void SetDebugName(const std::string& name) override;
 
     private:
+        struct HitGroupLibraryExports
+        {
+            std::optional<LibraryExport> AnyHitExport;
+            std::optional<LibraryExport> ClosestHitExport;
+            std::optional<LibraryExport> IntersectionExport;
+        };
+
         ShaderIdentifier GetShaderIdentifier(const std::wstring& exportName);
-        std::wstring GenerateUniqueExportName(const Shader& shader);
-        void GenerateLibrariesAndHitGroups();
-        DXILLibrary& GenerateLibrary(const Shader* shader, const RootSignature* localRootSignature);
-        void AssociateLibraryWithItsExport(const DXILLibrary& library);
-        void AssociateConfigWithExport(const RayTracingShaderConfig& config, const ShaderExport& shaderExport);
-        void AssociateRootSignatureWithExport(const RootSignature& signature, const ShaderExport& shaderExport);
-        void AddHitGroupSubobject(const RayTracingHitGroup& group);
+        LibraryExport GenerateLibraryExport(const std::string& shaderIntryPoint);
+        void AddExportToCollection(const LibraryExport& libraryExport, const Library* library);
+        void GenerateLibraryExportCollectionsAndHitGroups();
+
+        void AssociateExportsWithLocalRootSignaturesAndShaderConfig();
+        void AddLibraryExportCollectionSubobjects();
+        void AddHitGroupSubobjects();
+
+        void AddLibraryExportsCollectionSubobject(const LibraryExportsCollection& library);
+        void AssociateConfigWithExport(const RayTracingShaderConfig& config, const LibraryExport& shaderExport);
+        void AssociateRootSignatureWithExport(const RootSignature* signature, const LibraryExport& shaderExport);
+        void AddHitGroupSubobject(const RayTracingHitGroupExport& group);
         void AddGlobalRootSignatureSubobject();
         void AddPipelineConfigSubobject();
         void BuildShaderTable();
@@ -190,18 +213,29 @@ namespace HAL
         RayTracingShaderConfig mShaderConfig;
         D3D12_STATE_OBJECT_DESC mRTPSODesc{};
 
-        // Containers used until compilation
+        // Shader libraries, entry points and exports waiting for compilation
         SingleRTShader mRayGenerationShader;
+        std::optional<LibraryExport> mRayGenerationExport;
+
         std::vector<SingleRTShader> mMissShaders;
+        std::vector<LibraryExport> mMissShaderExports;
+
+        std::vector<SingleRTShader> mCallableShaders;
+        std::vector<LibraryExport> mCallableShaderExports;
+
         std::vector<HitGroupShaders> mHitGroupShaders;
+        std::vector<HitGroupLibraryExports> mHitGroupExports;
 
         // Containers used during and after compilation
-        std::vector<DXILLibrary> mLibraries;
-        std::vector<RayTracingHitGroup> mHitGroups;
-
+        std::unordered_map<const Library*, LibraryExportsCollection> mLibraryExportCollections;
+        std::vector<RayTracingHitGroupExport> mHitGroups;
         std::vector<D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION> mAssociations;
         std::vector<D3D12_STATE_SUBOBJECT> mSubobjects;
         std::vector<LPCWSTR> mExportNamePointerHolder;
+
+        // To save ourselves from redundant map accesses when a lot of shaders are added to PSO
+        const Library* mCurrentLibrary = nullptr;
+        LibraryExportsCollection* mCurrentExportsCollection = nullptr;
 
         Microsoft::WRL::ComPtr<ID3D12StateObject> mState;
         Microsoft::WRL::ComPtr<ID3D12StateObjectProperties> mProperties;

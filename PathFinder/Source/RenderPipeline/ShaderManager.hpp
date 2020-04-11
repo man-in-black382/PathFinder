@@ -2,8 +2,8 @@
 
 #include "../HardwareAbstractionLayer/Shader.hpp"
 #include "../HardwareAbstractionLayer/ShaderCompiler.hpp"
-
 #include "../IO/CommandLineParser.hpp"
+#include "../Foundation/Event.hpp"
 
 #include <vector>
 #include <list>
@@ -19,13 +19,13 @@ namespace PathFinder
     class ShaderManager : private FW::FileWatchListener
     {
     public:
-        using ShaderRecompilationCallback = std::function<void(const HAL::Shader*, const HAL::Shader*)>;
+        using ShaderEvent = Foundation::Event<ShaderManager, std::string, void(const HAL::Shader*, const HAL::Shader*)>;
+        using LibraryEvent = Foundation::Event<ShaderManager, std::string, void(const HAL::Library*, const HAL::Library*)>;
 
         ShaderManager(const CommandLineParser& commandLineParser);
 
         HAL::Shader* LoadShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
-
-        void SetShaderRecompilationCallback(const ShaderRecompilationCallback& callback);
+        HAL::Library* LoadLibrary(const std::filesystem::path& relativePath);
 
         void BeginFrame();
         void EndFrame();
@@ -33,16 +33,26 @@ namespace PathFinder
     private:
         using EntryPointName = Foundation::Name;
         using ShaderListIterator = std::list<HAL::Shader>::iterator;
-        using ShaderBundle = std::unordered_map<EntryPointName, ShaderListIterator>;
+        using LibraryListIterator = std::list<HAL::Library>::iterator;
+
+        struct CompiledObjectsInFile
+        {
+            std::unordered_map<EntryPointName, ShaderListIterator> Shaders;
+            std::optional<LibraryListIterator> Library;
+        };
 
         HAL::Shader* GetShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
         HAL::Shader* FindCachedShader(Foundation::Name entryPointName, const std::filesystem::path& relativePath);
         HAL::Shader* LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
-        ShaderBundle& GetShaderBundle(const std::string& entryPointShaderFile);
+
+        HAL::Library* GetLibrary(const std::filesystem::path& relativePath);
+        HAL::Library* FindCachedLibrary(const std::filesystem::path& relativePath);
+        HAL::Library* LoadAndCacheLibrary(const std::filesystem::path& relativePath);
 
         std::filesystem::path ConstructShaderRootPath(const CommandLineParser& commandLineParser) const;
         void FindAndAddEntryPointShaderFileForRecompilation(const std::string& modifiedFile);
         void RecompileShader(ShaderListIterator oldShaderIt, const std::string& shaderFile);
+        void RecompileLibrary(LibraryListIterator oldLibraryIt, const std::string& libraryFile);
         void RecompileModifiedShaders();
         void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action) override;
 
@@ -50,11 +60,20 @@ namespace PathFinder
         FW::FileWatcher mFileWatcher;
         HAL::ShaderCompiler mCompiler;
         std::filesystem::path mShaderRootPath;
+
         std::list<HAL::Shader> mShaders;
+        std::list<HAL::Library> mLibraries;
+
         std::unordered_set<std::string> mEntryPointShaderFilesToRecompile;
-        std::unordered_map<std::string, ShaderBundle> mShaderEntryPointFilePathToShaderAssociations;
-        std::unordered_map<std::string, std::unordered_set<std::string>> mShaderAnyFilePathToEntryPointFilePathAssociations;
-        ShaderRecompilationCallback mRecompilationCallback = [](const HAL::Shader* oldShader, const HAL::Shader* newShader){};
+        std::unordered_map<std::string, CompiledObjectsInFile> mEntryPointFilePathToCompiledObjectAssociations;
+        std::unordered_map<std::string, std::unordered_set<std::string>> mIncludedFilePathToEntryPointFilePathAssociations;
+
+        ShaderEvent mShaderRecompilationEvent;
+        LibraryEvent mLibraryRecompilationEvent;
+
+    public:
+        inline ShaderEvent& ShaderRecompilationEvent() { return mShaderRecompilationEvent; }
+        inline LibraryEvent& LibraryRecompilationEvent() { return mLibraryRecompilationEvent; }
     };
 
 }

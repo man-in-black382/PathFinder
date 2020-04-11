@@ -79,12 +79,59 @@ namespace HAL
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(mCompiler.GetAddressOf()))); 
     }
 
-    ShaderCompiler::CompilationResult ShaderCompiler::Compile(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild)
+    ShaderCompiler::ShaderCompilationResult ShaderCompiler::CompileShader(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild)
+    {
+        BlobCompilationResult result = CompileBlob(path, ProfileString(stage, Profile::P6_3), entryPoint, debugBuild);
+        return ShaderCompilationResult{ Shader{ result.Blob, entryPoint, stage }, result.CompiledFileRelativePaths };
+    }
+
+    ShaderCompiler::LibraryCompilationResult ShaderCompiler::CompileLibrary(const std::filesystem::path& path, bool debugBuild)
+    {
+        BlobCompilationResult result = CompileBlob(path, LibProfileString(Profile::P6_3), "", debugBuild);
+        return LibraryCompilationResult{ Library{ result.Blob }, result.CompiledFileRelativePaths };
+    }
+
+    std::string ShaderCompiler::ProfileString(Shader::Stage stage, Profile profile)
+    {
+        std::string profileString;
+
+        switch (stage)
+        {
+        case Shader::Stage::Vertex: profileString = "vs_"; break;
+        case Shader::Stage::Hull: profileString = "hs_"; break;
+        case Shader::Stage::Domain:	profileString = "ds_"; break;
+        case Shader::Stage::Geometry: profileString = "gs_"; break;
+        case Shader::Stage::Pixel: profileString = "ps_"; break;
+        case Shader::Stage::Compute: profileString = "cs_"; break;
+        default: break;
+        }
+
+        switch (profile)
+        {
+        case Profile::P6_3: profileString += "6_3"; break;
+        case Profile::P6_4: profileString += "6_4"; break;
+        default: break;
+        }
+
+        return profileString;
+    }
+
+    std::string ShaderCompiler::LibProfileString(Profile profile)
+    {
+        switch (profile)
+        {
+        case Profile::P6_3: return "lib_6_3";
+        case Profile::P6_4: return "lib_6_4";
+        default: return "lib_6_3";
+        }
+    }
+
+    ShaderCompiler::BlobCompilationResult ShaderCompiler::CompileBlob(const std::filesystem::path& path, const std::string& profileString, const std::string& entryPoint, bool debugBuild)
     {
         assert_format(std::filesystem::exists(path), "Shader file ", path.filename(), " doesn't exist");
 
         std::wstring wEntryPoint = StringToWString(entryPoint);
-        std::wstring wProfile = ProfileString(stage, Shader::Profile::P6_3);
+        std::wstring wProfile = StringToWString(profileString);
 
         std::vector<std::wstring> arguments;
         arguments.push_back(L"/all_resources_bound");
@@ -94,7 +141,7 @@ namespace HAL
             arguments.push_back(L"/Zi");
             arguments.push_back(L"/Od");
         }
-        
+
         std::vector<LPCWSTR> argumentPtrs;
 
         for (auto& argument : arguments)
@@ -108,17 +155,17 @@ namespace HAL
         Microsoft::WRL::ComPtr<IDxcOperationResult> result;
 
         reader.LoadSource(path.filename().wstring().c_str(), source.GetAddressOf());
-  
+
         mCompiler->Compile(
             source.Get(),                       // program text
             path.filename().wstring().c_str(),  // file name, mostly for error messages
-            wEntryPoint.c_str(),          // entry point function
-            wProfile.c_str(),             // target profile
+            wEntryPoint.c_str(),                // entry point function
+            wProfile.c_str(),                   // target profile
             argumentPtrs.data(),                // compilation arguments
             argumentPtrs.size(),                // number of compilation arguments
             nullptr, 0,                         // name/value defines and their count
             &reader,                            // handler for #include directives
-            result.GetAddressOf()); 
+            result.GetAddressOf());
 
         HRESULT hrCompilation{};
         result->GetStatus(&hrCompilation);
@@ -126,10 +173,9 @@ namespace HAL
         if (SUCCEEDED(hrCompilation))
         {
             Microsoft::WRL::ComPtr<IDxcBlob> resultingBlob;
-            result->GetResult(resultingBlob.GetAddressOf()); 
+            result->GetResult(resultingBlob.GetAddressOf());
 
-            CompilationResult compilationResult{ Shader{ resultingBlob, wEntryPoint, stage }, reader.AllReadFileRelativePaths() };
-            return compilationResult;
+            return { resultingBlob, reader.AllReadFileRelativePaths() };
         }
         else {
             Microsoft::WRL::ComPtr<IDxcBlobEncoding> printBlob;
@@ -140,40 +186,8 @@ namespace HAL
             mLibrary->GetBlobAsUtf16(printBlob.Get(), printBlob16.GetAddressOf());
             OutputDebugStringW((LPWSTR)printBlob16->GetBufferPointer());
 
-            CompilationResult compilationResult{ Shader{ nullptr, L"", stage }, {} };
-            return compilationResult;
+            return { nullptr, {} };
         }
-    }
-
-    std::wstring ShaderCompiler::ProfileString(Shader::Stage stage, Shader::Profile profile)
-    {
-        std::wstring profileString;
-
-        switch (stage)
-        {
-        case Shader::Stage::Vertex: profileString = L"vs_"; break;
-        case Shader::Stage::Hull: profileString = L"hs_"; break;
-        case Shader::Stage::Domain:	profileString = L"ds_"; break;
-        case Shader::Stage::Geometry: profileString = L"gs_"; break;
-        case Shader::Stage::Pixel: profileString = L"ps_"; break;
-        case Shader::Stage::Compute: profileString = L"cs_"; break;
-
-        case Shader::Stage::RayGeneration: profileString = L"lib_"; break;
-        case Shader::Stage::RayClosestHit: profileString = L"lib_"; break;
-        case Shader::Stage::RayAnyHit: profileString = L"lib_"; break;
-        case Shader::Stage::RayMiss: profileString = L"lib_"; break;
-        case Shader::Stage::RayIntersection: profileString = L"lib_"; break;
-
-        default: break;
-        }
-
-        switch (profile)
-        {
-        case Shader::Profile::P6_3: profileString += L"6_3"; break;
-        case Shader::Profile::P6_4: profileString += L"6_4"; break;
-        }
-
-        return profileString;
     }
 
 }

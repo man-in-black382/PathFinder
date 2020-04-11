@@ -141,19 +141,35 @@ namespace HAL
     void RayTracingPipelineState::SetRayGenerationShader(const SingleRTShader& shader)
     {
         mRayGenerationShader = shader;
+        mRayGenerationExport = GenerateLibraryExport(shader.EntryPoint);
     }
 
     void RayTracingPipelineState::AddMissShader(const SingleRTShader& shader)
     {
         mMissShaders.push_back(shader);
+        mMissShaderExports.push_back(GenerateLibraryExport(shader.EntryPoint));
+    }
+
+    void RayTracingPipelineState::AddCallableShader(const SingleRTShader& shader)
+    {
+        mCallableShaders.push_back(shader);
+        mCallableShaderExports.push_back(GenerateLibraryExport(shader.EntryPoint));
     }
 
     void RayTracingPipelineState::AddHitGroupShaders(const HitGroupShaders& hgShaders)
     {
-        assert_format(hgShaders.AnyHitShader || hgShaders.ClosestHitShader || hgShaders.IntersectionShader,
+        assert_format(hgShaders.AnyHitLibrary || hgShaders.ClosestHitLibrary || hgShaders.IntersectionLibrary,
             "At least one hit group shader must exist");
 
         mHitGroupShaders.push_back(hgShaders);
+
+        HitGroupLibraryExports hgExports{
+            hgShaders.AnyHitLibrary ? std::optional(GenerateLibraryExport(hgShaders.AnyHitEntryPoint)) : std::nullopt,
+            hgShaders.ClosestHitLibrary ? std::optional(GenerateLibraryExport(hgShaders.ClosestHitEntryPoint)) : std::nullopt,
+            hgShaders.IntersectionLibrary ? std::optional(GenerateLibraryExport(hgShaders.IntersectionEntryPoint)) : std::nullopt
+        };
+
+        mHitGroupExports.push_back(hgExports);
     }
 
     void RayTracingPipelineState::SetPipelineConfig(const RayTracingPipelineConfig& config)
@@ -171,91 +187,66 @@ namespace HAL
         mGlobalRootSignature = signature;
     }
 
-    void RayTracingPipelineState::ReplaceShader(const Shader* oldShader, const Shader* newShader)
+    void RayTracingPipelineState::ReplaceLibrary(const Library* oldLibrary, const Library* newLibrary)
     {
-        if (mRayGenerationShader.RTShader == oldShader && 
-            newShader->PipelineStage() == Shader::Stage::RayGeneration)
+        if (mRayGenerationShader.ShaderLibrary == oldLibrary)
         {
-            mRayGenerationShader.RTShader = newShader;
-            return;
+            mRayGenerationShader.ShaderLibrary = newLibrary;
         }
 
-        if (newShader->PipelineStage() == Shader::Stage::RayMiss)
+        for (SingleRTShader& missShader : mMissShaders)
         {
-            for (SingleRTShader& shader : mMissShaders)
+            if (missShader.ShaderLibrary == oldLibrary)
             {
-                if (shader.RTShader == oldShader)
-                {
-                    shader.RTShader = newShader;
-                    return;
-                }
+                missShader.ShaderLibrary = newLibrary;
             }
         }
 
-        for (HitGroupShaders& shaders : mHitGroupShaders)
+        for (SingleRTShader& callableShader : mCallableShaders)
         {
-            if (shaders.AnyHitShader == oldShader &&
-                newShader->PipelineStage() == Shader::Stage::RayAnyHit)
+            if (callableShader.ShaderLibrary == oldLibrary)
             {
-                shaders.AnyHitShader = newShader;
-                return;
+                callableShader.ShaderLibrary = newLibrary;
             }
+        }
 
-            if (shaders.ClosestHitShader == oldShader && 
-                newShader->PipelineStage() == Shader::Stage::RayClosestHit)
-            {
-                shaders.ClosestHitShader = newShader;
-                return;
-            }
-
-            if (shaders.IntersectionShader == oldShader && 
-                newShader->PipelineStage() == Shader::Stage::RayIntersection)
-            {
-                shaders.IntersectionShader = newShader;
-                return;
-            }
+        for (HitGroupShaders& hgShaders : mHitGroupShaders)
+        {
+            if (hgShaders.AnyHitLibrary == oldLibrary) hgShaders.AnyHitLibrary = newLibrary;
+            if (hgShaders.ClosestHitLibrary == oldLibrary) hgShaders.ClosestHitLibrary = newLibrary;
+            if (hgShaders.IntersectionLibrary == oldLibrary) hgShaders.IntersectionLibrary = newLibrary;
         }
     }
 
     void RayTracingPipelineState::Compile()
     {
-        mLibraries.clear();
+        mLibraryExportCollections.clear();
         mHitGroups.clear();
         mSubobjects.clear();
         mAssociations.clear();
         mExportNamePointerHolder.clear();
 
-        GenerateLibrariesAndHitGroups();
+        GenerateLibraryExportCollectionsAndHitGroups();
 
         uint64_t subobjectsToReserve =
-            mLibraries.size() * 5 + // Each Association can produce up to 5 subobjects
+            mLibraryExportCollections.size() * 5 + // Each Association can produce up to 5 subobjects
             mHitGroups.size() + // Each hit group produces 1 subobject
             2; // 1 global root sig subobject and 1 pipeline config subobject
 
         // Each Association can produce up to 2 association subobjects
-        uint64_t associationsToReserve = mLibraries.size() * 2; 
+        uint64_t associationsToReserve = mLibraryExportCollections.size() * 2; 
             
+        subobjectsToReserve = 100;
+        associationsToReserve = 100;
+
         // Reserve vectors to avoid pointer invalidation on pushes and emplacements
         mSubobjects.reserve(subobjectsToReserve);
         mAssociations.reserve(associationsToReserve);
         mExportNamePointerHolder.reserve(associationsToReserve);
 
-        for (const DXILLibrary& library : mLibraries)
-        {
-            AssociateLibraryWithItsExport(library);
-            AssociateConfigWithExport(mShaderConfig, library.Export());
-
-            if (library.LocalRootSignature())
-            {
-                AssociateRootSignatureWithExport(*library.LocalRootSignature(), library.Export());
-            }
-        }
-
-        for (RayTracingHitGroup& hitGroup : mHitGroups)
-        {
-            AddHitGroupSubobject(hitGroup);
-        }
-
+        AddLibraryExportCollectionSubobjects();
+        AssociateExportsWithLocalRootSignaturesAndShaderConfig();
+        AddHitGroupSubobjects();
         AddGlobalRootSignatureSubobject();
         AddPipelineConfigSubobject();
 
@@ -289,59 +280,141 @@ namespace HAL
         return identifier;
     }
 
-    std::wstring RayTracingPipelineState::GenerateUniqueExportName(const Shader& shader)
+    HAL::LibraryExport RayTracingPipelineState::GenerateLibraryExport(const std::string& shaderEntryPoint)
     {
-        mUniqueShaderExportID++;
-        return std::to_wstring(mUniqueShaderExportID) + shader.EntryPoint();
+        LibraryExport libExport{ shaderEntryPoint };
+        libExport.SetExportName(shaderEntryPoint + "_UID_" + std::to_string(mUniqueShaderExportID));
+        ++mUniqueShaderExportID;
+        return libExport;
     }
 
-    void RayTracingPipelineState::GenerateLibrariesAndHitGroups()
+    void RayTracingPipelineState::AddExportToCollection(const LibraryExport& libraryExport, const Library* library)
     {
-        assert_format(mRayGenerationShader.RTShader, "Ray Generation shader is missing");
-
-        GenerateLibrary(mRayGenerationShader.RTShader, mRayGenerationShader.LocalRootSignature);
-
-        for (const SingleRTShader& missShader : mMissShaders)
+        if (library != mCurrentLibrary)
         {
-            GenerateLibrary(missShader.RTShader, missShader.LocalRootSignature);
+            if (mLibraryExportCollections.find(library) == mLibraryExportCollections.end())
+            {
+                mLibraryExportCollections.emplace(library, library);
+            }
+
+            mCurrentLibrary = library;
+            mCurrentExportsCollection = &mLibraryExportCollections.at(library);
         }
 
-        for (const HitGroupShaders& shaders : mHitGroupShaders)
+        mCurrentExportsCollection->AddExport(libraryExport);
+    }
+
+    void RayTracingPipelineState::GenerateLibraryExportCollectionsAndHitGroups()
+    {
+        assert_format(mRayGenerationShader.ShaderLibrary && mRayGenerationExport, "Ray Generation shader is missing");
+
+        mLibraryExportCollections.clear();
+        mCurrentExportsCollection = nullptr;
+        mCurrentLibrary = nullptr;
+
+        AddExportToCollection(*mRayGenerationExport, mRayGenerationShader.ShaderLibrary);
+
+        for (auto i = 0; i < mMissShaders.size(); ++i)
         {
-            DXILLibrary* closestHitLib = nullptr;
-            DXILLibrary* anyHitLib = nullptr;
-            DXILLibrary* intersectionLib = nullptr;
+            AddExportToCollection(mMissShaderExports[i], mMissShaders[i].ShaderLibrary);
+        }
 
-            // Same local root signature for all hit group shaders
-            if (shaders.ClosestHitShader) closestHitLib = &GenerateLibrary(shaders.ClosestHitShader, shaders.LocalRootSignature);
-            if (shaders.AnyHitShader) anyHitLib = &GenerateLibrary(shaders.AnyHitShader, shaders.LocalRootSignature);
-            if (shaders.IntersectionShader) intersectionLib = &GenerateLibrary(shaders.IntersectionShader, shaders.LocalRootSignature);
+        for (auto i = 0; i < mCallableShaders.size(); ++i)
+        {
+            AddExportToCollection(mCallableShaderExports[i], mCallableShaders[i].ShaderLibrary);
+        }
 
-            assert_format(closestHitLib || anyHitLib || intersectionLib, "At least one hit group shader must exist");
+        for (auto i = 0; i < mHitGroupShaders.size(); ++i)
+        {
+            const HitGroupShaders& hgShaders = mHitGroupShaders[i];
+            const HitGroupLibraryExports& hgExports = mHitGroupExports[i];
 
-            mHitGroups.emplace_back(&closestHitLib->Export(), &anyHitLib->Export(), &intersectionLib->Export(), shaders.LocalRootSignature);
+            if (hgShaders.AnyHitLibrary) AddExportToCollection(*hgExports.AnyHitExport, hgShaders.AnyHitLibrary);
+            if (hgShaders.ClosestHitLibrary) AddExportToCollection(*hgExports.ClosestHitExport, hgShaders.ClosestHitLibrary);
+            if (hgShaders.IntersectionLibrary) AddExportToCollection(*hgExports.IntersectionExport, hgShaders.IntersectionLibrary);
+
+            const LibraryExport* closestHitExport = hgExports.ClosestHitExport ? &hgExports.ClosestHitExport.value() : nullptr;
+            const LibraryExport* anyHitExport = hgExports.AnyHitExport ? &hgExports.AnyHitExport.value() : nullptr;
+            const LibraryExport* intersectionExport = hgExports.IntersectionExport ? &hgExports.IntersectionExport.value() : nullptr;
+
+            mHitGroups.emplace_back(closestHitExport, anyHitExport, intersectionExport);
         }
     }
 
-    DXILLibrary& RayTracingPipelineState::GenerateLibrary(const Shader* shader, const RootSignature* localRootSignature)
+    void RayTracingPipelineState::AssociateExportsWithLocalRootSignaturesAndShaderConfig()
     {
-        ShaderExport shaderExport{ shader };
-        shaderExport.SetExportName(GenerateUniqueExportName(*shader));
-        DXILLibrary lib{ shaderExport };
-        lib.SetLocalRootSignature(localRootSignature);
-        return mLibraries.emplace_back(std::move(lib));
+        // Add local root signature and shader config associations
+        AssociateConfigWithExport(mShaderConfig, *mRayGenerationExport);
+        AssociateRootSignatureWithExport(mRayGenerationShader.LocalRootSignature, *mRayGenerationExport);
+
+        for (auto i = 0; i < mMissShaders.size(); ++i)
+        {
+            const LibraryExport& missShaderExport = mMissShaderExports[i];
+            AssociateConfigWithExport(mShaderConfig, missShaderExport);
+            AssociateRootSignatureWithExport(mMissShaders[i].LocalRootSignature, missShaderExport);
+        }
+
+        for (auto i = 0; i < mCallableShaders.size(); ++i)
+        {
+            const LibraryExport& callableShaderExport = mCallableShaderExports[i];
+            AssociateConfigWithExport(mShaderConfig, callableShaderExport);
+            AssociateRootSignatureWithExport(mCallableShaders[i].LocalRootSignature, callableShaderExport);
+        }
+
+        for (auto i = 0; i < mHitGroupShaders.size(); ++i)
+        {
+            const HitGroupShaders& hgShaders = mHitGroupShaders[i];
+            const HitGroupLibraryExports& hgExports = mHitGroupExports[i];
+
+            if (hgShaders.AnyHitLibrary)
+            {
+                AssociateConfigWithExport(mShaderConfig, *hgExports.AnyHitExport);
+                AssociateRootSignatureWithExport(hgShaders.LocalRootSignature, *hgExports.AnyHitExport);
+            }
+
+            if (hgShaders.ClosestHitLibrary)
+            {
+                AssociateConfigWithExport(mShaderConfig, *hgExports.ClosestHitExport);
+                AssociateRootSignatureWithExport(hgShaders.LocalRootSignature, *hgExports.ClosestHitExport);
+            }
+
+            if (hgShaders.IntersectionLibrary)
+            {
+                AssociateConfigWithExport(mShaderConfig, *hgExports.IntersectionExport);
+                AssociateRootSignatureWithExport(hgShaders.LocalRootSignature, *hgExports.IntersectionExport);
+            }
+        }
     }
 
-    void RayTracingPipelineState::AssociateLibraryWithItsExport(const DXILLibrary& library)
+    void RayTracingPipelineState::AddLibraryExportCollectionSubobjects()
     {
-        mExportNamePointerHolder.emplace_back(library.Export().ExportName().c_str());
+        // Add libraries
+        for (auto& [library, exportsCollection] : mLibraryExportCollections)
+        {
+            AddLibraryExportsCollectionSubobject(exportsCollection);
+        }
+    }
+
+    void RayTracingPipelineState::AddHitGroupSubobjects()
+    {
+        for (RayTracingHitGroupExport& hitGroup : mHitGroups)
+        {
+            AddHitGroupSubobject(hitGroup);
+        }
+    }
+
+    void RayTracingPipelineState::AddLibraryExportsCollectionSubobject(const LibraryExportsCollection& exports)
+    {
+        const D3D12_DXIL_LIBRARY_DESC& d3dExportsCollection = exports.GetD3DLibraryExports();
+
+        //mExportNamePointerHolder.emplace_back(exports.Export().ExportName().c_str());
 
         // Hold in memory until compilation
         D3D12_STATE_SUBOBJECT& librarySubobject = 
-            mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &library.D3DLibrary() });
+            mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY, &d3dExportsCollection });
     }
 
-    void RayTracingPipelineState::AssociateConfigWithExport(const RayTracingShaderConfig& config, const ShaderExport& shaderExport)
+    void RayTracingPipelineState::AssociateConfigWithExport(const RayTracingShaderConfig& config, const LibraryExport& shaderExport)
     {
         mExportNamePointerHolder.emplace_back(shaderExport.ExportName().c_str());
 
@@ -355,14 +428,19 @@ namespace HAL
         mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &configToExportAssociation });
     }
 
-    void RayTracingPipelineState::AssociateRootSignatureWithExport(const RootSignature& signature, const ShaderExport& shaderExport)
+    void RayTracingPipelineState::AssociateRootSignatureWithExport(const RootSignature* signature, const LibraryExport& shaderExport)
     {
+        if (!signature)
+        {
+            return;
+        }
+
         mExportNamePointerHolder.emplace_back(shaderExport.ExportName().c_str());
 
         // Associate local root signatures with shader exports
         // Hold in memory until compilation
         D3D12_STATE_SUBOBJECT& localRootSignatureSubobject = 
-            mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE, signature.D3DSignature() });
+            mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE, signature->D3DSignature() });
 
         D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION& localRootSigToExportAssociation = 
             mAssociations.emplace_back(D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION{ &localRootSignatureSubobject, 1, &mExportNamePointerHolder.back() });
@@ -370,7 +448,7 @@ namespace HAL
         mSubobjects.emplace_back(D3D12_STATE_SUBOBJECT{ D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION, &localRootSigToExportAssociation });
     }
 
-    void RayTracingPipelineState::AddHitGroupSubobject(const RayTracingHitGroup& group)
+    void RayTracingPipelineState::AddHitGroupSubobject(const RayTracingHitGroupExport& group)
     {
         D3D12_STATE_SUBOBJECT hitGroupSubobject{ D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP, &group.D3DHitGroup() };
         mSubobjects.push_back(hitGroupSubobject);
@@ -396,28 +474,24 @@ namespace HAL
     {
         mShaderTable.Clear();
 
-        for (const DXILLibrary& library : mLibraries)
+        mShaderTable.SetRayGenerationShader(GetShaderIdentifier(mRayGenerationExport->ExportName()), mRayGenerationShader.LocalRootSignature);
+
+        for (auto i = 0; i < mMissShaders.size(); ++i)
         {
-            const ShaderExport& shaderExport = library.Export();
-            Shader::Stage stage = shaderExport.AssosiatedShader()->PipelineStage();
-
-            if (stage == Shader::Stage::RayGeneration)
-            {
-                ShaderIdentifier shaderId = GetShaderIdentifier(shaderExport.ExportName());
-                mShaderTable.SetRayGenerationShader(shaderId, library.LocalRootSignature());
-            }
-
-            if (stage == Shader::Stage::RayMiss)
-            {
-                ShaderIdentifier shaderId = GetShaderIdentifier(shaderExport.ExportName());
-                mShaderTable.AddRayMissShader(shaderId, library.LocalRootSignature());
-            }
+            mShaderTable.AddRayMissShader(GetShaderIdentifier(mMissShaderExports[i].ExportName()), mMissShaders[i].LocalRootSignature);
         }
 
-        for (const RayTracingHitGroup& hitGroup : mHitGroups)
+        for (auto i = 0; i < mCallableShaders.size(); ++i)
         {
-            ShaderIdentifier shaderId = GetShaderIdentifier(hitGroup.ExportName());
-            mShaderTable.AddRayTracingHitGroupShaders(shaderId, hitGroup.LocalRootSignature());
+            mShaderTable.AddCallableShader(GetShaderIdentifier(mCallableShaderExports[i].ExportName()), mCallableShaders[i].LocalRootSignature);
+        }
+
+        for (auto i = 0; i < mHitGroupShaders.size(); ++i)
+        {
+            const HitGroupShaders& hgShaders = mHitGroupShaders[i];
+            const RayTracingHitGroupExport& hitGroup = mHitGroups[i];
+
+            mShaderTable.AddRayTracingHitGroupShaders(GetShaderIdentifier(hitGroup.ExportName()), hgShaders.LocalRootSignature);
         }
     }
 

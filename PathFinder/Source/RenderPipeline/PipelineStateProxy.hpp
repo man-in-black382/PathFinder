@@ -53,6 +53,14 @@ namespace PathFinder
             std::optional<Foundation::Name> LocalRootSignatureName;
         };
 
+        struct CallableShader
+        {
+            std::string ShaderFileName;
+            std::string EntryPointName;
+            std::optional<Foundation::Name> LocalRootSignatureName;
+        };
+
+        HAL::ShaderTableIndex AddCallableShader(const std::string& fileName, const std::string& entryPoint, std::optional<Foundation::Name> localRootSignatureName = std::nullopt);
         void AddMissShader(const std::string& missShaderFileName, std::optional<Foundation::Name> localRootSignatureName = std::nullopt);
         void AddHitGroupShaders(const HitGroupShaderFileNames& fileNames, std::optional<Foundation::Name> localRootSignatureName = std::nullopt);
 
@@ -65,10 +73,12 @@ namespace PathFinder
     private:
         std::vector<HitGroup> mHitGroups;
         std::vector<MissShader> mMissShaders;
+        std::vector<CallableShader> mCallableShaders;
 
     public:
         const auto& HitGroups() const { return mHitGroups; }
         const auto& MissShaders() const { return mMissShaders; }
+        const auto& CallableShaders() const { return mCallableShaders; }
     };
 
 }

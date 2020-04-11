@@ -10,10 +10,12 @@
 #include "Shader.hpp"
 #include "RayDispatchInfo.hpp"
 #include "Buffer.hpp"
-#include "RayTracingHitGroup.hpp"
+#include "RayTracingHitGroupExport.hpp"
 
 namespace HAL
 {
+
+    using ShaderTableIndex = uint32_t;
 
     class ShaderTable
     {
@@ -25,6 +27,7 @@ namespace HAL
 
         void SetRayGenerationShader(const ShaderIdentifier& id, const RootSignature* localRootSignature = nullptr);
         void AddRayMissShader(const ShaderIdentifier& id, const RootSignature* localRootSignature = nullptr);
+        void AddCallableShader(const ShaderIdentifier& id, const RootSignature* localRootSignature = nullptr);
         void AddRayTracingHitGroupShaders(const ShaderIdentifier& hitGroupId, const RootSignature* localRootSignature = nullptr);
 
         RayDispatchInfo UploadToGPUMemory(uint8_t* uploadGPUMemory, const Buffer* gpuTableBuffer);
@@ -46,11 +49,13 @@ namespace HAL
 
         std::optional<ShaderRecord> mRayGenShaderRecord;
         std::vector<ShaderRecord> mRayMissShaderRecords;
+        std::vector<ShaderRecord> mCallableShaderRecords;
         std::vector<ShaderRecord> mRayHitGroupRecords;
 
         // Shader table stride (maximum record size) for each RT shader type
         uint64_t mRayMissRecordStride = 0;
         uint64_t mRayHitGroupRecordStride = 0;
+        uint64_t mCallableRecordStride = 0;
     };
 
 }

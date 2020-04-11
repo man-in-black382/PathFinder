@@ -472,6 +472,17 @@ void RayMiss(inout ShadowRayPayload payload)
     payload.ShadowFactor = 1.0;
 }
 
+struct CallableParam
+{
+    float TestData;
+};
+
+[shader("callable")]
+void TestFunc(inout CallableParam parameter)
+{
+    //param.TestData = float3(0.0, 100.0, 0.0);
+}
+
 [shader("raygeneration")]
 void RayGeneration()
 {

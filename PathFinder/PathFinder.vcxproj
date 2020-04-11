@@ -219,7 +219,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\Device.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapter.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\DXILLibrary.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\LibraryExportsCollection.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Fence.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\GraphicAPIObject.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Heap.cpp" />
@@ -230,7 +230,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\RasterizerState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RayDispatchInfo.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingHitGroup.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingHitGroupExport.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingPipelineConfig.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingShaderConfig.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RenderTarget.cpp" />
@@ -244,7 +244,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\StaticSampler.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Shader.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ShaderCompiler.cpp" />
-    <ClCompile Include="Source\HardwareAbstractionLayer\ShaderExport.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\LibraryExport.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\ShaderTable.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\SwapChain.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Texture.cpp" />
@@ -371,7 +371,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\Device.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapter.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DisplayAdapterFetcher.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\DXILLibrary.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\LibraryExportsCollection.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Fence.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\GraphicAPIObject.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Heap.hpp" />
@@ -382,7 +382,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\RasterizerState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RayDispatchInfo.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingHitGroup.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingHitGroupExport.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingPipelineConfig.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingShaderConfig.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RenderTarget.hpp" />
@@ -396,7 +396,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\StaticSampler.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Shader.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderCompiler.hpp" />
-    <ClInclude Include="Source\HardwareAbstractionLayer\ShaderExport.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\LibraryExport.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.h" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderTable.hpp" />

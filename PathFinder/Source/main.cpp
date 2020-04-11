@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 
     auto sphereLight0 = scene.EmplaceSphericalLight();
     sphereLight0->SetRadius(2);
-    sphereLight0->SetPosition({ 2.5, 0.0, 0.0 });
+    sphereLight0->SetPosition({ 7.5, 0.0, 0.0 });
     sphereLight0->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
     sphereLight0->SetLuminousPower(50000);
 
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
     //flatLight1->SetColor({ 125.0 / 255, 215.0 / 255, 28.0 / 255 });
     //flatLight1->SetLuminousPower(5000);
 
-    /*auto flatLight2 = scene.EmplaceRectangularLight();
+    auto flatLight2 = scene.EmplaceRectangularLight();
     flatLight2->SetWidth(2);
     flatLight2->SetHeight(2);
     flatLight2->SetPosition({ -7.5, 0.0, 0.0 });
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
     flatLight3->SetPosition({ 2.5, 0.0, 0.0 });
     flatLight3->SetNormal({ 0.0, .0, 1.0 });
     flatLight3->SetColor({ 230.0 / 255, 215.0 / 255, 28.0 / 255 });
-    flatLight3->SetLuminousPower(5000);*/
+    flatLight3->SetLuminousPower(5000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",

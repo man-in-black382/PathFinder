@@ -76,10 +76,14 @@ namespace PathFinder
         const HAL::RootSignature* GetNamedRootSignatureOrNull(std::optional<RootSignatureName> name) const;
 
         void AssociateStateWithShader(PipelineStateVariantInternal* state, const HAL::Shader* shader);
+        void AssociateStateWithLibrary(PipelineStateVariantInternal* state, const HAL::Library* library);
 
         void ConfigureDefaultStates();
         void BuildBaseRootSignature(); 
         void CompileRayTracingState(RayTracingStateWrapper& stateWrapper, Foundation::Name psoName);
+
+        void RecompileStatesWithNewShader(const HAL::Shader* oldShader, const HAL::Shader* newShader);
+        void RecompileStatesWithNewLibrary(const HAL::Library* oldLibrary, const HAL::Library* newLibrary);
 
         ShaderManager* mShaderManager; 
         Memory::GPUResourceProducer* mResourceProducer;
@@ -92,6 +96,7 @@ namespace PathFinder
         std::unordered_map<PSOName, PipelineStateVariantInternal> mPipelineStates;
         std::unordered_map<RootSignatureName, HAL::RootSignature> mRootSignatures;
         std::unordered_map<const HAL::Shader*, std::unordered_set<PipelineStateVariantInternal*>> mShaderToPSOAssociations;
+        std::unordered_map<const HAL::Library*, std::unordered_set<PipelineStateVariantInternal*>> mLibraryToPSOAssociations;
         std::unordered_set<PipelineStateVariantInternal*> mStatesToRecompile;
 
         std::string mDefaultVertexEntryPointName = "VSMain";

@@ -9,9 +9,9 @@
 #include "GBuffer.hlsl"
 #include "ColorConversion.hlsl"
 
-static const uint LightTypeDisk = 0;
-static const uint LightTypeSphere = 1;
-static const uint LightTypeRectangle = 2;
+static const uint LightTypeSphere = 0;
+static const uint LightTypeRectangle = 1;
+static const uint LightTypeDisk = 2;
 
 struct Light
 {

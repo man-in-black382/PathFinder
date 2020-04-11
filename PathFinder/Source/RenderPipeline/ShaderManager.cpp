@@ -17,9 +17,9 @@ namespace PathFinder
         return GetShader(pipelineStage, entryPoint, relativePath);
     }
 
-    void ShaderManager::SetShaderRecompilationCallback(const ShaderRecompilationCallback& callback)
+    HAL::Library* ShaderManager::LoadLibrary(const std::filesystem::path& relativePath)
     {
-        mRecompilationCallback = callback;
+        return GetLibrary(relativePath);
     }
 
     void ShaderManager::BeginFrame()
@@ -72,18 +72,18 @@ namespace PathFinder
 
     HAL::Shader* ShaderManager::FindCachedShader(Foundation::Name entryPointName, const std::filesystem::path& relativePath)
     {
-        auto shaderAssociationIt = mShaderEntryPointFilePathToShaderAssociations.find(relativePath.string());
-        bool anyAssociationFound = shaderAssociationIt != mShaderEntryPointFilePathToShaderAssociations.end();
+        auto shaderAssociationIt = mEntryPointFilePathToCompiledObjectAssociations.find(relativePath.string());
+        bool anyAssociationFound = shaderAssociationIt != mEntryPointFilePathToCompiledObjectAssociations.end();
         
         if (!anyAssociationFound)
         {
             return nullptr;
         }
 
-        ShaderBundle& shadersForFile = shaderAssociationIt->second;
-        auto bundleIt = shadersForFile.find(entryPointName);
+        CompiledObjectsInFile& compiledObjectsInFile = shaderAssociationIt->second;
+        auto bundleIt = compiledObjectsInFile.Shaders.find(entryPointName);
 
-        if (bundleIt == shadersForFile.end())
+        if (bundleIt == compiledObjectsInFile.Shaders.end())
         {
             return nullptr;
         }
@@ -96,7 +96,7 @@ namespace PathFinder
     {
         auto fullPath = mShaderRootPath / relativePath;
 
-        HAL::ShaderCompiler::CompilationResult compilationResult = mCompiler.Compile(fullPath, pipelineStage, entryPoint, mCommandLineParser.ShouldBuildDebugShaders());
+        HAL::ShaderCompiler::ShaderCompilationResult compilationResult = mCompiler.CompileShader(fullPath, pipelineStage, entryPoint, mCommandLineParser.ShouldBuildDebugShaders());
         
         if (!compilationResult.CompiledShader.Blob())
         {
@@ -109,16 +109,78 @@ namespace PathFinder
         ShaderListIterator shaderIt = std::prev(mShaders.end());
         
         // Associate shader with a file it was loaded from and its entry point name
-        ShaderBundle& shadersForFile = mShaderEntryPointFilePathToShaderAssociations[relativePathString];
-        shadersForFile.emplace(shaderIt->EntryPointName(), shaderIt);
+        CompiledObjectsInFile& compiledObjectsInFile = mEntryPointFilePathToCompiledObjectAssociations[relativePathString];
+        compiledObjectsInFile.Shaders[shaderIt->EntryPointName()] = shaderIt;
 
         for (auto& shaderFilePath : compilationResult.CompiledFileRelativePaths)
         {
             // Associate every file that took place in compilation with the root file that has shader's entry point
-            mShaderAnyFilePathToEntryPointFilePathAssociations[shaderFilePath].insert(relativePathString);
+            mIncludedFilePathToEntryPointFilePathAssociations[shaderFilePath].insert(relativePathString);
         }
 
         return &(*shaderIt);
+    }
+
+    HAL::Library* ShaderManager::GetLibrary(const std::filesystem::path& relativePath)
+    {
+        HAL::Library* library = FindCachedLibrary(relativePath);
+
+        if (!library)
+        {
+            library = LoadAndCacheLibrary(relativePath);
+            assert_format(library, "Failed to compile library");
+        }
+
+        return library;
+    }
+
+    HAL::Library* ShaderManager::FindCachedLibrary(const std::filesystem::path& relativePath)
+    {
+        auto associationIt = mEntryPointFilePathToCompiledObjectAssociations.find(relativePath.string());
+        bool anyAssociationFound = associationIt != mEntryPointFilePathToCompiledObjectAssociations.end();
+
+        if (!anyAssociationFound)
+        {
+            return nullptr;
+        }
+
+        CompiledObjectsInFile& compiledObjectsInFile = associationIt->second;
+
+        if (!compiledObjectsInFile.Library)
+        {
+            return nullptr;
+        }
+
+        LibraryListIterator libraryIt = *compiledObjectsInFile.Library;
+        HAL::Library* library = &(*libraryIt);
+        return library;
+    }
+
+    HAL::Library* ShaderManager::LoadAndCacheLibrary(const std::filesystem::path& relativePath)
+    {
+        auto fullPath = mShaderRootPath / relativePath;
+
+        HAL::ShaderCompiler::LibraryCompilationResult compilationResult = mCompiler.CompileLibrary(fullPath, mCommandLineParser.ShouldBuildDebugShaders());
+
+        if (!compilationResult.CompiledLibrary.Blob())
+        {
+            return nullptr;
+        }
+
+        mLibraries.emplace_back(std::move(compilationResult.CompiledLibrary));
+
+        std::string relativePathString = relativePath.filename().string();
+        LibraryListIterator libraryIt = std::prev(mLibraries.end());
+
+        CompiledObjectsInFile& compiledObjectsInFile = mEntryPointFilePathToCompiledObjectAssociations[relativePathString];
+        compiledObjectsInFile.Library = libraryIt;
+
+        for (auto& shaderFilePath : compilationResult.CompiledFileRelativePaths)
+        {
+            mIncludedFilePathToEntryPointFilePathAssociations[shaderFilePath].insert(relativePathString);
+        }
+
+        return &(*libraryIt);
     }
 
     std::filesystem::path ShaderManager::ConstructShaderRootPath(const CommandLineParser& commandLineParser) const
@@ -135,7 +197,7 @@ namespace PathFinder
 
     void ShaderManager::FindAndAddEntryPointShaderFileForRecompilation(const std::string& modifiedFile)
     {
-        const std::unordered_set<std::string>& entryPointFileNames = mShaderAnyFilePathToEntryPointFilePathAssociations[modifiedFile];
+        const std::unordered_set<std::string>& entryPointFileNames = mIncludedFilePathToEntryPointFilePathAssociations[modifiedFile];
         for (auto& entryPointFilePath : entryPointFileNames)
         {
             mEntryPointShaderFilesToRecompile.insert(entryPointFilePath);
@@ -144,11 +206,6 @@ namespace PathFinder
 
     void ShaderManager::RecompileShader(ShaderListIterator oldShaderIt, const std::string& shaderFile)
     {
-        if (oldShaderIt == mShaders.end())
-        {
-            return;
-        }
-
         HAL::Shader* oldShader = &(*oldShaderIt);
         HAL::Shader* newShader = LoadAndCacheShader(oldShader->PipelineStage(), oldShader->EntryPointName().ToString(), shaderFile);
 
@@ -159,21 +216,40 @@ namespace PathFinder
         }
 
         // Notify anyone interested about the old-to-new swap operation
-        mRecompilationCallback(oldShader, newShader);
+        mShaderRecompilationEvent(oldShader, newShader);
 
         // Get rid of the old shader
         mShaders.erase(oldShaderIt);
+    }
+
+    void ShaderManager::RecompileLibrary(LibraryListIterator oldLibraryIt, const std::string& libraryFile)
+    {
+        HAL::Library* oldLibrary = &(*oldLibraryIt);
+        HAL::Library* newLibrary = LoadAndCacheLibrary(libraryFile);
+
+        if (!newLibrary)
+        {
+            return;
+        }
+
+        mLibraryRecompilationEvent(oldLibrary, newLibrary);
+        mLibraries.erase(oldLibraryIt);
     }
 
     void ShaderManager::RecompileModifiedShaders()
     {
         for (auto& shaderFile : mEntryPointShaderFilesToRecompile)
         {
-            const ShaderBundle& shaderBundle = mShaderEntryPointFilePathToShaderAssociations[shaderFile];
+            const CompiledObjectsInFile& compiledObjectsInFile = mEntryPointFilePathToCompiledObjectAssociations[shaderFile];
 
-            for (auto& [entryPointName, shaderIterator] : shaderBundle)
+            for (auto& [entryPointName, shaderIterator] : compiledObjectsInFile.Shaders)
             {
                 RecompileShader(shaderIterator, shaderFile);
+            }
+
+            if (auto libIt = compiledObjectsInFile.Library)
+            {
+                RecompileLibrary(*libIt, shaderFile);
             }
         }
 

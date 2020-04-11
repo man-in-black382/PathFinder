@@ -65,7 +65,7 @@ namespace PathFinder
     {
         enum class LightType : uint32_t
         {
-            Disk = 0, Sphere = 1, Rectangle = 2
+            Sphere = 0, Rectangle = 1, Disk = 2
         };
 
         glm::vec4 Orientation;

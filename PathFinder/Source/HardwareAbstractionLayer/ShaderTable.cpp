@@ -53,6 +53,22 @@ namespace HAL
         mRayMissRecordStride = std::max(mRayMissRecordStride, recordSize);
     }
 
+    void ShaderTable::AddCallableShader(const ShaderIdentifier& id, const RootSignature* localRootSignature)
+    {
+        uint64_t recordSize = sizeof(ShaderIdentifier);
+
+        // Local root signature is optional
+        if (localRootSignature)
+        {
+            // TODO: Implement correct root signature size calculation inside RootSignature itself
+            //mTableSize += localRootSignature->ParameterCount() * sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
+        }
+
+        recordSize = Foundation::MemoryUtils::Align(recordSize, D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT);
+        mCallableShaderRecords.emplace_back(id, localRootSignature, recordSize);
+        mCallableRecordStride = std::max(mCallableRecordStride, recordSize);
+    }
+
     void ShaderTable::AddRayTracingHitGroupShaders(const ShaderIdentifier& hitGroupId, const RootSignature* localRootSignature)
     {
         uint64_t recordSize = sizeof(ShaderIdentifier);
@@ -123,9 +139,25 @@ namespace HAL
             recordAddressOffset += mRayHitGroupRecordStride;
         }
 
-        mGPUTable = gpuTableBuffer;
+        // We're done with hit groups, address has moved past the last hit group shader.
+        // Alight it for callable table records start address
+        recordAddressOffset = Foundation::MemoryUtils::Align(recordAddressOffset, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
 
-        // Callable shaders are not yet supported. TODO: Implement callable shaders
+        if (!mCallableShaderRecords.empty())
+        {
+            uint64_t callableShadersRegionSize = mCallableShaderRecords.size() * mCallableRecordStride;
+            auto callableTableStartFinalAddress = gpuTableBuffer->GPUVirtualAddress() + recordAddressOffset;
+            addresses.CallableShaderTable = { callableTableStartFinalAddress, callableShadersRegionSize, mCallableRecordStride };
+        }
+
+        for (const ShaderRecord& callableRecord : mCallableShaderRecords)
+        {
+            auto callableTableUploadAddress = uploadGPUMemory + recordAddressOffset;
+            memcpy(callableTableUploadAddress, callableRecord.ID.RawData.data(), sizeof(callableRecord.ID.RawData));
+            recordAddressOffset += mCallableRecordStride;
+        }
+
+        mGPUTable = gpuTableBuffer;
 
         return RayDispatchInfo{ addresses };
     }

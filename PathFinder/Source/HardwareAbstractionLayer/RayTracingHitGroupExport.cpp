@@ -1,12 +1,12 @@
-#include "RayTracingHitGroup.hpp"
+#include "RayTracingHitGroupExport.hpp"
 
 #include <d3d12.h>
 
 namespace HAL
 {
 
-    RayTracingHitGroup::RayTracingHitGroup(const ShaderExport* closestHit, const ShaderExport* anyHit, const ShaderExport* intersection, const RootSignature* localSignature)
-        : mClosestHitExport{ closestHit }, mAnyHitExport{ anyHit }, mIntersectionExport{ intersection }, mLocalRootSignature{ localSignature }
+    RayTracingHitGroupExport::RayTracingHitGroupExport(const LibraryExport* closestHit, const LibraryExport* anyHit, const LibraryExport* intersection)
+        : mClosestHitExport{ closestHit }, mAnyHitExport{ anyHit }, mIntersectionExport{ intersection }
     {
         mName += L"HitGroup"; 
 
@@ -32,7 +32,7 @@ namespace HAL
         mHitGroup.Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;
     }
 
-    void RayTracingHitGroup::SetExportName(const std::wstring& name)
+    void RayTracingHitGroupExport::SetExportName(const std::wstring& name)
     {
         mName = name;
         mHitGroup.HitGroupExport = mName.c_str();
