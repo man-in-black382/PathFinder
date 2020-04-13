@@ -177,6 +177,7 @@ namespace HAL
         // Shader tables must be aligned
         auto tableSize = Foundation::MemoryUtils::Align(mRayGenShaderRecord->SizeInBytes, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
             Foundation::MemoryUtils::Align(mRayMissRecordStride * mRayMissShaderRecords.size(), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
+            Foundation::MemoryUtils::Align(mCallableRecordStride * mCallableShaderRecords.size(), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
             Foundation::MemoryUtils::Align(mRayHitGroupRecordStride * mRayHitGroupRecords.size(), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
 
         return { tableSize };

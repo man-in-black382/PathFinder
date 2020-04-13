@@ -19,7 +19,7 @@ namespace PathFinder
         mDefaultGraphicsState{ device }
     {
         ConfigureDefaultStates();
-        BuildBaseRootSignature();
+        AddCommonRootSignatureParameters(mBaseRootSignature);
 
         mShaderManager->ShaderRecompilationEvent() += { "shader.recompilation", this, &PipelineStateManager::RecompileStatesWithNewShader };
         mShaderManager->LibraryRecompilationEvent() += { "library.recompilation", this, &PipelineStateManager::RecompileStatesWithNewLibrary };
@@ -29,7 +29,7 @@ namespace PathFinder
     {
         assert_format(GetRootSignature(name) == nullptr, "Redefinition of Root Signature. ", name.ToString(), " already exists.");
 
-        HAL::RootSignature newSignature = mBaseRootSignature.Clone();
+        HAL::RootSignature newSignature{ mDevice };
         RootSignatureProxy signatureProxy{};
         configurator(signatureProxy);
 
@@ -47,6 +47,8 @@ namespace PathFinder
         {
             newSignature.AddDescriptorTableParameter(parameter);
         }
+
+        AddCommonRootSignatureParameters(newSignature);
 
         mRootSignatures.emplace(name, std::move(newSignature));
     }
@@ -151,7 +153,10 @@ namespace PathFinder
 
         assert_format(!proxy.RayGenerationShaderFileName.empty(), "Ray generation shader is missing");
         assert_format(proxy.PipelineConfig.MaxTracingRecursionDepth() > 0, "Pipeline config was not set");
-        assert_format(proxy.ShaderConfig.MaxPayloadSize() > 0, "Shader config was not set");
+        assert_format(proxy.ShaderConfig.MaxPayloadSize() > 0, "Shader config payload size was not set");
+        // This one is especially important because values less than *8* can cause driver crashes on Nvidia when callable shaders are used,
+        // but DX validation layer will not say anything. Driver version 442.74.
+        assert_format(proxy.ShaderConfig.MaxAttributesSize() >= 8, "Shader config attributes size was not set to proper value"); 
 
         auto [iter, success] = mPipelineStates.emplace(name, RayTracingStateWrapper{ HAL::RayTracingPipelineState{ mDevice }, nullptr });
         RayTracingStateWrapper& newStateWrapper = std::get<RayTracingStateWrapper>(iter->second);
@@ -326,76 +331,74 @@ namespace PathFinder
         mDefaultGraphicsState.SetRootSignature(&mBaseRootSignature);
     }
 
-    void PipelineStateManager::BuildBaseRootSignature()
+    void PipelineStateManager::AddCommonRootSignatureParameters(HAL::RootSignature& signature) const
     {
-        // See BaseRootSignature.hlsl for reference
-
         // Global data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 0, 10 }); 
+        signature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 0, 10 });
 
         // Frame-specific data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 1, 10 });
+        signature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 1, 10 });
 
         // Pass-specific data CB
-        mBaseRootSignature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 2, 10 });
+        signature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 2, 10 });
 
         // Unbounded Texture2D range
         HAL::RootDescriptorTableParameter textures2D;
         textures2D.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 10 });
-        mBaseRootSignature.AddDescriptorTableParameter(textures2D);
+        signature.AddDescriptorTableParameter(textures2D);
 
         // Unbounded Texture2D<uint4> range
         HAL::RootDescriptorTableParameter textures2DUInt4;
         textures2DUInt4.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 11 });
-        mBaseRootSignature.AddDescriptorTableParameter(textures2DUInt4);
+        signature.AddDescriptorTableParameter(textures2DUInt4);
 
         // Unbounded Texture3D range
         HAL::RootDescriptorTableParameter textures3D;
-        textures3D.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 12 }); 
-        mBaseRootSignature.AddDescriptorTableParameter(textures3D);
+        textures3D.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 12 });
+        signature.AddDescriptorTableParameter(textures3D);
 
         // Unbounded Texture3D<uint4> range
         HAL::RootDescriptorTableParameter textures3DUInt4;
         textures3DUInt4.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 13 });
-        mBaseRootSignature.AddDescriptorTableParameter(textures3DUInt4);
+        signature.AddDescriptorTableParameter(textures3DUInt4);
 
         // Unbounded Texture2DArray range
         HAL::RootDescriptorTableParameter texture2DArrays;
         texture2DArrays.AddDescriptorRange(HAL::SRDescriptorTableRange{ 0, 14 });
-        mBaseRootSignature.AddDescriptorTableParameter(texture2DArrays);
+        signature.AddDescriptorTableParameter(texture2DArrays);
 
         // Unbounded RWTexture2D range
         HAL::RootDescriptorTableParameter RWTextures2DFloat4;
         RWTextures2DFloat4.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 10 });
-        mBaseRootSignature.AddDescriptorTableParameter(RWTextures2DFloat4);
+        signature.AddDescriptorTableParameter(RWTextures2DFloat4);
 
         // Unbounded RWTexture2D<uint4> range
         HAL::RootDescriptorTableParameter RWTextures2DUInt4;
         RWTextures2DUInt4.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 11 });
-        mBaseRootSignature.AddDescriptorTableParameter(RWTextures2DUInt4);
+        signature.AddDescriptorTableParameter(RWTextures2DUInt4);
 
         // Unbounded RWTexture3D range
         HAL::RootDescriptorTableParameter RWTextures3D;
         RWTextures3D.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 12 });
-        mBaseRootSignature.AddDescriptorTableParameter(RWTextures3D);
+        signature.AddDescriptorTableParameter(RWTextures3D);
 
         // Unbounded RWTexture3D<uint4> range
         HAL::RootDescriptorTableParameter RWTextures3DUInt4;
         RWTextures3DUInt4.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 13 });
-        mBaseRootSignature.AddDescriptorTableParameter(RWTextures3DUInt4);
+        signature.AddDescriptorTableParameter(RWTextures3DUInt4);
 
         // Unbounded RWTexture2DArray range
         HAL::RootDescriptorTableParameter RWTexture2DArrays;
         RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 14 });
-        mBaseRootSignature.AddDescriptorTableParameter(RWTexture2DArrays);
+        signature.AddDescriptorTableParameter(RWTexture2DArrays);
 
-        mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::AnisotropicClamp(0));
-        mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::LinearClamp(1));
-        mBaseRootSignature.AddStaticSampler(HAL::StaticSampler::PointClamp(2));
+        signature.AddStaticSampler(HAL::StaticSampler::AnisotropicClamp(0));
+        signature.AddStaticSampler(HAL::StaticSampler::LinearClamp(1));
+        signature.AddStaticSampler(HAL::StaticSampler::PointClamp(2));
 
         // Debug readback buffer
         HAL::RootUnorderedAccessParameter debugBuffer{ 0, 15 };
-        mBaseRootSignature.AddDescriptorParameter(debugBuffer);
+        signature.AddDescriptorParameter(debugBuffer);
     }
 
     void PipelineStateManager::CompileRayTracingState(RayTracingStateWrapper& stateWrapper, Foundation::Name psoName)

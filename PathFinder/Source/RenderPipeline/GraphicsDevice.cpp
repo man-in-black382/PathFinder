@@ -105,6 +105,8 @@ namespace PathFinder
 
     void GraphicsDevice::ApplyCommonGraphicsResourceBindingsIfNeeded()
     {   
+        auto commonParametersIndexOffset = mAppliedGraphicsRootSignature->ParameterCount() - mPipelineStateManager->CommonRootSignatureParameterCount();
+
         if (mRebindingAfterSignatureChangeRequired)
         {
             // Look at PipelineStateManager for base root signature parameter ordering
@@ -112,45 +114,45 @@ namespace PathFinder
             HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
 
             // Alias different registers to one GPU address
-            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 3);
-            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 4);
-            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 5);
-            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 6);
-            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 7);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 3 + commonParametersIndexOffset);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 4 + commonParametersIndexOffset);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 5 + commonParametersIndexOffset);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 6 + commonParametersIndexOffset);
+            mCommandList->SetGraphicsRootDescriptorTable(SRRangeAddress, 7 + commonParametersIndexOffset);
 
-            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 8);
-            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 9);
-            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 10);
-            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 11);
-            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 12);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 8 + commonParametersIndexOffset);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 9 + commonParametersIndexOffset);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 10 + commonParametersIndexOffset);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 11 + commonParametersIndexOffset);
+            mCommandList->SetGraphicsRootDescriptorTable(UARangeAddress, 12 + commonParametersIndexOffset);
         }
 
         if (auto buffer = mResourceStorage->GlobalRootConstantsBuffer();
             buffer && (buffer->HALBuffer() != mBoundGlobalConstantBufferGraphics || mRebindingAfterSignatureChangeRequired))
         {
             mBoundGlobalConstantBufferGraphics = buffer->HALBuffer();
-            mCommandList->SetGraphicsRootConstantBuffer(*mBoundGlobalConstantBufferGraphics, 0);
+            mCommandList->SetGraphicsRootConstantBuffer(*mBoundGlobalConstantBufferGraphics, 0 + commonParametersIndexOffset);
         }
 
         if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer();
             buffer && (buffer->HALBuffer() != mBoundFrameConstantBufferGraphics || mRebindingAfterSignatureChangeRequired))
         {
             mBoundFrameConstantBufferGraphics = buffer->HALBuffer();
-            mCommandList->SetGraphicsRootConstantBuffer(*mBoundFrameConstantBufferGraphics, 1);
+            mCommandList->SetGraphicsRootConstantBuffer(*mBoundFrameConstantBufferGraphics, 1 + commonParametersIndexOffset);
         }
 
         if (auto address = mResourceStorage->RootConstantsBufferAddressForCurrentPass();
             address != mBoundFrameConstantBufferAddressGraphics || mRebindingAfterSignatureChangeRequired)
         {
             mBoundFrameConstantBufferAddressGraphics = address;
-            mCommandList->SetGraphicsRootConstantBuffer(address, 2);
+            mCommandList->SetGraphicsRootConstantBuffer(address, 2 + commonParametersIndexOffset);
         }
 
         if (auto buffer = mResourceStorage->DebugBufferForCurrentPass();
             buffer && (buffer->HALBuffer() != mBoundPassDebugBufferGraphics || mRebindingAfterSignatureChangeRequired))
         {
             mBoundPassDebugBufferGraphics = buffer->HALBuffer();
-            mCommandList->SetGraphicsRootUnorderedAccessResource(*mBoundPassDebugBufferGraphics, 13);
+            mCommandList->SetGraphicsRootUnorderedAccessResource(*mBoundPassDebugBufferGraphics, 13 + commonParametersIndexOffset);
         }
 
         mRebindingAfterSignatureChangeRequired = false;

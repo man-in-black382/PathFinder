@@ -240,28 +240,27 @@ bool RaySphereIntersection(Sphere sphere, Ray ray, out float3 intersectionPoint)
     float b = 2.0 * dot(oc, ray.Direction);
     float c = dot(oc, oc) - sphere.Radius * sphere.Radius;
     float discriminant = b * b - 4.0 * a * c;
+    float discriminantSqrt = sqrt(discriminant);
 
-    if (discriminant < 0.0)
+    bool intersects = false;
+
+    if (discriminant > 0.0)
     {
-        return false;
-    }
-    else
-    {
-        float numerator = -b - sqrt(discriminant);
+        float numerator = -b - discriminantSqrt;
 
         if (numerator <= 0.0)
         {
-            numerator = -b + sqrt(discriminant);
+            numerator = -b + discriminantSqrt;
         }
 
         if (numerator > 0.0)
         {
             intersectionPoint = ray.Origin + ray.Direction * (numerator / (2.0 * a));
-            return true;
+            intersects = true;
         }
-
-        return false;
     }
+
+    return intersects;
 }
 
 bool RayRectangleIntersection(Rectangle rectangle, Plane rectanglePlane, Ray ray, out float3 intersectionPoint)

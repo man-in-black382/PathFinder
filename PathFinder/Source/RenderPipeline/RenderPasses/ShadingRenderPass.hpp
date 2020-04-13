@@ -26,6 +26,15 @@ namespace PathFinder
         GPULightTablePartitionInfo LightOffsets;
     };
 
+    struct ShadingRootConstants
+    {
+        uint32_t CompressedLightPartitionInfo;
+        uint32_t SphericalLightsOffset;
+        uint32_t SphericalLightsCount;
+        uint32_t RectangularLightsOffset;
+        uint32_t RectangularLightsCount;
+    };
+
     class ShadingRenderPass : public RenderPass<RenderPassContentMediator>
     {
     public:

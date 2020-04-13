@@ -12,18 +12,17 @@ namespace PathFinder
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::RayTracing, [](RootSignatureProxy& signatureProxy)
         {
-            signatureProxy.AddRootConstantsParameter<uint32_t>(0, 0);
+            signatureProxy.AddRootConstantsParameter<ShadingRootConstants>(0, 0);
             signatureProxy.AddShaderResourceBufferParameter(0, 0); // Scene BVH | t0 - s0
             signatureProxy.AddShaderResourceBufferParameter(1, 0); // Light Table | t1 - s0
             signatureProxy.AddShaderResourceBufferParameter(2, 0); // Material Table | t2 - s0
         });
 
-        stateCreator->CreateRayTracingState(PSONames::Shading, [](RayTracingStateProxy& state)
+        stateCreator->CreateRayTracingState(PSONames::Shading, [this](RayTracingStateProxy& state)
         {
             state.RayGenerationShaderFileName = "ShadingRenderPass.hlsl";
             state.AddMissShader("ShadingRenderPass.hlsl");
-            //state.AddCallableShader("ShadingRenderPass.hlsl", "TestFunc");
-            state.ShaderConfig = HAL::RayTracingShaderConfig{ 4 * sizeof(float), 0 };
+            state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
             state.GlobalRootSignatureName = RootSignatureNames::RayTracing;
             state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
         });
@@ -69,8 +68,17 @@ namespace PathFinder
             }
         }
 
+        ShadingRootConstants rootConstants
+        {
+            CompressLightPartitionInfo(sceneStorage->LightTablePartitionInfo()),
+            sceneStorage->LightTablePartitionInfo().SphericalLightsOffset,
+            sceneStorage->LightTablePartitionInfo().SphericalLightsCount,
+            sceneStorage->LightTablePartitionInfo().RectangularLightsOffset,
+            sceneStorage->LightTablePartitionInfo().RectangularLightsCount
+        };
+
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->SetRootConstants(CompressLightPartitionInfo(sceneStorage->LightTablePartitionInfo()), 0, 0);
+        context->GetCommandRecorder()->SetRootConstants(rootConstants, 0, 0);
 
         const Memory::Buffer* bvh = sceneStorage->TopAccelerationStructure().AccelerationStructureBuffer();
         const Memory::Buffer* lights = sceneStorage->LightTable();

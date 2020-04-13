@@ -13,8 +13,8 @@ namespace HAL
 
     private:
         D3D12_RAYTRACING_SHADER_CONFIG mConfig{};
-        uint32_t mMaxPayloadSize = 1;
-        uint32_t mMaxAttributesSize = 1;
+        uint32_t mMaxPayloadSize = sizeof(float);
+        uint32_t mMaxAttributesSize = sizeof(float);
 
     public:
         inline const D3D12_RAYTRACING_SHADER_CONFIG& D3DConfig() const { return mConfig; }

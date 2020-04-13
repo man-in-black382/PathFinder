@@ -79,7 +79,7 @@ namespace PathFinder
         void AssociateStateWithLibrary(PipelineStateVariantInternal* state, const HAL::Library* library);
 
         void ConfigureDefaultStates();
-        void BuildBaseRootSignature(); 
+        void AddCommonRootSignatureParameters(HAL::RootSignature& signature) const;
         void CompileRayTracingState(RayTracingStateWrapper& stateWrapper, Foundation::Name psoName);
 
         void RecompileStatesWithNewShader(const HAL::Shader* oldShader, const HAL::Shader* newShader);
@@ -108,6 +108,9 @@ namespace PathFinder
         std::string mDefaultRayAnyHitEntryPointName = "RayAnyHit";
         std::string mDefaultRayClosestHitEntryPointName = "RayClosestHit";
         std::string mDefaultRayIntersectionEntryPointName = "RayIntersection";
+
+    public:
+        inline const auto CommonRootSignatureParameterCount() const { return mBaseRootSignature.ParameterCount(); }
     };
 
 }

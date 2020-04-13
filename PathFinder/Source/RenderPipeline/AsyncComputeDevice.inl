@@ -86,6 +86,8 @@ namespace PathFinder
     template <class CommandListT, class CommandQueueT>
     void AsyncComputeDevice<CommandListT, CommandQueueT>::ApplyCommonComputeResourceBindingsIfNeeded()
     {
+        auto commonParametersIndexOffset = mAppliedComputeRootSignature->ParameterCount() - mPipelineStateManager->CommonRootSignatureParameterCount();
+
         if (mRebindingAfterSignatureChangeRequired)
         {
             // Look at PipelineStateManager for base root signature parameter ordering
@@ -93,45 +95,45 @@ namespace PathFinder
             HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
 
             // Alias different registers to one GPU address
-            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 3);
-            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 4);
-            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 5);
-            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 6);
-            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 7);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 3 + commonParametersIndexOffset);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 4 + commonParametersIndexOffset);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 5 + commonParametersIndexOffset);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 6 + commonParametersIndexOffset);
+            mCommandList->SetComputeRootDescriptorTable(SRRangeAddress, 7 + commonParametersIndexOffset);
 
-            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 8);
-            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 9);
-            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 10);
-            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 11);
-            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 12);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 8 + commonParametersIndexOffset);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 9 + commonParametersIndexOffset);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 10 + commonParametersIndexOffset);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 11 + commonParametersIndexOffset);
+            mCommandList->SetComputeRootDescriptorTable(UARangeAddress, 12 + commonParametersIndexOffset);
         }
 
         if (auto buffer = mResourceStorage->GlobalRootConstantsBuffer();
             buffer && (buffer->HALBuffer() != mBoundGlobalConstantBufferCompute || mRebindingAfterSignatureChangeRequired))
         {
             mBoundGlobalConstantBufferCompute = buffer->HALBuffer();
-            mCommandList->SetComputeRootConstantBuffer(*mBoundGlobalConstantBufferCompute, 0);
+            mCommandList->SetComputeRootConstantBuffer(*mBoundGlobalConstantBufferCompute, 0 + commonParametersIndexOffset);
         }
 
         if (auto buffer = mResourceStorage->PerFrameRootConstantsBuffer();
             buffer && (buffer->HALBuffer() != mBoundFrameConstantBufferCompute || mRebindingAfterSignatureChangeRequired))
         {
             mBoundFrameConstantBufferCompute = buffer->HALBuffer();
-            mCommandList->SetComputeRootConstantBuffer(*mBoundFrameConstantBufferCompute, 1);
+            mCommandList->SetComputeRootConstantBuffer(*mBoundFrameConstantBufferCompute, 1 + commonParametersIndexOffset);
         }
 
         if (auto address = mResourceStorage->RootConstantsBufferAddressForCurrentPass();
             address != mBoundFrameConstantBufferAddressCompute || mRebindingAfterSignatureChangeRequired)
         {
             mBoundFrameConstantBufferAddressCompute = address;
-            mCommandList->SetComputeRootConstantBuffer(address, 2);
+            mCommandList->SetComputeRootConstantBuffer(address, 2 + commonParametersIndexOffset);
         }
 
         if (auto buffer = mResourceStorage->DebugBufferForCurrentPass();
             buffer && (buffer->HALBuffer() != mBoundPassDebugBufferCompute || mRebindingAfterSignatureChangeRequired))
         {
             mBoundPassDebugBufferCompute = buffer->HALBuffer();
-            mCommandList->SetComputeRootUnorderedAccessResource(*mBoundPassDebugBufferCompute, 13);
+            mCommandList->SetComputeRootUnorderedAccessResource(*mBoundPassDebugBufferCompute, 13 + commonParametersIndexOffset);
         }
 
         mRebindingAfterSignatureChangeRequired = false;

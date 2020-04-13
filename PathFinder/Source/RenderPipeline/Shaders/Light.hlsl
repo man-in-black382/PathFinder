@@ -86,6 +86,7 @@ struct LTCStochasticEvaluationResult
 struct LightPoints
 {
     float3 Points[4];
+    float3x3 LightRotation;
 };
 
 struct LightSample
@@ -98,8 +99,8 @@ struct LightSample
     float PDF;
 };
 
-// Data required to sample rectangular light
-struct RectangularLightSamplingInputs 
+// Data required to sample rectangular light using solid angle sampling
+struct RectLightSolidAngleSamplingInputs 
 {
     float SolidAngle;
     float3 SurfacePoint;
@@ -111,8 +112,21 @@ struct RectangularLightSamplingInputs
     float b0, b1, b0sq, k;
 };
 
+struct RectLightAreaSamplingInputs
+{
+    float Area;
+    float3 SurfacePoint;
+    float3x3 LightPointLocalToWorldRotation;
+};
+
+struct DiskLightAreaSamplingInputs
+{
+    float Area;
+    float3x3 LightPointLocalToWorldRotation;
+};
+
 // Data required to sample spherical light
-struct ShericalLightSamplingInputs
+struct ShereLightSolidAngleSamplingInputs
 {
     float SolidAngle;
     float3 SurfacePoint;
@@ -124,6 +138,14 @@ struct ShericalLightSamplingInputs
     // Terms required for solid angle sampling
     float Q;
 };
+
+LightSample ZeroLightSample()
+{
+    LightSample lightSample;
+    lightSample.IntersectionPoint = 0.xxx;
+    lightSample.PDF = -1.0;
+    return lightSample;
+}
 
 float LTCSampleVectorPDF(float3x3 MInv, float MDet, float3 L)
 {
@@ -155,7 +177,7 @@ LTCStochasticEvaluationResult EvaluateLTCLightingForSampleVector(Light light, LT
 
     LTCStochasticEvaluationResult result;
     result.PDF = lerp(specularPDF, diffusePDF, diffuseProbability);
-    result.OutgoingLuminance = light.LuminousIntensity * light.Color.rgb * (ltcTerms.SurfaceDiffuseAlbedo * specularPDF + ltcTerms.SurfaceDiffuseAlbedo * diffusePDF);
+    result.OutgoingLuminance = light.LuminousIntensity * light.Color.rgb * (ltcTerms.SurfaceSpecularAlbedo * specularPDF + ltcTerms.SurfaceDiffuseAlbedo * diffusePDF);
 
     return result;
 }
@@ -243,14 +265,15 @@ LightPoints ComputeLightPoints(Light light, float3 surfacePositionWS)
         normalize(surfacePositionWS.xyz - light.Position.xyz) : // Spherical light is a disk oriented towards the surface
         light.Orientation.xyz;
 
-    float3x3 diskRotation = RotationMatrix3x3(lightOrientation);
+    float3x3 lightRotation = RotationMatrix3x3(lightOrientation);
+    points.LightRotation = lightRotation;
 
     // Rotate around origin
-    p0 = mul(diskRotation, p0);
-    p1 = mul(diskRotation, p1);
-    p2 = mul(diskRotation, p2);
-    p3 = mul(diskRotation, p3);
-
+    p0 = mul(lightRotation, p0);
+    p1 = mul(lightRotation, p1);
+    p2 = mul(lightRotation, p2);
+    p3 = mul(lightRotation, p3);
+    
     // Displace to 
     p0 += light.Position.xyz;
     p1 += light.Position.xyz;
@@ -279,9 +302,9 @@ LightPoints ComputeLightPoints(Light light, float3 surfacePositionWS)
 // An Area-Preserving Parametrization for Spherical Rectangles:
 // https://www.arnoldrenderer.com/research/egsr2013_spherical_rectangle.pdf
 //
-RectangularLightSamplingInputs ComputeRectangularLightSamplingInputs(LightPoints lightPoints, float3 surfacePositionWS)
+RectLightSolidAngleSamplingInputs ComputeRectLightSolidAngleSamplingInputs(LightPoints lightPoints, float3 surfacePositionWS)
 {
-    RectangularLightSamplingInputs samplingInputs;
+    RectLightSolidAngleSamplingInputs samplingInputs;
 
     float3 ex = lightPoints.Points[1] - lightPoints.Points[0];
     float3 ey = lightPoints.Points[3] - lightPoints.Points[0];
@@ -343,7 +366,7 @@ RectangularLightSamplingInputs ComputeRectangularLightSamplingInputs(LightPoints
     return samplingInputs;
 }
 
-float3 RectangularLightSampleVector(RectangularLightSamplingInputs samplingInputs, float u, float v)
+float3 RectangularLightSampleVector(RectLightSolidAngleSamplingInputs samplingInputs, float u, float v)
 {
     // 1. compute 'cu'
     float au = u * samplingInputs.SolidAngle + samplingInputs.k;
@@ -369,24 +392,52 @@ float3 RectangularLightSampleVector(RectangularLightSamplingInputs samplingInput
     return normalize(toLightVector);
 }
 
-LightSample SampleRectangularLight(Light light, RectangularLightSamplingInputs samplingInputs, LightPoints lightPoints, float3 samplingVector)
+RectLightAreaSamplingInputs ComputeRectLightAreaSamplingInputs(Light light, float3 surfacePoint, float3x3 lightRotation)
 {
-    Ray ray = InitRay(samplingInputs.SurfacePoint, samplingVector);
+    RectLightAreaSamplingInputs inputs;
+    inputs.LightPointLocalToWorldRotation = lightRotation;
+    inputs.Area = light.Width * light.Height;
+    inputs.SurfacePoint = surfacePoint;
+    return inputs;
+}
+
+float3 RectangularLightRandomPoint(Light light, RectLightAreaSamplingInputs samplingInputs, float u, float v)
+{
+    float x = -light.Width * 0.5 + u * light.Width;
+    float y = -light.Height * 0.5 + v * light.Height;
+
+    float3 randomPoint = float3(x, y, 0.0);
+    randomPoint = mul(samplingInputs.LightPointLocalToWorldRotation, randomPoint);
+    randomPoint += light.Position.xyz;
+
+    return randomPoint;
+}
+
+LightSample SampleRectangularLight(Light light, LightPoints lightPoints, float samplePDF, float3 surfacePoint, float3 samplingVector)
+{
+    Ray ray = InitRay(surfacePoint, samplingVector);
     Rectangle rectangle = InitRectangle(lightPoints.Points);
     Plane plane = InitPlane(light.Orientation.xyz, -length(light.Position.xyz));
-
-    LightSample lightSample;
-    lightSample.IntersectionPoint = 0.xxx;
-    lightSample.PDF = -1.0;
+    LightSample lightSample = ZeroLightSample();
 
     float3 xp;
     if (RayRectangleIntersection(rectangle, plane, ray, xp))
     {
         lightSample.IntersectionPoint = xp;
-        lightSample.PDF = 1.0f / samplingInputs.SolidAngle;
+        lightSample.PDF = 1.0f / samplePDF;
     }
 
     return lightSample;
+}
+
+LightSample SampleRectangularLight(Light light, RectLightSolidAngleSamplingInputs samplingInputs, LightPoints lightPoints, float3 samplingVector)
+{
+    return SampleRectangularLight(light, lightPoints, 1.0 / samplingInputs.SolidAngle, samplingInputs.SurfacePoint, samplingVector);
+}
+
+LightSample SampleRectangularLight(Light light, RectLightAreaSamplingInputs samplingInputs, LightPoints lightPoints, float3 samplingVector)
+{
+    return SampleRectangularLight(light, lightPoints, 1.0 / samplingInputs.Area, samplingInputs.SurfacePoint, samplingVector);
 }
 
 //-------------------------------------------------------------------------------//
@@ -396,9 +447,9 @@ LightSample SampleRectangularLight(Light light, RectangularLightSamplingInputs s
 // Solid-angle sampling of spherical lights
 // https://schuttejoe.github.io/post/arealightsampling/
 //
-ShericalLightSamplingInputs ComputeSphericalLightSamplingInputs(Light light, float3 surfacePositionWS)
+ShereLightSolidAngleSamplingInputs ComputeSphericalLightSamplingInputs(Light light, float3 surfacePositionWS)
 {
-    ShericalLightSamplingInputs samplingInputs;
+    ShereLightSolidAngleSamplingInputs samplingInputs;
     samplingInputs.SurfacePoint = surfacePositionWS;
 
     float3 w = light.Position.xyz - samplingInputs.SurfacePoint;
@@ -415,7 +466,7 @@ ShericalLightSamplingInputs ComputeSphericalLightSamplingInputs(Light light, flo
     return samplingInputs;
 }
 
-float3 SphericalLightSampleVector(ShericalLightSamplingInputs samplingInputs, float u1, float u2)
+float3 SphericalLightSampleVector(ShereLightSolidAngleSamplingInputs samplingInputs, float u1, float u2)
 {
     float theta = acos(1.0 - u1 + u1 * samplingInputs.Q);
     float phi = TwoPi * u2;
@@ -426,7 +477,7 @@ float3 SphericalLightSampleVector(ShericalLightSamplingInputs samplingInputs, fl
     return worldSampleVector;
 }
 
-LightSample SampleSphericalLight(Light light, ShericalLightSamplingInputs samplingInputs, float3 samplingVector)
+LightSample SampleSphericalLight(Light light, ShereLightSolidAngleSamplingInputs samplingInputs, float3 samplingVector)
 {
     Ray ray = InitRay(samplingInputs.SurfacePoint, samplingVector);
     Sphere sphere = InitSphere(light.Position.xyz, light.Width * 0.5);
