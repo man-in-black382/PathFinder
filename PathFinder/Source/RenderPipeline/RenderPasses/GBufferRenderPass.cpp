@@ -55,7 +55,7 @@ namespace PathFinder
 
     void GBufferRenderPass::Render(RenderContext<RenderPassContentMediator>* context) 
     {
-        context->GetCommandRecorder()->SetRenderTargetAndDepthStencil(ResourceNames::GBufferRT0, ResourceNames::GBufferDepthStencil);
+        context->GetCommandRecorder()->SetRenderTarget(ResourceNames::GBufferRT0, ResourceNames::GBufferDepthStencil);
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferRT0, Foundation::Color::Black());
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
 

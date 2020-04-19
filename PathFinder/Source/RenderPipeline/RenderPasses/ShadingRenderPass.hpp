@@ -15,24 +15,15 @@ namespace PathFinder
         glm::vec4 HaltonSequence[MaxSupportedLights];
         // 16 byte boundary
         uint32_t BlueNoiseTextureIndex;
-        uint32_t AnalyticalOutputTextureIndex;
-        uint32_t StochasticUnshadowedOutputTextureIndex;
+        uint32_t AnalyticOutputTextureIndex;
         uint32_t StochasticShadowedOutputTextureIndex;
+        uint32_t StochasticUnshadowedOutputTextureIndex;
         // 16 byte boundary
         glm::uvec2 BlueNoiseTextureSize;
         uint32_t GBufferMaterialDataTextureIndex;
         uint32_t GBufferDepthTextureIndex;
         // 16 byte boundary
         GPULightTablePartitionInfo LightOffsets;
-    };
-
-    struct ShadingRootConstants
-    {
-        uint32_t CompressedLightPartitionInfo;
-        uint32_t SphericalLightsOffset;
-        uint32_t SphericalLightsCount;
-        uint32_t RectangularLightsOffset;
-        uint32_t RectangularLightsCount;
     };
 
     class ShadingRenderPass : public RenderPass<RenderPassContentMediator>

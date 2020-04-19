@@ -27,7 +27,6 @@ namespace PathFinder
 
     private:
         Lumen mLuminousPower = 0.0;
-        Candela mLuminousIntensity = 0.0;
         Nit mLuminance = 0.0;
         Foundation::Color mColor = Foundation::Color::White();
         float mArea = 0.0;
@@ -35,7 +34,6 @@ namespace PathFinder
 
     public:
         Lumen LuminousPower() const { return mLuminousPower; }
-        Candela LuminousIntensity() const { return mLuminousIntensity; }
         Nit Luminance() const { return mLuminance; }
         auto GPULightTableIndex() const { return mGPULightTableIndex; }
         const Foundation::Color& Color() const { return mColor; }

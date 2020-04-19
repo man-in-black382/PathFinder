@@ -86,8 +86,8 @@ namespace PathFinder
 
         using DebugBufferIteratorFunc = std::function<void(PassName passName, const float* debugData)>;
 
-        const HAL::RTDescriptor& GetRenderTargetDescriptor(Foundation::Name resourceName);
-        const HAL::DSDescriptor& GetDepthStencilDescriptor(Foundation::Name resourceName);
+        const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName);
+        const HAL::DSDescriptor* GetDepthStencilDescriptor(Foundation::Name resourceName);
         
         void SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node);
         void AllocateScheduledResources();

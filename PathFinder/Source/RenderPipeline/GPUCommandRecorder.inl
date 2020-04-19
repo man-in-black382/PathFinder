@@ -7,5 +7,11 @@ namespace PathFinder
         mGraphicsDevice->SetRootConstants(constants, shaderRegister, registerSpace);
     }
 
+    template <size_t RTCount>
+    void GPUCommandRecorder::SetRenderTargets(const std::array<Foundation::Name, RTCount>& rtResourceNames, std::optional<Foundation::Name> depthStencilResourceName)
+    {
+        mGraphicsDevice->SetRenderTargets(rtResourceNames, depthStencilResourceName);
+    }
+
 }
 

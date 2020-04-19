@@ -100,6 +100,28 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     //);
 
     //outputImage[dispatchThreadID.xy] = float4(SRGBFromLinear(tonemappedColor), 1.0);
+
+    //uint2 resolution = (GlobalDataCB.PipelineRTResolution - 1);
+
+    //float3 average = 0.xxx;
+    //uint2 pixelIndex = pin.UV * resolution;
+
+    //for (uint i = 0; i < 6; ++i)
+    //{
+    //    for (uint j = 0; j < 6; ++j)
+    //    {
+    //        uint2 loadIndex = pixelIndex + uint2(i, j);
+    //        loadIndex = clamp(loadIndex, 0, resolution);
+
+    //        float3 color = source.Load(uint3(loadIndex, 0)).rgb;
+    //        average += color;
+    //    }
+    //}
+
+    //average /= 36;
+
+    //return float4(average, 1.0);
+
 }
 
 #endif

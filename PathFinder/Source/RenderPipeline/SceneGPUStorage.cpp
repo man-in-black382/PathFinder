@@ -158,7 +158,7 @@ namespace PathFinder
             ++mLightTablePartitionInfo.RectangularLightsCount;
         }
 
-        mLightTablePartitionInfo.DiskLightsOffset = index;
+        mLightTablePartitionInfo.EllipticalLightsOffset = index;
 
         for (FlatLight& light : diskLights)
         {
@@ -167,7 +167,7 @@ namespace PathFinder
             light.SetGPULightTableIndex(index);
 
             ++index;
-            ++mLightTablePartitionInfo.DiskLightsCount;
+            ++mLightTablePartitionInfo.EllipticalLightsCount;
         }
     }
 
@@ -185,7 +185,6 @@ namespace PathFinder
                 glm::vec4(light.Normal(), 0.0f),
                 glm::vec4(light.Position(), 1.0f),
                 glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f),
-                light.LuminousIntensity(),
                 light.Luminance(),
                 light.Width(),
                 light.Height(),
@@ -199,7 +198,6 @@ namespace PathFinder
                 glm::vec4(0.0f), // No orientation required for spherical lights
                 glm::vec4(light.Position(), 1.0f),
                 glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f),
-                light.LuminousIntensity(),
                 light.Luminance(),
                 light.Radius(),
                 light.Radius(),

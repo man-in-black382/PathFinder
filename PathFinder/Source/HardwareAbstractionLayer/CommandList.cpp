@@ -172,9 +172,9 @@ namespace HAL
         mList->RSSetScissorRects(1, &scissorRect);
     }
 
-    void GraphicsCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor)
+    void GraphicsCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor)
     {
-        const D3D12_CPU_DESCRIPTOR_HANDLE* dsHandle = depthStencilDescriptor.has_value() ? &depthStencilDescriptor->CPUHandle() : nullptr;
+        const D3D12_CPU_DESCRIPTOR_HANDLE* dsHandle = depthStencilDescriptor ? &depthStencilDescriptor->CPUHandle() : nullptr;
         mList->OMSetRenderTargets(1, &rtDescriptor.CPUHandle(), false, dsHandle);
     }
 

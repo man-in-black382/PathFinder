@@ -1,9 +1,5 @@
 #include "Camera.hpp"
 
-#ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#endif
-
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace PathFinder
@@ -38,7 +34,7 @@ namespace PathFinder
         mFront.y = sin(glm::radians(mPitch));
         mFront.z = sin(glm::radians(mYaw)) * cos(glm::radians(mPitch));
         mFront = glm::normalize(mFront);
-        mRight = glm::normalize(glm::cross(mFront, mWorldUp));
+        mRight = glm::normalize(glm::cross(mWorldUp, mFront));
         mUp = glm::normalize(glm::cross(mRight, mFront));
     }
 
@@ -72,7 +68,7 @@ namespace PathFinder
     void Camera::RotateBy(float pitch, float yaw)
     {
         mPitch += pitch;
-        mYaw += yaw;
+        mYaw -= yaw;
 
         if (mPitch > mMaximumPitch) {
             mPitch = mMaximumPitch;

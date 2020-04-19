@@ -28,7 +28,7 @@ struct GBufferStandard
 
 struct GBufferEmissive
 {
-    float3 LuminousIntensity;
+    float3 Luminance;
 };
 
 // Packing scheme
@@ -68,7 +68,7 @@ GBufferEncoded EncodeGBuffer(GBufferStandard gBuffer)
 GBufferEncoded EncodeGBuffer(GBufferEmissive gBuffer)
 {
     GBufferEncoded encoded;
-    encoded.MaterialData = uint4(asuint(gBuffer.LuminousIntensity.x), asuint(gBuffer.LuminousIntensity.y), asuint(gBuffer.LuminousIntensity.z), GBufferTypeEmissive);
+    encoded.MaterialData = uint4(asuint(gBuffer.Luminance.x), asuint(gBuffer.Luminance.y), asuint(gBuffer.Luminance.z), GBufferTypeEmissive);
     return encoded;
 }
 
@@ -111,9 +111,9 @@ float3 DecodeGBufferStandardNormal(GBufferEncoded encodedGBuffer)
 GBufferEmissive DecodeGBufferEmissive(GBufferEncoded encodedGBuffer)
 {
     GBufferEmissive gBuffer;
-    gBuffer.LuminousIntensity.x = asfloat(encodedGBuffer.MaterialData.x);
-    gBuffer.LuminousIntensity.y = asfloat(encodedGBuffer.MaterialData.y);
-    gBuffer.LuminousIntensity.z = asfloat(encodedGBuffer.MaterialData.z);
+    gBuffer.Luminance.x = asfloat(encodedGBuffer.MaterialData.x);
+    gBuffer.Luminance.y = asfloat(encodedGBuffer.MaterialData.y);
+    gBuffer.Luminance.z = asfloat(encodedGBuffer.MaterialData.z);
     return gBuffer;
 }
 

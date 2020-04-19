@@ -22,7 +22,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
 
 
-        scheduler->ReadTexture(ResourceNames::ShadingAnalyticalOutput);
+        scheduler->ReadTexture(ResourceNames::ShadingAnalyticOutput);
     }
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -30,7 +30,7 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ShadingAnalyticalOutput/*BloomCompositionOutput*/);
+        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ShadingAnalyticOutput/*BloomCompositionOutput*/);
         cbContent.OutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
 

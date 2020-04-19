@@ -21,7 +21,7 @@ StructuredBuffer<Light> LightTable : register(t0);
 struct VertexOut
 {
     float4 Position : SV_POSITION;
-    float3 LuminousIntensity : LUMINANCE;
+    float3 Luminance : LUMINANCE;
     float2 LocalSpacePosition : DIST_FROM_CENTER;
     float2 LightSize : LIGHT_SIZE;
 };
@@ -35,19 +35,19 @@ void GetLightVertexWS(Light light, uint vertexId, out float3 worldSpaceCoord, ou
     float3 orientation = light.Orientation.xyz;
 
     // Get billboard points at the origin
-    float dx = (vertexId == 0 || vertexId == 3) ? -halfWidth : halfWidth;
-    float dy = (vertexId == 0 || vertexId == 1) ? -halfHeight : halfHeight;
+    float dx = (vertexId == 0 || vertexId == 1) ? halfWidth : -halfWidth;
+    float dy = (vertexId == 0 || vertexId == 3) ? -halfHeight : halfHeight;
 
     localSpaceCoord = float2(dx, dy);
-    float4 lightPoint = float4(dx, dy, 0.0f, 0.0f);
+    float3 lightPoint = float3(dx, dy, 0.0f);
 
-    float4x4 diskRotation = RotationMatrix4x4(orientation, GetUpVectorForOrientaion(orientation));
+    float3x3 diskRotation = RotationMatrix3x3(orientation);
 
     // Rotate around origin
     lightPoint = mul(diskRotation, lightPoint);
 
     // Move points to light's location
-    worldSpaceCoord = lightPoint.xyz + light.Position.xyz;
+    worldSpaceCoord = lightPoint + light.Position.xyz;
 }
 
 VertexOut VSMain(uint vertexId : SV_VertexID)
@@ -73,7 +73,7 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
 
     VertexOut vout;
     vout.Position = mul(FrameDataCB.CameraViewProjection, lightCornerVertex);
-    vout.LuminousIntensity = light.LuminousIntensity * light.Color.rgb;
+    vout.Luminance = light.Luminance * light.Color.rgb;
     vout.LocalSpacePosition = light.LightType != LightTypeRectangle ? localSpacePosition : 0.xx;
     vout.LightSize = float2(light.Width, light.Height);
 
@@ -92,7 +92,7 @@ GBufferPixelOut PSMain(VertexOut pin)
     }
 
     GBufferEmissive gBuffer;
-    gBuffer.LuminousIntensity = pin.LuminousIntensity;
+    gBuffer.Luminance = pin.Luminance;
 
     GBufferEncoded encodedGBuffer = EncodeGBuffer(gBuffer);
 

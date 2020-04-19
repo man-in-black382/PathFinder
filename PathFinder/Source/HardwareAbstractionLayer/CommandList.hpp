@@ -26,6 +26,7 @@
 #include <glm/vec4.hpp>
 
 #include <optional>
+#include <array>
 
 namespace HAL
 {
@@ -104,13 +105,14 @@ namespace HAL
         using ComputeCommandListBase::SetPipelineState;
 
         void SetViewport(const Viewport& viewport);
-        void SetRenderTarget(const RTDescriptor& rtDescriptor, std::optional<const DSDescriptor> depthStencilDescriptor = std::nullopt);
+        void SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor = nullptr);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
         void CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue);
         void SetPrimitiveTopology(PrimitiveTopology topology);
         void SetPipelineState(const GraphicsPipelineState& state);
         void SetGraphicsRootSignature(const RootSignature& signature);
 
+        template <size_t RTCount> void SetRenderTargets(const std::array<const RTDescriptor*, RTCount>& rtDescriptors, const DSDescriptor* depthStencilDescriptor = nullptr);
         template <class T> void SetGraphicsRootConstants(const T& constants, uint32_t rootParameterIndex);
 
         void SetGraphicsRootConstantBuffer(GPUAddress bufferAddress, uint32_t rootParameterIndex);

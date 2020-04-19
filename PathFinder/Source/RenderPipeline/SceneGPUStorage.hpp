@@ -77,26 +77,21 @@ namespace PathFinder
         glm::vec4 Color;
         // 16 byte boundary
 
-        float LuminousIntensity;
         float Luminance;
         float Width;
         float Height;
-        // 16 byte boundary
 
         std::underlying_type_t<LightType> LightTypeRaw;
-        uint32_t Pad0__;
-        uint32_t Pad1__;
-        uint32_t Pad2__;
         // 16 byte boundary
     };
 
     struct GPULightTablePartitionInfo
     {
         uint32_t SphericalLightsOffset = 0;
-        uint32_t DiskLightsOffset = 0;
+        uint32_t EllipticalLightsOffset = 0;
         uint32_t RectangularLightsOffset = 0;
         uint32_t SphericalLightsCount = 0;
-        uint32_t DiskLightsCount = 0;
+        uint32_t EllipticalLightsCount = 0;
         uint32_t RectangularLightsCount = 0;
         uint32_t TotalLightsCount = 0;
         uint32_t Pad1__;

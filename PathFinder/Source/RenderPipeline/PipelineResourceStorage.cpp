@@ -29,7 +29,7 @@ namespace PathFinder
         mDescriptorAllocator{ descriptorAllocator },
         mPassExecutionGraph{ passExecutionGraph } {}
 
-    const HAL::RTDescriptor& PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
+    const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
@@ -39,10 +39,10 @@ namespace PathFinder
         auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name);
         assert_format(perPassData && perPassData->CreateTextureRTDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
         
-        return *texture->GetRTDescriptor();
+        return texture->GetRTDescriptor();
     }
 
-    const HAL::DSDescriptor& PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
+    const HAL::DSDescriptor* PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
@@ -52,7 +52,7 @@ namespace PathFinder
         auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name);
         assert_format(perPassData && perPassData->CreateTextureDSDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
 
-        return *texture->GetDSDescriptor();
+        return texture->GetDSDescriptor();
     }
 
     void PipelineResourceStorage::SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node)

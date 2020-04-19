@@ -25,8 +25,7 @@ namespace PathFinder
     void Light::SetLuminousPower(Lumen luminousPower)
     {
         mLuminousPower = luminousPower;
-        mLuminousIntensity = mLuminousPower / mArea;
-        mLuminance = mLuminousIntensity / M_PI;
+        mLuminance = mLuminousPower / mArea / M_PI;
 
         // Luminance due to a point on a Lambertian emitter, emitted in any direction, 
         // is equal to its total luminous power Phi divided by the emitter area A and the projected solid angle (Pi)

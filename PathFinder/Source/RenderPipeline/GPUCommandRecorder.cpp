@@ -8,19 +8,14 @@ namespace PathFinder
     GPUCommandRecorder::GPUCommandRecorder(GraphicsDevice* graphicsDevice)
         : mGraphicsDevice{ graphicsDevice } {}
 
-    void GPUCommandRecorder::SetRenderTarget(Foundation::Name resourceName)
+    void GPUCommandRecorder::SetRenderTarget(Foundation::Name resourceName, std::optional<Foundation::Name> depthStencilResourceName)
     {
-        mGraphicsDevice->SetRenderTarget(resourceName);
+        mGraphicsDevice->SetRenderTarget(resourceName, depthStencilResourceName);
     }
 
     void GPUCommandRecorder::SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName)
     {
         mGraphicsDevice->SetBackBufferAsRenderTarget(depthStencilResourceName);
-    }
-
-    void GPUCommandRecorder::SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName)
-    {
-        mGraphicsDevice->SetRenderTargetAndDepthStencil(rtResourceName, dsResourceName);
     }
 
     void GPUCommandRecorder::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)

@@ -7,7 +7,7 @@ namespace HAL
     {
         SetCullMode(CullMode::Back);
         SetFillMode(FillMode::Solid);
-        SetFrontClockwise(false);
+        SetFrontClockwise(true);
 
         mDesc.DepthClipEnable = true;
     }

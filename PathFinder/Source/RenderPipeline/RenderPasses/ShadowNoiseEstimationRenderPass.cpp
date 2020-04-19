@@ -18,6 +18,7 @@ namespace PathFinder
 
     void ShadowNoiseEstimationRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
+        scheduler->ReadTexture(ResourceNames::ShadingAnalyticOutput);
         scheduler->ReadTexture(ResourceNames::ShadingStochasticShadowedOutput);
         scheduler->ReadTexture(ResourceNames::ShadingStochasticUnshadowedOutput);
         scheduler->NewTexture(ResourceNames::ShadowNoiseEstimationOutput);

@@ -33,12 +33,7 @@ struct BilinearPatch
 struct Plane
 {
     float3 Normal;
-    float Displacement;
-};
-
-struct Rectangle
-{
-    float3 Vertices[4];
+    float3 PointOnPlane;
 };
 
 Sphere InitSphere(float3 center, float radius)
@@ -64,29 +59,17 @@ Ray InitRay(float3 origin, float3 direction)
     return InitRay(origin, direction, 0.0, FloatMax);
 }
 
-Plane InitPlane(float3 normal, float displacement)
+Plane InitPlane(float3 normal, float3 pointOnPlane)
 {
     Plane plane;
     plane.Normal = normal;
-    plane.Displacement = displacement;
+    plane.PointOnPlane = pointOnPlane;
     return plane;
 }
 
-Rectangle InitRectangle(float3 p0, float3 p1, float3 p2, float3 p3)
+Plane InitPlane(float3 normal, float displacement)
 {
-    Rectangle rectangle;
-    rectangle.Vertices[0] = p0;
-    rectangle.Vertices[1] = p1;
-    rectangle.Vertices[2] = p2;
-    rectangle.Vertices[3] = p3;
-    return rectangle;
-}
-
-Rectangle InitRectangle(float3 vertices[4])
-{
-    Rectangle rectangle;
-    rectangle.Vertices = vertices;
-    return rectangle;
+    return InitPlane(normal, displacement * normal);
 }
 
 float3 InterpolatePatch(BilinearPatch patch, float2 uv)
@@ -174,9 +157,8 @@ bool RayBilinearPatchIntersection(BilinearPatch patch, Ray ray, out float3 inter
 bool RayPlaneIntersection(Plane plane, Ray ray, out float3 intersectionPoint) 
 {
     // Assuming float3s are all normalized
-    float denom = dot(plane.Normal, ray.Direction);
-    float3 pointOnPlane = plane.Normal * plane.Displacement;
-    float3 p0l0 = pointOnPlane - ray.Origin;
+    float denom = dot(plane.Normal, ray.Direction) + 1e-06;
+    float3 p0l0 = plane.PointOnPlane - ray.Origin;
     float t = dot(p0l0, plane.Normal) / denom;
     intersectionPoint = ray.Origin + ray.Direction * t;
     return t >= 0;
@@ -263,26 +245,6 @@ bool RaySphereIntersection(Sphere sphere, Ray ray, out float3 intersectionPoint)
     return intersects;
 }
 
-bool RayRectangleIntersection(Rectangle rectangle, Plane rectanglePlane, Ray ray, out float3 intersectionPoint)
-{
-    if (!RayPlaneIntersection(rectanglePlane, ray, intersectionPoint))
-    {
-        return false;
-    }
-
-    return true;
-
-    float3 pMin = min(rectangle.Vertices[0], rectangle.Vertices[1]);
-    pMin = min(pMin, rectangle.Vertices[2]);
-    pMin = min(pMin, rectangle.Vertices[3]);
-
-    float3 pMax = max(rectangle.Vertices[0], rectangle.Vertices[1]);
-    pMax = max(pMax, rectangle.Vertices[2]);
-    pMax = max(pMax, rectangle.Vertices[3]);
-
-    return all(intersectionPoint >= pMin) && all(intersectionPoint <= pMax);
-}
-
 bool IsPointInsideEllipse(float2 p, float2 ellipseCenter, float2 widthHeight)
 {
     float2 half = widthHeight * 0.5;
@@ -290,7 +252,7 @@ bool IsPointInsideEllipse(float2 p, float2 ellipseCenter, float2 widthHeight)
     return ((delta.x * delta.x) / (half.x * half.x) + (delta.y * delta.y) / (half.y * half.y)) <= 1.0;
 }
 
-float3 SphericalToCartesian(float theta, float phi)
+float3 SphericalToCartesian_ZUp(float theta, float phi)
 {
     // theta - vertical angle
     // phi - horizontal angle

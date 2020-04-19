@@ -10,9 +10,16 @@ namespace PathFinder
     public:
         GPUCommandRecorder(GraphicsDevice* graphicsDevice);
 
-        void SetRenderTarget(Foundation::Name resourceName);
+        template <class T> 
+        void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
+
+        template <size_t RTCount> 
+        void SetRenderTargets(
+            const std::array<Foundation::Name, RTCount>& rtResourceNames, 
+            std::optional<Foundation::Name> depthStencilResourceName = std::nullopt);
+
+        void SetRenderTarget(Foundation::Name resourceName, std::optional<Foundation::Name> depthStencilResourceName = std::nullopt);
         void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName = std::nullopt);
-        void SetRenderTargetAndDepthStencil(Foundation::Name rtResourceName, Foundation::Name dsResourceName);
         void ClearBackBuffer(const Foundation::Color& color);
         void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color);
         void ClearDepth(Foundation::Name resourceName, float depthValue);
@@ -27,7 +34,7 @@ namespace PathFinder
 
         void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         void BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
-        template <class T> void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
+        
 
     private:
         GraphicsDevice* mGraphicsDevice;

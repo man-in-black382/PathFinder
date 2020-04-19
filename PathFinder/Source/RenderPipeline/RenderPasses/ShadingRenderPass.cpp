@@ -12,7 +12,7 @@ namespace PathFinder
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::RayTracing, [](RootSignatureProxy& signatureProxy)
         {
-            signatureProxy.AddRootConstantsParameter<ShadingRootConstants>(0, 0);
+            signatureProxy.AddRootConstantsParameter<uint32_t>(0, 0);
             signatureProxy.AddShaderResourceBufferParameter(0, 0); // Scene BVH | t0 - s0
             signatureProxy.AddShaderResourceBufferParameter(1, 0); // Light Table | t1 - s0
             signatureProxy.AddShaderResourceBufferParameter(2, 0); // Material Table | t2 - s0
@@ -20,8 +20,8 @@ namespace PathFinder
 
         stateCreator->CreateRayTracingState(PSONames::Shading, [this](RayTracingStateProxy& state)
         {
-            state.RayGenerationShaderFileName = "ShadingRenderPass.hlsl";
-            state.AddMissShader("ShadingRenderPass.hlsl");
+            state.RayGenerationShaderFileName = "Shading.hlsl";
+            state.AddMissShader("Shading.hlsl");
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
             state.GlobalRootSignatureName = RootSignatureNames::RayTracing;
             state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
@@ -30,7 +30,7 @@ namespace PathFinder
      
     void ShadingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        scheduler->NewTexture(ResourceNames::ShadingAnalyticalOutput);
+        scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
         scheduler->NewTexture(ResourceNames::ShadingStochasticShadowedOutput);
         scheduler->NewTexture(ResourceNames::ShadingStochasticUnshadowedOutput);
         scheduler->ReadTexture(ResourceNames::GBufferRT0);
@@ -47,7 +47,7 @@ namespace PathFinder
 
         ShadingCBContent cbContent{};
         cbContent.BlueNoiseTextureIndex = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
-        cbContent.AnalyticalOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingAnalyticalOutput);
+        cbContent.AnalyticOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingAnalyticOutput);
         cbContent.StochasticShadowedOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput);
         cbContent.StochasticUnshadowedOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
         cbContent.GBufferMaterialDataTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferRT0);
@@ -68,17 +68,8 @@ namespace PathFinder
             }
         }
 
-        ShadingRootConstants rootConstants
-        {
-            CompressLightPartitionInfo(sceneStorage->LightTablePartitionInfo()),
-            sceneStorage->LightTablePartitionInfo().SphericalLightsOffset,
-            sceneStorage->LightTablePartitionInfo().SphericalLightsCount,
-            sceneStorage->LightTablePartitionInfo().RectangularLightsOffset,
-            sceneStorage->LightTablePartitionInfo().RectangularLightsCount
-        };
-
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->SetRootConstants(rootConstants, 0, 0);
+        context->GetCommandRecorder()->SetRootConstants(CompressLightPartitionInfo(sceneStorage->LightTablePartitionInfo()), 0, 0);
 
         const Memory::Buffer* bvh = sceneStorage->TopAccelerationStructure().AccelerationStructureBuffer();
         const Memory::Buffer* lights = sceneStorage->LightTable();
@@ -97,7 +88,7 @@ namespace PathFinder
         uint32_t compressed = 0;
         compressed |= (info.SphericalLightsOffset & 0xFF) << 24;
         compressed |= (info.RectangularLightsOffset & 0xFF) << 16;
-        compressed |= (info.DiskLightsOffset & 0xFF) << 8;
+        compressed |= (info.EllipticalLightsOffset & 0xFF) << 8;
         compressed |= (info.TotalLightsCount & 0xFF);
         return compressed;
     }

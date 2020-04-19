@@ -16,9 +16,9 @@ namespace PathFinder
         inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
         inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
         inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
-        inline Foundation::Name ShadingAnalyticalOutput{ "Resource_Shading_Analytical_Output" };
+        inline Foundation::Name ShadingAnalyticOutput{ "Resource_Shading_Analytic_Output" };
+        inline Foundation::Name ShadingStochasticUnshadowedOutput{ "Resource_Shading_Stochastic_Unshadowed_Output" };
         inline Foundation::Name ShadingStochasticShadowedOutput{ "Resource_Shading_Stochastic_Shadowed_Output" };
-        inline Foundation::Name ShadingStochasticUnshadowedOutput{ "Resource_Shading_Unstochastic_Shadowed_Output" };
         inline Foundation::Name ShadowNoiseEstimationOutput{ "Resource_Shadow_Noise_Estimation_Output" };
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };

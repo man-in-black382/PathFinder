@@ -11,32 +11,27 @@
 
 static const uint LightTypeSphere = 0;
 static const uint LightTypeRectangle = 1;
-static const uint LightTypeDisk = 2;
+static const uint LightTypeEllipse = 2;
 
 struct Light
 {
     float4 Orientation;
     float4 Position;
     float4 Color;
-    float LuminousIntensity;
     float Luminance;
     float Width;
     float Height;
     uint LightType;
-
-    uint Pad0__;
-    uint Pad1__;
-    uint Pad2__;
 };
 
 struct LightTablePartitionInfo
 {
     uint SphericalLightsOffset;
     uint RectangularLightsOffset;
-    uint DiskLightsOffset;
+    uint EllipticalLightsOffset;
     uint SphericalLightsCount;
     uint RectangularLightsCount;
-    uint DiskLightsCount;
+    uint EllipticalLightsCount;
     uint TotalLightsCount;
     uint Pad1__;
 };
@@ -71,11 +66,11 @@ struct LTCAnalyticEvaluationResult
     float DiffuseProbability;
 };
 
-struct LTCStochasticEvaluationResult
+struct LTCSample
 {
     // Luminance outgoing from the surface point
     // in the view direction
-    float3 OutgoingLuminance;
+    float3 BRDFMagnitude;
 
     // Probability density function value
     // for the sampling vector used to evaluate
@@ -170,14 +165,14 @@ float3 LTCSampleVector(float3x3 M, float u1, float u2)
     return w_i;
 }
 
-LTCStochasticEvaluationResult EvaluateLTCLightingForSampleVector(Light light, LTCTerms ltcTerms, float3 sampleVector, float diffuseProbability) 
+LTCSample SampleLTC(Light light, LTCTerms ltcTerms, float3 sampleVector, float diffuseProbability) 
 {
     float specularPDF = LTCSampleVectorPDF(ltcTerms.MInvSpecular, ltcTerms.MDetSpecular, sampleVector);
     float diffusePDF = LTCSampleVectorPDF(ltcTerms.MInvDiffuse, ltcTerms.MDetDiffuse, sampleVector);
 
-    LTCStochasticEvaluationResult result;
+    LTCSample result;
     result.PDF = lerp(specularPDF, diffusePDF, diffuseProbability);
-    result.OutgoingLuminance = light.LuminousIntensity * light.Color.rgb * (ltcTerms.SurfaceSpecularAlbedo * specularPDF + ltcTerms.SurfaceDiffuseAlbedo * diffusePDF);
+    result.BRDFMagnitude = ltcTerms.SurfaceSpecularAlbedo * specularPDF + ltcTerms.SurfaceDiffuseAlbedo * diffusePDF;
 
     return result;
 }
@@ -191,7 +186,7 @@ LTCAnalyticEvaluationResult ApplyMaterialAndLightingToLTCLobes(float specularLob
     float diffuseMagnitude = CIELuminance(diffuse);
 
     LTCAnalyticEvaluationResult evaluationResult;
-    evaluationResult.OutgoingLuminance = (diffuse + specular) * light.Color.rgb * light.LuminousIntensity;
+    evaluationResult.OutgoingLuminance = (diffuse + specular) * light.Color.rgb * light.Luminance;
     evaluationResult.DiffuseProbability = diffuseMagnitude / max(diffuseMagnitude + specularMagnitude, 1e-5);
     evaluationResult.BRDFProbability = lerp(specularLobe, diffuseLobe, evaluationResult.DiffuseProbability);
 
@@ -256,10 +251,10 @@ LightPoints ComputeLightPoints(Light light, float3 surfacePositionWS)
     halfWidth += light.LightType == LightTypeSphere ? 0.5 : 0.0;
 
     // Get billboard points at the origin
-    float3 p0 = float3(-halfWidth, -halfHeight, 0.0);
-    float3 p1 = float3(halfWidth, -halfHeight, 0.0);
-    float3 p2 = float3(halfWidth, halfHeight, 0.0);
-    float3 p3 = float3(-halfWidth, halfHeight, 0.0);
+    float3 p0 = float3(halfWidth, -halfHeight, 0.0);
+    float3 p1 = float3(halfWidth, halfHeight, 0.0);
+    float3 p2 = float3(-halfWidth, halfHeight, 0.0);
+    float3 p3 = float3(-halfWidth, -halfHeight, 0.0);
 
     float3 lightOrientation = light.LightType == LightTypeSphere ?
         normalize(surfacePositionWS.xyz - light.Position.xyz) : // Spherical light is a disk oriented towards the surface
@@ -387,9 +382,9 @@ float3 RectangularLightSampleVector(RectLightSolidAngleSamplingInputs samplingIn
 
     // 4. transform (xu, yv, z0) to world coords
     float3 pointOnLight = samplingInputs.SurfacePoint + xu * samplingInputs.x + yv * samplingInputs.y + samplingInputs.z0 * samplingInputs.z;
-    float3 toLightVector = pointOnLight - samplingInputs.SurfacePoint;
+    float3 toLightVector = normalize(pointOnLight - samplingInputs.SurfacePoint);
 
-    return normalize(toLightVector);
+    return toLightVector;
 }
 
 RectLightAreaSamplingInputs ComputeRectLightAreaSamplingInputs(Light light, float3 surfacePoint, float3x3 lightRotation)
@@ -416,15 +411,27 @@ float3 RectangularLightRandomPoint(Light light, RectLightAreaSamplingInputs samp
 LightSample SampleRectangularLight(Light light, LightPoints lightPoints, float samplePDF, float3 surfacePoint, float3 samplingVector)
 {
     Ray ray = InitRay(surfacePoint, samplingVector);
-    Rectangle rectangle = InitRectangle(lightPoints.Points);
-    Plane plane = InitPlane(light.Orientation.xyz, -length(light.Position.xyz));
+    Plane plane = InitPlane(light.Orientation.xyz, light.Position.xyz); 
     LightSample lightSample = ZeroLightSample();
 
-    float3 xp;
-    if (RayRectangleIntersection(rectangle, plane, ray, xp))
+    float3 intersectionPoint;
+    if (RayPlaneIntersection(plane, ray, intersectionPoint))
     {
-        lightSample.IntersectionPoint = xp;
-        lightSample.PDF = 1.0f / samplePDF;
+        float3 localPoint = intersectionPoint - light.Position.xyz;
+        float3 zAlignedPoint = mul(transpose(lightPoints.LightRotation), localPoint);
+
+        float hw = light.Width * 0.5;
+        float hh = light.Height * 0.5;
+
+        bool pointInsideRect =
+            all(zAlignedPoint.xy >= float2(-hw, -hh)) &&
+            all(zAlignedPoint.xy <= float2(hw, hh));
+
+        if (pointInsideRect)
+        {
+            lightSample.IntersectionPoint = intersectionPoint;
+            lightSample.PDF = samplePDF;
+        }
     }
 
     return lightSample;
@@ -471,7 +478,7 @@ float3 SphericalLightSampleVector(ShereLightSolidAngleSamplingInputs samplingInp
     float theta = acos(1.0 - u1 + u1 * samplingInputs.Q);
     float phi = TwoPi * u2;
 
-    float3 localSampleVector = SphericalToCartesian(theta, phi);
+    float3 localSampleVector = SphericalToCartesian_ZUp(theta, phi);
     float3 worldSampleVector = mul(samplingInputs.SampleLocalToWorldRotation, localSampleVector);
 
     return worldSampleVector;
@@ -481,10 +488,7 @@ LightSample SampleSphericalLight(Light light, ShereLightSolidAngleSamplingInputs
 {
     Ray ray = InitRay(samplingInputs.SurfacePoint, samplingVector);
     Sphere sphere = InitSphere(light.Position.xyz, light.Width * 0.5);
-
-    LightSample lightSample;
-    lightSample.IntersectionPoint = 0.xxx;
-    lightSample.PDF = -1.0;
+    LightSample lightSample = ZeroLightSample();
 
     float3 xp;
     if (RaySphereIntersection(sphere, ray, xp))
@@ -496,11 +500,38 @@ LightSample SampleSphericalLight(Light light, ShereLightSolidAngleSamplingInputs
     return lightSample;
 }
 
-// Solid-angle sampling of spherical ellipsoids (disk lights) is described in the research below,
-// but, IMO, it's too complicated for a real-time case, so stick to simple area sampling for disk lights
+//-------------------------------------------------------------------------------//
+// Disk Lights
+//-------------------------------------------------------------------------------//
+
+// Solid-angle sampling of spherical ellipsoids is described in the research below,
+// but, IMO, it's too complicated for a real-time case, so treat elliptical light as a rect light
 //
 // Area-Preserving Parameterizations for Spherical Ellipses
 // http://giga.cps.unizar.es/~iguillen/projects/EGSR2017_Spherical_Ellipses/
 // https://www.arnoldrenderer.com/research/egsr2017_spherical_ellipse.pdf
+
+// Disk light is sampled as rect light with corresponding PDF of a rect light, but intersection test still should be made with an ellipse
+LightSample SampleEllipticalLight(Light light, RectLightSolidAngleSamplingInputs samplingInputs, LightPoints lightPoints, float3 samplingVector)
+{
+    Ray ray = InitRay(samplingInputs.SurfacePoint, samplingVector);
+    Plane plane = InitPlane(light.Orientation.xyz, light.Position.xyz);
+    LightSample lightSample = ZeroLightSample();
+
+    float3 intersectionPoint;
+    if (RayPlaneIntersection(plane, ray, intersectionPoint))
+    {
+        float3 localPoint = intersectionPoint - light.Position.xyz;
+        float3 zAlignedPoint = mul(transpose(lightPoints.LightRotation), localPoint);
+
+        if (IsPointInsideEllipse(zAlignedPoint.xy, 0.xx, float2(light.Width, light.Height)))
+        {
+            lightSample.IntersectionPoint = intersectionPoint;
+            lightSample.PDF = 1.0 / samplingInputs.SolidAngle;
+        }
+    }
+
+    return lightSample;
+}
 
 #endif

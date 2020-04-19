@@ -2,6 +2,7 @@
 #define _ToneMappingRenderPass__
 
 #include "GTTonemapping.hlsl"
+#include "Exposure.hlsl"
 
 struct PassData
 {
@@ -30,7 +31,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     GTTonemappingParams params = PassDataCB.TonemappingParams;
     // Luminance was exposed using Saturation Based Sensitivity method 
     // hence the 1.0 for maximum luminance
-    params.MaximumLuminance = 1.0; 
+    params.MaximumLuminance = ConvertEV100ToMaxHsbsLuminance(FrameDataCB.CameraExposureValue100); 
 
     float3 tonemappedColor = float3(
         GTToneMap(color.r, params),

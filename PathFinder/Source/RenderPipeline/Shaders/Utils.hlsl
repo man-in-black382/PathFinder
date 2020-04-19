@@ -55,6 +55,11 @@ float CopySign(float x, float y)
     return x;
 }
 
+float Sign(float x)
+{
+    return x < 0.0 ? -1.0 : 1.0;
+}
+
 float2 Refit0to1ValuesToTexelCenter(float2 values, float2 textureSize)
 {
     float2 scale = (textureSize - 1.0) / textureSize;

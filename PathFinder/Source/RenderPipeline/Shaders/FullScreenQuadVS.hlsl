@@ -9,10 +9,10 @@ struct VertexOut
 
 static const float2 Vertices[4] =
 {
-    float2(-1.0, 1.0),
+    float2(1.0, -1.0),
     float2(-1.0, -1.0),
     float2(1.0, 1.0),
-    float2(1.0, -1.0)
+    float2(-1.0, 1.0)    
 };
 
 VertexOut VSMain(uint vertexId : SV_VertexID)

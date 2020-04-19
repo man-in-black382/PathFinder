@@ -2867,9 +2867,10 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Constants.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadingRenderPass.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimation.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMapping.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadingPacking.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Shading.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

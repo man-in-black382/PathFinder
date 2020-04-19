@@ -1,6 +1,49 @@
 #ifndef _Packing__
 #define _Packing__
 
+#include "Constants.hlsl"
+#include "Utils.hlsl"
+
+uint PackUnorm(float value, float valueRange, uint bitCount)
+{
+    uint base = (1u << (bitCount - 1)) - 1u;
+    float valueNorm = abs(value) / valueRange;
+    uint packed = uint(valueNorm * base);
+    return packed;
+}
+
+float UnpackUnorm(uint packed, float valueRange, uint bitCount)
+{
+    uint base = (1u << (bitCount - 1)) - 1u;
+    float valueNorm = float(packed) / float(base);
+    float value = valueNorm * valueRange;
+    return value;
+}
+
+uint PackSnorm(float value, float valueRange, uint bitCount)
+{
+    uint base = (1u << (bitCount - 2)) - 1u; // bit count - 2 to leave 1 bit for sign
+    uint signBit = uint(saturate(Sign(value))) << (bitCount - 1); // 1 for positive, 0 for negative
+    float valueNorm = abs(value) / valueRange;
+    uint packed = uint(valueNorm * base);
+    packed |= signBit;
+
+    return packed;
+}
+
+float UnpackSnorm(uint packed, float valueRange, uint bitCount)
+{
+    uint highestBit = 1u << (bitCount - 1);
+    uint base = highestBit - 1u; // Highest bit contains sigh, hence the -1 to determine base value
+    uint signBit = packed & highestBit;
+    float sign = signBit > 0 ? 1.0 : -1.0;
+    float valueNormUnsigned = float(packed & ~highestBit) / base; // Get rid of the sign bit then normalize
+    float valueNorm = valueNormUnsigned * sign;
+    float value = valueNorm * valueRange;
+    
+    return value;
+}
+
 uint PackSnorm2x16(float first, float second, float range)
 {
     static const float base = 32767.0;
@@ -106,6 +149,49 @@ uint Encode8888(float4 vec)
     (uint(vec.z * 255.0) << 8) |
     uint(vec.w * 255.0);
     return rgba;
+}
+
+// Signed Octahedron Normal Encoding
+// http://johnwhite3d.blogspot.com/2017/10/signed-octahedron-normal-encoding.html
+//
+uint EncodeNormalSignedOct(float3 n)
+{
+    float3 outN;
+
+    n /= (abs(n.x) + abs(n.y) + abs(n.z));
+
+    outN.y = n.y * 0.5 + 0.5;
+    outN.x = n.x * 0.5 + outN.y;
+    outN.y = n.x * -0.5 + outN.y;
+
+    outN.z = saturate(n.z * FloatMax);
+
+    uint signBit = outN.z > 0.0 ? 1 : 0;
+    uint encoded = PackUnorm2x16(outN.x, outN.y, 1.0);
+
+    // Sacrifice LS bit of one of the encoded 
+    // values to store normal z sign
+    encoded |= signBit;
+
+    return encoded;
+}
+
+float3 DecodeNormalSignedOct(uint encoded)
+{
+    float3 n;
+    // Extract sign and convert it to float
+    n.z = float(encoded & 1u);
+    n.xy = UnpackUnorm2x16(encoded, 1.0);
+
+    float3 outN;
+
+    outN.x = (n.x - n.y);
+    outN.y = (n.x + n.y) - 1.0;
+    outN.z = n.z * 2.0 - 1.0;
+    outN.z = outN.z * (1.0 - abs(outN.x) - abs(outN.y));
+
+    outN = normalize(outN);
+    return outN;
 }
 
 #endif
