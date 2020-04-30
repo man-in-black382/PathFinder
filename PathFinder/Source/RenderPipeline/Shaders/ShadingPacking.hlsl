@@ -4,11 +4,12 @@
 #include "ColorConversion.hlsl"
 #include "Light.hlsl"
 #include "Packing.hlsl"
+#include "Utils.hlsl"
 
 // Turing-level hardware can realistically work with 4 lights and 1 ray per light, per tile.
 // We should not bother with more to make space for other rendering workloads.
-static const uint MaxSupportedLights = 4;
-static const uint RaysPerLight = 1;
+static const uint MaxSupportedLights = 1;
+static const uint RaysPerLight = 4;
 static const float RaysPerLightInverse = 1.0 / RaysPerLight;
 
 static const uint YBitCount = 16;
@@ -23,7 +24,7 @@ static const uint CgMask = AllBits1 >> (32 - CgBitCount);
 struct RTData
 {
     // 4 components for 4 ray-light pairs
-    uint4 BRDFMagnitudes;
+    uint4 BRDFResponses;
     uint4 RayLightIntersectionData;
     float4 ShadowFactors;
 };
@@ -31,8 +32,9 @@ struct RTData
 RTData ZeroRTData()
 {
     RTData data;
-    data.BRDFMagnitudes = 0.xxxx;
+    data.BRDFResponses = 0.xxxx;
     data.RayLightIntersectionData = 0.xxxx;
+    data.ShadowFactors = 1.xxxx;
     return data;
 }
 
@@ -41,34 +43,37 @@ RTData ZeroRTData()
 // Avoids using arrays and allows us to pack everything into single 4-component registers to avoid 
 // register spilling.
 //--------------------------------------------------------------------------------------------------
-void SetStochasticBRDFMagnitude(inout RTData rtData, float3 brdfMagnitude, uint rayLightPairIndex)
+void SetStochasticBRDFMagnitude(inout RTData rtData, float3 brdf, uint rayLightPairIndex)
 {
     // Leverage YCoCg compressibility
-    float3 ycocgMagnitude = RGBToYCoCg(brdfMagnitude);
-    uint y = PackSnorm(ycocgMagnitude.x, 1.0, YBitCount);
-    uint co = PackSnorm(ycocgMagnitude.y, 1.0, CoBitCount);
-    uint cg = PackSnorm(ycocgMagnitude.z, 1.0, CgBitCount);
+    float3 ycocg = RGBToYCoCg(brdf);
+    float magnitude = 1.0;
+
+    uint y = PackSnorm(ycocg.x, magnitude, YBitCount);
+    uint co = PackSnorm(ycocg.y, magnitude, CoBitCount);
+    uint cg = PackSnorm(ycocg.z, magnitude, CgBitCount);
 
     uint packed = 0;
     packed |= y;
     packed |= (co << YBitCount);
     packed |= (cg << (YBitCount + CoBitCount));
 
-    rtData.BRDFMagnitudes[rayLightPairIndex] = packed;
+    rtData.BRDFResponses[rayLightPairIndex] = packed;
 }
 
 float3 GetStochasticBRDFMagnitude(RTData rtData, uint rayLightPairIndex)
 {
-    uint packed = rtData.BRDFMagnitudes[rayLightPairIndex];
+    uint packed = rtData.BRDFResponses[rayLightPairIndex];
+    float magnitude = 1.0;
 
     uint yPacked = packed & YMask;
     uint coPacked = (packed >> YBitCount) & CoMask;
     uint cgPacked = (packed >> (YBitCount + CoBitCount)) & CgMask;
 
     float3 ycocg = float3(
-        UnpackSnorm(yPacked, 1.0, YBitCount),
-        UnpackSnorm(coPacked, 1.0, CoBitCount),
-        UnpackSnorm(cgPacked, 1.0, CgBitCount));
+        UnpackSnorm(yPacked, magnitude, YBitCount),
+        UnpackSnorm(coPacked, magnitude, CoBitCount),
+        UnpackSnorm(cgPacked, magnitude, CgBitCount));
 
     float3 rgb = YCoCgToRGB(ycocg);
 

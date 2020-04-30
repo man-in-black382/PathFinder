@@ -8,6 +8,21 @@ float Square(float v)
     return v * v;
 }
 
+float Max(float2 v)
+{
+    return max(v.x, v.y);
+}
+
+float Max(float3 v)
+{
+    return max(v.x, max(v.y, v.z));
+}
+
+float Max(float4 v)
+{
+    return max(max(v.x, max(v.y, v.z)), v.w);
+}
+
 float Flatten3DIndexFloat(float3 index3D, float3 dimensions)
 {
     return (index3D.x) + (index3D.y * dimensions.x) + (index3D.z * dimensions.x * dimensions.y);

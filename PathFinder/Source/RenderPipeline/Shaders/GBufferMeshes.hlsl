@@ -53,9 +53,9 @@ VertexOut VSMain(uint indexId : SV_VertexID)
     float3x3 TBNInverse = transpose(TBN);
 
     float4 WSPosition = mul(instanceData.ModelMatrix, vertex.Position);
-    float3 viewVector = normalize(FrameDataCB.CameraPosition.xyz - WSPosition.xyz);
+    float3 viewVector = normalize(FrameDataCB.Camera.Position.xyz - WSPosition.xyz);
 
-    vout.Position = mul(FrameDataCB.CameraViewProjection, WSPosition);
+    vout.Position = mul(FrameDataCB.Camera.ViewProjection, WSPosition);
     vout.UV = vertex.UV;
     vout.TBN = TBN;
     vout.ViewDirectionTS = mul(TBNInverse, viewVector);

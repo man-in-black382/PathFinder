@@ -432,6 +432,12 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingHitGroupExport.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowDenoisingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationDenoisingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2318,6 +2324,12 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingHitGroupExport.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowDenoisingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationDenoisingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2845,7 +2857,6 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\SpaceConversion.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapHelperCompression.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapHelperInitialization.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapGeneration.hlsl" />
@@ -2867,10 +2878,16 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Constants.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimation.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMapping.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ShadingPacking.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Shading.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Random.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimation.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowDenoising.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Gaussian.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BaseEngineLayout.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Camera.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimationDenoising.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

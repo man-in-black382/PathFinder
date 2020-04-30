@@ -14,6 +14,8 @@
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadowNoiseEstimationRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/ShadowNoiseEstimationDenoisingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/ShadowDenoisingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
@@ -98,6 +100,8 @@ int main(int argc, char** argv)
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
     auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
     auto shadowNoiseEstimationPass = std::make_unique<PathFinder::ShadowNoiseEstimationRenderPass>();
+    auto shadowNoiseEstimationDenoisingPass = std::make_unique<PathFinder::ShadowNoiseEstimationDenoisingRenderPass>();
+    auto shadowDenoisingPass = std::make_unique<PathFinder::ShadowDenoisingRenderPass>();
     auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
     auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
     auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
@@ -110,6 +114,8 @@ int main(int argc, char** argv)
     engine.AddRenderPass(GBufferPass.get());
     engine.AddRenderPass(shadingPass.get());
     engine.AddRenderPass(shadowNoiseEstimationPass.get());
+    engine.AddRenderPass(shadowNoiseEstimationDenoisingPass.get());
+    engine.AddRenderPass(shadowDenoisingPass.get());
     engine.AddRenderPass(bloomBlurPass.get());
     engine.AddRenderPass(bloomCompositionPass.get());
     engine.AddRenderPass(toneMappingPass.get());
@@ -119,19 +125,19 @@ int main(int argc, char** argv)
     //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
     //renderPassGraph.AddPass(blurPass.get());
 
-  /*  auto sphereLight0 = scene.EmplaceSphericalLight();
-    sphereLight0->SetRadius(2);
+   /* auto sphereLight0 = scene.EmplaceSphericalLight();
+    sphereLight0->SetRadius(7);
     sphereLight0->SetPosition({ 2.5, 0.0, 0.0 });
     sphereLight0->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
-    sphereLight0->SetLuminousPower(50000);
+    sphereLight0->SetLuminousPower(50000);*/
 
-    auto sphereLight1 = scene.EmplaceSphericalLight();
-    sphereLight1->SetRadius(2);
-    sphereLight1->SetPosition({ -2.5, 0.0, 0.0 });
-    sphereLight1->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
-    sphereLight1->SetLuminousPower(50000);*/
+    //auto sphereLight1 = scene.EmplaceSphericalLight();
+    //sphereLight1->SetRadius(2);
+    //sphereLight1->SetPosition({ -2.5, 0.0, 0.0 });
+    //sphereLight1->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
+    //sphereLight1->SetLuminousPower(50000);
 
-    auto sphereLight2 = scene.EmplaceSphericalLight();
+    /*auto sphereLight2 = scene.EmplaceSphericalLight();
     sphereLight2->SetRadius(2);
     sphereLight2->SetPosition({ 7.5, 0.0, 0.0 });
     sphereLight2->SetColor({ 50.0 / 255, 50.0 / 255, 255.0 / 255 });
@@ -141,7 +147,7 @@ int main(int argc, char** argv)
     sphereLight3->SetRadius(2);
     sphereLight3->SetPosition({ -7.5, 0.0, 0.0 });
     sphereLight3->SetColor({ 201.0 / 255, 226.0 / 255, 50.0 / 255 });
-    sphereLight3->SetLuminousPower(50000);
+    sphereLight3->SetLuminousPower(50000);*/
 
    /* auto flatLight0 = scene.EmplaceRectangularLight();
     flatLight0->SetWidth(2);
@@ -159,21 +165,21 @@ int main(int argc, char** argv)
     flatLight2->SetColor({ 201.0 / 255, 125.0 / 255, 255.0 / 255 });
     flatLight2->SetLuminousPower(5000);*/
 
-    auto flatLight1 = scene.EmplaceRectangularLight();
+  /*  auto flatLight1 = scene.EmplaceRectangularLight();
     flatLight1->SetWidth(2);
     flatLight1->SetHeight(2);
     flatLight1->SetPosition({ -2.5, 0.0, 0.0 });
     flatLight1->SetNormal({ 0.0, .0, -1.0 });
     flatLight1->SetColor({ 200.0 / 255, 50.0 / 255, 50.0 / 255 });
-    flatLight1->SetLuminousPower(5000);
+    flatLight1->SetLuminousPower(10000);*/
 
     auto flatLight3 = scene.EmplaceRectangularLight();
-    flatLight3->SetWidth(2);
-    flatLight3->SetHeight(2);
-    flatLight3->SetPosition({ 2.5, 0.0, 0.0 });
-    flatLight3->SetNormal({ 0.0, .0, -1.0 });
-    flatLight3->SetColor({ 50.0 / 255, 215.0 / 255, 50.0 / 255 });
-    flatLight3->SetLuminousPower(5000);
+    flatLight3->SetWidth(5);
+    flatLight3->SetHeight(5);
+    flatLight3->SetPosition({ 0, 2, 0.0 });
+    flatLight3->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, -1.0 }));
+    flatLight3->SetColor({ 255 / 255, 255 / 255, 255 / 255 });
+    flatLight3->SetLuminousPower(10000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
@@ -182,16 +188,16 @@ int main(int argc, char** argv)
         "/MediaResources/Textures/Metal07/Metal07_met.dds",
         "/MediaResources/Textures/Metal07/Metal07_disp.dds"));
 
-    PathFinder::Material& harshBricksMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
-        "/MediaResources/Textures/HarshBricks/harshbricks-albedo.dds",
-        "/MediaResources/Textures/HarshBricks/harshbricks-normal.dds", 
-        "/MediaResources/Textures/HarshBricks/harshbricks-roughness.dds",
-        "/MediaResources/Textures/HarshBricks/harshbricks-metalness.dds", 
-        "/MediaResources/Textures/HarshBricks/harshbricks-height.dds"));
+    //PathFinder::Material& harshBricksMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+    //    "/MediaResources/Textures/HarshBricks/harshbricks-albedo.dds",
+    //    "/MediaResources/Textures/HarshBricks/harshbricks-normal.dds", 
+    //    "/MediaResources/Textures/HarshBricks/harshbricks-roughness.dds",
+    //    "/MediaResources/Textures/HarshBricks/harshbricks-metalness.dds", 
+    //    "/MediaResources/Textures/HarshBricks/harshbricks-height.dds"));
 
     PathFinder::Material& concrete19Material = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Concrete19/Concrete19_col.dds",
-        "/MediaResources/Textures/Concrete19/Concrete19_nrm.dds", 
+        "/MediaResources/Textures/Concrete19/Concrete19_nrm.dds",
         "/MediaResources/Textures/Concrete19/Concrete19_rgh.dds",
         std::nullopt,
         "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
@@ -200,7 +206,7 @@ int main(int argc, char** argv)
     PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &concrete19Material });
 
     PathFinder::Mesh& cube = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
-    PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &concrete19Material });
+    PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &metalMaterial });
 
     auto t = planeInstance.Transformation();
     //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
@@ -208,13 +214,13 @@ int main(int argc, char** argv)
     planeInstance.SetTransformation(t);
 
     t = cubeInstance.Transformation();
-    //t.Rotation = glm::angleAxis(glm::radians(90.0f), glm::normalize(glm::vec3(1.0, 1.0, 1.0)));
-    t.Translation = glm::vec3{ 0.0, -3.0, -4.0 };
+    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+    t.Translation = glm::vec3{ 0.0, -2.0, -4.0 };
     cubeInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(1000);
-    camera.SetNearPlane(1);
+    camera.SetNearPlane(0.1);
     camera.MoveTo({ 0.0, 0.0f, -25.f });
     camera.LookAt({ 0.f, 0.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
@@ -258,16 +264,7 @@ int main(int argc, char** argv)
             engine.RenderSurface().Dimensions().Height 
         };
 
-        const PathFinder::Camera& camera = scene.MainCamera();
-
-        perFrameConstants.CameraPosition = glm::vec4{ camera.Position(), 1.0 };
-        perFrameConstants.CameraView = camera.View();
-        perFrameConstants.CameraProjection = camera.Projection();
-        perFrameConstants.CameraViewProjection = camera.ViewProjection();
-        perFrameConstants.CameraInverseView = camera.InverseView();
-        perFrameConstants.CameraInverseProjection = camera.InverseProjection();
-        perFrameConstants.CameraInverseViewProjection = camera.InverseViewProjection();
-        perFrameConstants.CameraExposureValue100 = camera.ExposureValue100();
+        perFrameConstants.Camera = sceneStorage.CameraGPURepresentation();
 
         engine.SetGlobalRootConstants(globalConstants);
         engine.SetFrameRootConstants(perFrameConstants);

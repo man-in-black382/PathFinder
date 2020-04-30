@@ -18,25 +18,28 @@ namespace PathFinder
 
     void ShadowNoiseEstimationRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->ReadTexture(ResourceNames::ShadingAnalyticOutput);
         scheduler->ReadTexture(ResourceNames::ShadingStochasticShadowedOutput);
         scheduler->ReadTexture(ResourceNames::ShadingStochasticUnshadowedOutput);
-        scheduler->NewTexture(ResourceNames::ShadowNoiseEstimationOutput);
+
+        ResourceScheduler::NewTextureProperties noiseEstimationProps{};
+        noiseEstimationProps.ShaderVisibleFormat = HAL::ColorFormat::R8_Usigned_Norm;
+        scheduler->NewTexture(ResourceNames::ShadowNoiseEstimationOutput, noiseEstimationProps);
     }
      
     void ShadowNoiseEstimationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::ShadowNoiseEstimation);
 
-        //ToneMappingCBContent cbContent{};
-        //cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ShadingAnalyticalOutput/*BloomCompositionOutput*/);
-        //cbContent.OutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
-        //cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
+        auto resourceProvider = context->GetResourceProvider();
 
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
+        ShadowNoiseEstimationCBContent cbContent{};
+        cbContent.StochasticShadowedLuminanceTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::ShadingStochasticShadowedOutput);
+        cbContent.StochasticUnshadowedLuminanceTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
+        cbContent.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadowNoiseEstimationOutput);
+        cbContent.MaximumLightsLuminance = context->GetContent()->GetSceneGPUStorage()->LightsMaximumLuminanance();
 
-        //auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(32, 32);
-        //context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);
+        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
+        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
     }
 
 }

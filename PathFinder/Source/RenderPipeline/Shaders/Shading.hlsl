@@ -3,19 +3,8 @@
 
 #include "Exposure.hlsl"
 #include "Mesh.hlsl"
-#include "SpaceConversion.hlsl"
 #include "GBuffer.hlsl"
 #include "ShadingPacking.hlsl"
-
-struct ExposureOutput
-{
-    // Luminance value after exposition.
-    float3 ExposedLuminance;
-
-    // A luminance value that exceeded Saturation Based Sensitivity
-    // of our virtual camera's sensor. 0 if no over saturation occurred.
-    float3 OversaturatedLuminance;
-};
 
 struct ShadingResult
 {
@@ -23,7 +12,6 @@ struct ShadingResult
     float3 StochasticUnshadowedOutgoingLuminance;
     float3 StochasticShadowedOutgoingLuminance;
 };
-
 
 struct ShadowRayPayload
 {
@@ -96,7 +84,7 @@ ShadingResult ZeroShadingResult()
     ShadingResult result;
     result.AnalyticUnshadowedOutgoingLuminance = 0;
     result.StochasticShadowedOutgoingLuminance = 0;
-    result.StochasticUnshadowedOutgoingLuminance = 1e-05;
+    result.StochasticUnshadowedOutgoingLuminance = 0;
     return result;
 }
 
@@ -178,16 +166,19 @@ LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDi
     // Light that is not reflected is absorbed by conductors, so no diffuse term for them
     float3 diffuseAlbedo = gBuffer.Albedo * (1.0 - gBuffer.Metalness);
 
-    // Construct orthonormal basis around N
-    // World to tangent matrix
-    float3x3 tangentToWorld = RotationMatrix3x3(gBuffer.Normal);
-    float3x3 worldToTangent = transpose(tangentToWorld);
+    // Rotate area light in (T1, T2, N) basis
+    float3 T1, T2;
+    T1 = normalize(viewDirWS - gBuffer.Normal * dot(viewDirWS, gBuffer.Normal));
+    T2 = cross(gBuffer.Normal, T1);
+    float3x3 Rinv = Matrix3x3ColumnMajor(T1, T2, gBuffer.Normal);
+    float3x3 R = transpose(Rinv);
 
     LTCTerms terms;
-    terms.MInvSpecular = mul(worldToTangent, MInvSpecular);
-    terms.MInvDiffuse = mul(worldToTangent, MInvDiffuse);
-    terms.MSpecular = mul(MSpecular, tangentToWorld); // inv(AB) = inv(B)*inv(A)
-    terms.MDiffuse = mul(MDiffuse, tangentToWorld); // inv(AB) = inv(B)*inv(A)
+    // This order of matrix multiplication is intended
+    terms.MInvSpecular = mul(MInvSpecular, R);
+    terms.MInvDiffuse = mul(MInvDiffuse, R);
+    terms.MSpecular = mul(Rinv, MSpecular); // inv(AB) = inv(B)*inv(A)
+    terms.MDiffuse = mul(Rinv, MDiffuse); // inv(AB) = inv(B)*inv(A)
     terms.MDetSpecular = determinant(terms.MSpecular);
     terms.MDetDiffuse = determinant(terms.MDiffuse);
     terms.SurfaceSpecularAlbedo = specularAlbedo;
@@ -218,7 +209,7 @@ float3 SampleBRDF(Light light, LTCTerms ltcTerms, LTCAnalyticEvaluationResult di
         // Stochastic estimate of incident light, without shadow
         // Note: projection cosine dot(w_i, n) is baked into the LTC-based BRDF
         brdfRayLightingEvaluationResult.BRDFMagnitude / misPDF :
-        0.xxx;
+        0.xxx; 
 }
 
 void ShadeWithSphericalLights(
@@ -259,8 +250,9 @@ void ShadeWithSphericalLights(
                 SphericalLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
             LightSample lightSample = SampleSphericalLight(light, samplingInputs, sampleVector);
+
             float3 brdf = SampleBRDF(light, ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) * RaysPerLightInverse;
-            
+
             uint rayLightPairIndex = lightTableOffset * RaysPerLight + rayIdx;
             SetStochasticBRDFMagnitude(rtData, brdf, rayLightPairIndex);
             SetRaySphericalLightIntersectionPoint(rtData, light, lightSample.IntersectionPoint, rayLightPairIndex);
@@ -370,12 +362,13 @@ float4 TraceShadows(RTData rtData, float3 surfacePosition, float4 blueNoise)
     [unroll]
     for (uint i = 0; i < MaxSupportedLights * RaysPerLight; ++i)
     {
-        if (rtData.BRDFMagnitudes[i] == 0)
+        if (rtData.BRDFResponses[i] == 0)
         {
             continue;
         }
 
-        Light light = LightTable[i];
+        uint lightIndex = i * RaysPerLightInverse;
+        Light light = LightTable[lightIndex];
         float3 lightIntersectionPoint = 0.xxx;
         float3x3 lightRotation = RotationMatrix3x3(light.Orientation.xyz);
 
@@ -427,14 +420,16 @@ void CombineStochasticLightingAndShadows(RTData rtData, inout ShadingResult shad
     [unroll]
     for (uint i = 0; i < MaxSupportedLights * RaysPerLight; ++i)
     {
-        if (rtData.BRDFMagnitudes[i] == 0)
+        if (rtData.BRDFResponses[i] == 0)
         {
             continue;
         }
 
-        Light light = LightTable[i];
+        uint lightIndex = i * RaysPerLightInverse;
+        Light light = LightTable[lightIndex];
         float3 brdf = GetStochasticBRDFMagnitude(rtData, i);
         float3 unshadowed = brdf * light.Color.rgb * light.Luminance;
+
         shadingResult.StochasticUnshadowedOutgoingLuminance += unshadowed;
         shadingResult.StochasticShadowedOutgoingLuminance += unshadowed * rtData.ShadowFactors[i];
     }
@@ -447,8 +442,8 @@ ShadingResult EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
 
     float4 blueNoise = blueNoiseTexture.Load(uint3(pixelIndex % PassDataCB.BlueNoiseTextureSize, 0));
-    float3 surfacePosition = ReconstructWorldPosition(depth, uv, FrameDataCB.CameraInverseView, FrameDataCB.CameraInverseProjection);
-    float3 viewDirection = normalize(FrameDataCB.CameraPosition.xyz - surfacePosition);
+    float3 surfacePosition = ReconstructWorldSpacePosition(depth, uv, FrameDataCB.Camera).xyz;
+    float3 viewDirection = normalize(FrameDataCB.Camera.Position.xyz - surfacePosition);
 
     LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
     ShadingResult shadingResult = ZeroShadingResult();
@@ -469,25 +464,9 @@ ShadingResult EvaluateEmissiveGBufferLighting(GBufferEmissive gBuffer)
 {
     ShadingResult result = ZeroShadingResult();
     result.AnalyticUnshadowedOutgoingLuminance = gBuffer.Luminance;
-    result.StochasticShadowedOutgoingLuminance = 1;
-    result.StochasticUnshadowedOutgoingLuminance = 1;
+    result.StochasticShadowedOutgoingLuminance = 0;
+    result.StochasticUnshadowedOutgoingLuminance = 0;
     return result;
-}
-
-ExposureOutput ExposeOutgoingLuminance(float3 outgoingLuminance)
-{
-    float maxHsbsLuminance = ConvertEV100ToMaxHsbsLuminance(FrameDataCB.CameraExposureValue100);
-
-    float3 HSV = RGBtoHSV(outgoingLuminance);
-    HSV.z /= maxHsbsLuminance;
-
-    float3 RGB = HSVtoRGB(HSV);
-
-    ExposureOutput exposureOutput;
-    exposureOutput.ExposedLuminance = RGB;
-    exposureOutput.OversaturatedLuminance = HSV.z > 1.0 ? RGB : 0.0.xxx;
-
-    return exposureOutput;
 }
 
 [shader("miss")]
@@ -496,25 +475,39 @@ void RayMiss(inout ShadowRayPayload payload)
     payload.ShadowFactor = 1.0;
 }
 
+void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
+{
+    RWTexture2D<float4> analyticOutput = RW_Float4_Textures2D[PassDataCB.AnalyticOutputTextureIndex];
+    RWTexture2D<float4> stochasticUnshadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTextureIndex];
+    RWTexture2D<float4> stochasticShadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTextureIndex];
+
+    shadingResult.AnalyticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.AnalyticUnshadowedOutgoingLuminance, FrameDataCB.Camera);
+    shadingResult.StochasticShadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticShadowedOutgoingLuminance, FrameDataCB.Camera);
+    shadingResult.StochasticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticUnshadowedOutgoingLuminance, FrameDataCB.Camera);
+
+    analyticOutput[pixelIndex] = float4(shadingResult.AnalyticUnshadowedOutgoingLuminance, 1.0);
+    stochasticShadowedOutput[pixelIndex] = float4(shadingResult.StochasticShadowedOutgoingLuminance, 1.0);
+    stochasticUnshadowedOutput[pixelIndex] = float4(shadingResult.StochasticUnshadowedOutgoingLuminance, 1.0);
+}
+
 [shader("raygeneration")]
 void RayGeneration()
 {
     Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
     Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
-    RWTexture2D<float4> analyticOutput = RW_Float4_Textures2D[PassDataCB.AnalyticOutputTextureIndex];
-    RWTexture2D<float4> stochasticUnshadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTextureIndex];
-    RWTexture2D<float4> stochasticShadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTextureIndex];
-
+    
     uint2 pixelIndex = DispatchRaysIndex().xy;
     float2 currenPixelLocation = pixelIndex + float2(0.5f, 0.5f);
     float2 pixelCenterUV = currenPixelLocation / DispatchRaysDimensions().xy;
 
     float depth = depthTexture.Load(uint3(pixelIndex, 0)).r;
 
+    ShadingResult shadingResult = ZeroShadingResult();
+
     // Skip empty and emissive areas
     if (depth >= 1.0)
     {
-        analyticOutput[pixelIndex].rgb = 0.xxx;
+        OutputShadingResult(shadingResult, pixelIndex);
         return;
     }
 
@@ -522,7 +515,6 @@ void RayGeneration()
     encodedGBuffer.MaterialData = materialData.Load(uint3(pixelIndex, 0));
 
     uint gBufferType = DecodeGBufferType(encodedGBuffer);
-    ShadingResult shadingResult = ZeroShadingResult();
 
     switch (gBufferType)
     {
@@ -535,9 +527,7 @@ void RayGeneration()
         break;
     }
 
-    analyticOutput[pixelIndex] = float4(shadingResult.AnalyticUnshadowedOutgoingLuminance, 1.0);
-    stochasticShadowedOutput[pixelIndex] = float4(shadingResult.StochasticShadowedOutgoingLuminance, 1.0);
-    stochasticUnshadowedOutput[pixelIndex] = float4(shadingResult.StochasticUnshadowedOutgoingLuminance, 1.0);
+    OutputShadingResult(shadingResult, pixelIndex);
 }
 
 #endif

@@ -57,19 +57,14 @@ float4x4 RotationMatrix4x4(float3 forward, float3 up)
     );
 }
 
-//float4x4 LookAtMatrix4x4(float3 at, float3 eye, float3 up)
-//{
-//    float3 zaxis = normalize(at - eye);
-//    float3 xaxis = normalize(cross(up, zaxis));
-//    float3 yaxis = cross(zaxis, xaxis);
-//
-//    return Matrix4x4ColumnMajor(
-//        float4(xaxis, 0.0),
-//        float4(yaxis, 0.0),
-//        float4(zaxis, 0.0),
-//        float4(0.0, 0.0, 0.0, 1.0)
-//    );
-//}
+float3x3 ReduceTo3x3(float4x4 m)
+{
+    float3x3 m3x3;
+    m3x3[0] = m[0].xyz;
+    m3x3[1] = m[1].xyz;
+    m3x3[2] = m[2].xyz;
+    return m3x3;
+}
 
 float3x3 RotationMatrix3x3(float3 forward)
 {
@@ -81,14 +76,5 @@ float3x3 RotationMatrix3x3(float3 forward)
 
     return Matrix3x3ColumnMajor(xaxis, yaxis, zaxis);
 }
-
-//float3x3 RotationMatrix3x3(float3 at, float3 eye, float3 up)
-//{
-//    float3 zaxis = normalize(at - eye);
-//    float3 xaxis = normalize(cross(up, zaxis));
-//    float3 yaxis = cross(zaxis, xaxis);
-//
-//    return Matrix3x3ColumnMajor(xaxis, yaxis, zaxis);
-//}
 
 #endif

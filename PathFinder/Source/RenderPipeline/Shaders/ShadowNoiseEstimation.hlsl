@@ -5,123 +5,240 @@ struct PassData
 {
     uint StochasticShadowedLuminanceTextureIndex;
     uint StochasticUnshadowedLuminanceTextureIndex;
+    uint OutputTextureIndex;
+    float MaximumLightsLuminance;
 };
 
 #define PassDataType PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
+#include "Packing.hlsl"
+#include "Random.hlsl"
+#include "Constants.hlsl"
+#include "ColorConversion.hlsl"
 
-static const uint R = 10;
+// Number of lines to measure total variance with
+static const int VarianceMeasurementLinesCount = 2;
+static const int EstimationRadius = 4;
+static const float EstimationRadiusInverse = 1.0 / float(EstimationRadius);
+static const int GroupDimensionSize = 16;
+static const int GSBufferDimensionSize = EstimationRadius * 2 + GroupDimensionSize; // Add EstimationRadius pixels around the group
 
-///* Sample the signal used for the noise estimation at offset from ssC */
-//float3 tap(uint2 pixelIndex, uint2 offset, Texture2D source0, Texture2D source1)
-//{
-////#if 0
-////
-////    // stochastic image only
-////    // source0 - baseline
-////    return texelFetch(source0, ssC + offset, 0).rgb - texelFetch(baseline, ssC + offset, 0).rgb;
-////#else
-//    // Conditional shadow; gives slightly noiser transition to penumbra but avoids noise in the umbra
-//    float3 n = source0.Load(uint3(pixelIndex + offset, 0)).rgb;
-//    float3 d = source1.Load(uint3(pixelIndex + offset, 0)).rgb;
-//
-//    float3 result;
-//    for (int i = 0; i < 3; ++i) 
-//    {
-//        result[i] = (d[i] < 0.000001) ? 1.0 : (n[i] / d[i]);
-//    }
-//    return result;
-////#endif
-//}
-//
-/////////////////////////////////////////////////////////////////////////////////
-//// Estimate desired radius from the second derivative of the signal itself in source0 relative to baseline,
-//// which is the noisier image because it contains shadows
-//float estimateNoise(vec2 axis)
-//{
-//    const int NOISE_ESTIMATION_RADIUS = min(10, R);
-//    vec3 v2 = tap(ivec2(-NOISE_ESTIMATION_RADIUS * axis));
-//    vec3 v1 = tap(ivec2((1 - NOISE_ESTIMATION_RADIUS) * axis));
-//
-//    float d2mag = 0.0;
-//    // The first two points are accounted for above
-//    for (int r = -NOISE_ESTIMATION_RADIUS + 2; r <= NOISE_ESTIMATION_RADIUS; ++r) 
-//    {
-//        float3 v0 = tap(ivec2(axis * r));
-//
-//        // Second derivative
-//        float3 d2 = v2 - v1 * 2.0 + v0;
-//
-//        d2mag += length(d2);
-//
-//        // Shift weights in the window
-//        v2 = v1; v1 = v0;
-//    }
-//
-//    // Scaled value by 1.5 *before* clamping to visualize going out of range
-//    // It is clamped again when applied.
-//    return clamp(sqrt(d2mag * (1.0 / float(R))) * (1.0 / 1.5), 0.0, 1.0);
-//}
-//
-//void main()
-//{
-//
-//    float angle = hash(gl_FragCoord.x + gl_FragCoord.y * 1920.0);
-//
-//    result = 0;
-//    const int N = 4;
-//    for (float t = 0; t < N; ++t, angle += pi / float(N)) {
-//        float c = cos(angle), s = sin(angle);
-//        result = max(estimateNoise(vec2(c, s)), result);
-//    }
-//
-//}
+// 32KB Max
+groupshared uint gLuminances[GSBufferDimensionSize][GSBufferDimensionSize];
 
+groupshared float3 gLuminancesS[GSBufferDimensionSize][GSBufferDimensionSize];
+groupshared float3 gLuminancesU[GSBufferDimensionSize][GSBufferDimensionSize];
 
-[numthreads(32, 32, 1)]
+void PackLuminances(Texture2D shadowedLuminances, Texture2D unshadowedLuminances, int2 loadIndex, int2 storeIndex)
+{
+    float3 shadowed = shadowedLuminances[loadIndex].rgb;
+    float3 unshadowed = unshadowedLuminances[loadIndex].rgb;
+
+    // This is the maximum luminance any surface can reflect. 
+    // Good fit for compression range.
+    float packingRange = 100;// PassDataCB.MaximumLightsLuminance;
+
+    // Original algorithm operates with 3-component luminances, but it's not worth performance-wise. 
+    // CIE luminance gives good noise estimation but also is much more compact so we can reduce GS memory usage significantly.
+    gLuminances[storeIndex.x][storeIndex.y] = PackUnorm2x16(CIELuminance(shadowed), CIELuminance(unshadowed), packingRange);
+
+    gLuminancesS[storeIndex.x][storeIndex.y] = shadowed;
+    gLuminancesU[storeIndex.x][storeIndex.y] = unshadowed;
+}
+
+void UnpackLuminances(int2 loadIndex, out float3 shadowedLuminance, out float3 unshadowedLuminance)
+{
+    float packingRange = 100;// PassDataCB.MaximumLightsLuminance;
+    uint packed = gLuminances[loadIndex.x][loadIndex.y];
+    float2 luminances = UnpackUnorm2x16(packed, packingRange);
+
+    shadowedLuminance.r = luminances.x; unshadowedLuminance.r = luminances.y;
+    shadowedLuminance.g = luminances.x; unshadowedLuminance.g = luminances.y;
+    shadowedLuminance.b = luminances.x; unshadowedLuminance.b = luminances.y;
+
+    /*shadowedLuminance = log2(shadowedLuminance);
+    unshadowedLuminance = log2(unshadowedLuminance);*/
+
+    shadowedLuminance = gLuminancesS[loadIndex.x][loadIndex.y];
+    unshadowedLuminance = gLuminancesU[loadIndex.x][loadIndex.y];
+}
+
+void PopulateSharedMemory(int2 dispatchIndex, int2 threadIndex)
+{
+    Texture2D stochasticShadowedLuminances = Textures2D[PassDataCB.StochasticShadowedLuminanceTextureIndex];
+    Texture2D stochasticUnshadowedLuminances = Textures2D[PassDataCB.StochasticUnshadowedLuminanceTextureIndex];
+
+    dispatchIndex = clamp(dispatchIndex, 0, GlobalDataCB.PipelineRTResolution - 1);
+
+    // Account for additional pixels (Radius) around the group
+    int2 arrayIndex = threadIndex + EstimationRadius;
+
+    PackLuminances(stochasticShadowedLuminances, stochasticUnshadowedLuminances, dispatchIndex, arrayIndex);
+
+    // A relative coordinate for diagonal sampling, if required
+    int2 diagonalOffset = 0;
+
+    // Sample horizontally, left side
+    if (threadIndex.x < EstimationRadius)
+    {
+        int2 loadIndex = int2(max(dispatchIndex.x - EstimationRadius, 0), dispatchIndex.y);
+        int2 storeIndex = int2(arrayIndex.x - EstimationRadius, arrayIndex.y);
+
+        diagonalOffset.x = -EstimationRadius;
+
+        PackLuminances(stochasticShadowedLuminances, stochasticUnshadowedLuminances, loadIndex, storeIndex);
+    }
+
+    // Sample vertically, top side
+    if (threadIndex.y < EstimationRadius)
+    {
+        int2 loadIndex = int2(dispatchIndex.x, max(dispatchIndex.y - EstimationRadius, 0));
+        int2 storeIndex = int2(arrayIndex.x, arrayIndex.y - EstimationRadius);
+
+        diagonalOffset.y = -EstimationRadius;
+
+        PackLuminances(stochasticShadowedLuminances, stochasticUnshadowedLuminances, loadIndex, storeIndex);
+    }
+
+    // Sample horizontally, right side
+    if (threadIndex.x >= (GroupDimensionSize - EstimationRadius))
+    {
+        int2 loadIndex = int2(min(dispatchIndex.x + EstimationRadius, GlobalDataCB.PipelineRTResolution.x - 1), dispatchIndex.y);
+        int2 storeIndex = int2(arrayIndex.x + EstimationRadius, arrayIndex.y);
+
+        diagonalOffset.x = EstimationRadius;
+
+        PackLuminances(stochasticShadowedLuminances, stochasticUnshadowedLuminances, loadIndex, storeIndex);
+    }
+
+    // Sample vertically, bottom side
+    if (threadIndex.y >= (GroupDimensionSize - EstimationRadius))
+    {
+        int2 loadIndex = int2(dispatchIndex.x, min(dispatchIndex.y + EstimationRadius, GlobalDataCB.PipelineRTResolution.y - 1));
+        int2 storeIndex = int2(arrayIndex.x, arrayIndex.y + EstimationRadius);
+
+        diagonalOffset.y = EstimationRadius;
+
+        PackLuminances(stochasticShadowedLuminances, stochasticUnshadowedLuminances, loadIndex, storeIndex);
+    }
+
+    // Sample diagonally
+    if (all(diagonalOffset != 0))
+    {
+        int2 loadIndex = clamp(int2(dispatchIndex + diagonalOffset), 0, GlobalDataCB.PipelineRTResolution - 1);
+        int2 storeIndex = int2(arrayIndex + diagonalOffset);
+
+        PackLuminances(stochasticShadowedLuminances, stochasticUnshadowedLuminances, loadIndex, storeIndex);
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+}
+
+float3 GetLuminanceRatio(int2 threadIndex, int2 offset)
+{
+    float3 shadowedLuminance = 0; 
+    float3 unshadowedLuminance = 0;
+
+    int2 loadIndex = threadIndex + EstimationRadius + offset;
+
+    UnpackLuminances(loadIndex, shadowedLuminance, unshadowedLuminance);
+
+    float3 ratio = 0;
+
+    [unroll]
+    for (int i = 0; i < 3; ++i)
+    {
+        ratio[i] = (unshadowedLuminance[i] < 1e-05) ? 1.0 : (shadowedLuminance[i] / unshadowedLuminance[i]);
+    }
+
+    return ratio;
+}
+
+void EstimateNoise(int2 dispatchIndex, int2 threadIndex)
+{
+    float angle = Random(dispatchIndex);
+    float noiseLevel = 0;
+
+    static const float Increment = Pi / float(VarianceMeasurementLinesCount);
+
+    [unroll]
+    for (int i = 0; i < VarianceMeasurementLinesCount; ++i) 
+    {
+        float s, c;
+        sincos(angle, s, c);
+
+        float2 direction = float2(s, c);
+        float estimation = 0;
+
+        float3 v2 = GetLuminanceRatio(threadIndex, int2(-EstimationRadius * direction));
+        float3 v1 = GetLuminanceRatio(threadIndex, int2((-EstimationRadius + 1) * direction));
+
+        float d2mag = 0.0;
+
+        // The first two points are accounted for above
+        [unroll]
+        for (int r = -EstimationRadius + 2; r <= EstimationRadius; ++r) 
+        {
+            float3 v0 = GetLuminanceRatio(threadIndex, int2(r * direction));
+
+            // Second derivative
+            float3 d2 = v2 - v1 * 2.0 + v0;
+    
+            d2mag += length(d2);
+    
+            // Shift weights in the window
+            v2 = v1; v1 = v0;
+        }
+
+        estimation = clamp(sqrt(d2mag * EstimationRadiusInverse), 0.0, 1.0);
+        noiseLevel = max(estimation, noiseLevel);
+
+        angle += Increment; 
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+
+    int2 storeIndex = threadIndex + EstimationRadius; 
+    gLuminances[storeIndex.x][storeIndex.y] = asuint(noiseLevel);
+
+    GroupMemoryBarrierWithGroupSync();
+}
+
+float DenoiseNoiseEstimation(int2 threadIndex)
+{
+    /*   static const int R = 1;
+       float denoisedEstimation = 0.0;
+
+       [unroll]
+       for (int x = -R; x <= R; ++x)
+       {
+           [unroll]
+           for (int y = -R; y <= R; ++y)
+           {
+               int2 loadIndex = threadIndex + EstimationRadius + int2(x, y);
+               denoisedEstimation += asfloat(gLuminances[loadIndex.x][loadIndex.y]);
+           }
+       }
+
+       denoisedEstimation *= (1.0 / Square(2.0 * float(R) + 1.0));
+
+       return denoisedEstimation; */
+
+    int2 loadIndex = threadIndex + EstimationRadius;
+    return asfloat(gLuminances[loadIndex.x][loadIndex.y]);
+}
+
+[numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
 {
-    //Texture2D inputImage = Textures2D[PassDataCB.InputTextureIndex];
-    //RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
-    //
-    //uint3 loadCoords = uint3(dispatchThreadID.xy, 0);
-    //float3 color = inputImage.Load(loadCoords).rgb;
+    RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
+    
+    PopulateSharedMemory(dispatchThreadID.xy, groupThreadID.xy);
+    EstimateNoise(dispatchThreadID.xy, groupThreadID.xy);
+    float noiseLevel = DenoiseNoiseEstimation(groupThreadID.xy);
 
-    //GTTonemappingParams params = PassDataCB.TonemappingParams;
-    //// Luminance was exposed using Saturation Based Sensitivity method 
-    //// hence the 1.0 for maximum luminance
-    //params.MaximumLuminance = 1.0; 
-
-    //float3 tonemappedColor = float3(
-    //    GTToneMap(color.r, params),
-    //    GTToneMap(color.g, params),
-    //    GTToneMap(color.b, params)
-    //);
-
-    //outputImage[dispatchThreadID.xy] = float4(SRGBFromLinear(tonemappedColor), 1.0);
-
-    //uint2 resolution = (GlobalDataCB.PipelineRTResolution - 1);
-
-    //float3 average = 0.xxx;
-    //uint2 pixelIndex = pin.UV * resolution;
-
-    //for (uint i = 0; i < 6; ++i)
-    //{
-    //    for (uint j = 0; j < 6; ++j)
-    //    {
-    //        uint2 loadIndex = pixelIndex + uint2(i, j);
-    //        loadIndex = clamp(loadIndex, 0, resolution);
-
-    //        float3 color = source.Load(uint3(loadIndex, 0)).rgb;
-    //        average += color;
-    //    }
-    //}
-
-    //average /= 36;
-
-    //return float4(average, 1.0);
-
+    outputImage[dispatchThreadID.xy] = noiseLevel;
 }
 
 #endif

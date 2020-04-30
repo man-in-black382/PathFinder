@@ -122,7 +122,7 @@ namespace PathFinder
             mCamera->MoveBy(mKeyboardMoveDirection);
             mCamera->MoveBy(mMouseMoveDirection);
             mCamera->RotateBy(mRotation.y, mRotation.x);
-            mCamera->SetViewportAspectRatio(mViewportSize.x / mViewportSize.y);
+            mCamera->SetViewportAspectRatio(mViewportSize.x / (mViewportSize.y + 1e-05));
         }
 
         mRotation = glm::zero<glm::vec2>();

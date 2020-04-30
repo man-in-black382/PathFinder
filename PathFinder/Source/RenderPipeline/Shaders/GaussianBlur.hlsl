@@ -15,11 +15,6 @@ struct GaussianBlurParameters
     uint BlurRadius;
 };
 
-// https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-attributes-numthreads
-
-// Groupshared memory is limited to 16KB per group.
-// A single thread is limited to a 256 byte region of groupshared memory for writing.
-
 groupshared float3 gCache[GaussianBlurGroupSharedBufferSize]; // Around 5KB
 
 float3 BlurGaussian(int2 dispatchThreadID, int groupThreadIndex, RWTexture2D<float4> source, GaussianBlurParameters parameters)

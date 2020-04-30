@@ -23,7 +23,8 @@ namespace Foundation
             size_t kernelSize = 2 * radius + 1;
             size_t startIndex = kernelSize / 2;
 
-            for (size_t i = startIndex; i < kernelSize; i++) {
+            for (size_t i = startIndex; i < kernelSize; i++)
+            {
                 float weight = Gaussian(i, radius, sigma);
                 kernel[i - startIndex] = weight;
                 sum += weight;
@@ -32,7 +33,8 @@ namespace Foundation
             sum *= 2.0;
             sum -= kernel[0];
 
-            for (float &weight : kernel) {
+            for (float &weight : kernel)
+            {
                 weight /= sum;
             }
 
@@ -41,7 +43,7 @@ namespace Foundation
 
         Kernel Kernel1D(size_t radius)
         {
-            return Kernel(radius, radius / 2.0);
+            return Kernel1D(radius, radius / 2.0);
         }
     }
 

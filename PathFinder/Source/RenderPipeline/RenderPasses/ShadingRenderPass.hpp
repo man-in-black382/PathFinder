@@ -38,8 +38,6 @@ namespace PathFinder
 
     private:
         uint32_t CompressLightPartitionInfo(const GPULightTablePartitionInfo& info) const;
-
-        uint64_t mFrameNumber = 0;
     };
 
 }

@@ -139,7 +139,7 @@ float LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 points
     // T2 = cross(N, T1);
     // rotate area light in (T1, T2, N) basis
     // float3x3 R = transpose(Matrix3x3ColumnMajor(T1, T2, N));
-    // MInv = mul(R, MInv);
+    // MInv = mul(MInv, R);
 
     // polygon (allocate 5 vertices for clipping)
     float3 L_[3];
@@ -397,12 +397,12 @@ float LTCEvaluateRectangle(float3 N, float3 V, float3 P, float3x3 Minv, float3 p
 {
     // MInv matrix is expected to be multiplied by a World to Tangent space matrix 
     // around surface's normal like so:
-    // float3 T1, T2;
-    // T1 = normalize(V - N * dot(V, N));
-    // T2 = cross(N, T1);
+    //float3 T1, T2;
+    //T1 = normalize(V - N * dot(V, N));
+    //T2 = cross(N, T1);
     //// rotate area light in (T1, T2, N) basis
-    // float3x3 R = transpose(Matrix3x3ColumnMajor(T1, T2, N));
-    // MInv = mul(R, MInv);
+    //float3x3 R = transpose(Matrix3x3ColumnMajor(T1, T2, N));
+    //Minv = mul(Minv, R);
 
     // polygon (allocate 5 vertices for clipping)
     float3 L[5];

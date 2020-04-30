@@ -54,11 +54,8 @@ namespace PathFinder
         cbContent.GBufferDepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
         cbContent.LightOffsets = sceneStorage->LightTablePartitionInfo();
-        
-        uint32_t startIndex = mFrameNumber * (ShadingCBContent::MaxSupportedLights - 1);
-        uint32_t endIndex = startIndex + (ShadingCBContent::MaxSupportedLights - 1);
 
-        auto haltonSequence = Foundation::Halton::Sequence<4>(startIndex, endIndex);
+        auto haltonSequence = Foundation::Halton::Sequence<4>(0, ShadingCBContent::MaxSupportedLights - 1);
 
         for (auto i = 0; i < haltonSequence.size(); ++i)
         {
@@ -79,8 +76,6 @@ namespace PathFinder
         context->GetCommandRecorder()->BindExternalBuffer(*lights, 1, 0, HAL::ShaderRegister::ShaderResource);
         context->GetCommandRecorder()->BindExternalBuffer(*materials, 2, 0, HAL::ShaderRegister::ShaderResource);
         context->GetCommandRecorder()->DispatchRays(context->GetDefaultRenderSurfaceDesc().Dimensions());
-
-        mFrameNumber++;
     }
 
     uint32_t ShadingRenderPass::CompressLightPartitionInfo(const GPULightTablePartitionInfo& info) const

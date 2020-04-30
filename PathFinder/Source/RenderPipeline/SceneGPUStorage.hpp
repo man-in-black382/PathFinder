@@ -97,6 +97,24 @@ namespace PathFinder
         uint32_t Pad1__;
     };
 
+    struct GPUCamera
+    {
+        glm::vec4 Position;
+        // 16 byte boundary
+        glm::mat4 View;
+        glm::mat4 Projection;
+        glm::mat4 ViewProjection;
+        glm::mat4 InverseView;
+        glm::mat4 InverseProjection;
+        glm::mat4 InverseViewProjection;
+        // 16 byte boundary
+        float NearPlane;
+        float FarPlane;
+        float ExposureValue100;
+        uint32_t __Pad0;
+        // 16 byte boundary
+    };
+
     using GPUInstanceIndex = uint64_t;
 
     class SceneGPUStorage
@@ -108,6 +126,8 @@ namespace PathFinder
         void UploadMaterials();
         void UploadMeshInstances();
         void UploadLights();
+
+        GPUCamera CameraGPURepresentation() const;
 
     private:
         template <class Vertex>
@@ -145,6 +165,7 @@ namespace PathFinder
         Memory::GPUResourceProducer::BufferPtr mMaterialTable;
 
         GPULightTablePartitionInfo mLightTablePartitionInfo;
+        float mLightsMaximumLuminance;
         
         Scene* mScene;
         const HAL::Device* mDevice;
@@ -159,6 +180,7 @@ namespace PathFinder
         inline const auto& LightTablePartitionInfo() const { return mLightTablePartitionInfo; }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
+        inline auto LightsMaximumLuminanance() const { return mLightsMaximumLuminance; }
     };
 
 }

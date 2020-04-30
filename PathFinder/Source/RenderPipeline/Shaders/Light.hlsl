@@ -224,7 +224,7 @@ LTCAnalyticEvaluationResult EvaluateDirectSphericalLighting(
 LTCAnalyticEvaluationResult EvaluateDirectRectangularLighting(
     Light light,
     LightPoints lightPoints,
-    GBufferStandard gBuffer,
+    GBufferStandard gBuffer, 
     LTCTerms ltcTerms,
     float3 viewDirection,
     float3 surfacePosition)
@@ -248,7 +248,7 @@ LightPoints ComputeLightPoints(Light light, float3 surfacePositionWS)
     // strictly toward the surface point.
     // A slightly more wide light is almost imperceptible, so I guess it will have to do.
     //
-    halfWidth += light.LightType == LightTypeSphere ? 0.5 : 0.0;
+    halfWidth += light.LightType == LightTypeSphere ? 0.1 : 0.0;
 
     // Get billboard points at the origin
     float3 p0 = float3(halfWidth, -halfHeight, 0.0);
@@ -268,19 +268,13 @@ LightPoints ComputeLightPoints(Light light, float3 surfacePositionWS)
     p1 = mul(lightRotation, p1);
     p2 = mul(lightRotation, p2);
     p3 = mul(lightRotation, p3);
-    
-    // Displace to 
-    p0 += light.Position.xyz;
-    p1 += light.Position.xyz;
-    p2 += light.Position.xyz;
-    p3 += light.Position.xyz;
 
     // Move points to light's location
     // Clockwise to match LTC convention
-    points.Points[0] = p3;
-    points.Points[1] = p2;
-    points.Points[2] = p1;
-    points.Points[3] = p0;
+    points.Points[0] = p3.xyz + light.Position.xyz;
+    points.Points[1] = p2.xyz + light.Position.xyz;
+    points.Points[2] = p1.xyz + light.Position.xyz;
+    points.Points[3] = p0.xyz + light.Position.xyz;
 
     return points;
 }

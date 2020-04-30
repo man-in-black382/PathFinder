@@ -8,19 +8,17 @@
 namespace PathFinder
 {
 
-    struct ShadowNoiseEstimationCBContent
+    struct ShadowNoiseEstimationDenoisingCBContent
     {
-        uint32_t StochasticShadowedLuminanceTextureIndex;
-        uint32_t StochasticUnshadowedLuminanceTextureIndex;
+        uint32_t NoiseEstimationTextureIndex;
         uint32_t OutputTextureIndex;
-        float MaximumLightsLuminance;
     };
 
-    class ShadowNoiseEstimationRenderPass : public RenderPass<RenderPassContentMediator>
+    class ShadowNoiseEstimationDenoisingRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
-        ShadowNoiseEstimationRenderPass();
-        ~ShadowNoiseEstimationRenderPass() = default;
+        ShadowNoiseEstimationDenoisingRenderPass();
+        ~ShadowNoiseEstimationDenoisingRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;

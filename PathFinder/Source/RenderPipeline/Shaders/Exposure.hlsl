@@ -2,6 +2,7 @@
 #define _Exposure__
 
 #include "Utils.hlsl"
+#include "Camera.hlsl"
 
 // Physically-based camera from Moving Frostbite to PBR
 // https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
@@ -52,10 +53,10 @@ float ConvertEV100ToMaxHsbsLuminance(float EV100)
     return maxLuminance;
 }
 
-float ConvertEV100ToExposure(float EV100)
+float3 ExposeLuminance(float3 luminance, Camera camera)
 {
-    float maxLuminance = ConvertEV100ToMaxHsbsLuminance(EV100);
-    return 1.0f / maxLuminance;
+    float maxLuminance = ConvertEV100ToMaxHsbsLuminance(camera.ExposureValue100);
+    return luminance / maxLuminance;
 }
 
 #endif

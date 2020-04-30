@@ -131,6 +131,8 @@ namespace PathFinder
 
         mLightTable->RequestWrite();
 
+        mLightsMaximumLuminance = 0.0;
+
         uint32_t index = 0;
         mLightTablePartitionInfo = {};
         mLightTablePartitionInfo.TotalLightsCount = requiredBufferSize;
@@ -144,6 +146,9 @@ namespace PathFinder
 
             ++index;
             ++mLightTablePartitionInfo.SphericalLightsCount;
+
+            mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(), 
+                std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));
         }
 
         mLightTablePartitionInfo.RectangularLightsOffset = index;
@@ -156,6 +161,9 @@ namespace PathFinder
 
             ++index;
             ++mLightTablePartitionInfo.RectangularLightsCount;
+
+            mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(),
+                std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));
         }
 
         mLightTablePartitionInfo.EllipticalLightsOffset = index;
@@ -168,7 +176,30 @@ namespace PathFinder
 
             ++index;
             ++mLightTablePartitionInfo.EllipticalLightsCount;
+
+            mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(),
+                std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));
         }
+    }
+
+    GPUCamera SceneGPUStorage::CameraGPURepresentation() const
+    {
+        const PathFinder::Camera& camera = mScene->MainCamera();
+
+        GPUCamera gpuCamera{};
+
+        gpuCamera.Position = glm::vec4{ camera.Position(), 1.0 };
+        gpuCamera.View = camera.View();
+        gpuCamera.Projection = camera.Projection();
+        gpuCamera.ViewProjection = camera.ViewProjection();
+        gpuCamera.InverseView = camera.InverseView();
+        gpuCamera.InverseProjection = camera.InverseProjection();
+        gpuCamera.InverseViewProjection = camera.InverseViewProjection();
+        gpuCamera.ExposureValue100 = camera.ExposureValue100();
+        gpuCamera.FarPlane = camera.FarClipPlane();
+        gpuCamera.NearPlane = camera.NearClipPlane();
+
+        return gpuCamera;
     }
 
     GPULightTableEntry SceneGPUStorage::CreateLightGPUTableEntry(const FlatLight& light) const
