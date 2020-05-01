@@ -29,11 +29,11 @@ namespace PathFinder
         mDescriptorAllocator{ descriptorAllocator },
         mPassExecutionGraph{ passExecutionGraph } {}
 
-    const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName)
+    const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
-        Memory::Texture* texture = resourceObjects.Texture.get();
+        Memory::Texture* texture = resourceObjects.GetTexture(resourceIndex);
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
         auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name);
@@ -42,11 +42,11 @@ namespace PathFinder
         return texture->GetRTDescriptor();
     }
 
-    const HAL::DSDescriptor* PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName)
+    const HAL::DSDescriptor* PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName, uint64_t resourceIndex)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
-        Memory::Texture* texture = resourceObjects.Texture.get();
+        Memory::Texture* texture = resourceObjects.GetTexture(resourceIndex);
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
         auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name);
@@ -148,8 +148,11 @@ namespace PathFinder
             HAL::Texture::Properties completeProperties{ 
                 format, kind, dimensions, optimizedClearValue, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates(), mipCount };
 
-            resourceObjects.Texture = mResourceProducer->NewTexture(completeProperties/*, *heap, schedulingInfo.AliasingInfo.HeapOffset*/);
-            resourceObjects.Texture->SetDebugName(resourceName.ToString());
+            for (auto i = 0u; i < schedulingInfo.ResourceCount(); ++i)
+            {
+                resourceObjects.Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset));
+                resourceObjects.Textures.back()->SetDebugName(resourceName.ToString());
+            }
         };
 
         return &(resourceObjects.SchedulingInfo.value());
@@ -296,24 +299,6 @@ namespace PathFinder
         return mCurrentPassObjects->ScheduledResourceNames;
     }
 
-    Memory::Texture* PipelineResourceStorage::GetTextureResource(ResourceName resourceName)
-    {
-        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
-        return resourceObjects.Texture.get();
-    }
-
-    Memory::Buffer* PipelineResourceStorage::GetBufferResource(ResourceName resourceName)
-    {
-        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
-        return resourceObjects.Buffer.get();
-    }
-
-    Memory::GPUResource* PipelineResourceStorage::GetGPUResource(ResourceName resourceName)
-    {
-        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
-        return resourceObjects.GetGPUResource();
-    }
-
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::AliasingBarriersForCurrentPass() 
     {
         PerPassObjects& passObjects = GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
@@ -342,18 +327,38 @@ namespace PathFinder
         }
     }
 
-    const Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource() const
+    const Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource(uint64_t resourceIndex) const
     {
-        if (Texture) return Texture.get();
-        else if (Buffer) return Buffer.get();
+        if (resourceIndex + 1 <= Textures.size()) return Textures[resourceIndex].get();
+        else if (resourceIndex + 1 <= Buffers.size()) return Buffers[resourceIndex].get();
         else return nullptr;
     }
 
-    Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource()
+    Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource(uint64_t resourceIndex)
     {
-        if (Texture) return Texture.get();
-        else if (Buffer) return Buffer.get();
+        if (resourceIndex + 1 <= Textures.size()) return Textures[resourceIndex].get();
+        else if (resourceIndex + 1 <= Buffers.size()) return Buffers[resourceIndex].get();
         else return nullptr;
+    }
+
+    const Memory::Texture* PipelineResourceStorage::PerResourceObjects::GetTexture(uint64_t resourceIndex) const
+    {
+        return resourceIndex + 1 <= Textures.size() ? Textures[resourceIndex].get() : nullptr;
+    }
+
+    Memory::Texture* PipelineResourceStorage::PerResourceObjects::GetTexture(uint64_t resourceIndex)
+    {
+        return resourceIndex + 1 <= Textures.size() ? Textures[resourceIndex].get() : nullptr;
+    }
+
+    const Memory::Buffer* PipelineResourceStorage::PerResourceObjects::GetBuffer(uint64_t resourceIndex) const
+    {
+        return resourceIndex + 1 <= Buffers.size() ? Buffers[resourceIndex].get() : nullptr;
+    }
+
+    Memory::Buffer* PipelineResourceStorage::PerResourceObjects::GetBuffer(uint64_t resourceIndex)
+    {
+        return resourceIndex + 1 <= Buffers.size() ? Buffers[resourceIndex].get() : nullptr;
     }
 
 }

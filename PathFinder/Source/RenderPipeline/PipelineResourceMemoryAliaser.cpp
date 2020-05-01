@@ -20,7 +20,10 @@ namespace PathFinder
     {
         uint64_t optimalHeapSize = 0;
 
-        if (mSchedulingInfos.size() == 0) return 1;
+        if (mSchedulingInfos.size() == 0) 
+        {
+            return 1;
+        }
 
         if (mSchedulingInfos.size() == 1)
         {
@@ -91,7 +94,7 @@ namespace PathFinder
                 // Heap offset stored in AliasingInfo.HeapOffset is relative to heap beginning, 
                 // but the algorithm requires non-aliasable memory region to be 
                 // relative to current global offset, which is an offset of the current memory bucket we're aliasing resources in,
-                // therefore we have to substract current global offset
+                // therefore we have to subtract current global offset
                 uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset - mGlobalStartOffset;
                 uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes() - 1;
 
@@ -164,7 +167,7 @@ namespace PathFinder
         for (; startIt != mNonAliasableMemoryRegionStarts.end() && endIt != mNonAliasableMemoryRegionEnds.end();)
         {
             uint64_t nextStartOffset = *startIt;
-            uint64_t nextEndOffset = *endIt;
+            uint64_t nextEndOffset = *endIt + 1; // Move past the index of non-aliasable region end byte 
 
             bool nextRegionIsEmpty = overlappingMemoryRegionsCount == 0;
             bool nextPointIsStartPoint = nextStartOffset < nextEndOffset;
@@ -185,6 +188,7 @@ namespace PathFinder
                 FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
             }
 
+            // If we're using 
             localOffset = nextPointIsStartPoint ? nextStartOffset : nextEndOffset;
         }
 

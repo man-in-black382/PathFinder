@@ -37,7 +37,7 @@ namespace PathFinder
             bool NeedsAliasingBarrier = false;
         };
 
-        PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format, Foundation::Name resourceName);
+        PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format, Foundation::Name resourceName, uint32_t resourceCount = 1);
 
         void FinishScheduling();
         const PassMetadata* GetMetadataForPass(Foundation::Name passName) const;
@@ -55,6 +55,7 @@ namespace PathFinder
         HAL::ResourceFormat mResourceFormat;
         HAL::ResourceState mExpectedStates = HAL::ResourceState::Common;
         Foundation::Name mResourceName;
+        uint32_t mResourceCount = 1;
 
     public:
         inline const auto& AllPassesMetadata() const { return mPerPassData; }
@@ -63,6 +64,7 @@ namespace PathFinder
         inline const HAL::ResourceFormat& ResourceFormat() const { return mResourceFormat; }
         inline HAL::ResourceState ExpectedStates() const { return mExpectedStates; }
         inline Foundation::Name ResourceName() const { return mResourceName; }
+        inline auto ResourceCount() const { return mResourceCount; }
     };
 
 }

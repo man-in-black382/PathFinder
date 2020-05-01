@@ -68,11 +68,15 @@ namespace PathFinder
         struct PerResourceObjects
         {
             std::optional<PipelineResourceSchedulingInfo> SchedulingInfo;
-            Memory::GPUResourceProducer::TexturePtr Texture;
-            Memory::GPUResourceProducer::BufferPtr Buffer;
+            std::vector<Memory::GPUResourceProducer::TexturePtr> Textures;
+            std::vector<Memory::GPUResourceProducer::BufferPtr> Buffers;
 
-            const Memory::GPUResource* GetGPUResource() const;
-            Memory::GPUResource* GetGPUResource();
+            const Memory::GPUResource* GetGPUResource(uint64_t resourceIndex = 0) const;
+            Memory::GPUResource* GetGPUResource(uint64_t resourceIndex = 0);
+            const Memory::Texture* GetTexture(uint64_t resourceIndex = 0) const;
+            Memory::Texture* GetTexture(uint64_t resourceIndex = 0);
+            const Memory::Buffer* GetBuffer(uint64_t resourceIndex = 0) const;
+            Memory::Buffer* GetBuffer(uint64_t resourceIndex = 0);
         };
 
         PipelineResourceStorage(
@@ -86,8 +90,8 @@ namespace PathFinder
 
         using DebugBufferIteratorFunc = std::function<void(PassName passName, const float* debugData)>;
 
-        const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName);
-        const HAL::DSDescriptor* GetDepthStencilDescriptor(Foundation::Name resourceName);
+        const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0);
+        const HAL::DSDescriptor* GetDepthStencilDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0);
         
         void SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node);
         void AllocateScheduledResources();
@@ -109,9 +113,6 @@ namespace PathFinder
         const Memory::Buffer* DebugBufferForCurrentPass() const;
         HAL::GPUAddress RootConstantsBufferAddressForCurrentPass() const;
         const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
-        Memory::Texture* GetTextureResource(ResourceName resourceName);
-        Memory::Buffer* GetBufferResource(ResourceName resourceName);
-        Memory::GPUResource* GetGPUResource(ResourceName resourceName);
         const HAL::ResourceBarrierCollection& AliasingBarriersForCurrentPass();
         const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();
         const RenderPassExecutionGraph::Node& CurrentPassGraphNode() const;

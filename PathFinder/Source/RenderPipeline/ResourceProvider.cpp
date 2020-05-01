@@ -7,10 +7,10 @@ namespace PathFinder
     ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage)
         : mResourceStorage{ storage } {}
 
-    uint32_t ResourceProvider::GetUATextureIndex(Foundation::Name resourceName, uint8_t mipLevel)
+    uint32_t ResourceProvider::GetUATextureIndex(Foundation::Name resourceName, uint8_t mipLevel, uint64_t resourceIndex)
     {
-        auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
-        Memory::Texture* resource = resourceObjects->Texture.get();
+        const auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
+        const Memory::Texture* resource = resourceObjects->GetTexture(resourceIndex);
         assert_format(resource, "Resource ", resourceName.ToString(), " does not exist");
 
         const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassGraphNode().PassMetadata.Name);
@@ -19,10 +19,10 @@ namespace PathFinder
         return resource->GetUADescriptor(mipLevel)->IndexInHeapRange();
     }
 
-    uint32_t ResourceProvider::GetSRTextureIndex(Foundation::Name resourceName)
+    uint32_t ResourceProvider::GetSRTextureIndex(Foundation::Name resourceName, uint64_t resourceIndex)
     {
-        auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
-        Memory::Texture* resource = resourceObjects->Texture.get();
+        const auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
+        const Memory::Texture* resource = resourceObjects->GetTexture(resourceIndex);
         assert_format(resource, "Resource ", resourceName.ToString(), " does not exist");
 
         const auto* perPassData = resourceObjects->SchedulingInfo->GetMetadataForPass(mResourceStorage->CurrentPassGraphNode().PassMetadata.Name);
@@ -33,8 +33,9 @@ namespace PathFinder
 
     const HAL::Texture::Properties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName)
     {
-        auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
-        Memory::Texture* resource = resourceObjects->Texture.get();
+        const auto* resourceObjects = mResourceStorage->GetPerResourceObjects(resourceName);
+        // Since all textures in the array have identical properties, get first 
+        const Memory::Texture* resource = resourceObjects->GetTexture();
         assert_format(resource, "Resource ", resourceName.ToString(), " does not exist");
 
         return resource->Properties();

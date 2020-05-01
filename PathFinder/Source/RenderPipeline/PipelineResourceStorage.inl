@@ -91,9 +91,12 @@ namespace PathFinder
                 assert_format(false, "Should never be hit");
             }
 
-            HAL::Buffer::Properties<BufferDataT> finalProperties{ capacity, perElementAlignment, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates() };
-            resourceObjects.Buffer = mResourceProducer->NewBuffer(finalProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset);
-            resourceObjects.Buffer->SetDebugName(resourceName.ToString());
+            for (auto i = 0u; i < schedulingInfo.ResourceCount(); ++i)
+            {
+                HAL::Buffer::Properties<BufferDataT> finalProperties{ capacity, perElementAlignment, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates() };
+                resourceObjects.Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset));
+                resourceObjects.Buffers.back()->SetDebugName(resourceName.ToString());
+            }
         };
 
         return &(resourceObjects.SchedulingInfo.value());

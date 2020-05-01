@@ -30,6 +30,7 @@ namespace PathFinder
             std::optional<HAL::TextureKind> Kind;
             std::optional<Geometry::Dimensions> Dimensions;
             std::optional<uint8_t> MipCount;
+            uint64_t TextureCount = 1;
         };
 
         struct NewDepthStencilProperties
@@ -42,6 +43,7 @@ namespace PathFinder
 
             std::optional<HAL::DepthStencilFormat> Format;
             std::optional<Geometry::Dimensions> Dimensions;
+            uint64_t TextureCount = 1;
         };
 
         template <class T>
@@ -52,6 +54,7 @@ namespace PathFinder
 
             uint64_t Capacity;
             uint64_t PerElementAlignment;
+            uint64_t BufferCount = 1;
         };
 
         struct NewByteBufferProperties : public NewBufferProperties<uint8_t> {};
