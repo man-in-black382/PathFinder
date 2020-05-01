@@ -49,8 +49,11 @@ namespace PathFinder
         ResourceScheduler::NewTextureProperties RT0Properties{};
         RT0Properties.ShaderVisibleFormat = HAL::ColorFormat::RGBA32_Unsigned;
 
+        ResourceScheduler::NewDepthStencilProperties DSProperties{};
+        DSProperties.TextureCount = 2; // 2 for reprojection
+
         scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
-        scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil); 
+        scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil, DSProperties);
     }  
 
     void GBufferRenderPass::Render(RenderContext<RenderPassContentMediator>* context) 

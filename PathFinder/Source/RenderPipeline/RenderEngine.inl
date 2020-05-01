@@ -216,6 +216,7 @@ namespace PathFinder
     {
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % (uint8_t)mBackBuffers.size();
         mFrameNumber++;
+        mContext.SetFrameNumber(mFrameNumber);
 
         mBottomRTASes.clear();
         mTopRTASes.clear();

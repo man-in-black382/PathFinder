@@ -3,6 +3,7 @@
 #include "RenderSurfaceDescription.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
+#include "ResourceKey.hpp"
 
 #include "../Foundation/Name.hpp"
 #include "../Foundation/Color.hpp"
@@ -40,7 +41,7 @@ namespace PathFinder
         virtual void ApplyPipelineState(Foundation::Name psoName);
         virtual void Dispatch(uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
         virtual void DispatchRays(uint32_t width, uint32_t height = 1, uint32_t depth = 1);
-        virtual void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        virtual void BindBuffer(const ResourceKey& resourceKey, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         void BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         template <class T> 

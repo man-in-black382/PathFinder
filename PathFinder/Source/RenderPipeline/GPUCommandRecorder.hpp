@@ -18,11 +18,11 @@ namespace PathFinder
             const std::array<Foundation::Name, RTCount>& rtResourceNames, 
             std::optional<Foundation::Name> depthStencilResourceName = std::nullopt);
 
-        void SetRenderTarget(Foundation::Name resourceName, std::optional<Foundation::Name> depthStencilResourceName = std::nullopt);
-        void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName = std::nullopt);
+        void SetRenderTarget(const ResourceKey& rtKey, std::optional<ResourceKey> dsKey = std::nullopt);
+        void SetBackBufferAsRenderTarget(std::optional<ResourceKey> dsKey = std::nullopt);
         void ClearBackBuffer(const Foundation::Color& color);
-        void ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color);
-        void ClearDepth(Foundation::Name resourceName, float depthValue);
+        void ClearRenderTarget(const ResourceKey& rtKey, const Foundation::Color& color);
+        void ClearDepth(const ResourceKey& rtKey, float depthValue);
         void ApplyPipelineState(Foundation::Name psoName);
         void SetViewport(const HAL::Viewport& viewport);
 
@@ -32,7 +32,7 @@ namespace PathFinder
         void DispatchRays(const Geometry::Dimensions& dispatchDimensions);
         void Dispatch(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize);
 
-        void BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void BindBuffer(const ResourceKey& bufferKey, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         void BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         
 

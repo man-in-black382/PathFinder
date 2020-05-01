@@ -8,19 +8,19 @@ namespace PathFinder
     GPUCommandRecorder::GPUCommandRecorder(GraphicsDevice* graphicsDevice)
         : mGraphicsDevice{ graphicsDevice } {}
 
-    void GPUCommandRecorder::SetRenderTarget(Foundation::Name resourceName, std::optional<Foundation::Name> depthStencilResourceName)
+    void GPUCommandRecorder::SetRenderTarget(const ResourceKey& rtKey, std::optional<ResourceKey> dsKey)
     {
-        mGraphicsDevice->SetRenderTarget(resourceName, depthStencilResourceName);
+        mGraphicsDevice->SetRenderTarget(rtKey, dsKey);
     }
 
-    void GPUCommandRecorder::SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName)
+    void GPUCommandRecorder::SetBackBufferAsRenderTarget(std::optional<ResourceKey> dsKey)
     {
-        mGraphicsDevice->SetBackBufferAsRenderTarget(depthStencilResourceName);
+        mGraphicsDevice->SetBackBufferAsRenderTarget(dsKey);
     }
 
-    void GPUCommandRecorder::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)
+    void GPUCommandRecorder::ClearRenderTarget(const ResourceKey& rtKey, const Foundation::Color& color)
     {
-        mGraphicsDevice->ClearRenderTarget(resourceName, color);
+        mGraphicsDevice->ClearRenderTarget(rtKey, color);
     }
 
     void GPUCommandRecorder::ClearBackBuffer(const Foundation::Color& color)
@@ -28,9 +28,9 @@ namespace PathFinder
         mGraphicsDevice->ClearBackBuffer(color);
     }
 
-    void GPUCommandRecorder::ClearDepth(Foundation::Name resourceName, float depthValue)
+    void GPUCommandRecorder::ClearDepth(const ResourceKey& dsKey, float depthValue)
     {
-        mGraphicsDevice->ClearDepth(resourceName, depthValue);
+        mGraphicsDevice->ClearDepth(dsKey, depthValue);
     }
 
     void GPUCommandRecorder::ApplyPipelineState(Foundation::Name psoName)
@@ -72,9 +72,9 @@ namespace PathFinder
         mGraphicsDevice->DispatchRays(dispatchDimensions.Width, dispatchDimensions.Height, dispatchDimensions.Depth);
     }
 
-    void GPUCommandRecorder::BindBuffer(Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+    void GPUCommandRecorder::BindBuffer(const ResourceKey& bufferKey, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
-        mGraphicsDevice->BindBuffer(resourceName, shaderRegister, registerSpace, registerType);
+        mGraphicsDevice->BindBuffer(bufferKey, shaderRegister, registerSpace, registerType);
     }
 
     void GPUCommandRecorder::BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)

@@ -26,23 +26,23 @@ namespace PathFinder
         mCommandQueue.SetDebugName("Graphics Device Command Queue");
     }
 
-    void GraphicsDevice::SetRenderTarget(Foundation::Name resourceName, std::optional<Foundation::Name> depthStencilResourceName)
+    void GraphicsDevice::SetRenderTarget(const ResourceKey& rtKey, std::optional<ResourceKey> dsKey)
     {
-        const HAL::DSDescriptor* dsDescriptor = depthStencilResourceName ? mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName) : nullptr;
-        mCommandList->SetRenderTarget(*mResourceStorage->GetRenderTargetDescriptor(resourceName), dsDescriptor);
+        const HAL::DSDescriptor* dsDescriptor = dsKey ? mResourceStorage->GetDepthStencilDescriptor(dsKey->ResourceName(), dsKey->IndexInArray()) : nullptr;
+        mCommandList->SetRenderTarget(*mResourceStorage->GetRenderTargetDescriptor(rtKey.ResourceName(), rtKey.IndexInArray()), dsDescriptor);
     }
 
-    void GraphicsDevice::SetBackBufferAsRenderTarget(std::optional<Foundation::Name> depthStencilResourceName)
+    void GraphicsDevice::SetBackBufferAsRenderTarget(std::optional<ResourceKey> dsKey)
     {
-        const HAL::DSDescriptor* dsDescriptor = depthStencilResourceName ? mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName) : nullptr;
+        const HAL::DSDescriptor* dsDescriptor = dsKey ? mResourceStorage->GetDepthStencilDescriptor(dsKey->ResourceName(), dsKey->IndexInArray()) : nullptr;
         mCommandList->SetRenderTarget(*mBackBuffer->GetRTDescriptor(), dsDescriptor);
     }
 
-    void GraphicsDevice::ClearRenderTarget(Foundation::Name resourceName, const Foundation::Color& color)
+    void GraphicsDevice::ClearRenderTarget(const ResourceKey& rtKey, const Foundation::Color& color)
     {
         // Clear operation requires correct states same as a dispatch or a draw
         InsertResourceTransitionsIfNeeded();
-        mCommandList->ClearRenderTarget(*mResourceStorage->GetRenderTargetDescriptor(resourceName), color);
+        mCommandList->ClearRenderTarget(*mResourceStorage->GetRenderTargetDescriptor(rtKey.ResourceName(), rtKey.IndexInArray()), color);
     }
 
     void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
@@ -52,11 +52,11 @@ namespace PathFinder
         mCommandList->ClearRenderTarget(*mBackBuffer->GetRTDescriptor(), color);
     }
 
-    void GraphicsDevice::ClearDepth(Foundation::Name resourceName, float depthValue)
+    void GraphicsDevice::ClearDepth(const ResourceKey& dsKey, float depthValue)
     {
         // Clear operation requires correct states same as a dispatch or a draw
         InsertResourceTransitionsIfNeeded();
-        mCommandList->CleadDepthStencil(*mResourceStorage->GetDepthStencilDescriptor(resourceName), depthValue);
+        mCommandList->CleadDepthStencil(*mResourceStorage->GetDepthStencilDescriptor(dsKey.ResourceName(), dsKey.IndexInArray()), depthValue);
     }
 
     void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)

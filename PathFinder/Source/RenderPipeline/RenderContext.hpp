@@ -29,13 +29,16 @@ namespace PathFinder
             mDefaultRenderSurface{ defaultRenderSurface } {}
 
         void SetContentMediator(ContentMediator* mediator) { mContent = mediator; }
+        void SetFrameNumber(uint64_t frameNumber) { mFrameNumber = frameNumber; }
 
     private:
         ContentMediator* mContent;
+
         GPUCommandRecorder* mGrapicCommandRecorder;
         RootConstantsUpdater* mRootConstantsUpdater;
         ResourceProvider* mResourceProvider;
         RenderSurfaceDescription mDefaultRenderSurface;
+        uint64_t mFrameNumber = 0;
 
     public:
         inline ContentMediator* GetContent() const { return mContent; }
@@ -43,6 +46,7 @@ namespace PathFinder
         inline RootConstantsUpdater* GetConstantsUpdater() const { return mRootConstantsUpdater; }
         inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }
         inline const RenderSurfaceDescription& GetDefaultRenderSurfaceDesc() const { return mDefaultRenderSurface; }
+        inline auto GetFrameNumber() const { return mFrameNumber; }
     };
 
 }
