@@ -9,7 +9,7 @@ namespace PathFinder
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "Buffer creation has already been scheduled");
 
         PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueBufferAllocationIfNeeded<T>(
-            resourceName, bufferProperties.Capacity, bufferProperties.PerElementAlignment
+            resourceName, bufferProperties.Capacity, bufferProperties.PerElementAlignment, bufferProperties.BuffersCount
         );
 
         auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());

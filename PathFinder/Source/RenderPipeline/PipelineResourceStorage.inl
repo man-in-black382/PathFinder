@@ -64,7 +64,7 @@ namespace PathFinder
     }
 
     template <class BufferDataT>
-    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment)
+    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, uint64_t buffersCount)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
@@ -75,7 +75,7 @@ namespace PathFinder
         
         HAL::Buffer::Properties<BufferDataT> properties{ capacity, perElementAlignment };
 
-        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Buffer::ConstructResourceFormat(mDevice, properties), resourceName };
+        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Buffer::ConstructResourceFormat(mDevice, properties), resourceName, buffersCount };
 
         resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
         {
@@ -91,11 +91,16 @@ namespace PathFinder
                 assert_format(false, "Should never be hit");
             }
 
+            HAL::Buffer::Properties<BufferDataT> finalProperties{ capacity, perElementAlignment, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates() };
+
+            auto heapOffset = schedulingInfo.AliasingInfo.HeapOffset;
+
             for (auto i = 0u; i < schedulingInfo.ResourceCount(); ++i)
             {
-                HAL::Buffer::Properties<BufferDataT> finalProperties{ capacity, perElementAlignment, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates() };
-                resourceObjects.Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset));
-                resourceObjects.Buffers.back()->SetDebugName(resourceName.ToString());
+                resourceObjects.Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, heapOffset));
+                std::string debugName = resourceName.ToString() + (schedulingInfo.ResourceCount() > 1 ? ("[" + std::to_string(i) + "]") : "");
+                resourceObjects.Buffers.back()->SetDebugName(debugName);
+                heapOffset += schedulingInfo.ResourceFormat().ResourceSizeInBytes();
             }
         };
 

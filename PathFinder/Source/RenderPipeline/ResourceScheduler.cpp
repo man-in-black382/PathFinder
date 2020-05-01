@@ -16,7 +16,6 @@ namespace PathFinder
 
         HAL::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
         NewTextureProperties props = FillMissingFields(properties);
-
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
 
         if (props.TypelessFormat) 
@@ -25,7 +24,7 @@ namespace PathFinder
         }
 
         PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount
+            resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount, props.TextureCount
         );
 
         auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
@@ -50,7 +49,7 @@ namespace PathFinder
         NewDepthStencilProperties props = FillMissingFields(properties);
 
         PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, 1
+            resourceName, *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, 1, props.TextureCount
         );
 
         auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
@@ -77,7 +76,7 @@ namespace PathFinder
         }
 
         PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount
+            resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount, props.TextureCount
         );
 
         auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
@@ -208,6 +207,8 @@ namespace PathFinder
             if (properties->MipCount) filledProperties.MipCount = *properties->MipCount;
         }
 
+        filledProperties.TextureCount = std::max(properties->TextureCount, 1ull);
+
         return filledProperties;
     }
 
@@ -224,10 +225,12 @@ namespace PathFinder
             if (properties->Dimensions) filledProperties.Dimensions = *properties->Dimensions;
         }
 
+        filledProperties.TextureCount = std::max(properties->TextureCount, 1ull);
+
         return filledProperties;
     }
 
-    void ResourceScheduler::EnsureSingleSchedulingRequestForCurrentPass(ResourceName resourceName)
+    void ResourceScheduler::EnsureSingleSchedulingRequestForCurrentPass(ResourceName resourceName) const
     {
         const auto& names = mResourceStorage->ScheduledResourceNamesForCurrentPass();
         bool isResourceScheduledInCurrentPass = names.find(resourceName) != names.end();

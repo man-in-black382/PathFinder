@@ -77,6 +77,8 @@ namespace PathFinder
             Memory::Texture* GetTexture(uint64_t resourceIndex = 0);
             const Memory::Buffer* GetBuffer(uint64_t resourceIndex = 0) const;
             Memory::Buffer* GetBuffer(uint64_t resourceIndex = 0);
+
+            uint64_t ResourceCount() const;
         };
 
         PipelineResourceStorage(
@@ -134,14 +136,16 @@ namespace PathFinder
             HAL::TextureKind kind,
             const Geometry::Dimensions& dimensions,
             const HAL::ClearValue& optimizedClearValue,
-            uint16_t mipCount
+            uint16_t mipCount,
+            uint64_t textureCount
         );
 
         template <class BufferDataT>
         PipelineResourceSchedulingInfo* QueueBufferAllocationIfNeeded(
             ResourceName resourceName,
             uint64_t capacity,
-            uint64_t perElementAlignment
+            uint64_t perElementAlignment,
+            uint64_t buffersCount
         );
 
     private:

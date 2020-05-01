@@ -54,7 +54,7 @@ namespace PathFinder
 
             uint64_t Capacity;
             uint64_t PerElementAlignment;
-            uint64_t BufferCount = 1;
+            uint64_t BuffersCount = 1;
         };
 
         struct NewByteBufferProperties : public NewBufferProperties<uint8_t> {};
@@ -96,7 +96,7 @@ namespace PathFinder
         NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties);
         NewDepthStencilProperties FillMissingFields(std::optional<NewDepthStencilProperties> properties);
 
-        void EnsureSingleSchedulingRequestForCurrentPass(ResourceName resourceName);
+        void EnsureSingleSchedulingRequestForCurrentPass(ResourceName resourceName) const;
 
         PipelineResourceStorage* mResourceStorage;
         RenderSurfaceDescription mDefaultRenderSurfaceDesc;

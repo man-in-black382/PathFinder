@@ -28,14 +28,14 @@ namespace PathFinder
         if (mSchedulingInfos.size() == 1)
         {
             mSchedulingInfos.begin()->SchedulingInfo->AliasingInfo.HeapOffset = 0;
-            optimalHeapSize = mSchedulingInfos.begin()->SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
+            optimalHeapSize = mSchedulingInfos.begin()->SchedulingInfo->TotalRequiredMemory();
             return optimalHeapSize;
         }
 
         while (!mSchedulingInfos.empty())
         {
             auto largestAllocationIt = mSchedulingInfos.begin();
-            mAvailableMemory = largestAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
+            mAvailableMemory = largestAllocationIt->SchedulingInfo->TotalRequiredMemory();
             optimalHeapSize += mAvailableMemory;
 
             for (auto schedulingInfoIt = largestAllocationIt; schedulingInfoIt != mSchedulingInfos.end(); ++schedulingInfoIt)
@@ -106,7 +106,7 @@ namespace PathFinder
 
     bool PipelineResourceMemoryAliaser::AliasAsFirstAllocation(AliasingMetadataIterator nextAllocationIt)
     {
-        if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes() <= mAvailableMemory)
+        if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->SchedulingInfo->TotalRequiredMemory() <= mAvailableMemory)
         {
             nextAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
@@ -143,7 +143,7 @@ namespace PathFinder
 
         uint64_t localOffset = 0;
         uint16_t overlappingMemoryRegionsCount = 0;
-        uint64_t nextAllocationSize = nextSchedulingInfoIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
+        uint64_t nextAllocationSize = nextSchedulingInfoIt->SchedulingInfo->TotalRequiredMemory();
 
         auto startIt = mNonAliasableMemoryRegionStarts.begin();
         auto endIt = mNonAliasableMemoryRegionEnds.begin();
@@ -250,12 +250,12 @@ namespace PathFinder
 
     bool PipelineResourceMemoryAliaser::AliasingMetadata::SortAscending(const AliasingMetadata& first, const AliasingMetadata& second)
     {
-        return first.SchedulingInfo->ResourceFormat().ResourceSizeInBytes() < second.SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
+        return first.SchedulingInfo->TotalRequiredMemory() < second.SchedulingInfo->TotalRequiredMemory();
     }
 
     bool PipelineResourceMemoryAliaser::AliasingMetadata::SortDescending(const AliasingMetadata& first, const AliasingMetadata& second)
     {
-        return first.SchedulingInfo->ResourceFormat().ResourceSizeInBytes() > second.SchedulingInfo->ResourceFormat().ResourceSizeInBytes();
+        return first.SchedulingInfo->TotalRequiredMemory() > second.SchedulingInfo->TotalRequiredMemory();
     }
 
 }

@@ -32,7 +32,6 @@ namespace PathFinder
 
     private:
         ContentMediator* mContent;
-
         GPUCommandRecorder* mGrapicCommandRecorder;
         RootConstantsUpdater* mRootConstantsUpdater;
         ResourceProvider* mResourceProvider;

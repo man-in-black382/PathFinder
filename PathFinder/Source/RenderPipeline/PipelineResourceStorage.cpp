@@ -119,7 +119,8 @@ namespace PathFinder
         HAL::TextureKind kind,
         const Geometry::Dimensions& dimensions,
         const HAL::ClearValue& optimizedClearValue,
-        uint16_t mipCount)
+        uint16_t mipCount,
+        uint64_t textureCount)
     {
         PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
 
@@ -130,7 +131,7 @@ namespace PathFinder
 
         HAL::Texture::Properties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
 
-        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Texture::ConstructResourceFormat(mDevice, textureProperties), resourceName };
+        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Texture::ConstructResourceFormat(mDevice, textureProperties), resourceName, textureCount };
 
         resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
         {
@@ -148,10 +149,14 @@ namespace PathFinder
             HAL::Texture::Properties completeProperties{ 
                 format, kind, dimensions, optimizedClearValue, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates(), mipCount };
 
+            auto heapOffset = schedulingInfo.AliasingInfo.HeapOffset;
+
             for (auto i = 0u; i < schedulingInfo.ResourceCount(); ++i)
             {
-                resourceObjects.Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, schedulingInfo.AliasingInfo.HeapOffset));
-                resourceObjects.Textures.back()->SetDebugName(resourceName.ToString());
+                resourceObjects.Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, heapOffset));
+                std::string debugName = resourceName.ToString() + (schedulingInfo.ResourceCount() > 1 ? ("[" + std::to_string(i) + "]") : "");
+                resourceObjects.Textures.back()->SetDebugName(debugName);
+                heapOffset += schedulingInfo.ResourceFormat().ResourceSizeInBytes();
             }
         };
 
@@ -226,24 +231,27 @@ namespace PathFinder
     {
         for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
         {
-            const Memory::GPUResource* resource = resourceObjects.GetGPUResource();
-            assert_format(resource, "Resource must be allocated before creating any transitions");
-            
-            // Create aliasing barriers
-            if (resourceObjects.SchedulingInfo->AliasingInfo.NeedsAliasingBarrier)
+            for (auto resourceIdx = 0u; resourceIdx < resourceObjects.ResourceCount(); ++resourceIdx)
             {
-                PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.SchedulingInfo->FirstPassGraphNode().PassMetadata.Name);
-                passObjects.AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource->HALResource() });
-            }
+                const Memory::GPUResource* resource = resourceObjects.GetGPUResource(resourceIdx);
+                assert_format(resource, "Resource must be allocated before creating any transitions");
 
-            for (auto& [passName, passData] : resourceObjects.SchedulingInfo->AllPassesMetadata())
-            {
-                PerPassObjects& passObjects = GetPerPassObjects(passName);
-
-                // Create unordered access barriers
-                if (passData.NeedsUAVBarrier)
+                // Create aliasing barriers
+                if (resourceObjects.SchedulingInfo->AliasingInfo.NeedsAliasingBarrier)
                 {
-                    passObjects.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resource->HALResource() });
+                    PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.SchedulingInfo->FirstPassGraphNode().PassMetadata.Name);
+                    passObjects.AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource->HALResource() });
+                }
+
+                for (auto& [passName, passData] : resourceObjects.SchedulingInfo->AllPassesMetadata())
+                {
+                    PerPassObjects& passObjects = GetPerPassObjects(passName);
+
+                    // Create unordered access barriers
+                    if (passData.NeedsUAVBarrier)
+                    {
+                        passObjects.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resource->HALResource() });
+                    }
                 }
             }
         }
@@ -255,7 +263,11 @@ namespace PathFinder
         {
             PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
             HAL::ResourceState newState = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name)->OptimizedState;
-            resourceObjects.GetGPUResource()->RequestNewState(newState);
+
+            for (auto resourceIdx = 0u; resourceIdx < resourceObjects.ResourceCount(); ++resourceIdx)
+            {
+                resourceObjects.GetGPUResource(resourceIdx)->RequestNewState(newState);
+            }
         }
     }
 
@@ -359,6 +371,11 @@ namespace PathFinder
     Memory::Buffer* PipelineResourceStorage::PerResourceObjects::GetBuffer(uint64_t resourceIndex)
     {
         return resourceIndex + 1 <= Buffers.size() ? Buffers[resourceIndex].get() : nullptr;
+    }
+
+    uint64_t PipelineResourceStorage::PerResourceObjects::ResourceCount() const
+    {
+        return Textures.empty() ? Buffers.size() : Textures.size();
     }
 
 }
