@@ -101,7 +101,7 @@ void PackTapKey(Texture2D<uint4> gBufferTexture, Texture2D analyticLuminances, T
     {
     case GBufferTypeStandard:
     {
-        float3 normal = mul(ReduceTo3x3(FrameDataCB.Camera.View), DecodeGBufferStandardNormal(encodedGBuffer));
+        float3 normal = mul(ReduceTo3x3(FrameDataCB.CurrentFrameCamera.View), DecodeGBufferStandardNormal(encodedGBuffer));
         float depth = depthTexture.Load(uint3(loadIndex, 0)).r;
         float3 analyticLuminance = analyticLuminances.Load(uint3(loadIndex, 0)).rgb;
         float luminanceMean = (analyticLuminance.r + analyticLuminance.g + analyticLuminance.b) * 0.3333333;
@@ -126,8 +126,8 @@ TapKey UnpackTapKey(float2 uv, int threadIndex)
     float depth = asfloat(packed.y);
 
     TapKey key;
-    key.CSDepth = LinearizeDepth(depth, FrameDataCB.Camera);
-    key.CSPosition = ReconstructViewSpacePosition(depth, uv, FrameDataCB.Camera).xyz;
+    key.CSDepth = LinearizeDepth(depth, FrameDataCB.CurrentFrameCamera);
+    key.CSPosition = ReconstructViewSpacePosition(depth, uv, FrameDataCB.CurrentFrameCamera).xyz;
     key.CSNormal = DecodeNormalSignedOct(packed.x);
     key.Analytic = asfloat(packed.z);
 

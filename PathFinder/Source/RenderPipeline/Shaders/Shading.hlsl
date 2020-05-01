@@ -442,8 +442,8 @@ ShadingResult EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
 
     float4 blueNoise = blueNoiseTexture.Load(uint3(pixelIndex % PassDataCB.BlueNoiseTextureSize, 0));
-    float3 surfacePosition = ReconstructWorldSpacePosition(depth, uv, FrameDataCB.Camera).xyz;
-    float3 viewDirection = normalize(FrameDataCB.Camera.Position.xyz - surfacePosition);
+    float3 surfacePosition = ReconstructWorldSpacePosition(depth, uv, FrameDataCB.CurrentFrameCamera).xyz;
+    float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
 
     LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
     ShadingResult shadingResult = ZeroShadingResult();
@@ -481,9 +481,9 @@ void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
     RWTexture2D<float4> stochasticUnshadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTextureIndex];
     RWTexture2D<float4> stochasticShadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTextureIndex];
 
-    shadingResult.AnalyticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.AnalyticUnshadowedOutgoingLuminance, FrameDataCB.Camera);
-    shadingResult.StochasticShadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticShadowedOutgoingLuminance, FrameDataCB.Camera);
-    shadingResult.StochasticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticUnshadowedOutgoingLuminance, FrameDataCB.Camera);
+    shadingResult.AnalyticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.AnalyticUnshadowedOutgoingLuminance, FrameDataCB.CurrentFrameCamera);
+    shadingResult.StochasticShadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticShadowedOutgoingLuminance, FrameDataCB.CurrentFrameCamera);
+    shadingResult.StochasticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticUnshadowedOutgoingLuminance, FrameDataCB.CurrentFrameCamera);
 
     analyticOutput[pixelIndex] = float4(shadingResult.AnalyticUnshadowedOutgoingLuminance, 1.0);
     stochasticShadowedOutput[pixelIndex] = float4(shadingResult.StochasticShadowedOutgoingLuminance, 1.0);

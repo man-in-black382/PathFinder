@@ -108,9 +108,9 @@ namespace PathFinder
         glm::mat4 InverseProjection;
         glm::mat4 InverseViewProjection;
         // 16 byte boundary
-        float NearPlane;
-        float FarPlane;
-        float ExposureValue100;
+        float NearPlane = 0.0f;
+        float FarPlane = 0.0f;
+        float ExposureValue100 = 0.0f;
         uint32_t __Pad0;
         // 16 byte boundary
     };

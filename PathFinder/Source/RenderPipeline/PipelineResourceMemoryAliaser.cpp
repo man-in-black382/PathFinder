@@ -96,7 +96,7 @@ namespace PathFinder
                 // relative to current global offset, which is an offset of the current memory bucket we're aliasing resources in,
                 // therefore we have to subtract current global offset
                 uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset - mGlobalStartOffset;
-                uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->ResourceFormat().ResourceSizeInBytes() - 1;
+                uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->TotalRequiredMemory() - 1;
 
                 mNonAliasableMemoryRegionStarts.insert(startByteIndex);
                 mNonAliasableMemoryRegionEnds.insert(endByteIndex);

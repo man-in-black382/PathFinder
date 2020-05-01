@@ -51,7 +51,7 @@ namespace PathFinder
         cbContent.StochasticShadowedOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput);
         cbContent.StochasticUnshadowedOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
         cbContent.GBufferMaterialDataTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferRT0);
-        cbContent.GBufferDepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.GBufferDepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, context->GetFrameNumber() % 2 });
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
         cbContent.LightOffsets = sceneStorage->LightTablePartitionInfo();
 

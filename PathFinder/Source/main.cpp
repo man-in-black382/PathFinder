@@ -264,7 +264,8 @@ int main(int argc, char** argv)
             engine.RenderSurface().Dimensions().Height 
         };
 
-        perFrameConstants.Camera = sceneStorage.CameraGPURepresentation();
+        perFrameConstants.PreviousFrameCamera = perFrameConstants.CurrentFrameCamera;
+        perFrameConstants.CurrentFrameCamera = sceneStorage.CameraGPURepresentation();
 
         engine.SetGlobalRootConstants(globalConstants);
         engine.SetFrameRootConstants(perFrameConstants);

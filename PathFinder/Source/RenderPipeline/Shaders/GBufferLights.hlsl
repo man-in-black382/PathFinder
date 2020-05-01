@@ -62,7 +62,7 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
     // Sphere light is a disk always oriented towards the camera
     if (light.LightType == LightTypeSphere)
     {
-        light.Orientation = float4(normalize(FrameDataCB.Camera.Position.xyz - light.Position.xyz), 0);
+        light.Orientation = float4(normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - light.Position.xyz), 0);
     }
 
     float2 localSpacePosition;
@@ -72,7 +72,7 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
     float4 lightCornerVertex = float4(worldSpacePosition, 1.0);
 
     VertexOut vout;
-    vout.Position = mul(FrameDataCB.Camera.ViewProjection, lightCornerVertex);
+    vout.Position = mul(FrameDataCB.CurrentFrameCamera.ViewProjection, lightCornerVertex);
     vout.Luminance = light.Luminance * light.Color.rgb;
     vout.LocalSpacePosition = light.LightType != LightTypeRectangle ? localSpacePosition : 0.xx;
     vout.LightSize = float2(light.Width, light.Height);

@@ -10,7 +10,8 @@ struct GlobalData
 
 struct FrameData
 {
-    Camera Camera;
+    Camera CurrentFrameCamera;
+    Camera PreviousFrameCamera;
 }; 
 
 #define GlobalDataType GlobalData

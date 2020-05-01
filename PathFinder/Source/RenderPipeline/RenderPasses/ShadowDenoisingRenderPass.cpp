@@ -44,7 +44,7 @@ namespace PathFinder
         cbContent.StochasticUnshadowedLuminanceTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
         cbContent.NoiseEstimationTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::ShadowNoiseEstimationDenoisingOutput);
         cbContent.GBufferTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferRT0);
-        cbContent.DepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.DepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, context->GetFrameNumber() % 2 });
         cbContent.IntermediateOutput0TextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DenoisingStochasticShadowedIntermediateTarget);
         cbContent.IntermediateOutput1TextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DenoisingStochasticUnsadowedIntermediateTarget);
         cbContent.MaximumLightsLuminance = context->GetContent()->GetSceneGPUStorage()->LightsMaximumLuminanance();

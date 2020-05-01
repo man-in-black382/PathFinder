@@ -10,7 +10,8 @@ namespace PathFinder
 
     struct PerFrameRootConstants
     {
-        GPUCamera Camera;
+        GPUCamera CurrentFrameCamera;
+        GPUCamera PreviousFrameCamera;
     };
 
 }
