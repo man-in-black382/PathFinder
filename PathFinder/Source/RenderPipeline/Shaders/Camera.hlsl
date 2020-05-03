@@ -24,7 +24,7 @@ float LinearizeDepth(float hyperbolicDepth, Camera camera)
     return camera.NearPlane * camera.FarPlane / (camera.FarPlane + hyperbolicDepth * (camera.NearPlane - camera.FarPlane));
 }
 
-float4 ReconstructViewSpacePosition(
+float3 ReconstructViewSpacePosition(
     float hyperbolicDepth, // Depth value after viewport transformation in [0; 1] range
     float2 ssuv, // Normalized screen-space (texture) coordinates [0; 1]
     Camera camera) // Inverse camera projection matrix
@@ -41,23 +41,30 @@ float4 ReconstructViewSpacePosition(
     // Perspective division
     viewSpacePosition /= viewSpacePosition.w;
 
-    return viewSpacePosition;
+    return viewSpacePosition.xyz;
 }
 
-float4 ReconstructWorldSpacePosition(
+float3 ReconstructWorldSpacePosition(
     float hyperbolicDepth, // Depth value after viewport transformation in [0; 1] range
     float2 ssuv, // Normalized screen-space (texture) coordinates [0; 1]
     Camera camera)
 {
-    float4 viewSpacePosition = ReconstructViewSpacePosition(hyperbolicDepth, ssuv, camera);
+    float4 viewSpacePosition = float4(ReconstructViewSpacePosition(hyperbolicDepth, ssuv, camera), 1.0);
     float4 worldSpacePosition = mul(camera.InverseView, viewSpacePosition);
 
-    return worldSpacePosition;
+    return worldSpacePosition.xyz;
 }
 
 float3 WorldSpaceCameraRay(float2 centerUV, Camera camera)
 {
-    return normalize(ReconstructWorldSpacePosition(1.0, centerUV, camera).xyz - camera.Position.xyz);
+    return normalize(ReconstructWorldSpacePosition(1.0, centerUV, camera) - camera.Position.xyz);
+}
+
+float3 ViewProjectPoint(float3 p, Camera camera)
+{
+    float4 projected = mul(camera.ViewProjection, float4(p, 1.0));
+    projected /= projected.w;
+    return projected.xyz;
 }
 
 #endif

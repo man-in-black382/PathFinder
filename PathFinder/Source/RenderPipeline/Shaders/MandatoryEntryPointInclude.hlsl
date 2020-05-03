@@ -5,7 +5,8 @@
 
 struct GlobalData
 {
-    uint2 PipelineRTResolution;
+    float2 PipelineRTResolution;
+    float2 PipelineRTResolutionInv;
 };
 
 struct FrameData

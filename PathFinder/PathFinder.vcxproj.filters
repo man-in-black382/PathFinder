@@ -2897,6 +2897,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BaseEngineLayout.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Camera.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimationDenoising.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserReprojection.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

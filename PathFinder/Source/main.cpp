@@ -264,6 +264,8 @@ int main(int argc, char** argv)
             engine.RenderSurface().Dimensions().Height 
         };
 
+        globalConstants.PipelineRTResolutionInverse = 1.0f / globalConstants.PipelineRTResolution;
+
         perFrameConstants.PreviousFrameCamera = perFrameConstants.CurrentFrameCamera;
         perFrameConstants.CurrentFrameCamera = sceneStorage.CameraGPURepresentation();
 

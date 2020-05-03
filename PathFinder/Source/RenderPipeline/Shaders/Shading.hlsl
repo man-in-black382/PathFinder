@@ -442,7 +442,7 @@ ShadingResult EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
 
     float4 blueNoise = blueNoiseTexture.Load(uint3(pixelIndex % PassDataCB.BlueNoiseTextureSize, 0));
-    float3 surfacePosition = ReconstructWorldSpacePosition(depth, uv, FrameDataCB.CurrentFrameCamera).xyz;
+    float3 surfacePosition = ReconstructWorldSpacePosition(depth, uv, FrameDataCB.CurrentFrameCamera);
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
 
     LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);

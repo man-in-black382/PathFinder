@@ -19,7 +19,7 @@ namespace PathFinder
     void DenoiserReprojectionRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         ResourceScheduler::NewTextureProperties frameCountProperties{};
-        frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R8_Unsigned;
+        frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R8_Usigned_Norm;
         frameCountProperties.TextureCount = 2;
 
         scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount, frameCountProperties);

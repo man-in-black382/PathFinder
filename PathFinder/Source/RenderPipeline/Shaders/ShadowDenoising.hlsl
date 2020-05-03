@@ -127,7 +127,7 @@ TapKey UnpackTapKey(float2 uv, int threadIndex)
 
     TapKey key;
     key.CSDepth = LinearizeDepth(depth, FrameDataCB.CurrentFrameCamera);
-    key.CSPosition = ReconstructViewSpacePosition(depth, uv, FrameDataCB.CurrentFrameCamera).xyz;
+    key.CSPosition = ReconstructViewSpacePosition(depth, uv, FrameDataCB.CurrentFrameCamera);
     key.CSNormal = DecodeNormalSignedOct(packed.x);
     key.Analytic = asfloat(packed.z);
 
