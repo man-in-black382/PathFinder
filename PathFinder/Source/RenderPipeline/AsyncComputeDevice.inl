@@ -29,10 +29,11 @@ namespace PathFinder
     void AsyncComputeDevice<CommandListT, CommandQueueT>::BindBuffer(
         const ResourceKey& resourceKey, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
-        const Memory::Buffer* resource = mResourceStorage->GetPerResourceObjects(resourceKey.ResourceName()).GetBuffer(resourceKey.IndexInArray());
-        assert_format(resource, "Buffer ' ", resourceKey.ResourceName().ToString(), "' doesn't exist");
+        const PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
+        const Memory::Buffer* buffer = resourceData->GetBuffer(resourceKey.IndexInArray());
+        assert_format(buffer, "Buffer ' ", resourceKey.ResourceName().ToString(), "' doesn't exist");
 
-        BindExternalBuffer(*resource, shaderRegister, registerSpace, registerType);
+        BindExternalBuffer(*buffer, shaderRegister, registerSpace, registerType);
     }
 
     template <class CommandListT, class CommandQueueT>

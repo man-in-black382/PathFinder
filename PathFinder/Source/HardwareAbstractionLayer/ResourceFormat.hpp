@@ -53,7 +53,7 @@ namespace HAL
         BC5_Unsigned_Norm, BC5_Signed_Norm, BC7_Unsigned_Norm
     };
 
-    enum DepthStencilFormat
+    enum class DepthStencilFormat
     {
         Depth24_Float_Stencil8_Unsigned, Depth32_Float
     };

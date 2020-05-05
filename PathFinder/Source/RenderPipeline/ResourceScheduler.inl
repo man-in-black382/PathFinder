@@ -8,13 +8,16 @@ namespace PathFinder
 
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "Buffer creation has already been scheduled");
 
-        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueBufferAllocationIfNeeded<T>(
+        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueBuffersAllocationIfNeeded<T>(
             resourceName, bufferProperties.Capacity, bufferProperties.PerElementAlignment, bufferProperties.BuffersCount
         );
 
-        auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode());
-        passData.RequestedState = HAL::ResourceState::UnorderedAccess;
-        passData.CreateBufferUADescriptor = true;
+        for (auto bufferIdx = 0u; bufferIdx < schedulingInfo->ResourceCount(); ++bufferIdx)
+        {
+            auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode(), bufferIdx);
+            passData.RequestedState = HAL::ResourceState::UnorderedAccess;
+            passData.CreateBufferUADescriptor = true;
+        }
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }

@@ -8,13 +8,14 @@ namespace PathFinder
     template <class ContentMediator>
     RenderEngine<ContentMediator>::RenderEngine(HWND windowHandle, const CommandLineParser& commandLineParser)
         : mRenderSurfaceDescription{ { 1920, 1080 }, HAL::ColorFormat::RGBA16_Float, HAL::DepthStencilFormat::Depth32_Float },
+        mPassUtilityProvider{ 0, mRenderSurfaceDescription },
         mDevice{ FetchDefaultDisplayAdapter(), commandLineParser.ShouldEnableDebugLayer() },
         mResourceAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mCommandListAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mDescriptorAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mResourceProducer{ &mDevice, &mResourceAllocator, &mResourceStateTracker, &mDescriptorAllocator },
         mPipelineResourceStorage{ &mDevice, &mResourceProducer, &mDescriptorAllocator, &mResourceStateTracker, mRenderSurfaceDescription, &mPassExecutionGraph },
-        mResourceScheduler{ &mPipelineResourceStorage, mRenderSurfaceDescription },
+        mResourceScheduler{ &mPipelineResourceStorage, &mPassUtilityProvider },
         mResourceProvider{ &mPipelineResourceStorage },
         mRootConstantsUpdater{ &mPipelineResourceStorage },
         mShaderManager{ commandLineParser },
@@ -24,7 +25,7 @@ namespace PathFinder
         mGraphicsDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mResourceStateTracker, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
         mAsyncComputeDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mResourceStateTracker, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
         mCommandRecorder{ &mGraphicsDevice },
-        mContext{ &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, mRenderSurfaceDescription },
+        mContext{ &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, &mPassUtilityProvider },
         mAsyncComputeFence{ mDevice },
         mGraphicsFence{ mDevice },
         mUploadFence{ mDevice },
@@ -60,22 +61,21 @@ namespace PathFinder
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::SetContentMediator(ContentMediator* mediator)
     {
-        mContext.SetContentMediator(mediator);
+        mContext.SetContent(mediator);
     }
 
     template <class ContentMediator>
-    void RenderEngine<ContentMediator>::ScheduleAndAllocatePipelineResources()
+    void RenderEngine<ContentMediator>::CommitRenderPasses()
     {
-        // Schedule resources and states
+        mPipelineResourceStorage.CommitRenderPasses();
+
         for (auto passNode : mPassExecutionGraph.AllPasses())
         {
             auto pass = mRenderPasses[passNode.PassMetadata.Name];
             mPipelineResourceStorage.SetCurrentRenderPassGraphNode(passNode);
             pass->SetupPipelineStates(&mPipelineStateCreator, &mRootSignatureCreator);
-            pass->ScheduleResources(&mResourceScheduler);
         }
 
-        mPipelineResourceStorage.AllocateScheduledResources();
         mPipelineStateManager.CompileSignaturesAndStates();
     }
 
@@ -84,6 +84,9 @@ namespace PathFinder
     {
         // Let resources record upload commands into graphics cmd list
         mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+
+        // Run resource scheduling
+        ScheduleResources();
 
         // Run asset-processing passes
         RunAssetProcessingPasses();
@@ -114,6 +117,9 @@ namespace PathFinder
     void RenderEngine<ContentMediator>::Render()
     {
         if (mPassExecutionGraph.DefaultPasses().empty()) return;
+
+        // Reschedule resources in case their parameters have changed
+        ScheduleResources();
 
         // Advance fences
         mAsyncComputeFence.IncrementExpectedValue();
@@ -216,7 +222,7 @@ namespace PathFinder
     {
         mCurrentBackBufferIndex = (mCurrentBackBufferIndex + 1) % (uint8_t)mBackBuffers.size();
         mFrameNumber++;
-        mContext.SetFrameNumber(mFrameNumber);
+        mPassUtilityProvider.FrameNumber = mFrameNumber;
 
         mBottomRTASes.clear();
         mTopRTASes.clear();
@@ -287,6 +293,22 @@ namespace PathFinder
         // back buffer to be in Present state
         currentBackBuffer->RequestNewState(HAL::ResourceState::Present);
         mGraphicsDevice.CommandList()->InsertBarriers(mResourceStateTracker.ApplyRequestedTransitions());
+    }
+
+    template <class ContentMediator>
+    void RenderEngine<ContentMediator>::ScheduleResources()
+    {
+        mPipelineResourceStorage.StartResourceScheduling();
+
+        // Schedule resources and states
+        for (auto passNode : mPassExecutionGraph.AllPasses())
+        {
+            auto pass = mRenderPasses[passNode.PassMetadata.Name];
+            mPipelineResourceStorage.SetCurrentRenderPassGraphNode(passNode);
+            pass->ScheduleResources(&mResourceScheduler);
+        }
+
+        mPipelineResourceStorage.EndResourceScheduling();
     }
 
     template <class ContentMediator> 

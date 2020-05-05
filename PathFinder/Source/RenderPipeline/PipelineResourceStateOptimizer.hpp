@@ -22,7 +22,7 @@ namespace PathFinder
         void Optimize();
 
     private:
-        void CombineStateSequences(PipelineResourceSchedulingInfo* allocation);
+        void CombineStateSequences(PipelineResourceSchedulingInfo* allocation, uint64_t resourceIndex);
 
         // To be used between function calls to avoid memory reallocations
         std::vector<std::pair<Foundation::Name, HAL::ResourceState>> mCombinedStateSequences;

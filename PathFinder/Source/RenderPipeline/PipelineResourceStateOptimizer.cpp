@@ -16,21 +16,26 @@ namespace PathFinder
 
     void PipelineResourceStateOptimizer::Optimize()
     {
+        // Go through all scheduling info 
         for (PipelineResourceSchedulingInfo* schedulingInfo : mSchedulingInfos)
         {
-            CombineStateSequences(schedulingInfo);
-
-            assert_format(!mCombinedStateSequences.empty(), "Resource mush have at least one state");
-
-            for (auto i = 0; i < mCombinedStateSequences.size(); ++i)
+            // Go for each resource in the array
+            for (auto resourceIdx = 0u; resourceIdx < schedulingInfo->ResourceCount(); ++resourceIdx)
             {
-                auto& [passName, resourceState] = mCombinedStateSequences[i];
-                schedulingInfo->GetMetadataForPass(passName)->OptimizedState = resourceState;
+                CombineStateSequences(schedulingInfo, resourceIdx);
+
+                assert_format(!mCombinedStateSequences.empty(), "Resource mush have at least one state");
+
+                for (auto sequenceIdx = 0; sequenceIdx < mCombinedStateSequences.size(); ++sequenceIdx)
+                {
+                    auto& [passName, resourceState] = mCombinedStateSequences[sequenceIdx];
+                    schedulingInfo->GetMetadataForPass(passName, resourceIdx)->OptimizedState = resourceState;
+                }
             }
         }
     }
 
-    void PipelineResourceStateOptimizer::CombineStateSequences(PipelineResourceSchedulingInfo* schedulingInfo)
+    void PipelineResourceStateOptimizer::CombineStateSequences(PipelineResourceSchedulingInfo* schedulingInfo, uint64_t resourceIndex)
     {
         std::vector<Foundation::Name> relevantPassNames;
         std::vector<Foundation::Name> readOnlySequencePassNames;
@@ -39,7 +44,7 @@ namespace PathFinder
         // Build a list of passes this resource is scheduled for
         for (auto& passNode : mRenderPassGraph->AllPasses())
         {
-            if (schedulingInfo->GetMetadataForPass(passNode.PassMetadata.Name))
+            if (schedulingInfo->GetMetadataForPass(passNode.PassMetadata.Name, resourceIndex))
             {
                 relevantPassNames.push_back(passNode.PassMetadata.Name);
             }
@@ -55,7 +60,7 @@ namespace PathFinder
         // Associate combined read states sequence with each corresponding pass name
         auto dumpReadOnlySequence = [this, &readOnlyStateSequence, &readOnlySequencePassNames]()
         {
-            for (PassName passNameInReadOnlySequence : readOnlySequencePassNames)
+            for (Foundation::Name passNameInReadOnlySequence : readOnlySequencePassNames)
             {
                 mCombinedStateSequences.push_back({ passNameInReadOnlySequence, readOnlyStateSequence });
             }
@@ -66,7 +71,7 @@ namespace PathFinder
         for (auto relevantPassIdx = 0u; relevantPassIdx < relevantPassNames.size(); ++relevantPassIdx)
         {
             Foundation::Name currentPassName = relevantPassNames[relevantPassIdx];
-            auto perPassData = schedulingInfo->GetMetadataForPass(currentPassName);
+            auto perPassData = schedulingInfo->GetMetadataForPass(currentPassName, resourceIndex);
 
             bool isLastPass = relevantPassIdx == relevantPassNames.size() - 1;
 
@@ -89,8 +94,8 @@ namespace PathFinder
                 if (!isLastPass)
                 {
                     // If next state is not read-only then this sequence should be dumped
-                    PassName nextPassName = relevantPassNames[relevantPassIdx + 1];
-                    auto nextPerPassData = schedulingInfo->GetMetadataForPass(nextPassName);
+                    Foundation::Name nextPassName = relevantPassNames[relevantPassIdx + 1];
+                    auto nextPerPassData = schedulingInfo->GetMetadataForPass(nextPassName, resourceIndex);
 
                     if (!HAL::IsResourceStateReadOnly(nextPerPassData->RequestedState))
                     {

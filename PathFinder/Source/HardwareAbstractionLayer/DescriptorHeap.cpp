@@ -146,6 +146,12 @@ namespace HAL
         uint64_t bufferStride,
         std::optional<ColorFormat> explicitFormat) const
     {
+
+        if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
+        {
+            printf("");
+        }
+
         D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
 
         desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;

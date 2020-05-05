@@ -140,7 +140,6 @@ namespace PathFinder
 
         // Find memory regions in which we can place the next allocation based on previously found unavailable regions.
         // Pick the most fitting region. If next allocation cannot be fit in any free region, skip it.
-
         uint64_t localOffset = 0;
         uint16_t overlappingMemoryRegionsCount = 0;
         uint64_t nextAllocationSize = nextSchedulingInfoIt->SchedulingInfo->TotalRequiredMemory();

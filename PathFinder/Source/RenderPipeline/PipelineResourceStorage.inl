@@ -40,50 +40,50 @@ namespace PathFinder
     {
         constexpr uint64_t Alignment = 256;
 
-        if (!mCurrentPassObjects->PassConstantBuffer || mCurrentPassObjects->PassConstantBuffer->ElementCapacity<Constants>(Alignment) < 1)
+        if (!mCurrentPassData->PassConstantBuffer || mCurrentPassData->PassConstantBuffer->ElementCapacity<Constants>(Alignment) < 1)
         {
             HAL::Buffer::Properties<Constants> properties{ 1024, Alignment, HAL::ResourceState::ConstantBuffer };
-            mCurrentPassObjects->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
-            mCurrentPassObjects->PassConstantBuffer->SetDebugName(mCurrentRenderPassGraphNode.PassMetadata.Name.ToString() + " Constant Buffer");
+            mCurrentPassData->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mCurrentPassData->PassConstantBuffer->SetDebugName(mCurrentRenderPassGraphNode.PassMetadata.Name.ToString() + " Constant Buffer");
         }
 
         // Advance offset once if allowed and transition to non-allowed state
-        if (mCurrentPassObjects->IsAllowedToAdvanceConstantBufferOffset)
+        if (mCurrentPassData->IsAllowedToAdvanceConstantBufferOffset)
         {
-            mCurrentPassObjects->PassConstantBufferMemoryOffset += mCurrentPassObjects->LastSetConstantBufferDataSize;
-            mCurrentPassObjects->IsAllowedToAdvanceConstantBufferOffset = false;
+            mCurrentPassData->PassConstantBufferMemoryOffset += mCurrentPassData->LastSetConstantBufferDataSize;
+            mCurrentPassData->IsAllowedToAdvanceConstantBufferOffset = false;
         }
 
-        mCurrentPassObjects->LastSetConstantBufferDataSize = Foundation::MemoryUtils::Align(sizeof(Constants), Alignment);
+        mCurrentPassData->LastSetConstantBufferDataSize = Foundation::MemoryUtils::Align(sizeof(Constants), Alignment);
 
         // Interpret as raw bytes since one render pass can request to upload constants of different types
-        mCurrentPassObjects->PassConstantBuffer->RequestWrite();
-        mCurrentPassObjects->PassConstantBuffer->Write(
-            reinterpret_cast<const uint8_t*>(&constants), mCurrentPassObjects->PassConstantBufferMemoryOffset, sizeof(Constants)
+        mCurrentPassData->PassConstantBuffer->RequestWrite();
+        mCurrentPassData->PassConstantBuffer->Write(
+            reinterpret_cast<const uint8_t*>(&constants), mCurrentPassData->PassConstantBufferMemoryOffset, sizeof(Constants)
         );
     }
 
     template <class BufferDataT>
-    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, uint64_t buffersCount)
+    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueBuffersAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, uint64_t buffersCount)
     {
-        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
-
-        if (resourceObjects.SchedulingInfo)
-        {
-            return &(resourceObjects.SchedulingInfo.value());
-        }
-        
         HAL::Buffer::Properties<BufferDataT> properties{ capacity, perElementAlignment };
+        HAL::ResourceFormat bufferFormat = HAL::Buffer::ConstructResourceFormat(mDevice, properties);
 
-        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Buffer::ConstructResourceFormat(mDevice, properties), resourceName, buffersCount };
+        PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
 
-        resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
+        if (resourceObjects)
         {
-            PipelineResourceSchedulingInfo& schedulingInfo = *resourceObjects.SchedulingInfo;
+            return &resourceObjects->SchedulingInfo;
+        }
+
+        resourceObjects = &CreatePerResourceData(resourceName, bufferFormat, buffersCount);
+
+        resourceObjects->SchedulingInfo.AllocationAction = [=]()
+        {
             HAL::Heap* heap = nullptr;
 
-            switch (schedulingInfo.ResourceFormat().ResourceAliasingGroup())
-            { 
+            switch (resourceObjects->SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
+            {
             case HAL::HeapAliasingGroup::Buffers: heap = mBufferHeap.get(); break;
             case HAL::HeapAliasingGroup::Universal: heap = mUniversalHeap.get(); break;
             case HAL::HeapAliasingGroup::RTDSTextures:
@@ -91,20 +91,22 @@ namespace PathFinder
                 assert_format(false, "Should never be hit");
             }
 
-            HAL::Buffer::Properties<BufferDataT> finalProperties{ capacity, perElementAlignment, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates() };
+            HAL::Buffer::Properties<BufferDataT> finalProperties{ 
+                capacity, perElementAlignment, resourceObjects->SchedulingInfo.InitialStates(), resourceObjects->SchedulingInfo.ExpectedStates() 
+            };
 
-            auto heapOffset = schedulingInfo.AliasingInfo.HeapOffset;
+            auto heapOffset = resourceObjects->SchedulingInfo.AliasingInfo.HeapOffset;
 
-            for (auto i = 0u; i < schedulingInfo.ResourceCount(); ++i)
+            for (auto bufferIdx = 0u; bufferIdx < buffersCount; ++bufferIdx)
             {
-                resourceObjects.Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, heapOffset));
-                std::string debugName = resourceName.ToString() + (schedulingInfo.ResourceCount() > 1 ? ("[" + std::to_string(i) + "]") : "");
-                resourceObjects.Buffers.back()->SetDebugName(debugName);
-                heapOffset += schedulingInfo.ResourceFormat().ResourceSizeInBytes();
+                resourceObjects->Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, heapOffset));
+                std::string debugName = resourceName.ToString() + (buffersCount > 1 ? ("[" + std::to_string(bufferIdx) + "]") : "");
+                resourceObjects->Buffers.back()->SetDebugName(debugName);
+                heapOffset += resourceObjects->SchedulingInfo.ResourceFormat().ResourceSizeInBytes();
             }
         };
-
-        return &(resourceObjects.SchedulingInfo.value());
+        
+        return &resourceObjects->SchedulingInfo;
     }
 
 }

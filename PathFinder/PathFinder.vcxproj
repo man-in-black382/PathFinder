@@ -114,6 +114,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -173,6 +174,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -268,6 +270,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStateOptimizer.cpp" />
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceStorageResource.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateCreator.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp" />
     <ClCompile Include="Source\RenderPipeline\PreprocessableAssetStorage.cpp" />
@@ -434,6 +437,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\PerFrameRootConstants.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStateOptimizer.hpp" />
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceStoragePass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceStorageResource.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateCreator.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateProxy.hpp" />
     <ClInclude Include="Source\RenderPipeline\PreprocessableAssetStorage.hpp" />
@@ -455,6 +460,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassMetadata.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPassUtilityProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceKey.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
@@ -649,6 +655,14 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\assimp\Vertex.h" />
     <ClInclude Include="Source\ThirdParty\assimp\XMLTools.h" />
     <ClInclude Include="Source\ThirdParty\dds\dds-ktx.h" />
+    <ClInclude Include="Source\ThirdParty\dtl\Diff.hpp" />
+    <ClInclude Include="Source\ThirdParty\dtl\Diff3.hpp" />
+    <ClInclude Include="Source\ThirdParty\dtl\dtl.hpp" />
+    <ClInclude Include="Source\ThirdParty\dtl\functors.hpp" />
+    <ClInclude Include="Source\ThirdParty\dtl\Lcs.hpp" />
+    <ClInclude Include="Source\ThirdParty\dtl\Sequence.hpp" />
+    <ClInclude Include="Source\ThirdParty\dtl\Ses.hpp" />
+    <ClInclude Include="Source\ThirdParty\dtl\variables.hpp" />
     <ClInclude Include="Source\ThirdParty\filewatch\FileWatch.hpp" />
     <ClInclude Include="Source\ThirdParty\filewatch\FileWatcher.h" />
     <ClInclude Include="Source\ThirdParty\filewatch\FileWatcherImpl.h" />
@@ -1160,7 +1174,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\ThirdParty\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Source\RenderPipeline\Shaders\BaseEngineLayout.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BaseEngineLayout.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomBlur.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>
@@ -1284,7 +1300,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\Camera.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Camera.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\Constants.hlsl">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.2</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -1323,7 +1341,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserReprojection.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserReprojection.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapCommon.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>
@@ -1572,7 +1592,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\Gaussian.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Gaussian.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GaussianBlur.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>
@@ -1751,7 +1773,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\Random.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Random.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\Light.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>
@@ -2098,8 +2122,12 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadingPacking.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowDenoising.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadingPacking.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowDenoising.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimation.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>
@@ -2138,7 +2166,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimationDenoising.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimationDenoising.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMapping.hlsl">
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DisableOptimizations>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>

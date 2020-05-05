@@ -58,7 +58,7 @@ namespace PathFinder
 
     void GBufferRenderPass::Render(RenderContext<RenderPassContentMediator>* context) 
     {
-        auto dsIndex = context->GetFrameNumber() % 2;
+        auto dsIndex = context->FrameNumber() % 2;
 
         context->GetCommandRecorder()->SetRenderTarget(ResourceNames::GBufferRT0, ResourceKey{ ResourceNames::GBufferDepthStencil, dsIndex });
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferRT0, Foundation::Color::Black());

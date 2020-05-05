@@ -31,12 +31,11 @@ namespace PathFinder
 
     const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex)
     {
-        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
-
-        Memory::Texture* texture = resourceObjects.GetTexture(resourceIndex);
+        const PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
+        const Memory::Texture* texture = resourceObjects->GetTexture(resourceIndex);
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
-        auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name);
+        auto perPassData = resourceObjects->SchedulingInfo.GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIndex);
         assert_format(perPassData && perPassData->CreateTextureRTDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
         
         return texture->GetRTDescriptor();
@@ -44,12 +43,11 @@ namespace PathFinder
 
     const HAL::DSDescriptor* PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName, uint64_t resourceIndex)
     {
-        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
-
-        Memory::Texture* texture = resourceObjects.GetTexture(resourceIndex);
+        const PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
+        const Memory::Texture* texture = resourceObjects->GetTexture(resourceIndex);
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
-        auto perPassData = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name);
+        auto perPassData = resourceObjects->SchedulingInfo.GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIndex);
         assert_format(perPassData && perPassData->CreateTextureDSDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
 
         return texture->GetDSDescriptor();
@@ -58,62 +56,77 @@ namespace PathFinder
     void PipelineResourceStorage::SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node)
     {
         mCurrentRenderPassGraphNode = node;
-        mCurrentPassObjects = &GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
-        mCurrentPassObjects->PassConstantBufferMemoryOffset = 0;
-        mCurrentPassObjects->LastSetConstantBufferDataSize = 0;
-        mCurrentPassObjects->IsAllowedToAdvanceConstantBufferOffset = false;
+        mCurrentPassData = GetPerPassData(mCurrentRenderPassGraphNode.PassMetadata.Name);
+        mCurrentPassData->PassConstantBufferMemoryOffset = 0;
+        mCurrentPassData->LastSetConstantBufferDataSize = 0;
+        mCurrentPassData->IsAllowedToAdvanceConstantBufferOffset = false;
     }
 
-    void PipelineResourceStorage::AllocateScheduledResources()
+    void PipelineResourceStorage::CommitRenderPasses()
     {
-        PrepareSchedulingInfoForOptimization();
-
-        // Prepare empty per-pass objects
         for (auto& passNode : mPassExecutionGraph->AllPasses())
         {
-            mPerPassObjects.emplace(passNode.PassMetadata.Name, PerPassObjects{});
-        }
-
-        mStateOptimizer.Optimize();
-
-        if (!mRTDSMemoryAliaser.IsEmpty()) mRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::RTDSTextures);
-        if (!mNonRTDSMemoryAliaser.IsEmpty()) mNonRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mNonRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::NonRTDSTextures);
-        if (!mBufferMemoryAliaser.IsEmpty()) mBufferHeap = std::make_unique<HAL::Heap>(*mDevice, mBufferMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Buffers);
-        if (!mUniversalMemoryAliaser.IsEmpty()) mUniversalHeap = std::make_unique<HAL::Heap>(*mDevice, mUniversalMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Universal);
- 
-        for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
-        {
-            resourceObjects.SchedulingInfo->AllocationAction();
+            CreatePerPassData(passNode.PassMetadata.Name);
         }
 
         CreateDebugBuffers();
-        CreateAliasingAndUAVBarriers();
+    }
+
+    void PipelineResourceStorage::StartResourceScheduling()
+    {
+        mPreviousFrameResources->clear();
+        mPreviousFrameDiffEntries->clear();
+
+        std::swap(mPreviousFrameDiffEntries, mCurrentFrameDiffEntries);
+        std::swap(mPreviousFrameResources, mCurrentFrameResources);
+
+        for (auto& [passName, passData] : mPerPassData)
+        {
+            passData.ScheduledResourceNames.clear();
+        }
+    }
+
+    void PipelineResourceStorage::EndResourceScheduling()
+    {
+        FinalizeSchedulingInfo();
+
+        bool memoryValid = TransferPreviousFrameResources();
+
+        if (!memoryValid)
+        {
+            // Re-alias memory, then reallocate resources and then create new aliasing barriers only if memory was invalidated
+            // which can happen on first run or when resource properties were changed by the user.
+            //
+            if (!mRTDSMemoryAliaser.IsEmpty()) mRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::RTDSTextures);
+            if (!mNonRTDSMemoryAliaser.IsEmpty()) mNonRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mNonRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::NonRTDSTextures);
+            if (!mBufferMemoryAliaser.IsEmpty()) mBufferHeap = std::make_unique<HAL::Heap>(*mDevice, mBufferMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Buffers);
+            if (!mUniversalMemoryAliaser.IsEmpty()) mUniversalHeap = std::make_unique<HAL::Heap>(*mDevice, mUniversalMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Universal);
+
+            for (auto& [resourceName, resourceObjects] : *mCurrentFrameResources)
+            {
+                resourceObjects.SchedulingInfo.AllocationAction();
+            }
+
+            CreateAliasingBarriers();
+        }
+
+        // Assume resource states change every frame
+        mStateOptimizer.Optimize();
+        CreateUAVBarriers();
     }
 
     bool PipelineResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
     {
-        const PerResourceObjects* resourceObjects = GetPerResourceObjects(name);
-
-        if (!resourceObjects)
-        {
-            return false;
-        }
-
-        return resourceObjects->SchedulingInfo.has_value();
+        const PipelineResourceStorageResource* resourceObjects = GetPerResourceData(name);
+        return resourceObjects != nullptr;
     }
 
     void PipelineResourceStorage::RegisterResourceNameForCurrentPass(ResourceName name)
     {
-        mCurrentPassObjects->ScheduledResourceNames.insert(name);
+        mCurrentPassData->ScheduledResourceNames.insert(name);
     }
 
-    PipelineResourceSchedulingInfo* PipelineResourceStorage::GetResourceSchedulingInfo(ResourceName name)
-    {
-        PerResourceObjects& resourceObjects = GetPerResourceObjects(name);
-        return resourceObjects.SchedulingInfo.has_value() ? &resourceObjects.SchedulingInfo.value() : nullptr;
-    }
-
-    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueTextureAllocationIfNeeded(
+    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueTexturesAllocationIfNeeded(
         ResourceName resourceName,
         HAL::ResourceFormat::FormatVariant format,
         HAL::TextureKind kind,
@@ -122,23 +135,23 @@ namespace PathFinder
         uint16_t mipCount,
         uint64_t textureCount)
     {
-        PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
+        HAL::Texture::Properties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
+        HAL::ResourceFormat textureFormat = HAL::Texture::ConstructResourceFormat(mDevice, textureProperties);
 
-        if (resourceObjects.SchedulingInfo)
+        PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
+
+        if (resourceObjects)
         {
-            return &(resourceObjects.SchedulingInfo.value());
+            return &resourceObjects->SchedulingInfo;
         }
 
-        HAL::Texture::Properties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
+        resourceObjects = &CreatePerResourceData(resourceName, textureFormat, textureCount);
 
-        resourceObjects.SchedulingInfo = PipelineResourceSchedulingInfo{ HAL::Texture::ConstructResourceFormat(mDevice, textureProperties), resourceName, textureCount };
-
-        resourceObjects.SchedulingInfo->AllocationAction = [=, &resourceObjects]()
+        resourceObjects->SchedulingInfo.AllocationAction = [=]()
         {
-            PipelineResourceSchedulingInfo& schedulingInfo = *resourceObjects.SchedulingInfo;
             HAL::Heap* heap = nullptr;
 
-            switch (schedulingInfo.ResourceFormat().ResourceAliasingGroup())
+            switch (resourceObjects->SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
             {
             case HAL::HeapAliasingGroup::RTDSTextures: heap = mRTDSHeap.get(); break;
             case HAL::HeapAliasingGroup::NonRTDSTextures: heap = mNonRTDSHeap.get(); break;
@@ -146,50 +159,69 @@ namespace PathFinder
             case HAL::HeapAliasingGroup::Universal: heap = mUniversalHeap.get(); break;
             }
 
-            HAL::Texture::Properties completeProperties{ 
-                format, kind, dimensions, optimizedClearValue, schedulingInfo.InitialStates(), schedulingInfo.ExpectedStates(), mipCount };
+            HAL::Texture::Properties completeProperties{
+                format, kind, dimensions, optimizedClearValue, resourceObjects->SchedulingInfo.InitialStates(), resourceObjects->SchedulingInfo.ExpectedStates(), mipCount };
 
-            auto heapOffset = schedulingInfo.AliasingInfo.HeapOffset;
+            // All resources in the array should be aliased back-to-back, therefore to obtain offset of each resource
+            // we can simply take the offset of the first one and increment by the size of the resource.
+            // Each resource in the array is of the same size, same as it would be in any C++ STL container, for example.
+            auto heapOffset = resourceObjects->SchedulingInfo.AliasingInfo.HeapOffset;
 
-            for (auto i = 0u; i < schedulingInfo.ResourceCount(); ++i)
+            for (auto textureIdx = 0u; textureIdx < textureCount; ++textureIdx)
             {
-                resourceObjects.Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, heapOffset));
-                std::string debugName = resourceName.ToString() + (schedulingInfo.ResourceCount() > 1 ? ("[" + std::to_string(i) + "]") : "");
-                resourceObjects.Textures.back()->SetDebugName(debugName);
-                heapOffset += schedulingInfo.ResourceFormat().ResourceSizeInBytes();
+                resourceObjects->Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, heapOffset));
+                std::string debugName = resourceName.ToString() + (textureCount > 1 ? ("[" + std::to_string(textureIdx) + "]") : "");
+                resourceObjects->Textures.back()->SetDebugName(debugName);
+                heapOffset += resourceObjects->SchedulingInfo.ResourceFormat().ResourceSizeInBytes();
             }
         };
 
-        return &(resourceObjects.SchedulingInfo.value());
+        return &resourceObjects->SchedulingInfo;
     }
 
-    PipelineResourceStorage::PerPassObjects& PipelineResourceStorage::GetPerPassObjects(PassName name)
+    PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name)
     {
-        return mPerPassObjects[name];
-    }
-
-    PipelineResourceStorage::PerResourceObjects& PipelineResourceStorage::GetPerResourceObjects(ResourceName name)
-    {
-        return mPerResourceObjects[name];
-    }
-
-    const PipelineResourceStorage::PerPassObjects* PipelineResourceStorage::GetPerPassObjects(PassName name) const
-    {
-        auto it = mPerPassObjects.find(name);
-        if (it == mPerPassObjects.end()) return nullptr;
+        auto it = mPerPassData.find(name);
+        if (it == mPerPassData.end()) return nullptr;
         return &it->second;
     }
 
-    const PipelineResourceStorage::PerResourceObjects* PipelineResourceStorage::GetPerResourceObjects(ResourceName name) const
+    PipelineResourceStorageResource* PipelineResourceStorage::GetPerResourceData(ResourceName name)
     {
-        auto it = mPerResourceObjects.find(name);
-        if (it == mPerResourceObjects.end()) return nullptr;
+        auto it = mCurrentFrameResources->find(name);
+        if (it == mCurrentFrameResources->end()) return nullptr;
         return &it->second;
+    }
+
+    const PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name) const
+    {
+        auto it = mPerPassData.find(name);
+        if (it == mPerPassData.end()) return nullptr;
+        return &it->second;
+    }
+
+    const PipelineResourceStorageResource* PipelineResourceStorage::GetPerResourceData(ResourceName name) const
+    {
+        auto it = mCurrentFrameResources->find(name);
+        if (it == mCurrentFrameResources->end()) return nullptr;
+        return &it->second;
+    }
+
+    PipelineResourceStoragePass& PipelineResourceStorage::CreatePerPassData(PassName name)
+    {
+        auto [it, success] = mPerPassData.emplace(name, PipelineResourceStoragePass{});
+        return it->second;
+    }
+
+    PipelineResourceStorageResource& PipelineResourceStorage::CreatePerResourceData(ResourceName name, const HAL::ResourceFormat& resourceFormat, uint64_t resourceCount)
+    {
+        auto [it, success] = mCurrentFrameResources->emplace(name, PipelineResourceStorageResource{ name, resourceFormat, resourceCount });
+        return it->second;
     }
 
     void PipelineResourceStorage::CreateDebugBuffers()
     {
-        for (auto& [passName, passObjects] : mPerPassObjects)
+        for (auto& [passName, passObjects] : mPerPassData)
         {
             HAL::Buffer::Properties<float> properties{ 1024 };
             passObjects.PassDebugBuffer = mResourceProducer->NewBuffer(properties);
@@ -202,83 +234,169 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::PrepareSchedulingInfoForOptimization()
-    {
-        for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
+    bool PipelineResourceStorage::TransferPreviousFrameResources()
+{
+        for (auto& [resourceName, resourceData] : *mCurrentFrameResources)
         {
-            resourceObjects.SchedulingInfo->FinishScheduling();
-            mStateOptimizer.AddSchedulingInfo(&(*resourceObjects.SchedulingInfo));
+            mCurrentFrameDiffEntries->push_back(resourceData.GetDiffEntry());
+        }
 
-            switch (resourceObjects.SchedulingInfo->ResourceFormat().ResourceAliasingGroup())
+        dtl::Diff<PipelineResourceStorageResource::DiffEntry> diff{ *mPreviousFrameDiffEntries, *mCurrentFrameDiffEntries };
+
+        diff.compose();
+        dtl::Ses ses = diff.getSes();
+        auto sequence = ses.getSequence();
+
+        if (ses.isChange())
+        {
+            // Any ADD or DELETE will invalidate aliased memory layout
+            // so we'll need to reallocate everything.
+            // Return because there is nothing to transfer from previous frame:
+            // whole memory is invalidated.
+            return false;
+        }
+
+        for (auto& [diffEntry, elementInfo] : sequence)
+        {
+            dtl::edit_t diffOperation = elementInfo.type;
+
+            switch (diffOperation)
             {
-            case HAL::HeapAliasingGroup::RTDSTextures: 
-                mRTDSMemoryAliaser.AddSchedulingInfo(&(*resourceObjects.SchedulingInfo));
-                break;
-            case HAL::HeapAliasingGroup::NonRTDSTextures:
-                mNonRTDSMemoryAliaser.AddSchedulingInfo(&(*resourceObjects.SchedulingInfo));
-                break;
-            case HAL::HeapAliasingGroup::Buffers:
-                mBufferMemoryAliaser.AddSchedulingInfo(&(*resourceObjects.SchedulingInfo));
-                break;
-            case HAL::HeapAliasingGroup::Universal:
-                mUniversalMemoryAliaser.AddSchedulingInfo(&(*resourceObjects.SchedulingInfo));
+            case dtl::SES_COMMON:
+            {
+                // COMMON case means resource should be transfered from previous frame
+                PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(diffEntry.ResourceName);
+                PipelineResourceStorageResource& prevResourceData = mPreviousFrameResources->at(diffEntry.ResourceName);
+
+                // Transfer GPU resources from previous frame
+                resourceData.Textures = std::move(prevResourceData.Textures);
+                resourceData.Buffers = std::move(prevResourceData.Buffers);
+            }
+                
+            default:
                 break;
             }
         }
+
+        return true;
     }
 
-    void PipelineResourceStorage::CreateAliasingAndUAVBarriers()
+    void PipelineResourceStorage::CreateAliasingBarriers()
     {
-        for (auto& [resourceName, resourceObjects] : mPerResourceObjects)
+        // Clear barriers before creating new ones
+        for (auto& [passName, passData] : mPerPassData)
         {
+            passData.AliasingBarriers = {};
+        }
+
+        // Go through every resources scheduled for the frame
+        for (auto& [resourceName, resourceObjects] : *mCurrentFrameResources)
+        {
+            // Go through every GPU resource in scheduled resource's array
             for (auto resourceIdx = 0u; resourceIdx < resourceObjects.ResourceCount(); ++resourceIdx)
             {
                 const Memory::GPUResource* resource = resourceObjects.GetGPUResource(resourceIdx);
                 assert_format(resource, "Resource must be allocated before creating any transitions");
 
-                // Create aliasing barriers
-                if (resourceObjects.SchedulingInfo->AliasingInfo.NeedsAliasingBarrier)
+                // Insert aliasing barriers in render passes this resource is first used in
+                if (resourceObjects.SchedulingInfo.AliasingInfo.NeedsAliasingBarrier)
                 {
-                    PerPassObjects& passObjects = GetPerPassObjects(resourceObjects.SchedulingInfo->FirstPassGraphNode().PassMetadata.Name);
-                    passObjects.AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource->HALResource() });
+                    PipelineResourceStoragePass* passObjects = GetPerPassData(resourceObjects.SchedulingInfo.FirstPassGraphNode().PassMetadata.Name);
+                    passObjects->AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource->HALResource() });
                 }
+            }
+        }
+    }
 
-                for (auto& [passName, passData] : resourceObjects.SchedulingInfo->AllPassesMetadata())
+    void PipelineResourceStorage::CreateUAVBarriers()
+    {
+        // Clear barriers before creating new ones
+        for (auto& [passName, passData] : mPerPassData)
+        {
+            passData.UAVBarriers = {};
+        }
+
+        // Go through every resources scheduled for the frame
+        for (auto& [resourceName, resourceObjects] : *mCurrentFrameResources)
+        {
+            // Go through every GPU resource in scheduled resource's array
+            for (auto resourceIdx = 0u; resourceIdx < resourceObjects.ResourceCount(); ++resourceIdx)
+            {
+                const Memory::GPUResource* resource = resourceObjects.GetGPUResource(resourceIdx);
+                assert_format(resource, "Resource must be allocated before creating any transitions");
+
+                // Go through all scheduled render passes and add barriers for this resource where needed
+                for (auto& [passName, passData] : mPerPassData)
                 {
-                    PerPassObjects& passObjects = GetPerPassObjects(passName);
+                    auto resourcePassMetadata = resourceObjects.SchedulingInfo.GetMetadataForPass(passName, resourceIdx);
 
-                    // Create unordered access barriers
-                    if (passData.NeedsUAVBarrier)
+                    // If resource is scheduled for usage in this render pass and is used as a UAV then we create a corresponding barrier
+                    if (resourcePassMetadata && resourcePassMetadata->NeedsUAVBarrier)
                     {
-                        passObjects.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resource->HALResource() });
+                        passData.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resource->HALResource() });
                     }
                 }
             }
         }
     }
 
+    void PipelineResourceStorage::FinalizeSchedulingInfo()
+    {
+        mStateOptimizer = { mPassExecutionGraph };
+        mRTDSMemoryAliaser = { mPassExecutionGraph };
+        mNonRTDSMemoryAliaser = { mPassExecutionGraph };
+        mBufferMemoryAliaser = { mPassExecutionGraph };
+        mUniversalMemoryAliaser = { mPassExecutionGraph };
+
+        for (auto& [resourceName, resourceData] : *mCurrentFrameResources)
+        {
+            resourceData.SchedulingInfo.FinishScheduling();
+
+            mStateOptimizer.AddSchedulingInfo(&resourceData.SchedulingInfo);
+
+            switch (resourceData.SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
+            {
+            case HAL::HeapAliasingGroup::RTDSTextures:
+                mRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::NonRTDSTextures:
+                mNonRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::Buffers:
+                mBufferMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::Universal:
+                mUniversalMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                break;
+            }
+        }
+    }
+
     void PipelineResourceStorage::RequestResourceTransitionsToCurrentPassStates()
     {
-        for (ResourceName resourceName : mCurrentPassObjects->ScheduledResourceNames)
+        for (ResourceName resourceName : mCurrentPassData->ScheduledResourceNames)
         {
-            PerResourceObjects& resourceObjects = GetPerResourceObjects(resourceName);
-            HAL::ResourceState newState = resourceObjects.SchedulingInfo->GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name)->OptimizedState;
+            PipelineResourceStorageResource* resourceData = GetPerResourceData(resourceName);
 
-            for (auto resourceIdx = 0u; resourceIdx < resourceObjects.ResourceCount(); ++resourceIdx)
+            for (auto resourceIdx = 0u; resourceIdx < resourceData->ResourceCount(); ++resourceIdx)
             {
-                resourceObjects.GetGPUResource(resourceIdx)->RequestNewState(newState);
+                if (auto passMetadata = resourceData->SchedulingInfo.GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIdx))
+                {
+                    HAL::ResourceState newState = passMetadata->OptimizedState;
+                    resourceData->GetGPUResource(resourceIdx)->RequestNewState(newState);
+                }
             }
         }
     }
 
     void PipelineResourceStorage::RequestCurrentPassDebugReadback()
     {
-        mCurrentPassObjects->PassDebugBuffer->RequestRead();
+        mCurrentPassData->PassDebugBuffer->RequestRead();
     }
 
     void PipelineResourceStorage::AllowCurrentPassConstantBufferSingleOffsetAdvancement()
     {
-        mCurrentPassObjects->IsAllowedToAdvanceConstantBufferOffset = true;
+        mCurrentPassData->IsAllowedToAdvanceConstantBufferOffset = true;
     }
 
     const Memory::Buffer* PipelineResourceStorage::GlobalRootConstantsBuffer() const
@@ -293,14 +411,14 @@ namespace PathFinder
 
     const Memory::Buffer* PipelineResourceStorage::DebugBufferForCurrentPass() const
     {
-        return mCurrentPassObjects->PassDebugBuffer.get();
+        return mCurrentPassData->PassDebugBuffer.get();
     }
 
     HAL::GPUAddress PipelineResourceStorage::RootConstantsBufferAddressForCurrentPass() const
     {
-        if (auto buffer = mCurrentPassObjects->PassConstantBuffer.get())
+        if (auto buffer = mCurrentPassData->PassConstantBuffer.get())
         {
-            return buffer->HALBuffer()->GPUVirtualAddress() + mCurrentPassObjects->PassConstantBufferMemoryOffset;
+            return buffer->HALBuffer()->GPUVirtualAddress() + mCurrentPassData->PassConstantBufferMemoryOffset;
         }
 
         return 0;
@@ -308,19 +426,19 @@ namespace PathFinder
 
     const std::unordered_set<ResourceName>& PipelineResourceStorage::ScheduledResourceNamesForCurrentPass()
     {
-        return mCurrentPassObjects->ScheduledResourceNames;
+        return mCurrentPassData->ScheduledResourceNames;
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::AliasingBarriersForCurrentPass() 
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
-        return passObjects.AliasingBarriers;
+        PipelineResourceStoragePass* passObjects = GetPerPassData(mCurrentRenderPassGraphNode.PassMetadata.Name);
+        return passObjects->AliasingBarriers;
     }
 
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::UnorderedAccessBarriersForCurrentPass() 
     {
-        PerPassObjects& passObjects = GetPerPassObjects(mCurrentRenderPassGraphNode.PassMetadata.Name);
-        return passObjects.UAVBarriers;
+        PipelineResourceStoragePass* passObjects = GetPerPassData(mCurrentRenderPassGraphNode.PassMetadata.Name);
+        return passObjects->UAVBarriers;
     }
 
     const RenderPassExecutionGraph::Node& PipelineResourceStorage::CurrentPassGraphNode() const
@@ -330,52 +448,13 @@ namespace PathFinder
 
     void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const
     {
-        for (auto& [resourceName, passObjects] : mPerPassObjects)
+        /*for (auto& [resourceName, passObjects] : mPerPassData)
         {
             passObjects.PassDebugBuffer->Read<float>([&func, resourceName](const float* debugData)
             {
                 func(resourceName, debugData);
             });
-        }
-    }
-
-    const Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource(uint64_t resourceIndex) const
-    {
-        if (resourceIndex + 1 <= Textures.size()) return Textures[resourceIndex].get();
-        else if (resourceIndex + 1 <= Buffers.size()) return Buffers[resourceIndex].get();
-        else return nullptr;
-    }
-
-    Memory::GPUResource* PipelineResourceStorage::PerResourceObjects::GetGPUResource(uint64_t resourceIndex)
-    {
-        if (resourceIndex + 1 <= Textures.size()) return Textures[resourceIndex].get();
-        else if (resourceIndex + 1 <= Buffers.size()) return Buffers[resourceIndex].get();
-        else return nullptr;
-    }
-
-    const Memory::Texture* PipelineResourceStorage::PerResourceObjects::GetTexture(uint64_t resourceIndex) const
-    {
-        return resourceIndex + 1 <= Textures.size() ? Textures[resourceIndex].get() : nullptr;
-    }
-
-    Memory::Texture* PipelineResourceStorage::PerResourceObjects::GetTexture(uint64_t resourceIndex)
-    {
-        return resourceIndex + 1 <= Textures.size() ? Textures[resourceIndex].get() : nullptr;
-    }
-
-    const Memory::Buffer* PipelineResourceStorage::PerResourceObjects::GetBuffer(uint64_t resourceIndex) const
-    {
-        return resourceIndex + 1 <= Buffers.size() ? Buffers[resourceIndex].get() : nullptr;
-    }
-
-    Memory::Buffer* PipelineResourceStorage::PerResourceObjects::GetBuffer(uint64_t resourceIndex)
-    {
-        return resourceIndex + 1 <= Buffers.size() ? Buffers[resourceIndex].get() : nullptr;
-    }
-
-    uint64_t PipelineResourceStorage::PerResourceObjects::ResourceCount() const
-    {
-        return Textures.empty() ? Buffers.size() : Textures.size();
+        }*/
     }
 
 }

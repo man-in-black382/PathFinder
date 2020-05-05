@@ -19,7 +19,7 @@ namespace PathFinder
     struct RenderPassMetadata
     {
         Foundation::Name Name;
-        RenderPassPurpose Purpose;
+        RenderPassPurpose Purpose = RenderPassPurpose::Default;
     };
 
 }

@@ -6,7 +6,7 @@
 #include "GPUCommandRecorder.hpp"
 #include "RootConstantsUpdater.hpp"
 #include "ResourceProvider.hpp"
-#include "RenderSurfaceDescription.hpp"
+#include "RenderPassUtilityProvider.hpp"
 #include "UIGPUStorage.hpp"
 #include "SceneGPUStorage.hpp"
 
@@ -21,32 +21,29 @@ namespace PathFinder
             GPUCommandRecorder* graphicCommandRecorder, 
             RootConstantsUpdater* rootConstantsUpdater, 
             ResourceProvider* resourceProvider,
-            const RenderSurfaceDescription& defaultRenderSurface)
+            RenderPassUtilityProvider* utilityProvider)
             :
             mGrapicCommandRecorder{ graphicCommandRecorder },
             mRootConstantsUpdater{ rootConstantsUpdater },
             mResourceProvider{ resourceProvider },
-            mDefaultRenderSurface{ defaultRenderSurface } {}
+            mUtilityProvider{ utilityProvider } {}
 
-        void SetContentMediator(ContentMediator* mediator) { mContent = mediator; }
-        void SetFrameNumber(uint64_t frameNumber) { mFrameNumber = frameNumber; }
+        void SetContent(ContentMediator* content) { mContent = content; }
 
     private:
-        ContentMediator* mContent;
-
         GPUCommandRecorder* mGrapicCommandRecorder;
         RootConstantsUpdater* mRootConstantsUpdater;
         ResourceProvider* mResourceProvider;
-        RenderSurfaceDescription mDefaultRenderSurface;
-        uint64_t mFrameNumber = 0;
+        RenderPassUtilityProvider* mUtilityProvider;
+        ContentMediator* mContent = nullptr;
 
     public:
-        inline ContentMediator* GetContent() const { return mContent; }
         inline GPUCommandRecorder* GetCommandRecorder() const { return mGrapicCommandRecorder; }
         inline RootConstantsUpdater* GetConstantsUpdater() const { return mRootConstantsUpdater; }
         inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }
-        inline const RenderSurfaceDescription& GetDefaultRenderSurfaceDesc() const { return mDefaultRenderSurface; }
-        inline auto GetFrameNumber() const { return mFrameNumber; }
+        inline const ContentMediator* GetContent() const { return mContent; }
+        inline const RenderSurfaceDescription& GetDefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }
+        inline auto FrameNumber() const { return mUtilityProvider->FrameNumber; }
     };
 
 }

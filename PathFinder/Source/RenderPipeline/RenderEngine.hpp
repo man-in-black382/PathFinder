@@ -21,6 +21,7 @@
 #include "SceneGPUStorage.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "PreprocessableAssetStorage.hpp"
+#include "RenderPassUtilityProvider.hpp"
 #include "ResourceScheduler.hpp"
 #include "RootConstantsUpdater.hpp"
 #include "GraphicsDevice.hpp"
@@ -52,7 +53,7 @@ namespace PathFinder
 
         void AddRenderPass(RenderPass<ContentMediator>* pass);
 
-        void ScheduleAndAllocatePipelineResources();
+        void CommitRenderPasses();
         void UploadProcessAndTransferAssets();
         void Render();
         void FlushAllQueuedFrames();
@@ -76,9 +77,10 @@ namespace PathFinder
         void BuildAccelerationStructures(HAL::Fence& fenceToWaitFor, HAL::Fence& fenceToSignal);
         void RunAssetProcessingPasses();
         void RunDefaultPasses();
+        void ScheduleResources();
 
         RenderPassExecutionGraph mPassExecutionGraph;
-        std::unordered_map<PassName, RenderPass<ContentMediator>*> mRenderPasses;
+        std::unordered_map<Foundation::Name, RenderPass<ContentMediator>*> mRenderPasses;
 
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 2;
@@ -96,6 +98,7 @@ namespace PathFinder
         Memory::ResourceStateTracker mResourceStateTracker;
         Memory::GPUResourceProducer mResourceProducer;
 
+        RenderPassUtilityProvider mPassUtilityProvider;
         PipelineResourceStorage mPipelineResourceStorage;
         PreprocessableAssetStorage mAssetStorage;
         ResourceScheduler mResourceScheduler;

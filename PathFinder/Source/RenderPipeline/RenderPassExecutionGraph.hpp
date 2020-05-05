@@ -14,7 +14,7 @@ namespace PathFinder
         struct Node
         {
             RenderPassMetadata PassMetadata;
-            uint64_t ContextualExecutionIndex;
+            uint64_t ContextualExecutionIndex = 0;
         };
 
         void AddPass(const RenderPassMetadata& passMetadata);

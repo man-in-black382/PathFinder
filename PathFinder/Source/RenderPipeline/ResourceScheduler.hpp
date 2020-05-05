@@ -1,6 +1,8 @@
 #pragma once
 
 #include "PipelineResourceStorage.hpp"
+#include "ResourceKey.hpp"
+#include "RenderPassUtilityProvider.hpp"
 
 namespace PathFinder
 {
@@ -59,7 +61,7 @@ namespace PathFinder
 
         struct NewByteBufferProperties : public NewBufferProperties<uint8_t> {};
 
-        ResourceScheduler(PipelineResourceStorage* manager, const RenderSurfaceDescription& defaultRenderSurface);
+        ResourceScheduler(PipelineResourceStorage* manager, RenderPassUtilityProvider* utilityProvider);
 
         // Allocates new render target texture (Write Only)
         void NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt);
@@ -71,38 +73,39 @@ namespace PathFinder
         void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 
 
         // Indicates that a previously created render target will be used as a render target in the scheduling pass (Write Only)
-        void UseRenderTarget(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void UseRenderTarget(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Indicates that a previously created depth-stencil texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
-        void UseDepthStencil(Foundation::Name resourceName); 
+        void UseDepthStencil(const ResourceKey& resourceKey);
 
         // Read any previously created texture as a Shader Resource (Read Only)
-        void ReadTexture(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt); 
+        void ReadTexture(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Access a previously created texture as an Unordered Access resource (Read/Write)
-        void ReadWriteTexture(Foundation::Name resourceName, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void ReadWriteTexture(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Allocates new buffer to be accessed as Unordered Access resource (Read/Write)
         template <class T> 
         void NewBuffer(Foundation::Name resourceName, const NewBufferProperties<T>& bufferProperties = NewByteBufferProperties{ 1, 1 });
 
         // Read any previously created buffer either as Constant or Structured buffer (Read Only)
-        void ReadBuffer(Foundation::Name resourceName, BufferReadContext readContext); 
+        void ReadBuffer(const ResourceKey& resourceKey, BufferReadContext readContext);
 
         // Access a previously created buffer as an Unordered Access Structured buffer (Read/Write)
-        void ReadWriteBuffer(Foundation::Name resourceName);
+        void ReadWriteBuffer(const ResourceKey& resourceKey);
 
     private:
         NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties);
         NewDepthStencilProperties FillMissingFields(std::optional<NewDepthStencilProperties> properties);
 
-        void EnsureSingleSchedulingRequestForCurrentPass(ResourceName resourceName) const;
+        void EnsureSingleSchedulingRequestForCurrentPass(Foundation::Name resourceName) const;
 
         PipelineResourceStorage* mResourceStorage;
-        RenderSurfaceDescription mDefaultRenderSurfaceDesc;
+        RenderPassUtilityProvider* mUtilityProvider;
 
     public:
-        const RenderSurfaceDescription& DefaultRenderSurfaceDesc() const { return mDefaultRenderSurfaceDesc; }
+        inline const RenderSurfaceDescription& DefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }
+        inline auto FrameNumber() const { return mUtilityProvider->FrameNumber; }
     };
 
 }
