@@ -123,8 +123,6 @@ namespace PathFinder
 
     void ResourceScheduler::UseDepthStencil(const ResourceKey& resourceKey)
     {
-        EnsureSingleSchedulingRequestForCurrentPass(resourceKey.ResourceName());
-
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot reuse non-scheduled depth-stencil texture");
 
         PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
@@ -140,8 +138,6 @@ namespace PathFinder
 
     void ResourceScheduler::ReadTexture(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        EnsureSingleSchedulingRequestForCurrentPass(resourceKey.ResourceName());
-
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot read non-scheduled texture");
 
         PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
@@ -168,8 +164,6 @@ namespace PathFinder
 
     void ResourceScheduler::ReadWriteTexture(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        EnsureSingleSchedulingRequestForCurrentPass(resourceKey.ResourceName());
-
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot read/write non-scheduled texture");
 
         PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());

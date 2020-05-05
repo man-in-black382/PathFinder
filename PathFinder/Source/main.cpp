@@ -13,6 +13,7 @@
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadowNoiseEstimationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadowNoiseEstimationDenoisingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadowDenoisingRenderPass.hpp"
@@ -50,22 +51,6 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-uint32_t PackUnorm(float value, float valueRange, uint32_t bitCount)
-{
-    uint32_t base = (1u << (bitCount - 1)) - 1u;
-    float valueNorm = abs(value) / valueRange;
-    uint32_t packed = uint32_t(valueNorm * base);
-    return packed;
-}
-
-float UnpackUnorm(uint32_t packed, float valueRange, uint32_t bitCount)
-{
-    uint32_t base = (1u << (bitCount - 1)) - 1u;
-    float valueNorm = float(packed) / float(base);
-    float value = valueNorm * valueRange;
-    return value;
-}
-
 int main(int argc, char** argv)
 {
     using namespace HAL;
@@ -99,6 +84,7 @@ int main(int argc, char** argv)
     auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
     auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
+    auto denoiserReprojectionPass = std::make_unique<PathFinder::DenoiserReprojectionRenderPass>();
     auto shadowNoiseEstimationPass = std::make_unique<PathFinder::ShadowNoiseEstimationRenderPass>();
     auto shadowNoiseEstimationDenoisingPass = std::make_unique<PathFinder::ShadowNoiseEstimationDenoisingRenderPass>();
     auto shadowDenoisingPass = std::make_unique<PathFinder::ShadowDenoisingRenderPass>();
@@ -113,6 +99,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(distanceFieldGenerationPass.get());
     engine.AddRenderPass(GBufferPass.get());
     engine.AddRenderPass(shadingPass.get());
+    engine.AddRenderPass(denoiserReprojectionPass.get());
     engine.AddRenderPass(shadowNoiseEstimationPass.get());
     engine.AddRenderPass(shadowNoiseEstimationDenoisingPass.get());
     engine.AddRenderPass(shadowDenoisingPass.get());

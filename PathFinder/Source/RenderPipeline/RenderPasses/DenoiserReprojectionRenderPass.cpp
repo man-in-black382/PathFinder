@@ -12,7 +12,7 @@ namespace PathFinder
     {
         stateCreator->CreateComputeState(PSONames::DenoiserReprojection, [](ComputeStateProxy& state)
         {
-            state.ComputeShaderFileName = "ShadowDenoising.hlsl";
+            state.ComputeShaderFileName = "DenoiserReprojection.hlsl";
         });
     }
 
@@ -23,44 +23,30 @@ namespace PathFinder
         frameCountProperties.TextureCount = 2;
 
         scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount, frameCountProperties);
+
         scheduler->ReadTexture(ResourceNames::GBufferRT0);
-        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
+        scheduler->ReadTexture({ ResourceNames::GBufferDepthStencil, 0 });
+        scheduler->ReadTexture({ ResourceNames::GBufferDepthStencil, 1 });
+        scheduler->ReadTexture({ ResourceNames::DenoiserReprojectedFramesCount, (scheduler->FrameNumber() - 1) % 2 });
     }
      
     void DenoiserReprojectionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserReprojection);
+        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserReprojection);
 
-        //auto resourceProvider = context->GetResourceProvider();
-        //auto dimensions = context->GetDefaultRenderSurfaceDesc().Dimensions();
+        auto resourceProvider = context->GetResourceProvider();
 
-        //ShadowDenoisingCBContent cbContent{};
-        //cbContent.AnalyticLuminanceTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::ShadingAnalyticOutput);
-        //cbContent.StochasticShadowedLuminanceTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput);
-        //cbContent.StochasticUnshadowedLuminanceTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
-        //cbContent.NoiseEstimationTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::ShadowNoiseEstimationDenoisingOutput);
-        //cbContent.GBufferTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferRT0);
-        //cbContent.DepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
-        //cbContent.IntermediateOutput0TextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DenoisingStochasticShadowedIntermediateTarget);
-        //cbContent.IntermediateOutput1TextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DenoisingStochasticUnsadowedIntermediateTarget);
-        //cbContent.MaximumLightsLuminance = context->GetContent()->GetSceneGPUStorage()->LightsMaximumLuminanance();
-        //cbContent.ImageSize = { dimensions.Width, dimensions.Height };
+        auto frameIndex = (context->FrameNumber() - 1) % 2;
+        auto previousFrameIndex = context->FrameNumber() % 2;
 
-        //// Denoise horizontally
-        //cbContent.IsHorizontal = true;
+   /*     DenoiserReprojectionCBContent cbContent{};
+        cbContent.PreviousDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, previousFrameIndex });
+        cbContent.CurrentDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, frameIndex });
+        cbContent.PreviousAccumulationCounterTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::DenoiserReprojectedFramesCount, previousFrameIndex });
+        cbContent.CurrentAccumulationCounterTextureIndex = resourceProvider->GetUATextureIndex({ ResourceNames::DenoiserReprojectedFramesCount, frameIndex });
 
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        //context->GetCommandRecorder()->Dispatch(dimensions, { 256, 1 });
-
-        //// Denoise vertically
-        //std::swap(dimensions.Width, dimensions.Height);
-        //cbContent.IsHorizontal = false;
-        //cbContent.StochasticShadowedLuminanceTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DenoisingStochasticShadowedIntermediateTarget);
-        //cbContent.StochasticUnshadowedLuminanceTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DenoisingStochasticUnsadowedIntermediateTarget);
-        //cbContent.FinalOutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadowDenoisingOutput);
-
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        //context->GetCommandRecorder()->Dispatch(dimensions, { 256, 1 });
+        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
+        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });*/
     }
 
 }

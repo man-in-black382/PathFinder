@@ -14,6 +14,7 @@ struct PassData
 #include "MandatoryEntryPointInclude.hlsl"
 
 static const int GroupDimensionSize = 16;
+static const int MaxAccumulatedFrames = 32;
 
 struct Bilinear
 {
@@ -61,6 +62,9 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     Texture2D previousDepthTexture = Textures2D[PassDataCB.PreviousDepthTextureIndex];
     Texture2D currentDepthTexture = Textures2D[PassDataCB.CurrentDepthTextureIndex];
 
+    Texture2D previousAccumulationCounterTexture = Textures2D[PassDataCB.PreviousAccumulationCounterTextureIndex];
+    RWTexture2D<float4> currentAccumulationCounterTexture = RW_Float4_Textures2D[PassDataCB.CurrentAccumulationCounterTextureIndex];
+
     float previousDepth = previousDepthTexture.Load(uint3(pixelIndex, 0)).r;
     float currentDepth = currentDepthTexture.Load(uint3(pixelIndex, 0)).r;
 
@@ -70,9 +74,13 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     float reprojectedDepth = reprojectedCoord.z;
 
     Bilinear bilinearFilterAtPrevPos = GetBilinearFilter(saturate(reprojectedUV), GlobalDataCB.PipelineRTResolution);
-    float2 gatherUV = (bilinearFilterAtPrevPos.Origin + 1.0) * GlobalDataCB.PipelineRTResolutionInv;
+    
+    // Exactly center of 4 texels to get equally weighted values from Gather()
+    float2 gatherUV = (bilinearFilterAtPrevPos.Origin + 1.0) * GlobalDataCB.PipelineRTResolutionInv; 
     float4 depthPrev = previousDepthTexture.GatherRed(PointClampSampler, gatherUV).wzyx;
-    //float4 accumSpeedPrev =  
+    float4 accumSpeedPrev = previousAccumulationCounterTexture.GatherRed(PointClampSampler, gatherUV).wzyx;
+
+    float4 accumSpeedNew = min(accumSpeedPrev + 1.0, MaxAccumulatedFrames);
 }
 
 #endif

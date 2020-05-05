@@ -166,11 +166,15 @@ uint EncodeNormalSignedOct(float3 n)
 
     outN.z = saturate(n.z * FloatMax);
 
-    uint signBit = outN.z > 0.0 ? 1 : 0;
+    uint signBit = outN.z > 0.0 ? 1u : 0u;
     uint encoded = PackUnorm2x16(outN.x, outN.y, 1.0);
 
     // Sacrifice LS bit of one of the encoded 
     // values to store normal z sign
+
+    // 1) Make sure lowest bit is zero
+    encoded &= (~1u);
+    // 2) Set sign bit to lowest bit
     encoded |= signBit;
 
     return encoded;
