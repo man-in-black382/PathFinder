@@ -197,19 +197,19 @@ int main(int argc, char** argv)
 
     auto t = planeInstance.Transformation();
     //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
-    t.Translation = glm::vec3{ 0.0, -6.0, 0.0 };
+    t.Translation = glm::vec3{ 0.0, -2.50207 - 1, 0.0 };
     planeInstance.SetTransformation(t);
 
     t = cubeInstance.Transformation();
     t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-    t.Translation = glm::vec3{ 0.0, -2.0, -4.0 };
+    t.Translation = glm::vec3{ 0.0, 4.0, -4.0 };
     cubeInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
-    camera.SetFarPlane(1000);
+    camera.SetFarPlane(80);
     camera.SetNearPlane(0.1);
-    camera.MoveTo({ 0.0, 0.0f, -25.f });
-    camera.LookAt({ 0.f, 0.0f, 0.f });
+    camera.MoveTo({ 0.0, 6.0f, -25.f });
+    camera.LookAt({ 0.f, 6.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
     camera.SetAperture(0.8);
     camera.SetFilmSpeed(400);
@@ -231,6 +231,9 @@ int main(int argc, char** argv)
         engine.AddBottomRayTracingAccelerationStructure(&bottomRTAS);
     }
 
+    PathFinder::GlobalRootConstants globalConstants;
+    PathFinder::PerFrameRootConstants perFrameConstants;
+
     engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
         uiStorage.StartNewFrame();
@@ -242,9 +245,6 @@ int main(int argc, char** argv)
 
         // Top RT needs to be rebuilt every frame
         engine.AddTopRayTracingAccelerationStructure(&sceneStorage.TopAccelerationStructure());
-
-        PathFinder::GlobalRootConstants globalConstants;
-        PathFinder::PerFrameRootConstants perFrameConstants;
 
         globalConstants.PipelineRTResolution = { 
             engine.RenderSurface().Dimensions().Width, 

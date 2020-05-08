@@ -33,13 +33,13 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     // hence the 1.0 for maximum luminance
     params.MaximumLuminance = 1.0;// ConvertEV100ToMaxHsbsLuminance(FrameDataCB.Camera.ExposureValue100);
 
-  /*  color = float3(
+   /* color = float3(
         GTToneMap(color.r, params),
         GTToneMap(color.g, params),
         GTToneMap(color.b, params)
     );*/
 
-    outputImage[dispatchThreadID.xy] = float4(SRGBFromLinear(color), 1.0);
+    outputImage[dispatchThreadID.xy] = float4(/*SRGBFromLinear*/(color.rrr), 1.0);
 }
 
 #endif

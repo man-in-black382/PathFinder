@@ -32,21 +32,22 @@ namespace PathFinder
      
     void DenoiserReprojectionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserReprojection);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserReprojection);
 
         auto resourceProvider = context->GetResourceProvider();
 
-        auto frameIndex = (context->FrameNumber() - 1) % 2;
-        auto previousFrameIndex = context->FrameNumber() % 2;
+        auto previousFrameIndex = (context->FrameNumber() - 1) % 2;
+        auto frameIndex = context->FrameNumber() % 2;
 
-   /*     DenoiserReprojectionCBContent cbContent{};
+        DenoiserReprojectionCBContent cbContent{};
+        cbContent.GBufferTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferRT0);
         cbContent.PreviousDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, previousFrameIndex });
         cbContent.CurrentDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, frameIndex });
         cbContent.PreviousAccumulationCounterTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::DenoiserReprojectedFramesCount, previousFrameIndex });
         cbContent.CurrentAccumulationCounterTextureIndex = resourceProvider->GetUATextureIndex({ ResourceNames::DenoiserReprojectedFramesCount, frameIndex });
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });*/
+        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
     }
 
 }

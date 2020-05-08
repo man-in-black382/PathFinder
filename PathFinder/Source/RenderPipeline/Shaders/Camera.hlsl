@@ -21,7 +21,10 @@ struct Camera
 
 float LinearizeDepth(float hyperbolicDepth, Camera camera)
 {
-    return camera.NearPlane * camera.FarPlane / (camera.FarPlane + hyperbolicDepth * (camera.NearPlane - camera.FarPlane));
+    float n = camera.NearPlane;
+    float f = camera.FarPlane;
+
+    return n * f / (f + hyperbolicDepth * (n - f));
 }
 
 float3 ReconstructViewSpacePosition(

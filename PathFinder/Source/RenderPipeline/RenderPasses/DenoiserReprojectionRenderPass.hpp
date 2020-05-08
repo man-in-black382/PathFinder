@@ -10,6 +10,7 @@ namespace PathFinder
 
     struct DenoiserReprojectionCBContent
     {
+        uint32_t GBufferTextureIndex;
         uint32_t CurrentDepthTextureIndex;
         uint32_t PreviousDepthTextureIndex;
         uint32_t CurrentAccumulationCounterTextureIndex;
