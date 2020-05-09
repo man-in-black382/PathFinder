@@ -25,8 +25,9 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount, frameCountProperties);
 
         scheduler->ReadTexture(ResourceNames::GBufferRT0);
-        scheduler->ReadTexture({ ResourceNames::GBufferDepthStencil, 0 });
-        scheduler->ReadTexture({ ResourceNames::GBufferDepthStencil, 1 });
+        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
+        scheduler->ReadTexture({ ResourceNames::GBufferViewDepth, 0 });
+        scheduler->ReadTexture({ ResourceNames::GBufferViewDepth, 1 });
         scheduler->ReadTexture({ ResourceNames::DenoiserReprojectedFramesCount, (scheduler->FrameNumber() - 1) % 2 });
     }
      
@@ -41,8 +42,9 @@ namespace PathFinder
 
         DenoiserReprojectionCBContent cbContent{};
         cbContent.GBufferTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferRT0);
-        cbContent.PreviousDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, previousFrameIndex });
-        cbContent.CurrentDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, frameIndex });
+        cbContent.DepthTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.PreviousViewDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferViewDepth, previousFrameIndex });
+        cbContent.CurrentViewDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferViewDepth, frameIndex });
         cbContent.PreviousAccumulationCounterTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::DenoiserReprojectedFramesCount, previousFrameIndex });
         cbContent.CurrentAccumulationCounterTextureIndex = resourceProvider->GetUATextureIndex({ ResourceNames::DenoiserReprojectedFramesCount, frameIndex });
 

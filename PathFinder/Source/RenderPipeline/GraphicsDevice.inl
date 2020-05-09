@@ -22,14 +22,16 @@ namespace PathFinder
     }
 
     template <size_t RTCount>
-    void GraphicsDevice::SetRenderTargets(const std::array<Foundation::Name, RTCount>& rtResourceNames, std::optional<Foundation::Name> depthStencilResourceName)
+    void GraphicsDevice::SetRenderTargets(const std::array<ResourceKey, RTCount>& rtKeys, std::optional<ResourceKey> dsKey)
     {
-        const HAL::DSDescriptor* dsDescriptor = depthStencilResourceName ? mResourceStorage->GetDepthStencilDescriptor(*depthStencilResourceName) : nullptr;
+        const HAL::DSDescriptor* dsDescriptor = dsKey ?
+            mResourceStorage->GetDepthStencilDescriptor(dsKey->ResourceName(), dsKey->IndexInArray()) : nullptr;
+
         std::array<const HAL::RTDescriptor*, RTCount> descriptors;
         
         for (auto i = 0; i < RTCount; ++i)
         {
-            descriptors[i] = mResourceStorage->GetRenderTargetDescriptor(rtResourceNames[i]);
+            descriptors[i] = mResourceStorage->GetRenderTargetDescriptor(rtKeys[i].ResourceName(), rtKeys[i].IndexInArray());
         }
 
         mCommandList->SetRenderTargets(descriptors, dsDescriptor);

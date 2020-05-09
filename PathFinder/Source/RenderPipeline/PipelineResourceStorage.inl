@@ -95,14 +95,19 @@ namespace PathFinder
                 capacity, perElementAlignment, resourceObjects->SchedulingInfo.InitialStates(), resourceObjects->SchedulingInfo.ExpectedStates() 
             };
 
-            auto heapOffset = resourceObjects->SchedulingInfo.AliasingInfo.HeapOffset;
-
             for (auto bufferIdx = 0u; bufferIdx < buffersCount; ++bufferIdx)
             {
-                resourceObjects->Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, heapOffset));
+                if (resourceObjects->SchedulingInfo.AliasingInfo.IsAliased)
+                {
+                    resourceObjects->Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, resourceObjects->SchedulingInfo.AliasingInfo.HeapOffset));
+                }
+                else
+                {
+                    resourceObjects->Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties));
+                }
+
                 std::string debugName = resourceName.ToString() + (buffersCount > 1 ? ("[" + std::to_string(bufferIdx) + "]") : "");
                 resourceObjects->Buffers.back()->SetDebugName(debugName);
-                heapOffset += resourceObjects->SchedulingInfo.ResourceFormat().ResourceSizeInBytes();
             }
         };
         

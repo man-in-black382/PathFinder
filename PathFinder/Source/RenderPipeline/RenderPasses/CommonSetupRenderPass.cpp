@@ -10,7 +10,10 @@ namespace PathFinder
 
     void CommonSetupRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
-        
+        stateCreator->CreateComputeState(PSONames::AveragindDownsampling, [](ComputeStateProxy& state)
+        {
+            state.ComputeShaderFileName = "AveragingDownsampling.hlsl";
+        });
     }
 
     void CommonSetupRenderPass::ScheduleResources(ResourceScheduler* scheduler)

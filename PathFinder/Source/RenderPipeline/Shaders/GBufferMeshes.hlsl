@@ -25,7 +25,7 @@ StructuredBuffer<Material> MaterialTable : register(t3);
 struct VertexOut
 {
     float4 Position : SV_POSITION;
-    float3 ViewDirectionTS : VIEW_VECTOR_TS;
+    float ViewDepth : VIEW_DEPTH;
     float2 UV : TEXCOORD0;  
     float3x3 TBN : TBN_MATRIX;
 };
@@ -53,12 +53,13 @@ VertexOut VSMain(uint indexId : SV_VertexID)
     float3x3 TBNInverse = transpose(TBN);
 
     float4 WSPosition = mul(instanceData.ModelMatrix, vertex.Position);
-    float3 viewVector = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - WSPosition.xyz);
+    float4 CSPosition = mul(FrameDataCB.CurrentFrameCamera.View, WSPosition);
+    float4 ClipSPosition = mul(FrameDataCB.CurrentFrameCamera.Projection, CSPosition);
 
-    vout.Position = mul(FrameDataCB.CurrentFrameCamera.ViewProjection, WSPosition);
+    vout.Position = ClipSPosition;
+    vout.ViewDepth = CSPosition.z;
     vout.UV = vertex.UV;
     vout.TBN = TBN;
-    vout.ViewDirectionTS = mul(TBNInverse, viewVector);
 
     return vout;
 }
@@ -124,6 +125,7 @@ GBufferPixelOut PSMain(VertexOut pin)
 
     GBufferPixelOut pixelOut;
     pixelOut.MaterialData = encoded.MaterialData;
+    pixelOut.ViewDepth = pin.ViewDepth;
 
     //DebugOut(123.0, pin.Position.xy, uint2(1000, 500));
     //DebugOut(566.0, pin.Position.xy, uint2(1000, 500));

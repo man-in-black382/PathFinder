@@ -76,7 +76,7 @@ namespace HAL
         static DXGI_FORMAT D3DFormat(ColorFormat type);
         static DXGI_FORMAT D3DFormat(DepthStencilFormat type);
 
-        static std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> D3DDepthStecilSRVFormats(DepthStencilFormat type);
+        static std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> D3DDepthStecilShaderAccessFormats(DepthStencilFormat type);
 
         static FormatVariant FormatFromD3DFormat(DXGI_FORMAT format);
 

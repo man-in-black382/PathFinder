@@ -14,6 +14,7 @@ struct GBufferEncoded
 struct GBufferPixelOut
 {
     uint4 MaterialData : SV_Target0;
+    float ViewDepth : SV_Target1;
 };
 
 struct GBufferStandard

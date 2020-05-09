@@ -4,8 +4,9 @@
 struct PassData
 {
     uint GBufferTextureIndex;
-    uint CurrentDepthTextureIndex;
-    uint PreviousDepthTextureIndex;
+    uint DepthTextureIndex;
+    uint CurrentViewDepthTextureIndex;
+    uint PreviousViewDepthTextureIndex;
     uint CurrentAccumulationCounterTextureIndex;
     uint PreviousAccumulationCounterTextureIndex;
 };
@@ -56,13 +57,12 @@ float4 GetBilinearCustomWeights(Bilinear f, float4 customWeights)
     return weights;
 }
 
-float4 ApplyBilinearCustomWeights(float4 v, float4 weights)
+float ApplyBilinearCustomWeights(float4 v, float4 weights)
 {
     // Weight
     v *= weights;
     // Sum
-    v = dot(v, 1.0);
-    return v;
+    return dot(v, 1.0);
 }
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
@@ -72,8 +72,9 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     float2 uv = (float2(pixelIndex) + 0.5) / (GlobalDataCB.PipelineRTResolution - 1);
 
     Texture2D<uint4> gBufferTexture = UInt4_Textures2D[PassDataCB.GBufferTextureIndex];
-    Texture2D previousDepthTexture = Textures2D[PassDataCB.PreviousDepthTextureIndex];
-    Texture2D currentDepthTexture = Textures2D[PassDataCB.CurrentDepthTextureIndex];
+    Texture2D depthTexture = Textures2D[PassDataCB.DepthTextureIndex];
+    Texture2D previousViewDepthTexture = Textures2D[PassDataCB.PreviousViewDepthTextureIndex];
+    Texture2D currentViewDepthTexture = Textures2D[PassDataCB.CurrentViewDepthTextureIndex];
     Texture2D previousAccumulationCounterTexture = Textures2D[PassDataCB.PreviousAccumulationCounterTextureIndex];
     RWTexture2D<float4> currentAccumulationCounterTexture = RW_Float4_Textures2D[PassDataCB.CurrentAccumulationCounterTextureIndex];
 
@@ -81,7 +82,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     encodedGBuffer.MaterialData = gBufferTexture.Load(uint3(pixelIndex, 0));
     float3 surfaceNormal = DecodeGBufferStandardNormal(encodedGBuffer);
 
-    float currentDepth = currentDepthTexture.Load(uint3(pixelIndex, 0)).r;
+    float currentDepth = depthTexture.Load(uint3(pixelIndex, 0)).r;
     float3 currentSurfacePosition = ReconstructWorldSpacePosition(currentDepth, uv, FrameDataCB.CurrentFrameCamera);
     float3 reprojectedCoord = ViewProjectPoint(currentSurfacePosition, FrameDataCB.PreviousFrameCamera);
     float2 reprojectedUV = (reprojectedCoord.xy + 1.0) * 0.5;
@@ -91,13 +92,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     
     // Exactly center of 4 texels to get equally weighted values from Gather()
     float2 gatherUV = (bilinearFilterAtPrevPos.Origin + 1.0) * GlobalDataCB.PipelineRTResolutionInv; 
-    float4 depthPrev = previousDepthTexture.GatherRed(PointClampSampler, gatherUV).wzyx;
-
-    [unroll] for (int i = 0; i < 4; ++i)
-    {
-        depthPrev[i] = LinearizeDepth(depthPrev[i], FrameDataCB.PreviousFrameCamera);
-    }
-
+    float4 viewDepthPrev = previousViewDepthTexture.GatherRed(PointClampSampler, gatherUV).wzyx;
     float4 accumCountPrev = previousAccumulationCounterTexture.GatherRed(PointClampSampler, gatherUV).wzyx;
     float4 accumCountNew = min(accumCountPrev + 1.0, MaxAccumulatedFrames);
 
@@ -113,7 +108,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     float3 Xvprev = mul(FrameDataCB.PreviousFrameCamera.View, float4(Xprev, 1.0)).xyz; 
     float NoXprev = dot(surfaceNormal, Xprev); // Distance to the plane
     float NoVprev = NoXprev / Xvprev.z;
-    float4 planeDist = abs(NoVprev * depthPrev - NoXprev);
+    float4 planeDist = abs(NoVprev * viewDepthPrev - NoXprev); 
 
     float4 occlusion = step(DisocclusionThreshold, planeDist / NoXprev);
     occlusion = saturate(isInScreen - occlusion);

@@ -8,9 +8,9 @@ namespace PathFinder
     }
 
     template <size_t RTCount>
-    void GPUCommandRecorder::SetRenderTargets(const std::array<Foundation::Name, RTCount>& rtResourceNames, std::optional<Foundation::Name> depthStencilResourceName)
+    void GPUCommandRecorder::SetRenderTargets(const std::array<ResourceKey, RTCount>& rtKeys, std::optional<ResourceKey> dsKey)
     {
-        mGraphicsDevice->SetRenderTargets(rtResourceNames, depthStencilResourceName);
+        mGraphicsDevice->SetRenderTargets(rtKeys, dsKey);
     }
 
 }

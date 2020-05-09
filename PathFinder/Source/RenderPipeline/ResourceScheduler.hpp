@@ -39,12 +39,14 @@ namespace PathFinder
         {
             NewDepthStencilProperties(
                 std::optional<HAL::DepthStencilFormat> format = std::nullopt,
-                std::optional<Geometry::Dimensions> dimensions = std::nullopt)
+                std::optional<Geometry::Dimensions> dimensions = std::nullopt,
+                std::optional<uint8_t> mipCount = std::nullopt)
                 : 
-                Format{ format }, Dimensions{ dimensions } {}
+                Format{ format }, Dimensions{ dimensions }, MipCount{ mipCount } {}
 
             std::optional<HAL::DepthStencilFormat> Format;
             std::optional<Geometry::Dimensions> Dimensions;
+            std::optional<uint8_t> MipCount;
             uint64_t TextureCount = 1;
         };
 

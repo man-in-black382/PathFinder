@@ -3,8 +3,8 @@
 namespace PathFinder
 {
 
-    PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format, uint64_t resourceCount)
-        : mResourceFormat{ format }, mResourceCount{ resourceCount } 
+    PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format, uint64_t resourceCount)
+        : mResourceFormat{ format }, mResourceName{resourceName}, mResourceCount{ resourceCount }
     {
         mAllResourcesPerPassData.resize(resourceCount);
     }

@@ -219,13 +219,15 @@ namespace PathFinder
     {
         NewDepthStencilProperties filledProperties{
             mUtilityProvider->DefaultRenderSurfaceDescription.DepthStencilFormat(),
-            mUtilityProvider->DefaultRenderSurfaceDescription.Dimensions()
+            mUtilityProvider->DefaultRenderSurfaceDescription.Dimensions(),
+            1
         };
 
         if (properties)
         {
             if (properties->Format) filledProperties.Format = *properties->Format;
             if (properties->Dimensions) filledProperties.Dimensions = *properties->Dimensions;
+            if (properties->MipCount) filledProperties.MipCount = *properties->MipCount;
         }
 
         filledProperties.TextureCount = std::max(properties->TextureCount, 1ull);

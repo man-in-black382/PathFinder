@@ -31,7 +31,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     GTTonemappingParams params = PassDataCB.TonemappingParams;
     // Luminance was exposed using Saturation Based Sensitivity method 
     // hence the 1.0 for maximum luminance
-    params.MaximumLuminance = 1.0;// ConvertEV100ToMaxHsbsLuminance(FrameDataCB.Camera.ExposureValue100);
+    params.MaximumLuminance = 1.0;// ConvertEV100ToMaxHsbsLuminance(FrameDataCB.CurrentFrameCamera.ExposureValue100);
 
    /* color = float3(
         GTToneMap(color.r, params),

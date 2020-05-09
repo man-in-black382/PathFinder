@@ -444,6 +444,9 @@
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorageResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2375,6 +2378,12 @@
     <ClInclude Include="Source\RenderPipeline\RenderPassUtilityProvider.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingCBContent.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2934,6 +2943,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\Camera.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimationDenoising.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserReprojection.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\AveragingDownsampling.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

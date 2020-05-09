@@ -40,12 +40,12 @@ namespace PathFinder
 
         struct AliasingMetadata
         {
-            const PipelineResourceSchedulingInfo* AliasingSource = nullptr;
             uint64_t HeapOffset = 0;
             bool NeedsAliasingBarrier = false;
+            bool IsAliased = false;
         };
 
-        PipelineResourceSchedulingInfo(const HAL::ResourceFormat& format, uint64_t resourceCount);
+        PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format, uint64_t resourceCount);
 
         void FinishScheduling();
         const PassMetadata* GetMetadataForPass(Foundation::Name passName, uint64_t resourceIndex) const;
@@ -63,6 +63,7 @@ namespace PathFinder
         HAL::ResourceFormat mResourceFormat;
         HAL::ResourceState mInitialStates = HAL::ResourceState::Common;
         HAL::ResourceState mExpectedStates = HAL::ResourceState::Common;
+        Foundation::Name mResourceName;
         uint64_t mResourceCount = 0;
 
     public:
@@ -72,6 +73,7 @@ namespace PathFinder
         inline const HAL::ResourceFormat& ResourceFormat() const { return mResourceFormat; }
         inline HAL::ResourceState InitialStates() const { return mInitialStates; }
         inline HAL::ResourceState ExpectedStates() const { return mExpectedStates; }
+        inline Foundation::Name ResourceName() const { return mResourceName; }
         inline auto ResourceCount() const { return mResourceCount; }
         inline auto TotalRequiredMemory() const { return mResourceFormat.ResourceSizeInBytes() * mResourceCount; }
     };

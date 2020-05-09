@@ -22,7 +22,6 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::ShadingStochasticUnshadowedOutput);
 
         ResourceScheduler::NewTextureProperties noiseEstimationProps{};
-        noiseEstimationProps.TextureCount = 3;
         noiseEstimationProps.ShaderVisibleFormat = HAL::ColorFormat::R8_Usigned_Norm;
         scheduler->NewTexture(ResourceNames::ShadowNoiseEstimationOutput, noiseEstimationProps);
     }

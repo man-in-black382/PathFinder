@@ -30,11 +30,14 @@ namespace PathFinder
      
     void ShadingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
+        ResourceScheduler::NewTextureProperties outputProperties{};
+        outputProperties.MipCount = 5;
+
         scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
-        scheduler->NewTexture(ResourceNames::ShadingStochasticShadowedOutput);
+        scheduler->NewTexture(ResourceNames::ShadingStochasticShadowedOutput, outputProperties);
         scheduler->NewTexture(ResourceNames::ShadingStochasticUnshadowedOutput);
         scheduler->ReadTexture(ResourceNames::GBufferRT0);
-        scheduler->ReadTexture({ ResourceNames::GBufferDepthStencil, scheduler->FrameNumber() % 2 });
+        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
     } 
 
     void ShadingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -51,7 +54,7 @@ namespace PathFinder
         cbContent.StochasticShadowedOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput);
         cbContent.StochasticUnshadowedOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
         cbContent.GBufferMaterialDataTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferRT0);
-        cbContent.GBufferDepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex({ ResourceNames::GBufferDepthStencil, context->FrameNumber() % 2 });
+        cbContent.GBufferDepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
         cbContent.LightOffsets = sceneStorage->LightTablePartitionInfo();
 

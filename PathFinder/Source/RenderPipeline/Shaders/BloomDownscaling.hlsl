@@ -30,4 +30,6 @@ void CSMain(uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : SV_Dispatc
     destination[dispatchThreadID.xy].rgb = avgColor;
 }
 
+
+
 #endif

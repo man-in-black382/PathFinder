@@ -146,12 +146,6 @@ namespace HAL
         uint64_t bufferStride,
         std::optional<ColorFormat> explicitFormat) const
     {
-
-        if (resourceDesc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE)
-        {
-            printf("");
-        }
-
         D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
 
         desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -229,7 +223,8 @@ namespace HAL
 
         if (std::holds_alternative<DepthStencilFormat>(format))
         {
-            auto d3dDepthStencilSRVFormats = ResourceFormat::D3DDepthStecilSRVFormats(std::get<DepthStencilFormat>(format));
+            auto d3dDepthStencilSRVFormats = ResourceFormat::D3DDepthStecilShaderAccessFormats(std::get<DepthStencilFormat>(format));
+            // Current implementation ignores stencil
             desc.Format = d3dDepthStencilSRVFormats.first;
         }
         else {

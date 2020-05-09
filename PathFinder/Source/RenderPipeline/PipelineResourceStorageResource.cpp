@@ -8,7 +8,7 @@ namespace PathFinder
 {
 
     PipelineResourceStorageResource::PipelineResourceStorageResource(Foundation::Name resourceName, const HAL::ResourceFormat& format, uint64_t resourceCount)
-        : mResourceName{ resourceName }, SchedulingInfo{ format, resourceCount } {}
+        : mResourceName{ resourceName }, SchedulingInfo{ resourceName, format, resourceCount } {}
 
     const Memory::GPUResource* PipelineResourceStorageResource::GetGPUResource(uint64_t resourceIndex) const
     {

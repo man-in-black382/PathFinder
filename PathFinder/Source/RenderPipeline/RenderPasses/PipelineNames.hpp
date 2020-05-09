@@ -13,7 +13,8 @@ namespace PathFinder
         inline Foundation::Name JumpFloodingCones1{ "Resource_JumpFloodingConesBuffer1" };
         inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
         inline Foundation::Name GBufferRT0{ "Resource_GBuffer" };
-        inline Foundation::Name GBufferDepthStencil{ "Resource_MainDepthStencil" };
+        inline Foundation::Name GBufferDepthStencil{ "Resource_GBuffer_Depth_Stencil" };
+        inline Foundation::Name GBufferViewDepth{ "Resource_GBuffer_View_Depth" };
         inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
         inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
         inline Foundation::Name ShadingAnalyticOutput{ "Resource_Shading_Analytic_Output" };
@@ -36,6 +37,7 @@ namespace PathFinder
         inline Foundation::Name DistanceMapHelperInitialization{ "PSO_DistanceMapHelperInitialization" };
         inline Foundation::Name DistanceMapHelperCompression{ "PSO_DistanceMapHelperCompression" };
         inline Foundation::Name DistanceMapGeneration{ "PSO_DistanceMapGeneration" };
+        inline Foundation::Name AveragindDownsampling{ "PSO_AveragingDownsampling" };
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
         inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };

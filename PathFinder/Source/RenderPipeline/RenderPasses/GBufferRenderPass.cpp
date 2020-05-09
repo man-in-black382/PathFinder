@@ -27,7 +27,7 @@ namespace PathFinder
         {
             state.VertexShaderFileName = "GBufferMeshes.hlsl";
             state.PixelShaderFileName = "GBufferMeshes.hlsl";
-            state.RenderTargetFormats = { HAL::ColorFormat::RGBA32_Unsigned };
+            state.RenderTargetFormats = { HAL::ColorFormat::RGBA32_Unsigned, HAL::ColorFormat::R32_Float };
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::GBufferMeshes;
             state.DepthStencilState.SetDepthTestEnabled(true);
@@ -37,7 +37,7 @@ namespace PathFinder
         {
             state.VertexShaderFileName = "GBufferLights.hlsl";
             state.PixelShaderFileName = "GBufferLights.hlsl";
-            state.RenderTargetFormats = { HAL::ColorFormat::RGBA32_Unsigned };
+            state.RenderTargetFormats = { HAL::ColorFormat::RGBA32_Unsigned, HAL::ColorFormat::R32_Float };
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleList;
             state.RootSignatureName = RootSignatureNames::GBufferLights;
             state.DepthStencilState.SetDepthTestEnabled(true);
@@ -49,20 +49,27 @@ namespace PathFinder
         ResourceScheduler::NewTextureProperties RT0Properties{};
         RT0Properties.ShaderVisibleFormat = HAL::ColorFormat::RGBA32_Unsigned;
 
-        ResourceScheduler::NewDepthStencilProperties DSProperties{};
-        DSProperties.TextureCount = 2; // 2 for reprojection
+        ResourceScheduler::NewTextureProperties viewDepthProperties{};
+        viewDepthProperties.ShaderVisibleFormat = HAL::ColorFormat::R32_Float;
+        viewDepthProperties.TextureCount = 2; // 2 for reprojection
+        viewDepthProperties.MipCount = 5; 
 
         scheduler->NewRenderTarget(ResourceNames::GBufferRT0, RT0Properties);
-        scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil, DSProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth, viewDepthProperties);
+        scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
     }  
 
     void GBufferRenderPass::Render(RenderContext<RenderPassContentMediator>* context) 
     {
-        auto dsIndex = context->FrameNumber() % 2;
+        auto textureIndex = context->FrameNumber() % 2;
 
-        context->GetCommandRecorder()->SetRenderTarget(ResourceNames::GBufferRT0, ResourceKey{ ResourceNames::GBufferDepthStencil, dsIndex });
+        context->GetCommandRecorder()->SetRenderTargets(
+            std::array{ ResourceKey{ResourceNames::GBufferRT0}, ResourceKey{ResourceNames::GBufferViewDepth, textureIndex} },
+            ResourceKey{ResourceNames::GBufferDepthStencil});
+
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferRT0, Foundation::Color::Black());
-        context->GetCommandRecorder()->ClearDepth({ ResourceNames::GBufferDepthStencil, dsIndex }, 1.0f);
+        context->GetCommandRecorder()->ClearRenderTarget({ ResourceNames::GBufferViewDepth, textureIndex }, Foundation::Color::Black());
+        context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
 
         RenderMeshes(context);
         RenderLights(context);

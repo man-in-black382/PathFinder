@@ -92,6 +92,7 @@
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
@@ -148,6 +149,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -278,6 +280,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp" />
@@ -449,8 +452,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingCBContent.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowDenoisingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationDenoisingRenderPass.hpp" />
@@ -1174,6 +1179,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\ThirdParty\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Source\RenderPipeline\Shaders\AveragingDownsampling.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BaseEngineLayout.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>

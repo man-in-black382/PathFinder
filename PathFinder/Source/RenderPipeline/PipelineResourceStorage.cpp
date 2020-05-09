@@ -162,17 +162,19 @@ namespace PathFinder
             HAL::Texture::Properties completeProperties{
                 format, kind, dimensions, optimizedClearValue, resourceObjects->SchedulingInfo.InitialStates(), resourceObjects->SchedulingInfo.ExpectedStates(), mipCount };
 
-            // All resources in the array should be aliased back-to-back, therefore to obtain offset of each resource
-            // we can simply take the offset of the first one and increment by the size of the resource.
-            // Each resource in the array is of the same size, same as it would be in any C++ STL container, for example.
-            auto heapOffset = resourceObjects->SchedulingInfo.AliasingInfo.HeapOffset;
-
             for (auto textureIdx = 0u; textureIdx < textureCount; ++textureIdx)
             {
-                resourceObjects->Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, heapOffset));
+                if (resourceObjects->SchedulingInfo.AliasingInfo.IsAliased)
+                {
+                    resourceObjects->Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, resourceObjects->SchedulingInfo.AliasingInfo.HeapOffset));
+                }
+                else
+                {
+                    resourceObjects->Textures.emplace_back(mResourceProducer->NewTexture(completeProperties));
+                }
+
                 std::string debugName = resourceName.ToString() + (textureCount > 1 ? ("[" + std::to_string(textureIdx) + "]") : "");
                 resourceObjects->Textures.back()->SetDebugName(debugName);
-                heapOffset += resourceObjects->SchedulingInfo.ResourceFormat().ResourceSizeInBytes();
             }
         };
 
@@ -354,20 +356,26 @@ namespace PathFinder
 
             mStateOptimizer.AddSchedulingInfo(&resourceData.SchedulingInfo);
 
-            switch (resourceData.SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
+            // Resource arrays are usually used across frames which makes them unaliasable
+            bool shouldAlias = resourceData.ResourceCount() == 1;
+
+            if (shouldAlias)
             {
-            case HAL::HeapAliasingGroup::RTDSTextures:
-                mRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::NonRTDSTextures:
-                mNonRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::Buffers:
-                mBufferMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::Universal:
-                mUniversalMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
+                switch (resourceData.SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
+                {
+                case HAL::HeapAliasingGroup::RTDSTextures:
+                    mRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                    break;
+                case HAL::HeapAliasingGroup::NonRTDSTextures:
+                    mNonRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                    break;
+                case HAL::HeapAliasingGroup::Buffers:
+                    mBufferMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                    break;
+                case HAL::HeapAliasingGroup::Universal:
+                    mUniversalMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                    break;
+                }
             }
         }
     }

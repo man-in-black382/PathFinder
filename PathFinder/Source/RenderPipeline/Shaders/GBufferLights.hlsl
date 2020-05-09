@@ -21,6 +21,7 @@ StructuredBuffer<Light> LightTable : register(t0);
 struct VertexOut
 {
     float4 Position : SV_POSITION;
+    float ViewDepth : VIEW_DEPTH;
     float3 Luminance : LUMINANCE;
     float2 LocalSpacePosition : DIST_FROM_CENTER;
     float2 LightSize : LIGHT_SIZE;
@@ -69,10 +70,13 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
     float3 worldSpacePosition;
     GetLightVertexWS(light, lightVertexIndex, worldSpacePosition, localSpacePosition);
 
-    float4 lightCornerVertex = float4(worldSpacePosition, 1.0);
+    float4 WSPosition = float4(worldSpacePosition, 1.0);
+    float4 CSPosition = mul(FrameDataCB.CurrentFrameCamera.View, WSPosition);
+    float4 ClipSPosition = mul(FrameDataCB.CurrentFrameCamera.Projection, CSPosition);
 
     VertexOut vout;
-    vout.Position = mul(FrameDataCB.CurrentFrameCamera.ViewProjection, lightCornerVertex);
+    vout.Position = ClipSPosition;
+    vout.ViewDepth = CSPosition.z;
     vout.Luminance = light.Luminance * light.Color.rgb;
     vout.LocalSpacePosition = light.LightType != LightTypeRectangle ? localSpacePosition : 0.xx;
     vout.LightSize = float2(light.Width, light.Height);
@@ -98,6 +102,7 @@ GBufferPixelOut PSMain(VertexOut pin)
 
     GBufferPixelOut pixelOut;
     pixelOut.MaterialData = encodedGBuffer.MaterialData;
+    pixelOut.ViewDepth = pin.ViewDepth;
     return pixelOut;
 }
 

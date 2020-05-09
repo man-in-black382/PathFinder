@@ -241,7 +241,7 @@ namespace HAL
         }
     }
 
-    std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> ResourceFormat::D3DDepthStecilSRVFormats(DepthStencilFormat type)
+    std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> ResourceFormat::D3DDepthStecilShaderAccessFormats(DepthStencilFormat type)
     {
         switch (type)
         {

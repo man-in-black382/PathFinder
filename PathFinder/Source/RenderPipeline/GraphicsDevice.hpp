@@ -45,9 +45,7 @@ namespace PathFinder
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
         template <size_t RTCount>
-        void SetRenderTargets(
-            const std::array<Foundation::Name, RTCount>& rtResourceNames,
-            std::optional<Foundation::Name> depthStencilResourceName = std::nullopt);
+        void SetRenderTargets(const std::array<ResourceKey, RTCount>& rtKeys, std::optional<ResourceKey> dsKey = std::nullopt);
 
         void SetBackBuffer(Memory::Texture* backBuffer);
 
