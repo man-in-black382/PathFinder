@@ -92,8 +92,8 @@ void UnpackLuminances(int threadIndex, out float3 shadowedLuminance, out float3 
 
 void PackTapKey(Texture2D<uint4> gBufferTexture, Texture2D analyticLuminances, Texture2D depthTexture, int2 loadIndex, int storeIndex)
 {
-    GBufferEncoded encodedGBuffer;
-    encodedGBuffer.MaterialData = gBufferTexture.Load(uint3(loadIndex, 0));
+   /* GBufferEncoded encodedGBuffer;
+    encodedGBuffer.Encoded = gBufferTexture.Load(uint3(loadIndex, 0));
 
     uint gBufferType = DecodeGBufferType(encodedGBuffer);
 
@@ -116,7 +116,7 @@ void PackTapKey(Texture2D<uint4> gBufferTexture, Texture2D analyticLuminances, T
         gTapKeyData[storeIndex] = 0;
         break;
     }
-    }
+    }*/
 }
 
 TapKey UnpackTapKey(float2 uv, int threadIndex)

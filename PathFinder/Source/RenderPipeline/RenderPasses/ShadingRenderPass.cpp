@@ -31,12 +31,18 @@ namespace PathFinder
     void ShadingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         ResourceScheduler::NewTextureProperties outputProperties{};
+        outputProperties.TextureCount = 2;
         outputProperties.MipCount = 5;
 
         scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
         scheduler->NewTexture(ResourceNames::ShadingStochasticShadowedOutput, outputProperties);
-        scheduler->NewTexture(ResourceNames::ShadingStochasticUnshadowedOutput);
-        scheduler->ReadTexture(ResourceNames::GBufferRT0);
+        scheduler->NewTexture(ResourceNames::ShadingStochasticUnshadowedOutput, outputProperties);
+        
+        scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
+        scheduler->ReadTexture(ResourceNames::GBufferRoughness);
+        scheduler->ReadTexture(ResourceNames::GBufferNormal);
+        scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
+        scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
     } 
 
@@ -48,15 +54,23 @@ namespace PathFinder
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
         const Memory::Texture* blueNoiseTexture = scene->BlueNoiseTexture();
 
+        auto resourceProvider = context->GetResourceProvider();
+        auto currentFrameIndex = context->FrameNumber() % 2;
+
         ShadingCBContent cbContent{};
+
+        cbContent.GBufferIndices.AlbedoMetalnessTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalness);
+        cbContent.GBufferIndices.RoughnessTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferRoughness);
+        cbContent.GBufferIndices.NormalTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormal);
+        cbContent.GBufferIndices.MotionTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
+        cbContent.GBufferIndices.TypeAndMaterialTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferTypeAndMaterialIndex);
+        cbContent.GBufferIndices.DepthStencilTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+
         cbContent.BlueNoiseTextureIndex = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
-        cbContent.AnalyticOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingAnalyticOutput);
-        cbContent.StochasticShadowedOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput);
-        cbContent.StochasticUnshadowedOutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
-        cbContent.GBufferMaterialDataTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferRT0);
-        cbContent.GBufferDepthTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.AnalyticOutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadingAnalyticOutput);
+        cbContent.StochasticShadowedOutputTextureIndex = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, currentFrameIndex });
+        cbContent.StochasticUnshadowedOutputTextureIndex = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, currentFrameIndex });
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
-        cbContent.LightOffsets = sceneStorage->LightTablePartitionInfo();
 
         auto haltonSequence = Foundation::Halton::Sequence<4>(0, ShadingCBContent::MaxSupportedLights - 1);
 

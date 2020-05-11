@@ -109,23 +109,17 @@ float FetchDisplacementMap(VertexOut vertex, Material material)
 GBufferPixelOut PSMain(VertexOut pin)
 {
     MeshInstance instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
-    VertexOut displacedVertexData = pin;
     Material material = MaterialTable[instanceData.MaterialIndex];
 
-    GBufferStandard gBufferData;
-
-    gBufferData.Albedo = FetchAlbedoMap(displacedVertexData, material);
-    gBufferData.Normal = FetchNormalMap(displacedVertexData, material);
-    gBufferData.Metalness = FetchMetallnessMap(displacedVertexData, material);
-    gBufferData.Roughness = FetchRoughnessMap(displacedVertexData, material);
-    gBufferData.AO = FetchAOMap(displacedVertexData, material);
-    gBufferData.MaterialIndex = instanceData.MaterialIndex;
-
-    GBufferEncoded encoded = EncodeGBuffer(gBufferData);
-
-    GBufferPixelOut pixelOut;
-    pixelOut.MaterialData = encoded.MaterialData;
-    pixelOut.ViewDepth = pin.ViewDepth;
+    GBufferPixelOut pixelOut = GetStandardGBufferPixelOutput(
+        FetchAlbedoMap(pin, material),
+        FetchMetallnessMap(pin, material),
+        FetchRoughnessMap(pin, material),
+        FetchNormalMap(pin, material),
+        0.0,
+        instanceData.MaterialIndex,
+        pin.ViewDepth
+    );
 
     //DebugOut(123.0, pin.Position.xy, uint2(1000, 500));
     //DebugOut(566.0, pin.Position.xy, uint2(1000, 500));

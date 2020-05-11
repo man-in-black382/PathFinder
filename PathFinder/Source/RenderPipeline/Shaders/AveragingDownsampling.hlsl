@@ -17,7 +17,7 @@ struct PassData
 static const int GroupDimensionSize = 8;
 static const int GSArraySize = GroupDimensionSize * GroupDimensionSize;
 
-groupshared float3 gTile[GSArraySize];
+groupshared float4 gTile[GSArraySize];
 
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/MiniEngine/Core/Shaders/DownsampleBloomAllCS.hlsl
 //
@@ -42,15 +42,15 @@ void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
 
     // TODO: Rework engine to support different states for different mip levels.
     // Right now all mip levels are UAVs, but ideally 0 mip should be SRV to use hardware interpolation.
-    float3 color0 = source[sourceCoord].rgb;
-    float3 color1 = source[sourceCoord + uint2(1, 0)].rgb;
-    float3 color2 = source[sourceCoord + uint2(1, 1)].rgb;
-    float3 color3 = source[sourceCoord + uint2(0, 1)].rgb;
+    float4 color0 = source[sourceCoord];
+    float4 color1 = source[sourceCoord + uint2(1, 0)];
+    float4 color2 = source[sourceCoord + uint2(1, 1)];
+    float4 color3 = source[sourceCoord + uint2(0, 1)];
 
-    float3 avgPixel = (color0 + color1 + color2 + color3) * 0.25;
+    float4 avgPixel = (color0 + color1 + color2 + color3) * 0.25;
 
     gTile[GI] = avgPixel;
-    destination0[DTid.xy].rgb = avgPixel;
+    destination0[DTid.xy] = avgPixel;
 
     GroupMemoryBarrierWithGroupSync();
 
@@ -59,7 +59,7 @@ void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
     {
         avgPixel = 0.25f * (avgPixel + gTile[GI + 1] + gTile[GI + 8] + gTile[GI + 9]);
         gTile[GI] = avgPixel;
-        destination1[DTid.xy >> 1].rgb = avgPixel;
+        destination1[DTid.xy >> 1] = avgPixel;
     }
 
     GroupMemoryBarrierWithGroupSync();
@@ -69,7 +69,7 @@ void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
     {
         avgPixel = 0.25f * (avgPixel + gTile[GI + 2] + gTile[GI + 16] + gTile[GI + 18]);
         gTile[GI] = avgPixel;
-        destination2[DTid.xy >> 2].rgb = avgPixel;
+        destination2[DTid.xy >> 2] = avgPixel;
     }
 
     GroupMemoryBarrierWithGroupSync();
@@ -78,7 +78,7 @@ void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
     if ((parity & 7) == 0)
     {
         avgPixel = 0.25f * (avgPixel + gTile[GI + 4] + gTile[GI + 32] + gTile[GI + 36]);
-        destination3[DTid.xy >> 3].rgb = avgPixel;
+        destination3[DTid.xy >> 3] = avgPixel;
     }
 }
 

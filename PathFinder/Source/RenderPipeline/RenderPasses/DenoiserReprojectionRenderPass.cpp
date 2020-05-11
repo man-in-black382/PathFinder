@@ -19,12 +19,12 @@ namespace PathFinder
     void DenoiserReprojectionRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         ResourceScheduler::NewTextureProperties frameCountProperties{};
-        frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R8_Usigned_Norm;
+        frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R16_Float;
         frameCountProperties.TextureCount = 2;
 
         scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount, frameCountProperties);
 
-        scheduler->ReadTexture(ResourceNames::GBufferRT0);
+        scheduler->ReadTexture(ResourceNames::GBufferNormal);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
         scheduler->ReadTexture({ ResourceNames::GBufferViewDepth, 0 });
         scheduler->ReadTexture({ ResourceNames::GBufferViewDepth, 1 });
@@ -41,7 +41,7 @@ namespace PathFinder
         auto frameIndex = context->FrameNumber() % 2;
 
         DenoiserReprojectionCBContent cbContent{};
-        cbContent.GBufferTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferRT0);
+        cbContent.GBufferNormalTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormal);
         cbContent.DepthTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.PreviousViewDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferViewDepth, previousFrameIndex });
         cbContent.CurrentViewDepthTextureIndex = resourceProvider->GetSRTextureIndex({ ResourceNames::GBufferViewDepth, frameIndex });

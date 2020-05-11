@@ -20,6 +20,7 @@ struct ShadowRayPayload
 
 struct PassData
 {
+    GBufferTextureIndices GBufferIndices;
     // 1 4-component set of Halton numbers for rays of each light
     float4 HaltonSequence[MaxSupportedLights * RaysPerLight];
     // 16 byte boundary
@@ -29,8 +30,8 @@ struct PassData
     uint StochasticUnshadowedOutputTextureIndex;
     // 16 byte boundary
     uint2 BlueNoiseTextureSize;
-    uint GBufferMaterialDataTextureIndex;
-    uint GBufferDepthTextureIndex;
+    uint __Pad0;
+    uint __Pad1;;
 };
 
 struct RootConstants
@@ -435,9 +436,13 @@ void CombineStochasticLightingAndShadows(RTData rtData, inout ShadingResult shad
     }
 }
 
-ShadingResult EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv, uint2 pixelIndex, float depth)
+ShadingResult EvaluateStandardGBufferLighting(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float depth)
 {
     Texture2D blueNoiseTexture = Textures2D[PassDataCB.BlueNoiseTextureIndex];
+
+    GBufferStandard gBuffer;
+    LoadStandardGBuffer(gBuffer, gBufferTextures, pixelIndex);
+
     Material material = MaterialTable[gBuffer.MaterialIndex];
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
 
@@ -460,10 +465,15 @@ ShadingResult EvaluateStandardGBufferLighting(GBufferStandard gBuffer, float2 uv
     return shadingResult;
 }
 
-ShadingResult EvaluateEmissiveGBufferLighting(GBufferEmissive gBuffer)
+ShadingResult EvaluateEmissiveGBufferLighting(GBufferTexturePack gBufferTextures, uint2 pixelIndex)
 {
+    GBufferEmissive gBuffer;
+    LoadEmissiveGBuffer(gBuffer, gBufferTextures, pixelIndex);
+
+    Light light = LightTable[gBuffer.LightIndex];
+
     ShadingResult result = ZeroShadingResult();
-    result.AnalyticUnshadowedOutgoingLuminance = gBuffer.Luminance;
+    result.AnalyticUnshadowedOutgoingLuminance = light.Luminance * light.Color.rgb;
     result.StochasticShadowedOutgoingLuminance = 0;
     result.StochasticUnshadowedOutgoingLuminance = 0;
     return result;
@@ -493,14 +503,20 @@ void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
 [shader("raygeneration")]
 void RayGeneration()
 {
-    Texture2D<uint4> materialData = UInt4_Textures2D[PassDataCB.GBufferMaterialDataTextureIndex];
-    Texture2D depthTexture = Textures2D[PassDataCB.GBufferDepthTextureIndex];
-    
+    GBufferTexturePack gBufferTextures;
+    gBufferTextures.AlbedoMetalness = Textures2D[PassDataCB.GBufferIndices.AlbedoMetalnessTextureIndex];
+    gBufferTextures.Roughness = Textures2D[PassDataCB.GBufferIndices.RoughnessTextureIndex];
+    gBufferTextures.Motion = UInt4_Textures2D[PassDataCB.GBufferIndices.MotionTextureIndex];
+    gBufferTextures.Normal = UInt4_Textures2D[PassDataCB.GBufferIndices.NormalTextureIndex];
+    gBufferTextures.TypeAndMaterialIndex = UInt4_Textures2D[PassDataCB.GBufferIndices.TypeAndMaterialTextureIndex];
+    gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTextureIndex];
+    gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTextureIndex];
+
     uint2 pixelIndex = DispatchRaysIndex().xy;
     float2 currenPixelLocation = pixelIndex + float2(0.5f, 0.5f);
     float2 pixelCenterUV = currenPixelLocation / DispatchRaysDimensions().xy;
 
-    float depth = depthTexture.Load(uint3(pixelIndex, 0)).r;
+    float depth = gBufferTextures.DepthStencil.Load(uint3(pixelIndex, 0)).r;
 
     ShadingResult shadingResult = ZeroShadingResult();
 
@@ -511,19 +527,16 @@ void RayGeneration()
         return;
     }
 
-    GBufferEncoded encodedGBuffer;
-    encodedGBuffer.MaterialData = materialData.Load(uint3(pixelIndex, 0));
-
-    uint gBufferType = DecodeGBufferType(encodedGBuffer);
+    uint gBufferType = LoadGBufferType(gBufferTextures, pixelIndex);
 
     switch (gBufferType)
     {
     case GBufferTypeStandard:
-        shadingResult = EvaluateStandardGBufferLighting(DecodeGBufferStandard(encodedGBuffer), pixelCenterUV, pixelIndex, depth);
+        shadingResult = EvaluateStandardGBufferLighting(gBufferTextures, pixelCenterUV, pixelIndex, depth);
         break;
 
     case GBufferTypeEmissive:
-        shadingResult = EvaluateEmissiveGBufferLighting(DecodeGBufferEmissive(encodedGBuffer));
+        shadingResult = EvaluateEmissiveGBufferLighting(gBufferTextures, pixelIndex);
         break;
     }
 

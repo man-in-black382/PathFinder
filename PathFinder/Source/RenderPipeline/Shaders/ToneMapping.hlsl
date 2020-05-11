@@ -39,7 +39,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         GTToneMap(color.b, params)
     );*/
 
-    outputImage[dispatchThreadID.xy] = float4(/*SRGBFromLinear*/(color.rrr), 1.0);
+    outputImage[dispatchThreadID.xy] = float4(/*SRGBFromLinear*/(color / 32), 1.0);
 }
 
 #endif

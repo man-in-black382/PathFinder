@@ -18,25 +18,25 @@ namespace PathFinder
 
     void ShadowNoiseEstimationDenoisingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->ReadTexture(ResourceNames::ShadowNoiseEstimationOutput);
+        /*  scheduler->ReadTexture(ResourceNames::ShadowNoiseEstimationOutput);
 
-        ResourceScheduler::NewTextureProperties noiseEstimationProps{};
-        noiseEstimationProps.ShaderVisibleFormat = HAL::ColorFormat::R8_Usigned_Norm;
-        scheduler->NewTexture(ResourceNames::ShadowNoiseEstimationDenoisingOutput, noiseEstimationProps);
+          ResourceScheduler::NewTextureProperties noiseEstimationProps{};
+          noiseEstimationProps.ShaderVisibleFormat = HAL::ColorFormat::R8_Usigned_Norm;
+          scheduler->NewTexture(ResourceNames::ShadowNoiseEstimationDenoisingOutput, noiseEstimationProps);*/
     }
      
     void ShadowNoiseEstimationDenoisingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::ShadowNoiseEstimationDenoising);
+        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::ShadowNoiseEstimationDenoising);
 
-        auto resourceProvider = context->GetResourceProvider();
+        //auto resourceProvider = context->GetResourceProvider();
 
-        ShadowNoiseEstimationDenoisingCBContent cbContent{};
-        cbContent.NoiseEstimationTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::ShadowNoiseEstimationOutput);
-        cbContent.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadowNoiseEstimationDenoisingOutput);
+        //ShadowNoiseEstimationDenoisingCBContent cbContent{};
+        //cbContent.NoiseEstimationTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::ShadowNoiseEstimationOutput);
+        //cbContent.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadowNoiseEstimationDenoisingOutput);
 
-        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
+        //context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
     }
 
 }

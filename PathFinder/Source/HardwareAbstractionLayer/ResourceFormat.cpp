@@ -177,7 +177,7 @@ namespace HAL
 
         switch (type)
         {
-        case ColorFormat::R8_Usigned_Norm:      return DXGI_FORMAT_R8_UNORM;
+        case ColorFormat::R8_Unsigned_Norm:      return DXGI_FORMAT_R8_UNORM;
         case ColorFormat::RG8_Usigned_Norm:     return DXGI_FORMAT_R8G8_UNORM;
         case ColorFormat::RGBA8_Usigned_Norm:   return DXGI_FORMAT_R8G8B8A8_UNORM;
         case ColorFormat::RGBA16_Unsigned_Norm: return DXGI_FORMAT_R16G16B16A16_UNORM;
@@ -268,7 +268,7 @@ namespace HAL
 
         case DXGI_FORMAT_B8G8R8A8_UNORM: return ColorFormat::BGRA8_Unsigned_Norm;
 
-        case DXGI_FORMAT_R8_UNORM: return ColorFormat::R8_Usigned_Norm;
+        case DXGI_FORMAT_R8_UNORM: return ColorFormat::R8_Unsigned_Norm;
         case DXGI_FORMAT_R8G8_UNORM: return ColorFormat::RG8_Usigned_Norm;
         case DXGI_FORMAT_R8G8B8A8_UNORM: return ColorFormat::RGBA8_Usigned_Norm;
         case DXGI_FORMAT_R16G16B16A16_UNORM: return ColorFormat::RGBA16_Unsigned_Norm;

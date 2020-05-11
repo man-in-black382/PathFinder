@@ -18,9 +18,9 @@ namespace PathFinder
         struct NewTextureProperties
         {
             NewTextureProperties(
+                std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt,
                 std::optional<HAL::TextureKind> kind = std::nullopt,
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt,
-                std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt,
                 std::optional<HAL::TypelessColorFormat> typelessFormat = std::nullopt,
                 uint8_t mipCount = 1)
                 : 

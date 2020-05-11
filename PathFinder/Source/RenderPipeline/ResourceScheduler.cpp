@@ -194,9 +194,9 @@ namespace PathFinder
     ResourceScheduler::NewTextureProperties ResourceScheduler::FillMissingFields(std::optional<NewTextureProperties> properties)
     {
         NewTextureProperties filledProperties{
+            mUtilityProvider->DefaultRenderSurfaceDescription.RenderTargetFormat(),
             HAL::TextureKind::Texture2D,
             mUtilityProvider->DefaultRenderSurfaceDescription.Dimensions(),
-            mUtilityProvider->DefaultRenderSurfaceDescription.RenderTargetFormat(),
             std::nullopt,
             1
         };

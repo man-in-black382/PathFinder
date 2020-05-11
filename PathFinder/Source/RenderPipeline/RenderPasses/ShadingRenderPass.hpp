@@ -3,6 +3,8 @@
 #include "../RenderPass.hpp"
 #include "../RenderPassContentMediator.hpp"
 
+#include "GBufferTextureIndices.hpp"
+
 #include <glm/mat4x4.hpp>
 
 namespace PathFinder
@@ -12,6 +14,8 @@ namespace PathFinder
     {
         static const uint32_t MaxSupportedLights = 4;
 
+        GBufferTextureIndices GBufferIndices;
+        // 16 byte boundary
         glm::vec4 HaltonSequence[MaxSupportedLights];
         // 16 byte boundary
         uint32_t BlueNoiseTextureIndex;
@@ -20,10 +24,8 @@ namespace PathFinder
         uint32_t StochasticUnshadowedOutputTextureIndex;
         // 16 byte boundary
         glm::uvec2 BlueNoiseTextureSize;
-        uint32_t GBufferMaterialDataTextureIndex;
-        uint32_t GBufferDepthTextureIndex;
-        // 16 byte boundary
-        GPULightTablePartitionInfo LightOffsets;
+        uint32_t __Pad0;
+        uint32_t __Pad1;
     };
 
     class ShadingRenderPass : public RenderPass<RenderPassContentMediator>
