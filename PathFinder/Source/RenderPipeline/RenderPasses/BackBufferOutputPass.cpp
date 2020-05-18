@@ -29,7 +29,7 @@ namespace PathFinder
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
     
         BackBufferOutputPassData cbContent;
-        cbContent.SourceTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ToneMappingOutput);
+        cbContent.SourceTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ToneMappingOutput);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Draw(DrawablePrimitive::Quad());

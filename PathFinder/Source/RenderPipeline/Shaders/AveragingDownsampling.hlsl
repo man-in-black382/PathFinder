@@ -3,11 +3,11 @@
 
 struct PassData
 {
-    uint SourceTextureIndex; // Full resolution, source
-    uint Output0TextureIndex; // 1/2 resolution, destination
-    uint Output1TextureIndex; // 1/4 resolution, destination
-    uint Output2TextureIndex; // 1/8 resolution, destination
-    uint Output3TextureIndex; // 1/16 resolution, destination
+    uint SourceTexIdx; // Full resolution, source
+    uint Output0TexIdx; // 1/2 resolution, destination
+    uint Output1TexIdx; // 1/4 resolution, destination
+    uint Output2TexIdx; // 1/8 resolution, destination
+    uint Output3TexIdx; // 1/16 resolution, destination
 };
 
 #define PassDataType PassData
@@ -27,11 +27,11 @@ void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
     // TODO: Implement permutation system to use this algorithm with variable mip counts
 
     // Should dispatch for 1/2 resolution 
-    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.SourceTextureIndex];
-    RWTexture2D<float4> destination0 = RW_Float4_Textures2D[PassDataCB.Output0TextureIndex];
-    RWTexture2D<float4> destination1 = RW_Float4_Textures2D[PassDataCB.Output1TextureIndex];
-    RWTexture2D<float4> destination2 = RW_Float4_Textures2D[PassDataCB.Output2TextureIndex];
-    RWTexture2D<float4> destination3 = RW_Float4_Textures2D[PassDataCB.Output3TextureIndex];
+    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.SourceTexIdx];
+    RWTexture2D<float4> destination0 = RW_Float4_Textures2D[PassDataCB.Output0TexIdx];
+    RWTexture2D<float4> destination1 = RW_Float4_Textures2D[PassDataCB.Output1TexIdx];
+    RWTexture2D<float4> destination2 = RW_Float4_Textures2D[PassDataCB.Output2TexIdx];
+    RWTexture2D<float4> destination3 = RW_Float4_Textures2D[PassDataCB.Output3TexIdx];
 
     uint2 sourceCoord = DTid.xy * 2;
 

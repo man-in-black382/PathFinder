@@ -14,8 +14,7 @@ namespace PathFinder
         inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
 
         inline Foundation::Name GBufferAlbedoMetalness{ "Resource_GBuffer_Albedo_Metalness" };
-        inline Foundation::Name GBufferRoughness{ "Resource_GBuffer_Roughness" };
-        inline Foundation::Name GBufferNormal{ "Resource_GBuffer_Normal" };
+        inline Foundation::Name GBufferNormalRoughness{ "Resource_GBuffer_Normal_Roughness" };
         inline Foundation::Name GBufferMotionVector{ "Resource_GBuffer_Motion_Vector" };
         inline Foundation::Name GBufferTypeAndMaterialIndex{ "Resource_GBuffer_Type_And_Material_Index" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_GBuffer_Depth_Stencil" };
@@ -60,6 +59,7 @@ namespace PathFinder
         inline Foundation::Name ShadowNoiseEstimationDenoising{ "PSO_ShadowNoiseEstimationDenoising" };
         inline Foundation::Name ShadowDenoising{ "PSO_ShadowDenoising" };
         inline Foundation::Name DenoiserReprojection{ "PSO_DenoiserReprojection" };
+        inline Foundation::Name SpecularDenoiser{ "PSO_SpecularDenoiser" };
         inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
     }  

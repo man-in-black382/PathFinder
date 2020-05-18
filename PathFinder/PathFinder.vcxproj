@@ -284,9 +284,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowDenoisingRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationDenoisingRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\SpecularDenoiserRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\UIRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp" />
@@ -458,9 +456,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingCBContent.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferTextureIndices.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowDenoisingRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationDenoisingRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadowNoiseEstimationRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\SpecularDenoiserRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\UIRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp" />
@@ -1348,6 +1344,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserCommon.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserReprojection.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
@@ -1556,6 +1553,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\Filtering.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>
@@ -1780,6 +1778,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\ImportanceSampling.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Random.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
@@ -2135,47 +2134,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <FxCompile Include="Source\RenderPipeline\Shaders\ShadowDenoising.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimation.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">6.2</ShaderModel>
-      <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </AllResourcesBound>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </EnableUnboundedDescriptorTables>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </EntryPointName>
-      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DisableOptimizations>
-      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EnableDebuggingInformation>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Library</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">6.2</ShaderModel>
-      <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</AllResourcesBound>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EnableUnboundedDescriptorTables>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.2</ShaderModel>
-      <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </AllResourcesBound>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </EnableUnboundedDescriptorTables>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </EntryPointName>
-      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DisableOptimizations>
-      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableDebuggingInformation>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.2</ShaderModel>
-      <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</AllResourcesBound>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableUnboundedDescriptorTables>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
-    </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowNoiseEstimationDenoising.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\SpecularDenoiser.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMapping.hlsl">
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DisableOptimizations>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>
@@ -2219,6 +2178,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\Trig.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\UIRenderPass.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>

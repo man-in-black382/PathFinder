@@ -24,10 +24,10 @@ struct PassData
     // 1 4-component set of Halton numbers for rays of each light
     float4 HaltonSequence[MaxSupportedLights * RaysPerLight];
     // 16 byte boundary
-    uint BlueNoiseTextureIndex;
-    uint AnalyticOutputTextureIndex;
-    uint StochasticShadowedOutputTextureIndex;
-    uint StochasticUnshadowedOutputTextureIndex;
+    uint BlueNoiseTexIdx;
+    uint AnalyticOutputTexIdx;
+    uint StochasticShadowedOutputTexIdx;
+    uint StochasticUnshadowedOutputTexIdx;
     // 16 byte boundary
     uint2 BlueNoiseTextureSize;
     uint __Pad0;
@@ -438,7 +438,7 @@ void CombineStochasticLightingAndShadows(RTData rtData, inout ShadingResult shad
 
 ShadingResult EvaluateStandardGBufferLighting(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float depth)
 {
-    Texture2D blueNoiseTexture = Textures2D[PassDataCB.BlueNoiseTextureIndex];
+    Texture2D blueNoiseTexture = Textures2D[PassDataCB.BlueNoiseTexIdx];
 
     GBufferStandard gBuffer;
     LoadStandardGBuffer(gBuffer, gBufferTextures, pixelIndex);
@@ -487,9 +487,9 @@ void RayMiss(inout ShadowRayPayload payload)
 
 void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
 {
-    RWTexture2D<float4> analyticOutput = RW_Float4_Textures2D[PassDataCB.AnalyticOutputTextureIndex];
-    RWTexture2D<float4> stochasticUnshadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTextureIndex];
-    RWTexture2D<float4> stochasticShadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTextureIndex];
+    RWTexture2D<float4> analyticOutput = RW_Float4_Textures2D[PassDataCB.AnalyticOutputTexIdx];
+    RWTexture2D<float4> stochasticUnshadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTexIdx];
+    RWTexture2D<float4> stochasticShadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTexIdx];
 
     shadingResult.AnalyticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.AnalyticUnshadowedOutgoingLuminance, FrameDataCB.CurrentFrameCamera);
     shadingResult.StochasticShadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticShadowedOutgoingLuminance, FrameDataCB.CurrentFrameCamera);
@@ -504,13 +504,12 @@ void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
 void RayGeneration()
 {
     GBufferTexturePack gBufferTextures;
-    gBufferTextures.AlbedoMetalness = Textures2D[PassDataCB.GBufferIndices.AlbedoMetalnessTextureIndex];
-    gBufferTextures.Roughness = Textures2D[PassDataCB.GBufferIndices.RoughnessTextureIndex];
-    gBufferTextures.Motion = UInt4_Textures2D[PassDataCB.GBufferIndices.MotionTextureIndex];
-    gBufferTextures.Normal = UInt4_Textures2D[PassDataCB.GBufferIndices.NormalTextureIndex];
-    gBufferTextures.TypeAndMaterialIndex = UInt4_Textures2D[PassDataCB.GBufferIndices.TypeAndMaterialTextureIndex];
-    gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTextureIndex];
-    gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTextureIndex];
+    gBufferTextures.AlbedoMetalness = Textures2D[PassDataCB.GBufferIndices.AlbedoMetalnessTexIdx];
+    gBufferTextures.NormalRoughness = Textures2D[PassDataCB.GBufferIndices.NormalRoughnessTexIdx];
+    gBufferTextures.Motion = UInt4_Textures2D[PassDataCB.GBufferIndices.MotionTexIdx];
+    gBufferTextures.TypeAndMaterialIndex = UInt4_Textures2D[PassDataCB.GBufferIndices.TypeAndMaterialTexIdx];
+    gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
+    gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTexIdx];
 
     uint2 pixelIndex = DispatchRaysIndex().xy;
     float2 currenPixelLocation = pixelIndex + float2(0.5f, 0.5f);

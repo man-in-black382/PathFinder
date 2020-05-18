@@ -10,12 +10,16 @@ namespace PathFinder
 
     struct DenoiserReprojectionCBContent
     {
-        uint32_t GBufferNormalTextureIndex;
-        uint32_t DepthTextureIndex;
-        uint32_t CurrentViewDepthTextureIndex;
-        uint32_t PreviousViewDepthTextureIndex;
-        uint32_t CurrentAccumulationCounterTextureIndex;
-        uint32_t PreviousAccumulationCounterTextureIndex;
+        uint32_t GBufferNormalRoughnessTexIdx;
+        uint32_t DepthTexIdx;
+        uint32_t CurrentViewDepthTexIdx;
+        uint32_t PreviousViewDepthTexIdx;
+        uint32_t CurrentAccumulationCounterTexIdx;
+        uint32_t PreviousAccumulationCounterTexIdx;
+        uint32_t ShadowedShadingHistoryTexIdx;
+        uint32_t UnshadowedShadingHistoryTexIdx;
+        uint32_t ShadowedShadingReprojectionTargetTexIdx;
+        uint32_t UnshadowedShadingReprojectionTargetTexIdx;
     };
 
     class DenoiserReprojectionRenderPass : public RenderPass<RenderPassContentMediator>

@@ -32,7 +32,7 @@ namespace HAL
         s.mD3DStaticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
         s.mD3DStaticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
         s.mD3DStaticSampler.MipLODBias = 0;
-        s.mD3DStaticSampler.MaxAnisotropy = 16;
+        s.mD3DStaticSampler.MaxAnisotropy = 0;
         s.mD3DStaticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
         s.mD3DStaticSampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
         s.mD3DStaticSampler.MinLOD = 0;

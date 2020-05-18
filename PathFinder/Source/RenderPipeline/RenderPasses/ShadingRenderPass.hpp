@@ -18,10 +18,10 @@ namespace PathFinder
         // 16 byte boundary
         glm::vec4 HaltonSequence[MaxSupportedLights];
         // 16 byte boundary
-        uint32_t BlueNoiseTextureIndex;
-        uint32_t AnalyticOutputTextureIndex;
-        uint32_t StochasticShadowedOutputTextureIndex;
-        uint32_t StochasticUnshadowedOutputTextureIndex;
+        uint32_t BlueNoiseTexIdx;
+        uint32_t AnalyticOutputTexIdx;
+        uint32_t StochasticShadowedOutputTexIdx;
+        uint32_t StochasticUnshadowedOutputTexIdx;
         // 16 byte boundary
         glm::uvec2 BlueNoiseTextureSize;
         uint32_t __Pad0;

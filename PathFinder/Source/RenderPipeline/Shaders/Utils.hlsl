@@ -102,4 +102,11 @@ uint3 UVWToVoxelIndex(float3 uvw, uint3 textureSize)
     return clamp(uvw * textureSize, 0.xxx, textureSize - 1);
 }
 
+float2 NDCToUV(float3 ndcPoint)
+{
+    float2 uv = (ndcPoint.xy + 1.0) * 0.5; // [-1; 1] to [0; 1]
+    uv.y = 1.0 - uv.y; // Conform DX specs
+    return uv;
+}
+
 #endif

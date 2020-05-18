@@ -11,8 +11,8 @@ struct PassCBData
     float2 ImageSize;
     uint IsHorizontal;
     uint BlurRadius;
-    uint InputTextureIndex;
-    uint OutputTextureIndex;
+    uint InputTexIdx;
+    uint OutputTexIdx;
 };
 
 #define PassDataType PassCBData
@@ -22,8 +22,8 @@ struct PassCBData
 [numthreads(GaussianBlurGroupSize, 1, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
 {
-    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.InputTextureIndex];
-    RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
+    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.InputTexIdx];
+    RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
 
     GaussianBlurParameters parameters;
     parameters.Weights = PassDataCB.Weights;

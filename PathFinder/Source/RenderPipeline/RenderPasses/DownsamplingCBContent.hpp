@@ -7,11 +7,11 @@ namespace PathFinder
 
     struct DownsamplingCBContent
     {
-        uint32_t SourceTextureIndex;
-        uint32_t Destination0TextureIndex;
-        uint32_t Destination1TextureIndex;
-        uint32_t Destination2TextureIndex;
-        uint32_t Destination3TextureIndex;
+        uint32_t SourceTexIdx;
+        uint32_t Destination0TexIdx;
+        uint32_t Destination1TexIdx;
+        uint32_t Destination2TexIdx;
+        uint32_t Destination3TexIdx;
     };
 
 }

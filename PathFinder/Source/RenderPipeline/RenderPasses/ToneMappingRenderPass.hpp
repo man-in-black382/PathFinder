@@ -10,10 +10,10 @@ namespace PathFinder
 
     struct ToneMappingCBContent
     {
-        uint32_t InputTextureIndex;
-        uint32_t OutputTextureIndex;   
-        uint32_t _Padding0;
-        uint32_t _Padding1;
+        uint32_t InputTexIdx;
+        uint32_t OutputTexIdx;   
+        uint32_t _Pad0;
+        uint32_t _Pad1;
         // 16 byte boundary
         GTTonemappingParameterss TonemappingParams;
     };

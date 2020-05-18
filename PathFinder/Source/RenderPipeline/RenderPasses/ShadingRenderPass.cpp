@@ -31,7 +31,8 @@ namespace PathFinder
     void ShadingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         ResourceScheduler::NewTextureProperties outputProperties{};
-        outputProperties.TextureCount = 2;
+        // 3 textures: current frame, history, reprojected history
+        outputProperties.TextureCount = 3;
         outputProperties.MipCount = 5;
 
         scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
@@ -39,8 +40,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::ShadingStochasticUnshadowedOutput, outputProperties);
         
         scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
-        scheduler->ReadTexture(ResourceNames::GBufferRoughness);
-        scheduler->ReadTexture(ResourceNames::GBufferNormal);
+        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
@@ -55,24 +55,30 @@ namespace PathFinder
         const Memory::Texture* blueNoiseTexture = scene->BlueNoiseTexture();
 
         auto resourceProvider = context->GetResourceProvider();
-        auto currentFrameIndex = context->FrameNumber() % 2;
 
         ShadingCBContent cbContent{};
 
-        cbContent.GBufferIndices.AlbedoMetalnessTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalness);
-        cbContent.GBufferIndices.RoughnessTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferRoughness);
-        cbContent.GBufferIndices.NormalTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormal);
-        cbContent.GBufferIndices.MotionTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
-        cbContent.GBufferIndices.TypeAndMaterialTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferTypeAndMaterialIndex);
-        cbContent.GBufferIndices.DepthStencilTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalness);
+        cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
+        cbContent.GBufferIndices.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
+        cbContent.GBufferIndices.TypeAndMaterialTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferTypeAndMaterialIndex);
+        cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
 
-        cbContent.BlueNoiseTextureIndex = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
-        cbContent.AnalyticOutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::ShadingAnalyticOutput);
-        cbContent.StochasticShadowedOutputTextureIndex = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, currentFrameIndex });
-        cbContent.StochasticUnshadowedOutputTextureIndex = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, currentFrameIndex });
+        cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
+        cbContent.AnalyticOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingAnalyticOutput);
+
+        // Always use texture 0 for current frame rendering
+        auto currentFrameTexIdx = 0u;
+
+        cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, currentFrameTexIdx });
+        cbContent.StochasticUnshadowedOutputTexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, currentFrameTexIdx });
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
 
-        auto haltonSequence = Foundation::Halton::Sequence<4>(0, ShadingCBContent::MaxSupportedLights - 1);
+        auto frameNumber = context->FrameNumber();
+        auto startIndex = frameNumber * ShadingCBContent::MaxSupportedLights;
+        auto endIndex = startIndex + ShadingCBContent::MaxSupportedLights - 1;
+
+        auto haltonSequence = Foundation::Halton::Sequence<4>(startIndex, endIndex);
 
         for (auto i = 0; i < haltonSequence.size(); ++i)
         {

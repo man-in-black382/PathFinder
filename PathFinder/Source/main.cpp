@@ -15,9 +15,7 @@
 #include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserMipGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/ShadowNoiseEstimationRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/ShadowNoiseEstimationDenoisingRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/ShadowDenoisingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/SpecularDenoiserRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
@@ -87,9 +85,7 @@ int main(int argc, char** argv)
     auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
     auto denoiserMipGenerationPass = std::make_unique<PathFinder::DenoiserMipGenerationRenderPass>();
     auto denoiserReprojectionPass = std::make_unique<PathFinder::DenoiserReprojectionRenderPass>();
-    auto shadowNoiseEstimationPass = std::make_unique<PathFinder::ShadowNoiseEstimationRenderPass>();
-    auto shadowNoiseEstimationDenoisingPass = std::make_unique<PathFinder::ShadowNoiseEstimationDenoisingRenderPass>();
-    auto shadowDenoisingPass = std::make_unique<PathFinder::ShadowDenoisingRenderPass>();
+    auto specularDenoiserPass = std::make_unique<PathFinder::SpecularDenoiserRenderPass>();
     auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
     auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
     auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
@@ -103,9 +99,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(shadingPass.get());
     engine.AddRenderPass(denoiserMipGenerationPass.get());
     engine.AddRenderPass(denoiserReprojectionPass.get());
-    engine.AddRenderPass(shadowNoiseEstimationPass.get());
-    engine.AddRenderPass(shadowNoiseEstimationDenoisingPass.get());
-    engine.AddRenderPass(shadowDenoisingPass.get());
+    engine.AddRenderPass(specularDenoiserPass.get());
     engine.AddRenderPass(bloomBlurPass.get());
     engine.AddRenderPass(bloomCompositionPass.get());
     engine.AddRenderPass(toneMappingPass.get());
@@ -205,14 +199,14 @@ int main(int argc, char** argv)
 
     t = cubeInstance.Transformation();
     t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-    t.Translation = glm::vec3{ 0.0, 4.0, -4.0 };
+    t.Translation = glm::vec3{ 0.0, 1.0, -4.0 };
     cubeInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(80);
     camera.SetNearPlane(0.1);
-    camera.MoveTo({ 0.0, 6.0f, -25.f });
-    camera.LookAt({ 0.f, 6.0f, 0.f });
+    camera.MoveTo({ 0.0, 2.0f, -25.f });
+    camera.LookAt({ 0.f, 4.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
     camera.SetAperture(0.8);
     camera.SetFilmSpeed(400);

@@ -32,9 +32,9 @@ namespace PathFinder
 
         BloomCompositionCBContent inputs{};
         inputs.InverseTextureDimensions = { 1.0f / dimensions.Width, 1.0f / dimensions.Height };
-        inputs.DeferredLightingOutputTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingFullOutput);
-        inputs.BloomBlurOutputTextureIndex = resourceProvider->GetSRTextureIndex(ResourceNames::BloomBlurOutput);
-        inputs.CompositionOutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomCompositionOutput);
+        inputs.DeferredLightingOutputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingFullOutput);
+        inputs.BloomBlurOutputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::BloomBlurOutput);
+        inputs.CompositionOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomCompositionOutput);
         inputs.SmallBloomWeight = parameters.SmallBloomWeight;
         inputs.MediumBloomWeight = parameters.MediumBloomWeight;
         inputs.LargeBloomWeight = parameters.LargeBloomWeight;

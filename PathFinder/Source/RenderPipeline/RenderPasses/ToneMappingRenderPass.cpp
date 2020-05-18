@@ -20,7 +20,7 @@ namespace PathFinder
     {
         scheduler->ReadTexture(ResourceNames::BloomCompositionOutput);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
-        scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount);
+        scheduler->ReadTexture({ ResourceNames::ShadingStochasticShadowedOutput, 1 });
     }
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -28,8 +28,8 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTextureIndex = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::DenoiserReprojectedFramesCount);
-        cbContent.OutputTextureIndex = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, 1 });
+        cbContent.OutputTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);

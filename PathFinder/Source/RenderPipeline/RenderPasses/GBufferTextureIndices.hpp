@@ -7,15 +7,15 @@ namespace PathFinder
 
     struct GBufferTextureIndices
     {
-        uint32_t AlbedoMetalnessTextureIndex = 0;
-        uint32_t RoughnessTextureIndex = 0;
-        uint32_t NormalTextureIndex = 0;
-        uint32_t MotionTextureIndex = 0;
+        uint32_t AlbedoMetalnessTexIdx = 0;
+        uint32_t NormalRoughnessTexIdx = 0;
+        uint32_t MotionTexIdx = 0;
+        uint32_t TypeAndMaterialTexIdx = 0;
         // 16 byte boundary
-        uint32_t TypeAndMaterialTextureIndex = 0;
-        uint32_t ViewDepthTextureIndex = 0;
-        uint32_t DepthStencilTextureIndex = 0;
+        uint32_t ViewDepthTexIdx = 0;
+        uint32_t DepthStencilTexIdx = 0;
         uint32_t __Pad0 = 0;
+        uint32_t __Pad1 = 0;
         // 16 byte boundary
     };
 

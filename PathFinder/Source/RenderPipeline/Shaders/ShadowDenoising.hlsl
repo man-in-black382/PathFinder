@@ -3,18 +3,18 @@
 
 struct PassData
 {
-    uint NoiseEstimationTextureIndex;
-    uint AnalyticLuminanceTextureIndex;
-    uint StochasticShadowedLuminanceTextureIndex;
-    uint StochasticUnshadowedLuminanceTextureIndex;
+    uint NoiseEstimationTexIdx;
+    uint AnalyticLuminanceTexIdx;
+    uint StochasticShadowedLuminanceTexIdx;
+    uint StochasticUnshadowedLuminanceTexIdx;
     // 16 byte boundary
-    uint GBufferTextureIndex;
-    uint DepthTextureIndex;
-    uint IntermediateOutput0TextureIndex;
-    uint IntermediateOutput1TextureIndex;
+    uint GBufferTexIdx;
+    uint DepthTexIdx;
+    uint IntermediateOutput0TexIdx;
+    uint IntermediateOutput1TexIdx;
     // 16 byte boundary
     float2 ImageSize;
-    uint FinalOutputTextureIndex;
+    uint FinalOutputTexIdx;
     float MaximumLightsLuminance;
     // 16 byte boundary
     uint IsHorizontal;
@@ -136,11 +136,11 @@ TapKey UnpackTapKey(float2 uv, int threadIndex)
 
 void PopulateSharedMemory(int2 dispatchIndex, int threadIndex, bool isHorizontal)
 {
-    Texture2D analyticLuminances = Textures2D[PassDataCB.AnalyticLuminanceTextureIndex];
-    RWTexture2D<float4> stochasticShadowedLuminances = RW_Float4_Textures2D[PassDataCB.StochasticShadowedLuminanceTextureIndex];
-    RWTexture2D<float4> stochasticUnshadowedLuminances = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedLuminanceTextureIndex];
-    Texture2D<uint4> gBuffer = UInt4_Textures2D[PassDataCB.GBufferTextureIndex];
-    Texture2D depthTexture = Textures2D[PassDataCB.DepthTextureIndex];
+    Texture2D analyticLuminances = Textures2D[PassDataCB.AnalyticLuminanceTexIdx];
+    RWTexture2D<float4> stochasticShadowedLuminances = RW_Float4_Textures2D[PassDataCB.StochasticShadowedLuminanceTexIdx];
+    RWTexture2D<float4> stochasticUnshadowedLuminances = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedLuminanceTexIdx];
+    Texture2D<uint4> gBuffer = UInt4_Textures2D[PassDataCB.GBufferTexIdx];
+    Texture2D depthTexture = Textures2D[PassDataCB.DepthTexIdx];
 
     dispatchIndex = clamp(dispatchIndex, 0, GlobalDataCB.PipelineRTResolution - 1);
 
@@ -234,8 +234,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     // To reuse the same shader with horizontal group both for vertical and horizontal blur we swap dispatch id's X and Y
     int2 texelIndex = PassDataCB.IsHorizontal ? dispatchThreadID.xy : dispatchThreadID.yx;
 
-    Texture2D noiseEstimation = Textures2D[PassDataCB.NoiseEstimationTextureIndex];
-    Texture2D analyticLuminances = Textures2D[PassDataCB.AnalyticLuminanceTextureIndex];
+    Texture2D noiseEstimation = Textures2D[PassDataCB.NoiseEstimationTexIdx];
+    Texture2D analyticLuminances = Textures2D[PassDataCB.AnalyticLuminanceTexIdx];
 
     float3 analyticLuminance = analyticLuminances[texelIndex].rgb;
     float estimatedNoise = noiseEstimation[texelIndex].r;
@@ -299,8 +299,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     if (PassDataCB.IsHorizontal)
     {
         // Horizontal pass outputs to intermediate buffers
-        RWTexture2D<float4> intermediateOutput0 = RW_Float4_Textures2D[PassDataCB.IntermediateOutput0TextureIndex];
-        RWTexture2D<float4> intermediateOutput1 = RW_Float4_Textures2D[PassDataCB.IntermediateOutput1TextureIndex];
+        RWTexture2D<float4> intermediateOutput0 = RW_Float4_Textures2D[PassDataCB.IntermediateOutput0TexIdx];
+        RWTexture2D<float4> intermediateOutput1 = RW_Float4_Textures2D[PassDataCB.IntermediateOutput1TexIdx];
 
         intermediateOutput0[texelIndex] = float4(denoisedShadowed, 1.0);
         intermediateOutput1[texelIndex] = float4(denoisedUnshadowed, 1.0); 
@@ -308,7 +308,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     else
     {
         // Vertical pass composes the final image
-        RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.FinalOutputTextureIndex];
+        RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.FinalOutputTexIdx];
 
         float3 ratio = 0.0;
 

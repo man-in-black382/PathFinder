@@ -58,6 +58,15 @@ float3 ReconstructWorldSpacePosition(
     return worldSpacePosition.xyz;
 }
 
+void ReconstructPositions(float hyperbolicDepth, float2 ssuv, Camera camera, out float3 viewPosition, out float3 worldPosition)
+{
+    float4 viewSpacePosition = float4(ReconstructViewSpacePosition(hyperbolicDepth, ssuv, camera), 1.0);
+    float4 worldSpacePosition = mul(camera.InverseView, viewSpacePosition);
+
+    viewPosition = viewSpacePosition.xyz;
+    worldPosition = worldSpacePosition.xyz;
+}
+
 float3 WorldSpaceCameraRay(float2 centerUV, Camera camera)
 {
     return normalize(ReconstructWorldSpacePosition(1.0, centerUV, camera) - camera.Position.xyz);
@@ -66,6 +75,13 @@ float3 WorldSpaceCameraRay(float2 centerUV, Camera camera)
 float3 ViewProjectPoint(float3 p, Camera camera)
 {
     float4 projected = mul(camera.ViewProjection, float4(p, 1.0));
+    projected /= projected.w;
+    return projected.xyz;
+}
+
+float3 ProjectPoint(float3 p, Camera camera)
+{
+    float4 projected = mul(camera.Projection, float4(p, 1.0));
     projected /= projected.w;
     return projected.xyz;
 }

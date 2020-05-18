@@ -38,4 +38,21 @@ float Random(float2 v) { return FloatConstruct(Hash(asuint(v))); }
 float Random(float3 v) { return FloatConstruct(Hash(asuint(v))); }
 float Random(float4 v) { return FloatConstruct(Hash(asuint(v))); }
 
+// https://www.gamedev.net/articles/programming/graphics/contact-hardening-soft-shadows-made-fast-r4906/
+//
+float2 VogelDiskSample(int sampleIndex, int samplesCount, float phi) 
+{
+    static const float GoldenAngle = 2.4f;
+
+    float r = sqrt(float(sampleIndex) + 0.5f) / sqrt(float(samplesCount));
+    float theta = float(sampleIndex) * GoldenAngle + phi;
+
+    float sine;
+    float cosine;
+
+    sincos(theta, sine, cosine);
+
+    return float2(r * cosine, r * sine);
+}
+
 #endif

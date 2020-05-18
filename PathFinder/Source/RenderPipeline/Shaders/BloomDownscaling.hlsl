@@ -3,8 +3,8 @@
 
 struct PassData
 {
-    uint FullResSourceTextureIndex;
-    uint HalfResDestinationTextureIndex;
+    uint FullResSourceTexIdx;
+    uint HalfResDestinationTexIdx;
 };
 
 #define PassDataType PassData
@@ -15,8 +15,8 @@ struct PassData
 [numthreads(8, 8, 1)]
 void CSMain(uint groupIndex : SV_GroupIndex, uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.FullResSourceTextureIndex];
-    RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.HalfResDestinationTextureIndex];
+    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.FullResSourceTexIdx];
+    RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.HalfResDestinationTexIdx];
 
     uint2 sourceCoord = dispatchThreadID.xy * 2;
 

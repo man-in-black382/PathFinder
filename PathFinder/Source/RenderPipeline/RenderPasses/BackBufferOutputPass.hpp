@@ -10,7 +10,7 @@ namespace PathFinder
 
     struct BackBufferOutputPassData
     {
-        uint32_t SourceTextureIndex;
+        uint32_t SourceTexIdx;
     };
      
     class BackBufferOutputPass : public RenderPass<RenderPassContentMediator> 

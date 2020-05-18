@@ -4,9 +4,9 @@
 struct PassData
 {
     float2 InverseTextureDimensions;
-    uint DeferredLightingOutputTextureIndex;
-    uint BloomBlurOutputTextureIndex;
-    uint OutputTextureIndex;
+    uint DeferredLightingOutputTexIdx;
+    uint BloomBlurOutputTexIdx;
+    uint OutputTexIdx;
     uint SmallBloomWeight;
     uint MediumBloomWeight;
     uint LargeBloomWeight;
@@ -20,9 +20,9 @@ struct PassData
 [numthreads(32, 32, 1)]
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D deferredLightingOutput = Textures2D[PassDataCB.DeferredLightingOutputTextureIndex];
-    Texture2D bloomBlurOutput = Textures2D[PassDataCB.BloomBlurOutputTextureIndex];
-    RWTexture2D<float4> compositionOutput = RW_Float4_Textures2D[PassDataCB.OutputTextureIndex];
+    Texture2D deferredLightingOutput = Textures2D[PassDataCB.DeferredLightingOutputTexIdx];
+    Texture2D bloomBlurOutput = Textures2D[PassDataCB.BloomBlurOutputTexIdx];
+    RWTexture2D<float4> compositionOutput = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
 
     float2 centerUV = (float2(dispatchThreadID.xy) + 0.5f) * PassDataCB.InverseTextureDimensions;
 

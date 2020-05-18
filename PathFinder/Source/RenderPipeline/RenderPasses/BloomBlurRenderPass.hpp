@@ -16,14 +16,14 @@ namespace PathFinder
         glm::vec2 ImageSize;
         uint32_t IsHorizontal;
         uint32_t BlurRadius;
-        uint32_t InputTextureIndex;
-        uint32_t OutputTextureIndex;
+        uint32_t InputTexIdx;
+        uint32_t OutputTexIdx;
     };
 
     struct BloomDownscalingCBContent
     {
-        uint32_t FullResSourceTextureIndex;
-        uint32_t HalfResDestinationTextureIndex;
+        uint32_t FullResSourceTexIdx;
+        uint32_t HalfResDestinationTexIdx;
     };
 
     class BloomBlurRenderPass : public RenderPass<RenderPassContentMediator>

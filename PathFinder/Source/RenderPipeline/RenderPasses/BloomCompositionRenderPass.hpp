@@ -11,9 +11,9 @@ namespace PathFinder
     struct BloomCompositionCBContent
     {
         glm::vec2 InverseTextureDimensions;
-        uint32_t DeferredLightingOutputTextureIndex;
-        uint32_t BloomBlurOutputTextureIndex;
-        uint32_t CompositionOutputTextureIndex;
+        uint32_t DeferredLightingOutputTexIdx;
+        uint32_t BloomBlurOutputTexIdx;
+        uint32_t CompositionOutputTexIdx;
         uint32_t SmallBloomWeight;
         uint32_t MediumBloomWeight;
         uint32_t LargeBloomWeight;

@@ -56,8 +56,8 @@ namespace PathFinder
         blurInputs.IsHorizontal = true;
         blurInputs.BlurRadius = parameters.SmallBlurRadius;
         blurInputs.ImageSize = { fullResDimensions.Width, fullResDimensions.Height };
-        blurInputs.InputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingOverexposedOutput);
-        blurInputs.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 0);
+        blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingOverexposedOutput);
+        blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 0);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
         context->GetCommandRecorder()->Dispatch(fullResDimensions, { 256, 1 });
@@ -66,8 +66,8 @@ namespace PathFinder
         std::swap(fullResDimensions.Width, fullResDimensions.Height);
 
         blurInputs.IsHorizontal = false;
-        blurInputs.InputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 0);
-        blurInputs.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 0);
+        blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 0);
+        blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 0);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
         context->GetCommandRecorder()->Dispatch(fullResDimensions, { 256, 1 });
@@ -83,8 +83,8 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomDownscaling);
 
         BloomDownscalingCBContent downscalingInputs{};
-        downscalingInputs.FullResSourceTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 0);
-        downscalingInputs.HalfResDestinationTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
+        downscalingInputs.FullResSourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 0);
+        downscalingInputs.HalfResDestinationTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(downscalingInputs);
         context->GetCommandRecorder()->Dispatch(halfResDimensions, { 8, 8 });
@@ -102,8 +102,8 @@ namespace PathFinder
         blurInputs.IsHorizontal = true;
         blurInputs.BlurRadius = parameters.MediumBlurRadius;
         blurInputs.ImageSize = { halfResDimensions.Width, halfResDimensions.Height };
-        blurInputs.InputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
-        blurInputs.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 1);
+        blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
+        blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 1);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
         context->GetCommandRecorder()->Dispatch(halfResDimensions, { 256, 1 });
@@ -112,8 +112,8 @@ namespace PathFinder
         std::swap(halfResDimensions.Width, halfResDimensions.Height);
 
         blurInputs.IsHorizontal = false;
-        blurInputs.InputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 1);
-        blurInputs.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
+        blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 1);
+        blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
         context->GetCommandRecorder()->Dispatch(halfResDimensions, { 256, 1 });
@@ -129,8 +129,8 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomDownscaling);
 
         BloomDownscalingCBContent downscalingInputs{};
-        downscalingInputs.FullResSourceTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
-        downscalingInputs.HalfResDestinationTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
+        downscalingInputs.FullResSourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
+        downscalingInputs.HalfResDestinationTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(downscalingInputs);
         context->GetCommandRecorder()->Dispatch(quadResDimensions, { 8, 8 });
@@ -148,8 +148,8 @@ namespace PathFinder
         blurInputs.IsHorizontal = true;
         blurInputs.BlurRadius = parameters.LargeBlurRadius;
         blurInputs.ImageSize = { quadResDimensions.Width, quadResDimensions.Height };
-        blurInputs.InputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
-        blurInputs.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 2);
+        blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
+        blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 2);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
         context->GetCommandRecorder()->Dispatch(quadResDimensions, { 256, 1 });
@@ -158,8 +158,8 @@ namespace PathFinder
         std::swap(quadResDimensions.Width, quadResDimensions.Height);
 
         blurInputs.IsHorizontal = false;
-        blurInputs.InputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 2);
-        blurInputs.OutputTextureIndex = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
+        blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 2);
+        blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
         context->GetCommandRecorder()->Dispatch(quadResDimensions, { 256, 1 });
