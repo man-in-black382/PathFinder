@@ -238,13 +238,6 @@ namespace PathFinder
     {
         for (AliasingMetadataIterator it : mAlreadyAliasedAllocations)
         {
-            OutputDebugString(StringFormat("%s \n \t TL: %d %d Offset: %d Size: %d\n",
-                it->SchedulingInfo->ResourceName().ToString().c_str(),
-                it->ResourceTimeline.Start,
-                it->ResourceTimeline.End,
-                it->SchedulingInfo->AliasingInfo.HeapOffset,
-                it->SchedulingInfo->TotalRequiredMemory()).c_str());
-
             it->SchedulingInfo->AliasingInfo.IsAliased = true;
             mSchedulingInfos.erase(it);
         }

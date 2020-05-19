@@ -7,7 +7,7 @@ namespace Memory
 
     void ResourceStateTracker::StartTrakingResource(const HAL::Resource* resource)
     {
-        mCurrentResourceStates[resource] = resource->InitialStates();
+        mCurrentResourceStates[resource].resize(resource->SubresourceCount(), resource->InitialStates());
     }
 
     void ResourceStateTracker::StopTrakingResource(const HAL::Resource* resource)
@@ -17,21 +17,24 @@ namespace Memory
 
     void ResourceStateTracker::RequestTransition(const HAL::Resource* resource, HAL::ResourceState newState)
     {
-        mPendingResourceStates[resource] = newState;
+        ResourceStateTracker::SubresourceStateList& pendingStates = mPendingResourceStates[resource];
+        pendingStates.resize(resource->SubresourceCount(), newState);
+    }
+
+    void ResourceStateTracker::RequestTransitions(const HAL::Resource* resource, const ResourceStateTracker::SubresourceStateList& newStates)
+    {
+        ResourceStateTracker::SubresourceStateList& pendingStates = mPendingResourceStates[resource];
+        pendingStates = newStates;
     }
 
     HAL::ResourceBarrierCollection ResourceStateTracker::ApplyRequestedTransitions(bool firstInCommandList)
     {
         HAL::ResourceBarrierCollection barriers{};
 
-        for (auto& [resource, state] : mPendingResourceStates)
+        for (auto& [resource, subresourceStates] : mPendingResourceStates)
         {
-            auto [barrier, previousState] = TransitionToStateImmediately(resource, state, firstInCommandList);
-            
-            if (barrier)
-            {
-                barriers.AddBarrier(*barrier);
-            }
+            HAL::ResourceBarrierCollection resourceBarriers = TransitionToStatesImmediately(resource, subresourceStates, firstInCommandList);
+            barriers.AddBarriers(resourceBarriers);
         }
 
         mPendingResourceStates.clear();
@@ -39,33 +42,92 @@ namespace Memory
         return barriers;
     }
 
-    ResourceStateTracker::TransitionResult ResourceStateTracker::TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList)
+    HAL::ResourceBarrierCollection ResourceStateTracker::TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList)
     {
-        ResourceStateIterator stateIt = GetCurrentStateForResource(resource);
+        SubresourceStateList& currentSubresourceStates = GetResourceCurrentStatesInternal(resource);
+        HAL::ResourceBarrierCollection newStateBarriers{};
+        HAL::ResourceState firstCurrentState = currentSubresourceStates.front();
 
-        HAL::ResourceState oldState = stateIt->second;
+        bool subresourceStatesMatch = true;
 
-        if (IsNewStateRedundant(stateIt->second, newState))
+        for (auto subresource = 0u; subresource < currentSubresourceStates.size(); ++subresource)
         {
-            return { std::nullopt, oldState };
+            HAL::ResourceState currentState = currentSubresourceStates[subresource];
+
+            if (IsNewStateRedundant(currentState, newState))
+            {
+                continue;
+            }
+
+            currentSubresourceStates[subresource] = newState;
+
+            if (CanTransitionToStateImplicitly(resource, currentState, newState, firstInCommandList))
+            {
+                continue;
+            }
+
+            newStateBarriers.AddBarrier(HAL::ResourceTransitionBarrier{ currentState, newState, resource, subresource });
+
+            if (currentState != firstCurrentState)
+            {
+                subresourceStatesMatch = false;
+            }
         }
 
-        if (CanTransitionToStateImplicitly(resource, stateIt->second, newState, firstInCommandList))
+        // If multiple transitions were requested, but it's possible to make just one - do it
+        if (subresourceStatesMatch && newStateBarriers.BarrierCount() > 1)
         {
-            stateIt->second = newState;
-            return { std::nullopt, oldState };
+            HAL::ResourceBarrierCollection singleBarrierCollection{};
+            singleBarrierCollection.AddBarrier(HAL::ResourceTransitionBarrier{ firstCurrentState, newState, resource });
+            return singleBarrierCollection;
         }
 
-        HAL::ResourceTransitionBarrier barrier{ stateIt->second, newState, resource };
-        stateIt->second = newState;
-        return { barrier, oldState };
+        return newStateBarriers;
     }
 
-    ResourceStateTracker::ResourceStateIterator ResourceStateTracker::GetCurrentStateForResource(const HAL::Resource* resource)
+    HAL::ResourceBarrierCollection ResourceStateTracker::TransitionToStatesImmediately(const HAL::Resource* resource, const SubresourceStateList& newStates, bool firstInCommandList)
+    {
+        SubresourceStateList& currentSubresourceStates = GetResourceCurrentStatesInternal(resource);
+
+        assert_format(currentSubresourceStates.size() == newStates.size(), "Number of subresource states must match");
+
+        HAL::ResourceBarrierCollection newStateBarriers{};
+
+        for (auto subresource = 0u; subresource < currentSubresourceStates.size(); ++subresource)
+        {
+            HAL::ResourceState currentState = currentSubresourceStates[subresource];
+            HAL::ResourceState newState = newStates[subresource];
+
+            if (IsNewStateRedundant(currentState, newState))
+            {
+                continue;
+            }
+
+            currentSubresourceStates[subresource] = newState;
+
+            if (CanTransitionToStateImplicitly(resource, currentState, newState, firstInCommandList))
+            {
+                continue;
+            }
+
+            newStateBarriers.AddBarrier(HAL::ResourceTransitionBarrier{ currentState, newState, resource, subresource });
+        }
+
+        return newStateBarriers;
+    }
+
+    const ResourceStateTracker::SubresourceStateList& ResourceStateTracker::ResourceCurrentStates(const HAL::Resource* resource) const
     {
         auto it = mCurrentResourceStates.find(resource);
         assert_format(it != mCurrentResourceStates.end(), "Resource is not registered / not being tracked");
-        return it;
+        return it->second;
+    }
+
+    ResourceStateTracker::SubresourceStateList& ResourceStateTracker::GetResourceCurrentStatesInternal(const HAL::Resource* resource)
+    {
+        auto it = mCurrentResourceStates.find(resource);
+        assert_format(it != mCurrentResourceStates.end(), "Resource is not registered / not being tracked");
+        return it->second;
     }
 
     bool ResourceStateTracker::IsNewStateRedundant(HAL::ResourceState currentState, HAL::ResourceState newState)

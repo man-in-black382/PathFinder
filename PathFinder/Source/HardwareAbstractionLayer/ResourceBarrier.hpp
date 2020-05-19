@@ -3,6 +3,8 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include <vector>
+#include <optional>
+#include <cstdint>
 
 #include "Resource.hpp"
 
@@ -25,7 +27,12 @@ namespace HAL
     class ResourceTransitionBarrier : public ResourceBarrier
     {
     public:
-        ResourceTransitionBarrier(ResourceState beforeStateMask, ResourceState afterStateMask, const Resource* resource);
+        ResourceTransitionBarrier(
+            ResourceState beforeStateMask, 
+            ResourceState afterStateMask, 
+            const Resource* resource, 
+            std::optional<uint64_t> subresourceIndex = std::nullopt);
+
         ~ResourceTransitionBarrier() = default;
 
     private:

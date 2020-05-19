@@ -11,25 +11,29 @@ namespace Memory
     class ResourceStateTracker
     {
     public:
-        using TransitionResult = std::pair<std::optional<HAL::ResourceTransitionBarrier>, HAL::ResourceState>;
+        using SubresourceStateList = std::vector<HAL::ResourceState>;
 
         void StartTrakingResource(const HAL::Resource* resource);
         void StopTrakingResource(const HAL::Resource* resource);
 
-        // Queue state update but wait until CommitPendingTransitions
+        // Queue state update but wait until ApplyRequestedTransitions
         void RequestTransition(const HAL::Resource* resource, HAL::ResourceState newState);
+        void RequestTransitions(const HAL::Resource* resource, const SubresourceStateList& newStates);
 
         // Register new resource states that are currently pending and return a corresponding barrier collection
         HAL::ResourceBarrierCollection ApplyRequestedTransitions(bool firstInCommandList = false);
 
         // Immediately record new state for a resource 
-        TransitionResult TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList = false);
+        HAL::ResourceBarrierCollection TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList = false);
+        HAL::ResourceBarrierCollection TransitionToStatesImmediately(const HAL::Resource* resource, const SubresourceStateList& newStates, bool firstInCommandList = false);
+
+        const SubresourceStateList& ResourceCurrentStates(const HAL::Resource* resource) const;
 
     private:
-        using ResourceStateMap = std::unordered_map<const HAL::Resource*, HAL::ResourceState>;
+        using ResourceStateMap = std::unordered_map<const HAL::Resource*, SubresourceStateList>;
         using ResourceStateIterator = ResourceStateMap::iterator;
 
-        ResourceStateIterator GetCurrentStateForResource(const HAL::Resource* resource);
+        SubresourceStateList& GetResourceCurrentStatesInternal(const HAL::Resource* resource);
 
         bool IsNewStateRedundant(HAL::ResourceState currentState, HAL::ResourceState newState);
         bool CanTransitionToStateImplicitly(const HAL::Resource* resource, HAL::ResourceState currentState, HAL::ResourceState newState, bool firstInCommandList);

@@ -7,6 +7,8 @@
 static const float MaxAccumulatedFrames = 16;
 static const float MaxAccumulatedFramesInv = 1.0 / MaxAccumulatedFrames;
 
+// https://developer.nvidia.com/gtc/2020/video/s22699
+
 float GeometryWeight(float3 p0, float3 n0, float3 p, float p0ViewZ)
 {
     // Weight based on distance from current sample "p"

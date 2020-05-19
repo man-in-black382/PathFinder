@@ -5,12 +5,17 @@ namespace HAL
 {
     ResourceBarrier::~ResourceBarrier() {}
 
-    ResourceTransitionBarrier::ResourceTransitionBarrier(ResourceState beforeStateMask, ResourceState afterStateMask, const Resource* resource)
-        : mResource(resource), mBeforeStates(beforeStateMask), mAfterStates(afterStateMask)
+    ResourceTransitionBarrier::ResourceTransitionBarrier(
+        ResourceState beforeStateMask,
+        ResourceState afterStateMask,
+        const Resource* resource,
+        std::optional<uint64_t> subresourceIndex)
+        :
+        mResource(resource), mBeforeStates(beforeStateMask), mAfterStates(afterStateMask)
     {
         mDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         mDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        mDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        mDesc.Transition.Subresource = subresourceIndex.value_or(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
         mDesc.Transition.StateBefore = D3DResourceState(beforeStateMask);
         mDesc.Transition.StateAfter = D3DResourceState(afterStateMask);
         mDesc.Transition.pResource = resource->D3DResource();

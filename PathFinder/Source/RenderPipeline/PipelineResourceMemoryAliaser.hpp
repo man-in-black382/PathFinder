@@ -57,7 +57,6 @@ namespace PathFinder
         void AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt);
         void RemoveAliasedAllocationsFromOriginalList();
 
-        // Containers to be used between function calls to avoid redundant memory allocations
         std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionStarts;
         std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionEnds;
         std::vector<AliasingMetadataIterator> mAlreadyAliasedAllocations;

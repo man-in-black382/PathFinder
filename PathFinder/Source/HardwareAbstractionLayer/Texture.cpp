@@ -66,6 +66,9 @@ namespace HAL
     {
         mFormat = ResourceFormat::FormatFromD3DFormat(D3DDescription().Format);
         mDimensions = { D3DDescription().Width, D3DDescription().Height, D3DDescription().DepthOrArraySize };
+        mMipCount = D3DDescription().MipLevels;
+
+        // TODO: Fill the rest of the properties
 
         switch (D3DDescription().Dimension)
         {

@@ -30,17 +30,14 @@ namespace Memory
 
         if (mUploadStrategy != UploadStrategy::DirectAccess)
         {
-            auto [barrier, previousState] = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
+            const ResourceStateTracker::SubresourceStateList& previousStates = mStateTracker->ResourceCurrentStates(HALResource());
 
-            if (barrier)
-            {
-                HAL::ResourceState oldStates = barrier->BeforeStates();
-                mCommandListProvider->CommandList()->InsertBarrier(*barrier);
-            }
-            
+            HAL::ResourceBarrierCollection barriers = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
+            mCommandListProvider->CommandList()->InsertBarriers(barriers);
+
             RecordUploadCommands();
             // Request to apply old state after copy
-            RequestNewState(previousState);
+            mStateTracker->RequestTransitions(HALResource(), previousStates);
         }
     }
 
@@ -56,17 +53,14 @@ namespace Memory
 
         AllocateNewReadbackBuffer();
 
-        auto [barrier, previousState] = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopySource);
+        const ResourceStateTracker::SubresourceStateList& previousStates = mStateTracker->ResourceCurrentStates(HALResource());
 
-        if (barrier)
-        {
-            HAL::ResourceState oldStates = barrier->BeforeStates();
-            mCommandListProvider->CommandList()->InsertBarrier(*barrier);
-        }
+        HAL::ResourceBarrierCollection barriers = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
+        mCommandListProvider->CommandList()->InsertBarriers(barriers);
         
         RecordReadbackCommands();
         // Request to apply old state after copy
-        RequestNewState(previousState);
+        mStateTracker->RequestTransitions(HALResource(), previousStates);
     }
 
     void GPUResource::RequestNewState(HAL::ResourceState newState)
