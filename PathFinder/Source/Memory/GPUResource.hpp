@@ -56,6 +56,7 @@ namespace Memory
         void RequestWrite();
         void RequestRead();
         void RequestNewState(HAL::ResourceState newState);
+        void RequestNewSubresourceStates(const ResourceStateTracker::SubresourceStateList& newStates);
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);
         void SetDebugName(const std::string& name);

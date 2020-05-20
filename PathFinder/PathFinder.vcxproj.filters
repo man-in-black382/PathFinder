@@ -351,9 +351,6 @@
     <ClCompile Include="Source\Memory\GPUResourceProducer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\ResourceStateTracker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Memory\ResourceStateTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2231,9 +2228,6 @@
     <ClInclude Include="Source\Memory\GPUResourceProducer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceStateTracker.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Memory\ResourceStateTracker.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2927,7 +2921,6 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\ShadingPacking.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Shading.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Random.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadowDenoising.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Gaussian.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BaseEngineLayout.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Camera.hlsl" />

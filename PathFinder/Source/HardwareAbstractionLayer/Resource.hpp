@@ -32,8 +32,6 @@ namespace HAL
         Resource(const Resource& other) = delete;
         Resource(Resource&& other) = default;
 
-        void SetDeallocationCallback(const DeallocationCallback& callback);
-
         virtual ~Resource() = 0;
 
         virtual GPUAddress GPUVirtualAddress() const;
@@ -58,7 +56,6 @@ namespace HAL
         uint64_t mResourceAlignment = 0;
         uint64_t mSubresourceCount = 0;
         uint64_t mHeapOffset = 0;
-        DeallocationCallback mDeallocationCallback = []{};
         D3D12_RESOURCE_DESC mDescription{};
 
     public:

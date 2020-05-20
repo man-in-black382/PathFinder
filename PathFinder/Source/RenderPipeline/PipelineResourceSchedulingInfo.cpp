@@ -4,9 +4,14 @@ namespace PathFinder
 {
 
     PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format, uint64_t resourceCount)
-        : mResourceFormat{ format }, mResourceName{resourceName}, mResourceCount{ resourceCount }
+        : mResourceFormat{ format }, mResourceName{ resourceName }, mResourceCount{ resourceCount }, mSubresourceCount{ format.SubresourceCount() }
     {
-        mAllResourcesPerPassData.resize(resourceCount);
+        mResourceSchedulingMetadata.resize(resourceCount);
+
+        for (SubresourceArray& innerArray : mResourceSchedulingMetadata)
+        {
+            innerArray.resize(mSubresourceCount);
+        }
     }
 
     void PipelineResourceSchedulingInfo::FinishScheduling()
@@ -14,15 +19,21 @@ namespace PathFinder
         HAL::ResourceState initialStates = HAL::ResourceState::Common;
         HAL::ResourceState expectedStates = HAL::ResourceState::Common;
 
-        for (auto& resourcePerPassData : mAllResourcesPerPassData)
+        // Get subresources for each resource in the array
+        for (const SubresourceArray& subresources : mResourceSchedulingMetadata)
         {
-            for (const auto& [passName, metadata] : resourcePerPassData)
+            // Get per pass scheduling info for each subresource
+            for (const PassInfoMap& subresourcePerPassData : subresources)
             {
-                expectedStates |= metadata.RequestedState;
-
-                if (passName == mFirstPassGraphNode.PassMetadata.Name)
+                // Get scheduling metadata for each render pass that requested usage of this subresource
+                for (const auto& [passName, metadata] : subresourcePerPassData)
                 {
-                    initialStates |= initialStates;
+                    expectedStates |= metadata.RequestedState;
+
+                    if (passName == mFirstPassGraphNode.PassMetadata.Name)
+                    {
+                        initialStates |= initialStates;
+                    }
                 }
             }
         }
@@ -32,21 +43,23 @@ namespace PathFinder
         mResourceFormat.SetExpectedStates(expectedStates);
     }
 
-    const PipelineResourceSchedulingInfo::PassMetadata* PipelineResourceSchedulingInfo::GetMetadataForPass(Foundation::Name passName, uint64_t resourceIndex) const
+    const PipelineResourceSchedulingInfo::PassInfo* PipelineResourceSchedulingInfo::GetInfoForPass(Foundation::Name passName, uint64_t resourceIndex, uint64_t subresourceIndex) const
     {
-        auto& resourcePerPassData = mAllResourcesPerPassData[resourceIndex];
-        auto it = resourcePerPassData.find(passName);
-        return it != resourcePerPassData.end() ? &it->second : nullptr;
+        const SubresourceArray& subresourceArray = mResourceSchedulingMetadata[resourceIndex];
+        const PassInfoMap& passInfoMap = subresourceArray[subresourceIndex];
+        auto it = passInfoMap.find(passName);
+        return it != passInfoMap.end() ? &it->second : nullptr;
     }
 
-    PipelineResourceSchedulingInfo::PassMetadata* PipelineResourceSchedulingInfo::GetMetadataForPass(Foundation::Name passName, uint64_t resourceIndex)
+    PipelineResourceSchedulingInfo::PassInfo* PipelineResourceSchedulingInfo::GetInfoForPass(Foundation::Name passName, uint64_t resourceIndex, uint64_t subresourceIndex)
     {
-        auto& resourcePerPassData = mAllResourcesPerPassData[resourceIndex];
-        auto it = resourcePerPassData.find(passName);
-        return it != resourcePerPassData.end() ? &it->second : nullptr;
+        SubresourceArray& subresourceArray = mResourceSchedulingMetadata[resourceIndex];
+        PassInfoMap& passInfoMap = subresourceArray[subresourceIndex];
+        auto it = passInfoMap.find(passName);
+        return it != passInfoMap.end() ? &it->second : nullptr;
     }
 
-    PipelineResourceSchedulingInfo::PassMetadata& PipelineResourceSchedulingInfo::AllocateMetadataForPass(const RenderPassExecutionGraph::Node& passNode, uint64_t resourceIndex)
+    PipelineResourceSchedulingInfo::PassInfo& PipelineResourceSchedulingInfo::AllocateInfoForPass(const RenderPassExecutionGraph::Node& passNode, uint64_t resourceIndex, uint64_t subresourceIndex)
     {
         // Empty name means we have not set first pass node yet
         if (!mFirstPassGraphNode.PassMetadata.Name.IsValid())
@@ -56,7 +69,7 @@ namespace PathFinder
 
         mLastPassGraphNode = passNode;
 
-        auto [it, success] = mAllResourcesPerPassData[resourceIndex].emplace(passNode.PassMetadata.Name, PassMetadata{});
+        auto [it, success] = mResourceSchedulingMetadata[resourceIndex][subresourceIndex].emplace(passNode.PassMetadata.Name, PassInfo{});
         return it->second;
     }
 

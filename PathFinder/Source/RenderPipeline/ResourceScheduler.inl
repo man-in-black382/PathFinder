@@ -14,9 +14,15 @@ namespace PathFinder
 
         for (auto bufferIdx = 0u; bufferIdx < schedulingInfo->ResourceCount(); ++bufferIdx)
         {
-            auto& passData = schedulingInfo->AllocateMetadataForPass(mResourceStorage->CurrentPassGraphNode(), bufferIdx);
-            passData.RequestedState = HAL::ResourceState::UnorderedAccess;
-            passData.CreateBufferUADescriptor = true;
+            for (auto subresourceIdx = 0u; subresourceIdx < schedulingInfo->SubresourceCount(); ++subresourceIdx)
+            {
+                PipelineResourceSchedulingInfo::PassInfo& passInfo = schedulingInfo->AllocateInfoForPass(
+                    mResourceStorage->CurrentPassGraphNode(), bufferIdx, subresourceIdx
+                );
+
+                passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
+                passInfo.CreateBufferUADescriptor = true;
+            }            
         }
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);

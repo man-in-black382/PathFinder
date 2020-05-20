@@ -68,6 +68,11 @@ namespace Memory
         if (mStateTracker) mStateTracker->RequestTransition(HALResource(), newState);
     }
 
+    void GPUResource::RequestNewSubresourceStates(const ResourceStateTracker::SubresourceStateList& newStates)
+    {
+        if (mStateTracker) mStateTracker->RequestTransitions(HALResource(), newStates);
+    }
+
     void GPUResource::BeginFrame(uint64_t frameNumber)
     {
         mFrameNumber = frameNumber;

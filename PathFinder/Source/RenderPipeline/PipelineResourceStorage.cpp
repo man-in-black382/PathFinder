@@ -29,16 +29,16 @@ namespace PathFinder
         mDescriptorAllocator{ descriptorAllocator },
         mPassExecutionGraph{ passExecutionGraph } {}
 
-    const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex)
+    const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex, uint64_t mipIndex)
     {
         const PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
         const Memory::Texture* texture = resourceObjects->GetTexture(resourceIndex);
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
-        auto perPassData = resourceObjects->SchedulingInfo.GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIndex);
+        auto perPassData = resourceObjects->SchedulingInfo.GetInfoForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIndex, mipIndex);
         assert_format(perPassData && perPassData->CreateTextureRTDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
         
-        return texture->GetRTDescriptor();
+        return texture->GetRTDescriptor(mipIndex);
     }
 
     const HAL::DSDescriptor* PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName, uint64_t resourceIndex)
@@ -47,7 +47,7 @@ namespace PathFinder
         const Memory::Texture* texture = resourceObjects->GetTexture(resourceIndex);
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
-        auto perPassData = resourceObjects->SchedulingInfo.GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIndex);
+        auto perPassData = resourceObjects->SchedulingInfo.GetInfoForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIndex, 0);
         assert_format(perPassData && perPassData->CreateTextureDSDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
 
         return texture->GetDSDescriptor();
@@ -164,9 +164,9 @@ namespace PathFinder
 
             for (auto textureIdx = 0u; textureIdx < textureCount; ++textureIdx)
             {
-                if (resourceObjects->SchedulingInfo.AliasingInfo.IsAliased)
+                if (resourceObjects->SchedulingInfo.MemoryAliasingInfo.IsAliased)
                 {
-                    resourceObjects->Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, resourceObjects->SchedulingInfo.AliasingInfo.HeapOffset));
+                    resourceObjects->Textures.emplace_back(mResourceProducer->NewTexture(completeProperties, *heap, resourceObjects->SchedulingInfo.MemoryAliasingInfo.HeapOffset));
                 }
                 else
                 {
@@ -301,7 +301,7 @@ namespace PathFinder
                 assert_format(resource, "Resource must be allocated before creating any transitions");
 
                 // Insert aliasing barriers in render passes this resource is first used in
-                if (resourceObjects.SchedulingInfo.AliasingInfo.NeedsAliasingBarrier)
+                if (resourceObjects.SchedulingInfo.MemoryAliasingInfo.NeedsAliasingBarrier)
                 {
                     PipelineResourceStoragePass* passObjects = GetPerPassData(resourceObjects.SchedulingInfo.FirstPassGraphNode().PassMetadata.Name);
                     passObjects->AliasingBarriers.AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resource->HALResource() });
@@ -330,12 +330,18 @@ namespace PathFinder
                 // Go through all scheduled render passes and add barriers for this resource where needed
                 for (auto& [passName, passData] : mPerPassData)
                 {
-                    auto resourcePassMetadata = resourceObjects.SchedulingInfo.GetMetadataForPass(passName, resourceIdx);
-
-                    // If resource is scheduled for usage in this render pass and is used as a UAV then we create a corresponding barrier
-                    if (resourcePassMetadata && resourcePassMetadata->NeedsUAVBarrier)
+                    // Go through every subresource
+                    for (auto subresourceIdx = 0u; subresourceIdx < resourceObjects.SchedulingInfo.SubresourceCount(); ++subresourceIdx)
                     {
-                        passData.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resource->HALResource() });
+                        auto resourcePassMetadata = resourceObjects.SchedulingInfo.GetInfoForPass(passName, resourceIdx, subresourceIdx);
+
+                        // If resource is scheduled for usage in this render pass and is used as a UAV then we create a corresponding barrier
+                        if (resourcePassMetadata && resourcePassMetadata->NeedsUAVBarrier)
+                        {
+                            // If at least one subresource is used as UAV, issue a UAV barrier for the whole resource and break
+                            passData.UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resource->HALResource() });
+                            break;
+                        }
                     }
                 }
             }
@@ -382,16 +388,27 @@ namespace PathFinder
 
     void PipelineResourceStorage::RequestResourceTransitionsToCurrentPassStates()
     {
+        Memory::ResourceStateTracker::SubresourceStateList stateList{};
+
         for (ResourceName resourceName : mCurrentPassData->ScheduledResourceNames)
         {
             PipelineResourceStorageResource* resourceData = GetPerResourceData(resourceName);
 
             for (auto resourceIdx = 0u; resourceIdx < resourceData->ResourceCount(); ++resourceIdx)
             {
-                if (auto passMetadata = resourceData->SchedulingInfo.GetMetadataForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIdx))
+                for (auto subresourceIdx = 0u; subresourceIdx < resourceData->SchedulingInfo.SubresourceCount(); ++subresourceIdx)
                 {
-                    HAL::ResourceState newState = passMetadata->OptimizedState;
-                    resourceData->GetGPUResource(resourceIdx)->RequestNewState(newState);
+                    if (auto passMetadata = resourceData->SchedulingInfo.GetInfoForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIdx, subresourceIdx))
+                    {
+                        HAL::ResourceState newState = passMetadata->OptimizedState;
+                        stateList.push_back(newState);
+                    }
+                }
+
+                if (!stateList.empty())
+                {
+                    resourceData->GetGPUResource(resourceIdx)->RequestNewSubresourceStates(stateList);
+                    stateList.clear();
                 }
             }
         }

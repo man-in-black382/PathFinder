@@ -80,14 +80,11 @@ namespace HAL
 
         static FormatVariant FormatFromD3DFormat(DXGI_FORMAT format);
 
-        bool CanResourceImplicitlyPromoteFromCommonStateToState(ResourceState state) const;
-        bool CanResourceImplicitlyDecayToCommonStateFromState(ResourceState state) const;
-
     private:
         using KindVariant = std::variant<BufferKind, TextureKind>;
 
         void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);
-        void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions);
+        void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions, uint8_t mipCount);
         void QueryAllocationInfo();
         void DetermineExpectedUsageFlags(ResourceState expectedStates);
         void DetermineAliasingGroup(ResourceState expectedStates);
@@ -98,6 +95,7 @@ namespace HAL
         std::optional<D3D12_CLEAR_VALUE> mClearValue;
         uint64_t mResourceAlignment = 0;
         uint64_t mResourceSizeInBytes = 0;
+        uint64_t mSubresourceCount = 0;
         KindVariant mKind;
         HeapAliasingGroup mAliasingGroup = HeapAliasingGroup::Universal;
 
@@ -106,6 +104,7 @@ namespace HAL
         inline const D3D12_CLEAR_VALUE* D3DOptimizedClearValue() const { return mClearValue ? &(*mClearValue) : nullptr; }
         inline auto ResourceAlighnment() const { return mResourceAlignment; }
         inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }
+        inline auto SubresourceCount() const { return mSubresourceCount; }
         inline auto DataType() const { return mDataType; }
         inline auto Kind() const { return mKind; }
         inline auto ResourceAliasingGroup() const { return mAliasingGroup; }

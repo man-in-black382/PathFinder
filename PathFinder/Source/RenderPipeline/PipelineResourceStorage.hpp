@@ -48,7 +48,7 @@ namespace PathFinder
 
         using DebugBufferIteratorFunc = std::function<void(PassName passName, const float* debugData)>;
 
-        const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0);
+        const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0, uint64_t mipIndex = 0);
         const HAL::DSDescriptor* GetDepthStencilDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0);
         
         void SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node);

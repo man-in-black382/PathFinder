@@ -97,9 +97,9 @@ namespace PathFinder
 
             for (auto bufferIdx = 0u; bufferIdx < buffersCount; ++bufferIdx)
             {
-                if (resourceObjects->SchedulingInfo.AliasingInfo.IsAliased)
+                if (resourceObjects->SchedulingInfo.MemoryAliasingInfo.IsAliased)
                 {
-                    resourceObjects->Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, resourceObjects->SchedulingInfo.AliasingInfo.HeapOffset));
+                    resourceObjects->Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, resourceObjects->SchedulingInfo.MemoryAliasingInfo.HeapOffset));
                 }
                 else
                 {

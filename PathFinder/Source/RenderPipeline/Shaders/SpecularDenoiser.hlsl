@@ -126,7 +126,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     float parallax = length(movemenDelta) / (distanceToPoint * frameTime);
 
     // Decrease maximum frame number on surface motion which will effectively decrease history weight,
-    // which is absolutely mandatory to combat ghosting
+    // which is mandatory to combat ghosting
     float maxAllowedAccumFrames = MaxAllowedAccumulatedFrames(roughness, NdotV, parallax);
     accumFramesCount = min(accumFramesCount, maxAllowedAccumFrames);
     float accumFramesCountNorm = accumFramesCount / maxAllowedAccumFrames;
@@ -171,7 +171,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         // Get neighbor properties
         float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler, sampleUV, 0);
 
-        float3 neighborNormal = neighborNormalRoughness.xyz;
+        float3 neighborNormal = ExpandGBufferNormal(neighborNormalRoughness.xyz);
         float neighborRoughness = neighborNormalRoughness.w;
 
         // Compute weights
@@ -191,7 +191,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     denoisedShadowed /= totalWeight;
     denoisedUnshadowed /= totalWeight;
 
-    // Combine with history. 
+    // Combine with history
     denoisedShadowed = lerp(shadowedShadingHistoryTexture[pixelIndex].rgb, denoisedShadowed, accumulationSpeed);
     denoisedUnshadowed = lerp(unshadowedShadingHistoryTexture[pixelIndex].rgb, denoisedUnshadowed, accumulationSpeed);
     

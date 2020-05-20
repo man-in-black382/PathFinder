@@ -27,7 +27,7 @@ namespace PathFinder
 
         if (mSchedulingInfos.size() == 1)
         {
-            mSchedulingInfos.begin()->SchedulingInfo->AliasingInfo.HeapOffset = 0;
+            mSchedulingInfos.begin()->SchedulingInfo->MemoryAliasingInfo.HeapOffset = 0;
             optimalHeapSize = mSchedulingInfos.begin()->SchedulingInfo->TotalRequiredMemory();
             return optimalHeapSize;
         }
@@ -95,7 +95,7 @@ namespace PathFinder
                 // but the algorithm requires non-aliasable memory region to be 
                 // relative to current global offset, which is an offset of the current memory bucket we're aliasing resources in,
                 // therefore we have to subtract current global offset
-                uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset - mGlobalStartOffset;
+                uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->MemoryAliasingInfo.HeapOffset - mGlobalStartOffset;
                 uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->TotalRequiredMemory() - 1;
 
                 mNonAliasableMemoryRegionStarts.insert(startByteIndex);
@@ -108,7 +108,7 @@ namespace PathFinder
     {
         if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->SchedulingInfo->TotalRequiredMemory() <= mAvailableMemory)
         {
-            nextAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset = mGlobalStartOffset;
+            nextAllocationIt->SchedulingInfo->MemoryAliasingInfo.HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
             return true;
         }
@@ -120,7 +120,7 @@ namespace PathFinder
     {
         if (mNonAliasableMemoryRegionStarts.empty())
         {
-            nextAllocationIt->SchedulingInfo->AliasingInfo.HeapOffset = mGlobalStartOffset;
+            nextAllocationIt->SchedulingInfo->MemoryAliasingInfo.HeapOffset = mGlobalStartOffset;
             mAlreadyAliasedAllocations.push_back(nextAllocationIt);
             return true;
         }
@@ -217,7 +217,7 @@ namespace PathFinder
             //
             //nextAllocationIt->Allocation->AliasingSource = mAllocations.begin()->Allocation;
 
-            PipelineResourceSchedulingInfo::AliasingMetadata& aliasingInfo = nextSchedulingInfoIt->SchedulingInfo->AliasingInfo;
+            PipelineResourceSchedulingInfo::AliasingInfo& aliasingInfo = nextSchedulingInfoIt->SchedulingInfo->MemoryAliasingInfo;
 
             // Offset calculations were made in a frame relative to the current memory bucket.
             // Now we need to adjust it to be relative to the heap start.
@@ -228,7 +228,7 @@ namespace PathFinder
             // so it's no longer a single occupant of this memory region, therefore it now
             // needs an aliasing barrier. If the first resource is a single resource on this
             // memory region then this code branch will never be hit and we will avoid a barrier for it.
-            mAlreadyAliasedAllocations.front()->SchedulingInfo->AliasingInfo.NeedsAliasingBarrier = true;
+            mAlreadyAliasedAllocations.front()->SchedulingInfo->MemoryAliasingInfo.NeedsAliasingBarrier = true;
 
             mAlreadyAliasedAllocations.push_back(nextSchedulingInfoIt);
         }
@@ -238,7 +238,7 @@ namespace PathFinder
     {
         for (AliasingMetadataIterator it : mAlreadyAliasedAllocations)
         {
-            it->SchedulingInfo->AliasingInfo.IsAliased = true;
+            it->SchedulingInfo->MemoryAliasingInfo.IsAliased = true;
             mSchedulingInfos.erase(it);
         }
 

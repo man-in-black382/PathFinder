@@ -24,6 +24,12 @@ namespace Memory
     void ResourceStateTracker::RequestTransitions(const HAL::Resource* resource, const ResourceStateTracker::SubresourceStateList& newStates)
     {
         ResourceStateTracker::SubresourceStateList& pendingStates = mPendingResourceStates[resource];
+
+        if (newStates.size() == 0)
+        {
+            printf("");
+        }
+
         pendingStates = newStates;
     }
 

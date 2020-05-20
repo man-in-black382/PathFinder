@@ -13,7 +13,7 @@ namespace HAL
     {
         std::visit([this](auto&& t) { mDescription.Format = D3DFormat(t); }, dataType);
         
-        ResolveDemensionData(kind, dimensions);
+        ResolveDemensionData(kind, dimensions, mipCount);
 
         mClearValue = D3D12_CLEAR_VALUE{};
         mClearValue->Format = mDescription.Format;
@@ -52,6 +52,8 @@ namespace HAL
 
     void ResourceFormat::ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions)
     {
+        mSubresourceCount = 1;
+
         mDescription.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
         mDescription.Width = dimensions.Width;
         mDescription.Height = 1;
@@ -62,7 +64,7 @@ namespace HAL
         mDescription.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     }
 
-    void ResourceFormat::ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions)
+    void ResourceFormat::ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions, uint8_t mipCount)
     {
         switch (kind)
         {
@@ -70,6 +72,9 @@ namespace HAL
         case TextureKind::Texture2D: mDescription.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; break;
         case TextureKind::Texture1D: mDescription.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D; break;
         }
+
+        bool isArray = (kind == TextureKind::Texture1D || kind == TextureKind::Texture2D) && dimensions.Depth > 1;
+        mSubresourceCount = isArray ? dimensions.Depth * mipCount : mipCount;
 
         mDescription.Height = (UINT)dimensions.Height;
         mDescription.Width = dimensions.Width;
@@ -324,61 +329,6 @@ namespace HAL
             assert_format(false, "Unsupported D3D format");
             return TypelessColorFormat::R8;
         }
-    }
-
-    bool ResourceFormat::CanResourceImplicitlyPromoteFromCommonStateToState(ResourceState state) const
-    {
-        bool can = false;
-
-        std::visit(Foundation::MakeVisitor(
-            [&can](const BufferKind& kind)
-            {
-                can = true;
-            },
-            [&can, state](const TextureKind& kind)
-            {
-                // Simultaneous-Access Textures are not considered at the moment.
-                // Simultaneous-Access Textures are able to be explicitly promoted 
-                // to a larger number of states.
-                // Promotes from common to these states:
-                //
-                ResourceState compatibleStatesMask =
-                    ResourceState::NonPixelShaderAccess |
-                    ResourceState::PixelShaderAccess |
-                    ResourceState::CopyDestination |
-                    ResourceState::CopySource;
-
-                can = EnumMaskBitSet(compatibleStatesMask, state);
-            }),
-            mKind);
-
-        return can;
-    }
-
-    bool ResourceFormat::CanResourceImplicitlyDecayToCommonStateFromState(ResourceState state) const
-    {
-        bool can = false;
-
-        std::visit(Foundation::MakeVisitor(
-            [&can](const BufferKind& kind)
-            {
-                can = true;
-            },
-            [&can, state](const TextureKind& kind)
-            {
-                // Decay rules for Simultaneous-Access Textures are not considered at the moment.
-                // Decays to common from any read-only state
-                //
-                ResourceState compatibleStatesMask =
-                    ResourceState::NonPixelShaderAccess |
-                    ResourceState::PixelShaderAccess |
-                    ResourceState::CopySource;
-
-                can = EnumMaskBitSet(compatibleStatesMask, state);
-            }),
-            mKind);
-
-        return can;
     }
 
 }

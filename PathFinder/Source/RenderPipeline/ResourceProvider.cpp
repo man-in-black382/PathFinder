@@ -14,7 +14,7 @@ namespace PathFinder
         assert_format(resource, "Resource ", textureKey.ResourceName().ToString(), " does not exist");
 
         Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
-        const PipelineResourceSchedulingInfo::PassMetadata* perPassData = resourceObjects->SchedulingInfo.GetMetadataForPass(passName, textureKey.IndexInArray());
+        const PipelineResourceSchedulingInfo::PassInfo* perPassData = resourceObjects->SchedulingInfo.GetInfoForPass(passName, textureKey.IndexInArray(), mipLevel);
 
         assert_format(perPassData,
             "Resource ",
@@ -40,7 +40,9 @@ namespace PathFinder
         assert_format(resource, "Resource ", textureKey.ResourceName().ToString(), " does not exist");
 
         Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
-        const PipelineResourceSchedulingInfo::PassMetadata* perPassData = resourceObjects->SchedulingInfo.GetMetadataForPass(passName, textureKey.IndexInArray());
+        // TODO: Should SRV always start from mip 0? Will have to wait for a use case to decide
+        uint64_t mipLevel = 0; 
+        const PipelineResourceSchedulingInfo::PassInfo* perPassData = resourceObjects->SchedulingInfo.GetInfoForPass(passName, textureKey.IndexInArray(), mipLevel);
 
         assert_format(perPassData,
             "Resource ",

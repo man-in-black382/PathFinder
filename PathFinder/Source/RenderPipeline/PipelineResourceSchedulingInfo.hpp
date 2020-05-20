@@ -17,7 +17,7 @@ namespace PathFinder
     class PipelineResourceSchedulingInfo
     {
     public:
-        struct PassMetadata
+        struct PassInfo
         {
             HAL::ResourceState RequestedState = HAL::ResourceState::Common;
             std::optional<HAL::ColorFormat> ShaderVisibleFormat;
@@ -32,13 +32,15 @@ namespace PathFinder
             bool CreateBufferUADescriptor = false;
         };
 
-        using MetadataIterator = std::function<void(PassMetadata&)>;
+        using PassInfoIterator = std::function<void(PassInfo&)>;
 
         // An array of GPU resources can be scheduled and allocated per one resource name.
-        // Each resource in the array has it's own set of scheduling metadata.
-        using AllResourcePerPassMetadata = std::vector<std::unordered_map<Foundation::Name, PassMetadata>>;
+        // Each resource in the array has it's own array of scheduling metadata per each sub resource.
+        using PassInfoMap = std::unordered_map<Foundation::Name, PassInfo>;
+        using SubresourceArray = std::vector<PassInfoMap>;
+        using ResourceArray = std::vector<SubresourceArray>;
 
-        struct AliasingMetadata
+        struct AliasingInfo
         {
             uint64_t HeapOffset = 0;
             bool NeedsAliasingBarrier = false;
@@ -48,16 +50,15 @@ namespace PathFinder
         PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format, uint64_t resourceCount);
 
         void FinishScheduling();
-        const PassMetadata* GetMetadataForPass(Foundation::Name passName, uint64_t resourceIndex) const;
-        PassMetadata* GetMetadataForPass(Foundation::Name passName, uint64_t resourceIndex);
-        PassMetadata& AllocateMetadataForPass(const RenderPassExecutionGraph::Node& passNode, uint64_t resourceIndex);
+        const PassInfo* GetInfoForPass(Foundation::Name passName, uint64_t resourceIndex, uint64_t subresourceIndex) const;
+        PassInfo* GetInfoForPass(Foundation::Name passName, uint64_t resourceIndex, uint64_t subresourceIndex);
+        PassInfo& AllocateInfoForPass(const RenderPassExecutionGraph::Node& passNode, uint64_t resourceIndex, uint64_t subresourceIndex);
 
         std::function<void()> AllocationAction;
-        AliasingMetadata AliasingInfo;
+        AliasingInfo MemoryAliasingInfo;
 
     private:
-        // Per pass data per each resource in resource array
-        AllResourcePerPassMetadata mAllResourcesPerPassData;
+        ResourceArray mResourceSchedulingMetadata;
         RenderPassExecutionGraph::Node mFirstPassGraphNode;
         RenderPassExecutionGraph::Node mLastPassGraphNode;
         HAL::ResourceFormat mResourceFormat;
@@ -65,9 +66,10 @@ namespace PathFinder
         HAL::ResourceState mExpectedStates = HAL::ResourceState::Common;
         Foundation::Name mResourceName;
         uint64_t mResourceCount = 0;
+        uint64_t mSubresourceCount = 0;
 
     public:
-        inline const auto& AllPassesMetadata() const { return mAllResourcesPerPassData; }
+        inline const auto& AllPassesMetadata() const { return mResourceSchedulingMetadata; }
         inline const RenderPassExecutionGraph::Node& FirstPassGraphNode() const { return mFirstPassGraphNode; }
         inline const RenderPassExecutionGraph::Node& LastPassGraphNode() const { return mLastPassGraphNode; }
         inline const HAL::ResourceFormat& ResourceFormat() const { return mResourceFormat; }
@@ -75,6 +77,7 @@ namespace PathFinder
         inline HAL::ResourceState ExpectedStates() const { return mExpectedStates; }
         inline Foundation::Name ResourceName() const { return mResourceName; }
         inline auto ResourceCount() const { return mResourceCount; }
+        inline auto SubresourceCount() const { return mSubresourceCount; }
         inline auto TotalRequiredMemory() const { return mResourceFormat.ResourceSizeInBytes() * mResourceCount; }
     };
 

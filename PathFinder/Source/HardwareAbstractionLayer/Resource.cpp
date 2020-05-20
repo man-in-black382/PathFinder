@@ -102,15 +102,7 @@ namespace HAL
             IID_PPV_ARGS(mResource.GetAddressOf())));
     }
 
-    Resource::~Resource()
-    {
-        mDeallocationCallback();
-    }
-
-    void Resource::SetDeallocationCallback(const DeallocationCallback& callback)
-    {
-        mDeallocationCallback = callback;
-    }
+    Resource::~Resource() {}
 
     GPUAddress Resource::GPUVirtualAddress() const
     {

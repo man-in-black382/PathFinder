@@ -63,7 +63,7 @@ namespace HAL
         const RTDescriptor EmplaceRTDescriptor(uint64_t indexInHeap, const Texture& texture, uint8_t mipLevel = 0, std::optional<ColorFormat> shaderVisibleFormat = std::nullopt);
 
     private:
-        D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc, uint8_t mipLevel = 0) const;
+        D3D12_RENDER_TARGET_VIEW_DESC ResourceToRTVDescription(const D3D12_RESOURCE_DESC& resourceDesc, uint8_t mipLevel) const;
     };
 
 

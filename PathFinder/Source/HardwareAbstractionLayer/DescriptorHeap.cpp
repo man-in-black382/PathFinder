@@ -27,7 +27,7 @@ namespace HAL
 
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeap, 0) };
 
-        D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(d3dDesc);
+        D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = ResourceToRTVDescription(d3dDesc, mipLevel);
         mDevice->D3DDevice()->CreateRenderTargetView(texture.D3DResource(), &rtvDesc, cpuHandle);
 
         return RTDescriptor{ cpuHandle };

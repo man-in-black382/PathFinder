@@ -22,20 +22,24 @@ namespace PathFinder
             // Go for each resource in the array
             for (auto resourceIdx = 0u; resourceIdx < schedulingInfo->ResourceCount(); ++resourceIdx)
             {
-                CombineStateSequences(schedulingInfo, resourceIdx);
-
-                assert_format(!mCombinedStateSequences.empty(), "Resource mush have at least one state");
-
-                for (auto sequenceIdx = 0; sequenceIdx < mCombinedStateSequences.size(); ++sequenceIdx)
+                // Go for each subresource in resource
+                for (auto subresourceIdx = 0u; subresourceIdx < schedulingInfo->SubresourceCount(); ++subresourceIdx)
                 {
-                    auto& [passName, resourceState] = mCombinedStateSequences[sequenceIdx];
-                    schedulingInfo->GetMetadataForPass(passName, resourceIdx)->OptimizedState = resourceState;
+                    CombineStateSequences(schedulingInfo, resourceIdx, subresourceIdx);
+
+                    assert_format(!mCombinedStateSequences.empty(), "Resource mush have at least one state");
+
+                    for (auto sequenceIdx = 0; sequenceIdx < mCombinedStateSequences.size(); ++sequenceIdx)
+                    {
+                        auto& [passName, resourceState] = mCombinedStateSequences[sequenceIdx];
+                        schedulingInfo->GetInfoForPass(passName, resourceIdx, subresourceIdx)->OptimizedState = resourceState;
+                    }
                 }
             }
         }
     }
 
-    void PipelineResourceStateOptimizer::CombineStateSequences(PipelineResourceSchedulingInfo* schedulingInfo, uint64_t resourceIndex)
+    void PipelineResourceStateOptimizer::CombineStateSequences(PipelineResourceSchedulingInfo* schedulingInfo, uint64_t resourceIndex, uint64_t subresourceIndex)
     {
         std::vector<Foundation::Name> relevantPassNames;
         std::vector<Foundation::Name> readOnlySequencePassNames;
@@ -44,7 +48,7 @@ namespace PathFinder
         // Build a list of passes this resource is scheduled for
         for (auto& passNode : mRenderPassGraph->AllPasses())
         {
-            if (schedulingInfo->GetMetadataForPass(passNode.PassMetadata.Name, resourceIndex))
+            if (schedulingInfo->GetInfoForPass(passNode.PassMetadata.Name, resourceIndex, subresourceIndex))
             {
                 relevantPassNames.push_back(passNode.PassMetadata.Name);
             }
@@ -71,7 +75,7 @@ namespace PathFinder
         for (auto relevantPassIdx = 0u; relevantPassIdx < relevantPassNames.size(); ++relevantPassIdx)
         {
             Foundation::Name currentPassName = relevantPassNames[relevantPassIdx];
-            auto perPassData = schedulingInfo->GetMetadataForPass(currentPassName, resourceIndex);
+            auto perPassData = schedulingInfo->GetInfoForPass(currentPassName, resourceIndex, subresourceIndex);
 
             bool isLastPass = relevantPassIdx == relevantPassNames.size() - 1;
 
@@ -95,7 +99,7 @@ namespace PathFinder
                 {
                     // If next state is not read-only then this sequence should be dumped
                     Foundation::Name nextPassName = relevantPassNames[relevantPassIdx + 1];
-                    auto nextPerPassData = schedulingInfo->GetMetadataForPass(nextPassName, resourceIndex);
+                    auto nextPerPassData = schedulingInfo->GetInfoForPass(nextPassName, resourceIndex, subresourceIndex);
 
                     if (!HAL::IsResourceStateReadOnly(nextPerPassData->RequestedState))
                     {
