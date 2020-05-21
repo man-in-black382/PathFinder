@@ -178,9 +178,9 @@ namespace HAL
         mList->OMSetRenderTargets(1, &rtDescriptor.CPUHandle(), false, dsHandle);
     }
 
-    void GraphicsCommandListBase::ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color)
+    void GraphicsCommandListBase::ClearRenderTarget(const RTDescriptor& rtDescriptor, const glm::vec4& color)
     {
-        mList->ClearRenderTargetView(rtDescriptor.CPUHandle(), color.Ptr(), 0, nullptr);
+        mList->ClearRenderTargetView(rtDescriptor.CPUHandle(), (float*)&color, 0, nullptr);
     }
 
     void GraphicsCommandListBase::CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue)

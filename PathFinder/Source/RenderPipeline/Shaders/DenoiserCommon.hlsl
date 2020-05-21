@@ -5,7 +5,9 @@
 #include "ImportanceSampling.hlsl"
 
 static const float MaxAccumulatedFrames = 16;
+static const float MaxFrameCountWithHistoryFix = 3;
 static const float MaxAccumulatedFramesInv = 1.0 / MaxAccumulatedFrames;
+static const float MaxFrameCountWithHistoryFixInv = 1.0 / MaxFrameCountWithHistoryFix;
 
 // https://developer.nvidia.com/gtc/2020/video/s22699
 

@@ -24,7 +24,7 @@ namespace PathFinder
             " was not scheduled for usage in ",
             passName.ToString());
 
-        assert_format(perPassData->CreateTextureUADescriptor,
+        assert_format(perPassData->IsTextureUARequested(),
             "Resource ", 
             textureKey.ResourceName().ToString(),
             " was not scheduled to be accessed as Unordered Access resource in ",
@@ -33,15 +33,15 @@ namespace PathFinder
         return resource->GetUADescriptor(mipLevel)->IndexInHeapRange();
     }
 
-    uint32_t ResourceProvider::GetSRTextureIndex(const ResourceKey& textureKey)
+    uint32_t ResourceProvider::GetSRTextureIndex(const ResourceKey& textureKey, uint8_t mipLevel)
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(textureKey.ResourceName());
         const Memory::Texture* resource = resourceObjects->GetTexture(textureKey.IndexInArray());
         assert_format(resource, "Resource ", textureKey.ResourceName().ToString(), " does not exist");
 
         Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
-        // TODO: Should SRV always start from mip 0? Will have to wait for a use case to decide
-        uint64_t mipLevel = 0; 
+
+        // Mip level only used for sanity check. It doesn't alter SRV in any way in current implementation.
         const PipelineResourceSchedulingInfo::PassInfo* perPassData = resourceObjects->SchedulingInfo.GetInfoForPass(passName, textureKey.IndexInArray(), mipLevel);
 
         assert_format(perPassData,
@@ -52,7 +52,7 @@ namespace PathFinder
             " was not scheduled for usage in ",
             passName.ToString());
 
-        assert_format(perPassData->CreateTextureSRDescriptor,
+        assert_format(perPassData->IsTextureSRRequested(),
             "Resource ", 
             textureKey.ResourceName().ToString(),
             " was not scheduled to be accessed as Shader Resource in ",

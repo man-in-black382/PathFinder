@@ -4,12 +4,16 @@
 #include "ResourceKey.hpp"
 #include "RenderPassUtilityProvider.hpp"
 
+#include <vector>
+
 namespace PathFinder
 {
 
     class ResourceScheduler
     {
     public:
+        using MipList = std::vector<uint8_t>;
+
         enum class BufferReadContext
         {
             Constant, ShaderResource
@@ -22,16 +26,18 @@ namespace PathFinder
                 std::optional<HAL::TextureKind> kind = std::nullopt,
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt,
                 std::optional<HAL::TypelessColorFormat> typelessFormat = std::nullopt,
+                std::optional<HAL::ColorClearValue> clearValues = std::nullopt,
                 uint8_t mipCount = 1)
                 : 
                 TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat }, 
-                Kind{ kind }, Dimensions{ dimensions }, MipCount{ mipCount } {}
+                Kind{ kind }, Dimensions{ dimensions }, ClearValues{ clearValues }, MipCount{ mipCount } {}
 
             std::optional<HAL::TypelessColorFormat> TypelessFormat;
             std::optional<HAL::ColorFormat> ShaderVisibleFormat;
             std::optional<HAL::TextureKind> Kind;
             std::optional<Geometry::Dimensions> Dimensions;
             std::optional<uint8_t> MipCount;
+            std::optional<HAL::ColorClearValue> ClearValues;
             uint64_t TextureCount = 1;
         };
 
@@ -74,17 +80,17 @@ namespace PathFinder
         // Allocates new texture to be accessed as Unordered Access resource (Read/Write)
         void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 
 
-        // Indicates that a previously created render target will be used as a render target in the scheduling pass (Write Only)
-        void UseRenderTarget(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        // Indicates that a previously created texture will be used as a render target in the scheduling pass (Write Only)
+        void UseRenderTarget(const ResourceKey& resourceKey, const MipList& mips = {}, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
-        // Indicates that a previously created depth-stencil texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
+        // Indicates that a previously created texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
         void UseDepthStencil(const ResourceKey& resourceKey);
 
         // Read any previously created texture as a Shader Resource (Read Only)
-        void ReadTexture(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void ReadTexture(const ResourceKey& resourceKey, const MipList& mips = {}, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Access a previously created texture as an Unordered Access resource (Read/Write)
-        void ReadWriteTexture(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void ReadWriteTexture(const ResourceKey& resourceKey, const MipList& mips = {}, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Allocates new buffer to be accessed as Unordered Access resource (Read/Write)
         template <class T> 
@@ -101,6 +107,9 @@ namespace PathFinder
         NewDepthStencilProperties FillMissingFields(std::optional<NewDepthStencilProperties> properties);
 
         void EnsureSingleSchedulingRequestForCurrentPass(Foundation::Name resourceName) const;
+
+        template <class Lambda>
+        void FillCurrentPassInfo(const PipelineResourceStorageResource* resourceData, const MipList& mipList, const Lambda& lambda);
 
         PipelineResourceStorage* mResourceStorage;
         RenderPassUtilityProvider* mUtilityProvider;

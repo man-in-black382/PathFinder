@@ -52,6 +52,8 @@ namespace HAL
         ResourceState mExpectedStates = ResourceState::Common;
 
     private:
+        D3D12_CLEAR_VALUE D3DClearValue(const ClearValue& clearValue, DXGI_FORMAT format) const;
+
         uint64_t mTotalMemory = 0;
         uint64_t mResourceAlignment = 0;
         uint64_t mSubresourceCount = 0;
@@ -61,8 +63,8 @@ namespace HAL
     public:
         inline ID3D12Resource* D3DResource() const { return mResource.Get(); }
         inline const D3D12_RESOURCE_DESC& D3DDescription() const { return mDescription; };
-        inline ResourceState InitialStates() const { return mInitialStates; };
-        inline ResourceState ExpectedStates() const { return mExpectedStates; };
+        inline auto InitialStates() const { return mInitialStates; };
+        inline auto ExpectedStates() const { return mExpectedStates; };
         inline auto TotalMemory() const { return mTotalMemory; }
         inline auto ResourceAlignment() const { return mResourceAlignment; }
         inline auto HeapOffset() const { return mHeapOffset; }

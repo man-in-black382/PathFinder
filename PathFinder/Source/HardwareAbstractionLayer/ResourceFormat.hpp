@@ -11,10 +11,12 @@
 
 #include "../Geometry/Dimensions.hpp"
 
+#include <glm/vec4.hpp>
+
 namespace HAL
 {
 
-    using ColorClearValue = std::array<float, 4>;
+    using ColorClearValue = glm::vec4;
 
     struct DepthStencilClearValue
     {
@@ -92,7 +94,7 @@ namespace HAL
         const Device* mDevice;
         D3D12_RESOURCE_DESC mDescription{};
         std::optional<FormatVariant> mDataType;
-        std::optional<D3D12_CLEAR_VALUE> mClearValue;
+        std::optional<ClearValue> mClearValue;
         uint64_t mResourceAlignment = 0;
         uint64_t mResourceSizeInBytes = 0;
         uint64_t mSubresourceCount = 0;
@@ -101,7 +103,7 @@ namespace HAL
 
     public:
         inline const D3D12_RESOURCE_DESC& D3DResourceDescription() const { return mDescription; }
-        inline const D3D12_CLEAR_VALUE* D3DOptimizedClearValue() const { return mClearValue ? &(*mClearValue) : nullptr; }
+        inline auto OptimizedClearValue() const { return mClearValue; }
         inline auto ResourceAlighnment() const { return mResourceAlignment; }
         inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }
         inline auto SubresourceCount() const { return mSubresourceCount; }

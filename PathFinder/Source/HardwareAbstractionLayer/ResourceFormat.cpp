@@ -9,29 +9,11 @@ namespace HAL
     ResourceFormat::ResourceFormat(
         const Device* device, FormatVariant dataType, TextureKind kind, 
         const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue)
-        : mDevice{ device }, mDataType{ dataType }, mKind{ kind }
+        : mDevice{ device }, mDataType{ dataType }, mKind{ kind }, mClearValue{ optimizedClearValue }
     {
         std::visit([this](auto&& t) { mDescription.Format = D3DFormat(t); }, dataType);
         
         ResolveDemensionData(kind, dimensions, mipCount);
-
-        mClearValue = D3D12_CLEAR_VALUE{};
-        mClearValue->Format = mDescription.Format;
-
-        std::visit(Foundation::MakeVisitor(
-            [this](const ColorClearValue& value)
-        {
-            mClearValue->Color[0] = value[0];
-            mClearValue->Color[1] = value[1];
-            mClearValue->Color[2] = value[2];
-            mClearValue->Color[3] = value[3];
-        },
-            [this](const DepthStencilClearValue& value)
-        {
-            mClearValue->DepthStencil.Depth = value.Depth;
-            mClearValue->DepthStencil.Stencil = value.Stencil;
-        }),
-            optimizedClearValue);
 
         mDescription.MipLevels = mipCount;
 
@@ -75,6 +57,8 @@ namespace HAL
 
         bool isArray = (kind == TextureKind::Texture1D || kind == TextureKind::Texture2D) && dimensions.Depth > 1;
         mSubresourceCount = isArray ? dimensions.Depth * mipCount : mipCount;
+
+        assert_format(!isArray, "Texture arrays are not supported currently. Add proper handling of texture array scheduling first, then remove this assert.");
 
         mDescription.Height = (UINT)dimensions.Height;
         mDescription.Width = dimensions.Width;

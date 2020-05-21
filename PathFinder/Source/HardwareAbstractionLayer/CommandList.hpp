@@ -19,7 +19,6 @@
 #include "ShaderRegister.hpp"
 #include "Types.hpp"
 
-#include "../Foundation/Color.hpp"
 #include "../Geometry/Rect2D.hpp"
 
 #include <glm/vec3.hpp>
@@ -106,7 +105,7 @@ namespace HAL
 
         void SetViewport(const Viewport& viewport);
         void SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor = nullptr);
-        void ClearRenderTarget(const RTDescriptor& rtDescriptor, const Foundation::Color& color);
+        void ClearRenderTarget(const RTDescriptor& rtDescriptor, const glm::vec4& color);
         void CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue);
         void SetPrimitiveTopology(PrimitiveTopology topology);
         void SetPipelineState(const GraphicsPipelineState& state);

@@ -21,11 +21,30 @@ namespace PathFinder
                 );
 
                 passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
-                passInfo.CreateBufferUADescriptor = true;
+                passInfo.SetBufferUARequested();
             }            
         }
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
+    }
+
+    template <class Lambda>
+    void ResourceScheduler::FillCurrentPassInfo(const PipelineResourceStorageResource* resourceData, const MipList& mipList, const Lambda& lambda)
+    {
+        if (mipList.empty())
+        {
+            for (auto subresourceIdx = 0u; subresourceIdx < resourceData->SchedulingInfo.SubresourceCount(); ++subresourceIdx)
+            {
+                lambda(subresourceIdx);
+            }
+        }
+        else
+        {
+            for (uint8_t mip : mipList)
+            {
+                lambda(mip);
+            }
+        }
     }
 
 }

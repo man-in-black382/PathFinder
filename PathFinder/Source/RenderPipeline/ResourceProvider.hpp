@@ -15,7 +15,7 @@ namespace PathFinder
         ResourceProvider(const PipelineResourceStorage* storage);
        
         uint32_t GetUATextureIndex(const ResourceKey& textureKey, uint8_t mipLevel = 0);
-        uint32_t GetSRTextureIndex(const ResourceKey& textureKey);
+        uint32_t GetSRTextureIndex(const ResourceKey& textureKey, uint8_t mipLevel = 0);
         const HAL::Texture::Properties& GetTextureProperties(Foundation::Name resourceName);
 
     private:

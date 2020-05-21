@@ -11,7 +11,13 @@ namespace Memory
     class ResourceStateTracker
     {
     public:
-        using SubresourceStateList = std::vector<HAL::ResourceState>;
+        struct SubresourceState
+        {
+            uint64_t SubresourceIndex = 0;
+            HAL::ResourceState State = HAL::ResourceState::Common;
+        };
+
+        using SubresourceStateList = std::vector<SubresourceState>;
 
         void StartTrakingResource(const HAL::Resource* resource);
         void StopTrakingResource(const HAL::Resource* resource);

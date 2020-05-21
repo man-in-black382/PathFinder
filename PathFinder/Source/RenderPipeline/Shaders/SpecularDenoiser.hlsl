@@ -151,52 +151,56 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     
     float totalWeight = 1.0;
 
-    [unroll]
-    for (int i = 0; i < DenoiseSampleCount; ++i)
+    // Let the history fix do the blurring first N frames
+    if (accumFramesCount > MaxFrameCountWithHistoryFix)
     {
-        // Generate sample in 2D
-        float2 vdSample = VogelDiskSample(i, DenoiseSampleCount, vogelDiskRotation);
+        [unroll]
+        for (int i = 0; i < DenoiseSampleCount; ++i)
+        {
+            // Generate sample in 2D
+            float2 vdSample = VogelDiskSample(i, DenoiseSampleCount, vogelDiskRotation);
 
-        // Make sample 3D and z-alighned
-        float3 vd3DSample = float3(vdSample, 0.0);
+            // Make sample 3D and z-alighned
+            float3 vd3DSample = float3(vdSample, 0.0);
 
-        // Transform sample into its basis.
-        // Then position it around surface point in camera view space.
-        float3 viewSpaceSample = mul(samplingBasis, vd3DSample) + viewPosition;
+            // Transform sample into its basis.
+            // Then position it around surface point in camera view space.
+            float3 viewSpaceSample = mul(samplingBasis, vd3DSample) + viewPosition;
 
-        // Project and obtain sample's UV
-        float3 projectedSample = ProjectPoint(viewSpaceSample, FrameDataCB.CurrentFrameCamera);
-        float2 sampleUV = NDCToUV(projectedSample);
+            // Project and obtain sample's UV
+            float3 projectedSample = ProjectPoint(viewSpaceSample, FrameDataCB.CurrentFrameCamera);
+            float2 sampleUV = NDCToUV(projectedSample);
 
-        // Get neighbor properties
-        float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler, sampleUV, 0);
+            // Get neighbor properties
+            float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler, sampleUV, 0);
 
-        float3 neighborNormal = ExpandGBufferNormal(neighborNormalRoughness.xyz);
-        float neighborRoughness = neighborNormalRoughness.w;
+            float3 neighborNormal = ExpandGBufferNormal(neighborNormalRoughness.xyz);
+            float neighborRoughness = neighborNormalRoughness.w;
 
-        // Compute weights
-        float normalWeight = NormalWeight(worldNormal, neighborNormal, roughness, accumFramesCount);
-        float geometryWeight = GeometryWeight(viewPosition, viewNormal, viewSpaceSample, viewPosition.z);
-        float roughnessWeight = RoughnessWeight(roughness, neighborRoughness);
+            // Compute weights
+            float normalWeight = NormalWeight(worldNormal, neighborNormal, roughness, accumFramesCount);
+            float geometryWeight = GeometryWeight(viewPosition, viewNormal, viewSpaceSample, viewPosition.z);
+            float roughnessWeight = RoughnessWeight(roughness, neighborRoughness);
 
-        float sampleWeight = normalWeight * geometryWeight * roughnessWeight;
+            float sampleWeight = normalWeight * geometryWeight * roughnessWeight;
 
-        // Sample neighbor value and weight accordingly
-        denoisedShadowed += currentShadowedShadingTexture.SampleLevel(LinearClampSampler, sampleUV, 0).rgb * sampleWeight;
-        denoisedUnshadowed += currentUnshadowedShadingTexture.SampleLevel(LinearClampSampler, sampleUV, 0).rgb * sampleWeight;
+            // Sample neighbor value and weight accordingly
+            denoisedShadowed += currentShadowedShadingTexture.SampleLevel(LinearClampSampler, sampleUV, 0).rgb * sampleWeight;
+            denoisedUnshadowed += currentUnshadowedShadingTexture.SampleLevel(LinearClampSampler, sampleUV, 0).rgb * sampleWeight;
 
-        totalWeight += sampleWeight;
+            totalWeight += sampleWeight;
+        }
+
+        denoisedShadowed /= totalWeight;
+        denoisedUnshadowed /= totalWeight;
     }
-
-    denoisedShadowed /= totalWeight;
-    denoisedUnshadowed /= totalWeight;
 
     // Combine with history
     denoisedShadowed = lerp(shadowedShadingHistoryTexture[pixelIndex].rgb, denoisedShadowed, accumulationSpeed);
     denoisedUnshadowed = lerp(unshadowedShadingHistoryTexture[pixelIndex].rgb, denoisedUnshadowed, accumulationSpeed);
     
     // Output final denoised value
-    shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedShadowed; 
+    shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedShadowed;
     unshadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedUnshadowed;
 }
 

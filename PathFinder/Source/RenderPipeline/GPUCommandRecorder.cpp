@@ -18,19 +18,14 @@ namespace PathFinder
         mGraphicsDevice->SetBackBufferAsRenderTarget(dsKey);
     }
 
-    void GPUCommandRecorder::ClearRenderTarget(const ResourceKey& rtKey, const Foundation::Color& color)
+    void GPUCommandRecorder::ClearRenderTarget(const ResourceKey& rtKey)
     {
-        mGraphicsDevice->ClearRenderTarget(rtKey, color);
+        mGraphicsDevice->ClearRenderTarget(rtKey);
     }
 
-    void GPUCommandRecorder::ClearBackBuffer(const Foundation::Color& color)
+    void GPUCommandRecorder::ClearDepth(const ResourceKey& dsKey)
     {
-        mGraphicsDevice->ClearBackBuffer(color);
-    }
-
-    void GPUCommandRecorder::ClearDepth(const ResourceKey& dsKey, float depthValue)
-    {
-        mGraphicsDevice->ClearDepth(dsKey, depthValue);
+        mGraphicsDevice->ClearDepth(dsKey);
     }
 
     void GPUCommandRecorder::ApplyPipelineState(Foundation::Name psoName)

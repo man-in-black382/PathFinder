@@ -61,24 +61,24 @@ float ApplyBilinearCustomWeights(float4 v, float4 weights)
     return dot(v, 1.0);
 }
 
-float4 GatherRedManually(Texture2D tex, Bilinear filter, sampler s)
+float4 GatherRedManually(Texture2D tex, Bilinear filter, float mipLevel, sampler s)
 {
     // Get 4 neighbor texel values
-    float tl = tex.SampleLevel(s, filter.TopLeftUV, 0.0).r;
-    float tr = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, 0.0), 0.0).r;
-    float bl = tex.SampleLevel(s, filter.TopLeftUV + float2(0.0, filter.TexelSize.y), 0.0).r;
-    float br = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, filter.TexelSize.y), 0.0).r;
+    float tl = tex.SampleLevel(s, filter.TopLeftUV, mipLevel).r;
+    float tr = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, 0.0), mipLevel).r;
+    float bl = tex.SampleLevel(s, filter.TopLeftUV + float2(0.0, filter.TexelSize.y), mipLevel).r;
+    float br = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, filter.TexelSize.y), mipLevel).r;
 
     return float4(tl.r, tr.r, br.r, bl.r);
 }
 
-GatheredRGB GatherRGBManually(Texture2D tex, Bilinear filter, sampler s)
+GatheredRGB GatherRGBManually(Texture2D tex, Bilinear filter, float mipLevel, sampler s)
 {
     // Get 4 neighbor texel values
-    float3 tl = tex.SampleLevel(s, filter.TopLeftUV, 0.0).rgb;
-    float3 tr = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, 0.0), 0.0).rgb;
-    float3 bl = tex.SampleLevel(s, filter.TopLeftUV + float2(0.0, filter.TexelSize.y), 0.0).rgb;
-    float3 br = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, filter.TexelSize.y), 0.0).rgb;
+    float3 tl = tex.SampleLevel(s, filter.TopLeftUV, mipLevel).rgb;
+    float3 tr = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, 0.0), mipLevel).rgb;
+    float3 bl = tex.SampleLevel(s, filter.TopLeftUV + float2(0.0, filter.TexelSize.y), mipLevel).rgb;
+    float3 br = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, filter.TexelSize.y), mipLevel).rgb;
 
     GatheredRGB result;
     result.Red = float4(tl.r, tr.r, br.r, bl.r);

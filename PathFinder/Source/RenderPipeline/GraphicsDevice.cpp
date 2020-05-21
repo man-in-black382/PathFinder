@@ -38,25 +38,30 @@ namespace PathFinder
         mCommandList->SetRenderTarget(*mBackBuffer->GetRTDescriptor(), dsDescriptor);
     }
 
-    void GraphicsDevice::ClearRenderTarget(const ResourceKey& rtKey, const Foundation::Color& color)
+    void GraphicsDevice::ClearRenderTarget(const ResourceKey& rtKey)
     {
         // Clear operation requires correct states same as a dispatch or a draw
         InsertResourceTransitionsIfNeeded();
-        mCommandList->ClearRenderTarget(*mResourceStorage->GetRenderTargetDescriptor(rtKey.ResourceName(), rtKey.IndexInArray()), color);
+
+        const Memory::Texture* renderTarget = mResourceStorage->GetPerResourceData(rtKey.ResourceName())->GetTexture(rtKey.IndexInArray());
+        assert_format(renderTarget, "Render target doesn't exist");
+        auto clearValue = std::get_if<HAL::ColorClearValue>(&renderTarget->Properties().OptimizedClearValue);
+        assert_format(clearValue, "Texture does not contain optimized color clear value");
+
+        mCommandList->ClearRenderTarget(*mResourceStorage->GetRenderTargetDescriptor(rtKey.ResourceName(), rtKey.IndexInArray()), *clearValue);
     }
 
-    void GraphicsDevice::ClearBackBuffer(const Foundation::Color& color)
+    void GraphicsDevice::ClearDepth(const ResourceKey& dsKey)
     {
         // Clear operation requires correct states same as a dispatch or a draw
         InsertResourceTransitionsIfNeeded();
-        mCommandList->ClearRenderTarget(*mBackBuffer->GetRTDescriptor(), color);
-    }
 
-    void GraphicsDevice::ClearDepth(const ResourceKey& dsKey, float depthValue)
-    {
-        // Clear operation requires correct states same as a dispatch or a draw
-        InsertResourceTransitionsIfNeeded();
-        mCommandList->CleadDepthStencil(*mResourceStorage->GetDepthStencilDescriptor(dsKey.ResourceName(), dsKey.IndexInArray()), depthValue);
+        const Memory::Texture* depthAttachment = mResourceStorage->GetPerResourceData(dsKey.ResourceName())->GetTexture(dsKey.IndexInArray());
+        assert_format(depthAttachment, "Depth/stencil attachment doesn't exist");
+        auto clearValue = std::get_if<HAL::DepthStencilClearValue>(&depthAttachment->Properties().OptimizedClearValue);
+        assert_format(clearValue, "Texture does not contain optimized depth/stencil clear value");
+
+        mCommandList->CleadDepthStencil(*mResourceStorage->GetDepthStencilDescriptor(dsKey.ResourceName(), dsKey.IndexInArray()), clearValue->Depth);
     }
 
     void GraphicsDevice::SetViewport(const HAL::Viewport& viewport)

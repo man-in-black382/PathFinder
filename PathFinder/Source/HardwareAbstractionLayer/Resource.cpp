@@ -27,12 +27,19 @@ namespace HAL
             EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) || 
             EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
 
+        D3D12_CLEAR_VALUE d3dClearValue{};
+
+        if (isSubjectForClearing && format.OptimizedClearValue())
+        {
+            d3dClearValue = D3DClearValue(*format.OptimizedClearValue(), mDescription.Format);
+        }
+
         ThrowIfFailed(device.D3DDevice()->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
             &mDescription,
             D3DResourceState(mInitialStates),
-            isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
+            isSubjectForClearing ? &d3dClearValue : nullptr,
             IID_PPV_ARGS(&mResource)
         ));
     }
@@ -93,13 +100,43 @@ namespace HAL
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
 
+        D3D12_CLEAR_VALUE d3dClearValue{};
+
+        if (isSubjectForClearing && format.OptimizedClearValue())
+        {
+            d3dClearValue = D3DClearValue(*format.OptimizedClearValue(), mDescription.Format);
+        }
+
         ThrowIfFailed(device.D3DDevice()->CreatePlacedResource(
             heap.D3DHeap(),
             heapOffset,
             &mDescription,
             D3DResourceState(mInitialStates),
-            isSubjectForClearing ? format.D3DOptimizedClearValue() : nullptr,
+            isSubjectForClearing ? &d3dClearValue : nullptr,
             IID_PPV_ARGS(mResource.GetAddressOf())));
+    }
+
+    D3D12_CLEAR_VALUE Resource::D3DClearValue(const ClearValue& clearValue, DXGI_FORMAT format) const
+    {
+        D3D12_CLEAR_VALUE d3dClearValue{};
+        d3dClearValue.Format = format;
+
+        std::visit(Foundation::MakeVisitor(
+            [&](const ColorClearValue& value)
+            {
+                d3dClearValue.Color[0] = value[0];
+                d3dClearValue.Color[1] = value[1];
+                d3dClearValue.Color[2] = value[2];
+                d3dClearValue.Color[3] = value[3];
+            },
+            [&](const DepthStencilClearValue& value)
+            {
+                d3dClearValue.DepthStencil.Depth = value.Depth;
+                d3dClearValue.DepthStencil.Stencil = value.Stencil;
+            }),
+            clearValue);
+
+        return d3dClearValue;
     }
 
     Resource::~Resource() {}

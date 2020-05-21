@@ -36,7 +36,7 @@ namespace PathFinder
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
         auto perPassData = resourceObjects->SchedulingInfo.GetInfoForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIndex, mipIndex);
-        assert_format(perPassData && perPassData->CreateTextureRTDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
+        assert_format(perPassData && perPassData->IsTextureRTRequested(), "Resource ", resourceName.ToString(), " was not scheduled to be used as render target");
         
         return texture->GetRTDescriptor(mipIndex);
     }
@@ -48,7 +48,7 @@ namespace PathFinder
         assert_format(texture, "Resource ", resourceName.ToString(), " doesn't exist");
 
         auto perPassData = resourceObjects->SchedulingInfo.GetInfoForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIndex, 0);
-        assert_format(perPassData && perPassData->CreateTextureDSDescriptor, "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
+        assert_format(perPassData && perPassData->IsTextureDSRequested(), "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil target");
 
         return texture->GetDSDescriptor();
     }
@@ -401,7 +401,7 @@ namespace PathFinder
                     if (auto passMetadata = resourceData->SchedulingInfo.GetInfoForPass(mCurrentRenderPassGraphNode.PassMetadata.Name, resourceIdx, subresourceIdx))
                     {
                         HAL::ResourceState newState = passMetadata->OptimizedState;
-                        stateList.push_back(newState);
+                        stateList.push_back({ subresourceIdx, newState });
                     }
                 }
 

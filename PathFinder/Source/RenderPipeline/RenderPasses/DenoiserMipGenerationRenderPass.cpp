@@ -15,9 +15,11 @@ namespace PathFinder
 
     void DenoiserMipGenerationRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->ReadWriteTexture(ResourceNames::GBufferViewDepth);
-        scheduler->ReadWriteTexture(ResourceNames::ShadingStochasticShadowedOutput);
-        scheduler->ReadWriteTexture(ResourceNames::ShadingStochasticUnshadowedOutput);
+        auto frameIndex = scheduler->FrameNumber() % 2;
+
+        scheduler->ReadWriteTexture({ ResourceNames::GBufferViewDepth, frameIndex });
+        scheduler->ReadWriteTexture({ ResourceNames::ShadingStochasticShadowedOutput, 0 });
+        scheduler->ReadWriteTexture({ ResourceNames::ShadingStochasticUnshadowedOutput, 0 });
     }
      
     void DenoiserMipGenerationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -25,14 +27,16 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::AveragindDownsampling);
 
         auto resourceProvider = context->GetResourceProvider();
+        auto frameIndex = context->FrameNumber() % 2;
 
         // Downsample view depth
         DownsamplingCBContent cbContent{};
-        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth, 0);
-        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth, 1);
-        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth, 2);
-        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth, 3);
-        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth, 4);
+        cbContent.FilterType = DownsamplingCBContent::Filter::Min;
+        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::GBufferViewDepth, frameIndex });
+        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::GBufferViewDepth, frameIndex }, 1);
+        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::GBufferViewDepth, frameIndex }, 2);
+        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::GBufferViewDepth, frameIndex }, 3);
+        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::GBufferViewDepth, frameIndex }, 4);
 
         auto firstMipDimensions = resourceProvider->GetTextureProperties(ResourceNames::GBufferViewDepth).Dimensions.XYMultiplied(0.5);
 
@@ -40,7 +44,8 @@ namespace PathFinder
         context->GetCommandRecorder()->Dispatch(firstMipDimensions, { 8, 8 });
 
         // Downsample shadowed luminance
-        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput, 0);
+        cbContent.FilterType = DownsamplingCBContent::Filter::Average;
+        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput);
         cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput, 1);
         cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput, 2);
         cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput, 3);
@@ -52,7 +57,8 @@ namespace PathFinder
         context->GetCommandRecorder()->Dispatch(firstMipDimensions, { 8, 8 });
 
         // Downsample unshadowed luminance
-        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput, 0);
+        cbContent.FilterType = DownsamplingCBContent::Filter::Average;
+        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
         cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput, 1);
         cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput, 2);
         cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput, 3);

@@ -4,6 +4,8 @@
 
 #include "../HardwareAbstractionLayer/Texture.hpp"
 
+#include <vector>
+
 namespace Memory
 {
    

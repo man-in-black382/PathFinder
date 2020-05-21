@@ -17,19 +17,34 @@ namespace PathFinder
     class PipelineResourceSchedulingInfo
     {
     public:
-        struct PassInfo
+        class PassInfo
         {
+        public:
+            using RequestedAccessFlag = uint16_t;
+
             HAL::ResourceState RequestedState = HAL::ResourceState::Common;
             std::optional<HAL::ColorFormat> ShaderVisibleFormat;
             HAL::ResourceState OptimizedState = HAL::ResourceState::Common;
             bool NeedsUAVBarrier = false;
-            bool CreateTextureRTDescriptor = false;
-            bool CreateTextureDSDescriptor = false;
-            bool CreateTextureSRDescriptor = false;
-            bool CreateTextureUADescriptor = false;
-            bool CreateBufferCBDescriptor = false;
-            bool CreateBufferSRDescriptor = false;
-            bool CreateBufferUADescriptor = false;
+
+            void SetTextureRTRequested() { mAccessFlag = 1 << 0; }
+            void SetTextureDSRequested() { mAccessFlag = 1 << 1; }
+            void SetTextureSRRequested() { mAccessFlag = 1 << 2; }
+            void SetTextureUARequested() { mAccessFlag = 1 << 3; }
+            void SetBufferCBRequested() { mAccessFlag = 1 << 4; }
+            void SetBufferSRRequested() { mAccessFlag = 1 << 5; }
+            void SetBufferUARequested() { mAccessFlag = 1 << 6; }
+
+            bool IsTextureRTRequested() const { return mAccessFlag & 1 << 0; }
+            bool IsTextureDSRequested() const { return mAccessFlag & 1 << 1; }
+            bool IsTextureSRRequested() const { return mAccessFlag & 1 << 2; }
+            bool IsTextureUARequested() const { return mAccessFlag & 1 << 3; }
+            bool IsBufferCBRequested() const { return mAccessFlag & 1 << 4; }
+            bool IsBufferSRRequested() const { return mAccessFlag & 1 << 5; }
+            bool IsBufferUARequested() const { return mAccessFlag & 1 << 6; }
+
+        private:
+            RequestedAccessFlag mAccessFlag;
         };
 
         using PassInfoIterator = std::function<void(PassInfo&)>;

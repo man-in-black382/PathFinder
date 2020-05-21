@@ -49,9 +49,11 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     RWTexture2D<float4> shadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.ShadowedShadingReprojectionTargetTexIdx];
     RWTexture2D<float4> unshadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingReprojectionTargetTexIdx];
 
+    float roughness;
+    float3 surfaceNormal;
+    LoadGBufferNormalAndRoughness(normalRoughnessTexture, pixelIndex, surfaceNormal, roughness);
+
     float currentDepth = depthTexture.Load(uint3(pixelIndex, 0)).r;
-    float4 normalRoughness = normalRoughnessTexture.Load(uint3(pixelIndex, 0)).xyzw;
-    float3 surfaceNormal = normalRoughness.xyz;
     float3 currentPosition = ReconstructWorldSpacePosition(currentDepth, uv, FrameDataCB.CurrentFrameCamera);
     float3 motionVector = float3(0.0, 0.0, 0.0); // TODO: Implement motion vectors
     float3 previousPosition = currentPosition - motionVector;
@@ -61,15 +63,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     // Custom binary weights based on disocclusion help us get rid of ghosting
     Bilinear bilinearFilterAtPrevPos = GetBilinearFilter(reprojectedUV, GlobalDataCB.PipelineRTResolutionInv, GlobalDataCB.PipelineRTResolution);
 
-    float4 viewDepthPrev = GatherRedManually(prevViewDepthTexture, bilinearFilterAtPrevPos, PointClampSampler);
-
-    for (int idx = 0; idx < 4; ++idx)
-    {
-        if (viewDepthPrev[idx] <= 0.0)
-        {
-            viewDepthPrev[idx] = 10000.0;
-        }
-    }
+    float4 viewDepthPrev = GatherRedManually(prevViewDepthTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler);
 
     // Compute disocclusion
     float4 isInScreen = float4(
@@ -95,7 +89,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     float4 weights = GetBilinearCustomWeights(bilinearFilterAtPrevPos, occlusion);
 
-    float4 accumCountPrev = GatherRedManually(prevAccumulationCounterTexture, bilinearFilterAtPrevPos, PointClampSampler);
+    float4 accumCountPrev = GatherRedManually(prevAccumulationCounterTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler);
     float accumCountNew = ApplyBilinearCustomWeights(min(accumCountPrev + 1.0, MaxAccumulatedFrames), weights);
 
     // Force an aggressive counter reset when 
@@ -105,8 +99,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         accumCountNew = 0.0; 
     }
 
-    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingHistoryTexture, bilinearFilterAtPrevPos, PointClampSampler);
-    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingHistoryTexture, bilinearFilterAtPrevPos, PointClampSampler);
+    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler);
+    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler);
 
     float3 shadowedShadingReprojected = float3(
         ApplyBilinearCustomWeights(shadowedShadingGatherResult.Red, weights),

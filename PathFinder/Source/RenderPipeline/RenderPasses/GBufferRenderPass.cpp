@@ -67,6 +67,7 @@ namespace PathFinder
         viewDepthProperties.ShaderVisibleFormat = HAL::ColorFormat::R32_Float;
         viewDepthProperties.TextureCount = 2; // 2 for reprojection
         viewDepthProperties.MipCount = 5; 
+        viewDepthProperties.ClearValues = HAL::ColorClearValue{ std::numeric_limits<float>::max() };
 
         scheduler->NewRenderTarget(ResourceNames::GBufferAlbedoMetalness, albedoMetalnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness, normalRoughnessProperties);
@@ -90,12 +91,12 @@ namespace PathFinder
             },
             ResourceKey{ResourceNames::GBufferDepthStencil});
 
-        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferAlbedoMetalness, Foundation::Color::Black());
-        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferNormalRoughness, Foundation::Color::Black());
-        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferMotionVector, Foundation::Color::Black());
-        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferTypeAndMaterialIndex, Foundation::Color::Black());
-        context->GetCommandRecorder()->ClearRenderTarget({ ResourceNames::GBufferViewDepth, currentFrameIndex }, Foundation::Color::Black());
-        context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil, 1.0f);
+        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferAlbedoMetalness);
+        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferNormalRoughness);
+        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferMotionVector);
+        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferTypeAndMaterialIndex);
+        context->GetCommandRecorder()->ClearRenderTarget({ ResourceNames::GBufferViewDepth, currentFrameIndex });
+        context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil);
 
         RenderMeshes(context);
         RenderLights(context);

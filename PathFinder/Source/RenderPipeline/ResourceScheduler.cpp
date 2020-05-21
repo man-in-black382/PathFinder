@@ -14,7 +14,6 @@ namespace PathFinder
 
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "New render target has already been scheduled");
 
-        HAL::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
         NewTextureProperties props = FillMissingFields(properties);
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
 
@@ -24,7 +23,7 @@ namespace PathFinder
         }
 
         PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTexturesAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount, props.TextureCount
+            resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, *props.MipCount, props.TextureCount
         );
 
         for (auto textureIdx = 0u; textureIdx < schedulingInfo->ResourceCount(); ++textureIdx)
@@ -33,7 +32,7 @@ namespace PathFinder
             {
                 PipelineResourceSchedulingInfo::PassInfo& passInfo = schedulingInfo->AllocateInfoForPass(mResourceStorage->CurrentPassGraphNode(), textureIdx, subresourceIdx);
                 passInfo.RequestedState = HAL::ResourceState::RenderTarget;
-                passInfo.CreateTextureRTDescriptor = true;
+                passInfo.SetTextureRTRequested();
 
                 if (props.TypelessFormat)
                 {
@@ -64,7 +63,7 @@ namespace PathFinder
             {
                 PipelineResourceSchedulingInfo::PassInfo& passInfo = schedulingInfo->AllocateInfoForPass(mResourceStorage->CurrentPassGraphNode(), textureIdx, subresourceIdx);
                 passInfo.RequestedState = HAL::ResourceState::DepthWrite;
-                passInfo.CreateTextureDSDescriptor = true;
+                passInfo.SetTextureDSRequested();
             }
         }
 
@@ -77,7 +76,6 @@ namespace PathFinder
 
         assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "Texture creation has already been scheduled");
 
-        HAL::ColorClearValue clearValue{ 0.0, 0.0, 0.0, 1.0 };
         NewTextureProperties props = FillMissingFields(properties);
 
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
@@ -88,7 +86,7 @@ namespace PathFinder
         }
 
         PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTexturesAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, clearValue, *props.MipCount, props.TextureCount
+            resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, *props.MipCount, props.TextureCount
         );
 
         for (auto textureIdx = 0u; textureIdx < schedulingInfo->ResourceCount(); ++textureIdx)
@@ -97,7 +95,7 @@ namespace PathFinder
             {
                 PipelineResourceSchedulingInfo::PassInfo& passInfo = schedulingInfo->AllocateInfoForPass(mResourceStorage->CurrentPassGraphNode(), textureIdx, subresourceIdx);
                 passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
-                passInfo.CreateTextureUADescriptor = true;
+                passInfo.SetTextureUARequested();
 
                 if (props.TypelessFormat)
                 {
@@ -109,7 +107,7 @@ namespace PathFinder
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
     }
 
-    void ResourceScheduler::UseRenderTarget(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat)
+    void ResourceScheduler::UseRenderTarget(const ResourceKey& resourceKey, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
     {
         EnsureSingleSchedulingRequestForCurrentPass(resourceKey.ResourceName());
 
@@ -121,20 +119,22 @@ namespace PathFinder
         assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
 
-        for (auto subresourceIdx = 0u; subresourceIdx < resourceData->SchedulingInfo.SubresourceCount(); ++subresourceIdx)
+        auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
         {
             PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
                 mResourceStorage->CurrentPassGraphNode(), resourceKey.IndexInArray(), subresourceIdx
             );
 
             passInfo.RequestedState = HAL::ResourceState::RenderTarget;
-            passInfo.CreateTextureRTDescriptor = true;
+            passInfo.SetTextureRTRequested();
 
             if (isTypeless)
             {
                 passInfo.ShaderVisibleFormat = concreteFormat;
             }
-        }
+        };
+
+        FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceKey.ResourceName());
     }
@@ -154,13 +154,13 @@ namespace PathFinder
             );
 
             passInfo.RequestedState = HAL::ResourceState::DepthWrite;
-            passInfo.CreateTextureDSDescriptor = true;
+            passInfo.SetTextureDSRequested();
         }
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceKey.ResourceName());
     }
 
-    void ResourceScheduler::ReadTexture(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat)
+    void ResourceScheduler::ReadTexture(const ResourceKey& resourceKey, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
     {
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot read non-scheduled texture");
 
@@ -171,7 +171,7 @@ namespace PathFinder
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        for (auto subresourceIdx = 0u; subresourceIdx < resourceData->SchedulingInfo.SubresourceCount(); ++subresourceIdx)
+        auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
         {
             PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
                 mResourceStorage->CurrentPassGraphNode(), resourceKey.IndexInArray(), subresourceIdx
@@ -189,13 +189,15 @@ namespace PathFinder
                 passInfo.ShaderVisibleFormat = concreteFormat;
             }
 
-            passInfo.CreateTextureSRDescriptor = true;
-        }
+            passInfo.SetTextureSRRequested();
+        };
+
+        FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceKey.ResourceName());
     }
 
-    void ResourceScheduler::ReadWriteTexture(const ResourceKey& resourceKey, std::optional<HAL::ColorFormat> concreteFormat)
+    void ResourceScheduler::ReadWriteTexture(const ResourceKey& resourceKey, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
     {
         assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot read/write non-scheduled texture");
 
@@ -205,20 +207,22 @@ namespace PathFinder
         assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
         assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-        for (auto subresourceIdx = 0u; subresourceIdx < resourceData->SchedulingInfo.SubresourceCount(); ++subresourceIdx)
+        auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
         {
             PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
                 mResourceStorage->CurrentPassGraphNode(), resourceKey.IndexInArray(), subresourceIdx
             );
 
             passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
-            passInfo.CreateTextureUADescriptor = true;
+            passInfo.SetTextureUARequested();
 
-            if (isTypeless) 
-            { 
+            if (isTypeless)
+            {
                 passInfo.ShaderVisibleFormat = concreteFormat;
             }
-        }
+        };
+
+        FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
 
         mResourceStorage->RegisterResourceNameForCurrentPass(resourceKey.ResourceName());
     }
@@ -240,16 +244,18 @@ namespace PathFinder
             HAL::TextureKind::Texture2D,
             mUtilityProvider->DefaultRenderSurfaceDescription.Dimensions(),
             std::nullopt,
+            HAL::ColorClearValue{ 0, 0, 0, 1 },
             1
         };
 
         if (properties)
         {
-            if (properties->Kind) filledProperties.Kind = *properties->Kind;
-            if (properties->Dimensions) filledProperties.Dimensions = *properties->Dimensions;
-            if (properties->ShaderVisibleFormat) filledProperties.ShaderVisibleFormat = *properties->ShaderVisibleFormat;
-            if (properties->TypelessFormat) filledProperties.TypelessFormat = *properties->TypelessFormat;
-            if (properties->MipCount) filledProperties.MipCount = *properties->MipCount;
+            if (properties->Kind) filledProperties.Kind = properties->Kind;
+            if (properties->Dimensions) filledProperties.Dimensions = properties->Dimensions;
+            if (properties->ShaderVisibleFormat) filledProperties.ShaderVisibleFormat = properties->ShaderVisibleFormat;
+            if (properties->TypelessFormat) filledProperties.TypelessFormat = properties->TypelessFormat;
+            if (properties->ClearValues) filledProperties.ClearValues = properties->ClearValues;
+            if (properties->MipCount) filledProperties.MipCount = properties->MipCount;
         }
 
         filledProperties.TextureCount = std::max(properties->TextureCount, 1ull);
@@ -267,9 +273,9 @@ namespace PathFinder
 
         if (properties)
         {
-            if (properties->Format) filledProperties.Format = *properties->Format;
-            if (properties->Dimensions) filledProperties.Dimensions = *properties->Dimensions;
-            if (properties->MipCount) filledProperties.MipCount = *properties->MipCount;
+            if (properties->Format) filledProperties.Format = properties->Format;
+            if (properties->Dimensions) filledProperties.Dimensions = properties->Dimensions;
+            if (properties->MipCount) filledProperties.MipCount = properties->MipCount;
         }
 
         filledProperties.TextureCount = std::max(properties->TextureCount, 1ull);

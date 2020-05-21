@@ -18,9 +18,8 @@ namespace PathFinder
 
         void SetRenderTarget(const ResourceKey& rtKey, std::optional<ResourceKey> dsKey = std::nullopt);
         void SetBackBufferAsRenderTarget(std::optional<ResourceKey> dsKey = std::nullopt);
-        void ClearBackBuffer(const Foundation::Color& color);
-        void ClearRenderTarget(const ResourceKey& rtKey, const Foundation::Color& color);
-        void ClearDepth(const ResourceKey& rtKey, float depthValue);
+        void ClearRenderTarget(const ResourceKey& rtKey);
+        void ClearDepth(const ResourceKey& rtKey);
         void ApplyPipelineState(Foundation::Name psoName);
         void SetViewport(const HAL::Viewport& viewport);
 

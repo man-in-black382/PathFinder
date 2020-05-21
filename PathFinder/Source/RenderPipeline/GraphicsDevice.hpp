@@ -30,9 +30,8 @@ namespace PathFinder
 
         void SetRenderTarget(const ResourceKey& rtKey, std::optional<ResourceKey> dsKey = std::nullopt);
         void SetBackBufferAsRenderTarget(std::optional<ResourceKey> dsKey = std::nullopt);
-        void ClearBackBuffer(const Foundation::Color& color);
-        void ClearRenderTarget(const ResourceKey& rtKey, const Foundation::Color& color);
-        void ClearDepth(const ResourceKey& dsKey, float depthValue);
+        void ClearRenderTarget(const ResourceKey& rtKey);
+        void ClearDepth(const ResourceKey& dsKey);
         void SetViewport(const HAL::Viewport& viewport);
         void Draw(uint32_t vertexCount, uint32_t instanceCount = 1);
         void Draw(const DrawablePrimitive& primitive);

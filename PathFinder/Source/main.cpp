@@ -15,6 +15,7 @@
 #include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserMipGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserHistoryFixRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SpecularDenoiserRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
@@ -85,6 +86,7 @@ int main(int argc, char** argv)
     auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
     auto denoiserMipGenerationPass = std::make_unique<PathFinder::DenoiserMipGenerationRenderPass>();
     auto denoiserReprojectionPass = std::make_unique<PathFinder::DenoiserReprojectionRenderPass>();
+    auto denoiserHistoryFixPass = std::make_unique<PathFinder::DenoiserHistoryFixRenderPass>();
     auto specularDenoiserPass = std::make_unique<PathFinder::SpecularDenoiserRenderPass>();
     auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
     auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
@@ -99,6 +101,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(shadingPass.get());
     engine.AddRenderPass(denoiserMipGenerationPass.get());
     engine.AddRenderPass(denoiserReprojectionPass.get());
+    engine.AddRenderPass(denoiserHistoryFixPass.get());
     engine.AddRenderPass(specularDenoiserPass.get());
     engine.AddRenderPass(bloomBlurPass.get());
     engine.AddRenderPass(bloomCompositionPass.get());

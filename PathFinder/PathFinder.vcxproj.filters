@@ -438,6 +438,9 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\SpecularDenoiserRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2369,6 +2372,9 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\SpecularDenoiserRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2925,12 +2931,13 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BaseEngineLayout.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Camera.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserReprojection.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\AveragingDownsampling.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ImportanceSampling.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SpecularDenoiser.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserCommon.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Trig.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Filtering.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\Downsampling.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserHistoryFix.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

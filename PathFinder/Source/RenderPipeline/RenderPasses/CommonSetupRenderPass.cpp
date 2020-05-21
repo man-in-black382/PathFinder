@@ -12,7 +12,7 @@ namespace PathFinder
     {
         stateCreator->CreateComputeState(PSONames::AveragindDownsampling, [](ComputeStateProxy& state)
         {
-            state.ComputeShaderFileName = "AveragingDownsampling.hlsl";
+            state.ComputeShaderFileName = "Downsampling.hlsl";
         });
     }
 

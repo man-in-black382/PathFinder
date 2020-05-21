@@ -22,7 +22,7 @@ namespace PathFinder
         auto frameIndex = scheduler->FrameNumber() % 2;
 
         ResourceScheduler::NewTextureProperties frameCountProperties{};
-        frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R32_Float;
+        frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R16_Float;
         frameCountProperties.TextureCount = 2;
 
         scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount, frameCountProperties);
