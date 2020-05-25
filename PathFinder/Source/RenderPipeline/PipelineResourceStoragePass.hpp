@@ -3,6 +3,8 @@
 #include "../Foundation/Name.hpp"
 #include "../Memory/GPUResourceProducer.hpp"
 
+#include "PipelineResourceStorageResource.hpp"
+
 #include <unordered_set>
 
 namespace PathFinder

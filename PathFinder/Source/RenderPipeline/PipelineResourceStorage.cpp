@@ -76,6 +76,9 @@ namespace PathFinder
     {
         mPreviousFrameResources->clear();
         mPreviousFrameDiffEntries->clear();
+        mResourceCreationRequests.clear();
+        mResourceUsageRequests.clear();
+        mResourceCreationRequestTracker.clear();
 
         std::swap(mPreviousFrameDiffEntries, mCurrentFrameDiffEntries);
         std::swap(mPreviousFrameResources, mCurrentFrameResources);
@@ -88,6 +91,9 @@ namespace PathFinder
 
     void PipelineResourceStorage::EndResourceScheduling()
     {
+        for (const DelayedSchedulingAction& action : mResourceCreationRequests) action();
+        for (const DelayedSchedulingAction& action : mResourceUsageRequests) action();
+
         FinalizeSchedulingInfo();
 
         bool memoryValid = TransferPreviousFrameResources();
@@ -115,18 +121,7 @@ namespace PathFinder
         CreateUAVBarriers();
     }
 
-    bool PipelineResourceStorage::IsResourceAllocationScheduled(ResourceName name) const
-    {
-        const PipelineResourceStorageResource* resourceObjects = GetPerResourceData(name);
-        return resourceObjects != nullptr;
-    }
-
-    void PipelineResourceStorage::RegisterResourceNameForCurrentPass(ResourceName name)
-    {
-        mCurrentPassData->ScheduledResourceNames.insert(name);
-    }
-
-    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueTexturesAllocationIfNeeded(
+    PipelineResourceStorageResource& PipelineResourceStorage::QueueTexturesAllocationIfNeeded(
         ResourceName resourceName,
         HAL::ResourceFormat::FormatVariant format,
         HAL::TextureKind kind,
@@ -142,7 +137,7 @@ namespace PathFinder
 
         if (resourceObjects)
         {
-            return &resourceObjects->SchedulingInfo;
+            return *resourceObjects;
         }
 
         resourceObjects = &CreatePerResourceData(resourceName, textureFormat, textureCount);
@@ -178,7 +173,7 @@ namespace PathFinder
             }
         };
 
-        return &resourceObjects->SchedulingInfo;
+        return *resourceObjects;
     }
 
     PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name)
@@ -449,11 +444,6 @@ namespace PathFinder
         return 0;
     }
 
-    const std::unordered_set<ResourceName>& PipelineResourceStorage::ScheduledResourceNamesForCurrentPass()
-    {
-        return mCurrentPassData->ScheduledResourceNames;
-    }
-
     const HAL::ResourceBarrierCollection& PipelineResourceStorage::AliasingBarriersForCurrentPass() 
     {
         PipelineResourceStoragePass* passObjects = GetPerPassData(mCurrentRenderPassGraphNode.PassMetadata.Name);
@@ -469,6 +459,21 @@ namespace PathFinder
     const RenderPassExecutionGraph::Node& PipelineResourceStorage::CurrentPassGraphNode() const
     {
         return mCurrentRenderPassGraphNode;
+    }
+
+    void PipelineResourceStorage::AddResourceCreationAction(const DelayedSchedulingAction& action, ResourceName resourceName, PassName passName)
+    {
+        auto trackerIt = mResourceCreationRequestTracker.find(resourceName);
+        assert_format(trackerIt == mResourceCreationRequestTracker.end(),
+            "Resource ", resourceName.ToString(), " creation was already requested in ", passName.ToString(), " render pass");
+
+        mResourceCreationRequestTracker.emplace(resourceName, passName);
+        mResourceCreationRequests.push_back(action);
+    }
+
+    void PipelineResourceStorage::AddResourceUsageAction(const DelayedSchedulingAction& action)
+    {
+        mResourceUsageRequests.push_back(action);
     }
 
     void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const

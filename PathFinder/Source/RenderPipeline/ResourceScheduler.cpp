@@ -10,221 +10,270 @@ namespace PathFinder
 
     void ResourceScheduler::NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
     {
-        EnsureSingleSchedulingRequestForCurrentPass(resourceName);
-
-        assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "New render target has already been scheduled");
-
         NewTextureProperties props = FillMissingFields(properties);
-        HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
+        Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
 
-        if (props.TypelessFormat) 
+        // Wait until all allocations are requested by render passed to detach scheduling algorithm from scheduling order
+        auto delayedAllocationRequest = [this, props, resourceName, passGraphNode = mResourceStorage->CurrentPassGraphNode()]
         {
-            format = *props.TypelessFormat;
-        }
+            HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
 
-        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTexturesAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, *props.MipCount, props.TextureCount
-        );
+            if (props.TypelessFormat) format = *props.TypelessFormat;
 
-        for (auto textureIdx = 0u; textureIdx < schedulingInfo->ResourceCount(); ++textureIdx)
-        {
-            for (auto subresourceIdx = 0u; subresourceIdx < schedulingInfo->SubresourceCount(); ++subresourceIdx)
+            PipelineResourceStorageResource& resourceData = mResourceStorage->QueueTexturesAllocationIfNeeded(
+                resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, *props.MipCount, props.TextureCount
+            );
+
+            for (auto textureIdx = 0u; textureIdx < resourceData.SchedulingInfo.ResourceCount(); ++textureIdx)
             {
-                PipelineResourceSchedulingInfo::PassInfo& passInfo = schedulingInfo->AllocateInfoForPass(mResourceStorage->CurrentPassGraphNode(), textureIdx, subresourceIdx);
-                passInfo.RequestedState = HAL::ResourceState::RenderTarget;
-                passInfo.SetTextureRTRequested();
-
-                if (props.TypelessFormat)
+                for (auto subresourceIdx = 0u; subresourceIdx < resourceData.SchedulingInfo.SubresourceCount(); ++subresourceIdx)
                 {
-                    passInfo.ShaderVisibleFormat = props.ShaderVisibleFormat;
+                    PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData.SchedulingInfo.AllocateInfoForPass(passGraphNode, textureIdx, subresourceIdx);
+                    passInfo.RequestedState = HAL::ResourceState::RenderTarget;
+                    passInfo.SetTextureRTRequested();
+
+                    if (props.TypelessFormat)
+                    {
+                        passInfo.ShaderVisibleFormat = props.ShaderVisibleFormat;
+                    }
                 }
             }
-        }
 
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
+            // Register resource usage for the render pass
+            PipelineResourceStoragePass* passData = mResourceStorage->GetPerPassData(passGraphNode.PassMetadata.Name);
+            passData->ScheduledResourceNames.insert(resourceName);
+        };
+
+        mResourceStorage->AddResourceCreationAction(delayedAllocationRequest, resourceName, passName);
     }
 
     void ResourceScheduler::NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties)
     {
-        EnsureSingleSchedulingRequestForCurrentPass(resourceName);
-
-        assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "New depth-stencil texture has already been scheduled");
-
-        HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
         NewDepthStencilProperties props = FillMissingFields(properties);
+        Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
 
-        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTexturesAllocationIfNeeded(
-            resourceName, *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, 1, props.TextureCount
-        );
-
-        for (auto textureIdx = 0u; textureIdx < schedulingInfo->ResourceCount(); ++textureIdx)
+        // Wait until all allocations are requested by render passed to detach scheduling algorithm from scheduling order
+        auto delayedAllocationRequest = [this, props, resourceName, passGraphNode = mResourceStorage->CurrentPassGraphNode()]
         {
-            for (auto subresourceIdx = 0u; subresourceIdx < schedulingInfo->SubresourceCount(); ++subresourceIdx)
-            {
-                PipelineResourceSchedulingInfo::PassInfo& passInfo = schedulingInfo->AllocateInfoForPass(mResourceStorage->CurrentPassGraphNode(), textureIdx, subresourceIdx);
-                passInfo.RequestedState = HAL::ResourceState::DepthWrite;
-                passInfo.SetTextureDSRequested();
-            }
-        }
+            HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
+            
+            PipelineResourceStorageResource& resourceData = mResourceStorage->QueueTexturesAllocationIfNeeded(
+                resourceName, *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, 1, props.TextureCount
+            );
 
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
+            for (auto textureIdx = 0u; textureIdx < resourceData.SchedulingInfo.ResourceCount(); ++textureIdx)
+            {
+                for (auto subresourceIdx = 0u; subresourceIdx < resourceData.SchedulingInfo.SubresourceCount(); ++subresourceIdx)
+                {
+                    PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData.SchedulingInfo.AllocateInfoForPass(passGraphNode, textureIdx, subresourceIdx);
+                    passInfo.RequestedState = HAL::ResourceState::DepthWrite;
+                    passInfo.SetTextureDSRequested();
+                }
+            }
+
+            // Register resource usage for the render pass
+            PipelineResourceStoragePass* passData = mResourceStorage->GetPerPassData(passGraphNode.PassMetadata.Name);
+            passData->ScheduledResourceNames.insert(resourceName);
+        };
+
+        mResourceStorage->AddResourceCreationAction(delayedAllocationRequest, resourceName, passName);
     }
 
     void ResourceScheduler::NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
     {
-        EnsureSingleSchedulingRequestForCurrentPass(resourceName);
-
-        assert_format(!mResourceStorage->IsResourceAllocationScheduled(resourceName), "Texture creation has already been scheduled");
-
         NewTextureProperties props = FillMissingFields(properties);
+        Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
 
-        HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
-
-        if (props.TypelessFormat)
+        // Wait until all allocations are requested by render passed to detach scheduling algorithm from scheduling order
+        auto delayedAllocationRequest = [this, props, resourceName, passGraphNode = mResourceStorage->CurrentPassGraphNode()]
         {
-            format = *props.TypelessFormat;
-        }
+            HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
 
-        PipelineResourceSchedulingInfo* schedulingInfo = mResourceStorage->QueueTexturesAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, *props.MipCount, props.TextureCount
-        );
-
-        for (auto textureIdx = 0u; textureIdx < schedulingInfo->ResourceCount(); ++textureIdx)
-        {
-            for (auto subresourceIdx = 0u; subresourceIdx < schedulingInfo->SubresourceCount(); ++subresourceIdx)
+            if (props.TypelessFormat)
             {
-                PipelineResourceSchedulingInfo::PassInfo& passInfo = schedulingInfo->AllocateInfoForPass(mResourceStorage->CurrentPassGraphNode(), textureIdx, subresourceIdx);
-                passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
-                passInfo.SetTextureUARequested();
+                format = *props.TypelessFormat;
+            }
 
-                if (props.TypelessFormat)
+            PipelineResourceStorageResource& resourceData = mResourceStorage->QueueTexturesAllocationIfNeeded(
+                resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, *props.MipCount, props.TextureCount
+            );
+
+            for (auto textureIdx = 0u; textureIdx < resourceData.SchedulingInfo.ResourceCount(); ++textureIdx)
+            {
+                for (auto subresourceIdx = 0u; subresourceIdx < resourceData.SchedulingInfo.SubresourceCount(); ++subresourceIdx)
                 {
-                    passInfo.ShaderVisibleFormat = props.ShaderVisibleFormat;
+                    PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData.SchedulingInfo.AllocateInfoForPass(passGraphNode, textureIdx, subresourceIdx);
+                    passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
+                    passInfo.SetTextureUARequested();
+
+                    if (props.TypelessFormat)
+                    {
+                        passInfo.ShaderVisibleFormat = props.ShaderVisibleFormat;
+                    }
                 }
             }
-        }
 
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceName);
+            // Register resource usage for the render pass
+            PipelineResourceStoragePass* passData = mResourceStorage->GetPerPassData(passGraphNode.PassMetadata.Name);
+            passData->ScheduledResourceNames.insert(resourceName);
+        };
+
+        mResourceStorage->AddResourceCreationAction(delayedAllocationRequest, resourceName, passName);
     }
 
     void ResourceScheduler::UseRenderTarget(const ResourceKey& resourceKey, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        EnsureSingleSchedulingRequestForCurrentPass(resourceKey.ResourceName());
+        Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
 
-        assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot use non-scheduled render target");
-
-        PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
-        bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
-
-        assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
-        assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
-
-        auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
+        auto delayedUsageRequest = [=, passGraphNode = mResourceStorage->CurrentPassGraphNode()]
         {
-            PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
-                mResourceStorage->CurrentPassGraphNode(), resourceKey.IndexInArray(), subresourceIdx
-            );
+            PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
 
-            passInfo.RequestedState = HAL::ResourceState::RenderTarget;
-            passInfo.SetTextureRTRequested();
+            assert_format(resourceData, "Cannot use non-scheduled render target");
 
-            if (isTypeless)
+            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
+
+            assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
+            assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
+
+            auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
             {
-                passInfo.ShaderVisibleFormat = concreteFormat;
-            }
+                PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
+                    passGraphNode, resourceKey.IndexInArray(), subresourceIdx
+                );
+
+                passInfo.RequestedState = HAL::ResourceState::RenderTarget;
+                passInfo.SetTextureRTRequested();
+
+                if (isTypeless)
+                {
+                    passInfo.ShaderVisibleFormat = concreteFormat;
+                }
+            };
+
+            FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
+
+            // Register resource usage for the render pass
+            PipelineResourceStoragePass* passData = mResourceStorage->GetPerPassData(passGraphNode.PassMetadata.Name);
+            passData->ScheduledResourceNames.insert(resourceKey.ResourceName());
         };
 
-        FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
-
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceKey.ResourceName());
+        mResourceStorage->AddResourceUsageAction(delayedUsageRequest);
     }
 
     void ResourceScheduler::UseDepthStencil(const ResourceKey& resourceKey)
     {
-        assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot reuse non-scheduled depth-stencil texture");
+        Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
 
-        PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
-
-        assert_format(std::holds_alternative<HAL::DepthStencilFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType()), "Cannot reuse non-depth-stencil texture");
-
-        for (auto subresourceIdx = 0u; subresourceIdx < resourceData->SchedulingInfo.SubresourceCount(); ++subresourceIdx)
+        auto delayedUsageRequest = [=, passGraphNode = mResourceStorage->CurrentPassGraphNode()]
         {
-            PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
-                mResourceStorage->CurrentPassGraphNode(), resourceKey.IndexInArray(), subresourceIdx
-            );
+            PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
 
-            passInfo.RequestedState = HAL::ResourceState::DepthWrite;
-            passInfo.SetTextureDSRequested();
-        }
+            assert_format(resourceData, "Cannot reuse non-scheduled depth-stencil texture");
+            assert_format(std::holds_alternative<HAL::DepthStencilFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType()), "Cannot reuse non-depth-stencil texture");
 
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceKey.ResourceName());
+            for (auto subresourceIdx = 0u; subresourceIdx < resourceData->SchedulingInfo.SubresourceCount(); ++subresourceIdx)
+            {
+                PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
+                    passGraphNode, resourceKey.IndexInArray(), subresourceIdx
+                );
+
+                passInfo.RequestedState = HAL::ResourceState::DepthWrite;
+                passInfo.SetTextureDSRequested();
+            }
+
+            // Register resource usage for the render pass
+            PipelineResourceStoragePass* passData = mResourceStorage->GetPerPassData(passGraphNode.PassMetadata.Name);
+            passData->ScheduledResourceNames.insert(resourceKey.ResourceName());
+        };
+
+        mResourceStorage->AddResourceUsageAction(delayedUsageRequest);
     }
 
     void ResourceScheduler::ReadTexture(const ResourceKey& resourceKey, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot read non-scheduled texture");
+        Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
 
-        PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
-
-        bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
-
-        assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
-        assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
-
-        auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
+        auto delayedUsageRequest = [=, passGraphNode = mResourceStorage->CurrentPassGraphNode()]
         {
-            PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
-                mResourceStorage->CurrentPassGraphNode(), resourceKey.IndexInArray(), subresourceIdx
-            );
+            PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
 
-            passInfo.RequestedState = HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
+            assert_format(resourceData, "Cannot read non-scheduled texture");
 
-            if (std::holds_alternative<HAL::DepthStencilFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType()))
+            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
+
+            assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
+            assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
+
+            auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
             {
-                passInfo.RequestedState |= HAL::ResourceState::DepthRead;
-            }
+                PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
+                    passGraphNode, resourceKey.IndexInArray(), subresourceIdx
+                );
 
-            if (isTypeless)
-            {
-                passInfo.ShaderVisibleFormat = concreteFormat;
-            }
+                passInfo.RequestedState = HAL::ResourceState::PixelShaderAccess | HAL::ResourceState::NonPixelShaderAccess;
 
-            passInfo.SetTextureSRRequested();
+                if (std::holds_alternative<HAL::DepthStencilFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType()))
+                {
+                    passInfo.RequestedState |= HAL::ResourceState::DepthRead;
+                }
+
+                if (isTypeless)
+                {
+                    passInfo.ShaderVisibleFormat = concreteFormat;
+                }
+
+                passInfo.SetTextureSRRequested();
+            };
+
+            FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
+
+            // Register resource usage for the render pass
+            PipelineResourceStoragePass* passData = mResourceStorage->GetPerPassData(passGraphNode.PassMetadata.Name);
+            passData->ScheduledResourceNames.insert(resourceKey.ResourceName());
         };
 
-        FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
-
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceKey.ResourceName());
+        mResourceStorage->AddResourceUsageAction(delayedUsageRequest);
     }
 
     void ResourceScheduler::ReadWriteTexture(const ResourceKey& resourceKey, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        assert_format(mResourceStorage->IsResourceAllocationScheduled(resourceKey.ResourceName()), "Cannot read/write non-scheduled texture");
+        Foundation::Name passName = mResourceStorage->CurrentPassGraphNode().PassMetadata.Name;
 
-        PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
-        bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
-
-        assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
-        assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
-
-        auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
+        auto delayedUsageRequest = [=, passGraphNode = mResourceStorage->CurrentPassGraphNode()]
         {
-            PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
-                mResourceStorage->CurrentPassGraphNode(), resourceKey.IndexInArray(), subresourceIdx
-            );
+            PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
 
-            passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
-            passInfo.SetTextureUARequested();
+            assert_format(resourceData, "Cannot read/write non-scheduled texture");
 
-            if (isTypeless)
+            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
+
+            assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
+            assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
+
+            auto fillInfoForCurrentPass = [&](uint64_t subresourceIdx)
             {
-                passInfo.ShaderVisibleFormat = concreteFormat;
-            }
+                PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData->SchedulingInfo.AllocateInfoForPass(
+                    passGraphNode, resourceKey.IndexInArray(), subresourceIdx
+                );
+
+                passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
+                passInfo.SetTextureUARequested();
+
+                if (isTypeless)
+                {
+                    passInfo.ShaderVisibleFormat = concreteFormat;
+                }
+            };
+
+            FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
+
+            // Register resource usage for the render pass
+            PipelineResourceStoragePass* passData = mResourceStorage->GetPerPassData(passGraphNode.PassMetadata.Name);
+            passData->ScheduledResourceNames.insert(resourceKey.ResourceName());
         };
 
-        FillCurrentPassInfo(resourceData, mips, fillInfoForCurrentPass);
-
-        mResourceStorage->RegisterResourceNameForCurrentPass(resourceKey.ResourceName());
+        mResourceStorage->AddResourceUsageAction(delayedUsageRequest);
     }
 
     void ResourceScheduler::ReadBuffer(const ResourceKey& resourceKey, BufferReadContext readContext)
@@ -281,13 +330,6 @@ namespace PathFinder
         filledProperties.TextureCount = std::max(properties->TextureCount, 1ull);
 
         return filledProperties;
-    }
-
-    void ResourceScheduler::EnsureSingleSchedulingRequestForCurrentPass(Foundation::Name resourceName) const
-    {
-        const auto& names = mResourceStorage->ScheduledResourceNamesForCurrentPass();
-        bool isResourceScheduledInCurrentPass = names.find(resourceName) != names.end();
-        assert_format(!isResourceScheduledInCurrentPass, "Resource ", resourceName.ToString(), " is already scheduled for this pass. Resources can only be scheduled once per pass");
     }
 
 }

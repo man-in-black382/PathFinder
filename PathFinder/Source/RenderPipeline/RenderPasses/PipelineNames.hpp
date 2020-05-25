@@ -5,6 +5,14 @@
 namespace PathFinder
 {
 
+    namespace ResourceIndices
+    {
+        inline uint64_t StochasticShadingCurrentFrameOutputArrayIdx = 0;
+        inline uint64_t StochasticShadingHistoryArrayIdx = 1;
+        inline uint64_t StochasticShadingReprojectedHistoryArrayIdx = 2;
+        inline uint64_t StochasticShadingDenoiseTargetArrayIdx = 1;
+    }
+
     namespace ResourceNames
     {
         inline Foundation::Name JumpFloodingConesIndirection0{ "Resource_JumpFloodingConesIndirection0" };
@@ -23,9 +31,17 @@ namespace PathFinder
         inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
         inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
         inline Foundation::Name ShadingAnalyticOutput{ "Resource_Shading_Analytic_Output" };
+
         inline Foundation::Name ShadingStochasticUnshadowedOutput{ "Resource_Shading_Stochastic_Unshadowed_Output" };
         inline Foundation::Name ShadingStochasticShadowedOutput{ "Resource_Shading_Stochastic_Shadowed_Output" };
+        inline Foundation::Name ShadingStochasticUnshadowedDenoised{ "Resource_Shading_Stochastic_Unshadowed_Denoised" };
+        inline Foundation::Name ShadingStochasticShadowedDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised" };
+        inline Foundation::Name ShadingStochasticUnshadowedDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
+        inline Foundation::Name ShadingStochasticShadowedDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
+
+        inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
         inline Foundation::Name DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count" };
+        inline Foundation::Name DenoisedCombinedDirectShading{ "Resource_Denoised_Combined_Direct_Shading" };
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
         inline Foundation::Name BloomCompositionOutput{ "Resource_Bloom_Composition_Output" };
@@ -37,13 +53,13 @@ namespace PathFinder
         inline Foundation::Name DistanceMapHelperInitialization{ "PSO_DistanceMapHelperInitialization" };
         inline Foundation::Name DistanceMapHelperCompression{ "PSO_DistanceMapHelperCompression" };
         inline Foundation::Name DistanceMapGeneration{ "PSO_DistanceMapGeneration" };
-        inline Foundation::Name AveragindDownsampling{ "PSO_AveragingDownsampling" };
+        inline Foundation::Name Downsampling{ "PSO_AveragingDownsampling" };
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
         inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
         inline Foundation::Name Shading{ "PSO_Shading" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
-        inline Foundation::Name GaussianBlur{ "PSO_GaussianBlur" };
+        inline Foundation::Name SeparableBlur{ "PSO_SeparableBlur" };
         inline Foundation::Name BloomDownscaling{ "PSO_BloomDownscaling" };
         inline Foundation::Name BloomBlur{ "PSO_BloomBlur" };
         inline Foundation::Name BloomComposition{ "PSO_BloomComposition" };
@@ -53,6 +69,7 @@ namespace PathFinder
         inline Foundation::Name ShadowDenoising{ "PSO_ShadowDenoising" };
         inline Foundation::Name DenoiserReprojection{ "PSO_DenoiserReprojection" };
         inline Foundation::Name DenoiserHistoryFix{ "PSO_DenoiserHistoryFix" };
+        inline Foundation::Name DenoiserPostStabilization{ "PSO_DenoiserPostStabilization" };
         inline Foundation::Name SpecularDenoiser{ "PSO_SpecularDenoiser" };
         inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };

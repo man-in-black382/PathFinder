@@ -68,6 +68,8 @@ VertexOut VSMain(uint indexId : SV_VertexID)
 
 float3 FetchAlbedoMap(VertexOut vertex, Material material)
 {
+    return 0.8;//
+
     Texture2D albedoMap = Textures2D[material.AlbedoMapIndex];
     return LinearFromSRGB(albedoMap.Sample(AnisotropicClampSampler, vertex.UV).rgb);
 }
@@ -79,17 +81,23 @@ float3 FetchNormalMap(VertexOut vertex, Material material)
     float3 normal = normalMap.Sample(AnisotropicClampSampler, vertex.UV).xyz;
     normal = normal * 2.0 - 1.0;
 
+    normal = float3(0, 0, 1);
+
     return normalize(mul(vertex.TBN, normal));
 }
 
 float FetchMetallnessMap(VertexOut vertex, Material material)
 {
+    return 0.0;//
+
     Texture2D metalnessMap = Textures2D[material.MetalnessMapIndex];
     return metalnessMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }
 
 float FetchRoughnessMap(VertexOut vertex, Material material)
 {
+    return 0.1;//
+
     Texture2D roughnessMap = Textures2D[material.RoughnessMapIndex];
     return roughnessMap.Sample(AnisotropicClampSampler, vertex.UV).r;
 }

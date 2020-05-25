@@ -106,8 +106,6 @@ namespace PathFinder
         NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties);
         NewDepthStencilProperties FillMissingFields(std::optional<NewDepthStencilProperties> properties);
 
-        void EnsureSingleSchedulingRequestForCurrentPass(Foundation::Name resourceName) const;
-
         template <class Lambda>
         void FillCurrentPassInfo(const PipelineResourceStorageResource* resourceData, const MipList& mipList, const Lambda& lambda);
 

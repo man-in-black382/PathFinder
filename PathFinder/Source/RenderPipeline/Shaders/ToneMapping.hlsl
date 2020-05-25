@@ -24,21 +24,31 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 {
     Texture2D inputImage = Textures2D[PassDataCB.InputTexIdx];
     RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
-    
-    uint3 loadCoords = uint3(dispatchThreadID.xy, 0);
-    float3 color = inputImage.Load(loadCoords).rgb;
+    Texture2D analytic = Textures2D[PassDataCB._Padding1];
+    Texture2D unshadowed = Textures2D[PassDataCB._Padding0];
+
+    float3 shadowedShading = inputImage[dispatchThreadID.xy].rgb;
+    float3 unshadowedShading = unshadowed[dispatchThreadID.xy].rgb;
+    float3 shadow = 0;
+
+    [unroll] for (int i = 0; i < 3; ++i)
+    {
+        shadow[i] = unshadowedShading[i] < 1e-05 ? 1.0 : shadowedShading[i] / unshadowedShading[i];
+    }
+
+    float3 color = shadow * analytic[dispatchThreadID.xy].rgb;
 
     GTTonemappingParams params = PassDataCB.TonemappingParams;
     // Luminance was exposed using Saturation Based Sensitivity method 
     // hence the 1.0 for maximum luminance
     params.MaximumLuminance = 1.0;// ConvertEV100ToMaxHsbsLuminance(FrameDataCB.CurrentFrameCamera.ExposureValue100);
 
-    /*color = float3(
+    color = float3(
         GTToneMap(color.r, params),
         GTToneMap(color.g, params),
-        GTToneMap(color.b, params));*/
+        GTToneMap(color.b, params));
 
-    outputImage[dispatchThreadID.xy] = float4(/*SRGBFromLinear*/(color), 1.0);
+    outputImage[dispatchThreadID.xy] = float4(SRGBFromLinear(color), 1.0);
 }
 
 #endif

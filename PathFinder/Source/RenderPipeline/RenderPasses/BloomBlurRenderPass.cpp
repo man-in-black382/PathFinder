@@ -12,7 +12,7 @@ namespace PathFinder
     {
         stateCreator->CreateComputeState(PSONames::BloomBlur, [this](ComputeStateProxy& state)
         {
-            state.ComputeShaderFileName = "BloomBlur.hlsl";
+            state.ComputeShaderFileName = "SeparableBlur.hlsl";
         });
 
         stateCreator->CreateComputeState(PSONames::BloomDownscaling, [](ComputeStateProxy& state)
@@ -46,7 +46,7 @@ namespace PathFinder
         auto fullResDimensions = defaultRenderSurfaceDesc.Dimensions();
         auto resourceProvider = context->GetResourceProvider();
 
-        BloomBlurCBContent blurInputs{};
+        BlurCBContent blurInputs{};
 
         // Blur horizontal
         const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
@@ -92,7 +92,7 @@ namespace PathFinder
         // Blur
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomBlur);
 
-        BloomBlurCBContent blurInputs{};
+        BlurCBContent blurInputs{};
 
         // Blur horizontal
         const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
@@ -138,7 +138,7 @@ namespace PathFinder
         // Blur
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomBlur);
 
-        BloomBlurCBContent blurInputs{};
+        BlurCBContent blurInputs{};
 
         // Blur horizontal
         const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();

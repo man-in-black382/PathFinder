@@ -13,9 +13,11 @@
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserPreBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserMipGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserHistoryFixRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserPostStabilizationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SpecularDenoiserRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
@@ -84,9 +86,11 @@ int main(int argc, char** argv)
     auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
     auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
+    auto denoiserPreBlurPass = std::make_unique<PathFinder::DenoiserPreBlurRenderPass>();
     auto denoiserMipGenerationPass = std::make_unique<PathFinder::DenoiserMipGenerationRenderPass>();
     auto denoiserReprojectionPass = std::make_unique<PathFinder::DenoiserReprojectionRenderPass>();
     auto denoiserHistoryFixPass = std::make_unique<PathFinder::DenoiserHistoryFixRenderPass>();
+    auto denoiserPostStabilizationPass = std::make_unique<PathFinder::DenoiserPostStabilizationRenderPass>();
     auto specularDenoiserPass = std::make_unique<PathFinder::SpecularDenoiserRenderPass>();
     auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
     auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
@@ -99,10 +103,12 @@ int main(int argc, char** argv)
     engine.AddRenderPass(distanceFieldGenerationPass.get());
     engine.AddRenderPass(GBufferPass.get());
     engine.AddRenderPass(shadingPass.get());
+    engine.AddRenderPass(denoiserPreBlurPass.get());
     engine.AddRenderPass(denoiserMipGenerationPass.get());
     engine.AddRenderPass(denoiserReprojectionPass.get());
     engine.AddRenderPass(denoiserHistoryFixPass.get());
     engine.AddRenderPass(specularDenoiserPass.get());
+    engine.AddRenderPass(denoiserPostStabilizationPass.get());
     engine.AddRenderPass(bloomBlurPass.get());
     engine.AddRenderPass(bloomCompositionPass.get());
     engine.AddRenderPass(toneMappingPass.get());
@@ -161,8 +167,8 @@ int main(int argc, char** argv)
     flatLight1->SetLuminousPower(10000);*/
 
     auto flatLight3 = scene.EmplaceRectangularLight();
-    flatLight3->SetWidth(5);
-    flatLight3->SetHeight(5);
+    flatLight3->SetWidth(2);
+    flatLight3->SetHeight(2);
     flatLight3->SetPosition({ 0, 2, 0.0 });
     flatLight3->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, -1.0 }));
     flatLight3->SetColor({ 255 / 255, 255 / 255, 255 / 255 });
@@ -190,7 +196,7 @@ int main(int argc, char** argv)
         "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
 
     PathFinder::Mesh& plane = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &concrete19Material });
+    PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &metalMaterial });
 
     PathFinder::Mesh& cube = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
     PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &metalMaterial });

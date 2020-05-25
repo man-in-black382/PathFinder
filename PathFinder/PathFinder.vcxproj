@@ -282,6 +282,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPostStabilizationRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp" />
@@ -292,6 +294,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingRequest.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootConstantsUpdater.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootSignatureCreator.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootSignatureProxy.cpp" />
@@ -449,9 +452,12 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurCBContent.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPostStabilizationRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingCBContent.hpp" />
@@ -468,6 +474,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingRequest.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootSignatureCreator.hpp" />
@@ -1177,6 +1184,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserHistoryFix.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserPostStabilization.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Downsampling.hlsl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -1189,47 +1197,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\BloomBlur.hlsl">
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">6.2</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </EntryPointName>
-      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DisableOptimizations>
-      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EnableDebuggingInformation>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Library</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">6.2</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </EntryPointName>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.2</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </EntryPointName>
-      <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DisableOptimizations>
-      <EnableDebuggingInformation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableDebuggingInformation>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">6.2</ShaderModel>
-      <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </AllResourcesBound>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </EnableUnboundedDescriptorTables>
-      <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </AllResourcesBound>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </EnableUnboundedDescriptorTables>
-      <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</AllResourcesBound>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</EnableUnboundedDescriptorTables>
-      <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</AllResourcesBound>
-      <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableUnboundedDescriptorTables>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -1631,7 +1598,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\GaussianBlur.hlsl">
+    <FxCompile Include="Source\RenderPipeline\Shaders\SeparableBlur.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>
@@ -1766,6 +1733,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </Text>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GTTonemapping.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>

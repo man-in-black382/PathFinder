@@ -8,6 +8,7 @@
 #include "PipelineResourceStateOptimizer.hpp"
 #include "PipelineResourceStoragePass.hpp"
 #include "PipelineResourceStorageResource.hpp"
+#include "PipelineResourceSchedulingRequest.hpp"
 
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
@@ -47,6 +48,7 @@ namespace PathFinder
         );
 
         using DebugBufferIteratorFunc = std::function<void(PassName passName, const float* debugData)>;
+        using DelayedSchedulingAction = std::function<void()>;
 
         const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0, uint64_t mipIndex = 0);
         const HAL::DSDescriptor* GetDepthStencilDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0);
@@ -72,10 +74,12 @@ namespace PathFinder
         const Memory::Buffer* PerFrameRootConstantsBuffer() const;
         const Memory::Buffer* DebugBufferForCurrentPass() const;
         HAL::GPUAddress RootConstantsBufferAddressForCurrentPass() const;
-        const std::unordered_set<ResourceName>& ScheduledResourceNamesForCurrentPass();
         const HAL::ResourceBarrierCollection& AliasingBarriersForCurrentPass();
         const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();
         const RenderPassExecutionGraph::Node& CurrentPassGraphNode() const;
+
+        void AddResourceCreationAction(const DelayedSchedulingAction& action, ResourceName resourceName, PassName passName);
+        void AddResourceUsageAction(const DelayedSchedulingAction& action);
 
         PipelineResourceStoragePass* GetPerPassData(PassName name);
         PipelineResourceStorageResource* GetPerResourceData(ResourceName name);
@@ -84,10 +88,7 @@ namespace PathFinder
 
         void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
-        bool IsResourceAllocationScheduled(ResourceName name) const;
-        void RegisterResourceNameForCurrentPass(ResourceName name);
-
-        PipelineResourceSchedulingInfo* QueueTexturesAllocationIfNeeded(
+        PipelineResourceStorageResource& QueueTexturesAllocationIfNeeded(
             ResourceName resourceName,
             HAL::ResourceFormat::FormatVariant format,
             HAL::TextureKind kind,
@@ -98,7 +99,7 @@ namespace PathFinder
         );
 
         template <class BufferDataT>
-        PipelineResourceSchedulingInfo* QueueBuffersAllocationIfNeeded(
+        PipelineResourceStorageResource& QueueBuffersAllocationIfNeeded(
             ResourceName resourceName,
             uint64_t capacity,
             uint64_t perElementAlignment,
@@ -160,6 +161,13 @@ namespace PathFinder
         std::pair<DiffEntryList, DiffEntryList> mDiffEntries;
         DiffEntryList* mPreviousFrameDiffEntries = &mDiffEntries.first;
         DiffEntryList* mCurrentFrameDiffEntries = &mDiffEntries.second;
+
+        // Prepared callbacks to be called after all passes scheduled their resources
+        std::vector<DelayedSchedulingAction> mResourceCreationRequests;
+        std::vector<DelayedSchedulingAction> mResourceUsageRequests;
+
+        // Keeps track of resource allocation requests to detect duplicates
+        std::unordered_map<Foundation::Name, Foundation::Name> mResourceCreationRequestTracker;
 
         // Transitions for resources scheduled for readback
         HAL::ResourceBarrierCollection mReadbackBarriers;

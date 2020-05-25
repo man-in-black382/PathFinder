@@ -441,6 +441,15 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPostStabilizationRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingRequest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2375,6 +2384,18 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPostStabilizationRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurCBContent.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingRequest.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2918,9 +2939,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\Mesh.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GBufferLights.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomDownscaling.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\GaussianBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Exposure.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\BloomBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Constants.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMapping.hlsl" />
@@ -2938,6 +2957,9 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\Filtering.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Downsampling.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserHistoryFix.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserPostStabilization.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\SeparableBlur.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

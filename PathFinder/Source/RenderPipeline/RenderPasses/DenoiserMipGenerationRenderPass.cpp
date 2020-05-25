@@ -18,13 +18,13 @@ namespace PathFinder
         auto frameIndex = scheduler->FrameNumber() % 2;
 
         scheduler->ReadWriteTexture({ ResourceNames::GBufferViewDepth, frameIndex });
-        scheduler->ReadWriteTexture({ ResourceNames::ShadingStochasticShadowedOutput, 0 });
-        scheduler->ReadWriteTexture({ ResourceNames::ShadingStochasticUnshadowedOutput, 0 });
+        scheduler->ReadWriteTexture({ ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx });
+        scheduler->ReadWriteTexture({ ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx });
     }
      
     void DenoiserMipGenerationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::AveragindDownsampling);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::Downsampling);
 
         auto resourceProvider = context->GetResourceProvider();
         auto frameIndex = context->FrameNumber() % 2;
@@ -45,11 +45,11 @@ namespace PathFinder
 
         // Downsample shadowed luminance
         cbContent.FilterType = DownsamplingCBContent::Filter::Average;
-        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput);
-        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput, 1);
-        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput, 2);
-        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput, 3);
-        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticShadowedOutput, 4);
+        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx });
+        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx }, 1);
+        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx }, 2);
+        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx }, 3);
+        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx }, 4);
 
         firstMipDimensions = resourceProvider->GetTextureProperties(ResourceNames::ShadingStochasticShadowedOutput).Dimensions.XYMultiplied(0.5);
 
@@ -58,11 +58,11 @@ namespace PathFinder
 
         // Downsample unshadowed luminance
         cbContent.FilterType = DownsamplingCBContent::Filter::Average;
-        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput);
-        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput, 1);
-        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput, 2);
-        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput, 3);
-        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingStochasticUnshadowedOutput, 4);
+        cbContent.SourceTexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx });
+        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx }, 1);
+        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx }, 2);
+        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx }, 3);
+        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx }, 4);
 
         firstMipDimensions = resourceProvider->GetTextureProperties(ResourceNames::ShadingStochasticUnshadowedOutput).Dimensions.XYMultiplied(0.5);
 

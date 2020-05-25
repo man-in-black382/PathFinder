@@ -64,7 +64,7 @@ namespace PathFinder
     }
 
     template <class BufferDataT>
-    PipelineResourceSchedulingInfo* PipelineResourceStorage::QueueBuffersAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, uint64_t buffersCount)
+    PipelineResourceStorageResource& PipelineResourceStorage::QueueBuffersAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, uint64_t buffersCount)
     {
         HAL::Buffer::Properties<BufferDataT> properties{ capacity, perElementAlignment };
         HAL::ResourceFormat bufferFormat = HAL::Buffer::ConstructResourceFormat(mDevice, properties);
@@ -73,7 +73,7 @@ namespace PathFinder
 
         if (resourceObjects)
         {
-            return &resourceObjects->SchedulingInfo;
+            return *resourceObjects;
         }
 
         resourceObjects = &CreatePerResourceData(resourceName, bufferFormat, buffersCount);
@@ -111,7 +111,7 @@ namespace PathFinder
             }
         };
         
-        return &resourceObjects->SchedulingInfo;
+        return *resourceObjects;
     }
 
 }

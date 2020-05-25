@@ -10,9 +10,14 @@ namespace PathFinder
 
     void CommonSetupRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
-        stateCreator->CreateComputeState(PSONames::AveragindDownsampling, [](ComputeStateProxy& state)
+        stateCreator->CreateComputeState(PSONames::Downsampling, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "Downsampling.hlsl";
+        });
+
+        stateCreator->CreateComputeState(PSONames::SeparableBlur, [](ComputeStateProxy& state)
+        {
+            state.ComputeShaderFileName = "SeparableBlur.hlsl";
         });
     }
 

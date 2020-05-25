@@ -56,7 +56,7 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
     float3 surfaceNormal;
     LoadGBufferNormalAndRoughness(normalRoughnessTexture, pixelIndex, surfaceNormal, roughness);
 
-    uint mipLevel = (HistoryFixMipCount - 1) * (1.0 - normAccumulatedFrameCount) * roughness;
+    uint mipLevel = (HistoryFixMipCount - 1)* (1.0 - normAccumulatedFrameCount)* roughness;
 
     // Sampling mip 0 and then writing to mip 0 is useless work
     if (mipLevel == 0)
