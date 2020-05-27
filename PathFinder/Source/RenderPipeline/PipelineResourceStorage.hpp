@@ -8,7 +8,6 @@
 #include "PipelineResourceStateOptimizer.hpp"
 #include "PipelineResourceStoragePass.hpp"
 #include "PipelineResourceStorageResource.hpp"
-#include "PipelineResourceSchedulingRequest.hpp"
 
 #include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"

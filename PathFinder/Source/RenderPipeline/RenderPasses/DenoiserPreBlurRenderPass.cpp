@@ -16,19 +16,19 @@ namespace PathFinder
     void DenoiserPreBlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         scheduler->NewTexture(ResourceNames::DenoisedPreBlurIntermediate);
-        scheduler->ReadWriteTexture({ ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx });
-        scheduler->ReadWriteTexture({ ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx });
+        scheduler->ReadWriteTexture(ResourceNames::StochasticShadowedShadingOutput);
+        scheduler->ReadWriteTexture(ResourceNames::StochasticUnshadowedShadingOutput);
     }
      
     void DenoiserPreBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::SeparableBlur);
 
-        BlurTexture(context, ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx);
-        BlurTexture(context, ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx);
+        BlurTexture(context, ResourceNames::StochasticShadowedShadingOutput);
+        BlurTexture(context, ResourceNames::StochasticUnshadowedShadingOutput);
     }
 
-    void DenoiserPreBlurRenderPass::BlurTexture(RenderContext<RenderPassContentMediator>* context, Foundation::Name textureName, uint64_t textureIndex)
+    void DenoiserPreBlurRenderPass::BlurTexture(RenderContext<RenderPassContentMediator>* context, Foundation::Name textureName)
     {
         auto resourceProvider = context->GetResourceProvider();
 
@@ -42,7 +42,7 @@ namespace PathFinder
         std::move(kernel.begin(), kernel.end(), cbContent.Weights.begin());
         cbContent.ImageSize = { dispatchDimensions.Width, dispatchDimensions.Height };
 
-        cbContent.InputTexIdx = resourceProvider->GetUATextureIndex({ textureName, textureIndex });
+        cbContent.InputTexIdx = resourceProvider->GetUATextureIndex(textureName);
         cbContent.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoisedPreBlurIntermediate);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);

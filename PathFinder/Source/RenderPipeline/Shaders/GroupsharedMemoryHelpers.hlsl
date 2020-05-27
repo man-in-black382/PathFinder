@@ -18,6 +18,17 @@ struct GSBoxLoadStoreCoords
     bool IsLoadStore3Required;
 };
 
+struct GSLineLoadStoreCoords
+{
+    int2 LoadCoord0;
+    int2 LoadCoord1;
+
+    int StoreCoord0;
+    int StoreCoord1;
+
+    bool IsLoadStore1Required;
+};
+
 GSBoxLoadStoreCoords GetGSBoxLoadStoreCoords(int2 dispatchIndex, int2 threadIndex, int2 textureSize, int groupSize, int radius)
 {
     GSBoxLoadStoreCoords coords;
@@ -102,5 +113,44 @@ GSBoxLoadStoreCoords GetGSBoxLoadStoreCoords(int2 dispatchIndex, int2 threadInde
     return coords;
 }
 
+GSLineLoadStoreCoords GetGSLineLoadStoreCoords(int2 dispatchIndex, int threadIndex, int2 textureSize, int groupSize, int radius, bool isHorizontal)
+{
+    GSLineLoadStoreCoords coords;
+
+    // Gather pixels for threads in the middle of the group
+    // Clamp for the case when GroupSize is not multiple of source image dimension
+    int2 loadCoord = min(dispatchIndex, textureSize - 1);
+    coords.LoadCoord0 = loadCoord;
+    coords.StoreCoord0 = threadIndex + radius;
+    coords.IsLoadStore1Required = false;
+
+    // Gather pixels needed for the (Radius) leftmost threads in the group
+    // Clamp against image border if necessary
+    if (threadIndex < radius)
+    {
+        int2 loadCoord = isHorizontal ?
+            int2(max(dispatchIndex.x - radius, 0), dispatchIndex.y) :
+            int2(dispatchIndex.x, max(dispatchIndex.y - radius, 0));
+
+        coords.LoadCoord1 = loadCoord;
+        coords.StoreCoord1 = threadIndex;
+        coords.IsLoadStore1Required = true;
+    }
+
+    // Gather pixels needed for the (Radius) rightmost threads in the group
+    // Clamp against image border if necessary
+    if (threadIndex >= (groupSize - radius))
+    {
+        int2 loadCoord = isHorizontal ?
+            int2(min(dispatchIndex.x + radius, textureSize.x - 1), dispatchIndex.y) :
+            int2(dispatchIndex.x, min(dispatchIndex.y + radius, textureSize.y - 1));
+
+        coords.LoadCoord1 = loadCoord;
+        coords.StoreCoord1 = threadIndex + radius * 2;
+        coords.IsLoadStore1Required = true;
+    }
+
+    return coords;
+}
 
 #endif

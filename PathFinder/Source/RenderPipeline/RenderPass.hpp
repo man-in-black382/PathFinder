@@ -24,6 +24,7 @@ namespace PathFinder
 
         virtual ~RenderPass() = 0;
 
+        virtual RenderPassExecutionQueue ExecutionQueue() const { return RenderPassExecutionQueue::Graphics; };
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) {};
         virtual void ScheduleResources(ResourceScheduler* scheduler) {};
         virtual void Render(RenderContext<ContentMediator>* context) {};

@@ -38,7 +38,7 @@ float MaxAllowedAccumulatedFrames(float roughness, float NdotV, float parallax)
      
     // Controls sensitivity to parallax in general
     // Smaller values - more aggressive accumulation
-    static const float SpecularAccumulationBasePower = 0.4;
+    static const float SpecularAccumulationBasePower = 0.25;
 
     float acos01sq = saturate(1.0 - NdotV); // ~ "normalized acos" ^ 2
     float a = pow(acos01sq, SpecularAccumulationCurve);

@@ -358,7 +358,7 @@ namespace PathFinder
             mStateOptimizer.AddSchedulingInfo(&resourceData.SchedulingInfo);
 
             // Resource arrays are usually used across frames which makes them unaliasable
-            bool shouldAlias = resourceData.ResourceCount() == 1;
+            bool shouldAlias = false;// resourceData.ResourceCount() == 1;
 
             if (shouldAlias)
             {

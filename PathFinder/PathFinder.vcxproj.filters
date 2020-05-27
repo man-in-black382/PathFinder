@@ -225,9 +225,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -447,7 +444,7 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingRequest.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientGuidedBlurRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1913,9 +1910,6 @@
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\HardwareAbstractionLayer\HWCapabilityFetcher.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2393,7 +2387,7 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurCBContent.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingRequest.hpp">
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientGuidedBlurRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2960,6 +2954,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserPostStabilization.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SeparableBlur.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

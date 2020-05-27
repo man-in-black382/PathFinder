@@ -43,6 +43,10 @@ namespace PathFinder
             bool IsBufferSRRequested() const { return mAccessFlag & 1 << 5; }
             bool IsBufferUARequested() const { return mAccessFlag & 1 << 6; }
 
+            bool IsWriteAccessRequested() const {
+                return IsTextureRTRequested() || IsTextureDSRequested() || IsTextureUARequested() || IsBufferUARequested();
+            }
+
         private:
             RequestedAccessFlag mAccessFlag;
         };

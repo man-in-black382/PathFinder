@@ -5,14 +5,6 @@
 namespace PathFinder
 {
 
-    namespace ResourceIndices
-    {
-        inline uint64_t StochasticShadingCurrentFrameOutputArrayIdx = 0;
-        inline uint64_t StochasticShadingHistoryArrayIdx = 1;
-        inline uint64_t StochasticShadingReprojectedHistoryArrayIdx = 2;
-        inline uint64_t StochasticShadingDenoiseTargetArrayIdx = 1;
-    }
-
     namespace ResourceNames
     {
         inline Foundation::Name JumpFloodingConesIndirection0{ "Resource_JumpFloodingConesIndirection0" };
@@ -28,16 +20,16 @@ namespace PathFinder
         inline Foundation::Name GBufferDepthStencil{ "Resource_GBuffer_Depth_Stencil" };
         inline Foundation::Name GBufferViewDepth{ "Resource_GBuffer_View_Depth" };
 
-        inline Foundation::Name DeferredLightingFullOutput{ "Resource_DeferredLighting_Full_Output" };
-        inline Foundation::Name DeferredLightingOverexposedOutput{ "Resource_DeferredLighting_Overexposed_Output" };
         inline Foundation::Name ShadingAnalyticOutput{ "Resource_Shading_Analytic_Output" };
 
-        inline Foundation::Name ShadingStochasticUnshadowedOutput{ "Resource_Shading_Stochastic_Unshadowed_Output" };
-        inline Foundation::Name ShadingStochasticShadowedOutput{ "Resource_Shading_Stochastic_Shadowed_Output" };
-        inline Foundation::Name ShadingStochasticUnshadowedDenoised{ "Resource_Shading_Stochastic_Unshadowed_Denoised" };
-        inline Foundation::Name ShadingStochasticShadowedDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised" };
-        inline Foundation::Name ShadingStochasticUnshadowedDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
-        inline Foundation::Name ShadingStochasticShadowedDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
+        inline Foundation::Name StochasticUnshadowedShadingOutput{ "Resource_Shading_Stochastic_Unshadowed_Output" };
+        inline Foundation::Name StochasticShadowedShadingOutput{ "Resource_Shading_Stochastic_Shadowed_Output" };
+        inline Foundation::Name StochasticUnshadowedShadingReprojected{ "Resource_Shading_Stochastic_Unshadowed_Reprojected_History" };
+        inline Foundation::Name StochasticShadowedShadingReprojected{ "Resource_Shading_Stochastic_Shadowed_Reprojected_History" };
+        inline Foundation::Name StochasticUnshadowedShadingDenoised{ "Resource_Shading_Stochastic_Unshadowed_Denoised" };
+        inline Foundation::Name StochasticShadowedShadingDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised" };
+        inline Foundation::Name StochasticUnshadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
+        inline Foundation::Name StochasticShadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
 
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
         inline Foundation::Name DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count" };

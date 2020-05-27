@@ -63,7 +63,7 @@ namespace PathFinder
 
     PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceSchedulingInfo* schedulingInfo) const
     {
-        return { schedulingInfo->FirstPassGraphNode().ContextualExecutionIndex, schedulingInfo->LastPassGraphNode().ContextualExecutionIndex };
+        return { schedulingInfo->FirstPassGraphNode().ExecutionIndex, schedulingInfo->LastPassGraphNode().ExecutionIndex };
     }
 
     void PipelineResourceMemoryAliaser::FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const

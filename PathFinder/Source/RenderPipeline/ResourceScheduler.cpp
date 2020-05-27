@@ -129,7 +129,7 @@ namespace PathFinder
         {
             PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
 
-            assert_format(resourceData, "Cannot use non-scheduled render target");
+            assert_format(resourceData, "Cannot use non-scheduled render target ", resourceKey.ResourceName().ToString(), " in ", passName.ToString(), " render pass");
 
             bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
 
@@ -169,7 +169,7 @@ namespace PathFinder
         {
             PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
 
-            assert_format(resourceData, "Cannot reuse non-scheduled depth-stencil texture");
+            assert_format(resourceData, "Cannot reuse non-scheduled depth-stencil texture ", resourceKey.ResourceName().ToString(), " in ", passName.ToString(), " render pass");
             assert_format(std::holds_alternative<HAL::DepthStencilFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType()), "Cannot reuse non-depth-stencil texture");
 
             for (auto subresourceIdx = 0u; subresourceIdx < resourceData->SchedulingInfo.SubresourceCount(); ++subresourceIdx)
@@ -198,7 +198,7 @@ namespace PathFinder
         {
             PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
 
-            assert_format(resourceData, "Cannot read non-scheduled texture");
+            assert_format(resourceData, "Cannot read non-scheduled texture ", resourceKey.ResourceName().ToString(), " in ", passName.ToString(), " render pass");
 
             bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
 
@@ -244,7 +244,7 @@ namespace PathFinder
         {
             PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceKey.ResourceName());
 
-            assert_format(resourceData, "Cannot read/write non-scheduled texture");
+            assert_format(resourceData, "Cannot read/write non-scheduled texture ", resourceKey.ResourceName().ToString(), " in ", passName.ToString(), " render pass");
 
             bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*resourceData->SchedulingInfo.ResourceFormat().DataType());
 

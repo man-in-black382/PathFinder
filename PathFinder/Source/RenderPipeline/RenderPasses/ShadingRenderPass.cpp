@@ -32,12 +32,11 @@ namespace PathFinder
     { 
         ResourceScheduler::NewTextureProperties outputProperties{};
         // 3 textures: current frame, history, reprojected history
-        outputProperties.TextureCount = 3;
         outputProperties.MipCount = 5;
 
         scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
-        scheduler->NewTexture(ResourceNames::ShadingStochasticShadowedOutput, outputProperties);
-        scheduler->NewTexture(ResourceNames::ShadingStochasticUnshadowedOutput, outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput, outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingOutput, outputProperties);
         
         scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
@@ -65,8 +64,8 @@ namespace PathFinder
         cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.AnalyticOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingAnalyticOutput);
-        cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticShadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx });
-        cbContent.StochasticUnshadowedOutputTexIdx = resourceProvider->GetUATextureIndex({ ResourceNames::ShadingStochasticUnshadowedOutput, ResourceIndices::StochasticShadingCurrentFrameOutputArrayIdx });
+        cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingOutput);
+        cbContent.StochasticUnshadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingOutput);
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
 
         auto frameNumber = context->FrameNumber();

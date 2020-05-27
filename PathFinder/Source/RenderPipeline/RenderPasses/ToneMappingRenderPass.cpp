@@ -21,8 +21,8 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::BloomCompositionOutput);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
         scheduler->ReadTexture(ResourceNames::ShadingAnalyticOutput);
-        scheduler->ReadTexture(ResourceNames::ShadingStochasticShadowedDenoisedStabilized);
-        scheduler->ReadTexture(ResourceNames::ShadingStochasticUnshadowedDenoisedStabilized);
+        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
+        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingDenoisedStabilized);
     }
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -30,8 +30,8 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ShadingStochasticShadowedDenoisedStabilized);
-        cbContent._Pad0 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ShadingStochasticUnshadowedDenoisedStabilized);
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
+        cbContent._Pad0 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoisedStabilized);
         cbContent._Pad1 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ShadingAnalyticOutput);
         cbContent.OutputTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();

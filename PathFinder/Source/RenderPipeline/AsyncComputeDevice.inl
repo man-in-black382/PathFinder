@@ -272,7 +272,7 @@ namespace PathFinder
 
         // Add any transitions that may have been requested for external resources (assets)
         // for example copy dest. to srv or cbv 
-        bool isFirstPass = passNode.ContextualExecutionIndex == 0;
+        bool isFirstPass = passNode.ExecutionIndex == 0;
         barriers.AddBarriers(mResourceStateTracker->ApplyRequestedTransitions(isFirstPass));
         barriers.AddBarriers(mUABarriersToApply);
         mCommandList->InsertBarriers(barriers);

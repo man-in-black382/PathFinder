@@ -16,6 +16,11 @@ namespace PathFinder
         AssetProcessing
     };
 
+    enum class RenderPassExecutionQueue : uint8_t
+    {
+        Graphics = 0, AsyncCompute = 1
+    };
+
     struct RenderPassMetadata
     {
         Foundation::Name Name;
