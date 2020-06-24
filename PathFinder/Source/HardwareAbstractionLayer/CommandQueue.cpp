@@ -44,6 +44,11 @@ namespace HAL
         mQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&ptr);
     }
 
+    void GraphicsCommandQueue::ExecuteCommandLists(const GraphicsCommandList* const* lists, uint64_t count)
+    {
+        ExecuteCommandListsInternal(lists, count);
+    }
+
 
 
     ComputeCommandQueue::ComputeCommandQueue(const Device& device)
@@ -53,6 +58,11 @@ namespace HAL
     {
         auto ptr = list.D3DList();
         mQueue->ExecuteCommandLists(1, (ID3D12CommandList * const*)& ptr);
+    }
+
+    void ComputeCommandQueue::ExecuteCommandLists(const ComputeCommandList* const* lists, uint64_t count)
+    {
+        ExecuteCommandListsInternal(lists, count);
     }
 
 
@@ -66,6 +76,9 @@ namespace HAL
         mQueue->ExecuteCommandLists(1, (ID3D12CommandList* const*)&ptr);
     }
 
-    
+    void CopyCommandQueue::ExecuteCommandLists(const CopyCommandList* const* lists, uint64_t count)
+    {
+        ExecuteCommandListsInternal(lists, count);
+    }
 
 }

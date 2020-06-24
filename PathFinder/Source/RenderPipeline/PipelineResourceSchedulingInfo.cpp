@@ -1,76 +1,84 @@
 #include "PipelineResourceSchedulingInfo.hpp"
 
+#include "../Foundation/Assert.hpp"
+
 namespace PathFinder
 {
 
-    PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format, uint64_t resourceCount)
-        : mResourceFormat{ format }, mResourceName{ resourceName }, mResourceCount{ resourceCount }, mSubresourceCount{ format.SubresourceCount() }
+    PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format)
+        : mResourceFormat{ format }, mResourceName{ resourceName }, mSubresourceCount{ format.SubresourceCount() }
     {
-        mResourceSchedulingMetadata.resize(resourceCount);
+        mSubresourceCombinedReadStates.resize(mSubresourceCount);
+        mSubresourceWriteStates.resize(mSubresourceCount);
+    }
 
-        for (SubresourceArray& innerArray : mResourceSchedulingMetadata)
-        {
-            innerArray.resize(mSubresourceCount);
-        }
+    void PipelineResourceSchedulingInfo::AddExpectedStates(HAL::ResourceState states)
+    {
+        mExpectedStates |= states;
     }
 
     void PipelineResourceSchedulingInfo::FinishScheduling()
     {
-        HAL::ResourceState initialStates = HAL::ResourceState::Common;
-        HAL::ResourceState expectedStates = HAL::ResourceState::Common;
+        // Determine final memory requirements
+        mResourceFormat.SetExpectedStates(mExpectedStates);
+    }
 
-        // Get subresources for each resource in the array
-        for (const SubresourceArray& subresources : mResourceSchedulingMetadata)
+    const PipelineResourceSchedulingInfo::PassInfo* PipelineResourceSchedulingInfo::GetInfoForPass(Foundation::Name passName) const
+    {
+        auto it = mPassInfoMap.find(passName);
+        return it != mPassInfoMap.end() ? &it->second : nullptr;
+    }
+
+    PipelineResourceSchedulingInfo::PassInfo* PipelineResourceSchedulingInfo::GetInfoForPass(Foundation::Name passName)
+    {
+        auto it = mPassInfoMap.find(passName);
+        return it != mPassInfoMap.end() ? &it->second : nullptr;
+    }
+
+    void PipelineResourceSchedulingInfo::SetSubresourceInfo(
+        Foundation::Name passName,
+        uint64_t subresourceIndex,
+        HAL::ResourceState state,
+        SubresourceInfo::AccessFlag accessFlag,
+        std::optional<HAL::ColorFormat> shaderVisibleFormat)
+    {
+        assert_format(subresourceIndex < mSubresourceCount, "Subresource index is out of bounds");
+
+        PassInfo& passInfo = mPassInfoMap[passName];
+        passInfo.SubresourceInfos.resize(mSubresourceCount);
+        passInfo.SubresourceInfos[subresourceIndex] = SubresourceInfo{};
+        passInfo.SubresourceInfos[subresourceIndex]->AccessValidationFlag = accessFlag;
+        passInfo.SubresourceInfos[subresourceIndex]->RequestedState = state;
+        passInfo.SubresourceInfos[subresourceIndex]->ShaderVisibleFormat = shaderVisibleFormat;
+
+        if (IsResourceStateReadOnly(state))
         {
-            // Get per pass scheduling info for each subresource
-            for (const PassInfoMap& subresourcePerPassData : subresources)
-            {
-                // Get scheduling metadata for each render pass that requested usage of this subresource
-                for (const auto& [passName, metadata] : subresourcePerPassData)
-                {
-                    expectedStates |= metadata.RequestedState;
+            mSubresourceCombinedReadStates[subresourceIndex] |= state;
+        }
+        else
+        {
+            assert_format(mSubresourceWriteStates[subresourceIndex] == HAL::ResourceState::Common,
+                "One write state for subresource is already requested. Engine architecture allows one write per frame.");
 
-                    if (passName == mFirstPassGraphNode.PassMetadata.Name)
-                    {
-                        initialStates |= initialStates;
-                    }
-                }
+            mSubresourceWriteStates[subresourceIndex] = state;
+
+            if (EnumMaskBitSet(state, HAL::ResourceState::UnorderedAccess))
+            {
+                passInfo.NeedsUnorderedAccessBarrier = true;
             }
         }
 
-        mInitialStates = initialStates;
-        mExpectedStates = expectedStates;
-        mResourceFormat.SetExpectedStates(expectedStates);
+        mExpectedStates |= state;
     }
 
-    const PipelineResourceSchedulingInfo::PassInfo* PipelineResourceSchedulingInfo::GetInfoForPass(Foundation::Name passName, uint64_t resourceIndex, uint64_t subresourceIndex) const
+    HAL::ResourceState PipelineResourceSchedulingInfo::GetSubresourceCombinedReadStates(uint64_t subresourceIndex) const
     {
-        const SubresourceArray& subresourceArray = mResourceSchedulingMetadata[resourceIndex];
-        const PassInfoMap& passInfoMap = subresourceArray[subresourceIndex];
-        auto it = passInfoMap.find(passName);
-        return it != passInfoMap.end() ? &it->second : nullptr;
+        return mSubresourceCombinedReadStates[subresourceIndex];
     }
 
-    PipelineResourceSchedulingInfo::PassInfo* PipelineResourceSchedulingInfo::GetInfoForPass(Foundation::Name passName, uint64_t resourceIndex, uint64_t subresourceIndex)
+    HAL::ResourceState PipelineResourceSchedulingInfo::GetSubresourceWriteState(uint64_t subresourceIndex) const
     {
-        SubresourceArray& subresourceArray = mResourceSchedulingMetadata[resourceIndex];
-        PassInfoMap& passInfoMap = subresourceArray[subresourceIndex];
-        auto it = passInfoMap.find(passName);
-        return it != passInfoMap.end() ? &it->second : nullptr;
-    }
-
-    PipelineResourceSchedulingInfo::PassInfo& PipelineResourceSchedulingInfo::AllocateInfoForPass(const RenderPassExecutionGraph::Node& passNode, uint64_t resourceIndex, uint64_t subresourceIndex)
-    {
-        // Empty name means we have not set first pass node yet
-        if (!mFirstPassGraphNode.PassMetadata.Name.IsValid())
-        {
-            mFirstPassGraphNode = passNode;
-        }
-
-        mLastPassGraphNode = passNode;
-
-        auto [it, success] = mResourceSchedulingMetadata[resourceIndex][subresourceIndex].emplace(passNode.PassMetadata.Name, PassInfo{});
-        return it->second;
+        return mSubresourceWriteStates[subresourceIndex];
     }
 
 }

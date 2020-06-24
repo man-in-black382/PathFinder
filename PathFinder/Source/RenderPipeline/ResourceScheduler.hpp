@@ -1,8 +1,10 @@
 #pragma once
 
 #include "PipelineResourceStorage.hpp"
-#include "ResourceKey.hpp"
 #include "RenderPassUtilityProvider.hpp"
+#include "RenderPassGraph.hpp"
+
+#include "../Foundation/BitwiseEnum.hpp"
 
 #include <vector>
 
@@ -12,11 +14,18 @@ namespace PathFinder
     class ResourceScheduler
     {
     public:
-        using MipList = std::vector<uint8_t>;
+        using MipList = std::vector<uint32_t>;
 
         enum class BufferReadContext
         {
             Constant, ShaderResource
+        };
+
+        enum class Flags : uint32_t
+        {
+            None = 0, 
+            CrossFrameRead = 1 << 0, // Resource will be read across frames so it cannot participate in memory aliasing
+            WillNotWrite = 1 << 1    // Resource will not be written and should not be added to the graph as write dependency
         };
 
         struct NewTextureProperties
@@ -27,18 +36,19 @@ namespace PathFinder
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt,
                 std::optional<HAL::TypelessColorFormat> typelessFormat = std::nullopt,
                 std::optional<HAL::ColorClearValue> clearValues = std::nullopt,
-                uint8_t mipCount = 1)
+                uint8_t mipCount = 1,
+                Flags readFlags = Flags::None)
                 : 
                 TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat }, 
-                Kind{ kind }, Dimensions{ dimensions }, ClearValues{ clearValues }, MipCount{ mipCount } {}
+                Kind{ kind }, Dimensions{ dimensions }, ClearValues{ clearValues }, MipCount{ mipCount }, Flags{ readFlags } {}
 
             std::optional<HAL::TypelessColorFormat> TypelessFormat;
             std::optional<HAL::ColorFormat> ShaderVisibleFormat;
             std::optional<HAL::TextureKind> Kind;
             std::optional<Geometry::Dimensions> Dimensions;
-            std::optional<uint8_t> MipCount;
             std::optional<HAL::ColorClearValue> ClearValues;
-            uint64_t TextureCount = 1;
+            uint8_t MipCount;
+            Flags Flags;
         };
 
         struct NewDepthStencilProperties
@@ -46,30 +56,31 @@ namespace PathFinder
             NewDepthStencilProperties(
                 std::optional<HAL::DepthStencilFormat> format = std::nullopt,
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt,
-                std::optional<uint8_t> mipCount = std::nullopt)
+                uint8_t mipCount = 1,
+                Flags readFlags = Flags::None)
                 : 
-                Format{ format }, Dimensions{ dimensions }, MipCount{ mipCount } {}
+                Format{ format }, Dimensions{ dimensions }, MipCount{ mipCount }, Flags{ readFlags } {}
 
             std::optional<HAL::DepthStencilFormat> Format;
             std::optional<Geometry::Dimensions> Dimensions;
-            std::optional<uint8_t> MipCount;
-            uint64_t TextureCount = 1;
+            uint8_t MipCount;
+            Flags Flags;
         };
 
         template <class T>
         struct NewBufferProperties
         {
-            NewBufferProperties(uint64_t capacity = 1, uint64_t perElementAlignment = 1)
-                : Capacity{ capacity }, PerElementAlignment{ perElementAlignment } {}
+            NewBufferProperties(uint64_t capacity = 1, uint64_t perElementAlignment = 1, Flags readFlags = Flags::None)
+                : Capacity{ capacity }, PerElementAlignment{ perElementAlignment }, Flags{ readFlags } {}
 
             uint64_t Capacity;
             uint64_t PerElementAlignment;
-            uint64_t BuffersCount = 1;
+            Flags Flags;
         };
 
         struct NewByteBufferProperties : public NewBufferProperties<uint8_t> {};
 
-        ResourceScheduler(PipelineResourceStorage* manager, RenderPassUtilityProvider* utilityProvider);
+        ResourceScheduler(PipelineResourceStorage* manager, RenderPassUtilityProvider* utilityProvider, RenderPassGraph* passGraph);
 
         // Allocates new render target texture (Write Only)
         void NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt);
@@ -77,30 +88,40 @@ namespace PathFinder
         // Allocates new depth-stencil texture (Write Only)
         void NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties = std::nullopt); 
 
-        // Allocates new texture to be accessed as Unordered Access resource (Read/Write)
+        // Allocates new texture to be accessed as Unordered Access resource (Write)
         void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 
 
         // Indicates that a previously created texture will be used as a render target in the scheduling pass (Write Only)
-        void UseRenderTarget(const ResourceKey& resourceKey, const MipList& mips = {}, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void UseRenderTarget(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Indicates that a previously created texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
-        void UseDepthStencil(const ResourceKey& resourceKey);
+        void UseDepthStencil(Foundation::Name resourceName);
 
         // Read any previously created texture as a Shader Resource (Read Only)
-        void ReadTexture(const ResourceKey& resourceKey, const MipList& mips = {}, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void ReadTexture(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
-        // Access a previously created texture as an Unordered Access resource (Read/Write)
-        void ReadWriteTexture(const ResourceKey& resourceKey, const MipList& mips = {}, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        // Access a previously created texture as an Unordered Access resource (Write)
+        void WriteTexture(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
-        // Allocates new buffer to be accessed as Unordered Access resource (Read/Write)
+        // Allocates new buffer to be accessed as Unordered Access resource (Write Only)
         template <class T> 
         void NewBuffer(Foundation::Name resourceName, const NewBufferProperties<T>& bufferProperties = NewByteBufferProperties{ 1, 1 });
 
         // Read any previously created buffer either as Constant or Structured buffer (Read Only)
-        void ReadBuffer(const ResourceKey& resourceKey, BufferReadContext readContext);
+        void ReadBuffer(Foundation::Name resourceName, BufferReadContext readContext);
 
-        // Access a previously created buffer as an Unordered Access Structured buffer (Read/Write)
-        void ReadWriteBuffer(const ResourceKey& resourceKey);
+        // Access a previously created buffer as an Unordered Access Structured buffer (Write)
+        void WriteBuffer(Foundation::Name resourceName);
+
+        // Explicitly set a queue to execute render pass on
+        void ExecuteOnQueue(RenderPassExecutionQueue queue);
+
+        // Indicate that pass will use Ray Tracing Acceleration structures.
+        // BVH builds will be synchronized to first pass in the graph that requests their usage.
+        void UseRayTracing();
+
+        // To be called by the engine, not render passes
+        void SetCurrentlySchedulingPassNode(RenderPassGraph::Node* node);
 
     private:
         NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties);
@@ -109,8 +130,10 @@ namespace PathFinder
         template <class Lambda>
         void FillCurrentPassInfo(const PipelineResourceStorageResource* resourceData, const MipList& mipList, const Lambda& lambda);
 
-        PipelineResourceStorage* mResourceStorage;
-        RenderPassUtilityProvider* mUtilityProvider;
+        RenderPassGraph::Node* mCurrentlySchedulingPassNode = nullptr;
+        PipelineResourceStorage* mResourceStorage = nullptr;
+        RenderPassUtilityProvider* mUtilityProvider = nullptr;
+        RenderPassGraph* mRenderPassGraph = nullptr;
 
     public:
         inline const RenderSurfaceDescription& DefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }
@@ -118,5 +141,7 @@ namespace PathFinder
     };
 
 }
+
+ENABLE_BITMASK_OPERATORS(PathFinder::ResourceScheduler::Flags);
 
 #include "ResourceScheduler.inl"

@@ -31,7 +31,7 @@ struct PassData
     // 16 byte boundary
     uint2 BlueNoiseTextureSize;
     uint __Pad0;
-    uint __Pad1;;
+    uint __Pad1;
 };
 
 struct RootConstants

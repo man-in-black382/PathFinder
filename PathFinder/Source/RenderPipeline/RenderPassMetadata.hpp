@@ -16,7 +16,7 @@ namespace PathFinder
         AssetProcessing
     };
 
-    enum class RenderPassExecutionQueue : uint8_t
+    enum class RenderPassExecutionQueue : uint64_t
     {
         Graphics = 0, AsyncCompute = 1
     };

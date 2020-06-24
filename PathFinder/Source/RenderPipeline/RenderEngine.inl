@@ -14,36 +14,32 @@ namespace PathFinder
         mCommandListAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mDescriptorAllocator{ &mDevice, mSimultaneousFramesInFlight },
         mResourceProducer{ &mDevice, &mResourceAllocator, &mResourceStateTracker, &mDescriptorAllocator },
-        mPipelineResourceStorage{ &mDevice, &mResourceProducer, &mDescriptorAllocator, &mResourceStateTracker, mRenderSurfaceDescription, &mPassExecutionGraph },
-        mResourceScheduler{ &mPipelineResourceStorage, &mPassUtilityProvider },
-        mResourceProvider{ &mPipelineResourceStorage },
-        mRootConstantsUpdater{ &mPipelineResourceStorage },
+        mPipelineResourceStorage{ &mDevice, &mResourceProducer, &mDescriptorAllocator, &mResourceStateTracker, mRenderSurfaceDescription, &mRenderPassGraph },
+        mResourceScheduler{ &mPipelineResourceStorage, &mPassUtilityProvider, &mRenderPassGraph },
         mShaderManager{ commandLineParser },
         mPipelineStateManager{ &mDevice, &mShaderManager, &mResourceProducer, mRenderSurfaceDescription },
         mPipelineStateCreator{ &mPipelineStateManager },
         mRootSignatureCreator{ &mPipelineStateManager },
-        mGraphicsDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mResourceStateTracker, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
-        mAsyncComputeDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mResourceStateTracker, &mPipelineResourceStorage, &mPipelineStateManager, mRenderSurfaceDescription },
-        mCommandRecorder{ &mGraphicsDevice },
-        mContext{ &mCommandRecorder, &mRootConstantsUpdater, &mResourceProvider, &mPassUtilityProvider },
-        mAsyncComputeFence{ mDevice },
-        mGraphicsFence{ mDevice },
-        mUploadFence{ mDevice },
-        mSwapChain{ mGraphicsDevice.CommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ColorFormat::RGBA8_Usigned_Norm, mRenderSurfaceDescription.Dimensions() }
+        mRenderDevice{ mDevice, &mDescriptorAllocator.CBSRUADescriptorHeap(), &mCommandListAllocator, &mResourceStateTracker, &mPipelineResourceStorage, &mPipelineStateManager, &mRenderPassGraph, mRenderSurfaceDescription },
+        mSwapChain{ mRenderDevice.GraphicsCommandQueue(), windowHandle, HAL::BackBufferingStrategy::Double, HAL::ColorFormat::RGBA8_Usigned_Norm, mRenderSurfaceDescription.Dimensions() },
+        mFrameFence{ mDevice }
     {
         for (auto& backBufferPtr : mSwapChain.BackBuffers())
         {
             mBackBuffers.emplace_back(mResourceProducer.NewTexture(backBufferPtr.get()));
         }
 
-        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+        // Prepare memory to be immediately used after engine construction
+        mFrameFence.IncrementExpectedValue();
+        NotifyStartFrame(mFrameFence.ExpectedValue());
+        mRenderDevice.AllocateUploadCommandList();
+        mResourceProducer.SetCommandList(mRenderDevice.PreRenderUploadsCommandList());
     }
 
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::AddRenderPass(RenderPass<ContentMediator>* pass)
     {
-        mPassExecutionGraph.AddPass(pass->Metadata());
-        mRenderPasses.emplace(pass->Metadata().Name, pass);
+        mRenderPasses.emplace(pass->Metadata().Name, std::pair<RenderPass<ContentMediator>*, uint64_t>{ pass, 0 });
     }
 
     template <class ContentMediator>
@@ -61,120 +57,146 @@ namespace PathFinder
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::SetContentMediator(ContentMediator* mediator)
     {
-        mContext.SetContent(mediator);
+        mContentMediator = mediator;
     }
 
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::CommitRenderPasses()
     {
-        mPipelineResourceStorage.CommitRenderPasses();
+        mRenderContexts.clear();
+        mCommandRecorders.clear();
+        mResourceProviders.clear();
+        mRootConstantUpdaters.clear();
 
-        for (auto passNode : mPassExecutionGraph.AllPasses())
+        mRenderContexts.reserve(mRenderPasses.size());
+        mCommandRecorders.reserve(mRenderPasses.size());
+        mResourceProviders.reserve(mRenderPasses.size());
+        mRootConstantUpdaters.reserve(mRenderPasses.size());
+
+        for (auto& [passName, passPtrAndContextIdx] : mRenderPasses)
         {
-            auto pass = mRenderPasses[passNode.PassMetadata.Name];
-            mPipelineResourceStorage.SetCurrentRenderPassGraphNode(passNode);
-            pass->SetupPipelineStates(&mPipelineStateCreator, &mRootSignatureCreator);
+            auto& [passPtr, contextIdx] = passPtrAndContextIdx;
+
+            // Populate graph with nodes first
+            mRenderPassGraph.AddPass(passPtr->Metadata());
+            // Run PSO setup
+            passPtr->SetupPipelineStates(&mPipelineStateCreator, &mRootSignatureCreator);
         }
 
+        auto nodeIdx = 0;
+
+        for (auto& [passName, passPtrAndContextIdx] : mRenderPasses)
+        {
+            auto& [passPtr, contextIdx] = passPtrAndContextIdx;
+
+            // Create a separate command recorder for each pass
+            CommandRecorder& commandRecorder = mCommandRecorders.emplace_back(&mRenderDevice, &mRenderPassGraph.Nodes()[nodeIdx]);
+            ResourceProvider& resourceProvider = mResourceProviders.emplace_back(&mPipelineResourceStorage, &mRenderPassGraph.Nodes()[nodeIdx]);
+            RootConstantsUpdater& constantsUpdater = mRootConstantUpdaters.emplace_back(&mPipelineResourceStorage, &mRenderPassGraph.Nodes()[nodeIdx]);
+            RenderContext<ContentMediator> context{ &commandRecorder, &constantsUpdater, &resourceProvider, &mPassUtilityProvider };
+            context.SetContent(mContentMediator);
+            mRenderContexts.push_back(context);
+            contextIdx = mRenderContexts.size() - 1;
+
+            ++nodeIdx;
+        }
+
+        // Make resource storage allocate necessary info using graph nodes
+        mPipelineResourceStorage.CreatePerPassData();
+
+        // Compile states
         mPipelineStateManager.CompileSignaturesAndStates();
     }
 
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::UploadProcessAndTransferAssets()
     {
-        // Let resources record upload commands into graphics cmd list
-        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+        //// Let resources record upload commands into graphics cmd list
+        ////mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
 
-        // Run resource scheduling
-        ScheduleResources();
+        //// Run resource scheduling
+        //ScheduleResources();
 
-        // Run asset-processing passes
-        RunAssetProcessingPasses();
+        //// Run asset-processing passes
+        //RunAssetProcessingPasses();
 
-        // Upload and process assets
-        mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
+        //// Upload and process assets
+        //mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
 
-        // Execute readback commands
-        mGraphicsFence.IncrementExpectedValue();
+        //// Execute readback commands
+        //mGraphicsFence.IncrementExpectedValue();
 
-        // Let resources record readback commands into graphics cmd list
-        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+        //// Let resources record readback commands into graphics cmd list
+        ////mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
 
-        // Read all requested to read resources
-        mAssetStorage.ReadbackAllAssets();
+        //// Read all requested to read resources
+        //mAssetStorage.ReadbackAllAssets();
 
-        // Perform readbacks
-        mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
+        //// Perform readbacks
+        //mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
 
-        // Wait until both devices are finished
-        mGraphicsFence.StallCurrentThreadUntilCompletion();
-        mAsyncComputeFence.StallCurrentThreadUntilCompletion();
+        //// Wait until both devices are finished
+        //mGraphicsFence.StallCurrentThreadUntilCompletion();
+        //mAsyncComputeFence.StallCurrentThreadUntilCompletion();
 
-        mAssetStorage.ReportAllAssetsPostprocessed();
+        //mAssetStorage.ReportAllAssetsPostprocessed();
     }
 
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::Render()
     {
-        if (mPassExecutionGraph.DefaultPasses().empty()) return;
+        if (mRenderPassGraph.Nodes().empty()) return;
 
-        // Reschedule resources in case their parameters have changed
+        // First frame starts in engine constructor
+        if (mFrameNumber > 0)
+        {
+            mFrameFence.IncrementExpectedValue();
+            // Notify internal listeners
+            NotifyStartFrame(mFrameFence.ExpectedValue());
+            // For first frame use upload cmd list allocated in constructor
+            mRenderDevice.AllocateUploadCommandList();
+            mResourceProducer.SetCommandList(mRenderDevice.PreRenderUploadsCommandList());
+        }
+
+        // Recompile states that were modified
+        if (mPipelineStateManager.HasModifiedStates())
+        {
+            mPipelineStateManager.RecompileModifiedStates();
+        }
+
+        // Scheduler resources, build graph
         ScheduleResources();
 
-        // Advance fences
-        mAsyncComputeFence.IncrementExpectedValue();
-        mGraphicsFence.IncrementExpectedValue();
-        mUploadFence.IncrementExpectedValue();
+        mRenderDevice.AllocateRTASBuildsCommandList();
+        mRenderDevice.AllocateWorkerCommandLists();
 
-        // Update Graphics device with current frame back buffer
-        mGraphicsDevice.SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
-
-        // Notify internal listeners
-        NotifyStartFrame(mGraphicsFence.ExpectedValue());
-
-        // Let resources record upload commands into graphics cmd list
-        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
+        // Update render device with current frame back buffer
+        mRenderDevice.SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
 
         // Notify external listeners
         mPreRenderEvent.Raise();
 
-        // Execute any pending upload commands. Perform execution here because RT AS depends on resource uploads.
-        mGraphicsDevice.ExecuteCommands(nullptr, &mUploadFence);
-
         // Build AS
-        BuildAccelerationStructures(mUploadFence, mAsyncComputeFence);
+        BuildAccelerationStructures();
 
-        // Let resources record transfer (upload/readback) commands into graphics cmd list
-        mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
-
-        // Execute render passes that contain render work and may contain data transfers
-        RunDefaultPasses();
-
-        // Execute all graphics work along with data transfers (upload/readback)
-        // But wait for TLAS build first
-        mGraphicsDevice.ExecuteCommands(&mAsyncComputeFence, &mGraphicsFence);
+        // Render
+        RecordCommandLists();
+        mRenderDevice.BatchCommandLists();
+        mRenderDevice.UploadPassConstants();
+        mRenderDevice.ExetuteCommandLists();
 
         // Put the picture on the screen
         mSwapChain.Present();
 
         // Issue a CPU wait if necessary
-        mGraphicsFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
+        mRenderDevice.GraphicsCommandQueue().SignalFence(mFrameFence);
+        mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
         // Notify internal listeners
-        NotifyEndFrame(mGraphicsFence.CompletedValue());
+        NotifyEndFrame(mFrameFence.CompletedValue());
 
         // Notify external listeners
         mPostRenderEvent.Raise();
-
-        // Recompile states that were modified, but after a pipeline flush
-        if (mPipelineStateManager.HasModifiedStates())
-        {
-            FlushAllQueuedFrames();
-            // Since recompilation of ray tracing involves shader table upload
-            // we need to set correct command list to resource producer before recompilations
-            mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
-            mPipelineStateManager.RecompileModifiedStates();
-        }
 
         MoveToNextFrame();
     }
@@ -182,7 +204,7 @@ namespace PathFinder
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::FlushAllQueuedFrames()
     {
-        mGraphicsFence.StallCurrentThreadUntilCompletion();
+        mFrameFence.StallCurrentThreadUntilCompletion();
     }
 
     template <class ContentMediator>
@@ -229,85 +251,84 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
-    void RenderEngine<ContentMediator>::BuildAccelerationStructures(HAL::Fence& fenceToWaitFor, HAL::Fence& fenceToSignal)
+    void RenderEngine<ContentMediator>::BuildAccelerationStructures()
     {
+        if (!mRenderPassGraph.FirstNodeThatUsesRayTracing())
+        {
+            // Skip building ray tracing acceleration structure
+            // if no render passes consume them
+            return;
+        }
+
         HAL::ResourceBarrierCollection bottomRTASUABarriers{};
 
         for (const BottomRTAS* blas : mBottomRTASes)
         {
             bottomRTASUABarriers.AddBarrier(blas->UABarrier());
-            mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(blas->HALAccelerationStructure());
+            mRenderDevice.RTASBuildsCommandList()->BuildRaytracingAccelerationStructure(blas->HALAccelerationStructure());
         }
 
         // Top RTAS needs to wait for Bottom RTAS
-        mAsyncComputeDevice.CommandList()->InsertBarriers(bottomRTASUABarriers);
+        mRenderDevice.RTASBuildsCommandList()->InsertBarriers(bottomRTASUABarriers);
 
         HAL::ResourceBarrierCollection topRTASUABarriers{};
-
         for (const TopRTAS* tlas : mTopRTASes)
         {
             topRTASUABarriers.AddBarrier(tlas->UABarrier());
-            mAsyncComputeDevice.CommandList()->BuildRaytracingAccelerationStructure(tlas->HALAccelerationStructure());
+            mRenderDevice.RTASBuildsCommandList()->BuildRaytracingAccelerationStructure(tlas->HALAccelerationStructure());
         }
 
-        // Make the rest of the pipeline wait for Top RTAS build
-        mAsyncComputeDevice.CommandList()->InsertBarriers(topRTASUABarriers);
-
-        mAsyncComputeDevice.ExecuteCommands(&fenceToWaitFor, &fenceToSignal);
+        mRenderDevice.RTASBuildsCommandList()->InsertBarriers(topRTASUABarriers);
     }
 
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::RunAssetProcessingPasses()
     {
-        auto& nodes = mPassExecutionGraph.AssetProcessingPasses();
+        /*auto& nodes = mPassExecutionGraph.AssetProcessingPasses();
 
         for (auto nodeIt = nodes.begin(); nodeIt != nodes.end(); ++nodeIt)
         {
             mGraphicsDevice.ResetViewportToDefault();
             mPipelineResourceStorage.SetCurrentRenderPassGraphNode(*nodeIt);
             mRenderPasses[nodeIt->PassMetadata.Name]->Render(&mContext);
-        }
+        }*/
     }
 
     template <class ContentMediator>
-    void RenderEngine<ContentMediator>::RunDefaultPasses()
+    void RenderEngine<ContentMediator>::RecordCommandLists()
     {
         Memory::Texture* currentBackBuffer = mBackBuffers[mCurrentBackBufferIndex].get();
-        auto& nodes = mPassExecutionGraph.DefaultPasses();
-
-        // This transition will be picked up automatically
-        // by the first draw/dispatch in any of the render passes
-        currentBackBuffer->RequestNewState(HAL::ResourceState::RenderTarget);
+        mRenderDevice.SetBackBuffer(currentBackBuffer);
+        auto& nodes = mRenderPassGraph.Nodes();
 
         for (auto nodeIt = nodes.begin(); nodeIt != nodes.end(); ++nodeIt)
         {
-            mGraphicsDevice.ResetViewportToDefault();
-            mPipelineResourceStorage.SetCurrentRenderPassGraphNode(*nodeIt);
-            mRenderPasses[nodeIt->PassMetadata.Name]->Render(&mContext); 
-            mPipelineResourceStorage.RequestCurrentPassDebugReadback();
+            auto& [passPtr, passContextIdx] = mRenderPasses[nodeIt->PassMetadata().Name];
+            RenderContext<ContentMediator>& context = mRenderContexts[passContextIdx];
+            passPtr->Render(&context);
         }
 
-        // This is a special case when a transition needs to be manually extracted from state tracker
-        // and then executed, because no more dispatches/draws will be executed in this frame,
-        // therefore no transitions will be performed automatically, but Swap Chain Present requires 
-        // back buffer to be in Present state
-        currentBackBuffer->RequestNewState(HAL::ResourceState::Present);
-        mGraphicsDevice.CommandList()->InsertBarriers(mResourceStateTracker.ApplyRequestedTransitions());
+        // TODO: When multi threading is implemented, insert a sync here
+        // because render passes request transitions in the state tracker
+        // and we treat those as prerender transitions alongside external resource 
+        // upload transitions
     }
 
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::ScheduleResources()
     {
+        mRenderPassGraph.Clear();
         mPipelineResourceStorage.StartResourceScheduling();
 
         // Schedule resources and states
-        for (auto passNode : mPassExecutionGraph.AllPasses())
+        for (RenderPassGraph::Node& passNode : mRenderPassGraph.Nodes())
         {
-            auto pass = mRenderPasses[passNode.PassMetadata.Name];
-            mPipelineResourceStorage.SetCurrentRenderPassGraphNode(passNode);
-            pass->ScheduleResources(&mResourceScheduler);
+            auto& [passPtr, passContextIdx] = mRenderPasses[passNode.PassMetadata().Name];
+            mResourceScheduler.SetCurrentlySchedulingPassNode(&passNode);
+            passPtr->ScheduleResources(&mResourceScheduler);
         }
 
+        mRenderPassGraph.Build();
         mPipelineResourceStorage.EndResourceScheduling();
     }
 

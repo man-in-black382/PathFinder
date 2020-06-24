@@ -83,7 +83,6 @@ int main(int argc, char** argv)
     PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene };
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
-    auto distanceFieldGenerationPass = std::make_unique<PathFinder::DisplacementDistanceMapRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
     auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
     auto denoiserPreBlurPass = std::make_unique<PathFinder::DenoiserPreBlurRenderPass>();
@@ -100,7 +99,6 @@ int main(int argc, char** argv)
 
     engine.SetContentMediator(&contentMediator);
     engine.AddRenderPass(commonSetupPass.get());
-    engine.AddRenderPass(distanceFieldGenerationPass.get());
     engine.AddRenderPass(GBufferPass.get());
     engine.AddRenderPass(shadingPass.get());
     engine.AddRenderPass(denoiserPreBlurPass.get());
@@ -109,14 +107,11 @@ int main(int argc, char** argv)
     engine.AddRenderPass(denoiserHistoryFixPass.get());
     engine.AddRenderPass(specularDenoiserPass.get());
     engine.AddRenderPass(denoiserPostStabilizationPass.get());
-    engine.AddRenderPass(bloomBlurPass.get());
-    engine.AddRenderPass(bloomCompositionPass.get());
+    //engine.AddRenderPass(bloomBlurPass.get());
+    //engine.AddRenderPass(bloomCompositionPass.get());
     engine.AddRenderPass(toneMappingPass.get());
     engine.AddRenderPass(backBufferOutputPass.get());
     engine.AddRenderPass(uiPass.get());
-
-    //renderPassGraph.AddPass(PathFinder::ShadowsRenderPass{});
-    //renderPassGraph.AddPass(blurPass.get());
 
    /* auto sphereLight0 = scene.EmplaceSphericalLight();
     sphereLight0->SetRadius(7);

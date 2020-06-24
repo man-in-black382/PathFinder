@@ -35,6 +35,8 @@ namespace HAL
 
         ~ResourceTransitionBarrier() = default;
 
+        std::pair<ResourceTransitionBarrier, ResourceTransitionBarrier> Split() const;
+
     private:
         const Resource* mResource = nullptr;
         ResourceState mBeforeStates = ResourceState::Common;

@@ -50,7 +50,7 @@ namespace Memory
     }
 
     template <class Element>
-    uint64_t Buffer::ElementCapacity(uint64_t elementAlignment) const
+    uint64_t Buffer::Capacity(uint64_t elementAlignment) const
     {
         return mBufferPtr ?
             mBufferPtr->ElementCapacity<Element>(elementAlignment) :

@@ -33,7 +33,7 @@ namespace PathFinder
     {
         auto& materials = mScene->Materials();
 
-        if (!mMaterialTable || mMaterialTable->ElementCapacity<GPUMaterialTableEntry>() < materials.size())
+        if (!mMaterialTable || mMaterialTable->Capacity<GPUMaterialTableEntry>() < materials.size())
         {
             HAL::Buffer::Properties<GPUMaterialTableEntry> props{ materials.size() };
             mMaterialTable = mResourceProducer->NewBuffer(props);
@@ -79,7 +79,7 @@ namespace PathFinder
 
         auto requiredBufferSize = meshInstances.size();
 
-        if (!mMeshInstanceTable || mMeshInstanceTable->ElementCapacity<GPUMeshInstanceTableEntry>() < requiredBufferSize)
+        if (!mMeshInstanceTable || mMeshInstanceTable->Capacity<GPUMeshInstanceTableEntry>() < requiredBufferSize)
         {
             HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ requiredBufferSize };
             mMeshInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
@@ -122,7 +122,7 @@ namespace PathFinder
 
         auto requiredBufferSize = sphericalLights.size() + rectangularLights.size() + diskLights.size();
 
-        if (!mLightTable || mLightTable->ElementCapacity<GPULightTableEntry>() < requiredBufferSize)
+        if (!mLightTable || mLightTable->Capacity<GPULightTableEntry>() < requiredBufferSize)
         {
             HAL::Buffer::Properties<GPULightTableEntry> props{ requiredBufferSize };
             mLightTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);

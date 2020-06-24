@@ -39,7 +39,7 @@ namespace Memory
         const HAL::CBDescriptor* GetCBDescriptor() const;
 
         template <class Element = uint8_t>
-        uint64_t ElementCapacity(uint64_t elementAlignment = 1) const;
+        uint64_t Capacity(uint64_t elementAlignment = 1) const;
 
         const HAL::Buffer* HALBuffer() const;
         const HAL::Resource* HALResource() const override;

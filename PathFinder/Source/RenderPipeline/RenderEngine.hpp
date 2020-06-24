@@ -24,15 +24,14 @@
 #include "RenderPassUtilityProvider.hpp"
 #include "ResourceScheduler.hpp"
 #include "RootConstantsUpdater.hpp"
-#include "GraphicsDevice.hpp"
-#include "AsyncComputeDevice.hpp"
+#include "RenderDevice.hpp"
 #include "ShaderManager.hpp"
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
 #include "PipelineStateCreator.hpp"
 #include "RootSignatureCreator.hpp"
-#include "RenderPassExecutionGraph.hpp"
-#include "GPUCommandRecorder.hpp"
+#include "RenderPassGraph.hpp"
+#include "CommandRecorder.hpp"
 #include "UIGPUStorage.hpp"
 #include "BottomRTAS.hpp"
 #include "TopRTAS.hpp"
@@ -74,13 +73,13 @@ namespace PathFinder
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
-        void BuildAccelerationStructures(HAL::Fence& fenceToWaitFor, HAL::Fence& fenceToSignal);
+        void BuildAccelerationStructures();
         void RunAssetProcessingPasses();
-        void RunDefaultPasses();
+        void RecordCommandLists();
         void ScheduleResources();
 
-        RenderPassExecutionGraph mPassExecutionGraph;
-        std::unordered_map<Foundation::Name, RenderPass<ContentMediator>*> mRenderPasses;
+        RenderPassGraph mRenderPassGraph;
+        std::unordered_map<Foundation::Name, std::pair<RenderPass<ContentMediator>*, uint64_t>> mRenderPasses;
 
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 2;
@@ -102,22 +101,20 @@ namespace PathFinder
         PipelineResourceStorage mPipelineResourceStorage;
         PreprocessableAssetStorage mAssetStorage;
         ResourceScheduler mResourceScheduler;
-        ResourceProvider mResourceProvider;
-        RootConstantsUpdater mRootConstantsUpdater;
         ShaderManager mShaderManager;
         PipelineStateManager mPipelineStateManager;
         PipelineStateCreator mPipelineStateCreator;
         RootSignatureCreator mRootSignatureCreator;
-        GraphicsDevice mGraphicsDevice;
-        AsyncComputeDevice<> mAsyncComputeDevice;
-        GPUCommandRecorder mCommandRecorder;
-        RenderContext<ContentMediator> mContext;
+        RenderDevice mRenderDevice;
 
-        HAL::Fence mGraphicsFence;
-        HAL::Fence mAsyncComputeFence;
-        HAL::Fence mUploadFence;
+        ContentMediator* mContentMediator = nullptr;
+        std::vector<CommandRecorder> mCommandRecorders;
+        std::vector<ResourceProvider> mResourceProviders;
+        std::vector<RootConstantsUpdater> mRootConstantUpdaters;
+        std::vector<RenderContext<ContentMediator>> mRenderContexts;
 
         HAL::SwapChain mSwapChain;
+        HAL::Fence mFrameFence;
 
         Event mPreRenderEvent;
         Event mPostRenderEvent;

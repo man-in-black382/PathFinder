@@ -5,7 +5,7 @@
 #include "RenderPassMetadata.hpp"
 #include "ResourceScheduler.hpp"
 #include "ResourceProvider.hpp"
-#include "GraphicsDevice.hpp"
+#include "RenderDevice.hpp"
 #include "RenderContext.hpp"
 #include "PipelineStateCreator.hpp"
 #include "RootSignatureCreator.hpp"
@@ -24,7 +24,6 @@ namespace PathFinder
 
         virtual ~RenderPass() = 0;
 
-        virtual RenderPassExecutionQueue ExecutionQueue() const { return RenderPassExecutionQueue::Graphics; };
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) {};
         virtual void ScheduleResources(ResourceScheduler* scheduler) {};
         virtual void Render(RenderContext<ContentMediator>* context) {};

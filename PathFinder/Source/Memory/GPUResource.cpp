@@ -18,7 +18,7 @@ namespace Memory
 
     GPUResource::~GPUResource() {}
 
-    void GPUResource::RequestWrite()
+    void GPUResource::RequestWrite(HAL::CopyCommandListBase* customCmdList)
     {
         // Upload is already requested in current frame
         if (!mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber)
@@ -33,7 +33,8 @@ namespace Memory
             const ResourceStateTracker::SubresourceStateList& previousStates = mStateTracker->ResourceCurrentStates(HALResource());
 
             HAL::ResourceBarrierCollection barriers = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
-            mCommandListProvider->CommandList()->InsertBarriers(barriers);
+            HAL::CopyCommandListBase* commandList = customCmdList ? customCmdList : mCommandListProvider->CommandList();
+            commandList->InsertBarriers(barriers);
 
             RecordUploadCommands();
             // Request to apply old state after copy
@@ -41,7 +42,7 @@ namespace Memory
         }
     }
 
-    void GPUResource::RequestRead()
+    void GPUResource::RequestRead(HAL::CopyCommandListBase* customCmdList)
     {
         assert_format(mUploadStrategy != UploadStrategy::DirectAccess, "DirectAccess upload resource does not support reads");
 
@@ -56,7 +57,8 @@ namespace Memory
         const ResourceStateTracker::SubresourceStateList& previousStates = mStateTracker->ResourceCurrentStates(HALResource());
 
         HAL::ResourceBarrierCollection barriers = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
-        mCommandListProvider->CommandList()->InsertBarriers(barriers);
+        HAL::CopyCommandListBase* commandList = customCmdList ? customCmdList : mCommandListProvider->CommandList();
+        commandList->InsertBarriers(barriers);
         
         RecordReadbackCommands();
         // Request to apply old state after copy

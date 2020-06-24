@@ -21,6 +21,15 @@ namespace HAL
         mDesc.Transition.pResource = resource->D3DResource();
     }
 
+    std::pair<ResourceTransitionBarrier, ResourceTransitionBarrier> ResourceTransitionBarrier::Split() const
+    {
+        ResourceTransitionBarrier before = *this;
+        ResourceTransitionBarrier after = *this;
+        before.mDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY;
+        after.mDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+        return { before, after };
+    }
+
     ResourceAliasingBarrier::ResourceAliasingBarrier(const Resource* source, const Resource* destination)
         : mSource{ source }, mDestination{ destination }
     {

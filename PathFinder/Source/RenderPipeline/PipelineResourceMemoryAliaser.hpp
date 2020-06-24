@@ -5,17 +5,18 @@
 #include "../HardwareAbstractionLayer/ResourceFormat.hpp"
 
 #include "PipelineResourceSchedulingInfo.hpp"
-#include "RenderPassExecutionGraph.hpp"
+#include "RenderPassGraph.hpp"
 
 #include <set>
 
 namespace PathFinder
 {
 
+    // Helper class to determine memory aliasing properties
     class PipelineResourceMemoryAliaser
     {
     public:
-        PipelineResourceMemoryAliaser(const RenderPassExecutionGraph* renderPassGraph);
+        PipelineResourceMemoryAliaser(const RenderPassGraph* renderPassGraph);
 
         void AddSchedulingInfo(PipelineResourceSchedulingInfo* schedulingInfo);
         uint64_t Alias();
@@ -51,10 +52,11 @@ namespace PathFinder
         bool TimelinesIntersect(const Timeline& first, const Timeline& second) const;
         Timeline GetTimeline(const PipelineResourceSchedulingInfo* allocation) const;
         void FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const;
-        void FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt);
-        bool AliasAsFirstAllocation(AliasingMetadataIterator nextAllocationIt);
-        bool AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextAllocationIt);
-        void AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextAllocationIt);
+        void FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextSchedulingInfoIt);
+        bool AliasAsFirstAllocation(AliasingMetadataIterator nextSchedulingInfoIt);
+        bool AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextSchedulingInfoIt);
+        void AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextSchedulingInfoIt);
+        PipelineResourceSchedulingInfo::PassInfo* GetFirstPassInfo(AliasingMetadataIterator nextSchedulingInfoIt) const;
         void RemoveAliasedAllocationsFromOriginalList();
 
         std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionStarts;
@@ -67,7 +69,7 @@ namespace PathFinder
 
         AliasingMetadataSet mSchedulingInfos;
         
-        const RenderPassExecutionGraph* mRenderPassGraph;
+        const RenderPassGraph* mRenderPassGraph;
     };
 
 }

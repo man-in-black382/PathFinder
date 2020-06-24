@@ -67,6 +67,8 @@ namespace Memory
 
     void GPUResourceProducer::BeginFrame(uint64_t frameNumber)
     {
+        mFrameNumber = frameNumber;
+
         for (GPUResource* resource : mAllocatedResources)
         {
             resource->BeginFrame(frameNumber);

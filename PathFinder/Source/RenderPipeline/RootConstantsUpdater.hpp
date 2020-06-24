@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PipelineResourceStorage.hpp"
+#include "RenderPassGraph.hpp"
 
 namespace PathFinder
 {
@@ -8,7 +9,7 @@ namespace PathFinder
     class RootConstantsUpdater
     {
     public:
-        RootConstantsUpdater(PipelineResourceStorage* storage);
+        RootConstantsUpdater(PipelineResourceStorage* storage, const RenderPassGraph::Node* passNode);
 
         /// Uploads data to current pass' constant buffer.
         /// Data is versioned between each draw/dispatch call
@@ -17,12 +18,13 @@ namespace PathFinder
 
     private:
         PipelineResourceStorage* mResourceStorage;
+        const RenderPassGraph::Node* mPassNode;
     };
 
     template <class RootCBufferContent>
     void RootConstantsUpdater::UpdateRootConstantBuffer(const RootCBufferContent& data)
     {
-        return mResourceStorage->UpdateCurrentPassRootConstants(data);
+        mResourceStorage->UpdatePassRootConstants(data, *mPassNode);
     }
 
 }

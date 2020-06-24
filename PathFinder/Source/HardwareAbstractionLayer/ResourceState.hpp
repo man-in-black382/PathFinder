@@ -34,6 +34,12 @@ namespace HAL
     };
 
     bool IsResourceStateReadOnly(ResourceState state);
+    bool IsResourceStateUsageSupportedOnGraphicsQueue(ResourceState state);
+    bool IsResourceStateTransitionsSupportedOnGraphicsQueue(ResourceState state);
+    bool IsResourceStateUsageSupportedOnComputeQueue(ResourceState state);
+    bool IsResourceStateTransitionSupportedOnComputeQueue(ResourceState state);
+    bool IsResourceStateUsageSupportedOnCopyQueue(ResourceState state);
+    bool IsResourceStateTransitionSupportedOnCopyQueue(ResourceState state);
 
     D3D12_RESOURCE_STATES D3DResourceState(ResourceState state);
 

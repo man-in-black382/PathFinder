@@ -29,7 +29,7 @@ groupshared float3 gCache[BlurGroupSharedBufferSize]; // Around 5KB
 [numthreads(BlurGroupSize, 1, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
 {
-    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.InputTexIdx];
+    
     RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
 
     int2 texelIndex = PassDataCB.IsHorizontal ? dispatchThreadID.xy : dispatchThreadID.yx;
@@ -41,11 +41,27 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     int groupThreadIndex = groupThreadID.x;
     int radius = int(PassDataCB.BlurRadius);
 
-    gCache[loadStoreCoords.StoreCoord0] = source[loadStoreCoords.LoadCoord0].rgb;
+    if (PassDataCB.IsHorizontal)
+    {
+        // Source texture for horizontal blur comes as SRV
+        Texture2D source = Textures2D[PassDataCB.InputTexIdx];
 
-    if (loadStoreCoords.IsLoadStore1Required)
-        gCache[loadStoreCoords.StoreCoord1] = source[loadStoreCoords.LoadCoord1].rgb;
+        gCache[loadStoreCoords.StoreCoord0] = source[loadStoreCoords.LoadCoord0].rgb;
 
+        if (loadStoreCoords.IsLoadStore1Required)
+            gCache[loadStoreCoords.StoreCoord1] = source[loadStoreCoords.LoadCoord1].rgb;
+    }
+    else
+    {
+        // Source texture for vertical blur is a temporary texture accessed as UAV
+        RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.InputTexIdx];
+
+        gCache[loadStoreCoords.StoreCoord0] = source[loadStoreCoords.LoadCoord0].rgb;
+
+        if (loadStoreCoords.IsLoadStore1Required)
+            gCache[loadStoreCoords.StoreCoord1] = source[loadStoreCoords.LoadCoord1].rgb;
+    }
+   
     GroupMemoryBarrierWithGroupSync();
 
     float3 color = float3(0.0, 0.0, 0.0);

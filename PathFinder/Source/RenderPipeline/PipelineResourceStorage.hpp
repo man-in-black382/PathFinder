@@ -5,7 +5,6 @@
 #include "PerFrameRootConstants.hpp"
 #include "PipelineResourceSchedulingInfo.hpp"
 #include "PipelineResourceMemoryAliaser.hpp"
-#include "PipelineResourceStateOptimizer.hpp"
 #include "PipelineResourceStoragePass.hpp"
 #include "PipelineResourceStorageResource.hpp"
 
@@ -29,7 +28,7 @@
 namespace PathFinder
 {
 
-    class RenderPassExecutionGraph;
+    class RenderPassGraph;
 
     using ResourceName = Foundation::Name;
     using PassName = Foundation::Name;
@@ -43,22 +42,20 @@ namespace PathFinder
             Memory::PoolDescriptorAllocator* descriptorAllocator,
             Memory::ResourceStateTracker* stateTracker,
             const RenderSurfaceDescription& defaultRenderSurface,
-            const RenderPassExecutionGraph* passExecutionGraph
+            const RenderPassGraph* passExecutionGraph
         );
 
         using DebugBufferIteratorFunc = std::function<void(PassName passName, const float* debugData)>;
-        using DelayedSchedulingAction = std::function<void()>;
+        using SchedulingInfoConfigurator = std::function<void(PipelineResourceSchedulingInfo&)>;
 
-        const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0, uint64_t mipIndex = 0);
-        const HAL::DSDescriptor* GetDepthStencilDescriptor(Foundation::Name resourceName, uint64_t resourceIndex = 0);
+        const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName, Foundation::Name passName, uint64_t mipIndex = 0);
+        const HAL::DSDescriptor* GetDepthStencilDescriptor(Foundation::Name resourceName, Foundation::Name passName);
+        bool HasMemoryLayoutChange() const;
         
-        void SetCurrentRenderPassGraphNode(const RenderPassExecutionGraph::Node& node);
-        void CommitRenderPasses();
+        void CreatePerPassData();
+
         void StartResourceScheduling();
         void EndResourceScheduling();
-        void RequestResourceTransitionsToCurrentPassStates();
-        void RequestCurrentPassDebugReadback();
-        void AllowCurrentPassConstantBufferSingleOffsetAdvancement();
         
         template <class Constants> 
         void UpdateGlobalRootConstants(const Constants& constants);
@@ -67,18 +64,10 @@ namespace PathFinder
         void UpdateFrameRootConstants(const Constants& constants);
 
         template <class Constants>
-        void UpdateCurrentPassRootConstants(const Constants& constants);
+        void UpdatePassRootConstants(const Constants& constants, const RenderPassGraph::Node& passNode);
 
         const Memory::Buffer* GlobalRootConstantsBuffer() const;
         const Memory::Buffer* PerFrameRootConstantsBuffer() const;
-        const Memory::Buffer* DebugBufferForCurrentPass() const;
-        HAL::GPUAddress RootConstantsBufferAddressForCurrentPass() const;
-        const HAL::ResourceBarrierCollection& AliasingBarriersForCurrentPass();
-        const HAL::ResourceBarrierCollection& UnorderedAccessBarriersForCurrentPass();
-        const RenderPassExecutionGraph::Node& CurrentPassGraphNode() const;
-
-        void AddResourceCreationAction(const DelayedSchedulingAction& action, ResourceName resourceName, PassName passName);
-        void AddResourceUsageAction(const DelayedSchedulingAction& action);
 
         PipelineResourceStoragePass* GetPerPassData(PassName name);
         PipelineResourceStorageResource* GetPerResourceData(ResourceName name);
@@ -87,42 +76,42 @@ namespace PathFinder
 
         void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
-        PipelineResourceStorageResource& QueueTexturesAllocationIfNeeded(
+        void QueueTexturesAllocationIfNeeded(
             ResourceName resourceName,
             HAL::ResourceFormat::FormatVariant format,
             HAL::TextureKind kind,
             const Geometry::Dimensions& dimensions,
             const HAL::ClearValue& optimizedClearValue,
             uint16_t mipCount,
-            uint64_t textureCount
+            const SchedulingInfoConfigurator& siConfigurator
         );
 
         template <class BufferDataT>
-        PipelineResourceStorageResource& QueueBuffersAllocationIfNeeded(
+        void QueueBuffersAllocationIfNeeded(
             ResourceName resourceName,
             uint64_t capacity,
             uint64_t perElementAlignment,
-            uint64_t buffersCount
+            const SchedulingInfoConfigurator& siConfigurator
         );
+
+        void QueueResourceUsage(ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator);
 
     private:
         using ResourceMap = std::unordered_map<ResourceName, PipelineResourceStorageResource>;
         using DiffEntryList = std::vector<PipelineResourceStorageResource::DiffEntry>;
 
         PipelineResourceStoragePass& CreatePerPassData(PassName name);
-        PipelineResourceStorageResource& CreatePerResourceData(ResourceName name, const HAL::ResourceFormat& resourceFormat, uint64_t resourceCount);
+        PipelineResourceStorageResource& CreatePerResourceData(ResourceName name, const HAL::ResourceFormat& resourceFormat);
 
         void CreateDebugBuffers();
         bool TransferPreviousFrameResources();
-        void CreateAliasingBarriers();
-        void CreateUAVBarriers();
         void FinalizeSchedulingInfo();
 
         HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;
         Memory::PoolDescriptorAllocator* mDescriptorAllocator;
         Memory::ResourceStateTracker* mResourceStateTracker;
-        const RenderPassExecutionGraph* mPassExecutionGraph;
+        const RenderPassGraph* mPassExecutionGraph;
 
         std::unique_ptr<HAL::Heap> mRTDSHeap;
         std::unique_ptr<HAL::Heap> mNonRTDSHeap;
@@ -131,16 +120,10 @@ namespace PathFinder
 
         RenderSurfaceDescription mDefaultRenderSurface;
 
-        PipelineResourceStateOptimizer mStateOptimizer;
-
         PipelineResourceMemoryAliaser mRTDSMemoryAliaser;
         PipelineResourceMemoryAliaser mNonRTDSMemoryAliaser;
         PipelineResourceMemoryAliaser mBufferMemoryAliaser;
         PipelineResourceMemoryAliaser mUniversalMemoryAliaser;
-
-        // This class' logic works with 'the current' render pass.
-        // Saves the user from passing current pass name in every possible API.
-        RenderPassExecutionGraph::Node mCurrentRenderPassGraphNode;
 
         // Constant buffer for global data that changes rarely
         Memory::GPUResourceProducer::BufferPtr mGlobalRootConstantsBuffer;
@@ -149,7 +132,9 @@ namespace PathFinder
         Memory::GPUResourceProducer::BufferPtr mPerFrameRootConstantsBuffer;
 
         std::unordered_map<PassName, PipelineResourceStoragePass> mPerPassData;
-        PipelineResourceStoragePass* mCurrentPassData = nullptr;
+        std::vector<std::function<void()>> mAllocationActions;
+        std::vector<std::pair<SchedulingInfoConfigurator, Foundation::Name>> mSchedulingInfoCreationConfiguators;
+        std::vector<std::pair<SchedulingInfoConfigurator, Foundation::Name>> mSchedulingInfoUsageConfiguators;
 
         // Two sets of resources: current and previous frame
         std::pair<ResourceMap, ResourceMap> mPerResourceData;
@@ -161,15 +146,10 @@ namespace PathFinder
         DiffEntryList* mPreviousFrameDiffEntries = &mDiffEntries.first;
         DiffEntryList* mCurrentFrameDiffEntries = &mDiffEntries.second;
 
-        // Prepared callbacks to be called after all passes scheduled their resources
-        std::vector<DelayedSchedulingAction> mResourceCreationRequests;
-        std::vector<DelayedSchedulingAction> mResourceUsageRequests;
-
-        // Keeps track of resource allocation requests to detect duplicates
-        std::unordered_map<Foundation::Name, Foundation::Name> mResourceCreationRequestTracker;
-
         // Transitions for resources scheduled for readback
         HAL::ResourceBarrierCollection mReadbackBarriers;
+
+        bool mMemoryLayoutChanged = false;
     };
 
 }

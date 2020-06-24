@@ -323,6 +323,11 @@ namespace HAL
 
         assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
 
+        if (!(texture.D3DDescription().Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
+        {
+            printf("");
+        }
+
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), 1, mipLevel, shaderVisibleFormat);
         mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DResource(), nullptr, &desc, cpuHandle);
 

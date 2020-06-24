@@ -22,6 +22,9 @@ namespace HAL
         void SetDebugName(const std::string& name) override;
 
     protected:
+        template <class CommandListT>
+        void ExecuteCommandListsInternal(const CommandListT* const* lists, uint64_t count);
+
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> mQueue;
 
     public:
@@ -34,6 +37,7 @@ namespace HAL
         ~GraphicsCommandQueue() = default;
 
         void ExecuteCommandList(const GraphicsCommandList& list);
+        void ExecuteCommandLists(const GraphicsCommandList* const* lists, uint64_t count);
     };
 
     class ComputeCommandQueue : public CommandQueue {
@@ -42,6 +46,7 @@ namespace HAL
         ~ComputeCommandQueue() = default;
 
         void ExecuteCommandList(const ComputeCommandList& list);
+        void ExecuteCommandLists(const ComputeCommandList* const* lists, uint64_t count);
     };
 
     class CopyCommandQueue : public CommandQueue {
@@ -50,6 +55,9 @@ namespace HAL
         ~CopyCommandQueue() = default;
 
         void ExecuteCommandList(const CopyCommandList& list);
+        void ExecuteCommandLists(const CopyCommandList* const* lists, uint64_t count);
     };
 
 }
+
+#include "CommandQueue.inl"

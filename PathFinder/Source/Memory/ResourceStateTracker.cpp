@@ -35,16 +35,16 @@ namespace Memory
     void ResourceStateTracker::RequestTransitions(const HAL::Resource* resource, const ResourceStateTracker::SubresourceStateList& newStates)
     {
         SubresourceStateList& pendingStates = mPendingResourceStates[resource];
-        pendingStates = newStates;
+        pendingStates.insert(pendingStates.end(), newStates.begin(), newStates.end());
     }
 
-    HAL::ResourceBarrierCollection ResourceStateTracker::ApplyRequestedTransitions(bool firstInCommandList)
+    HAL::ResourceBarrierCollection ResourceStateTracker::ApplyRequestedTransitions(bool tryApplyImplicitly)
     {
         HAL::ResourceBarrierCollection barriers{};
 
         for (auto& [resource, subresourceStates] : mPendingResourceStates)
         {
-            HAL::ResourceBarrierCollection resourceBarriers = TransitionToStatesImmediately(resource, subresourceStates, firstInCommandList);
+            HAL::ResourceBarrierCollection resourceBarriers = TransitionToStatesImmediately(resource, subresourceStates, tryApplyImplicitly);
             barriers.AddBarriers(resourceBarriers);
         }
 
@@ -53,7 +53,7 @@ namespace Memory
         return barriers;
     }
 
-    HAL::ResourceBarrierCollection ResourceStateTracker::TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool firstInCommandList)
+    HAL::ResourceBarrierCollection ResourceStateTracker::TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, bool tryApplyImplicitly)
     {
         SubresourceStateList& currentSubresourceStates = GetResourceCurrentStatesInternal(resource);
         HAL::ResourceBarrierCollection newStateBarriers{};
@@ -72,7 +72,7 @@ namespace Memory
 
             subresourceState.State = newState;
 
-            if (CanTransitionToStateImplicitly(resource, oldState, newState, firstInCommandList))
+            if (CanTransitionToStateImplicitly(resource, oldState, newState, tryApplyImplicitly))
             {
                 continue;
             }
@@ -96,11 +96,30 @@ namespace Memory
         return newStateBarriers;
     }
 
-    HAL::ResourceBarrierCollection ResourceStateTracker::TransitionToStatesImmediately(const HAL::Resource* resource, const SubresourceStateList& newStates, bool firstInCommandList)
+    std::optional<HAL::ResourceTransitionBarrier> ResourceStateTracker::TransitionToStateImmediately(const HAL::Resource* resource, HAL::ResourceState newState, uint64_t subresourceIndex, bool tryApplyImplicitly)
     {
         SubresourceStateList& currentSubresourceStates = GetResourceCurrentStatesInternal(resource);
+        assert_format(subresourceIndex < currentSubresourceStates.size(), "Requested a state change for subresource that doesn't exist");
+        HAL::ResourceState oldState = currentSubresourceStates[subresourceIndex].State;
 
-        assert_format(currentSubresourceStates.size() == newStates.size(), "Number of subresource states must match");
+        if (IsNewStateRedundant(oldState, newState))
+        {
+            return std::nullopt;
+        }
+
+        currentSubresourceStates[subresourceIndex].State = newState;
+
+        if (CanTransitionToStateImplicitly(resource, oldState, newState, tryApplyImplicitly))
+        {
+            return std::nullopt;
+        }
+
+        return HAL::ResourceTransitionBarrier{ oldState, newState, resource, subresourceIndex };
+    }
+
+    HAL::ResourceBarrierCollection ResourceStateTracker::TransitionToStatesImmediately(const HAL::Resource* resource, const SubresourceStateList& newStates, bool tryApplyImplicitly)
+    {
+        SubresourceStateList& currentSubresourceStates = GetResourceCurrentStatesInternal(resource);
 
         HAL::ResourceBarrierCollection newStateBarriers{};
 
@@ -124,7 +143,7 @@ namespace Memory
 
             currentState.State = newSubresourceState.State;
 
-            if (CanTransitionToStateImplicitly(resource, oldState, newState, firstInCommandList))
+            if (CanTransitionToStateImplicitly(resource, oldState, newState, tryApplyImplicitly))
             {
                 continue;
             }
@@ -157,6 +176,11 @@ namespace Memory
         return it->second;
     }
 
+    bool ResourceStateTracker::CanResourceBeImplicitlyTransitioned(const HAL::Resource& resource, HAL::ResourceState fromState, HAL::ResourceState toState)
+    {
+        return resource.CanImplicitlyDecayToCommonStateFromState(fromState) && resource.CanImplicitlyPromoteFromCommonStateToState(toState);
+    }
+
     ResourceStateTracker::SubresourceStateList& ResourceStateTracker::GetResourceCurrentStatesInternal(const HAL::Resource* resource)
     {
         auto it = mCurrentResourceStates.find(resource);
@@ -172,9 +196,9 @@ namespace Memory
         return (currentState == newState) || (HAL::IsResourceStateReadOnly(currentState) && EnumMaskBitSet(currentState, newState));
     }
 
-    bool ResourceStateTracker::CanTransitionToStateImplicitly(const HAL::Resource* resource, HAL::ResourceState currentState, HAL::ResourceState newState, bool firstInCommandList)
+    bool ResourceStateTracker::CanTransitionToStateImplicitly(const HAL::Resource* resource, HAL::ResourceState currentState, HAL::ResourceState newState, bool tryApplyImplicitly)
     {
-        return firstInCommandList && resource->CanImplicitlyDecayToCommonStateFromState(currentState) && resource->CanImplicitlyPromoteFromCommonStateToState(newState);
+        return tryApplyImplicitly && CanResourceBeImplicitlyTransitioned(*resource, currentState, newState);
     }
 
 }

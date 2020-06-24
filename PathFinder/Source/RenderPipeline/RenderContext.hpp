@@ -3,7 +3,7 @@
 #include "../Foundation/Name.hpp"
 #include "../Scene/Scene.hpp"
 
-#include "GPUCommandRecorder.hpp"
+#include "CommandRecorder.hpp"
 #include "RootConstantsUpdater.hpp"
 #include "ResourceProvider.hpp"
 #include "RenderPassUtilityProvider.hpp"
@@ -18,7 +18,7 @@ namespace PathFinder
     {
     public:
         RenderContext(
-            GPUCommandRecorder* graphicCommandRecorder, 
+            CommandRecorder* graphicCommandRecorder, 
             RootConstantsUpdater* rootConstantsUpdater, 
             ResourceProvider* resourceProvider,
             RenderPassUtilityProvider* utilityProvider)
@@ -31,14 +31,14 @@ namespace PathFinder
         void SetContent(ContentMediator* content) { mContent = content; }
 
     private:
-        GPUCommandRecorder* mGrapicCommandRecorder;
+        CommandRecorder* mGrapicCommandRecorder;
         RootConstantsUpdater* mRootConstantsUpdater;
         ResourceProvider* mResourceProvider;
         RenderPassUtilityProvider* mUtilityProvider;
         ContentMediator* mContent = nullptr;
 
     public:
-        inline GPUCommandRecorder* GetCommandRecorder() const { return mGrapicCommandRecorder; }
+        inline CommandRecorder* GetCommandRecorder() const { return mGrapicCommandRecorder; }
         inline RootConstantsUpdater* GetConstantsUpdater() const { return mRootConstantsUpdater; }
         inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }
         inline const ContentMediator* GetContent() const { return mContent; }

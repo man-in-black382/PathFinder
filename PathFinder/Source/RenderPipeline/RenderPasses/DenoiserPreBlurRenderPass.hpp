@@ -19,7 +19,7 @@ namespace PathFinder
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
 
     private:
-        void BlurTexture(RenderContext<RenderPassContentMediator>* context, Foundation::Name textureName);
+        void BlurTexture(RenderContext<RenderPassContentMediator>* context, Foundation::Name inputName, Foundation::Name outputName);
     };
 
 }

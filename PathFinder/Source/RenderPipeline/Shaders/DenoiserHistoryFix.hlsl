@@ -11,10 +11,10 @@ struct PassData
     uint GBufferNormalRoughnessTexIdx;
     uint ViewDepthTexIdx;
     uint AccumulationCounterTexIdx;
-    uint ShadowedShadingMip0TexIdx;
-    uint UnshadowedShadingMip0TexIdx;
-    uint ShadowedShadingTailMipsTexIdx;
-    uint UnshadowedShadingTailMipsTexIdx;
+    uint ShadowedShadingFixedTexIdx;
+    uint UnshadowedShadingFixedTexIdx;
+    uint ShadowedShadingPreBlurredTexIdx;
+    uint UnshadowedShadingPreBlurredTexIdx;
 };
 
 #define PassDataType PassData
@@ -37,11 +37,11 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
     Texture2D normalRoughnessTexture = Textures2D[PassDataCB.GBufferNormalRoughnessTexIdx];
     Texture2D viewDepthTexture = Textures2D[PassDataCB.ViewDepthTexIdx];
     Texture2D accumulationCounterTexture = Textures2D[PassDataCB.AccumulationCounterTexIdx];
-    Texture2D shadowedShadingTailMips = Textures2D[PassDataCB.ShadowedShadingTailMipsTexIdx];
-    Texture2D unshadowedShadingTailMips = Textures2D[PassDataCB.UnshadowedShadingTailMipsTexIdx];
+    Texture2D shadowedShadingPreBlurred = Textures2D[PassDataCB.ShadowedShadingFixedTexIdx];
+    Texture2D unshadowedShadingPreBlurred = Textures2D[PassDataCB.UnshadowedShadingFixedTexIdx];
 
-    RWTexture2D<float4> shadowedShadingMip0 = RW_Float4_Textures2D[PassDataCB.ShadowedShadingMip0TexIdx];
-    RWTexture2D<float4> unshadowedShadingMip0 = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingMip0TexIdx];
+    RWTexture2D<float4> shadowedShadingFixedTexture = RW_Float4_Textures2D[PassDataCB.ShadowedShadingFixedTexIdx];
+    RWTexture2D<float4> unshadowedShadingFixedTexture = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingFixedTexIdx];
 
     float accumulatedFramesCount = accumulationCounterTexture[pixelIndex].r;
     float normAccumulatedFrameCount = accumulatedFramesCount * MaxFrameCountWithHistoryFixInv;
@@ -97,8 +97,8 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
         weights[closestSampleIdx] = 1.0;
     }
 
-    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingTailMips, bilinearFilter, mipLevel, PointClampSampler);
-    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingTailMips, bilinearFilter, mipLevel, PointClampSampler);
+    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingPreBlurred, bilinearFilter, mipLevel, PointClampSampler);
+    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingPreBlurred, bilinearFilter, mipLevel, PointClampSampler);
 
     float3 shadowedShadingFixed = float3(
         ApplyBilinearCustomWeights(shadowedShadingGatherResult.Red, weights),
@@ -110,8 +110,8 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
         ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Green, weights),
         ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Blue, weights));
 
-    shadowedShadingMip0[pixelIndex].rgb = shadowedShadingFixed;
-    unshadowedShadingMip0[pixelIndex].rgb = unshadowedShadingFixed;
+    shadowedShadingFixedTexture[pixelIndex].rgb = shadowedShadingFixed;
+    unshadowedShadingFixedTexture[pixelIndex].rgb = unshadowedShadingFixed;
 }
 
 #endif

@@ -70,7 +70,7 @@ float3 ClipVariance(int2 groupThreadIndex)
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
 {
-    RWTexture2D<float4> inputTexture = RW_Float4_Textures2D[PassDataCB.InputTexIdx];
+    Texture2D inputTexture = Textures2D[PassDataCB.InputTexIdx];
     RWTexture2D<float4> outputTexture = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
 
     GSBoxLoadStoreCoords coords = GetGSBoxLoadStoreCoords(DTid.xy, GTid.xy, GlobalDataCB.PipelineRTResolution, GroupDimensionSize, SamplingRadius);

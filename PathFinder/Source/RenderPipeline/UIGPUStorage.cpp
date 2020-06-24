@@ -44,14 +44,14 @@ namespace PathFinder
 
     void UIGPUStorage::UploadVertices(const ImDrawData& drawData)
     {
-        if ((!mVertexBuffer || mVertexBuffer->ElementCapacity<ImDrawVert>() < drawData.TotalVtxCount) && drawData.TotalVtxCount > 0)
+        if ((!mVertexBuffer || mVertexBuffer->Capacity<ImDrawVert>() < drawData.TotalVtxCount) && drawData.TotalVtxCount > 0)
         {
             HAL::Buffer::Properties<ImDrawVert> properties{ (uint64_t)drawData.TotalVtxCount };
             mVertexBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
             mVertexBuffer->SetDebugName("ImGUI Vertex Buffer");
         }
 
-        if ((!mIndexBuffer || mIndexBuffer->ElementCapacity<ImDrawIdx>() < drawData.TotalIdxCount) && drawData.TotalIdxCount > 0)
+        if ((!mIndexBuffer || mIndexBuffer->Capacity<ImDrawIdx>() < drawData.TotalIdxCount) && drawData.TotalIdxCount > 0)
         {
             HAL::Buffer::Properties<ImDrawIdx> properties{ (uint64_t)drawData.TotalIdxCount };
             mIndexBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);

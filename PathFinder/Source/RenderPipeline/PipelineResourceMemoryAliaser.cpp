@@ -7,7 +7,7 @@
 namespace PathFinder
 {
 
-    PipelineResourceMemoryAliaser::PipelineResourceMemoryAliaser(const RenderPassExecutionGraph* renderPassGraph)
+    PipelineResourceMemoryAliaser::PipelineResourceMemoryAliaser(const RenderPassGraph* renderPassGraph)
         : mRenderPassGraph{ renderPassGraph },
         mSchedulingInfos{ &AliasingMetadata::SortDescending } {}
 
@@ -27,7 +27,7 @@ namespace PathFinder
 
         if (mSchedulingInfos.size() == 1)
         {
-            mSchedulingInfos.begin()->SchedulingInfo->MemoryAliasingInfo.HeapOffset = 0;
+            mSchedulingInfos.begin()->SchedulingInfo->HeapOffset = 0;
             optimalHeapSize = mSchedulingInfos.begin()->SchedulingInfo->TotalRequiredMemory();
             return optimalHeapSize;
         }
@@ -63,7 +63,8 @@ namespace PathFinder
 
     PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceSchedulingInfo* schedulingInfo) const
     {
-        return { schedulingInfo->FirstPassGraphNode().ExecutionIndex, schedulingInfo->LastPassGraphNode().ExecutionIndex };
+        const RenderPassGraph::ResourceUsageTimeline& timeline = mRenderPassGraph->GetResourceUsageTimeline(schedulingInfo->ResourceName());
+        return { timeline.first, timeline.second };
     }
 
     void PipelineResourceMemoryAliaser::FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const
@@ -80,7 +81,7 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceMemoryAliaser::FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextAllocationIt)
+    void PipelineResourceMemoryAliaser::FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextSchedulingInfoIt)
     {
         mNonAliasableMemoryRegionStarts.clear();
         mNonAliasableMemoryRegionEnds.clear();
@@ -89,13 +90,13 @@ namespace PathFinder
         // are used simultaneously with the next one by some render passed (timelines)
         for (AliasingMetadataIterator alreadyAliasedAllocationIt : mAlreadyAliasedAllocations)
         {
-            if (TimelinesIntersect(alreadyAliasedAllocationIt->ResourceTimeline, nextAllocationIt->ResourceTimeline))
+            if (TimelinesIntersect(alreadyAliasedAllocationIt->ResourceTimeline, nextSchedulingInfoIt->ResourceTimeline))
             {
                 // Heap offset stored in AliasingInfo.HeapOffset is relative to heap beginning, 
                 // but the algorithm requires non-aliasable memory region to be 
                 // relative to current global offset, which is an offset of the current memory bucket we're aliasing resources in,
                 // therefore we have to subtract current global offset
-                uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->MemoryAliasingInfo.HeapOffset - mGlobalStartOffset;
+                uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->HeapOffset - mGlobalStartOffset;
                 uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->TotalRequiredMemory() - 1;
 
                 mNonAliasableMemoryRegionStarts.insert(startByteIndex);
@@ -104,24 +105,33 @@ namespace PathFinder
         }
     }
 
-    bool PipelineResourceMemoryAliaser::AliasAsFirstAllocation(AliasingMetadataIterator nextAllocationIt)
+    bool PipelineResourceMemoryAliaser::AliasAsFirstAllocation(AliasingMetadataIterator nextSchedulingInfoIt)
     {
-        if (mAlreadyAliasedAllocations.empty() && nextAllocationIt->SchedulingInfo->TotalRequiredMemory() <= mAvailableMemory)
+        if (mAlreadyAliasedAllocations.empty() && nextSchedulingInfoIt->SchedulingInfo->TotalRequiredMemory() <= mAvailableMemory)
         {
-            nextAllocationIt->SchedulingInfo->MemoryAliasingInfo.HeapOffset = mGlobalStartOffset;
-            mAlreadyAliasedAllocations.push_back(nextAllocationIt);
+            nextSchedulingInfoIt->SchedulingInfo->HeapOffset = mGlobalStartOffset;
+            mAlreadyAliasedAllocations.push_back(nextSchedulingInfoIt);
             return true;
         }
 
         return false;
     }
 
-    bool PipelineResourceMemoryAliaser::AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextAllocationIt)
+    bool PipelineResourceMemoryAliaser::AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextSchedulingInfoIt)
     {
         if (mNonAliasableMemoryRegionStarts.empty())
         {
-            nextAllocationIt->SchedulingInfo->MemoryAliasingInfo.HeapOffset = mGlobalStartOffset;
-            mAlreadyAliasedAllocations.push_back(nextAllocationIt);
+            nextSchedulingInfoIt->SchedulingInfo->HeapOffset = mGlobalStartOffset;
+            mAlreadyAliasedAllocations.push_back(nextSchedulingInfoIt);
+
+            // We now have more than one occupant of the same memory region,
+            // so now aliasing barriers are required
+            PipelineResourceSchedulingInfo::PassInfo* firstPassInfo = GetFirstPassInfo(nextSchedulingInfoIt);
+            firstPassInfo->NeedsAliasingBarrier = true;
+
+            firstPassInfo = GetFirstPassInfo(mAlreadyAliasedAllocations.front());
+            firstPassInfo->NeedsAliasingBarrier = true;
+
             return true;
         }
 
@@ -208,37 +218,34 @@ namespace PathFinder
         // If we found a fitting aliasable memory region update allocation with an offset
         if (mostFittingMemoryRegion.Size > 0)
         {
-            // ??? DirectX spec doesn't say anything on how to choose from several 
-            // available source resources for aliasing
-            // 
-            // Do not use any source in aliasing barriers for the moment. 
-            // Probably won't hurt on most hardware/drivers, but need to
-            // figure out a way to check the actual behavior
-            //
-            //nextAllocationIt->Allocation->AliasingSource = mAllocations.begin()->Allocation;
-
-            PipelineResourceSchedulingInfo::AliasingInfo& aliasingInfo = nextSchedulingInfoIt->SchedulingInfo->MemoryAliasingInfo;
-
             // Offset calculations were made in a frame relative to the current memory bucket.
             // Now we need to adjust it to be relative to the heap start.
-            aliasingInfo.HeapOffset = mGlobalStartOffset + mostFittingMemoryRegion.Offset;
-            aliasingInfo.NeedsAliasingBarrier = true;
+            nextSchedulingInfoIt->SchedulingInfo->HeapOffset = mGlobalStartOffset + mostFittingMemoryRegion.Offset;
+
+            PipelineResourceSchedulingInfo::PassInfo* firstPassInfo = GetFirstPassInfo(nextSchedulingInfoIt);
+            firstPassInfo->NeedsAliasingBarrier = true;
 
             // We aliased something with the first resource in the current memory bucket
             // so it's no longer a single occupant of this memory region, therefore it now
             // needs an aliasing barrier. If the first resource is a single resource on this
             // memory region then this code branch will never be hit and we will avoid a barrier for it.
-            mAlreadyAliasedAllocations.front()->SchedulingInfo->MemoryAliasingInfo.NeedsAliasingBarrier = true;
+            firstPassInfo = GetFirstPassInfo(mAlreadyAliasedAllocations.front());
+            firstPassInfo->NeedsAliasingBarrier = true;
 
             mAlreadyAliasedAllocations.push_back(nextSchedulingInfoIt);
         }
+    }
+
+    PipelineResourceSchedulingInfo::PassInfo* PipelineResourceMemoryAliaser::GetFirstPassInfo(AliasingMetadataIterator schedulingInfoIt) const
+    {
+        const RenderPassGraph::Node* firstNode = mRenderPassGraph->NodesInGlobalExecutionOrder().at(schedulingInfoIt->ResourceTimeline.Start);
+        return schedulingInfoIt->SchedulingInfo->GetInfoForPass(firstNode->PassMetadata().Name);
     }
 
     void PipelineResourceMemoryAliaser::RemoveAliasedAllocationsFromOriginalList()
     {
         for (AliasingMetadataIterator it : mAlreadyAliasedAllocations)
         {
-            it->SchedulingInfo->MemoryAliasingInfo.IsAliased = true;
             mSchedulingInfos.erase(it);
         }
 

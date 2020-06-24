@@ -41,7 +41,7 @@ float4 Filter(float4 v0, float4 v1, float4 v2, float4 v3)
 void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
 {
     // Should dispatch for 1/2 resolution 
-    RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.SourceTexIdx];
+    Texture2D source = Textures2D[PassDataCB.SourceTexIdx];
     RWTexture2D<float4> destination0 = RW_Float4_Textures2D[PassDataCB.Output0TexIdx];
     RWTexture2D<float4> destination1 = RW_Float4_Textures2D[PassDataCB.Output1TexIdx];
     RWTexture2D<float4> destination2 = RW_Float4_Textures2D[PassDataCB.Output2TexIdx];

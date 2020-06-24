@@ -2,8 +2,13 @@
 
 #include "../Foundation/Name.hpp"
 
+#include <array>
+
 namespace PathFinder
 {
+
+    template <size_t Count>
+    using NameArray = std::array<Foundation::Name, Count>;
 
     namespace ResourceNames
     {
@@ -18,21 +23,25 @@ namespace PathFinder
         inline Foundation::Name GBufferMotionVector{ "Resource_GBuffer_Motion_Vector" };
         inline Foundation::Name GBufferTypeAndMaterialIndex{ "Resource_GBuffer_Type_And_Material_Index" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_GBuffer_Depth_Stencil" };
-        inline Foundation::Name GBufferViewDepth{ "Resource_GBuffer_View_Depth" };
+        inline NameArray<2> GBufferViewDepth{ "Resource_GBuffer_View_Depth[0]", "Resource_GBuffer_View_Depth[1]" };
 
         inline Foundation::Name ShadingAnalyticOutput{ "Resource_Shading_Analytic_Output" };
 
         inline Foundation::Name StochasticUnshadowedShadingOutput{ "Resource_Shading_Stochastic_Unshadowed_Output" };
         inline Foundation::Name StochasticShadowedShadingOutput{ "Resource_Shading_Stochastic_Shadowed_Output" };
+        inline Foundation::Name StochasticUnshadowedShadingPreBlurred{ "Resource_Shading_Stochastic_Unshadowed_Pre_Blurred" };
+        inline Foundation::Name StochasticShadowedShadingPreBlurred{ "Resource_Shading_Stochastic_Shadowed_Pre_Blurred" };
+        inline Foundation::Name StochasticUnshadowedShadingFixed{ "Resource_Shading_Stochastic_Unshadowed_Fixed" };
+        inline Foundation::Name StochasticShadowedShadingFixed{ "Resource_Shading_Stochastic_Shadowed_Fixed" };
         inline Foundation::Name StochasticUnshadowedShadingReprojected{ "Resource_Shading_Stochastic_Unshadowed_Reprojected_History" };
         inline Foundation::Name StochasticShadowedShadingReprojected{ "Resource_Shading_Stochastic_Shadowed_Reprojected_History" };
-        inline Foundation::Name StochasticUnshadowedShadingDenoised{ "Resource_Shading_Stochastic_Unshadowed_Denoised" };
-        inline Foundation::Name StochasticShadowedShadingDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised" };
+        inline NameArray<2> StochasticUnshadowedShadingDenoised{ "Resource_Shading_Stochastic_Unshadowed_Denoised[0]", "Resource_Shading_Stochastic_Unshadowed_Denoised[1]" };
+        inline NameArray<2> StochasticShadowedShadingDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised[0]", "Resource_Shading_Stochastic_Shadowed_Denoised[1]" };
         inline Foundation::Name StochasticUnshadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
         inline Foundation::Name StochasticShadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
 
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
-        inline Foundation::Name DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count" };
+        inline NameArray<2> DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count[0]", "Resource_Denoiser_Reprojected_Frames_Count[1]" };
         inline Foundation::Name DenoisedCombinedDirectShading{ "Resource_Denoised_Combined_Direct_Shading" };
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };

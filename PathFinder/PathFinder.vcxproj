@@ -266,11 +266,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Memory\SegregatedPoolsResourceAllocator.cpp" />
     <ClCompile Include="Source\Memory\Texture.cpp" />
     <ClCompile Include="Source\RenderPipeline\BottomRTAS.cpp" />
-    <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp" />
-    <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp" />
+    <ClCompile Include="Source\RenderPipeline\CommandRecorder.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
-    <ClCompile Include="Source\RenderPipeline\PipelineResourceStateOptimizer.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorageResource.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateCreator.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp" />
@@ -290,7 +289,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\SpecularDenoiserRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\UIRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPassGraph.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceProvider.cpp" />
     <ClCompile Include="Source\RenderPipeline\ResourceScheduler.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
@@ -427,18 +426,16 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Memory\SegregatedPools.hpp" />
     <ClInclude Include="Source\Memory\SegregatedPoolsResourceAllocator.hpp" />
     <ClInclude Include="Source\Memory\Texture.hpp" />
-    <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\BottomRTAS.hpp" />
     <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
-    <ClInclude Include="Source\RenderPipeline\GPUCommandRecorder.hpp" />
-    <ClInclude Include="Source\RenderPipeline\GraphicsDevice.hpp" />
+    <ClInclude Include="Source\RenderPipeline\CommandRecorder.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\PerFrameRootConstants.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.hpp" />
-    <ClInclude Include="Source\RenderPipeline\PipelineResourceStateOptimizer.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStoragePass.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorageResource.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateCreator.hpp" />
@@ -465,11 +462,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\SpecularDenoiserRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\UIRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPassGraph.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassMetadata.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassUtilityProvider.hpp" />
-    <ClInclude Include="Source\RenderPipeline\ResourceKey.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
@@ -998,6 +994,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
       <FileType>CppHeader</FileType>
     </None>
+    <None Include="Source\HardwareAbstractionLayer\CommandQueue.inl" />
     <None Include="Source\HardwareAbstractionLayer\Descriptor.inl">
       <FileType>CppHeader</FileType>
     </None>
@@ -1010,13 +1007,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl">
       <FileType>CppHeader</FileType>
     </None>
-    <None Include="Source\RenderPipeline\AsyncComputeDevice.inl">
+    <None Include="Source\RenderPipeline\CommandRecorder.inl">
       <FileType>CppHeader</FileType>
     </None>
-    <None Include="Source\RenderPipeline\GPUCommandRecorder.inl">
-      <FileType>CppHeader</FileType>
-    </None>
-    <None Include="Source\RenderPipeline\GraphicsDevice.inl">
+    <None Include="Source\RenderPipeline\RenderDevice.inl">
       <FileType>CppHeader</FileType>
     </None>
     <None Include="Source\RenderPipeline\RootSignatureProxy.inl" />
@@ -1181,9 +1175,18 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\ThirdParty\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserHistoryFix.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserPostStabilization.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserHistoryFix.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserPostStabilization.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\Downsampling.hlsl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -1732,7 +1735,10 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GTTonemapping.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>

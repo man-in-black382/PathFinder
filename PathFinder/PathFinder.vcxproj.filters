@@ -201,9 +201,6 @@
     <ClCompile Include="Source\Scene\Vertices\Vertex1P4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\GraphicsDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\ShaderManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -255,9 +252,6 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\GraphicAPIObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPassExecutionGraph.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -283,9 +277,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\GPUCommandRecorder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ThirdParty\filewatch\FileWatcher.cpp">
@@ -375,9 +366,6 @@
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\PipelineResourceStateOptimizer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Scene\Light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -445,6 +433,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientGuidedBlurRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPassGraph.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\CommandRecorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1835,9 +1832,6 @@
     <ClInclude Include="Source\Scene\Vertices\Vertex1P4.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\GraphicsDevice.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\ResourceView.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1940,9 +1934,6 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\GraphicAPIObject.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPassExecutionGraph.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ThirdParty\dds\dds-ktx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1967,12 +1958,6 @@
     <ClInclude Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\PipelineResourceStateOptimizer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\AsyncComputeDevice.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\ShaderRegister.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1992,9 +1977,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\GPUCommandRecorder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPassConfigurator.hpp">
@@ -2324,9 +2306,6 @@
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingHitGroupExport.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceKey.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2388,6 +2367,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientGuidedBlurRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPassGraph.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\CommandRecorder.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2846,15 +2834,6 @@
     <None Include="Source\RenderPipeline\ResourceScheduler.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\RenderPipeline\GPUCommandRecorder.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\RenderPipeline\GraphicsDevice.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\RenderPipeline\AsyncComputeDevice.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="packages.config" />
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl">
       <Filter>Header Files</Filter>
@@ -2896,6 +2875,15 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\Foundation\Halton.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\CommandRecorder.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\RenderDevice.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\HardwareAbstractionLayer\CommandQueue.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

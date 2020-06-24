@@ -53,8 +53,8 @@ namespace Memory
         template <class T = uint8_t>
         void Write(const T* data, uint64_t startIndex, uint64_t objectCount, uint64_t objectAlignment = 1);
 
-        void RequestWrite();
-        void RequestRead();
+        void RequestWrite(HAL::CopyCommandListBase* customCmdList = nullptr);
+        void RequestRead(HAL::CopyCommandListBase* customCmdList = nullptr);
         void RequestNewState(HAL::ResourceState newState);
         void RequestNewSubresourceStates(const ResourceStateTracker::SubresourceStateList& newStates);
         void BeginFrame(uint64_t frameNumber);

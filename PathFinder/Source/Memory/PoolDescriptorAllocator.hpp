@@ -64,7 +64,7 @@ namespace Memory
         void ValidateRTFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
         void ValidateSRUAFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
 
-        uint64_t mDescriptorRangeCapacity = 5000;
+        uint64_t mDescriptorRangeCapacity = 1000;
         uint64_t mCurrentFrameIndex = 0;
 
         HAL::CBSRUADescriptorHeap mCBSRUADescriptorHeap;

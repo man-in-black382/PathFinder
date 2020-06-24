@@ -42,5 +42,58 @@ namespace HAL
 
     }
 
+    bool IsResourceStateUsageSupportedOnGraphicsQueue(ResourceState state)
+    {
+        return true;
+    }
+
+    bool IsResourceStateTransitionsSupportedOnGraphicsQueue(ResourceState state)
+    {
+        return true;
+    }
+
+    bool IsResourceStateUsageSupportedOnComputeQueue(ResourceState state)
+    {
+        HAL::ResourceState allowedStates =
+            ResourceState::Common | 
+            ResourceState::AnyShaderAccess |
+            ResourceState::GenericRead | 
+            ResourceState::CopyDestination |
+            ResourceState::CopySource | 
+            ResourceState::UnorderedAccess |
+            ResourceState::RaytracingAccelerationStructure |
+            ResourceState::ConstantBuffer | 
+            ResourceState::DepthRead;
+
+        return !EnumMaskBitSet(state, ~allowedStates);
+    }
+
+    bool IsResourceStateTransitionSupportedOnComputeQueue(ResourceState state)
+    {
+        HAL::ResourceState allowedStates =
+            ResourceState::Common |
+            ResourceState::NonPixelShaderAccess |
+            ResourceState::GenericRead |
+            ResourceState::CopyDestination |
+            ResourceState::CopySource |
+            ResourceState::UnorderedAccess |
+            ResourceState::RaytracingAccelerationStructure |
+            ResourceState::ConstantBuffer;
+
+        return !EnumMaskBitSet(state, ~allowedStates);
+    }
+
+    bool IsResourceStateUsageSupportedOnCopyQueue(ResourceState state)
+    {
+        HAL::ResourceState allowedStates = ResourceState::Common | ResourceState::CopyDestination | ResourceState::CopySource;
+        return !EnumMaskBitSet(state, ~allowedStates);
+    }
+
+    bool IsResourceStateTransitionSupportedOnCopyQueue(ResourceState state)
+    {
+        HAL::ResourceState allowedStates = ResourceState::Common | ResourceState::CopyDestination | ResourceState::CopySource;
+        return !EnumMaskBitSet(state, ~allowedStates);
+    }
+
 }
 

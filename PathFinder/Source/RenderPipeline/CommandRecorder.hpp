@@ -1,25 +1,26 @@
 #pragma once
 
-#include "GraphicsDevice.hpp"
+#include "RenderDevice.hpp"
+#include "RenderPassGraph.hpp"
 
 namespace PathFinder
 {
 
-    class GPUCommandRecorder
+    class CommandRecorder
     {
     public:
-        GPUCommandRecorder(GraphicsDevice* graphicsDevice);
+        CommandRecorder(RenderDevice* graphicsDevice, const RenderPassGraph::Node* passNode);
 
         template <class T> 
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
         template <size_t RTCount> 
-        void SetRenderTargets(const std::array<ResourceKey, RTCount>& rtKeys, std::optional<ResourceKey> dsKey = std::nullopt);
+        void SetRenderTargets(const std::array<Foundation::Name, RTCount>& rtNames, std::optional<Foundation::Name> dsName = std::nullopt);
 
-        void SetRenderTarget(const ResourceKey& rtKey, std::optional<ResourceKey> dsKey = std::nullopt);
-        void SetBackBufferAsRenderTarget(std::optional<ResourceKey> dsKey = std::nullopt);
-        void ClearRenderTarget(const ResourceKey& rtKey);
-        void ClearDepth(const ResourceKey& rtKey);
+        void SetRenderTarget(Foundation::Name rtName, std::optional<Foundation::Name> dsName = std::nullopt);
+        void SetBackBufferAsRenderTarget(std::optional<Foundation::Name> dsName = std::nullopt);
+        void ClearRenderTarget(Foundation::Name rtName);
+        void ClearDepth(Foundation::Name rtName);
         void ApplyPipelineState(Foundation::Name psoName);
         void SetViewport(const HAL::Viewport& viewport);
 
@@ -29,14 +30,15 @@ namespace PathFinder
         void DispatchRays(const Geometry::Dimensions& dispatchDimensions);
         void Dispatch(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize);
 
-        void BindBuffer(const ResourceKey& bufferKey, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void BindBuffer(Foundation::Name bufferName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         void BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         
 
     private:
-        GraphicsDevice* mGraphicsDevice;
+        RenderDevice* mGraphicsDevice;
+        const RenderPassGraph::Node* mPassNode;
     };
 
 }
 
-#include "GPUCommandRecorder.inl"
+#include "CommandRecorder.inl"

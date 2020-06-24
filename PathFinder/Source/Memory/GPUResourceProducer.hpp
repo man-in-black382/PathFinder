@@ -44,6 +44,7 @@ namespace Memory
     private:
         using ResourceSetIterator = std::unordered_set<GPUResource*>::iterator;
 
+        uint64_t mFrameNumber = 0;
         const HAL::Device* mDevice = nullptr;
         SegregatedPoolsResourceAllocator* mResourceAllocator = nullptr;
         ResourceStateTracker* mStateTracker = nullptr;

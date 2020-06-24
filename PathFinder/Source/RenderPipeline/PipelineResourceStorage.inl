@@ -8,7 +8,7 @@ namespace PathFinder
     {
         constexpr uint64_t Alignment = 256;
 
-        if (!mPerFrameRootConstantsBuffer || mPerFrameRootConstantsBuffer->ElementCapacity<Constants>(Alignment) < 1)
+        if (!mPerFrameRootConstantsBuffer || mPerFrameRootConstantsBuffer->Capacity<Constants>(Alignment) < 1)
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
@@ -24,7 +24,7 @@ namespace PathFinder
     {
         constexpr uint64_t Alignment = 256;
 
-        if (!mGlobalRootConstantsBuffer || mGlobalRootConstantsBuffer->ElementCapacity<Constants>(Alignment) < 1)
+        if (!mGlobalRootConstantsBuffer || mGlobalRootConstantsBuffer->Capacity<Constants>(Alignment) < 1)
         {
             HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             mGlobalRootConstantsBuffer = mResourceProducer->NewBuffer(properties);
@@ -36,49 +36,54 @@ namespace PathFinder
     }
 
     template <class Constants>
-    void PipelineResourceStorage::UpdateCurrentPassRootConstants(const Constants& constants)
+    void PipelineResourceStorage::UpdatePassRootConstants(const Constants& constants, const RenderPassGraph::Node& passNode)
     {
         constexpr uint64_t Alignment = 256;
+        constexpr uint64_t GrowAlignment = 4096;
 
-        if (!mCurrentPassData->PassConstantBuffer || mCurrentPassData->PassConstantBuffer->ElementCapacity<Constants>(Alignment) < 1)
-        {
-            HAL::Buffer::Properties<Constants> properties{ 1024, Alignment, HAL::ResourceState::ConstantBuffer };
-            mCurrentPassData->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
-            mCurrentPassData->PassConstantBuffer->SetDebugName(mCurrentRenderPassGraphNode.PassMetadata.Name.ToString() + " Constant Buffer");
-        }
+        PipelineResourceStoragePass* passData = GetPerPassData(passNode.PassMetadata().Name);
+
+        uint64_t alignedBytesToWrite = Foundation::MemoryUtils::Align(sizeof(Constants), Alignment);
+        uint64_t alreadyWrittenBytes = passData->PassConstantBufferMemoryOffset;
+        uint64_t newBufferSize = alignedBytesToWrite + alreadyWrittenBytes;
 
         // Advance offset once if allowed and transition to non-allowed state
-        if (mCurrentPassData->IsAllowedToAdvanceConstantBufferOffset)
+        if (passData->IsAllowedToAdvanceConstantBufferOffset)
         {
-            mCurrentPassData->PassConstantBufferMemoryOffset += mCurrentPassData->LastSetConstantBufferDataSize;
-            mCurrentPassData->IsAllowedToAdvanceConstantBufferOffset = false;
+            passData->PassConstantBufferMemoryOffset += passData->LastSetConstantBufferDataSize;
+            passData->IsAllowedToAdvanceConstantBufferOffset = false;
         }
 
-        mCurrentPassData->LastSetConstantBufferDataSize = Foundation::MemoryUtils::Align(sizeof(Constants), Alignment);
+        passData->LastSetConstantBufferDataSize = alignedBytesToWrite;
 
-        // Interpret as raw bytes since one render pass can request to upload constants of different types
-        mCurrentPassData->PassConstantBuffer->RequestWrite();
-        mCurrentPassData->PassConstantBuffer->Write(
-            reinterpret_cast<const uint8_t*>(&constants), mCurrentPassData->PassConstantBufferMemoryOffset, sizeof(Constants)
-        );
+        // Allocate on demand
+        if (!passData->PassConstantBuffer || passData->PassConstantBuffer->Capacity() < newBufferSize)
+        {
+            uint64_t grownBufferSize = Foundation::MemoryUtils::Align(newBufferSize, GrowAlignment);
+            HAL::Buffer::Properties properties{ grownBufferSize, 1, HAL::ResourceState::ConstantBuffer };
+            passData->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            passData->PassConstantBuffer->SetDebugName(passNode.PassMetadata().Name.ToString() + " Constant Buffer");
+            passData->PassConstantData.resize(grownBufferSize);
+        }
+
+        passData->PassConstantBuffer->RequestWrite();
+
+        // Store data in CPU storage 
+        const uint8_t* data = reinterpret_cast<const uint8_t*>(&constants);
+        std::copy(data, data + sizeof(Constants), passData->PassConstantData.begin() + passData->PassConstantBufferMemoryOffset);
     }
 
     template <class BufferDataT>
-    PipelineResourceStorageResource& PipelineResourceStorage::QueueBuffersAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, uint64_t buffersCount)
+    void PipelineResourceStorage::QueueBuffersAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, const SchedulingInfoConfigurator& siConfigurator)
     {
         HAL::Buffer::Properties<BufferDataT> properties{ capacity, perElementAlignment };
         HAL::ResourceFormat bufferFormat = HAL::Buffer::ConstructResourceFormat(mDevice, properties);
 
         PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
+        assert_format(!resourceObjects, "Buffer ", resourceName.ToString(), " allocation is already requested");
+        resourceObjects = &CreatePerResourceData(resourceName, bufferFormat);
 
-        if (resourceObjects)
-        {
-            return *resourceObjects;
-        }
-
-        resourceObjects = &CreatePerResourceData(resourceName, bufferFormat, buffersCount);
-
-        resourceObjects->SchedulingInfo.AllocationAction = [=]()
+        auto allocationAction = [=]()
         {
             HAL::Heap* heap = nullptr;
 
@@ -91,27 +96,24 @@ namespace PathFinder
                 assert_format(false, "Should never be hit");
             }
 
-            HAL::Buffer::Properties<BufferDataT> finalProperties{ 
-                capacity, perElementAlignment, resourceObjects->SchedulingInfo.InitialStates(), resourceObjects->SchedulingInfo.ExpectedStates() 
+            HAL::Buffer::Properties<BufferDataT> finalProperties{
+                capacity, perElementAlignment, HAL::ResourceState::Common, resourceObjects->SchedulingInfo.ExpectedStates()
             };
 
-            for (auto bufferIdx = 0u; bufferIdx < buffersCount; ++bufferIdx)
+            if (resourceObjects->SchedulingInfo.CanBeAliased)
             {
-                if (resourceObjects->SchedulingInfo.MemoryAliasingInfo.IsAliased)
-                {
-                    resourceObjects->Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties, *heap, resourceObjects->SchedulingInfo.MemoryAliasingInfo.HeapOffset));
-                }
-                else
-                {
-                    resourceObjects->Buffers.emplace_back(mResourceProducer->NewBuffer(finalProperties));
-                }
-
-                std::string debugName = resourceName.ToString() + (buffersCount > 1 ? ("[" + std::to_string(bufferIdx) + "]") : "");
-                resourceObjects->Buffers.back()->SetDebugName(debugName);
+                resourceObjects->Buffer = mResourceProducer->NewBuffer(finalProperties, *heap, resourceObjects->SchedulingInfo.HeapOffset);
             }
+            else
+            {
+                resourceObjects->Buffer = mResourceProducer->NewBuffer(finalProperties);
+            }
+
+            resourceObjects->Buffer->SetDebugName(resourceName.ToString());
         };
-        
-        return *resourceObjects;
+
+        mAllocationActions.push_back(allocationAction);
+        mSchedulingInfoCreationConfiguators.emplace_back(siConfigurator, resourceName);
     }
 
 }

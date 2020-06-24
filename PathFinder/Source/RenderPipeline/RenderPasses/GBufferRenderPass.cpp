@@ -65,15 +65,16 @@ namespace PathFinder
 
         ResourceScheduler::NewTextureProperties viewDepthProperties{};
         viewDepthProperties.ShaderVisibleFormat = HAL::ColorFormat::R32_Float;
-        viewDepthProperties.TextureCount = 2; // 2 for reprojection
         viewDepthProperties.MipCount = 5; 
         viewDepthProperties.ClearValues = HAL::ColorClearValue{ std::numeric_limits<float>::max() };
+        viewDepthProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
 
         scheduler->NewRenderTarget(ResourceNames::GBufferAlbedoMetalness, albedoMetalnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness, normalRoughnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferMotionVector, motionVectorProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferTypeAndMaterialIndex, typeAndMaterialIndexProperties);
-        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth, viewDepthProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[0], viewDepthProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[1], viewDepthProperties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
     }  
 
@@ -82,20 +83,20 @@ namespace PathFinder
         auto currentFrameIndex = context->FrameNumber() % 2;
 
         context->GetCommandRecorder()->SetRenderTargets(
-            std::array{ 
-                ResourceKey{ResourceNames::GBufferAlbedoMetalness},
-                ResourceKey{ResourceNames::GBufferNormalRoughness},
-                ResourceKey{ResourceNames::GBufferMotionVector},
-                ResourceKey{ResourceNames::GBufferTypeAndMaterialIndex},
-                ResourceKey{ResourceNames::GBufferViewDepth, currentFrameIndex}
+            std::array{
+                ResourceNames::GBufferAlbedoMetalness,
+                ResourceNames::GBufferNormalRoughness,
+                ResourceNames::GBufferMotionVector,
+                ResourceNames::GBufferTypeAndMaterialIndex,
+                ResourceNames::GBufferViewDepth[currentFrameIndex]
             },
-            ResourceKey{ResourceNames::GBufferDepthStencil});
+            ResourceNames::GBufferDepthStencil);
 
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferAlbedoMetalness);
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferNormalRoughness);
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferMotionVector);
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferTypeAndMaterialIndex);
-        context->GetCommandRecorder()->ClearRenderTarget({ ResourceNames::GBufferViewDepth, currentFrameIndex });
+        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferViewDepth[currentFrameIndex]);
         context->GetCommandRecorder()->ClearDepth(ResourceNames::GBufferDepthStencil);
 
         RenderMeshes(context);
