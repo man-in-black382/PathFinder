@@ -691,3 +691,5 @@ healthchecksdb
 
 
 # End of https://www.gitignore.io/api/visualstudio
+.vs/PathFinder/v16/Browse.VC.db-shm
+.vs/PathFinder/v16/Browse.VC.db-wal
