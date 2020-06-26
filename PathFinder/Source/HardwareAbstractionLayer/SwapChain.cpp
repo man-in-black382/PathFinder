@@ -30,7 +30,7 @@ namespace HAL
         chain.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
         ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&mDXGIFactory)));
-        ThrowIfFailed(mDXGIFactory->CreateSwapChain(commandQueue.D3DPtr(), &chain, &mSwapChain));
+        ThrowIfFailed(mDXGIFactory->CreateSwapChain(commandQueue.D3DQueue(), &chain, &mSwapChain));
 
         Microsoft::WRL::ComPtr<ID3D12Resource> backBufferResourcePtr;
 

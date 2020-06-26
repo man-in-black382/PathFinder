@@ -334,6 +334,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\ThirdParty\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Source\Utility\EventTracker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -977,6 +978,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\imgui\misc\freetype\imgui_freetype.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.config.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
+    <ClInclude Include="Source\Utility\EventTracker.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
@@ -2520,12 +2522,12 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\WinPixEventRuntime.1.0.190604001\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.190604001\build\WinPixEventRuntime.targets')" />
+    <Import Project="..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets" Condition="Exists('..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.190604001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.190604001\build\WinPixEventRuntime.targets'))" />
+    <Error Condition="!Exists('..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinPixEventRuntime.1.0.200127001\build\WinPixEventRuntime.targets'))" />
   </Target>
 </Project>

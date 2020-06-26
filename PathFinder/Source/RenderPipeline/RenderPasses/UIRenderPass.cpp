@@ -28,15 +28,25 @@ namespace PathFinder
             state.BlendState = AlphaBlendingState();
             state.RenderTargetFormats = { HAL::ColorFormat::RGBA8_Usigned_Norm };
         });
+
+        stateCreator->CreateComputeState(PSONames::DebugComputePSO, [](ComputeStateProxy& state)
+        {
+            state.ComputeShaderFileName = "SeparableBlur.hlsl";
+        });
     }
       
     void UIRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
+        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
+
+        scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     }  
 
     void UIRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::UI);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::DebugComputePSO);
+
+        /*context->GetCommandRecorder()->ApplyPipelineState(PSONames::UI);
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
 
         if (auto vertexBuffer = context->GetContent()->GetUIGPUStorage()->VertexBuffer())
@@ -63,7 +73,7 @@ namespace PathFinder
 
             context->GetCommandRecorder()->SetRootConstants(offsets, 0, 0);
             context->GetCommandRecorder()->Draw(drawCommand.IndexCount);
-        }
+        }*/
     }
 
 }

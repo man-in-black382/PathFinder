@@ -6,7 +6,7 @@
 #include "RenderPassMetadata.hpp"
 
 #include "../Foundation/Name.hpp"
-
+#include "../Utility/EventTracker.hpp"
 #include "../Geometry/Dimensions.hpp"
 
 #include "../HardwareAbstractionLayer/ShaderRegister.hpp"
@@ -151,6 +151,7 @@ namespace PathFinder
         PipelineStateManager* mPipelineStateManager;
         const RenderPassGraph* mRenderPassGraph;
         RenderSurfaceDescription mDefaultRenderSurface;
+        EventTracker mEventTracker;
 
         Memory::Texture* mBackBuffer = nullptr;
         Memory::PoolCommandListAllocator::GraphicsCommandListPtr mPreRenderUploadsCommandList;

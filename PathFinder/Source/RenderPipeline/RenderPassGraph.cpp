@@ -108,15 +108,11 @@ namespace PathFinder
                     {
                         adjacentNodeIndices.push_back(otherNodeIdx);
 
-                        // Signal only for cross-queue dependencies
                         if (node.ExecutionQueueIndex != otherNode.ExecutionQueueIndex)
                         {
-                            otherNode.mSyncSignalRequired = true;
+                            node.mSyncSignalRequired = true;
+                            otherNode.mNodesToSyncWith.push_back(&node);
                         }
-
-                        // Adding dependency even from the same queue is convenient 
-                        // for dependency optimization pass later.
-                        node.mNodesToSyncWith.push_back(&otherNode);
 
                         break;
                     }
@@ -223,6 +219,7 @@ namespace PathFinder
         bool firstRayTracingUserDetected = false;
 
         mNodesInGlobalExecutionOrder.resize(mTopologicallySortedNodes.size(), nullptr);
+        std::vector<const Node*> perQueuePreviousNodes(mDetectedQueueCount, nullptr);
         
         for (DependencyLevel& dependencyLevel : mDependencyLevels)
         {
@@ -246,6 +243,14 @@ namespace PathFinder
                 mNodesInGlobalExecutionOrder[globalExecutionIndex] = node;
 
                 dependencyLevel.mNodesPerQueue[node->ExecutionQueueIndex].push_back(node);
+
+                // Add previous node on that queue as a dependency for sync optimization later
+                if (perQueuePreviousNodes[node->ExecutionQueueIndex])
+                {
+                    node->mNodesToSyncWith.push_back(perQueuePreviousNodes[node->ExecutionQueueIndex]);
+                }
+
+                perQueuePreviousNodes[node->ExecutionQueueIndex] = node;
 
                 for (SubresourceName subresourceName : node->AllSubresources())
                 {
@@ -277,6 +282,8 @@ namespace PathFinder
 
                 localExecutionIndex++;
                 globalExecutionIndex++;
+
+                OutputDebugString(StringFormat("DL %d GI %d Node %s \n", dependencyLevel.LevelIndex(), node->GlobalExecutionIndex(), node->PassMetadata().Name.ToString().c_str()).c_str());
             }
 
             // Record queue indices that are detected to read common resources
@@ -292,6 +299,8 @@ namespace PathFinder
                     }
                 }
             }
+
+            
         }
     }
 
@@ -366,16 +375,6 @@ namespace PathFinder
 
                 for (const Node* nodeToSyncWith : node->mNodesToSyncWith)
                 {
-                    // Having node on the same queue as a dependency to sync with is useful 
-                    // to detect indirect syncs performed through nodes on the same queue,
-                    // but we don't actually want the same queue for direct synchronization,
-                    // so skip it here.
-
-                    if (nodeToSyncWith->ExecutionQueueIndex == node->ExecutionQueueIndex)
-                    {
-                        continue;
-                    }
-
                     queueToSyncWithIndices.insert(nodeToSyncWith->ExecutionQueueIndex);
                 }
 
@@ -398,6 +397,11 @@ namespace PathFinder
                             uint64_t currentNodeDesiredSyncIndex = node->mSynchronizationIndexSet[queueIndex];
                             uint64_t dependencyNodeSyncIndex = dependencyNode->mSynchronizationIndexSet[queueIndex];
 
+                            if (queueIndex == node->ExecutionQueueIndex)
+                            {
+                                currentNodeDesiredSyncIndex -= 1;
+                            }
+
                             if (dependencyNodeSyncIndex >= currentNodeDesiredSyncIndex)
                             {
                                 ++numberOfSyncsCoveredByDependency;
@@ -408,13 +412,22 @@ namespace PathFinder
                         maxNumberOfSyncsCoveredBySingleNode = std::max(maxNumberOfSyncsCoveredBySingleNode, numberOfSyncsCoveredByDependency);
                     }
 
-                    for (auto& [node, syncedQueues] : syncCoverage)
+                    for (auto& [nodeToSyncWith, syncedQueues] : syncCoverage)
                     {
                         auto coveredSyncCount = syncedQueues.size();
 
                         if (coveredSyncCount >= maxNumberOfSyncsCoveredBySingleNode)
                         {
-                            optimalNodesToSyncWith.push_back(node);
+                            // Optimal list of synchronizations should not contain nodes from the same queue,
+                            // because work on the same queue is synchronized automatically and implicitly
+                            if (nodeToSyncWith->ExecutionQueueIndex != node->ExecutionQueueIndex)
+                            {
+                                optimalNodesToSyncWith.push_back(nodeToSyncWith);
+
+                                // Update SSIS
+                                auto& index = node->mSynchronizationIndexSet[nodeToSyncWith->ExecutionQueueIndex];
+                                index = std::max(index, node->mSynchronizationIndexSet[nodeToSyncWith->ExecutionQueueIndex]);
+                            }
 
                             // Remove covered queues from the list of queues we need to sync with
                             for (uint64_t syncedQueueIndex : syncedQueues)

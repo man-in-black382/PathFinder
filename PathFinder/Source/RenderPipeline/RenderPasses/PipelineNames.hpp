@@ -74,6 +74,8 @@ namespace PathFinder
         inline Foundation::Name SpecularDenoiser{ "PSO_SpecularDenoiser" };
         inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
+
+        inline Foundation::Name DebugComputePSO{ "PSO_Debug_Compute" };
     }  
    
     namespace RootSignatureNames

@@ -28,7 +28,7 @@ namespace HAL
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> mQueue;
 
     public:
-        inline const auto D3DPtr() const { return mQueue.Get(); }
+        inline const auto D3DQueue() const { return mQueue.Get(); }
     };
 
     class GraphicsCommandQueue : public CommandQueue {

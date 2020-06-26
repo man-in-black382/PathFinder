@@ -178,11 +178,13 @@ namespace PathFinder
     void RenderDevice::AllocateUploadCommandList()
     {
         mPreRenderUploadsCommandList = mCommandListAllocator->AllocateGraphicsCommandList();
+        mEventTracker.StartGPUEvent("Prerender Data Upload", *mPreRenderUploadsCommandList);
     }
 
     void RenderDevice::AllocateRTASBuildsCommandList()
     {
         mRTASBuildsCommandList = mCommandListAllocator->AllocateComputeCommandList();
+        mEventTracker.StartGPUEvent("Ray Tracing BVH Build", *mRTASBuildsCommandList);
     }
 
     void RenderDevice::AllocateWorkerCommandLists()
@@ -190,12 +192,13 @@ namespace PathFinder
         CreatePassHelpers();
 
         mPassCommandLists.clear();
+        mPassCommandLists.resize(mRenderPassGraph->Nodes().size());
 
         for (const RenderPassGraph::Node& node : mRenderPassGraph->Nodes())
         {
             CommandListPtrVariant cmdListVariant = AllocateCommandListForQueue(node.ExecutionQueueIndex);
             std::visit([this](auto&& cmdList) { cmdList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap); }, cmdListVariant);
-            mPassCommandLists.emplace_back(PassCommandLists{ GraphicsCommandListPtr{nullptr}, std::move(cmdListVariant) });
+            mPassCommandLists[node.GlobalExecutionIndex()].WorkCommandList = std::move(cmdListVariant);
         }
     }
 
@@ -502,9 +505,10 @@ namespace PathFinder
         HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(commandListVariant);
 
         std::vector<CommandListBatch>& mostCompetentQueueBatches = mCommandListBatches[mostCompetentQueueIndex];
-        CommandListBatch& reroutedTransitionsBatch = mostCompetentQueueBatches.emplace_back();
-        reroutedTransitionsBatch.FenceToSignal = &FenceForQueueIndex(mostCompetentQueueIndex);
-        reroutedTransitionsBatch.CommandLists.emplace_back(GetHALCommandListVariant(commandListVariant));
+        CommandListBatch* reroutedTransitionsBatch = &mostCompetentQueueBatches.emplace_back();
+        reroutedTransitionsBatch->FenceToSignal = &FenceForQueueIndex(mostCompetentQueueIndex);
+        reroutedTransitionsBatch->CommandLists.emplace_back(GetHALCommandListVariant(commandListVariant));
+        uint64_t reroutedTransitionsBatchIndex = mostCompetentQueueBatches.size() - 1;
 
         HAL::ResourceBarrierCollection reroutedTransitionBarrires;
 
@@ -512,16 +516,18 @@ namespace PathFinder
 
         for (RenderPassGraph::Node::QueueIndex queueIndex : mDependencyLevelQueuesThatRequireTransitionRerouting)
         {
+            // Make rerouted transitions wait for fences from involved queues
+            if (queueIndex != mostCompetentQueueIndex)
+            {
+                mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FencesToWait.insert(&FenceForQueueIndex(queueIndex));
+            }
+
             for (const RenderPassGraph::Node* node : dependencyLevel.NodesForQueue(queueIndex))
             {
-                for (const RenderPassGraph::Node* nodeToWait : node->NodesToSyncWith())
+                // A special case of waiting for BVH build fence, if of course pass is not executed on the same queue as BVH build
+                if (mRenderPassGraph->FirstNodeThatUsesRayTracing() == node && mBVHBuildsQueueIndex != queueIndex)
                 {
-                    reroutedTransitionsBatch.FencesToWait.insert(&FenceForQueueIndex(nodeToWait->ExecutionQueueIndex));
-                }
-
-                if (mRenderPassGraph->FirstNodeThatUsesRayTracing() == node)
-                {
-                    reroutedTransitionsBatch.FencesToWait.insert(&FenceForQueueIndex(mBVHBuildsQueueIndex));
+                    mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FencesToWait.insert(&FenceForQueueIndex(mBVHBuildsQueueIndex));
                 }
 
                 if (!dependencyLevelPerQueueBatches[node->ExecutionQueueIndex])
@@ -531,7 +537,8 @@ namespace PathFinder
 
                 CommandListBatch* currentBatchInCurrentDependencyLevel = dependencyLevelPerQueueBatches[node->ExecutionQueueIndex];
 
-                currentBatchInCurrentDependencyLevel->FencesToWait.insert(reroutedTransitionsBatch.FenceToSignal);
+                // Make command lists in a batch wait for rerouted transitions
+                currentBatchInCurrentDependencyLevel->FencesToWait.insert(mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FenceToSignal);
                 currentBatchInCurrentDependencyLevel->CommandLists.push_back(GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList));
 
                 uint64_t currentCommandListBatchIndex = mCommandListBatches[queueIndex].size() - 1;
@@ -542,6 +549,12 @@ namespace PathFinder
                     currentBatchInCurrentDependencyLevel->FenceToSignal = &FenceForQueueIndex(node->ExecutionQueueIndex);
                     dependencyLevelPerQueueBatches[node->ExecutionQueueIndex] = &mCommandListBatches[node->ExecutionQueueIndex].emplace_back();
                 }
+            }
+
+            // Do not leave empty batches 
+            if (mCommandListBatches[queueIndex].back().CommandLists.empty())
+            {
+                mCommandListBatches[queueIndex].pop_back();
             }
         }
 
@@ -558,6 +571,11 @@ namespace PathFinder
             }
 
             auto& nodesForQueue = dependencyLevel.NodesForQueue(queueIdx);
+
+            if (nodesForQueue.empty())
+            {
+                continue;
+            }
 
             for (const RenderPassGraph::Node* node : nodesForQueue)
             {
@@ -611,6 +629,12 @@ namespace PathFinder
                     mCommandListBatches[queueIdx].emplace_back();
                 }
             }
+
+            // Do not leave empty batches 
+            if (mCommandListBatches[queueIdx].back().CommandLists.empty())
+            {
+                mCommandListBatches[queueIdx].pop_back();
+            }
         }
     }
 
@@ -637,6 +661,8 @@ namespace PathFinder
         mPreRenderUploadsCommandList->Close();
         mGraphicsQueue.ExecuteCommandList(*mPreRenderUploadsCommandList);
         mGraphicsQueue.SignalFence(mGraphicsQueueFence);
+        
+        mEventTracker.EndGPUEvent(mGraphicsQueue);
 
         // Wait for uploads, run RT AS builds
         mComputeQueueFence.IncrementExpectedValue();
@@ -644,6 +670,8 @@ namespace PathFinder
         mRTASBuildsCommandList->Close();
         mComputeQueue.ExecuteCommandList(*mRTASBuildsCommandList);
         mComputeQueue.SignalFence(mComputeQueueFence);
+
+        mEventTracker.EndGPUEvent(mComputeQueue);
 
         for (auto queueIdx = 0; queueIdx < mQueueCount; ++queueIdx)
         {

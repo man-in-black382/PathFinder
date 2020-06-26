@@ -444,6 +444,9 @@
     <ClCompile Include="Source\RenderPipeline\RenderDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Utility\EventTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2378,6 +2381,9 @@
     <ClInclude Include="Source\RenderPipeline\RenderDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Utility\EventTracker.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2834,7 +2840,6 @@
     <None Include="Source\RenderPipeline\ResourceScheduler.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="packages.config" />
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -2886,6 +2891,7 @@
     <None Include="Source\HardwareAbstractionLayer\CommandQueue.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
