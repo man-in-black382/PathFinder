@@ -611,7 +611,7 @@ namespace PathFinder
                     for (const RenderPassGraph::Node* nodeToWait : node->NodesToSyncWith())
                     {
                         currentBatch->FencesToWait.push_back(&FenceForQueueIndex(nodeToWait->ExecutionQueueIndex));
-                        currentBatch->EventNamesToWait.push_back(StringFormat("Waiting %s Pass", node->PassMetadata().Name.ToString().c_str()));
+                        currentBatch->EventNamesToWait.push_back(StringFormat("Waiting %s Pass", nodeToWait->PassMetadata().Name.ToString().c_str()));
                     }
 
                     if (usesRT && node->ExecutionQueueIndex != mBVHBuildsQueueIndex)
