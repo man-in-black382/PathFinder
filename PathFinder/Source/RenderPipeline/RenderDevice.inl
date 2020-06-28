@@ -51,5 +51,28 @@ namespace PathFinder
         cmdList->SetRenderTargets(descriptors, dsDescriptor);
     }
 
+    template <class CommandQueueT>
+    void RenderDevice::InsertGPUEvent(const CommandListBatch& batch, CommandQueueT& queue, uint64_t cmdListIndex)
+    {
+        if (batch.CommandListNames.empty()) return;
+
+        if (cmdListIndex == 0)
+        {
+            mEventTracker.StartGPUEvent(*batch.CommandListNames[cmdListIndex], queue);
+        }
+        else if (auto name = batch.CommandListNames[cmdListIndex])
+        {
+            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(batch.CommandLists[cmdListIndex - 1]);
+            mEventTracker.EndGPUEvent(*cmdList);
+            mEventTracker.StartGPUEvent(*name, *cmdList);
+        }
+
+        if (cmdListIndex == batch.CommandLists.size() - 1)
+        {
+            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(batch.CommandLists[cmdListIndex]);
+            mEventTracker.EndGPUEvent(*cmdList);
+        }
+    }
+
 }
 

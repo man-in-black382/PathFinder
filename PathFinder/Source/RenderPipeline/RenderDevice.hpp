@@ -101,8 +101,13 @@ namespace PathFinder
         struct CommandListBatch
         {
             std::vector<HALCommandListPtrVariant> CommandLists;
-            std::unordered_set<const HAL::Fence*> FencesToWait;
+            std::vector<const HAL::Fence*> FencesToWait;
             HAL::Fence* FenceToSignal = nullptr;
+
+            // Debug info
+            std::vector<std::optional<std::string>> CommandListNames;
+            std::vector<std::string> EventNamesToWait;
+            std::string EventNameThatSignals;
         };
 
         struct SubresourceTransitionInfo
@@ -133,6 +138,8 @@ namespace PathFinder
         void BatchCommandListsWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void BatchCommandListsWithoutTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void RecordBeginBarriers();
+        void ExecuteUploadCommands();
+        void ExecuteBVHBuildCommands();
 
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState beforeState, HAL::ResourceState afterState) const;
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState afterState) const;
@@ -140,9 +147,12 @@ namespace PathFinder
         uint64_t FindMostCompetentQueueIndex(const std::unordered_set<RenderPassGraph::Node::QueueIndex>& queueIndices) const;
         CommandListPtrVariant AllocateCommandListForQueue(uint64_t queueIndex) const;
         HAL::ComputeCommandListBase* GetComputeCommandListBase(CommandListPtrVariant& variant) const;
+        HAL::ComputeCommandListBase* GetComputeCommandListBase(HALCommandListPtrVariant& variant) const;
         HALCommandListPtrVariant GetHALCommandListVariant(CommandListPtrVariant& variant) const;
-
         HAL::Fence& FenceForQueueIndex(uint64_t index);
+
+        template <class CommandQueueT>
+        void InsertGPUEvent(const CommandListBatch& batch, CommandQueueT& queue, uint64_t cmdListIndex);
 
         const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap;
         Memory::PoolCommandListAllocator* mCommandListAllocator;

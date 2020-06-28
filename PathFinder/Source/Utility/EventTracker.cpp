@@ -15,6 +15,16 @@ namespace PathFinder
         PIXBeginEvent(commandQueue.D3DQueue(), PIX_COLOR_DEFAULT, "%s", eventName.c_str());
     }
 
+    void EventTracker::SetMarker(const std::string& eventName, const HAL::CommandList& commandList)
+    {
+        PIXSetMarker(commandList.D3DList(), PIX_COLOR_DEFAULT, "%s", eventName.c_str());
+    }
+
+    void EventTracker::SetMarker(const std::string& eventName, const HAL::CommandQueue& commandQueue)
+    {
+        PIXSetMarker(commandQueue.D3DQueue(), PIX_COLOR_DEFAULT, "%s", eventName.c_str());
+    }
+
     void EventTracker::EndGPUEvent(const HAL::CommandList& commandList)
     {
         PIXEndEvent(commandList.D3DList());
