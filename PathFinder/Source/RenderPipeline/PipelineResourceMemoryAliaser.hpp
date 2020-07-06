@@ -35,6 +35,13 @@ namespace PathFinder
             uint64_t End;
         };
 
+        enum class MemoryOffsetType
+        {
+            Start, End
+        };
+
+        using MemoryOffset = std::pair<uint64_t, MemoryOffsetType>;
+
         struct AliasingMetadata
         {
             Timeline ResourceTimeline;
@@ -54,13 +61,11 @@ namespace PathFinder
         void FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const;
         void FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextSchedulingInfoIt);
         bool AliasAsFirstAllocation(AliasingMetadataIterator nextSchedulingInfoIt);
-        bool AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextSchedulingInfoIt);
         void AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextSchedulingInfoIt);
         PipelineResourceSchedulingInfo::PassInfo* GetFirstPassInfo(AliasingMetadataIterator nextSchedulingInfoIt) const;
         void RemoveAliasedAllocationsFromOriginalList();
 
-        std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionStarts;
-        std::set<uint64_t, std::less<uint64_t>> mNonAliasableMemoryRegionEnds;
+        std::vector<MemoryOffset> mNonAliasableMemoryOffsets;
         std::vector<AliasingMetadataIterator> mAlreadyAliasedAllocations;
         
         // Memory offset of the current bucket in which aliasing is performed

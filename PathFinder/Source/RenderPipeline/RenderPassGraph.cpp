@@ -165,11 +165,6 @@ namespace PathFinder
         }
 
         std::reverse(mTopologicallySortedNodes.begin(), mTopologicallySortedNodes.end());
-
-        for (const Node* node : mTopologicallySortedNodes)
-        {
-            OutputDebugString(StringFormat("%s \n", node->PassMetadata().Name.ToString().c_str()).c_str());
-        }
     }
 
     void RenderPassGraph::BuildDependencyLevels()
@@ -282,8 +277,6 @@ namespace PathFinder
 
                 localExecutionIndex++;
                 globalExecutionIndex++;
-
-                OutputDebugString(StringFormat("DL %d GI %d Node %s \n", dependencyLevel.LevelIndex(), node->GlobalExecutionIndex(), node->PassMetadata().Name.ToString().c_str()).c_str());
             }
 
             // Record queue indices that are detected to read common resources
@@ -299,8 +292,6 @@ namespace PathFinder
                     }
                 }
             }
-
-            
         }
     }
 

@@ -90,9 +90,11 @@
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
@@ -113,9 +115,11 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -147,9 +151,11 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -174,9 +180,11 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -321,6 +329,12 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P3.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P4.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Source\ThirdParty\filewatch\FileWatcher.cpp" />
     <ClCompile Include="Source\ThirdParty\filewatch\FileWatcherLinux.cpp" />
     <ClCompile Include="Source\ThirdParty\filewatch\FileWatcherOSX.cpp" />
@@ -965,6 +979,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\glm\vec4.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\vector_relational.hpp" />
     <ClInclude Include="Source\ThirdParty\halton.hpp" />
+    <ClInclude Include="Source\ThirdParty\icecream\icecream.hpp" />
     <ClInclude Include="Source\ThirdParty\imgui\imconfig.h" />
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h" />
     <ClInclude Include="Source\ThirdParty\imgui\imgui_impl_dx12.h" />
@@ -979,6 +994,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\optick\optick.config.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
     <ClInclude Include="Source\Utility\EventTracker.hpp" />
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />

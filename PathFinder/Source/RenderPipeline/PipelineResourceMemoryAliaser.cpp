@@ -1,6 +1,7 @@
 #include "PipelineResourceMemoryAliaser.hpp"
 
 #include <limits>
+#include <algorithm>
 
 #include "../Foundation/StringUtils.hpp"
 
@@ -83,8 +84,8 @@ namespace PathFinder
 
     void PipelineResourceMemoryAliaser::FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextSchedulingInfoIt)
     {
-        mNonAliasableMemoryRegionStarts.clear();
-        mNonAliasableMemoryRegionEnds.clear();
+        mNonAliasableMemoryOffsets.clear();
+        mNonAliasableMemoryOffsets.push_back({ 0, MemoryOffsetType::End });
 
         // Find memory regions in which we can't place the next allocation, because their allocations
         // are used simultaneously with the next one by some render passed (timelines)
@@ -97,12 +98,19 @@ namespace PathFinder
                 // relative to current global offset, which is an offset of the current memory bucket we're aliasing resources in,
                 // therefore we have to subtract current global offset
                 uint64_t startByteIndex = alreadyAliasedAllocationIt->SchedulingInfo->HeapOffset - mGlobalStartOffset;
-                uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->TotalRequiredMemory() - 1;
+                uint64_t endByteIndex = startByteIndex + alreadyAliasedAllocationIt->SchedulingInfo->TotalRequiredMemory();
 
-                mNonAliasableMemoryRegionStarts.insert(startByteIndex);
-                mNonAliasableMemoryRegionEnds.insert(endByteIndex);
+                mNonAliasableMemoryOffsets.push_back({ startByteIndex, MemoryOffsetType::Start });
+                mNonAliasableMemoryOffsets.push_back({ endByteIndex, MemoryOffsetType::End });
             }
         }
+
+        mNonAliasableMemoryOffsets.push_back({ mAvailableMemory, MemoryOffsetType::Start });
+
+        std::sort(mNonAliasableMemoryOffsets.begin(), mNonAliasableMemoryOffsets.end(), [](auto& offset1, auto& offset2) -> bool
+        {
+            return offset1.first < offset2.first;
+        });
     }
 
     bool PipelineResourceMemoryAliaser::AliasAsFirstAllocation(AliasingMetadataIterator nextSchedulingInfoIt)
@@ -117,27 +125,6 @@ namespace PathFinder
         return false;
     }
 
-    bool PipelineResourceMemoryAliaser::AliasAsNonTimelineConflictingAllocation(AliasingMetadataIterator nextSchedulingInfoIt)
-    {
-        if (mNonAliasableMemoryRegionStarts.empty())
-        {
-            nextSchedulingInfoIt->SchedulingInfo->HeapOffset = mGlobalStartOffset;
-            mAlreadyAliasedAllocations.push_back(nextSchedulingInfoIt);
-
-            // We now have more than one occupant of the same memory region,
-            // so now aliasing barriers are required
-            PipelineResourceSchedulingInfo::PassInfo* firstPassInfo = GetFirstPassInfo(nextSchedulingInfoIt);
-            firstPassInfo->NeedsAliasingBarrier = true;
-
-            firstPassInfo = GetFirstPassInfo(mAlreadyAliasedAllocations.front());
-            firstPassInfo->NeedsAliasingBarrier = true;
-
-            return true;
-        }
-
-        return false;
-    }
-
     void PipelineResourceMemoryAliaser::AliasWithAlreadyAliasedAllocations(AliasingMetadataIterator nextSchedulingInfoIt)
     {
         // Bail out if there is nothing to alias with
@@ -145,74 +132,30 @@ namespace PathFinder
 
         FindCurrentBucketNonAliasableMemoryRegions(nextSchedulingInfoIt);
 
-        // Bail out if there is no timeline conflicts with already aliased resources
-        if (AliasAsNonTimelineConflictingAllocation(nextSchedulingInfoIt)) return;
-
         // Find memory regions in which we can place the next allocation based on previously found unavailable regions.
         // Pick the most fitting region. If next allocation cannot be fit in any free region, skip it.
-        uint64_t localOffset = 0;
-        uint16_t overlappingMemoryRegionsCount = 0;
         uint64_t nextAllocationSize = nextSchedulingInfoIt->SchedulingInfo->TotalRequiredMemory();
-
-        auto startIt = mNonAliasableMemoryRegionStarts.begin();
-        auto endIt = mNonAliasableMemoryRegionEnds.begin();
-
         MemoryRegion mostFittingMemoryRegion{ 0, 0 };
+        int64_t overlapCounter = 0;
 
-        // Handle first free region from start of the bucket to first non-aliasable region if it exists
-        if (!mNonAliasableMemoryRegionStarts.empty())
+        for (auto i = 0u; i < mNonAliasableMemoryOffsets.size() - 1; ++i)
         {
-            // Consider first aliasable region size to be from 0 to first non-aliasable region start
-            uint64_t regionSize = *startIt;
-            MemoryRegion nextAliasableMemoryRegion{ 0, regionSize };
-            FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
+            const auto& [currentOffset, currentType] = mNonAliasableMemoryOffsets[i];
+            const auto& [nextOffset, nextType] = mNonAliasableMemoryOffsets[i + 1];
 
-            localOffset = *startIt;
-            ++startIt;
-            ++overlappingMemoryRegionsCount;
-        }
+            overlapCounter += currentType == MemoryOffsetType::Start ? 1 : -1;
+            overlapCounter = std::max(overlapCounter, 0ll);
 
-        // Search for free aliasable memory regions between non-aliasable regions
-        for (; startIt != mNonAliasableMemoryRegionStarts.end() && endIt != mNonAliasableMemoryRegionEnds.end();)
-        {
-            uint64_t nextStartOffset = *startIt;
-            uint64_t nextEndOffset = *endIt + 1; // Move past the index of non-aliasable region end byte 
+            bool reachedAliasableRegion = 
+                overlapCounter == 0 && 
+                currentType == MemoryOffsetType::End && 
+                nextType == MemoryOffsetType::Start;
 
-            bool nextRegionIsEmpty = overlappingMemoryRegionsCount == 0;
-            bool nextPointIsStartPoint = nextStartOffset < nextEndOffset;
-
-            if (nextPointIsStartPoint)
+            if (reachedAliasableRegion)
             {
-                ++startIt;
-                ++overlappingMemoryRegionsCount;
-            }
-            else {
-                ++endIt;
-                --overlappingMemoryRegionsCount;
-            }
-
-            if (nextRegionIsEmpty && nextPointIsStartPoint)
-            {
-                MemoryRegion nextAliasableMemoryRegion{ localOffset, nextStartOffset - localOffset };
+                MemoryRegion nextAliasableMemoryRegion{ currentOffset, nextOffset - currentOffset };
                 FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
             }
-
-            // If we're using 
-            localOffset = nextPointIsStartPoint ? nextStartOffset : nextEndOffset;
-        }
-
-        // Handle last free region from end of last non-aliasable region to bucket end
-        if (!mNonAliasableMemoryRegionEnds.empty())
-        {
-            auto lastNonAliasableRegionEndIt = std::prev(mNonAliasableMemoryRegionEnds.end());
-
-            // Check if a free, aliasable memory region exists after last non-aliasable memory region
-            // and before end of this memory bucket and whether that region can fit requested allocation.
-            uint64_t lastEmptyRegionOffset = *lastNonAliasableRegionEndIt + 1; // One past the end offset of non-aliasable region
-            uint64_t lastEmptyRegionSize = mAvailableMemory - lastEmptyRegionOffset;
-            MemoryRegion nextAliasableMemoryRegion{ lastEmptyRegionOffset, lastEmptyRegionSize };
-
-            FitAliasableMemoryRegion(nextAliasableMemoryRegion, nextAllocationSize, mostFittingMemoryRegion);
         }
 
         // If we found a fitting aliasable memory region update allocation with an offset
