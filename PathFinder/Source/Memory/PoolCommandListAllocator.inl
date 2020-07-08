@@ -2,40 +2,67 @@ namespace Memory
 {
 
     template <>
-    PoolCommandListAllocator::CopyCommandListPtr PoolCommandListAllocator::AllocateCommandList()
+    PoolCommandListAllocator::CopyCommandListPtr PoolCommandListAllocator::AllocateCommandList(uint64_t threadIndex)
     {
         return AllocateCopyCommandList();
     }
 
     template <>
-    PoolCommandListAllocator::ComputeCommandListPtr PoolCommandListAllocator::AllocateCommandList()
+    PoolCommandListAllocator::ComputeCommandListPtr PoolCommandListAllocator::AllocateCommandList(uint64_t threadIndex)
     {
         return AllocateComputeCommandList();
     }
 
     template <>
-    PoolCommandListAllocator::GraphicsCommandListPtr PoolCommandListAllocator::AllocateCommandList()
+    PoolCommandListAllocator::GraphicsCommandListPtr PoolCommandListAllocator::AllocateCommandList(uint64_t threadIndex)
     {
         return AllocateGraphicsCommandList();
     }
 
-    template <class CommandListT, class DeleterT>
-    std::unique_ptr<CommandListT, DeleterT> PoolCommandListAllocator::AllocateCommandList(Pool<void>& pool, std::vector<CommandListT*>& cmdLists)
+    template <class CommandListT, class CommandAllocatorT, class DeleterT>
+    std::unique_ptr<CommandListT, DeleterT>
+        PoolCommandListAllocator::AllocateCommandList(
+            Pool<void>& packagePool,
+            std::vector<CommandListPackage<CommandListT, CommandAllocatorT>>& packages,
+            std::optional<uint64_t>& currentPackageIndex,
+            uint64_t threadIndex,
+            CommandListPackageType packageType)
     {
-        Pool<void>::SlotType slot = pool.Allocate();
-        auto index = slot.MemoryOffset;
-
-        if (index >= cmdLists.size())
+        // If frame changed we need to request new package of command allocator and command lists
+        // by either taking existing one from the pool or creating a new one if none are available
+        if (!currentPackageIndex || *currentPackageIndex != mCurrentFrameIndex)
         {
-            cmdLists.emplace_back(new CommandListT{ *mDevice });
+            Pool<void>::SlotType packageSlot = packagePool.Allocate();
+            auto packageIndex = packageSlot.MemoryOffset;
+
+            if (packageIndex >= packages.size())
+            {
+                packages.emplace_back(*mDevice);
+            }
+
+            currentPackageIndex = packageIndex;
         }
 
-        auto deleter = [this, slot, &pool, cmdList = cmdLists[index]](CommandListT* cmdList)
+        // Get command list from a pool associated with the package
+        CommandListPackage<CommandListT, CommandAllocatorT>& package = packages[*currentPackageIndex];
+        Pool<void>::SlotType commandListSlot = package.CommandListPool.Allocate();
+        auto cmdListIndex = commandListSlot.MemoryOffset;
+
+        if (cmdListIndex >= package.CommandLists.size())
         {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ &pool, slot, cmdList });
+            package.CommandLists.emplace_back(new CommandListT{ *mDevice, package.CommandAllocator.get() });
+        }
+
+        CommandListT* cmdList = package.CommandLists[cmdListIndex];
+        // Return command lists in closed state
+        cmdList->Close();
+
+        auto deleter = [this, commandListSlot, threadIndex, packageType](CommandListT* cmdList)
+        {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ commandListSlot, cmdList, threadIndex, packageType });
         };
 
-        return { cmdLists[index], deleter };
+        return { cmdList, deleter };
     }
 
 }

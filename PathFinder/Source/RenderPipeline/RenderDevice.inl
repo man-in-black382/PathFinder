@@ -1,6 +1,16 @@
 namespace PathFinder
 {
 
+    template <class Lambda>
+    void RenderDevice::RecordWorkerCommandList(const RenderPassGraph::Node& passNode, const Lambda& action)
+    {
+        HAL::ComputeCommandListBase* worker = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
+        worker->Reset();
+        worker->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
+        action();
+        worker->Close();
+    }
+
     template <class T>
     void RenderDevice::SetRootConstants(const RenderPassGraph::Node* passNode, const T& constants, uint16_t shaderRegister, uint16_t registerSpace)
     {

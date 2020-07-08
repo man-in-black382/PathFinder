@@ -178,12 +178,14 @@ namespace PathFinder
     void RenderDevice::AllocateUploadCommandList()
     {
         mPreRenderUploadsCommandList = mCommandListAllocator->AllocateGraphicsCommandList();
+        mPreRenderUploadsCommandList->Reset();
         mEventTracker.StartGPUEvent("Prerender Data Upload", *mPreRenderUploadsCommandList);
     }
 
     void RenderDevice::AllocateRTASBuildsCommandList()
     {
         mRTASBuildsCommandList = mCommandListAllocator->AllocateComputeCommandList();
+        mRTASBuildsCommandList->Reset();
         mEventTracker.StartGPUEvent("Ray Tracing BVH Build", *mRTASBuildsCommandList);
     }
 
@@ -197,9 +199,15 @@ namespace PathFinder
         for (const RenderPassGraph::Node& node : mRenderPassGraph->Nodes())
         {
             CommandListPtrVariant cmdListVariant = AllocateCommandListForQueue(node.ExecutionQueueIndex);
-            std::visit([this](auto&& cmdList) { cmdList->SetDescriptorHeap(*mUniversalGPUDescriptorHeap); }, cmdListVariant);
             mPassCommandLists[node.GlobalExecutionIndex()].WorkCommandList = std::move(cmdListVariant);
         }
+    }
+
+    void RenderDevice::ExecuteRenderGraph()
+    {
+        BatchCommandLists();
+        ExetuteCommandLists();
+        UploadPassConstants();
     }
 
     void RenderDevice::BindGraphicsCommonResources(const RenderPassGraph::Node* passNode, const HAL::RootSignature* rootSignature, HAL::GraphicsCommandListBase* cmdList)
@@ -571,7 +579,9 @@ namespace PathFinder
             }
         }
 
+        transitionsCommandList->Reset();
         transitionsCommandList->InsertBarriers(reroutedTransitionBarrires);
+        transitionsCommandList->Close();
     }
 
     void RenderDevice::BatchCommandListsWithoutTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel)
@@ -635,7 +645,9 @@ namespace PathFinder
                     mPassCommandLists[node->GlobalExecutionIndex()].TransitionsCommandList = AllocateCommandListForQueue(queueIdx);
                     CommandListPtrVariant& cmdListVariant = mPassCommandLists[node->GlobalExecutionIndex()].TransitionsCommandList;
                     HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(cmdListVariant);
+                    transitionsCommandList->Reset();
                     transitionsCommandList->InsertBarriers(nodeBarriers);
+                    transitionsCommandList->Close();
                     currentBatch->CommandLists.emplace_back(GetHALCommandListVariant(cmdListVariant));
 
                     // Do not mark second cmd list 
@@ -680,7 +692,6 @@ namespace PathFinder
         mGraphicsQueueFence.IncrementExpectedValue();
         // Transition uploaded resources to readable states
         mPreRenderUploadsCommandList->InsertBarriers(mResourceStateTracker->ApplyRequestedTransitions());
-        mPreRenderUploadsCommandList->Close();
         mGraphicsQueue.ExecuteCommandList(*mPreRenderUploadsCommandList);
         mEventTracker.EndGPUEvent(mGraphicsQueue);
 
@@ -698,7 +709,6 @@ namespace PathFinder
         mComputeQueue.WaitFence(mGraphicsQueueFence);
         mEventTracker.EndGPUEvent(mComputeQueue);
 
-        mRTASBuildsCommandList->Close();
         mComputeQueue.ExecuteCommandList(*mRTASBuildsCommandList);
         mEventTracker.EndGPUEvent(mComputeQueue);
 

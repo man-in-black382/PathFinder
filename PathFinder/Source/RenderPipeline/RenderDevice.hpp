@@ -65,9 +65,10 @@ namespace PathFinder
         void AllocateRTASBuildsCommandList();
         void AllocateWorkerCommandLists();
 
-        void BatchCommandLists();
-        void ExetuteCommandLists();
-        void UploadPassConstants();
+        void ExecuteRenderGraph();
+
+        template <class Lambda>
+        void RecordWorkerCommandList(const RenderPassGraph::Node& passNode, const Lambda& action);
 
     private:
         using GraphicsCommandListPtr = Memory::PoolCommandListAllocator::GraphicsCommandListPtr;
@@ -122,6 +123,10 @@ namespace PathFinder
             const RenderPassGraph::Node* Node;
             uint64_t CommandListBatchIndex = 0;
         };
+
+        void BatchCommandLists();
+        void ExetuteCommandLists();
+        void UploadPassConstants();
 
         void ApplyState(const RenderPassGraph::Node* passNode, const HAL::GraphicsPipelineState* state);
         void ApplyState(const RenderPassGraph::Node* passNode, const HAL::ComputePipelineState* state);

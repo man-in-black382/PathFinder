@@ -4,7 +4,7 @@ namespace Memory
 {
 
     PoolCommandListAllocator::PoolCommandListAllocator(const HAL::Device* device, uint8_t simultaneousFramesInFlight)
-        : mDevice{ device }, mRingFrameTracker{ simultaneousFramesInFlight }, mGraphicsPool{ 1, 1 }, mComputePool{ 1, 1 }, mCopyPool{ 1, 1 }
+        : mDevice{ device }, mRingFrameTracker{ simultaneousFramesInFlight }, mSimultaneousFramesInFlight{simultaneousFramesInFlight}
     {
         mRingFrameTracker.SetDeallocationCallback([this](const Ring::FrameTailAttributes& frameAttributes)
         {
@@ -17,9 +17,9 @@ namespace Memory
 
     PoolCommandListAllocator::~PoolCommandListAllocator()
     {
-        for (HAL::GraphicsCommandList* cmdList : mGraphicCommandLists) delete cmdList;
+       /* for (HAL::GraphicsCommandList* cmdList : mGraphicCommandLists) delete cmdList;
         for (HAL::ComputeCommandList* cmdList : mComputeCommandLists) delete cmdList;
-        for (HAL::CopyCommandList* cmdList : mCopyCommandLists) delete cmdList;
+        for (HAL::CopyCommandList* cmdList : mCopyCommandLists) delete cmdList;*/
     }
 
     void PoolCommandListAllocator::BeginFrame(uint64_t frameNumber)
@@ -33,27 +33,72 @@ namespace Memory
         mRingFrameTracker.ReleaseCompletedFrames(frameNumber);
     }
   
-    PoolCommandListAllocator::GraphicsCommandListPtr PoolCommandListAllocator::AllocateGraphicsCommandList()
+    PoolCommandListAllocator::GraphicsCommandListPtr PoolCommandListAllocator::AllocateGraphicsCommandList(uint64_t threadIndex)
     {
-        return AllocateCommandList<HAL::GraphicsCommandList, std::function<void(HAL::GraphicsCommandList*)>>(mGraphicsPool, mGraphicCommandLists);
+        PreallocateThreadObjectsIfNeeded(threadIndex);
+        return AllocateCommandList<HAL::GraphicsCommandList, HAL::GraphicsCommandAllocator, std::function<void(HAL::GraphicsCommandList*)>>(
+            mPerThreadObjects[threadIndex]->GraphicsCommandListPackagePool,
+            mPerThreadObjects[threadIndex]->GraphicsCommandListPackages,
+            mPerThreadObjects[threadIndex]->CurrentGraphicsPackageIndex,
+            threadIndex,
+            CommandListPackageType::Graphics);
     }
 
-    PoolCommandListAllocator::ComputeCommandListPtr PoolCommandListAllocator::AllocateComputeCommandList()
+    PoolCommandListAllocator::ComputeCommandListPtr PoolCommandListAllocator::AllocateComputeCommandList(uint64_t threadIndex)
     {
-        return AllocateCommandList<HAL::ComputeCommandList, std::function<void(HAL::ComputeCommandList*)>>(mComputePool, mComputeCommandLists);
+        PreallocateThreadObjectsIfNeeded(threadIndex);
+        return AllocateCommandList<HAL::ComputeCommandList, HAL::ComputeCommandAllocator, std::function<void(HAL::ComputeCommandList*)>>(
+            mPerThreadObjects[threadIndex]->ComputeCommandListPackagePool,
+            mPerThreadObjects[threadIndex]->ComputeCommandListPackages,
+            mPerThreadObjects[threadIndex]->CurrentComputePackageIndex,
+            threadIndex,
+            CommandListPackageType::Compute);
     }
 
-    PoolCommandListAllocator::CopyCommandListPtr PoolCommandListAllocator::AllocateCopyCommandList()
+    PoolCommandListAllocator::CopyCommandListPtr PoolCommandListAllocator::AllocateCopyCommandList(uint64_t threadIndex)
     {
-        return AllocateCommandList<HAL::CopyCommandList, std::function<void(HAL::CopyCommandList*)>>(mCopyPool, mCopyCommandLists);
+        PreallocateThreadObjectsIfNeeded(threadIndex);
+        return AllocateCommandList<HAL::CopyCommandList, HAL::CopyCommandAllocator, std::function<void(HAL::CopyCommandList*)>>(
+            mPerThreadObjects[threadIndex]->CopyCommandListPackagePool,
+            mPerThreadObjects[threadIndex]->CopyCommandListPackages,
+            mPerThreadObjects[threadIndex]->CurrentCopyPackageIndex,
+            threadIndex,
+            CommandListPackageType::Copy);
+    }
+
+    void PoolCommandListAllocator::PreallocateThreadObjectsIfNeeded(uint64_t threadIndex)
+    {
+        int64_t newThreadsCount = threadIndex + 1 - (int64_t)mPerThreadObjects.size();
+
+        for (auto i = 0; i < newThreadsCount; ++i)
+        {
+            mPerThreadObjects.emplace_back(std::make_unique<ThreadObjects>());
+        }
     }
 
     void PoolCommandListAllocator::ExecutePendingDeallocations(uint64_t frameIndex)
     {
+        for (std::unique_ptr<ThreadObjects>& threadObjects : mPerThreadObjects)
+        {
+            if (!threadObjects->GraphicsCommandListPackages.empty())
+                threadObjects->GraphicsCommandListPackages[frameIndex].CommandAllocator->Reset();
+
+            if (!threadObjects->ComputeCommandListPackages.empty())
+                threadObjects->ComputeCommandListPackages[frameIndex].CommandAllocator->Reset();
+
+            if (!threadObjects->CopyCommandListPackages.empty())
+                threadObjects->CopyCommandListPackages[frameIndex].CommandAllocator->Reset();
+        }
+
         for (Deallocation& deallocation : mPendingDeallocations[frameIndex])
         {
-            deallocation.CommandList->Reset();
-            deallocation.PoolThatProducedAllocation->Deallocate(deallocation.Slot);
+            switch (deallocation.PackageType)
+            {
+            case CommandListPackageType::Graphics: mPerThreadObjects[deallocation.ThreadIndex]->GraphicsCommandListPackagePool.Deallocate(deallocation.Slot); break;
+            case CommandListPackageType::Compute: mPerThreadObjects[deallocation.ThreadIndex]->ComputeCommandListPackagePool.Deallocate(deallocation.Slot); break;
+            case CommandListPackageType::Copy: mPerThreadObjects[deallocation.ThreadIndex]->CopyCommandListPackagePool.Deallocate(deallocation.Slot); break;
+            default: break;
+            }
         }
 
         mPendingDeallocations[frameIndex].clear();

@@ -167,9 +167,6 @@ namespace PathFinder
         // Scheduler resources, build graph
         ScheduleResources();
 
-        mRenderDevice.AllocateRTASBuildsCommandList();
-        mRenderDevice.AllocateWorkerCommandLists();
-
         // Update render device with current frame back buffer
         mRenderDevice.SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
 
@@ -177,13 +174,14 @@ namespace PathFinder
         mPreRenderEvent.Raise();
 
         // Build AS
+        mRenderDevice.PreRenderUploadsCommandList()->Close();
+        mRenderDevice.AllocateRTASBuildsCommandList();
         BuildAccelerationStructures();
 
         // Render
+        mRenderDevice.AllocateWorkerCommandLists();
         RecordCommandLists();
-        mRenderDevice.BatchCommandLists();
-        mRenderDevice.UploadPassConstants();
-        mRenderDevice.ExetuteCommandLists();
+        mRenderDevice.ExecuteRenderGraph();
 
         // Put the picture on the screen
         mSwapChain.Present();
@@ -279,6 +277,8 @@ namespace PathFinder
         }
 
         mRenderDevice.RTASBuildsCommandList()->InsertBarriers(topRTASUABarriers);
+
+        mRenderDevice.RTASBuildsCommandList()->Close();
     }
 
     template <class ContentMediator>
@@ -305,7 +305,11 @@ namespace PathFinder
         {
             auto& [passPtr, passContextIdx] = mRenderPasses[nodeIt->PassMetadata().Name];
             RenderContext<ContentMediator>& context = mRenderContexts[passContextIdx];
-            passPtr->Render(&context);
+
+            mRenderDevice.RecordWorkerCommandList(*nodeIt, [passPtr, &context]
+            {
+                passPtr->Render(&context);
+            });
         }
 
         // TODO: When multi threading is implemented, insert a sync here

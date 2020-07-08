@@ -32,7 +32,7 @@ namespace HAL
     class CommandList : public GraphicAPIObject
     {
     public:
-        CommandList(const Device& device, std::unique_ptr<CommandAllocator> allocator, D3D12_COMMAND_LIST_TYPE type);
+        CommandList(const Device& device, CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type);
         CommandList(CommandList&& that) = default;
         CommandList(const CommandList& that) = delete;
         CommandList& operator=(const CommandList& that) = delete;
@@ -42,7 +42,7 @@ namespace HAL
         void Close();
 
     protected:
-        std::unique_ptr<CommandAllocator> mCommandAllocator;
+        CommandAllocator* mCommandAllocator = nullptr;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> mList;
 
     public:
@@ -125,13 +125,13 @@ namespace HAL
 
     class CopyCommandList : public CopyCommandListBase {
     public:
-        CopyCommandList(const Device& device);
+        CopyCommandList(const Device& device, CopyCommandAllocator* commandAllocator);
         ~CopyCommandList() = default;
     };
 
     class ComputeCommandList : public ComputeCommandListBase {
     public:
-        ComputeCommandList(const Device& device);
+        ComputeCommandList(const Device& device, ComputeCommandAllocator* commandAllocator);
         ~ComputeCommandList() = default;
 
         void BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as);
@@ -139,13 +139,13 @@ namespace HAL
     
     class BundleCommandList : public GraphicsCommandListBase {
     public:
-        BundleCommandList(const Device& device);
+        BundleCommandList(const Device& device, BundleCommandAllocator* commandAllocator);
         ~BundleCommandList() = default;
     };
 
     class GraphicsCommandList : public GraphicsCommandListBase {
     public:
-        GraphicsCommandList(const Device& device);
+        GraphicsCommandList(const Device& device, GraphicsCommandAllocator* commandAllocator);
         ~GraphicsCommandList() = default;
 
         void ExecuteBundle(const BundleCommandList& bundle);

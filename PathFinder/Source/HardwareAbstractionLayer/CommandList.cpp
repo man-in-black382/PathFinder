@@ -4,8 +4,8 @@
 namespace HAL
 {
 
-    CommandList::CommandList(const Device& device, std::unique_ptr<CommandAllocator> allocator, D3D12_COMMAND_LIST_TYPE type)
-        : mCommandAllocator{ std::move(allocator) }
+    CommandList::CommandList(const Device& device, CommandAllocator* allocator, D3D12_COMMAND_LIST_TYPE type)
+        : mCommandAllocator{ allocator }
     {
         ThrowIfFailed(device.D3DDevice()->CreateCommandList(0, type, mCommandAllocator->D3DPtr(), nullptr, IID_PPV_ARGS(&mList)));
     }
@@ -14,7 +14,6 @@ namespace HAL
 
     void CommandList::Reset()
     {
-        mCommandAllocator->Reset();
         ThrowIfFailed(mList->Reset(mCommandAllocator->D3DPtr(), nullptr));
     }
 
@@ -230,13 +229,13 @@ namespace HAL
 
 
 
-    CopyCommandList::CopyCommandList(const Device& device)
-        : CopyCommandListBase(device, std::make_unique<CopyCommandAllocator>(device), D3D12_COMMAND_LIST_TYPE_COPY) {}
+    CopyCommandList::CopyCommandList(const Device& device, CopyCommandAllocator* commandAllocator)
+        : CopyCommandListBase(device, commandAllocator, D3D12_COMMAND_LIST_TYPE_COPY) {}
 
 
 
-    ComputeCommandList::ComputeCommandList(const Device& device)
-        : ComputeCommandListBase(device, std::make_unique<ComputeCommandAllocator>(device), D3D12_COMMAND_LIST_TYPE_COMPUTE) {}
+    ComputeCommandList::ComputeCommandList(const Device& device, ComputeCommandAllocator* commandAllocator)
+        : ComputeCommandListBase(device, commandAllocator, D3D12_COMMAND_LIST_TYPE_COMPUTE) {}
 
     void ComputeCommandList::BuildRaytracingAccelerationStructure(const RayTracingAccelerationStructure& as)
     {
@@ -245,13 +244,13 @@ namespace HAL
 
 
 
-    BundleCommandList::BundleCommandList(const Device& device)
-        : GraphicsCommandListBase(device, std::make_unique<BundleCommandAllocator>(device), D3D12_COMMAND_LIST_TYPE_BUNDLE) {}
+    BundleCommandList::BundleCommandList(const Device& device, BundleCommandAllocator* commandAllocator)
+        : GraphicsCommandListBase(device, commandAllocator, D3D12_COMMAND_LIST_TYPE_BUNDLE) {}
 
 
 
-    GraphicsCommandList::GraphicsCommandList(const Device& device)
-        : GraphicsCommandListBase(device, std::make_unique<GraphicsCommandAllocator>(device), D3D12_COMMAND_LIST_TYPE_DIRECT) {}
+    GraphicsCommandList::GraphicsCommandList(const Device& device, GraphicsCommandAllocator* commandAllocator)
+        : GraphicsCommandListBase(device, commandAllocator, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
 
     void GraphicsCommandList::ExecuteBundle(const BundleCommandList& bundle)
     {
