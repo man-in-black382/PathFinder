@@ -44,6 +44,7 @@ namespace HAL
     protected:
         CommandAllocator* mCommandAllocator = nullptr;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> mList;
+        bool mIsClosed = false;
 
     public:
         inline ID3D12GraphicsCommandList* D3DList() const { return mList.Get(); }

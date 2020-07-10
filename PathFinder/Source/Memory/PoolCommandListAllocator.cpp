@@ -37,9 +37,7 @@ namespace Memory
     {
         PreallocateThreadObjectsIfNeeded(threadIndex);
         return AllocateCommandList<HAL::GraphicsCommandList, HAL::GraphicsCommandAllocator, std::function<void(HAL::GraphicsCommandList*)>>(
-            mPerThreadObjects[threadIndex]->GraphicsCommandListPackagePool,
             mPerThreadObjects[threadIndex]->GraphicsCommandListPackages,
-            mPerThreadObjects[threadIndex]->CurrentGraphicsPackageIndex,
             threadIndex,
             CommandListPackageType::Graphics);
     }
@@ -48,9 +46,7 @@ namespace Memory
     {
         PreallocateThreadObjectsIfNeeded(threadIndex);
         return AllocateCommandList<HAL::ComputeCommandList, HAL::ComputeCommandAllocator, std::function<void(HAL::ComputeCommandList*)>>(
-            mPerThreadObjects[threadIndex]->ComputeCommandListPackagePool,
             mPerThreadObjects[threadIndex]->ComputeCommandListPackages,
-            mPerThreadObjects[threadIndex]->CurrentComputePackageIndex,
             threadIndex,
             CommandListPackageType::Compute);
     }
@@ -59,9 +55,7 @@ namespace Memory
     {
         PreallocateThreadObjectsIfNeeded(threadIndex);
         return AllocateCommandList<HAL::CopyCommandList, HAL::CopyCommandAllocator, std::function<void(HAL::CopyCommandList*)>>(
-            mPerThreadObjects[threadIndex]->CopyCommandListPackagePool,
             mPerThreadObjects[threadIndex]->CopyCommandListPackages,
-            mPerThreadObjects[threadIndex]->CurrentCopyPackageIndex,
             threadIndex,
             CommandListPackageType::Copy);
     }
@@ -94,9 +88,15 @@ namespace Memory
         {
             switch (deallocation.PackageType)
             {
-            case CommandListPackageType::Graphics: mPerThreadObjects[deallocation.ThreadIndex]->GraphicsCommandListPackagePool.Deallocate(deallocation.Slot); break;
-            case CommandListPackageType::Compute: mPerThreadObjects[deallocation.ThreadIndex]->ComputeCommandListPackagePool.Deallocate(deallocation.Slot); break;
-            case CommandListPackageType::Copy: mPerThreadObjects[deallocation.ThreadIndex]->CopyCommandListPackagePool.Deallocate(deallocation.Slot); break;
+            case CommandListPackageType::Graphics: 
+                mPerThreadObjects[deallocation.ThreadIndex]->GraphicsCommandListPackages[deallocation.PackageIndex].CommandListPool.Deallocate(deallocation.Slot);
+                break;
+            case CommandListPackageType::Compute:
+                mPerThreadObjects[deallocation.ThreadIndex]->ComputeCommandListPackages[deallocation.PackageIndex].CommandListPool.Deallocate(deallocation.Slot);
+                break;
+            case CommandListPackageType::Copy: 
+                mPerThreadObjects[deallocation.ThreadIndex]->CopyCommandListPackages[deallocation.PackageIndex].CommandListPool.Deallocate(deallocation.Slot);
+                break;
             default: break;
             }
         }

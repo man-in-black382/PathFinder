@@ -22,29 +22,25 @@ namespace Memory
     template <class CommandListT, class CommandAllocatorT, class DeleterT>
     std::unique_ptr<CommandListT, DeleterT>
         PoolCommandListAllocator::AllocateCommandList(
-            Pool<void>& packagePool,
             std::vector<CommandListPackage<CommandListT, CommandAllocatorT>>& packages,
-            std::optional<uint64_t>& currentPackageIndex,
             uint64_t threadIndex,
             CommandListPackageType packageType)
     {
         // If frame changed we need to request new package of command allocator and command lists
         // by either taking existing one from the pool or creating a new one if none are available
-        if (!currentPackageIndex || *currentPackageIndex != mCurrentFrameIndex)
-        {
-            Pool<void>::SlotType packageSlot = packagePool.Allocate();
-            auto packageIndex = packageSlot.MemoryOffset;
+        uint64_t packageIndex = mCurrentFrameIndex;
 
+        if (packageIndex >= packages.size())
+        {
             if (packageIndex >= packages.size())
             {
                 packages.emplace_back(*mDevice);
+                packages.back().CommandAllocator->SetDebugName(StringFormat("Command Allocator. Thread %d. Frame Index %d.", threadIndex, packageIndex));
             }
-
-            currentPackageIndex = packageIndex;
         }
 
         // Get command list from a pool associated with the package
-        CommandListPackage<CommandListT, CommandAllocatorT>& package = packages[*currentPackageIndex];
+        CommandListPackage<CommandListT, CommandAllocatorT>& package = packages[packageIndex];
         Pool<void>::SlotType commandListSlot = package.CommandListPool.Allocate();
         auto cmdListIndex = commandListSlot.MemoryOffset;
 
@@ -57,9 +53,11 @@ namespace Memory
         // Return command lists in closed state
         cmdList->Close();
 
-        auto deleter = [this, commandListSlot, threadIndex, packageType](CommandListT* cmdList)
+        Deallocation deallocation{ commandListSlot, cmdList, threadIndex, packageIndex, packageType };
+
+        auto deleter = [this, deallocation](CommandListT* cmdList)
         {
-            mPendingDeallocations[mCurrentFrameIndex].emplace_back(Deallocation{ commandListSlot, cmdList, threadIndex, packageType });
+            mPendingDeallocations[mCurrentFrameIndex].push_back(deallocation);
         };
 
         return { cmdList, deleter };

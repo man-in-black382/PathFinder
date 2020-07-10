@@ -359,11 +359,12 @@ namespace PathFinder
             mDependencyLevelTransitionBarriers.resize(dependencyLevel.Nodes().size());
 
             GatherResourceTransitionKnowledge(dependencyLevel);
-            BatchCommandListsWithTransitionRerouting(dependencyLevel);
-            BatchCommandListsWithoutTransitionRerouting(dependencyLevel);
+            CreateBatchesWithTransitionRerouting(dependencyLevel);
+            CreateBatchesWithoutTransitionRerouting(dependencyLevel);
         }
 
-        RecordBeginBarriers();
+        RecordPostWorkCommandLists();
+        InsertCommandListsIntoCorrespondingBatches();
     }
 
     void RenderDevice::GatherResourceTransitionKnowledge(const RenderPassGraph::DependencyLevel& dependencyLevel)
@@ -480,7 +481,7 @@ namespace PathFinder
                 // That will only double the amount of barriers without any performance gain.
                 bool currentNodeIsNextToPrevious = node->LocalToQueueExecutionIndex() - previousTransitionInfo.Node->LocalToQueueExecutionIndex() <= 1;
 
-                if (isSplitBarrierPossible && !currentNodeIsNextToPrevious)
+                if (/*isSplitBarrierPossible*/false && !currentNodeIsNextToPrevious)
                 {
                     auto [beginBarrier, endBarrier] = transitionInfo.TransitionBarrier.Split();
                     collection.AddBarrier(endBarrier);
@@ -500,7 +501,7 @@ namespace PathFinder
         }
     }
 
-    void RenderDevice::BatchCommandListsWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel)
+    void RenderDevice::CreateBatchesWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel)
     {
         if (mDependencyLevelQueuesThatRequireTransitionRerouting.empty())
         {
@@ -548,6 +549,7 @@ namespace PathFinder
                 if (!latestBatchAfterRerouting)
                 {
                     latestBatchAfterRerouting = &mCommandListBatches[node->ExecutionQueueIndex].emplace_back();
+                    dependencyLevelPerQueueBatches[node->ExecutionQueueIndex] = latestBatchAfterRerouting;
 
                     // Insert fence before first pass after rerouted transitions
                     if (node->ExecutionQueueIndex != mostCompetentQueueIndex)
@@ -558,10 +560,13 @@ namespace PathFinder
                 }
 
                 // Make command lists in a batch wait for rerouted transitions
-                latestBatchAfterRerouting->CommandLists.emplace_back(GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList));
                 latestBatchAfterRerouting->CommandListNames.emplace_back(node->PassMetadata().Name.ToString());
+                latestBatchAfterRerouting->IsEmpty = false;
 
+                // Associate batch index with pass command lists so we could insert them later when all split barriers are collected
                 uint64_t currentCommandListBatchIndex = mCommandListBatches[queueIndex].size() - 1;
+                mPassCommandLists[node->GlobalExecutionIndex()].CommandListBatchIndex = currentCommandListBatchIndex;
+
                 CollectNodeTransitions(node, currentCommandListBatchIndex, reroutedTransitionBarrires);
 
                 if (node->IsSyncSignalRequired())
@@ -573,7 +578,7 @@ namespace PathFinder
             }
 
             // Do not leave empty batches 
-            if (mCommandListBatches[queueIndex].back().CommandLists.empty())
+            if (mCommandListBatches[queueIndex].back().IsEmpty)
             {
                 mCommandListBatches[queueIndex].pop_back();
             }
@@ -584,7 +589,7 @@ namespace PathFinder
         transitionsCommandList->Close();
     }
 
-    void RenderDevice::BatchCommandListsWithoutTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel)
+    void RenderDevice::CreateBatchesWithoutTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel)
     {
         for (auto queueIdx = 0u; queueIdx < mRenderPassGraph->DetectedQueueCount(); ++queueIdx)
         {
@@ -613,7 +618,7 @@ namespace PathFinder
 
                 if (!node->NodesToSyncWith().empty() || usesRT)
                 {
-                    if (!currentBatch->CommandLists.empty())
+                    if (!currentBatch->IsEmpty)
                     {
                         currentBatch = &mCommandListBatches[queueIdx].emplace_back();
                     }
@@ -633,12 +638,16 @@ namespace PathFinder
 
                 // On queues that do not require transition rerouting each node will have its own transition collection
                 HAL::ResourceBarrierCollection nodeBarriers{};
+
+                // Associate batch index with pass command lists so we could insert them later when all split barriers are collected
                 uint64_t currentCommandListBatchIndex = mCommandListBatches[queueIdx].size() - 1;
+                mPassCommandLists[node->GlobalExecutionIndex()].CommandListBatchIndex = currentCommandListBatchIndex;
 
                 CollectNodeTransitions(node, currentCommandListBatchIndex, nodeBarriers);
 
                 // Mark first command list of render pass with it's debug name
                 currentBatch->CommandListNames.emplace_back(node->PassMetadata().Name.ToString());
+                currentBatch->IsEmpty = false;
 
                 if (nodeBarriers.BarrierCount() > 0)
                 {
@@ -648,13 +657,10 @@ namespace PathFinder
                     transitionsCommandList->Reset();
                     transitionsCommandList->InsertBarriers(nodeBarriers);
                     transitionsCommandList->Close();
-                    currentBatch->CommandLists.emplace_back(GetHALCommandListVariant(cmdListVariant));
 
                     // Do not mark second cmd list 
                     currentBatch->CommandListNames.emplace_back(std::nullopt);
                 }
-
-                currentBatch->CommandLists.push_back(GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList));
 
                 if (node->IsSyncSignalRequired())
                 {
@@ -665,24 +671,65 @@ namespace PathFinder
             }
 
             // Do not leave empty batches 
-            if (mCommandListBatches[queueIdx].back().CommandLists.empty())
+            if (mCommandListBatches[queueIdx].back().IsEmpty)
             {
                 mCommandListBatches[queueIdx].pop_back();
             }
         }
     }
 
-    void RenderDevice::RecordBeginBarriers()
+    void RenderDevice::RecordPostWorkCommandLists()
     {
+        auto graphicNodesCount = mRenderPassGraph->NodeCountForQueue(0);
+
+        // Now that split barriers are determined we can record them with minimal amount of cmd list commands
         for (const RenderPassGraph::Node& node : mRenderPassGraph->Nodes())
         {
             const HAL::ResourceBarrierCollection& beginBarriers = mPerNodeBeginBarriers[node.GlobalExecutionIndex()];
             
-            if (beginBarriers.BarrierCount() > 0)
+            bool lastGraphicNode = node.LocalToQueueExecutionIndex() == graphicNodesCount - 1;
+            bool beginBarriersExist = beginBarriers.BarrierCount() > 0;
+            bool postWorkExists = lastGraphicNode || beginBarriersExist;
+
+            if (!postWorkExists)
             {
-                HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[node.GlobalExecutionIndex()].WorkCommandList);
-                cmdList->InsertBarriers(beginBarriers);
+                continue;
             }
+
+            HAL::ResourceBarrierCollection barriers{};
+            
+            if (beginBarriersExist)
+            {
+                barriers.AddBarriers(beginBarriers);
+            }
+
+            if (lastGraphicNode)
+            {
+                barriers.AddBarriers(mResourceStateTracker->TransitionToStateImmediately(mBackBuffer->HALResource(), HAL::ResourceState::Present));
+            }
+
+            mPassCommandLists[node.GlobalExecutionIndex()].PostWorkCommandList = AllocateCommandListForQueue(node.ExecutionQueueIndex);
+            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[node.GlobalExecutionIndex()].PostWorkCommandList);
+            cmdList->Reset();
+            cmdList->InsertBarriers(barriers);
+            cmdList->Close();
+        }
+    }
+
+    void RenderDevice::InsertCommandListsIntoCorrespondingBatches()
+    {
+        for (const RenderPassGraph::Node* node : mRenderPassGraph->NodesInGlobalExecutionOrder())
+        {
+            auto batchIndex = mPassCommandLists[node->GlobalExecutionIndex()].CommandListBatchIndex;
+            CommandListBatch& batch = mCommandListBatches[node->ExecutionQueueIndex][batchIndex];
+
+            HALCommandListPtrVariant transitionsCommandList = GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].TransitionsCommandList);
+            HALCommandListPtrVariant workCommandList = GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList);
+            HALCommandListPtrVariant postWorkCommandList = GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].PostWorkCommandList);
+
+            if (!IsNullCommandList(transitionsCommandList)) batch.CommandLists.push_back(transitionsCommandList);
+            if (!IsNullCommandList(workCommandList)) batch.CommandLists.push_back(workCommandList);
+            if (!IsNullCommandList(postWorkCommandList)) batch.CommandLists.push_back(postWorkCommandList);
         }
     }
 
@@ -741,22 +788,12 @@ namespace PathFinder
                 if (RenderPassExecutionQueue{ queueIdx } == RenderPassExecutionQueue::Graphics)
                 {
                     std::vector<HAL::GraphicsCommandList*> graphicsCommands;
-                    HAL::GraphicsCommandQueue* graphicsQueue = dynamic_cast<HAL::GraphicsCommandQueue*>(&queue);
+                    HAL::GraphicsCommandQueue* graphicsQueue = static_cast<HAL::GraphicsCommandQueue*>(&queue);
 
                     for (auto cmdListIdx = 0; cmdListIdx < batch.CommandLists.size(); ++cmdListIdx)
                     {
                         HALCommandListPtrVariant& cmdListVariant = batch.CommandLists[cmdListIdx];
-                        auto cmdList = std::get<HAL::GraphicsCommandList*>(cmdListVariant);
-
-                        bool isLastGraphicsCmdList = batchIdx == batches.size() - 1 && cmdListIdx == batch.CommandLists.size() - 1;
-
-                        if (isLastGraphicsCmdList)
-                        {
-                            cmdList->InsertBarriers(mResourceStateTracker->TransitionToStateImmediately(mBackBuffer->HALResource(), HAL::ResourceState::Present));
-                        }
-
-                        cmdList->Close();
-                        graphicsCommands.push_back(cmdList);
+                        graphicsCommands.push_back(std::get<HAL::GraphicsCommandList*>(cmdListVariant));
                     }
 
                     graphicsQueue->ExecuteCommandLists(graphicsCommands.data(), graphicsCommands.size());
@@ -764,14 +801,12 @@ namespace PathFinder
                 else
                 {
                     std::vector<HAL::ComputeCommandList*> computeCommands;
-                    HAL::ComputeCommandQueue* computeQueue = dynamic_cast<HAL::ComputeCommandQueue*>(&queue);
+                    HAL::ComputeCommandQueue* computeQueue = static_cast<HAL::ComputeCommandQueue*>(&queue);
 
                     for (auto cmdListIdx = 0; cmdListIdx < batch.CommandLists.size(); ++cmdListIdx)
                     {
                         HALCommandListPtrVariant& cmdListVariant = batch.CommandLists[cmdListIdx];
-                        auto cmdList = std::get<HAL::ComputeCommandList*>(cmdListVariant);
-                        cmdList->Close();
-                        computeCommands.push_back(cmdList);
+                        computeCommands.push_back(std::get<HAL::ComputeCommandList*>(cmdListVariant));
                     }
 
                     computeQueue->ExecuteCommandLists(computeCommands.data(), computeCommands.size());
@@ -869,6 +904,11 @@ namespace PathFinder
         HALCommandListPtrVariant halv;
         std::visit([&halv](auto&& v) { halv = v.get(); }, variant);
         return halv;
+    }
+
+    bool RenderDevice::IsNullCommandList(HALCommandListPtrVariant& variant) const
+    {
+        return GetComputeCommandListBase(variant) == nullptr;
     }
 
     HAL::Fence& RenderDevice::FenceForQueueIndex(uint64_t index)

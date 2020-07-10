@@ -188,6 +188,7 @@ namespace PathFinder
 
         // Issue a CPU wait if necessary
         mRenderDevice.GraphicsCommandQueue().SignalFence(mFrameFence);
+
         mFrameFence.StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
         // Notify internal listeners

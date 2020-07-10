@@ -64,22 +64,15 @@ namespace Memory
             Pool<void>::SlotType Slot;
             HAL::CommandList* CommandList;
             uint64_t ThreadIndex = 0;
+            uint64_t PackageIndex = 0;
             CommandListPackageType PackageType;
         };
 
         struct ThreadObjects
         {
-            Pool<void> GraphicsCommandListPackagePool{ 1, 1 };
-            Pool<void> ComputeCommandListPackagePool{ 1, 1 };
-            Pool<void> CopyCommandListPackagePool{ 1, 1 };
-
             std::vector<GraphicsCommandListPackage> GraphicsCommandListPackages;
             std::vector<ComputeCommandListPackage> ComputeCommandListPackages;
             std::vector<CopyCommandListPackage> CopyCommandListPackages;
-
-            std::optional<uint64_t> CurrentGraphicsPackageIndex;
-            std::optional<uint64_t> CurrentComputePackageIndex;
-            std::optional<uint64_t> CurrentCopyPackageIndex;
         };
 
         void PreallocateThreadObjectsIfNeeded(uint64_t threadIndex);
@@ -87,9 +80,7 @@ namespace Memory
 
         template <class CommandListT, class CommandAllocatorT, class DeleterT>
         std::unique_ptr<CommandListT, DeleterT> AllocateCommandList(
-            Pool<void>& packagePool, 
             std::vector<CommandListPackage<CommandListT, CommandAllocatorT>>& packages,
-            std::optional<uint64_t>& currentPackageIndex,
             uint64_t threadIndex,
             CommandListPackageType packageType);
 

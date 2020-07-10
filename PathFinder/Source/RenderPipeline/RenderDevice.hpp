@@ -78,8 +78,19 @@ namespace PathFinder
 
         struct PassCommandLists
         {
+            // A command list to execute transition barriers before render pass work.
+            // Separated from work so we could perform transitions in separate thread.
             CommandListPtrVariant TransitionsCommandList = GraphicsCommandListPtr{ nullptr };
+
+            // A command list render commands are recorded into
             CommandListPtrVariant WorkCommandList = GraphicsCommandListPtr{ nullptr };
+
+            // An optional command list that may be required to execute Begin barriers 
+            // or back buffer transition at the end of the frame
+            CommandListPtrVariant PostWorkCommandList = GraphicsCommandListPtr{ nullptr };
+
+            // Index of a batch these command lists belong to.
+            uint64_t CommandListBatchIndex = 0;
         };
 
         struct PassHelpers
@@ -101,6 +112,7 @@ namespace PathFinder
 
         struct CommandListBatch
         {
+            bool IsEmpty = true;
             std::vector<HALCommandListPtrVariant> CommandLists;
             std::vector<const HAL::Fence*> FencesToWait;
             HAL::Fence* FenceToSignal = nullptr;
@@ -140,9 +152,10 @@ namespace PathFinder
         void CreatePassHelpers();
         void GatherResourceTransitionKnowledge(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void CollectNodeTransitions(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection);
-        void BatchCommandListsWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
-        void BatchCommandListsWithoutTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
-        void RecordBeginBarriers();
+        void CreateBatchesWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
+        void CreateBatchesWithoutTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
+        void RecordPostWorkCommandLists();
+        void InsertCommandListsIntoCorrespondingBatches();
         void ExecuteUploadCommands();
         void ExecuteBVHBuildCommands();
 
@@ -154,6 +167,7 @@ namespace PathFinder
         HAL::ComputeCommandListBase* GetComputeCommandListBase(CommandListPtrVariant& variant) const;
         HAL::ComputeCommandListBase* GetComputeCommandListBase(HALCommandListPtrVariant& variant) const;
         HALCommandListPtrVariant GetHALCommandListVariant(CommandListPtrVariant& variant) const;
+        bool IsNullCommandList(HALCommandListPtrVariant& variant) const;
         HAL::Fence& FenceForQueueIndex(uint64_t index);
 
         template <class CommandQueueT>

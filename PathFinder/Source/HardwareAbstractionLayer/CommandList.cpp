@@ -15,11 +15,16 @@ namespace HAL
     void CommandList::Reset()
     {
         ThrowIfFailed(mList->Reset(mCommandAllocator->D3DPtr(), nullptr));
+        mIsClosed = false;
     }
 
     void CommandList::Close()
     {
-        ThrowIfFailed(mList->Close());
+        if (!mIsClosed)
+        {
+            ThrowIfFailed(mList->Close());
+            mIsClosed = true;
+        }
     }
 
 
