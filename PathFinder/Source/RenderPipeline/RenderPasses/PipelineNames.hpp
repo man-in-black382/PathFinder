@@ -39,6 +39,8 @@ namespace PathFinder
         inline NameArray<2> StochasticShadowedShadingDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised[0]", "Resource_Shading_Stochastic_Shadowed_Denoised[1]" };
         inline Foundation::Name StochasticUnshadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
         inline Foundation::Name StochasticShadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
+        inline Foundation::Name StochasticUnshadowedShadingGradient{ "Resource_Shading_Stochastic_Unshadowed_Gradient" };
+        inline Foundation::Name StochasticShadowedShadingGradient{ "Resource_Shading_Stochastic_Shadowed_Gradient" };
 
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
         inline NameArray<2> DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count[0]", "Resource_Denoiser_Reprojected_Frames_Count[1]" };
@@ -65,9 +67,7 @@ namespace PathFinder
         inline Foundation::Name BloomBlur{ "PSO_BloomBlur" };
         inline Foundation::Name BloomComposition{ "PSO_BloomComposition" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
-        inline Foundation::Name ShadowNoiseEstimation{ "PSO_ShadowNoiseEstimation" };
-        inline Foundation::Name ShadowNoiseEstimationDenoising{ "PSO_ShadowNoiseEstimationDenoising" };
-        inline Foundation::Name ShadowDenoising{ "PSO_ShadowDenoising" };
+        inline Foundation::Name DenoiserGradientConstruction{ "PSO_DenoiserGradientConstruction" };
         inline Foundation::Name DenoiserReprojection{ "PSO_DenoiserReprojection" };
         inline Foundation::Name DenoiserHistoryFix{ "PSO_DenoiserHistoryFix" };
         inline Foundation::Name DenoiserPostStabilization{ "PSO_DenoiserPostStabilization" };

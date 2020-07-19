@@ -81,14 +81,18 @@ namespace HAL
 
     ShaderCompiler::ShaderCompilationResult ShaderCompiler::CompileShader(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild)
     {
-        BlobCompilationResult result = CompileBlob(path, ProfileString(stage, Profile::P6_3), entryPoint, debugBuild);
-        return ShaderCompilationResult{ Shader{ result.Blob, entryPoint, stage }, result.CompiledFileRelativePaths };
+        BlobCompilationResult blobCompilationResult = CompileBlob(path, ProfileString(stage, Profile::P6_3), entryPoint, debugBuild);
+        ShaderCompilationResult shaderCompilationResult{ Shader{ blobCompilationResult.Blob, blobCompilationResult.PDBBlob, entryPoint, stage }, blobCompilationResult.CompiledFileRelativePaths };
+        shaderCompilationResult.CompiledShader.SetDebugName(blobCompilationResult.DebugName);
+        return shaderCompilationResult;
     }
 
     ShaderCompiler::LibraryCompilationResult ShaderCompiler::CompileLibrary(const std::filesystem::path& path, bool debugBuild)
     {
-        BlobCompilationResult result = CompileBlob(path, LibProfileString(Profile::P6_3), "", debugBuild);
-        return LibraryCompilationResult{ Library{ result.Blob }, result.CompiledFileRelativePaths };
+        BlobCompilationResult blobCompilationResult = CompileBlob(path, LibProfileString(Profile::P6_3), "", debugBuild);
+        LibraryCompilationResult libraryCompilationResult{ Library{ blobCompilationResult.Blob, blobCompilationResult.PDBBlob }, blobCompilationResult.CompiledFileRelativePaths };
+        libraryCompilationResult.CompiledLibrary.SetDebugName(blobCompilationResult.DebugName);
+        return libraryCompilationResult;
     }
 
     std::string ShaderCompiler::ProfileString(Shader::Stage stage, Profile profile)
@@ -132,6 +136,7 @@ namespace HAL
 
         std::wstring wEntryPoint = StringToWString(entryPoint);
         std::wstring wProfile = StringToWString(profileString);
+        LPWSTR suggestedDebugName = nullptr;
 
         std::vector<std::wstring> arguments;
         arguments.push_back(L"/all_resources_bound");
@@ -140,6 +145,9 @@ namespace HAL
         {
             arguments.push_back(L"/Zi");
             arguments.push_back(L"/Od");
+
+            // Produce a smaller shader without duplicated debug information
+            //arguments.push_back(L"/Qstrip_debug"); 
         }
 
         std::vector<LPCWSTR> argumentPtrs;
@@ -151,31 +159,53 @@ namespace HAL
 
         ShaderFileReader reader{ path.parent_path(), mLibrary.Get() };
 
-        Microsoft::WRL::ComPtr<IDxcBlob> source;
+        Microsoft::WRL::ComPtr<IDxcBlob> sourceBlob;
+        Microsoft::WRL::ComPtr<IDxcBlob> pdbBlob;
         Microsoft::WRL::ComPtr<IDxcOperationResult> result;
 
-        reader.LoadSource(path.filename().wstring().c_str(), source.GetAddressOf());
+        reader.LoadSource(path.filename().wstring().c_str(), sourceBlob.GetAddressOf());
 
-        mCompiler->Compile(
-            source.Get(),                       // program text
-            path.filename().wstring().c_str(),  // file name, mostly for error messages
-            wEntryPoint.c_str(),                // entry point function
-            wProfile.c_str(),                   // target profile
-            argumentPtrs.data(),                // compilation arguments
-            argumentPtrs.size(),                // number of compilation arguments
-            nullptr, 0,                         // name/value defines and their count
-            &reader,                            // handler for #include directives
-            result.GetAddressOf());
+        // Note: when compiling libraries, entry point and profile are ignored
 
+        if (debugBuild)
+        {
+            mCompiler->CompileWithDebug(
+                sourceBlob.Get(),                   // Program text
+                path.filename().wstring().c_str(),  // File name, mostly for error messages
+                wEntryPoint.c_str(),                // Entry point function
+                wProfile.c_str(),                   // Target profile
+                argumentPtrs.data(),                // Compilation arguments
+                argumentPtrs.size(),                // Number of compilation arguments
+                nullptr, 0,                         // Name/value defines and their count
+                &reader,                            // Handler for #include directives
+                result.GetAddressOf(),              // Compiler output status, buffer, and errors
+                &suggestedDebugName,                            // Suggested file name for debug blob.
+                pdbBlob.GetAddressOf());            // Debug info blob
+        }
+        else
+        {
+            mCompiler->Compile(
+                sourceBlob.Get(),                   // Program text
+                path.filename().wstring().c_str(),  // File name, mostly for error messages
+                wEntryPoint.c_str(),                // Entry point function
+                wProfile.c_str(),                   // Target profile
+                argumentPtrs.data(),                // Compilation arguments
+                argumentPtrs.size(),                // Number of compilation arguments
+                nullptr, 0,                         // Name/value defines and their count
+                &reader,                            // Handler for #include directives
+                result.GetAddressOf());
+        }
+        
         HRESULT hrCompilation{};
         result->GetStatus(&hrCompilation);
 
         if (SUCCEEDED(hrCompilation))
         {
-            Microsoft::WRL::ComPtr<IDxcBlob> resultingBlob;
-            result->GetResult(resultingBlob.GetAddressOf());
+            Microsoft::WRL::ComPtr<IDxcBlob> compiledShaderBlob;
+            result->GetResult(compiledShaderBlob.GetAddressOf());
+            std::wstring pdbAutoGeneratedFileName = suggestedDebugName;
 
-            return { resultingBlob, reader.AllReadFileRelativePaths() };
+            return { compiledShaderBlob, pdbBlob, reader.AllReadFileRelativePaths(), WStringToString(pdbAutoGeneratedFileName) };
         }
         else {
             Microsoft::WRL::ComPtr<IDxcBlobEncoding> printBlob;
@@ -186,7 +216,7 @@ namespace HAL
             mLibrary->GetBlobAsUtf16(printBlob.Get(), printBlob16.GetAddressOf());
             OutputDebugStringW((LPWSTR)printBlob16->GetBufferPointer());
 
-            return { nullptr, {} };
+            return { nullptr, nullptr, {}, "" };
         }
     }
 

@@ -6,8 +6,8 @@
 namespace PathFinder
 {
 
-    ShaderManager::ShaderManager(const CommandLineParser& commandLineParser)
-        : mCommandLineParser{ commandLineParser }, mShaderRootPath{ ConstructShaderRootPath(commandLineParser) }
+    ShaderManager::ShaderManager(const CommandLineParser& commandLineParser, AftermathShaderDatabase* aftermathShaderDatabase)
+        : mCommandLineParser{ commandLineParser }, mShaderRootPath{ ConstructShaderRootPath(commandLineParser) }, mAftermathShaderDatabase{ aftermathShaderDatabase }
     {
         mFileWatcher.addWatch(mShaderRootPath.string(), this, true);
     }
@@ -103,6 +103,7 @@ namespace PathFinder
             return nullptr;
         }
 
+        mAftermathShaderDatabase->AddShader(compilationResult.CompiledShader);
         mShaders.emplace_back(std::move(compilationResult.CompiledShader));
         
         std::string relativePathString = relativePath.filename().string();
@@ -167,6 +168,7 @@ namespace PathFinder
             return nullptr;
         }
 
+        mAftermathShaderDatabase->AddLibrary(compilationResult.CompiledLibrary);
         mLibraries.emplace_back(std::move(compilationResult.CompiledLibrary));
 
         std::string relativePathString = relativePath.filename().string();

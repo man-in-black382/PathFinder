@@ -1,3 +1,5 @@
+#include <aftermath/AftermathHelpers.hpp>
+
 namespace PathFinder
 {
 
@@ -61,27 +63,44 @@ namespace PathFinder
         cmdList->SetRenderTargets(descriptors, dsDescriptor);
     }
 
-    template <class CommandQueueT>
-    void RenderDevice::InsertGPUEvent(const CommandListBatch& batch, CommandQueueT& queue, uint64_t cmdListIndex)
+    template <class CommandQueueT, class CommandListT>
+    void RenderDevice::ExecuteCommandListBatch(CommandListBatch& batch, HAL::CommandQueue& queue)
     {
-        if (batch.CommandListNames.empty()) return;
+        std::vector<CommandListT*> commandLists;
+        CommandQueueT* concreteQueue = static_cast<CommandQueueT*>(&queue);
 
-        if (cmdListIndex == 0)
+        for (auto cmdListIdx = 0; cmdListIdx < batch.CommandLists.size(); ++cmdListIdx)
         {
-            mEventTracker.StartGPUEvent(*batch.CommandListNames[cmdListIndex], queue);
-        }
-        else if (auto name = batch.CommandListNames[cmdListIndex])
-        {
-            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(batch.CommandLists[cmdListIndex - 1]);
-            mEventTracker.EndGPUEvent(*cmdList);
-            mEventTracker.StartGPUEvent(*name, *cmdList);
+            InsertGPUEvent(batch, queue, cmdListIdx);
+            HALCommandListPtrVariant& cmdListVariant = batch.CommandLists[cmdListIdx];
+            commandLists.push_back(std::get<CommandListT*>(cmdListVariant));
         }
 
-        if (cmdListIndex == batch.CommandLists.size() - 1)
-        {
-            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(batch.CommandLists[cmdListIndex]);
-            mEventTracker.EndGPUEvent(*cmdList);
-        }
+        concreteQueue->ExecuteCommandLists(commandLists.data(), commandLists.size());
+    }
+
+    template <class CommandQueueT>
+    void RenderDevice::InsertGPUEvent(CommandListBatch& batch, CommandQueueT& queue, uint64_t cmdListIndex)
+    {
+        //if (batch.CommandListNames.empty()) return;
+
+        //HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(batch.CommandLists[cmdListIndex]);
+
+        //if (auto cmdListName = batch.CommandListNames[cmdListIndex])
+        //{
+        //    /*    HAL::ComputeCommandListBase* prevCmdList = GetComputeCommandListBase(batch.CommandLists[cmdListIndex]);
+        //        mEventTracker.EndGPUEvent(*prevCmdList);*/
+
+        //    //mEventTracker.StartGPUEvent(*cmdListName, *cmdList);
+        //    //AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_SetEventMarker(cmdList->AftermathHandle(), (*cmdListName).c_str(), (*cmdListName).size() + 1));
+        //}
+
+        //// Command list already contains recorded render pass work here,
+        //// so END event will be inserted after that work
+        //if (cmdListIndex == batch.CommandLists.size() - 1)
+        //{
+        //    mEventTracker.EndGPUEvent(*cmdList);
+        //}
     }
 
 }

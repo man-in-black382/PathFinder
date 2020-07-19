@@ -1,6 +1,8 @@
 #include "CommandList.hpp"
 #include "Utils.h"
 
+#include <aftermath/AftermathHelpers.hpp>
+
 namespace HAL
 {
 
@@ -8,9 +10,13 @@ namespace HAL
         : mCommandAllocator{ allocator }
     {
         ThrowIfFailed(device.D3DDevice()->CreateCommandList(0, type, mCommandAllocator->D3DPtr(), nullptr, IID_PPV_ARGS(&mList)));
+        AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_DX12_CreateContextHandle(mList.Get(), &mAftermathHandle));
     }
 
-    CommandList::~CommandList() {}
+    CommandList::~CommandList()
+    {
+        GFSDK_Aftermath_ReleaseContextHandle(mAftermathHandle);
+    }
 
     void CommandList::Reset()
     {

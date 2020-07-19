@@ -16,6 +16,7 @@
 #include "RenderPipeline/RenderPasses/DenoiserPreBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserMipGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserGradientConstructionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserHistoryFixRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserPostStabilizationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SpecularDenoiserRenderPass.hpp"
@@ -71,15 +72,15 @@ int main(int argc, char** argv)
     PathFinder::CommandLineParser cmdLineParser{ argc, argv };    
 
     PathFinder::RenderEngine<PathFinder::RenderPassContentMediator> engine{ hwnd, cmdLineParser };
-    PathFinder::Scene scene{ cmdLineParser.ExecutableFolderPath(), &engine.ResourceProducer() };
-    PathFinder::SceneGPUStorage sceneStorage{ &scene, &engine.Device(), &engine.ResourceProducer() };
-    PathFinder::UIGPUStorage uiStorage{ &engine.ResourceProducer() };
+    PathFinder::Scene scene{ cmdLineParser.ExecutableFolderPath(), engine.ResourceProducer() };
+    PathFinder::SceneGPUStorage sceneStorage{ &scene, engine.Device(), engine.ResourceProducer() };
+    PathFinder::UIGPUStorage uiStorage{ engine.ResourceProducer() };
     PathFinder::Input input{};
     PathFinder::InputHandlerWindows windowsInputHandler{ &input, hwnd };
     PathFinder::UIInteractor uiInteractor{ hwnd, &input };
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
-    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath(), &engine.AssetStorage(), &engine.ResourceProducer() };
+    PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath(), engine.AssetStorage(), engine.ResourceProducer() };
     PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene };
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
@@ -88,6 +89,7 @@ int main(int argc, char** argv)
     auto denoiserPreBlurPass = std::make_unique<PathFinder::DenoiserPreBlurRenderPass>();
     auto denoiserMipGenerationPass = std::make_unique<PathFinder::DenoiserMipGenerationRenderPass>();
     auto denoiserReprojectionPass = std::make_unique<PathFinder::DenoiserReprojectionRenderPass>();
+    auto denoiserGradientConstructionPass = std::make_unique<PathFinder::DenoiserGradientConstructionRenderPass>();
     auto denoiserHistoryFixPass = std::make_unique<PathFinder::DenoiserHistoryFixRenderPass>();
     auto denoiserPostStabilizationPass = std::make_unique<PathFinder::DenoiserPostStabilizationRenderPass>();
     auto specularDenoiserPass = std::make_unique<PathFinder::SpecularDenoiserRenderPass>();
@@ -104,6 +106,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(denoiserPreBlurPass.get());
     engine.AddRenderPass(denoiserMipGenerationPass.get());
     engine.AddRenderPass(denoiserReprojectionPass.get());
+    //engine.AddRenderPass(denoiserGradientConstructionPass.get());
     engine.AddRenderPass(denoiserHistoryFixPass.get());
     engine.AddRenderPass(specularDenoiserPass.get());
     engine.AddRenderPass(denoiserPostStabilizationPass.get());

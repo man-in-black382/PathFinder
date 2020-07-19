@@ -2,7 +2,7 @@
 
 #include "DisplayAdapter.hpp"
 
-#include <dxgi.h>
+#include <dxgi1_2.h>
 #include <vector>
 
 namespace HAL
@@ -12,10 +12,14 @@ namespace HAL
 	public:
 	    DisplayAdapterFetcher();
 	
-	    std::vector<DisplayAdapter> Fetch() const;
-	
 	private:
-	    Microsoft::WRL::ComPtr<IDXGIFactory> mDXGIFactory;
+	    Microsoft::WRL::ComPtr<IDXGIFactory2> mDXGIFactory;
+		std::unique_ptr<DisplayAdapter> mWARPAdapter;
+		std::vector<DisplayAdapter> mHardwareAdapters;
+
+	public:
+		inline const auto& HardwareAdapters() const { return mHardwareAdapters; };
+		const DisplayAdapter* WARPAdapter() const { return mWARPAdapter.get(); }
 	};
 }
 

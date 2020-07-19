@@ -76,10 +76,10 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>$(ProjectDir)Source/ThirdParty/assimp/lib/x86_64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Development\PathFinder\PathFinder\Libs\Optick;D:\Development\PathFinder\PathFinder\Libs\DXC;D:\Development\PathFinder\PathFinder\Libs\Assimp;D:\Development\PathFinder\PathFinder\Libs\Aftermath;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>$(ProjectDir)Source/ThirdParty/assimp/lib/x86_64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\Development\PathFinder\PathFinder\Libs\Optick;D:\Development\PathFinder\PathFinder\Libs\DXC;D:\Development\PathFinder\PathFinder\Libs\Assimp;D:\Development\PathFinder\PathFinder\Libs\Aftermath;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -122,13 +122,14 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;GFSDK_Aftermath_Lib.x64.lib;GFSDK_Aftermath_Lib_UWP.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
 xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
 xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
-xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
+cd $(TargetDir)
+del *.cso</Command>
     </PostBuildEvent>
     <FxCompile>
       <EntryPointName />
@@ -189,13 +190,14 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;GFSDK_Aftermath_Lib.x64.lib;GFSDK_Aftermath_Lib_UWP.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
 xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
 xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
-xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
+cd $(TargetDir)
+del *.cso</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -224,6 +226,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandAllocator.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandList.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandQueue.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\DebugLayer.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DepthStencilState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Descriptor.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\DescriptorHeap.cpp" />
@@ -286,6 +289,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientGuidedBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.cpp" />
@@ -329,6 +333,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P3.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P4.cpp" />
+    <ClCompile Include="Source\Utility\AftermathCrashTracker.cpp" />
+    <ClCompile Include="Source\Utility\AftermathShaderDatabase.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -387,6 +393,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandAllocator.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandList.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandQueue.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\DebugLayer.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DepthStencilState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Descriptor.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeap.hpp" />
@@ -464,6 +471,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurCBContent.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientGuidedBlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.hpp" />
@@ -523,6 +531,11 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P3.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P4.hpp" />
+    <ClInclude Include="Source\ThirdParty\aftermath\AftermathHelpers.hpp" />
+    <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath.h" />
+    <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath_Defines.h" />
+    <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath_GpuCrashDump.h" />
+    <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath_GpuCrashDumpDecoding.h" />
     <ClInclude Include="Source\ThirdParty\assimp\ai_assert.h" />
     <ClInclude Include="Source\ThirdParty\assimp\anim.h" />
     <ClInclude Include="Source\ThirdParty\assimp\BaseImporter.h" />
@@ -993,6 +1006,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\ThirdParty\imgui\misc\freetype\imgui_freetype.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.config.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
+    <ClInclude Include="Source\Utility\AftermathCrashTracker.hpp" />
+    <ClInclude Include="Source\Utility\AftermathHelpers.hpp" />
+    <ClInclude Include="Source\Utility\AftermathShaderDatabase.hpp" />
     <ClInclude Include="Source\Utility\EventTracker.hpp" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
@@ -1006,6 +1022,27 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.inl">
       <FileType>CppHeader</FileType>
     </ClInclude>
+    <CopyFileToFolders Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <None Include="Libs\Aftermath\llvm_7_0_1.dll" />
+    <CopyFileToFolders Include="Libs\Assimp\assimp-vc140-mt.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <None Include="Libs\Assimp\assimp-vc140-mt.exp" />
+    <CopyFileToFolders Include="Libs\DXC\dxcompiler.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Libs\DXC\dxil.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="Libs\Optick\OptickCore.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <None Include="Libs\Optick\OptickCore.pdb" />
     <None Include="packages.config" />
     <None Include="Source\Foundation\Halton.inl" />
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl" />
@@ -1048,10 +1085,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\ThirdParty\assimp\include\SmoothingGroups.inl" />
     <None Include="Source\ThirdParty\assimp\include\vector2.inl" />
     <None Include="Source\ThirdParty\assimp\include\vector3.inl" />
-    <CopyFileToFolders Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.dll">
-      <FileType>Document</FileType>
-    </CopyFileToFolders>
-    <None Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.exp" />
     <None Include="Source\ThirdParty\assimp\material.inl" />
     <None Include="Source\ThirdParty\assimp\matrix3x3.inl" />
     <None Include="Source\ThirdParty\assimp\matrix4x4.inl" />
@@ -1193,6 +1226,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <None Include="Source\ThirdParty\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientConstruction.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -1743,9 +1777,6 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl">
@@ -2535,6 +2566,12 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.lib" />
+    <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.lib" />
+    <Library Include="Libs\Assimp\assimp-vc140-mt.lib" />
+    <Library Include="Libs\Optick\OptickCore.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

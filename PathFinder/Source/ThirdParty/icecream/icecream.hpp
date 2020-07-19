@@ -1750,6 +1750,11 @@ namespace icecream{ namespace detail
             if (!this->enabled_)
                 return;
 
+#ifdef _MSC_VER
+            stream_.str("");
+            stream_.clear();
+#endif
+
             auto const prefix = this->prefix_();
             auto context = std::string {};
 
@@ -1778,7 +1783,7 @@ namespace icecream{ namespace detail
 
             this->stream_ << std::endl;
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _MSC_VER
             OutputDebugString(stream_.str().c_str());
 #endif
         }

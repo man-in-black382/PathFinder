@@ -8,13 +8,13 @@ namespace HAL
     class DisplayAdapter
     {
     public:
-        DisplayAdapter(const Microsoft::WRL::ComPtr<IDXGIAdapter>& adapter);
+        DisplayAdapter(const Microsoft::WRL::ComPtr<IDXGIAdapter1>& adapter);
     
     private:
-        Microsoft::WRL::ComPtr<IDXGIAdapter> mAdapter;
+        Microsoft::WRL::ComPtr<IDXGIAdapter1> mAdapter;
 
     public:
-        inline const auto D3DPtr() const { return mAdapter.Get(); }
+        inline const auto D3DAdapter() const { return mAdapter.Get(); }
     };
 }
 

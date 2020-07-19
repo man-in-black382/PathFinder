@@ -65,7 +65,9 @@ namespace HAL
         struct BlobCompilationResult
         {
             Microsoft::WRL::ComPtr<IDxcBlob> Blob;
+            Microsoft::WRL::ComPtr<IDxcBlob> PDBBlob;
             std::vector<std::string> CompiledFileRelativePaths;
+            std::string DebugName;
         };
 
         std::string ProfileString(Shader::Stage stage, Profile profile);
@@ -73,7 +75,7 @@ namespace HAL
         BlobCompilationResult CompileBlob(const std::filesystem::path& path, const std::string& profileString, const std::string& entryPoint, bool debugBuild);
 
         Microsoft::WRL::ComPtr<IDxcLibrary> mLibrary;
-        Microsoft::WRL::ComPtr<IDxcCompiler> mCompiler;
+        Microsoft::WRL::ComPtr<IDxcCompiler2> mCompiler;
     };
 
 }

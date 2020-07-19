@@ -1,19 +1,14 @@
 #include "Device.hpp"
 #include "Utils.h"
 
+#include <aftermath/GFSDK_Aftermath.h>
+
 namespace HAL
 {
-    Device::Device(const DisplayAdapter& adapter, bool enableDebugLayer)
+    Device::Device(const DisplayAdapter& adapter)
     {
-        if (enableDebugLayer)
-        {
-            Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
-            ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
-            debugController->EnableDebugLayer();
-        }
-
         D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
-        ThrowIfFailed(D3D12CreateDevice(adapter.D3DPtr(), featureLevel, IID_PPV_ARGS(&mDevice)));
+        ThrowIfFailed(D3D12CreateDevice(adapter.D3DAdapter(), featureLevel, IID_PPV_ARGS(&mDevice)));
 
         mHeapAlignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
         mMinimumHeapSize = mHeapAlignment;

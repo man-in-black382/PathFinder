@@ -9,11 +9,23 @@
 namespace HAL
 {
 
-    Shader::Shader(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const std::string& entryPoint, Stage stage)
-        : mBlob{ blob }, mEntryPoint{ entryPoint }, mEntryPointName{ entryPoint }, mStage{ stage } {}
+    Shader::Shader(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const Microsoft::WRL::ComPtr<IDxcBlob>& pdbBlob, const std::string& entryPoint, Stage stage)
+        : mBlob{ blob }, mPDBBlob{ pdbBlob }, mEntryPoint{ entryPoint }, mEntryPointName{ entryPoint }, mStage{ stage } {}
 
-    Library::Library(const Microsoft::WRL::ComPtr<IDxcBlob>& blob)
-        : mBlob{ blob } {}
+    void Shader::SetDebugName(const std::string& name)
+    {
+        mDebugName = name;
+    }
+
+
+
+    Library::Library(const Microsoft::WRL::ComPtr<IDxcBlob>& blob, const Microsoft::WRL::ComPtr<IDxcBlob>& pdbBlob)
+        : mBlob{ blob }, mPDBBlob{ pdbBlob } {}
+
+    void Library::SetDebugName(const std::string& name)
+    {
+        mDebugName = name;
+    }
 
 }
 

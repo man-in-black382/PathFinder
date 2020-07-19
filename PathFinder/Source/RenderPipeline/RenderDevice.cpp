@@ -128,6 +128,8 @@ namespace PathFinder
 
     void RenderDevice::Dispatch(const RenderPassGraph::Node* passNode, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
+        IC(passNode->PassMetadata().Name.ToString());
+
         HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[passNode->GlobalExecutionIndex()].WorkCommandList);
         PassHelpers& passHelpers = mPassHelpers[passNode->GlobalExecutionIndex()];
 
@@ -481,7 +483,7 @@ namespace PathFinder
                 // That will only double the amount of barriers without any performance gain.
                 bool currentNodeIsNextToPrevious = node->LocalToQueueExecutionIndex() - previousTransitionInfo.Node->LocalToQueueExecutionIndex() <= 1;
 
-                if (/*isSplitBarrierPossible*/false && !currentNodeIsNextToPrevious)
+                if (isSplitBarrierPossible && !currentNodeIsNextToPrevious)
                 {
                     auto [beginBarrier, endBarrier] = transitionInfo.TransitionBarrier.Split();
                     collection.AddBarrier(endBarrier);
@@ -784,32 +786,13 @@ namespace PathFinder
                     queue.WaitFence(*batch.FencesToWait[fenceIdx]);
                     mEventTracker.EndGPUEvent(queue);
                 }
-
+                
                 if (RenderPassExecutionQueue{ queueIdx } == RenderPassExecutionQueue::Graphics)
                 {
-                    std::vector<HAL::GraphicsCommandList*> graphicsCommands;
-                    HAL::GraphicsCommandQueue* graphicsQueue = static_cast<HAL::GraphicsCommandQueue*>(&queue);
-
-                    for (auto cmdListIdx = 0; cmdListIdx < batch.CommandLists.size(); ++cmdListIdx)
-                    {
-                        HALCommandListPtrVariant& cmdListVariant = batch.CommandLists[cmdListIdx];
-                        graphicsCommands.push_back(std::get<HAL::GraphicsCommandList*>(cmdListVariant));
-                    }
-
-                    graphicsQueue->ExecuteCommandLists(graphicsCommands.data(), graphicsCommands.size());
+                    ExecuteCommandListBatch<HAL::GraphicsCommandQueue, HAL::GraphicsCommandList>(batch, queue);
                 }
-                else
-                {
-                    std::vector<HAL::ComputeCommandList*> computeCommands;
-                    HAL::ComputeCommandQueue* computeQueue = static_cast<HAL::ComputeCommandQueue*>(&queue);
-
-                    for (auto cmdListIdx = 0; cmdListIdx < batch.CommandLists.size(); ++cmdListIdx)
-                    {
-                        HALCommandListPtrVariant& cmdListVariant = batch.CommandLists[cmdListIdx];
-                        computeCommands.push_back(std::get<HAL::ComputeCommandList*>(cmdListVariant));
-                    }
-
-                    computeQueue->ExecuteCommandLists(computeCommands.data(), computeCommands.size());
+                else {
+                    ExecuteCommandListBatch<HAL::ComputeCommandQueue, HAL::ComputeCommandList>(batch, queue);
                 }
 
                 if (batch.FenceToSignal)

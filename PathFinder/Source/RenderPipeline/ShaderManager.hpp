@@ -4,6 +4,7 @@
 #include "../HardwareAbstractionLayer/ShaderCompiler.hpp"
 #include "../IO/CommandLineParser.hpp"
 #include "../Foundation/Event.hpp"
+#include "../Utility/AftermathShaderDatabase.hpp"
 
 #include <vector>
 #include <list>
@@ -22,7 +23,7 @@ namespace PathFinder
         using ShaderEvent = Foundation::Event<ShaderManager, std::string, void(const HAL::Shader*, const HAL::Shader*)>;
         using LibraryEvent = Foundation::Event<ShaderManager, std::string, void(const HAL::Library*, const HAL::Library*)>;
 
-        ShaderManager(const CommandLineParser& commandLineParser);
+        ShaderManager(const CommandLineParser& commandLineParser, AftermathShaderDatabase* aftermathShaderDatabase);
 
         HAL::Shader* LoadShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
         HAL::Library* LoadLibrary(const std::filesystem::path& relativePath);
@@ -56,6 +57,7 @@ namespace PathFinder
         void RecompileModifiedShaders();
         void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action) override;
 
+        AftermathShaderDatabase* mAftermathShaderDatabase = nullptr;
         CommandLineParser mCommandLineParser;
         FW::FileWatcher mFileWatcher;
         HAL::ShaderCompiler mCompiler;

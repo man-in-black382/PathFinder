@@ -34,6 +34,16 @@ namespace PathFinder
         {
             mDebugLayerEnabled = true;
         }
+
+        if (strcmp(argv, "-aftermath") == 0)
+        {
+            mAftermathEnabled = true;
+        }
+
+        if (strcmp(argv, "-warp") == 0)
+        {
+            mUseWARPDevice = true;
+        }
     }
 
 }

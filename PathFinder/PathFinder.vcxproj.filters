@@ -450,6 +450,18 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utility\AftermathCrashTracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Utility\AftermathShaderDatabase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\DebugLayer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2393,6 +2405,36 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath_Defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath_GpuCrashDump.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath_GpuCrashDumpDecoding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utility\AftermathCrashTracker.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utility\AftermathHelpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utility\AftermathShaderDatabase.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\DebugLayer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\aftermath\AftermathHelpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2839,7 +2881,6 @@
     <None Include="Source\ThirdParty\assimp\vector3.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.exp" />
     <None Include="Source\HardwareAbstractionLayer\CommandList.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -2901,16 +2942,13 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="Libs\Optick\OptickCore.pdb" />
+    <None Include="Libs\Assimp\assimp-vc140-mt.exp" />
+    <None Include="Libs\Aftermath\llvm_7_0_1.dll" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.lib" />
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="Source\ThirdParty\assimp\lib\x86_64\assimp-vc140-mt.dll" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\RenderPipeline\Shaders\GBuffer.hlsl" />
@@ -2958,6 +2996,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SeparableBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientConstruction.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">
@@ -2977,5 +3016,19 @@
     <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="Libs\Optick\OptickCore.lib" />
+    <Library Include="Libs\Assimp\assimp-vc140-mt.lib" />
+    <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.lib" />
+    <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="Libs\Optick\OptickCore.dll" />
+    <CopyFileToFolders Include="Libs\Assimp\assimp-vc140-mt.dll" />
+    <CopyFileToFolders Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.dll" />
+    <CopyFileToFolders Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.dll" />
+    <CopyFileToFolders Include="Libs\DXC\dxcompiler.dll" />
+    <CopyFileToFolders Include="Libs\DXC\dxil.dll" />
   </ItemGroup>
 </Project>

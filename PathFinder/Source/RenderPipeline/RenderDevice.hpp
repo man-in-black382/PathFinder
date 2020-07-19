@@ -170,8 +170,11 @@ namespace PathFinder
         bool IsNullCommandList(HALCommandListPtrVariant& variant) const;
         HAL::Fence& FenceForQueueIndex(uint64_t index);
 
+        template <class CommandQueueT, class CommandListT>
+        void ExecuteCommandListBatch(CommandListBatch& batch, HAL::CommandQueue& queue);
+
         template <class CommandQueueT>
-        void InsertGPUEvent(const CommandListBatch& batch, CommandQueueT& queue, uint64_t cmdListIndex);
+        void InsertGPUEvent(CommandListBatch& batch, CommandQueueT& queue, uint64_t cmdListIndex);
 
         const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap;
         Memory::PoolCommandListAllocator* mCommandListAllocator;

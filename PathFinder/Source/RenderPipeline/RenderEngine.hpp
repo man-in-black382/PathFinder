@@ -8,10 +8,12 @@
 
 #include "../HardwareAbstractionLayer/Device.hpp"
 #include "../HardwareAbstractionLayer/SwapChain.hpp"
+#include "../HardwareAbstractionLayer/DisplayAdapterFetcher.hpp"
 
 #include "../Scene/Scene.hpp"
 #include "../Foundation/Event.hpp"
 #include "../IO/CommandLineParser.hpp"
+#include "../Utility/AftermathCrashTracker.hpp"
 
 #include "../Memory/SegregatedPoolsResourceAllocator.hpp"
 #include "../Memory/PoolDescriptorAllocator.hpp"
@@ -38,7 +40,6 @@
 
 namespace PathFinder
 {
-
     template <class ContentMediator>
     class RenderPass;
 
@@ -69,7 +70,6 @@ namespace PathFinder
         void SetFrameRootConstants(const Constants& constants);
 
     private:
-        HAL::DisplayAdapter FetchDefaultDisplayAdapter() const;
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
@@ -82,39 +82,41 @@ namespace PathFinder
         std::unordered_map<Foundation::Name, std::pair<RenderPass<ContentMediator>*, uint64_t>> mRenderPasses;
 
         uint8_t mCurrentBackBufferIndex = 0;
-        uint8_t mSimultaneousFramesInFlight = 2;
+        uint8_t mSimultaneousFramesInFlight = 1;
         uint64_t mFrameNumber = 0;
         std::chrono::time_point<std::chrono::steady_clock> mFrameStartTimestamp;
         std::chrono::microseconds mFrameDuration = std::chrono::microseconds::zero();
 
         RenderSurfaceDescription mRenderSurfaceDescription;
+        HAL::DisplayAdapterFetcher mAdapterFetcher;
 
-        HAL::Device mDevice;
+        std::unique_ptr<HAL::Device> mDevice;
 
-        Memory::SegregatedPoolsResourceAllocator mResourceAllocator;
-        Memory::PoolCommandListAllocator mCommandListAllocator;
-        Memory::PoolDescriptorAllocator mDescriptorAllocator;
-        Memory::ResourceStateTracker mResourceStateTracker;
-        Memory::GPUResourceProducer mResourceProducer;
+        std::unique_ptr<Memory::SegregatedPoolsResourceAllocator> mResourceAllocator;
+        std::unique_ptr<Memory::PoolCommandListAllocator> mCommandListAllocator;
+        std::unique_ptr<Memory::PoolDescriptorAllocator> mDescriptorAllocator;
+        std::unique_ptr<Memory::ResourceStateTracker> mResourceStateTracker;
+        std::unique_ptr<Memory::GPUResourceProducer> mResourceProducer;
 
-        RenderPassUtilityProvider mPassUtilityProvider;
-        PipelineResourceStorage mPipelineResourceStorage;
-        PreprocessableAssetStorage mAssetStorage;
-        ResourceScheduler mResourceScheduler;
-        ShaderManager mShaderManager;
-        PipelineStateManager mPipelineStateManager;
-        PipelineStateCreator mPipelineStateCreator;
-        RootSignatureCreator mRootSignatureCreator;
-        RenderDevice mRenderDevice;
+        std::unique_ptr<AftermathCrashTracker> mAftermathCrashTracker;
+        std::unique_ptr<RenderPassUtilityProvider> mPassUtilityProvider;
+        std::unique_ptr<PipelineResourceStorage> mPipelineResourceStorage;
+        std::unique_ptr<PreprocessableAssetStorage> mAssetStorage;
+        std::unique_ptr<ResourceScheduler> mResourceScheduler;
+        std::unique_ptr<ShaderManager> mShaderManager;
+        std::unique_ptr<PipelineStateManager> mPipelineStateManager;
+        std::unique_ptr<PipelineStateCreator> mPipelineStateCreator;
+        std::unique_ptr<RootSignatureCreator> mRootSignatureCreator;
+        std::unique_ptr<RenderDevice> mRenderDevice;
+
+        std::unique_ptr<HAL::SwapChain> mSwapChain;
+        std::unique_ptr<HAL::Fence> mFrameFence;
 
         ContentMediator* mContentMediator = nullptr;
         std::vector<CommandRecorder> mCommandRecorders;
         std::vector<ResourceProvider> mResourceProviders;
         std::vector<RootConstantsUpdater> mRootConstantUpdaters;
         std::vector<RenderContext<ContentMediator>> mRenderContexts;
-
-        HAL::SwapChain mSwapChain;
-        HAL::Fence mFrameFence;
 
         Event mPreRenderEvent;
         Event mPostRenderEvent;
@@ -124,10 +126,10 @@ namespace PathFinder
         std::vector<Memory::GPUResourceProducer::TexturePtr> mBackBuffers;
 
     public:
-        inline PreprocessableAssetStorage& AssetStorage() { return mAssetStorage; }
+        inline PreprocessableAssetStorage* AssetStorage() { return mAssetStorage.get(); }
         inline const RenderSurfaceDescription& RenderSurface() const { return mRenderSurfaceDescription; }
-        inline Memory::GPUResourceProducer& ResourceProducer() { return mResourceProducer; }
-        inline HAL::Device& Device() { return mDevice; }
+        inline Memory::GPUResourceProducer* ResourceProducer() { return mResourceProducer.get(); }
+        inline HAL::Device* Device() { return mDevice.get(); }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }
         inline uint64_t FrameDurationMicroseconds() const { return mFrameDuration.count(); }

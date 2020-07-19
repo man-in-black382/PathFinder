@@ -24,7 +24,9 @@
 
 #if FILEWATCHER_PLATFORM == FILEWATCHER_PLATFORM_WIN32
 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0550
+#endif
 #include <windows.h>
 
 #if defined(_MSC_VER)
