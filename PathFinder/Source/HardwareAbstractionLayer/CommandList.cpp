@@ -10,12 +10,20 @@ namespace HAL
         : mCommandAllocator{ allocator }
     {
         ThrowIfFailed(device.D3DDevice()->CreateCommandList(0, type, mCommandAllocator->D3DPtr(), nullptr, IID_PPV_ARGS(&mList)));
-        AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_DX12_CreateContextHandle(mList.Get(), &mAftermathHandle));
+
+        if (device.AftermathEnabled())
+        {
+            mAftermathHandle = GFSDK_Aftermath_ContextHandle{};
+            AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_DX12_CreateContextHandle(mList.Get(), &mAftermathHandle.value()));
+        }
     }
 
     CommandList::~CommandList()
     {
-        GFSDK_Aftermath_ReleaseContextHandle(mAftermathHandle);
+        if (mAftermathHandle)
+        {
+            GFSDK_Aftermath_ReleaseContextHandle(*mAftermathHandle);
+        }
     }
 
     void CommandList::Reset()

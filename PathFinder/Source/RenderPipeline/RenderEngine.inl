@@ -22,7 +22,7 @@ namespace PathFinder
             mAftermathCrashTracker->Initialize();
         }
 
-        mDevice = std::make_unique<HAL::Device>(mAdapterFetcher.HardwareAdapters().front());
+        mDevice = std::make_unique<HAL::Device>(mAdapterFetcher.HardwareAdapters().front(), commandLineParser.ShouldEnableAftermath());
 
         if (commandLineParser.ShouldEnableAftermath())
         {
@@ -55,7 +55,9 @@ namespace PathFinder
             &mRenderPassGraph);
 
         mShaderManager = std::make_unique<ShaderManager>(
-            commandLineParser,
+            commandLineParser.ExecutableFolderPath(),
+            commandLineParser.ShouldUseShadersFromProjectFolder(),
+            commandLineParser.ShouldBuildDebugShaders(),
             &mAftermathCrashTracker->ShaderDatabase());
 
         mPipelineStateManager = std::make_unique<PipelineStateManager>(

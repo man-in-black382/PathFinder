@@ -47,11 +47,11 @@ namespace HAL
         CommandAllocator* mCommandAllocator = nullptr;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> mList;
         bool mIsClosed = false;
-        GFSDK_Aftermath_ContextHandle mAftermathHandle;
+        std::optional<GFSDK_Aftermath_ContextHandle> mAftermathHandle;
 
     public:
         inline ID3D12GraphicsCommandList* D3DList() const { return mList.Get(); }
-        inline const GFSDK_Aftermath_ContextHandle& AftermathHandle() const { return mAftermathHandle; }
+        inline std::optional<GFSDK_Aftermath_ContextHandle> AftermathHandle() const { return mAftermathHandle; }
     };
 
 

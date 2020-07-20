@@ -11,12 +11,13 @@ namespace HAL
     class Device : public GraphicAPIObject
     {
     public:
-        Device(const DisplayAdapter& adapter);
+        Device(const DisplayAdapter& adapter, bool aftermathEnabled);
 
     private:
         Microsoft::WRL::ComPtr<ID3D12Device5> mDevice;
 
         bool mSupportsUniversalHeaps = false;
+        bool mAftermathEnabled = false;
         uint64_t mMinimumHeapSize = 1;
         uint64_t mHeapAlignment = 1;
 
@@ -26,5 +27,6 @@ namespace HAL
         inline auto SupportsUniversalHeaps() const { return mSupportsUniversalHeaps; }
         inline auto MinimumHeapSize() const { return mMinimumHeapSize; }
         inline auto MandatoryHeapAlignment() const { return mHeapAlignment; }
+        inline auto AftermathEnabled() const { return mAftermathEnabled; }
     };
 }

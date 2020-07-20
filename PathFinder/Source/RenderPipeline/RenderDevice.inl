@@ -8,8 +8,18 @@ namespace PathFinder
     {
         HAL::ComputeCommandListBase* worker = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
         worker->Reset();
+
+        const std::string& passName = passNode.PassMetadata().Name.ToString();
+        mEventTracker.StartGPUEvent(passName, *worker);
+
+        if (worker->AftermathHandle())
+        {
+            AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_SetEventMarker(*worker->AftermathHandle(), passName.c_str(), passName.size() + 1));
+        }
+
         worker->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
         action();
+        mEventTracker.EndGPUEvent(*worker);
         worker->Close();
     }
 
@@ -71,36 +81,11 @@ namespace PathFinder
 
         for (auto cmdListIdx = 0; cmdListIdx < batch.CommandLists.size(); ++cmdListIdx)
         {
-            InsertGPUEvent(batch, queue, cmdListIdx);
             HALCommandListPtrVariant& cmdListVariant = batch.CommandLists[cmdListIdx];
             commandLists.push_back(std::get<CommandListT*>(cmdListVariant));
         }
 
         concreteQueue->ExecuteCommandLists(commandLists.data(), commandLists.size());
-    }
-
-    template <class CommandQueueT>
-    void RenderDevice::InsertGPUEvent(CommandListBatch& batch, CommandQueueT& queue, uint64_t cmdListIndex)
-    {
-        //if (batch.CommandListNames.empty()) return;
-
-        //HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(batch.CommandLists[cmdListIndex]);
-
-        //if (auto cmdListName = batch.CommandListNames[cmdListIndex])
-        //{
-        //    /*    HAL::ComputeCommandListBase* prevCmdList = GetComputeCommandListBase(batch.CommandLists[cmdListIndex]);
-        //        mEventTracker.EndGPUEvent(*prevCmdList);*/
-
-        //    //mEventTracker.StartGPUEvent(*cmdListName, *cmdList);
-        //    //AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_SetEventMarker(cmdList->AftermathHandle(), (*cmdListName).c_str(), (*cmdListName).size() + 1));
-        //}
-
-        //// Command list already contains recorded render pass work here,
-        //// so END event will be inserted after that work
-        //if (cmdListIndex == batch.CommandLists.size() - 1)
-        //{
-        //    mEventTracker.EndGPUEvent(*cmdList);
-        //}
     }
 
 }

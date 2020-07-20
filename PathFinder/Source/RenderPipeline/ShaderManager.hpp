@@ -23,7 +23,7 @@ namespace PathFinder
         using ShaderEvent = Foundation::Event<ShaderManager, std::string, void(const HAL::Shader*, const HAL::Shader*)>;
         using LibraryEvent = Foundation::Event<ShaderManager, std::string, void(const HAL::Library*, const HAL::Library*)>;
 
-        ShaderManager(const CommandLineParser& commandLineParser, AftermathShaderDatabase* aftermathShaderDatabase);
+        ShaderManager(const std::filesystem::path& executableFolder, bool useProjectDirShaders, bool buildDebugShaders, AftermathShaderDatabase* aftermathShaderDatabase);
 
         HAL::Shader* LoadShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
         HAL::Library* LoadLibrary(const std::filesystem::path& relativePath);
@@ -50,7 +50,13 @@ namespace PathFinder
         HAL::Library* FindCachedLibrary(const std::filesystem::path& relativePath);
         HAL::Library* LoadAndCacheLibrary(const std::filesystem::path& relativePath);
 
-        std::filesystem::path ConstructShaderRootPath(const CommandLineParser& commandLineParser) const;
+        void SaveToFile(
+            const HAL::CompiledBinary& binary, 
+            const HAL::CompiledBinary& debugBinary, 
+            const std::string& entryPointName,
+            const std::string& debugName,
+            const std::filesystem::path& sourceRelativePath) const;
+
         void FindAndAddEntryPointShaderFileForRecompilation(const std::string& modifiedFile);
         void RecompileShader(ShaderListIterator oldShaderIt, const std::string& shaderFile);
         void RecompileLibrary(LibraryListIterator oldLibraryIt, const std::string& libraryFile);
@@ -58,10 +64,15 @@ namespace PathFinder
         void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action) override;
 
         AftermathShaderDatabase* mAftermathShaderDatabase = nullptr;
-        CommandLineParser mCommandLineParser;
         FW::FileWatcher mFileWatcher;
         HAL::ShaderCompiler mCompiler;
-        std::filesystem::path mShaderRootPath;
+
+        bool mUseProjectDirShaders = false;
+        bool mBuildDebugShaders = false;
+
+        std::filesystem::path mExecutableFolderPath;
+        std::filesystem::path mShaderSourceRootPath;
+        std::filesystem::path mShaderBinariesPath;
 
         std::list<HAL::Shader> mShaders;
         std::list<HAL::Library> mLibraries;

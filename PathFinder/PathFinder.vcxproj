@@ -129,7 +129,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
 xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
 xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
 cd $(TargetDir)
-del *.cso</Command>
+del *.cso
+RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     </PostBuildEvent>
     <FxCompile>
       <EntryPointName />
@@ -197,7 +198,8 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
 xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
 xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
 cd $(TargetDir)
-del *.cso</Command>
+del *.cso
+RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

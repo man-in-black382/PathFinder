@@ -5,7 +5,8 @@
 
 namespace HAL
 {
-    Device::Device(const DisplayAdapter& adapter)
+    Device::Device(const DisplayAdapter& adapter, bool aftermathEnabled)
+        : mAftermathEnabled{ aftermathEnabled }
     {
         D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
         ThrowIfFailed(D3D12CreateDevice(adapter.D3DAdapter(), featureLevel, IID_PPV_ARGS(&mDevice)));

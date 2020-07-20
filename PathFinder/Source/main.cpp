@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(denoiserPreBlurPass.get());
     engine.AddRenderPass(denoiserMipGenerationPass.get());
     engine.AddRenderPass(denoiserReprojectionPass.get());
-    //engine.AddRenderPass(denoiserGradientConstructionPass.get());
+    engine.AddRenderPass(denoiserGradientConstructionPass.get());
     engine.AddRenderPass(denoiserHistoryFixPass.get());
     engine.AddRenderPass(specularDenoiserPass.get());
     engine.AddRenderPass(denoiserPostStabilizationPass.get());

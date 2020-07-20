@@ -173,9 +173,6 @@ namespace PathFinder
         template <class CommandQueueT, class CommandListT>
         void ExecuteCommandListBatch(CommandListBatch& batch, HAL::CommandQueue& queue);
 
-        template <class CommandQueueT>
-        void InsertGPUEvent(CommandListBatch& batch, CommandQueueT& queue, uint64_t cmdListIndex);
-
         const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap;
         Memory::PoolCommandListAllocator* mCommandListAllocator;
         Memory::ResourceStateTracker* mResourceStateTracker;

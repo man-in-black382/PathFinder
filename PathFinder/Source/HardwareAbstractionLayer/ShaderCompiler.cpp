@@ -147,7 +147,7 @@ namespace HAL
             arguments.push_back(L"/Od");
 
             // Produce a smaller shader without duplicated debug information
-            //arguments.push_back(L"/Qstrip_debug"); 
+            arguments.push_back(L"/Qstrip_debug"); 
         }
 
         std::vector<LPCWSTR> argumentPtrs;

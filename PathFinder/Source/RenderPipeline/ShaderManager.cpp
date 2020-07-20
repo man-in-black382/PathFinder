@@ -3,13 +3,25 @@
 #include "../Foundation/StringUtils.hpp"
 #include "../Foundation/Assert.hpp"
 
+#include <fstream>
+
 namespace PathFinder
 {
 
-    ShaderManager::ShaderManager(const CommandLineParser& commandLineParser, AftermathShaderDatabase* aftermathShaderDatabase)
-        : mCommandLineParser{ commandLineParser }, mShaderRootPath{ ConstructShaderRootPath(commandLineParser) }, mAftermathShaderDatabase{ aftermathShaderDatabase }
+    ShaderManager::ShaderManager(const std::filesystem::path& executableFolder, bool useProjectDirShaders, bool buildDebugShaders, AftermathShaderDatabase* aftermathShaderDatabase)
+        : mUseProjectDirShaders{ useProjectDirShaders },
+        mBuildDebugShaders{ buildDebugShaders },
+        mExecutableFolderPath{ executableFolder }, 
+        mAftermathShaderDatabase{ aftermathShaderDatabase }
     {
-        mFileWatcher.addWatch(mShaderRootPath.string(), this, true);
+        mShaderSourceRootPath = mUseProjectDirShaders ?
+            std::filesystem::path{ std::string(PROJECT_DIR) + "Source\\RenderPipeline\\Shaders" } :
+            mExecutableFolderPath / "Shaders";
+
+        mShaderBinariesPath = mExecutableFolderPath / "CompiledShaders";
+        std::filesystem::create_directories(mShaderBinariesPath);
+
+        mFileWatcher.addWatch(mShaderSourceRootPath.string(), this, true);
     }
 
     HAL::Shader* ShaderManager::LoadShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath)
@@ -94,9 +106,9 @@ namespace PathFinder
 
     HAL::Shader* ShaderManager::LoadAndCacheShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath)
     {
-        auto fullPath = mShaderRootPath / relativePath;
+        auto fullPath = mShaderSourceRootPath / relativePath;
 
-        HAL::ShaderCompiler::ShaderCompilationResult compilationResult = mCompiler.CompileShader(fullPath, pipelineStage, entryPoint, mCommandLineParser.ShouldBuildDebugShaders());
+        HAL::ShaderCompiler::ShaderCompilationResult compilationResult = mCompiler.CompileShader(fullPath, pipelineStage, entryPoint, mBuildDebugShaders);
         
         if (!compilationResult.CompiledShader.Blob())
         {
@@ -108,6 +120,7 @@ namespace PathFinder
         
         std::string relativePathString = relativePath.filename().string();
         ShaderListIterator shaderIt = std::prev(mShaders.end());
+        SaveToFile(shaderIt->Binary(), shaderIt->PDBBinary(), shaderIt->EntryPoint(), shaderIt->DebugName(), relativePath);
         
         // Associate shader with a file it was loaded from and its entry point name
         CompiledObjectsInFile& compiledObjectsInFile = mEntryPointFilePathToCompiledObjectAssociations[relativePathString];
@@ -159,9 +172,9 @@ namespace PathFinder
 
     HAL::Library* ShaderManager::LoadAndCacheLibrary(const std::filesystem::path& relativePath)
     {
-        auto fullPath = mShaderRootPath / relativePath;
+        auto fullPath = mShaderSourceRootPath / relativePath;
 
-        HAL::ShaderCompiler::LibraryCompilationResult compilationResult = mCompiler.CompileLibrary(fullPath, mCommandLineParser.ShouldBuildDebugShaders());
+        HAL::ShaderCompiler::LibraryCompilationResult compilationResult = mCompiler.CompileLibrary(fullPath, mBuildDebugShaders);
 
         if (!compilationResult.CompiledLibrary.Blob())
         {
@@ -173,6 +186,7 @@ namespace PathFinder
 
         std::string relativePathString = relativePath.filename().string();
         LibraryListIterator libraryIt = std::prev(mLibraries.end());
+        SaveToFile(libraryIt->Binary(), libraryIt->PDBBinary(), "", libraryIt->DebugName(), relativePath);
 
         CompiledObjectsInFile& compiledObjectsInFile = mEntryPointFilePathToCompiledObjectAssociations[relativePathString];
         compiledObjectsInFile.Library = libraryIt;
@@ -185,15 +199,47 @@ namespace PathFinder
         return &(*libraryIt);
     }
 
-    std::filesystem::path ShaderManager::ConstructShaderRootPath(const CommandLineParser& commandLineParser) const
+    void ShaderManager::SaveToFile(
+        const HAL::CompiledBinary& binary,
+        const HAL::CompiledBinary& debugBinary,
+        const std::string& entryPointName,
+        const std::string& debugName,
+        const std::filesystem::path& sourceRelativePath) const
     {
-        if (commandLineParser.ShouldUseShadersFromProjectFolder())
+        std::filesystem::path relativePath{ sourceRelativePath };
+        std::filesystem::path debugPath{ debugName };
+
+        std::string libraryName = relativePath.replace_extension().filename().string();
+
+        if (!entryPointName.empty())
         {
-            return std::filesystem::path{ std::string(PROJECT_DIR) + "Source\\RenderPipeline\\Shaders" };
+            libraryName += "_" + entryPointName;
         }
-        else
+
+        // Could've attached a meaningful name here to unreadable PDB name,
+        // but NSight doesn't recognize it.
+        std::string pdbName = debugPath.replace_extension().string();
+
+        libraryName += ".bin";
+        pdbName += ".lld";
+
+        std::filesystem::path binaryPath = mShaderBinariesPath / libraryName;
+        std::ofstream binaryStream(binaryPath, std::ios::out | std::ios::binary);
+
+        if (binaryStream)
         {
-            return commandLineParser.ExecutableFolderPath() / "Shaders";
+            binaryStream.write((const char*)binary.Data, binary.Size);
+        }
+
+        if (debugBinary.Data)
+        {
+            std::filesystem::path pdbPath = mShaderBinariesPath / pdbName;
+            std::ofstream pdbStream(pdbPath, std::ios::out | std::ios::binary);
+
+            if (pdbStream)
+            {
+                pdbStream.write((const char*)debugBinary.Data, debugBinary.Size);
+            }
         }
     }
 

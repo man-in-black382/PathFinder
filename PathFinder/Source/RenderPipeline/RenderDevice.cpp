@@ -128,8 +128,6 @@ namespace PathFinder
 
     void RenderDevice::Dispatch(const RenderPassGraph::Node* passNode, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
     {
-        IC(passNode->PassMetadata().Name.ToString());
-
         HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[passNode->GlobalExecutionIndex()].WorkCommandList);
         PassHelpers& passHelpers = mPassHelpers[passNode->GlobalExecutionIndex()];
 
@@ -208,8 +206,8 @@ namespace PathFinder
     void RenderDevice::ExecuteRenderGraph()
     {
         BatchCommandLists();
-        ExetuteCommandLists();
         UploadPassConstants();
+        ExetuteCommandLists();
     }
 
     void RenderDevice::BindGraphicsCommonResources(const RenderPassGraph::Node* passNode, const HAL::RootSignature* rootSignature, HAL::GraphicsCommandListBase* cmdList)
