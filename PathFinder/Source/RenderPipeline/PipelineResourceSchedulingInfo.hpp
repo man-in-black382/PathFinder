@@ -40,6 +40,7 @@ namespace PathFinder
         PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format);
 
         void AddExpectedStates(HAL::ResourceState states);
+        void AddNameAlias(Foundation::Name alias);
         void FinishScheduling();
         const PassInfo* GetInfoForPass(Foundation::Name passName) const;
         PassInfo* GetInfoForPass(Foundation::Name passName);
@@ -53,27 +54,26 @@ namespace PathFinder
         );
 
         HAL::ResourceState GetSubresourceCombinedReadStates(uint64_t subresourceIndex) const;
-        HAL::ResourceState GetSubresourceWriteState(uint64_t subresourceIndex) const;
 
         uint64_t HeapOffset = 0;
         bool CanBeAliased = true;
+        std::pair<uint64_t, uint64_t> AliasingLifetime;
 
     private:
         std::unordered_map<Foundation::Name, PassInfo> mPassInfoMap;
         HAL::ResourceFormat mResourceFormat;
         HAL::ResourceState mExpectedStates = HAL::ResourceState::Common;
         Foundation::Name mResourceName;
+        std::vector<Foundation::Name> mAliases;
         uint64_t mSubresourceCount = 0;
 
-        // Since engine is designed to make only one write per subresource in a frame
-        // we can store the single write state and batch all read states
         std::vector<HAL::ResourceState> mSubresourceCombinedReadStates;
-        std::vector<HAL::ResourceState> mSubresourceWriteStates;
 
     public:
         inline const HAL::ResourceFormat& ResourceFormat() const { return mResourceFormat; }
         inline HAL::ResourceState ExpectedStates() const { return mExpectedStates; }
         inline Foundation::Name ResourceName() const { return mResourceName; }
+        inline const auto& Aliases() const { return mAliases; }
         inline auto SubresourceCount() const { return mSubresourceCount; }
         inline auto TotalRequiredMemory() const { return mResourceFormat.ResourceSizeInBytes(); }
     };

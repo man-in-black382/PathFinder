@@ -30,12 +30,12 @@ namespace PathFinder
 
     class RenderPassGraph;
 
-    using ResourceName = Foundation::Name;
-    using PassName = Foundation::Name;
-
     class PipelineResourceStorage
     {
     public:
+        using ResourceName = Foundation::Name;
+        using PassName = Foundation::Name;
+
         PipelineResourceStorage(
             HAL::Device* device,
             Memory::GPUResourceProducer* resourceProducer,
@@ -76,7 +76,7 @@ namespace PathFinder
 
         void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
-        void QueueTexturesAllocationIfNeeded(
+        void QueueTextureAllocationIfNeeded(
             ResourceName resourceName,
             HAL::ResourceFormat::FormatVariant format,
             HAL::TextureKind kind,
@@ -87,18 +87,26 @@ namespace PathFinder
         );
 
         template <class BufferDataT>
-        void QueueBuffersAllocationIfNeeded(
+        void QueueBufferAllocationIfNeeded(
             ResourceName resourceName,
             uint64_t capacity,
             uint64_t perElementAlignment,
             const SchedulingInfoConfigurator& siConfigurator
         );
 
-        void QueueResourceUsage(ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator);
+        void QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator);
 
     private:
-        using ResourceMap = std::unordered_map<ResourceName, PipelineResourceStorageResource>;
+        using ResourceMap = std::unordered_map<ResourceName, uint64_t>;
+        using ResourceList = std::vector<PipelineResourceStorageResource>;
         using DiffEntryList = std::vector<PipelineResourceStorageResource::DiffEntry>;
+
+        struct SchedulingRequest
+        {
+            SchedulingInfoConfigurator Configurator;
+            Foundation::Name ResourceName;
+            std::optional<Foundation::Name> NameAlias;
+        };
 
         PipelineResourceStoragePass& CreatePerPassData(PassName name);
         PipelineResourceStorageResource& CreatePerResourceData(ResourceName name, const HAL::ResourceFormat& resourceFormat);
@@ -133,13 +141,16 @@ namespace PathFinder
 
         std::unordered_map<PassName, PipelineResourceStoragePass> mPerPassData;
         std::vector<std::function<void()>> mAllocationActions;
-        std::vector<std::pair<SchedulingInfoConfigurator, Foundation::Name>> mSchedulingInfoCreationConfiguators;
-        std::vector<std::pair<SchedulingInfoConfigurator, Foundation::Name>> mSchedulingInfoUsageConfiguators;
+        std::vector<SchedulingRequest> mSchedulingCreationRequests;
+        std::vector<SchedulingRequest> mSchedulingUsageRequests;
 
         // Two sets of resources: current and previous frame
-        std::pair<ResourceMap, ResourceMap> mPerResourceData;
-        ResourceMap* mPreviousFrameResources = &mPerResourceData.first;
-        ResourceMap* mCurrentFrameResources = &mPerResourceData.second;
+        std::pair<ResourceList, ResourceList> mResourceLists;
+        std::pair<ResourceMap, ResourceMap> mResourceMaps;
+        ResourceList* mPreviousFrameResources = &mResourceLists.first;
+        ResourceList* mCurrentFrameResources = &mResourceLists.second;
+        ResourceMap* mPreviousFrameResourceMap = &mResourceMaps.first;
+        ResourceMap* mCurrentFrameResourceMap = &mResourceMaps.second;
 
         // Resource diff entries to determine resource allocation needs
         std::pair<DiffEntryList, DiffEntryList> mDiffEntries;

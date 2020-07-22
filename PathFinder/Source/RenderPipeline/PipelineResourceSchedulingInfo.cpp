@@ -9,12 +9,16 @@ namespace PathFinder
         : mResourceFormat{ format }, mResourceName{ resourceName }, mSubresourceCount{ format.SubresourceCount() }
     {
         mSubresourceCombinedReadStates.resize(mSubresourceCount);
-        mSubresourceWriteStates.resize(mSubresourceCount);
     }
 
     void PipelineResourceSchedulingInfo::AddExpectedStates(HAL::ResourceState states)
     {
         mExpectedStates |= states;
+    }
+
+    void PipelineResourceSchedulingInfo::AddNameAlias(Foundation::Name alias)
+    {
+        mAliases.push_back(alias);
     }
 
     void PipelineResourceSchedulingInfo::FinishScheduling()
@@ -55,17 +59,9 @@ namespace PathFinder
         {
             mSubresourceCombinedReadStates[subresourceIndex] |= state;
         }
-        else
+        else if (EnumMaskBitSet(state, HAL::ResourceState::UnorderedAccess))
         {
-            assert_format(mSubresourceWriteStates[subresourceIndex] == HAL::ResourceState::Common,
-                "One write state for subresource is already requested. Engine architecture allows one write per frame.");
-
-            mSubresourceWriteStates[subresourceIndex] = state;
-
-            if (EnumMaskBitSet(state, HAL::ResourceState::UnorderedAccess))
-            {
-                passInfo.NeedsUnorderedAccessBarrier = true;
-            }
+            passInfo.NeedsUnorderedAccessBarrier = true;
         }
 
         mExpectedStates |= state;
@@ -74,11 +70,6 @@ namespace PathFinder
     HAL::ResourceState PipelineResourceSchedulingInfo::GetSubresourceCombinedReadStates(uint64_t subresourceIndex) const
     {
         return mSubresourceCombinedReadStates[subresourceIndex];
-    }
-
-    HAL::ResourceState PipelineResourceSchedulingInfo::GetSubresourceWriteState(uint64_t subresourceIndex) const
-    {
-        return mSubresourceWriteStates[subresourceIndex];
     }
 
 }

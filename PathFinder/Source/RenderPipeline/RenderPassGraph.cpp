@@ -555,7 +555,7 @@ namespace PathFinder
 
         assert_format(mWriteDependencyRegistry->find(name) == mWriteDependencyRegistry->end(),
             "Resource ", resourceName.ToString(), ", subresource ", subresourceIndex, " already has a write dependency. ",
-            "Consider refactoring render passes to write to each sub resource of any resource only once in a frame.");
+            "Use Aliases to perform multiple writes into the same resource.");
 
         mWriteDependencyRegistry->insert(name);
     }

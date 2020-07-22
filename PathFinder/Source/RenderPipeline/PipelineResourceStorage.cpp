@@ -82,13 +82,15 @@ namespace PathFinder
     void PipelineResourceStorage::StartResourceScheduling()
     {
         mPreviousFrameResources->clear();
+        mPreviousFrameResourceMap->clear();
         mPreviousFrameDiffEntries->clear();
         mAllocationActions.clear();
-        mSchedulingInfoCreationConfiguators.clear();
-        mSchedulingInfoUsageConfiguators.clear();
+        mSchedulingCreationRequests.clear();
+        mSchedulingUsageRequests.clear();
 
         std::swap(mPreviousFrameDiffEntries, mCurrentFrameDiffEntries);
         std::swap(mPreviousFrameResources, mCurrentFrameResources);
+        std::swap(mPreviousFrameResourceMap, mCurrentFrameResourceMap);
     }
 
     void PipelineResourceStorage::EndResourceScheduling()
@@ -117,7 +119,7 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::QueueTexturesAllocationIfNeeded(
+    void PipelineResourceStorage::QueueTextureAllocationIfNeeded(
         ResourceName resourceName,
         HAL::ResourceFormat::FormatVariant format,
         HAL::TextureKind kind,
@@ -129,13 +131,15 @@ namespace PathFinder
         HAL::Texture::Properties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
         HAL::ResourceFormat textureFormat = HAL::Texture::ConstructResourceFormat(mDevice, textureProperties);
 
-        PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
-        assert_format(!resourceObjects, "Texture ", resourceName.ToString(), " allocation is already requested");
-        resourceObjects = &CreatePerResourceData(resourceName, textureFormat);
+        assert_format(!GetPerResourceData(resourceName), "Texture ", resourceName.ToString(), " allocation is already requested");
+        CreatePerResourceData(resourceName, textureFormat);
+
+        uint64_t resourceDataIndex = mCurrentFrameResources->size() - 1;
 
         auto allocationAction = [=]()
         {
             HAL::Heap* heap = nullptr;
+            PipelineResourceStorageResource* resourceObjects = &mCurrentFrameResources->at(resourceDataIndex);
 
             switch (resourceObjects->SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
             {
@@ -161,40 +165,12 @@ namespace PathFinder
         };
 
         mAllocationActions.push_back(allocationAction);
-        mSchedulingInfoCreationConfiguators.emplace_back(siConfigurator, resourceName);
+        mSchedulingCreationRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName, std::nullopt });
     }
 
-    void PipelineResourceStorage::QueueResourceUsage(ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator)
+    void PipelineResourceStorage::QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator)
     {
-        mSchedulingInfoUsageConfiguators.emplace_back(siConfigurator, resourceName);
-    }
-
-    PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name)
-    {
-        auto it = mPerPassData.find(name);
-        if (it == mPerPassData.end()) return nullptr;
-        return &it->second;
-    }
-
-    PipelineResourceStorageResource* PipelineResourceStorage::GetPerResourceData(ResourceName name)
-    {
-        auto it = mCurrentFrameResources->find(name);
-        if (it == mCurrentFrameResources->end()) return nullptr;
-        return &it->second;
-    }
-
-    const PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name) const
-    {
-        auto it = mPerPassData.find(name);
-        if (it == mPerPassData.end()) return nullptr;
-        return &it->second;
-    }
-
-    const PipelineResourceStorageResource* PipelineResourceStorage::GetPerResourceData(ResourceName name) const
-    {
-        auto it = mCurrentFrameResources->find(name);
-        if (it == mCurrentFrameResources->end()) return nullptr;
-        return &it->second;
+        mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName, aliasName });
     }
 
     PipelineResourceStoragePass& PipelineResourceStorage::CreatePerPassData(PassName name)
@@ -205,8 +181,9 @@ namespace PathFinder
 
     PipelineResourceStorageResource& PipelineResourceStorage::CreatePerResourceData(ResourceName name, const HAL::ResourceFormat& resourceFormat)
     {
-        auto [it, success] = mCurrentFrameResources->emplace(name, PipelineResourceStorageResource{ name, resourceFormat });
-        return it->second;
+        PipelineResourceStorageResource& resourceObjects = mCurrentFrameResources->emplace_back(name, resourceFormat);
+        mCurrentFrameResourceMap->emplace(name, mCurrentFrameResources->size() - 1);
+        return resourceObjects;
     }
 
     void PipelineResourceStorage::CreateDebugBuffers()
@@ -224,23 +201,87 @@ namespace PathFinder
         }
     }
 
+    void PipelineResourceStorage::FinalizeSchedulingInfo()
+    {
+        mRTDSMemoryAliaser = { mPassExecutionGraph };
+        mNonRTDSMemoryAliaser = { mPassExecutionGraph };
+        mBufferMemoryAliaser = { mPassExecutionGraph };
+        mUniversalMemoryAliaser = { mPassExecutionGraph };
+
+        auto joinAliasingLifetimes = [this](PipelineResourceStorageResource& resourceData, Foundation::Name resourceName)
+        {
+            const RenderPassGraph::ResourceUsageTimeline& usageTimeline = mPassExecutionGraph->GetResourceUsageTimeline(resourceName);
+            uint64_t start = std::min(resourceData.SchedulingInfo.AliasingLifetime.first, usageTimeline.first);
+            uint64_t end = std::max(resourceData.SchedulingInfo.AliasingLifetime.second, usageTimeline.second);
+            resourceData.SchedulingInfo.AliasingLifetime = { start, end };
+        };
+
+        for (SchedulingRequest& request : mSchedulingCreationRequests)
+        {
+            uint64_t resourceDataIndex = mCurrentFrameResourceMap->at(request.ResourceName);
+            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(resourceDataIndex);
+            request.Configurator(resourceData.SchedulingInfo);
+            joinAliasingLifetimes(resourceData, request.ResourceName);
+        }
+
+        for (SchedulingRequest& request : mSchedulingUsageRequests)
+        {
+            auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
+            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", request.ResourceName.ToString());
+
+            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
+            request.Configurator(resourceData.SchedulingInfo);
+            joinAliasingLifetimes(resourceData, request.ResourceName);
+
+            if (request.NameAlias)
+            {
+                mCurrentFrameResourceMap->emplace(*request.NameAlias, indexIt->second);
+                resourceData.SchedulingInfo.AddNameAlias(*request.NameAlias);
+                joinAliasingLifetimes(resourceData, *request.NameAlias);
+            }
+        }
+
+        for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
+        {
+            resourceData.SchedulingInfo.FinishScheduling();
+
+            if (!resourceData.SchedulingInfo.CanBeAliased)
+            {
+                continue;
+            }
+
+            switch (resourceData.SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
+            {
+            case HAL::HeapAliasingGroup::RTDSTextures:
+                mRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::NonRTDSTextures:
+                mNonRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::Buffers:
+                mBufferMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                break;
+            case HAL::HeapAliasingGroup::Universal:
+                mUniversalMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
+                break;
+            }
+        }
+    }
+
     bool PipelineResourceStorage::TransferPreviousFrameResources()
     {
-        for (auto& [resourceName, resourceData] : *mCurrentFrameResources)
+        for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
         {
             // Accumulate expected states for resource from previous frame to avoid reallocations 
             // when resource's states ping-pong between frames or change frequently for other reasons.
-            auto prevResourceDataIt = mPreviousFrameResources->find(resourceName);
-            if (prevResourceDataIt != mPreviousFrameResources->end())
+            auto prevResourceDataIndexIt = mPreviousFrameResourceMap->find(resourceData.ResourceName());
+            if (prevResourceDataIndexIt != mPreviousFrameResourceMap->end())
             {
-                resourceData.SchedulingInfo.AddExpectedStates(prevResourceDataIt->second.SchedulingInfo.ExpectedStates());
+                PipelineResourceStorageResource& previousResourceData = mPreviousFrameResources->at(prevResourceDataIndexIt->second);
+                resourceData.SchedulingInfo.AddExpectedStates(previousResourceData.SchedulingInfo.ExpectedStates());
             }
 
             PipelineResourceStorageResource::DiffEntry diffEntry = resourceData.GetDiffEntry();
-            const RenderPassGraph::ResourceUsageTimeline& usageTimeline = mPassExecutionGraph->GetResourceUsageTimeline(resourceName);
-
-            diffEntry.LifetimeStart = usageTimeline.first;
-            diffEntry.LifetimeEnd = usageTimeline.second;
             mCurrentFrameDiffEntries->push_back(diffEntry);
         }
 
@@ -274,8 +315,10 @@ namespace PathFinder
             case dtl::SES_COMMON:
             {
                 // COMMON case means resource should be transfered from previous frame
-                PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(diffEntry.ResourceName);
-                PipelineResourceStorageResource& prevResourceData = mPreviousFrameResources->at(diffEntry.ResourceName);
+                uint64_t indexInPrevFrame = mPreviousFrameResourceMap->at(diffEntry.ResourceName);
+                uint64_t indexInCurrFrame = mCurrentFrameResourceMap->at(diffEntry.ResourceName);
+                PipelineResourceStorageResource& prevResourceData = mPreviousFrameResources->at(indexInPrevFrame);
+                PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexInCurrFrame);
 
                 // Transfer GPU resources from previous frame
                 resourceData.Texture = std::move(prevResourceData.Texture);
@@ -290,53 +333,6 @@ namespace PathFinder
         return true;
     }
 
-    void PipelineResourceStorage::FinalizeSchedulingInfo()
-    {
-        mRTDSMemoryAliaser = { mPassExecutionGraph };
-        mNonRTDSMemoryAliaser = { mPassExecutionGraph };
-        mBufferMemoryAliaser = { mPassExecutionGraph };
-        mUniversalMemoryAliaser = { mPassExecutionGraph };
-
-        for (auto& [configurator, resourceName] : mSchedulingInfoCreationConfiguators)
-        {
-            PipelineResourceStorageResource* resourceData = GetPerResourceData(resourceName);
-            configurator(resourceData->SchedulingInfo);
-        }
-
-        for (auto& [configurator, resourceName] : mSchedulingInfoUsageConfiguators)
-        {
-            PipelineResourceStorageResource* resourceData = GetPerResourceData(resourceName);
-            assert_format(resourceData, "Trying to use a resource that wasn't created: ", resourceName.ToString());
-            configurator(resourceData->SchedulingInfo);
-        }
-
-        for (auto& [resourceName, resourceData] : *mCurrentFrameResources)
-        {
-            resourceData.SchedulingInfo.FinishScheduling();
-
-            if (!resourceData.SchedulingInfo.CanBeAliased)
-            {
-                continue;
-            }
-            
-            switch (resourceData.SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
-            {
-            case HAL::HeapAliasingGroup::RTDSTextures:
-                mRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::NonRTDSTextures:
-                mNonRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::Buffers:
-                mBufferMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::Universal:
-                mUniversalMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            }
-        }
-    }
-
     const Memory::Buffer* PipelineResourceStorage::GlobalRootConstantsBuffer() const
     {
         return mGlobalRootConstantsBuffer.get();
@@ -345,6 +341,34 @@ namespace PathFinder
     const Memory::Buffer* PipelineResourceStorage::PerFrameRootConstantsBuffer() const
     {
         return mPerFrameRootConstantsBuffer.get();
+    }
+
+    PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name)
+    {
+        auto it = mPerPassData.find(name);
+        if (it == mPerPassData.end()) return nullptr;
+        return &it->second;
+    }
+
+    PipelineResourceStorageResource* PipelineResourceStorage::GetPerResourceData(ResourceName name)
+    {
+        auto indexIt = mCurrentFrameResourceMap->find(name);
+        if (indexIt == mCurrentFrameResourceMap->end()) return nullptr;
+        return &mCurrentFrameResources->at(indexIt->second);
+    }
+
+    const PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name) const
+    {
+        auto it = mPerPassData.find(name);
+        if (it == mPerPassData.end()) return nullptr;
+        return &it->second;
+    }
+
+    const PipelineResourceStorageResource* PipelineResourceStorage::GetPerResourceData(ResourceName name) const
+    {
+        auto indexIt = mCurrentFrameResourceMap->find(name);
+        if (indexIt == mCurrentFrameResourceMap->end()) return nullptr;
+        return &mCurrentFrameResources->at(indexIt->second);
     }
 
     void PipelineResourceStorage::IterateDebugBuffers(const DebugBufferIteratorFunc& func) const

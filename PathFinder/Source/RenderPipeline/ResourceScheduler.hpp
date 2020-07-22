@@ -93,15 +93,21 @@ namespace PathFinder
 
         // Indicates that a previously created texture will be used as a render target in the scheduling pass (Write Only)
         void UseRenderTarget(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        // Provide alias when writing to existing resource more then once is required
+        void AliasAndUseRenderTarget(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Indicates that a previously created texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
         void UseDepthStencil(Foundation::Name resourceName);
+        // Provide alias when writing to existing resource more then once is required
+        void AliasAndUseDepthStencil(Foundation::Name resourceName, Foundation::Name outputAliasName);
 
         // Read any previously created texture as a Shader Resource (Read Only)
         void ReadTexture(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Access a previously created texture as an Unordered Access resource (Write)
         void WriteTexture(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        // Provide alias when writing to existing resource more then once is required
+        void AliasAndWriteTexture(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Allocates new buffer to be accessed as Unordered Access resource (Write Only)
         template <class T> 
@@ -112,6 +118,8 @@ namespace PathFinder
 
         // Access a previously created buffer as an Unordered Access Structured buffer (Write)
         void WriteBuffer(Foundation::Name resourceName);
+        // Provide alias when writing to existing resource more then once is required
+        void WriteBuffer(Foundation::Name resourceName, Foundation::Name outputAliasName);
 
         // Explicitly set a queue to execute render pass on
         void ExecuteOnQueue(RenderPassExecutionQueue queue);

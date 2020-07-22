@@ -26,7 +26,14 @@ namespace PathFinder
 
     PipelineResourceStorageResource::DiffEntry PipelineResourceStorageResource::GetDiffEntry() const
     {
-        return { mResourceName, SchedulingInfo.CanBeAliased, SchedulingInfo.ExpectedStates(), SchedulingInfo.TotalRequiredMemory(), 0, 0 };
+        return { 
+            mResourceName, 
+            SchedulingInfo.CanBeAliased, 
+            SchedulingInfo.ExpectedStates(), 
+            SchedulingInfo.TotalRequiredMemory(), 
+            SchedulingInfo.AliasingLifetime.first, 
+            SchedulingInfo.AliasingLifetime.second 
+        };
     }
 
     bool PipelineResourceStorageResource::DiffEntry::operator==(const DiffEntry& that) const

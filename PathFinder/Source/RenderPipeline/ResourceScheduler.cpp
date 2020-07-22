@@ -23,7 +23,7 @@ namespace PathFinder
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
-        mResourceStorage->QueueTexturesAllocationIfNeeded(
+        mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, props.MipCount, 
 
             [canBeReadAcrossFrames,
@@ -60,7 +60,7 @@ namespace PathFinder
 
         HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
 
-        mResourceStorage->QueueTexturesAllocationIfNeeded(
+        mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, props.MipCount,
 
             [canBeReadAcrossFrames,
@@ -95,7 +95,7 @@ namespace PathFinder
         HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
-        mResourceStorage->QueueTexturesAllocationIfNeeded(
+        mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, props.MipCount,
 
             [canBeReadAcrossFrames,
@@ -119,9 +119,16 @@ namespace PathFinder
 
     void ResourceScheduler::UseRenderTarget(Foundation::Name resourceName, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        mCurrentlySchedulingPassNode->AddWriteDependency(resourceName, mips);
+        AliasAndUseRenderTarget(resourceName, {}, mips, concreteFormat);
+    }
 
-        mResourceStorage->QueueResourceUsage(resourceName, [mips, concreteFormat, passName = mCurrentlySchedulingPassNode->PassMetadata().Name](PipelineResourceSchedulingInfo& schedulingInfo)
+    void ResourceScheduler::AliasAndUseRenderTarget(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
+    {
+        Foundation::Name name = outputAliasName.IsValid() ? outputAliasName : resourceName;
+        mCurrentlySchedulingPassNode->AddWriteDependency(name, mips);
+
+        mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt,
+            [mips, concreteFormat, passName = mCurrentlySchedulingPassNode->PassMetadata().Name](PipelineResourceSchedulingInfo& schedulingInfo)
         {
             bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*schedulingInfo.ResourceFormat().DataType());
 
@@ -143,9 +150,16 @@ namespace PathFinder
 
     void ResourceScheduler::UseDepthStencil(Foundation::Name resourceName)
     {
-        mCurrentlySchedulingPassNode->AddWriteDependency(resourceName, 1);
+        AliasAndUseDepthStencil(resourceName, {});
+    }
 
-        mResourceStorage->QueueResourceUsage(resourceName, [passName = mCurrentlySchedulingPassNode->PassMetadata().Name](PipelineResourceSchedulingInfo& schedulingInfo)
+    void ResourceScheduler::AliasAndUseDepthStencil(Foundation::Name resourceName, Foundation::Name outputAliasName)
+    {
+        Foundation::Name name = outputAliasName.IsValid() ? outputAliasName : resourceName;
+        mCurrentlySchedulingPassNode->AddWriteDependency(name, 1);
+
+        mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt, 
+            [passName = mCurrentlySchedulingPassNode->PassMetadata().Name](PipelineResourceSchedulingInfo& schedulingInfo)
         {
             assert_format(std::holds_alternative<HAL::DepthStencilFormat>(*schedulingInfo.ResourceFormat().DataType()), "Cannot reuse non-depth-stencil texture");
 
@@ -162,7 +176,7 @@ namespace PathFinder
     {
         mCurrentlySchedulingPassNode->AddReadDependency(resourceName, mips);
         
-        mResourceStorage->QueueResourceUsage(resourceName,
+        mResourceStorage->QueueResourceUsage(resourceName, {},
             [mips,
             concreteFormat, 
             passName = mCurrentlySchedulingPassNode->PassMetadata().Name]
@@ -194,9 +208,16 @@ namespace PathFinder
 
     void ResourceScheduler::WriteTexture(Foundation::Name resourceName, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        mCurrentlySchedulingPassNode->AddWriteDependency(resourceName, mips);
+        AliasAndWriteTexture(resourceName, {}, mips, concreteFormat);
+    }
 
-        mResourceStorage->QueueResourceUsage(resourceName, [mips, concreteFormat, passName = mCurrentlySchedulingPassNode->PassMetadata().Name](PipelineResourceSchedulingInfo& schedulingInfo)
+    void ResourceScheduler::AliasAndWriteTexture(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipList& mips, std::optional<HAL::ColorFormat> concreteFormat)
+    {
+        Foundation::Name name = outputAliasName.IsValid() ? outputAliasName : resourceName;
+        mCurrentlySchedulingPassNode->AddWriteDependency(name, mips);
+
+        mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt, 
+            [mips, concreteFormat, passName = mCurrentlySchedulingPassNode->PassMetadata().Name](PipelineResourceSchedulingInfo& schedulingInfo)
         {
             bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*schedulingInfo.ResourceFormat().DataType());
 
@@ -222,6 +243,11 @@ namespace PathFinder
     }
 
     void ResourceScheduler::WriteBuffer(Foundation::Name resourceName)
+    {
+        assert_format(false, "Not implemented");
+    }
+
+    void ResourceScheduler::WriteBuffer(Foundation::Name resourceName, Foundation::Name outputAliasName)
     {
         assert_format(false, "Not implemented");
     }

@@ -379,10 +379,16 @@ namespace PathFinder
             {
                 auto [resourceName, subresourceIndex] = mRenderPassGraph->DecodeSubresourceName(subresourceName);
                 PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceName);
+                HAL::ResourceState newState{};
 
-                HAL::ResourceState newState = isReadDependency ?
-                    resourceData->SchedulingInfo.GetSubresourceCombinedReadStates(subresourceIndex) :
-                    resourceData->SchedulingInfo.GetSubresourceWriteState(subresourceIndex);
+                if (isReadDependency)
+                {
+                    newState = resourceData->SchedulingInfo.GetSubresourceCombinedReadStates(subresourceIndex);
+                }
+                else {
+                    const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceData->SchedulingInfo.GetInfoForPass(node->PassMetadata().Name);
+                    newState = passInfo->SubresourceInfos[subresourceIndex]->RequestedState;
+                }
 
                 std::optional<HAL::ResourceTransitionBarrier> barrier =
                     mResourceStateTracker->TransitionToStateImmediately(resourceData->GetGPUResource()->HALResource(), newState, subresourceIndex, false);
