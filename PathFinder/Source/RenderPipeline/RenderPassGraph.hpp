@@ -42,14 +42,16 @@ namespace PathFinder
             void AddWriteDependency(Foundation::Name resourceName, const SubresourceList& subresources);
 
             bool HasDependency(Foundation::Name resourceName, uint32_t subresourceIndex) const;
+            bool HasDependency(SubresourceName subresourceName) const;
+            bool HasAnyDependencies() const;
 
             uint64_t ExecutionQueueIndex = 0;
             bool UsesRayTracing = false;
+            bool WritesToBackBuffer = false;
 
         private:
             friend RenderPassGraph;
 
-            SubresourceName CreateSubresourceName(Foundation::Name resourceName, uint32_t subresourceIndex) const;
             void EnsureSingleWriteDependency(SubresourceName name);
             void Clear();
 
@@ -117,6 +119,7 @@ namespace PathFinder
         using ResourceUsageTimeline = std::pair<uint64_t, uint64_t>;
         using ResourceUsageTimelines = std::unordered_map<Foundation::Name, ResourceUsageTimeline>;
 
+        static SubresourceName ConstructSubresourceName(Foundation::Name resourceName, uint32_t subresourceIndex);
         static std::pair<Foundation::Name, uint32_t> DecodeSubresourceName(SubresourceName name);
 
         uint64_t NodeCountForQueue(uint64_t queueIndex) const;
@@ -127,8 +130,6 @@ namespace PathFinder
 
         void Build();
         void Clear();
-
-        void IterateNodesInExecutionOrder(const std::function<void(const Node&)>& iterator) const;
 
     private:
         using DependencyLevelList = std::vector<DependencyLevel>;

@@ -1,5 +1,4 @@
 #include "DenoiserMipGenerationRenderPass.hpp"
-#include "DownsamplingCBContent.hpp"
 
 #include "../Foundation/Gaussian.hpp"
 
@@ -18,12 +17,14 @@ namespace PathFinder
         auto frameIndex = scheduler->FrameNumber() % 2;
 
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[frameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, { 0 });
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, { 0 });
+        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceScheduler::MipSet::FirstMip());
+        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceScheduler::MipSet::FirstMip());
+        scheduler->ReadTexture(ResourceNames::StochasticShadingGradient, ResourceScheduler::MipSet::FirstMip());
 
-        scheduler->WriteTexture(ResourceNames::GBufferViewDepth[frameIndex], { 1, 2, 3, 4 });
-        scheduler->WriteTexture(ResourceNames::StochasticShadowedShadingPreBlurred, { 1, 2, 3, 4 });
-        scheduler->WriteTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, { 1, 2, 3, 4 });
+        scheduler->WriteTexture(ResourceNames::GBufferViewDepth[frameIndex], ResourceScheduler::MipSet::Range(1, std::nullopt));
+        scheduler->WriteTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceScheduler::MipSet::Range(1, std::nullopt));
+        scheduler->WriteTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceScheduler::MipSet::Range(1, std::nullopt));
+        scheduler->WriteTexture(ResourceNames::StochasticShadingGradient, ResourceScheduler::MipSet::Range(1, std::nullopt));
     }
      
     void DenoiserMipGenerationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -33,45 +34,21 @@ namespace PathFinder
         auto resourceProvider = context->GetResourceProvider();
         auto frameIndex = context->FrameNumber() % 2;
 
-        // Downsample view depth
-        DownsamplingCBContent cbContent{};
-        cbContent.FilterType = DownsamplingCBContent::Filter::Min;
-        cbContent.SourceTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[frameIndex]);
-        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth[frameIndex], 1);
-        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth[frameIndex], 2);
-        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth[frameIndex], 3);
-        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::GBufferViewDepth[frameIndex], 4);
+        GenerateMips(ResourceNames::GBufferViewDepth[frameIndex], context, DownsamplingCBContent::Filter::Min, DownsamplingStrategy::WriteAllLevels);
+        GenerateMips(ResourceNames::StochasticUnshadowedShadingPreBlurred, context, DownsamplingCBContent::Filter::Average, DownsamplingStrategy::WriteAllLevels);
+        GenerateMips(ResourceNames::StochasticShadowedShadingPreBlurred, context, DownsamplingCBContent::Filter::Average, DownsamplingStrategy::WriteAllLevels);
+        GenerateMips(ResourceNames::StochasticShadingGradient, context, DownsamplingCBContent::Filter::Max, DownsamplingStrategy::WriteOnlyLastLevel);
+    }
 
-        auto firstMipDimensions = resourceProvider->GetTextureProperties(ResourceNames::GBufferViewDepth[frameIndex]).Dimensions.XYMultiplied(0.5);
+    void DenoiserMipGenerationRenderPass::GenerateMips(Foundation::Name resourceName, RenderContext<RenderPassContentMediator>* context, DownsamplingCBContent::Filter filter, DownsamplingStrategy strategy)
+    {
+        auto inputs = GenerateDownsamplingShaderInvocationInputs(*context->GetResourceProvider(), resourceName, filter, strategy);
 
-        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(firstMipDimensions, { 8, 8 });
-
-        // Downsample shadowed luminance
-        cbContent.FilterType = DownsamplingCBContent::Filter::Average;
-        cbContent.SourceTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred);
-        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred, 1);
-        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred, 2);
-        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred, 3);
-        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred, 4);
-
-        firstMipDimensions = resourceProvider->GetTextureProperties(ResourceNames::StochasticShadowedShadingPreBlurred).Dimensions.XYMultiplied(0.5);
-
-        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(firstMipDimensions, { 8, 8 });
-
-        // Downsample unshadowed luminance
-        cbContent.FilterType = DownsamplingCBContent::Filter::Average;
-        cbContent.SourceTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred);
-        cbContent.Destination0TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred, 1);
-        cbContent.Destination1TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred, 2);
-        cbContent.Destination2TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred, 3);
-        cbContent.Destination3TexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred, 4);
-
-        firstMipDimensions = resourceProvider->GetTextureProperties(ResourceNames::StochasticUnshadowedShadingPreBlurred).Dimensions.XYMultiplied(0.5);
-
-        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(firstMipDimensions, { 8, 8 });
+        for (const DownsamplingInvocationInputs& inputs : inputs)
+        {
+            context->GetConstantsUpdater()->UpdateRootConstantBuffer(inputs.CBContent);
+            context->GetCommandRecorder()->Dispatch(inputs.DispatchDimensions, { 8, 8 });
+        }
     }
 
 }

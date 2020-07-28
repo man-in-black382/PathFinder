@@ -21,7 +21,7 @@ namespace PathFinder
         mAliases.push_back(alias);
     }
 
-    void PipelineResourceSchedulingInfo::FinishScheduling()
+    void PipelineResourceSchedulingInfo::ApplyExpectedStates()
     {
         // Determine final memory requirements
         mResourceFormat.SetExpectedStates(mExpectedStates);

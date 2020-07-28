@@ -15,6 +15,8 @@ namespace PathFinder
     {
     public:
         using MipList = std::vector<uint32_t>;
+        using MipRange = std::pair<uint32_t, std::optional<uint32_t>>;
+        static constexpr uint32_t FullMipChain = 0;
 
         enum class BufferReadContext
         {
@@ -25,7 +27,21 @@ namespace PathFinder
         {
             None = 0, 
             CrossFrameRead = 1 << 0, // Resource will be read across frames so it cannot participate in memory aliasing
-            WillNotWrite = 1 << 1    // Resource will not be written and should not be added to the graph as write dependency
+        };
+
+        struct MipSet
+        {
+            static MipSet Empty();
+            static MipSet Explicit(const MipList& mips);
+            static MipSet IndexFromStart(uint32_t index);
+            static MipSet IndexFromEnd(uint32_t index);
+            static MipSet FirstMip();
+            static MipSet LastMip();
+            static MipSet Range(uint32_t firstMip, std::optional<uint32_t> lastMip);
+
+            using MipVariant = std::variant<MipList, MipRange, uint32_t, uint32_t>;
+
+            std::optional<MipVariant> Combination = std::nullopt;
         };
 
         struct NewTextureProperties
@@ -36,7 +52,7 @@ namespace PathFinder
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt,
                 std::optional<HAL::TypelessColorFormat> typelessFormat = std::nullopt,
                 std::optional<HAL::ColorClearValue> clearValues = std::nullopt,
-                uint8_t mipCount = 1,
+                std::optional<uint32_t> mipCount = std::nullopt,
                 Flags readFlags = Flags::None)
                 : 
                 TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat }, 
@@ -47,7 +63,7 @@ namespace PathFinder
             std::optional<HAL::TextureKind> Kind;
             std::optional<Geometry::Dimensions> Dimensions;
             std::optional<HAL::ColorClearValue> ClearValues;
-            uint8_t MipCount;
+            std::optional<uint32_t> MipCount;
             Flags Flags;
         };
 
@@ -56,14 +72,14 @@ namespace PathFinder
             NewDepthStencilProperties(
                 std::optional<HAL::DepthStencilFormat> format = std::nullopt,
                 std::optional<Geometry::Dimensions> dimensions = std::nullopt,
-                uint8_t mipCount = 1,
+                std::optional<uint32_t> mipCount = std::nullopt,
                 Flags readFlags = Flags::None)
                 : 
                 Format{ format }, Dimensions{ dimensions }, MipCount{ mipCount }, Flags{ readFlags } {}
 
             std::optional<HAL::DepthStencilFormat> Format;
             std::optional<Geometry::Dimensions> Dimensions;
-            uint8_t MipCount;
+            std::optional<uint32_t> MipCount;
             Flags Flags;
         };
 
@@ -78,40 +94,80 @@ namespace PathFinder
             Flags Flags;
         };
 
-        struct NewByteBufferProperties : public NewBufferProperties<uint8_t> {};
+        struct NewByteBufferProperties : public NewBufferProperties<uint32_t> {};
 
         ResourceScheduler(PipelineResourceStorage* manager, RenderPassUtilityProvider* utilityProvider, RenderPassGraph* passGraph);
 
         // Allocates new render target texture (Write Only)
-        void NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt);
+        void NewRenderTarget(
+            Foundation::Name resourceName, 
+            std::optional<NewTextureProperties> properties = std::nullopt);
+
+        void NewRenderTarget(
+            Foundation::Name resourceName,
+            const MipSet& writtenMips, 
+            std::optional<NewTextureProperties> properties = std::nullopt);
 
         // Allocates new depth-stencil texture (Write Only)
-        void NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties = std::nullopt); 
+        void NewDepthStencil(
+            Foundation::Name resourceName, 
+            std::optional<NewDepthStencilProperties> properties = std::nullopt); 
 
         // Allocates new texture to be accessed as Unordered Access resource (Write)
-        void NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties = std::nullopt); 
+        void NewTexture(
+            Foundation::Name resourceName, 
+            std::optional<NewTextureProperties> properties = std::nullopt);
+
+        void NewTexture(
+            Foundation::Name resourceName, 
+            const MipSet& writtenMips,
+            std::optional<NewTextureProperties> properties = std::nullopt);
 
         // Indicates that a previously created texture will be used as a render target in the scheduling pass (Write Only)
-        void UseRenderTarget(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void UseRenderTarget(
+            Foundation::Name resourceName,
+            const MipSet& writtenMips = MipSet::FirstMip(), 
+            std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+
         // Provide alias when writing to existing resource more then once is required
-        void AliasAndUseRenderTarget(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void AliasAndUseRenderTarget(
+            Foundation::Name resourceName, 
+            Foundation::Name outputAliasName,
+            const MipSet& writtenMips = MipSet::FirstMip(),
+            std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Indicates that a previously created texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
         void UseDepthStencil(Foundation::Name resourceName);
+
         // Provide alias when writing to existing resource more then once is required
-        void AliasAndUseDepthStencil(Foundation::Name resourceName, Foundation::Name outputAliasName);
+        void AliasAndUseDepthStencil(
+            Foundation::Name resourceName,
+            Foundation::Name outputAliasName);
 
         // Read any previously created texture as a Shader Resource (Read Only)
-        void ReadTexture(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void ReadTexture(
+            Foundation::Name resourceName, 
+            const MipSet& readMips = MipSet::FirstMip(),
+            std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Access a previously created texture as an Unordered Access resource (Write)
-        void WriteTexture(Foundation::Name resourceName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void WriteTexture(
+            Foundation::Name resourceName,
+            const MipSet& writtenMips = MipSet::FirstMip(),
+            std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+
         // Provide alias when writing to existing resource more then once is required
-        void AliasAndWriteTexture(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipList& mips = { 0 }, std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
+        void AliasAndWriteTexture(
+            Foundation::Name resourceName,
+            Foundation::Name outputAliasName,
+            const MipSet& writtenMips = MipSet::FirstMip(),
+            std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Allocates new buffer to be accessed as Unordered Access resource (Write Only)
         template <class T> 
-        void NewBuffer(Foundation::Name resourceName, const NewBufferProperties<T>& bufferProperties = NewByteBufferProperties{ 1, 1 });
+        void NewBuffer(
+            Foundation::Name resourceName, 
+            const NewBufferProperties<T>& bufferProperties = NewByteBufferProperties{ 1, 1 });
 
         // Read any previously created buffer either as Constant or Structured buffer (Read Only)
         void ReadBuffer(Foundation::Name resourceName, BufferReadContext readContext);
@@ -120,6 +176,9 @@ namespace PathFinder
         void WriteBuffer(Foundation::Name resourceName);
         // Provide alias when writing to existing resource more then once is required
         void WriteBuffer(Foundation::Name resourceName, Foundation::Name outputAliasName);
+
+        // Indicate that pass will write to back buffer
+        void WriteToBackBuffer();
 
         // Explicitly set a queue to execute render pass on
         void ExecuteOnQueue(RenderPassExecutionQueue queue);
@@ -132,8 +191,24 @@ namespace PathFinder
         void SetCurrentlySchedulingPassNode(RenderPassGraph::Node* node);
 
     private:
-        NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties);
-        NewDepthStencilProperties FillMissingFields(std::optional<NewDepthStencilProperties> properties);
+        NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties) const;
+        NewDepthStencilProperties FillMissingFields(std::optional<NewDepthStencilProperties> properties) const;
+        uint32_t MaxMipCount(const Geometry::Dimensions& dimensions) const;
+
+        void RegisterGraphDependency(
+            RenderPassGraph::Node& passNode, 
+            const MipSet& subresources, 
+            Foundation::Name resourceName, 
+            uint32_t resourceMipCount, 
+            bool isWriteDependency);
+
+        void UpdateSubresourceInfos(
+            PipelineResourceSchedulingInfo& resourceShcedulingInfo,
+            const MipSet& mips,
+            Foundation::Name passName,
+            HAL::ResourceState state, 
+            PipelineResourceSchedulingInfo::SubresourceInfo::AccessFlag accessFlag,
+            std::optional<HAL::ColorFormat> concreteFormat);
 
         template <class Lambda>
         void FillCurrentPassInfo(const PipelineResourceStorageResource* resourceData, const MipList& mipList, const Lambda& lambda);

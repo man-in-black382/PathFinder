@@ -98,6 +98,7 @@ namespace HAL
         uint64_t mResourceAlignment = 0;
         uint64_t mResourceSizeInBytes = 0;
         uint64_t mSubresourceCount = 0;
+        uint64_t mMipCount = 1;
         KindVariant mKind;
         HeapAliasingGroup mAliasingGroup = HeapAliasingGroup::Universal;
 
@@ -107,6 +108,7 @@ namespace HAL
         inline auto ResourceAlighnment() const { return mResourceAlignment; }
         inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }
         inline auto SubresourceCount() const { return mSubresourceCount; }
+        inline auto MipCount() const { return mMipCount; }
         inline auto DataType() const { return mDataType; }
         inline auto Kind() const { return mKind; }
         inline auto ResourceAliasingGroup() const { return mAliasingGroup; }

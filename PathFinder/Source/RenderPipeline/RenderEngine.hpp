@@ -76,7 +76,7 @@ namespace PathFinder
         void BuildAccelerationStructures();
         void RunAssetProcessingPasses();
         void RecordCommandLists();
-        void ScheduleResources();
+        void ScheduleFrame();
 
         RenderPassGraph mRenderPassGraph;
         std::unordered_map<Foundation::Name, std::pair<RenderPass<ContentMediator>*, uint64_t>> mRenderPasses;

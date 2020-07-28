@@ -229,7 +229,7 @@ namespace PathFinder
         }
 
         // Scheduler resources, build graph
-        ScheduleResources();
+        ScheduleFrame();
 
         // Update render device with current frame back buffer
         mRenderDevice->SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
@@ -357,14 +357,13 @@ namespace PathFinder
     {
         Memory::Texture* currentBackBuffer = mBackBuffers[mCurrentBackBufferIndex].get();
         mRenderDevice->SetBackBuffer(currentBackBuffer);
-        auto& nodes = mRenderPassGraph.Nodes();
 
-        for (auto nodeIt = nodes.begin(); nodeIt != nodes.end(); ++nodeIt)
+        for (const RenderPassGraph::Node* passNode : mRenderPassGraph.NodesInGlobalExecutionOrder())
         {
-            auto& [passPtr, passContextIdx] = mRenderPasses[nodeIt->PassMetadata().Name];
+            auto& [passPtr, passContextIdx] = mRenderPasses[passNode->PassMetadata().Name];
             RenderContext<ContentMediator>& context = mRenderContexts[passContextIdx];
 
-            mRenderDevice->RecordWorkerCommandList(*nodeIt, [passPtr, &context]
+            mRenderDevice->RecordWorkerCommandList(*passNode, [passPtr, &context]
             {
                 passPtr->Render(&context);
             });
@@ -377,7 +376,7 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
-    void RenderEngine<ContentMediator>::ScheduleResources()
+    void RenderEngine<ContentMediator>::ScheduleFrame()
     {
         mRenderPassGraph.Clear();
         mPipelineResourceStorage->StartResourceScheduling();
@@ -390,8 +389,9 @@ namespace PathFinder
             passPtr->ScheduleResources(mResourceScheduler.get());
         }
 
-        mRenderPassGraph.Build();
         mPipelineResourceStorage->EndResourceScheduling();
+        mRenderPassGraph.Build();
+        mPipelineResourceStorage->AllocateScheduledResources();
     }
 
     template <class ContentMediator> 

@@ -37,7 +37,7 @@ namespace PathFinder
       
     void UIRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
+        scheduler->WriteToBackBuffer();
     }  
 
     void UIRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

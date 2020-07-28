@@ -18,8 +18,8 @@ namespace PathFinder
 
     void DenoiserGradientGuidedBlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoisedStabilized);
+        /*scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
+        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoisedStabilized);*/
        /* scheduler->ReadWriteTexture(ResourceNames::StochasticShadowedShadingDenoised);
         scheduler->ReadWriteTexture(ResourceNames::StochasticUnshadowedShadingDenoised);*/
     }

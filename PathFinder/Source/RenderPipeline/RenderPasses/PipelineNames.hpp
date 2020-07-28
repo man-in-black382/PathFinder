@@ -39,8 +39,7 @@ namespace PathFinder
         inline NameArray<2> StochasticShadowedShadingDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised[0]", "Resource_Shading_Stochastic_Shadowed_Denoised[1]" };
         inline Foundation::Name StochasticUnshadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
         inline Foundation::Name StochasticShadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
-        inline Foundation::Name StochasticUnshadowedShadingGradient{ "Resource_Shading_Stochastic_Unshadowed_Gradient" };
-        inline Foundation::Name StochasticShadowedShadingGradient{ "Resource_Shading_Stochastic_Shadowed_Gradient" };
+        inline Foundation::Name StochasticShadingGradient{ "Resource_Stochastic_Shading_Gradient" };
 
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
         inline NameArray<2> DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count[0]", "Resource_Denoiser_Reprojected_Frames_Count[1]" };

@@ -56,6 +56,7 @@ namespace PathFinder
 
         void StartResourceScheduling();
         void EndResourceScheduling();
+        void AllocateScheduledResources();
         
         template <class Constants> 
         void UpdateGlobalRootConstants(const Constants& constants);
@@ -113,7 +114,6 @@ namespace PathFinder
 
         void CreateDebugBuffers();
         bool TransferPreviousFrameResources();
-        void FinalizeSchedulingInfo();
 
         HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;

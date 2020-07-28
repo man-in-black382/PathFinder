@@ -1,5 +1,4 @@
 #include "SpecularDenoiserRenderPass.hpp"
-#include "DownsamplingCBContent.hpp"
 
 #include "../Foundation/Gaussian.hpp"
 
@@ -32,16 +31,13 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingFixed);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingFixed);
 
-        ResourceScheduler::NewTextureProperties currentOutputProperties{};
-        currentOutputProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
+        ResourceScheduler::NewTextureProperties outputProperties{};
+        outputProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
 
-        ResourceScheduler::NewTextureProperties previousOutputProperties = currentOutputProperties;
-        previousOutputProperties.Flags |= ResourceScheduler::Flags::WillNotWrite;
-
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoised[currentFrameIndex], currentOutputProperties);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoised[currentFrameIndex], currentOutputProperties);
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex], previousOutputProperties);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex], previousOutputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoised[currentFrameIndex], outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoised[currentFrameIndex], outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex], ResourceScheduler::MipSet::Empty(), outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex], ResourceScheduler::MipSet::Empty(), outputProperties);
     }
      
     void SpecularDenoiserRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

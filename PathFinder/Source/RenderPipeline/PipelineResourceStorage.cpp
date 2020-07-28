@@ -95,12 +95,70 @@ namespace PathFinder
 
     void PipelineResourceStorage::EndResourceScheduling()
     {
-        FinalizeSchedulingInfo();
+        for (SchedulingRequest& request : mSchedulingCreationRequests)
+        {
+            uint64_t resourceDataIndex = mCurrentFrameResourceMap->at(request.ResourceName);
+            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(resourceDataIndex);
+            request.Configurator(resourceData.SchedulingInfo);
+        }
 
-        bool memoryValid = TransferPreviousFrameResources();
-        mMemoryLayoutChanged = !memoryValid;
+        for (SchedulingRequest& request : mSchedulingUsageRequests)
+        {
+            auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
+            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", request.ResourceName.ToString());
 
-        if (memoryValid)
+            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
+            request.Configurator(resourceData.SchedulingInfo);
+
+            if (request.NameAlias)
+            {
+                mCurrentFrameResourceMap->emplace(*request.NameAlias, indexIt->second);
+                resourceData.SchedulingInfo.AddNameAlias(*request.NameAlias);
+            }
+        }
+    }
+
+    void PipelineResourceStorage::AllocateScheduledResources()
+    {
+        mRTDSMemoryAliaser = { mPassExecutionGraph };
+        mNonRTDSMemoryAliaser = { mPassExecutionGraph };
+        mBufferMemoryAliaser = { mPassExecutionGraph };
+        mUniversalMemoryAliaser = { mPassExecutionGraph };
+
+        // Determine resource effective lifetimes
+        auto joinAliasingLifetimes = [this](PipelineResourceStorageResource& resourceData, Foundation::Name resourceName)
+        {
+            const RenderPassGraph::ResourceUsageTimeline& usageTimeline = mPassExecutionGraph->GetResourceUsageTimeline(resourceName);
+            uint64_t start = std::min(resourceData.SchedulingInfo.AliasingLifetime.first, usageTimeline.first);
+            uint64_t end = std::max(resourceData.SchedulingInfo.AliasingLifetime.second, usageTimeline.second);
+            resourceData.SchedulingInfo.AliasingLifetime = { start, end };
+        };
+
+        for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
+        {
+            joinAliasingLifetimes(resourceData, resourceData.SchedulingInfo.ResourceName());
+
+            for (Foundation::Name alias : resourceData.SchedulingInfo.Aliases())
+            {
+                joinAliasingLifetimes(resourceData, alias);
+            }
+
+            if (resourceData.SchedulingInfo.CanBeAliased)
+            {
+                switch (resourceData.SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
+                {
+                case HAL::HeapAliasingGroup::RTDSTextures: mRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo); break;
+                case HAL::HeapAliasingGroup::NonRTDSTextures: mNonRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo); break;
+                case HAL::HeapAliasingGroup::Buffers: mBufferMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo); break;
+                case HAL::HeapAliasingGroup::Universal: mUniversalMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo); break;
+                }
+            }
+        }
+
+        // See whether resource reallocation and therefore memory layout invalidation is required
+        mMemoryLayoutChanged = !TransferPreviousFrameResources();
+
+        if (!mMemoryLayoutChanged)
         {
             return;
         }
@@ -201,73 +259,6 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::FinalizeSchedulingInfo()
-    {
-        mRTDSMemoryAliaser = { mPassExecutionGraph };
-        mNonRTDSMemoryAliaser = { mPassExecutionGraph };
-        mBufferMemoryAliaser = { mPassExecutionGraph };
-        mUniversalMemoryAliaser = { mPassExecutionGraph };
-
-        auto joinAliasingLifetimes = [this](PipelineResourceStorageResource& resourceData, Foundation::Name resourceName)
-        {
-            const RenderPassGraph::ResourceUsageTimeline& usageTimeline = mPassExecutionGraph->GetResourceUsageTimeline(resourceName);
-            uint64_t start = std::min(resourceData.SchedulingInfo.AliasingLifetime.first, usageTimeline.first);
-            uint64_t end = std::max(resourceData.SchedulingInfo.AliasingLifetime.second, usageTimeline.second);
-            resourceData.SchedulingInfo.AliasingLifetime = { start, end };
-        };
-
-        for (SchedulingRequest& request : mSchedulingCreationRequests)
-        {
-            uint64_t resourceDataIndex = mCurrentFrameResourceMap->at(request.ResourceName);
-            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(resourceDataIndex);
-            request.Configurator(resourceData.SchedulingInfo);
-            joinAliasingLifetimes(resourceData, request.ResourceName);
-        }
-
-        for (SchedulingRequest& request : mSchedulingUsageRequests)
-        {
-            auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
-            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", request.ResourceName.ToString());
-
-            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
-            request.Configurator(resourceData.SchedulingInfo);
-            joinAliasingLifetimes(resourceData, request.ResourceName);
-
-            if (request.NameAlias)
-            {
-                mCurrentFrameResourceMap->emplace(*request.NameAlias, indexIt->second);
-                resourceData.SchedulingInfo.AddNameAlias(*request.NameAlias);
-                joinAliasingLifetimes(resourceData, *request.NameAlias);
-            }
-        }
-
-        for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
-        {
-            resourceData.SchedulingInfo.FinishScheduling();
-
-            if (!resourceData.SchedulingInfo.CanBeAliased)
-            {
-                continue;
-            }
-
-            switch (resourceData.SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
-            {
-            case HAL::HeapAliasingGroup::RTDSTextures:
-                mRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::NonRTDSTextures:
-                mNonRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::Buffers:
-                mBufferMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            case HAL::HeapAliasingGroup::Universal:
-                mUniversalMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo);
-                break;
-            }
-        }
-    }
-
     bool PipelineResourceStorage::TransferPreviousFrameResources()
     {
         for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
@@ -281,6 +272,7 @@ namespace PathFinder
                 resourceData.SchedulingInfo.AddExpectedStates(previousResourceData.SchedulingInfo.ExpectedStates());
             }
 
+            resourceData.SchedulingInfo.ApplyExpectedStates();
             PipelineResourceStorageResource::DiffEntry diffEntry = resourceData.GetDiffEntry();
             mCurrentFrameDiffEntries->push_back(diffEntry);
         }

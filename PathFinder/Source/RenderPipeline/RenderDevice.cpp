@@ -46,6 +46,8 @@ namespace PathFinder
         assert_format(RenderPassExecutionQueue{ passNode->ExecutionQueueIndex } != RenderPassExecutionQueue::AsyncCompute,
             "Render Target Set command is unsupported on asynchronous compute queue");
 
+        assert_format(passNode->WritesToBackBuffer, "Render pass has not scheduled writing to back buffer");
+
         auto cmdList = std::get<GraphicsCommandListPtr>(mPassCommandLists[passNode->GlobalExecutionIndex()].WorkCommandList).get();
         const HAL::DSDescriptor* dsDescriptor = dsName ? mResourceStorage->GetDepthStencilDescriptor(*dsName, passNode->PassMetadata().Name) : nullptr;
         cmdList->SetRenderTarget(*mBackBuffer->GetRTDescriptor(), dsDescriptor);
@@ -194,12 +196,12 @@ namespace PathFinder
         CreatePassHelpers();
 
         mPassCommandLists.clear();
-        mPassCommandLists.resize(mRenderPassGraph->Nodes().size());
+        mPassCommandLists.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
 
-        for (const RenderPassGraph::Node& node : mRenderPassGraph->Nodes())
+        for (const RenderPassGraph::Node* node : mRenderPassGraph->NodesInGlobalExecutionOrder())
         {
-            CommandListPtrVariant cmdListVariant = AllocateCommandListForQueue(node.ExecutionQueueIndex);
-            mPassCommandLists[node.GlobalExecutionIndex()].WorkCommandList = std::move(cmdListVariant);
+            CommandListPtrVariant cmdListVariant = AllocateCommandListForQueue(node->ExecutionQueueIndex);
+            mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList = std::move(cmdListVariant);
         }
     }
 
@@ -318,14 +320,14 @@ namespace PathFinder
 
     void RenderDevice::CreatePassHelpers()
     {
-        mPassHelpers.resize(mRenderPassGraph->Nodes().size());
+        mPassHelpers.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
 
-        for (const RenderPassGraph::Node& node : mRenderPassGraph->Nodes())
+        for (const RenderPassGraph::Node* node : mRenderPassGraph->NodesInGlobalExecutionOrder())
         {
             // Zero out helpers on new frame
-            mPassHelpers[node.GlobalExecutionIndex()] = PassHelpers{};
-            PassHelpers& helpers = mPassHelpers[node.GlobalExecutionIndex()];
-            helpers.ResourceStoragePassData = mResourceStorage->GetPerPassData(node.PassMetadata().Name);
+            mPassHelpers[node->GlobalExecutionIndex()] = PassHelpers{};
+            PassHelpers& helpers = mPassHelpers[node->GlobalExecutionIndex()];
+            helpers.ResourceStoragePassData = mResourceStorage->GetPerPassData(node->PassMetadata().Name);
             helpers.ResourceStoragePassData->LastSetConstantBufferDataSize = 0;
             helpers.ResourceStoragePassData->PassConstantBufferMemoryOffset = 0;
             helpers.ResourceStoragePassData->IsAllowedToAdvanceConstantBufferOffset = false;
@@ -341,14 +343,14 @@ namespace PathFinder
         mReroutedTransitionsCommandLists.resize(mRenderPassGraph->DependencyLevels().size());
 
         mPerNodeBeginBarriers.clear();
-        mPerNodeBeginBarriers.resize(mRenderPassGraph->Nodes().size());
+        mPerNodeBeginBarriers.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
 
         // If memory layout did not change we reuse aliasing barriers from previous frame.
         // Otherwise we start from scratch.
         if (mResourceStorage->HasMemoryLayoutChange())
         {
             mPerNodeAliasingBarriers.clear();
-            mPerNodeAliasingBarriers.resize(mRenderPassGraph->Nodes().size());
+            mPerNodeAliasingBarriers.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
         }
 
         mSubresourcesPreviousTransitionInfo.clear();
@@ -412,7 +414,12 @@ namespace PathFinder
                     return;
                 }
 
-                mDependencyLevelTransitionBarriers[node->LocalToDependencyLevelExecutionIndex()].push_back({ subresourceName, *barrier, resourceData->GetGPUResource()->HALResource() });
+                // Render graph works with resource name aliases, so we need to track transitions for the resource using its original name,
+                // otherwise we would lose transition history and place incorrect Begin/End barriers
+                RenderPassGraph::SubresourceName originalSubresourceName = RenderPassGraph::ConstructSubresourceName(resourceData->ResourceName(), subresourceIndex);
+                SubresourceTransitionInfo transitionInfo{ originalSubresourceName, *barrier, resourceData->GetGPUResource()->HALResource() };
+
+                mDependencyLevelTransitionBarriers[node->LocalToDependencyLevelExecutionIndex()].push_back(transitionInfo);
 
                 // Another reason to reroute resource transitions into another queue is incompatibility 
                 // of resource state transitions with receiving queue
@@ -689,11 +696,11 @@ namespace PathFinder
         auto graphicNodesCount = mRenderPassGraph->NodeCountForQueue(0);
 
         // Now that split barriers are determined we can record them with minimal amount of cmd list commands
-        for (const RenderPassGraph::Node& node : mRenderPassGraph->Nodes())
+        for (const RenderPassGraph::Node* node : mRenderPassGraph->NodesInGlobalExecutionOrder())
         {
-            const HAL::ResourceBarrierCollection& beginBarriers = mPerNodeBeginBarriers[node.GlobalExecutionIndex()];
+            const HAL::ResourceBarrierCollection& beginBarriers = mPerNodeBeginBarriers[node->GlobalExecutionIndex()];
             
-            bool lastGraphicNode = node.LocalToQueueExecutionIndex() == graphicNodesCount - 1;
+            bool lastGraphicNode = node->LocalToQueueExecutionIndex() == graphicNodesCount - 1;
             bool beginBarriersExist = beginBarriers.BarrierCount() > 0;
             bool postWorkExists = lastGraphicNode || beginBarriersExist;
 
@@ -714,8 +721,8 @@ namespace PathFinder
                 barriers.AddBarriers(mResourceStateTracker->TransitionToStateImmediately(mBackBuffer->HALResource(), HAL::ResourceState::Present));
             }
 
-            mPassCommandLists[node.GlobalExecutionIndex()].PostWorkCommandList = AllocateCommandListForQueue(node.ExecutionQueueIndex);
-            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[node.GlobalExecutionIndex()].PostWorkCommandList);
+            mPassCommandLists[node->GlobalExecutionIndex()].PostWorkCommandList = AllocateCommandListForQueue(node->ExecutionQueueIndex);
+            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[node->GlobalExecutionIndex()].PostWorkCommandList);
             cmdList->Reset();
             cmdList->InsertBarriers(barriers);
             cmdList->Close();

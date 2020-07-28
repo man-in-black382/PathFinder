@@ -462,6 +462,9 @@
     <ClCompile Include="Source\HardwareAbstractionLayer\DebugLayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DownsamplingHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2363,9 +2366,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingCBContent.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferTextureIndices.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2433,6 +2433,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\ThirdParty\aftermath\AftermathHelpers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingHelper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

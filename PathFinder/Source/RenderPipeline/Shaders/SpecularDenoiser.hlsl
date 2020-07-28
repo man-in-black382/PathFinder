@@ -128,7 +128,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     // Decrease maximum frame number on surface motion which will effectively decrease history weight,
     // which is mandatory to combat ghosting
     float maxAllowedAccumFrames = MaxAllowedAccumulatedFrames(roughness, NdotV, parallax);
-    accumFramesCount = min(accumFramesCount, maxAllowedAccumFrames);
+    //accumFramesCount = min(accumFramesCount, maxAllowedAccumFrames);
     float accumFramesCountNorm = accumFramesCount / maxAllowedAccumFrames;
     float accumulationSpeed = 1.0 / (1.0 + accumFramesCount);
 

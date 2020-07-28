@@ -299,6 +299,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DownsamplingHelper.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\SpecularDenoiserRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ToneMappingRenderPass.cpp" />
@@ -481,7 +482,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DisplacementDistanceMapRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingCBContent.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingHelper.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferTextureIndices.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\SpecularDenoiserRenderPass.hpp" />

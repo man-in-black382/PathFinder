@@ -21,6 +21,7 @@ namespace PathFinder
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
         scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
+        scheduler->WriteToBackBuffer();
     } 
 
     void BackBufferOutputPass::Render(RenderContext<RenderPassContentMediator>* context)

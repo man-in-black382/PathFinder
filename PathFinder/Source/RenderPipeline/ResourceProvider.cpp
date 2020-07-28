@@ -7,7 +7,7 @@ namespace PathFinder
     ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage, const RenderPassGraph::Node* passNode)
         : mResourceStorage{ storage }, mPassNode{ passNode } {}
 
-    uint32_t ResourceProvider::GetUATextureIndex(Foundation::Name textureName, uint8_t mipLevel)
+    uint32_t ResourceProvider::GetUATextureIndex(Foundation::Name textureName, uint8_t mipLevel) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(textureName);
         assert_format(resourceObjects && resourceObjects->Texture, "Resource ", textureName.ToString(), " does not exist");
@@ -30,7 +30,7 @@ namespace PathFinder
         return resourceObjects->Texture->GetUADescriptor(mipLevel)->IndexInHeapRange();
     }
 
-    uint32_t ResourceProvider::GetSRTextureIndex(Foundation::Name textureName, uint8_t mipLevel)
+    uint32_t ResourceProvider::GetSRTextureIndex(Foundation::Name textureName, uint8_t mipLevel) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(textureName);
         assert_format(resourceObjects && resourceObjects->Texture, "Resource ", textureName.ToString(), " does not exist");
@@ -55,7 +55,7 @@ namespace PathFinder
         return resourceObjects->Texture->GetSRDescriptor()->IndexInHeapRange();
     }
 
-    const HAL::Texture::Properties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName)
+    const HAL::Texture::Properties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(resourceName);
         assert_format(resourceObjects && resourceObjects->Texture, "Resource ", resourceName.ToString(), " does not exist");

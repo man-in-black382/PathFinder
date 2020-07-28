@@ -35,6 +35,7 @@ namespace HAL
     void ResourceFormat::ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions)
     {
         mSubresourceCount = 1;
+        mMipCount = 1;
 
         mDescription.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
         mDescription.Width = dimensions.Width;
@@ -57,6 +58,7 @@ namespace HAL
 
         bool isArray = (kind == TextureKind::Texture1D || kind == TextureKind::Texture2D) && dimensions.Depth > 1;
         mSubresourceCount = isArray ? dimensions.Depth * mipCount : mipCount;
+        mMipCount = mipCount;
 
         assert_format(!isArray, "Texture arrays are not supported currently. Add proper handling of texture array scheduling first, then remove this assert.");
 

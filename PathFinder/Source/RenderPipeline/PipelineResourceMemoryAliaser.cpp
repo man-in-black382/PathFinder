@@ -14,7 +14,7 @@ namespace PathFinder
 
     void PipelineResourceMemoryAliaser::AddSchedulingInfo(PipelineResourceSchedulingInfo* scheudlingInfo)
     {
-        mSchedulingInfos.emplace(GetTimeline(scheudlingInfo), scheudlingInfo);
+        mSchedulingInfos.emplace(scheudlingInfo);
     }
 
     uint64_t PipelineResourceMemoryAliaser::Alias()
@@ -57,15 +57,10 @@ namespace PathFinder
         return mSchedulingInfos.empty();
     }
 
-    bool PipelineResourceMemoryAliaser::TimelinesIntersect(const PipelineResourceMemoryAliaser::Timeline& first, const PipelineResourceMemoryAliaser::Timeline& second) const
+    bool PipelineResourceMemoryAliaser::TimelinesIntersect(const PipelineResourceSchedulingInfo& first, const PipelineResourceSchedulingInfo& second) const
     {
-        return first.Start <= second.End && second.Start <= first.End;
-    }
-
-    PipelineResourceMemoryAliaser::Timeline PipelineResourceMemoryAliaser::GetTimeline(const PipelineResourceSchedulingInfo* schedulingInfo) const
-    {
-        const RenderPassGraph::ResourceUsageTimeline& timeline = mRenderPassGraph->GetResourceUsageTimeline(schedulingInfo->ResourceName());
-        return { timeline.first, timeline.second };
+        return first.AliasingLifetime.first <= second.AliasingLifetime.second &&
+            second.AliasingLifetime.first <= first.AliasingLifetime.second;
     }
 
     void PipelineResourceMemoryAliaser::FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const
@@ -91,7 +86,7 @@ namespace PathFinder
         // are used simultaneously with the next one by some render passed (timelines)
         for (AliasingMetadataIterator alreadyAliasedAllocationIt : mAlreadyAliasedAllocations)
         {
-            if (TimelinesIntersect(alreadyAliasedAllocationIt->ResourceTimeline, nextSchedulingInfoIt->ResourceTimeline))
+            if (TimelinesIntersect(*alreadyAliasedAllocationIt->SchedulingInfo, *nextSchedulingInfoIt->SchedulingInfo))
             {
                 // Heap offset stored in AliasingInfo.HeapOffset is relative to heap beginning, 
                 // but the algorithm requires non-aliasable memory region to be 
@@ -181,7 +176,7 @@ namespace PathFinder
 
     PipelineResourceSchedulingInfo::PassInfo* PipelineResourceMemoryAliaser::GetFirstPassInfo(AliasingMetadataIterator schedulingInfoIt) const
     {
-        const RenderPassGraph::Node* firstNode = mRenderPassGraph->NodesInGlobalExecutionOrder().at(schedulingInfoIt->ResourceTimeline.Start);
+        const RenderPassGraph::Node* firstNode = mRenderPassGraph->NodesInGlobalExecutionOrder().at(schedulingInfoIt->SchedulingInfo->AliasingLifetime.first);
         return schedulingInfoIt->SchedulingInfo->GetInfoForPass(firstNode->PassMetadata().Name);
     }
 
@@ -195,8 +190,8 @@ namespace PathFinder
         mAlreadyAliasedAllocations.clear();
     }
 
-    PipelineResourceMemoryAliaser::AliasingMetadata::AliasingMetadata(const Timeline& timeline, PipelineResourceSchedulingInfo* schedulingInfo)
-        : ResourceTimeline{ timeline }, SchedulingInfo{ schedulingInfo } {}
+    PipelineResourceMemoryAliaser::AliasingMetadata::AliasingMetadata(PipelineResourceSchedulingInfo* schedulingInfo)
+        : SchedulingInfo{ schedulingInfo } {}
 
     bool PipelineResourceMemoryAliaser::AliasingMetadata::SortAscending(const AliasingMetadata& first, const AliasingMetadata& second)
     {

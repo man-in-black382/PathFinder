@@ -41,7 +41,7 @@ namespace PathFinder
 
         void AddExpectedStates(HAL::ResourceState states);
         void AddNameAlias(Foundation::Name alias);
-        void FinishScheduling();
+        void ApplyExpectedStates();
         const PassInfo* GetInfoForPass(Foundation::Name passName) const;
         PassInfo* GetInfoForPass(Foundation::Name passName);
 

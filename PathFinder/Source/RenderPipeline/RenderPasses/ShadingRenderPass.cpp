@@ -67,7 +67,9 @@ namespace PathFinder
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
 
         auto frameNumber = context->FrameNumber();
-        auto startIndex = frameNumber * ShadingCBContent::MaxSupportedLights;
+
+        // Correlate every Nth frame 
+        auto startIndex = frameNumber % 8 == 0 ? 0 : frameNumber * ShadingCBContent::MaxSupportedLights;
         auto endIndex = startIndex + ShadingCBContent::MaxSupportedLights - 1;
 
         auto haltonSequence = Foundation::Halton::Sequence<4>(startIndex, endIndex);

@@ -29,12 +29,6 @@ namespace PathFinder
             uint64_t Size;
         };
 
-        struct Timeline
-        {
-            uint64_t Start;
-            uint64_t End;
-        };
-
         enum class MemoryOffsetType
         {
             Start, End
@@ -44,10 +38,9 @@ namespace PathFinder
 
         struct AliasingMetadata
         {
-            Timeline ResourceTimeline;
             PipelineResourceSchedulingInfo* SchedulingInfo;
 
-            AliasingMetadata(const Timeline& timeline, PipelineResourceSchedulingInfo* schedulingInfo);
+            AliasingMetadata(PipelineResourceSchedulingInfo* schedulingInfo);
     
             static bool SortAscending(const AliasingMetadata& first, const AliasingMetadata& second);
             static bool SortDescending(const AliasingMetadata& first, const AliasingMetadata& second);
@@ -56,8 +49,7 @@ namespace PathFinder
         using AliasingMetadataSet = std::multiset<AliasingMetadata, decltype(&AliasingMetadata::SortDescending)>;
         using AliasingMetadataIterator = AliasingMetadataSet::iterator;
 
-        bool TimelinesIntersect(const Timeline& first, const Timeline& second) const;
-        Timeline GetTimeline(const PipelineResourceSchedulingInfo* allocation) const;
+        bool TimelinesIntersect(const PipelineResourceSchedulingInfo& first, const PipelineResourceSchedulingInfo& second) const;
         void FitAliasableMemoryRegion(const MemoryRegion& nextAliasableRegion, uint64_t nextAllocationSize, MemoryRegion& optimalRegion) const;
         void FindCurrentBucketNonAliasableMemoryRegions(AliasingMetadataIterator nextSchedulingInfoIt);
         bool AliasAsFirstAllocation(AliasingMetadataIterator nextSchedulingInfoIt);
