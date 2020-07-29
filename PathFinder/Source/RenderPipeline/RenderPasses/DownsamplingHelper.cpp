@@ -55,6 +55,9 @@ namespace PathFinder
                 ++mipLevel;
                 cbContent.OutputsToWrite[localMipIndex] = strategy == DownsamplingStrategy::WriteAllLevels;
                 cbContent.OutputTexIndices[localMipIndex] = resourceProvider.GetUATextureIndex(textureName, mipLevel);
+
+                Geometry::Dimensions mipDimensions = textureProperties.MipSize(mipLevel);
+                cbContent.OutputSizes[localMipIndex] = { mipDimensions.Width, mipDimensions.Height };
             }
 
             if (strategy == DownsamplingStrategy::WriteOnlyLastLevel)

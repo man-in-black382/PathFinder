@@ -22,6 +22,7 @@ struct PassData
     uint ShadowedShadingReprojectionTargetTexIdx;
     uint UnshadowedShadingReprojectionTargetTexIdx;
     uint ShadingGradientTexIdx;
+    uint ShadingGradientNormFactorTexIdx;
 };
 
 #define PassDataType PassData
@@ -55,6 +56,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     RWTexture2D<float4> shadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.ShadowedShadingReprojectionTargetTexIdx];
     RWTexture2D<float4> unshadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingReprojectionTargetTexIdx];
     RWTexture2D<float4> shadingGradientTarget = RW_Float4_Textures2D[PassDataCB.ShadingGradientTexIdx];
+    RWTexture2D<float4> shadingGradientNormFactorTarget = RW_Float4_Textures2D[PassDataCB.ShadingGradientNormFactorTexIdx];
 
     float roughness;
     float3 surfaceNormal;
@@ -123,10 +125,14 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     shadowedShadingReprojectionTarget[pixelIndex].rgb = shadowedShadingReprojected;
     unshadowedShadingReprojectionTarget[pixelIndex].rgb = unshadowedShadingReprojected;
 
-    float shadowedShadingGradient = CIELuminance(shadowedShadingTexture[pixelIndex].rgb) - CIELuminance(shadowedShadingReprojected);
-    float unshadowedShadingGradient = CIELuminance(unshadowedShadingTexture[pixelIndex].rgb) - CIELuminance(unshadowedShadingReprojected);
+    float shadowedShadingLuminance = CIELuminance(shadowedShadingReprojected);
+    float unshadowedShadingLuminance = CIELuminance(unshadowedShadingReprojected);
+
+    float shadowedShadingGradient = CIELuminance(shadowedShadingTexture[pixelIndex].rgb) - shadowedShadingLuminance;
+    float unshadowedShadingGradient = CIELuminance(unshadowedShadingTexture[pixelIndex].rgb) - unshadowedShadingLuminance;
 
     shadingGradientTarget[pixelIndex].rg = float2(abs(shadowedShadingGradient), abs(unshadowedShadingGradient));
+    shadingGradientNormFactorTarget[pixelIndex].rg = float2(shadowedShadingLuminance, unshadowedShadingLuminance);
 }
 
 #endif

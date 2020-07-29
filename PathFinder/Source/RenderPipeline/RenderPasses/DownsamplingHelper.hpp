@@ -25,6 +25,7 @@ namespace PathFinder
         uint32_t NumberOfOutputsToCompute = 0;
         glm::uvec4 OutputTexIndices;
         glm::uvec4 OutputsToWrite;
+        std::array<glm::uvec2, 4> OutputSizes;
     };
 
     enum class DownsamplingStrategy

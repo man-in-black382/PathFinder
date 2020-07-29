@@ -31,12 +31,13 @@ namespace PathFinder
             passNode = mCurrentlySchedulingPassNode,
             typelessFormat = props.TypelessFormat,
             shaderVisibleFormat = props.ShaderVisibleFormat,
+            resourceName,
             writtenMips,
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, writtenMips, schedulingInfo.ResourceName(), schedulingInfo.ResourceFormat().MipCount(), true);
+                RegisterGraphDependency(*passNode, writtenMips, resourceName, schedulingInfo.ResourceFormat().MipCount(), true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     writtenMips,
@@ -59,11 +60,12 @@ namespace PathFinder
 
             [canBeReadAcrossFrames,
             passNode = mCurrentlySchedulingPassNode,
+            resourceName,
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, MipSet::FirstMip(), schedulingInfo.ResourceName(), schedulingInfo.ResourceFormat().MipCount(), true);
+                RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, schedulingInfo.ResourceFormat().MipCount(), true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     MipSet::FirstMip(),
@@ -95,12 +97,13 @@ namespace PathFinder
             passNode = mCurrentlySchedulingPassNode,
             typelessFormat = props.TypelessFormat,
             shaderVisibleFormat = props.ShaderVisibleFormat,
+            resourceName,
             writtenMips,
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, writtenMips, schedulingInfo.ResourceName(), schedulingInfo.ResourceFormat().MipCount(), true);
+                RegisterGraphDependency(*passNode, writtenMips, resourceName, schedulingInfo.ResourceFormat().MipCount(), true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     writtenMips,
@@ -182,6 +185,7 @@ namespace PathFinder
             [passNode = mCurrentlySchedulingPassNode, 
             readMips,
             concreteFormat,
+            resourceName,
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
         {
@@ -195,7 +199,7 @@ namespace PathFinder
                 state |= HAL::ResourceState::DepthRead;
             }
 
-            RegisterGraphDependency(*passNode, readMips, schedulingInfo.ResourceName(), schedulingInfo.ResourceFormat().MipCount(), false);
+            RegisterGraphDependency(*passNode, readMips, resourceName, schedulingInfo.ResourceFormat().MipCount(), false);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 readMips,

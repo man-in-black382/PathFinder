@@ -25,7 +25,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     float2 uv = dispatchThreadID.xy * GlobalDataCB.PipelineRTResolutionInv;
     Texture2D inputImage = Textures2D[PassDataCB.InputTexIdx];
     RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
-    Texture2D analytic = Textures2D[PassDataCB._Padding1];
+    Texture2D normFactor = Textures2D[PassDataCB._Padding1];
     Texture2D gradient = Textures2D[PassDataCB._Padding0];
 
     /*   float3 shadowedShading = inputImage[dispatchThreadID.xy].rgb;
@@ -37,8 +37,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
            shadow[i] = unshadowedShading[i] < 1e-05 ? 1.0 : shadowedShading[i] / unshadowedShading[i];
        }*/
 
-    float g = gradient.SampleLevel(LinearClampSampler, uv, 0).r;// / 6;
-        /// gradient.SampleLevel(PointClampSampler, 0.xx, 11).r;
+    float g = gradient[dispatchThreadID.xy].r / normFactor.SampleLevel(PointClampSampler, 0.xx, 11).r;
     // shadow* analytic[dispatchThreadID.xy].rgb;
 
     GTTonemappingParams params = PassDataCB.TonemappingParams;
@@ -51,7 +50,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     //    GTToneMap(color.g, params),
     //    GTToneMap(color.b, params));
 
-    outputImage[dispatchThreadID.xy] = float4(/*SRGBFromLinear*/(g > 1.0 ? float3(0,1,0): g.xxx), 1.0);
+    outputImage[dispatchThreadID.xy] = float4(/*SRGBFromLinear*/(g > 1.0 ? float3(0, 1, 0) : g.xxx), 1.0);
 }
 
 #endif

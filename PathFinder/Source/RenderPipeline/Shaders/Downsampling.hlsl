@@ -13,6 +13,7 @@ struct PassData
     uint NumberOfOutputsToCompute;
     uint4 OutputTexIndices;
     bool4 OutputsToWrite;
+    uint2 OutputSizes[4];
 };
 
 #define PassDataType PassData

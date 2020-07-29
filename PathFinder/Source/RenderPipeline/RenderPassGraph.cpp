@@ -200,23 +200,15 @@ namespace PathFinder
         mDetectedQueueCount = 1;
 
         // Dispatch nodes to corresponding dependency levels.
-        // Iterate through unordered nodes because adjacency lists contain indices to 
-        // initial unordered list of nodes and longest distances also correspond to them.
-        for (auto nodeIndex = 0; nodeIndex < mPassNodes.size(); ++nodeIndex)
+        for (auto nodeIndex = 0; nodeIndex < mTopologicallySortedNodes.size(); ++nodeIndex)
         {
-            Node& node = mPassNodes[nodeIndex];
-
-            if (!node.HasAnyDependencies())
-            {
-                continue;
-            }
-
-            uint64_t levelIndex = longestDistances[nodeIndex];
+            Node* node = mTopologicallySortedNodes[nodeIndex];
+            uint64_t levelIndex = longestDistances[node->mIndexInUnorderedList];
             DependencyLevel& dependencyLevel = mDependencyLevels[levelIndex];
             dependencyLevel.mLevelIndex = levelIndex;
-            dependencyLevel.AddNode(&node);
-            node.mDependencyLevelIndex = levelIndex;
-            mDetectedQueueCount = std::max(mDetectedQueueCount, node.ExecutionQueueIndex + 1);
+            dependencyLevel.AddNode(node);
+            node->mDependencyLevelIndex = levelIndex;
+            mDetectedQueueCount = std::max(mDetectedQueueCount, node->ExecutionQueueIndex + 1);
         }
     }
 

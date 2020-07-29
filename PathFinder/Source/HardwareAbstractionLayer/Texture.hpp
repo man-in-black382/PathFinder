@@ -29,6 +29,8 @@ namespace HAL
 
             Properties(ResourceFormat::FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
                 ResourceState initialStateMask, uint16_t mipCount = 1);
+
+            Geometry::Dimensions MipSize(uint8_t mip) const;
         };
 
         Texture(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr);

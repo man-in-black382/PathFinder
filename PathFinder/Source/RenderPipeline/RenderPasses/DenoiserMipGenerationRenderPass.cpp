@@ -19,12 +19,12 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[frameIndex]);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceScheduler::MipSet::FirstMip());
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceScheduler::MipSet::FirstMip());
-        scheduler->ReadTexture(ResourceNames::StochasticShadingGradient, ResourceScheduler::MipSet::FirstMip());
+        scheduler->ReadTexture(ResourceNames::StochasticShadingGradientNormFactor, ResourceScheduler::MipSet::FirstMip());
 
         scheduler->WriteTexture(ResourceNames::GBufferViewDepth[frameIndex], ResourceScheduler::MipSet::Range(1, std::nullopt));
         scheduler->WriteTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceScheduler::MipSet::Range(1, std::nullopt));
         scheduler->WriteTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceScheduler::MipSet::Range(1, std::nullopt));
-        scheduler->WriteTexture(ResourceNames::StochasticShadingGradient, ResourceScheduler::MipSet::Range(1, std::nullopt));
+        scheduler->WriteTexture(ResourceNames::StochasticShadingGradientNormFactor, ResourceScheduler::MipSet::Range(1, std::nullopt));
     }
      
     void DenoiserMipGenerationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -37,7 +37,7 @@ namespace PathFinder
         GenerateMips(ResourceNames::GBufferViewDepth[frameIndex], context, DownsamplingCBContent::Filter::Min, DownsamplingStrategy::WriteAllLevels);
         GenerateMips(ResourceNames::StochasticUnshadowedShadingPreBlurred, context, DownsamplingCBContent::Filter::Average, DownsamplingStrategy::WriteAllLevels);
         GenerateMips(ResourceNames::StochasticShadowedShadingPreBlurred, context, DownsamplingCBContent::Filter::Average, DownsamplingStrategy::WriteAllLevels);
-        GenerateMips(ResourceNames::StochasticShadingGradient, context, DownsamplingCBContent::Filter::Max, DownsamplingStrategy::WriteOnlyLastLevel);
+        GenerateMips(ResourceNames::StochasticShadingGradientNormFactor, context, DownsamplingCBContent::Filter::Max, DownsamplingStrategy::WriteAllLevels);
     }
 
     void DenoiserMipGenerationRenderPass::GenerateMips(Foundation::Name resourceName, RenderContext<RenderPassContentMediator>* context, DownsamplingCBContent::Filter filter, DownsamplingStrategy strategy)

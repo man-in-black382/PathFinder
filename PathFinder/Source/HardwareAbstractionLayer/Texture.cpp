@@ -59,6 +59,14 @@ namespace HAL
             ColorClearValue{ 0, 0, 0, 0 },
             initialStateMask, initialStateMask, mipCount) {}
 
+    Geometry::Dimensions Texture::Properties::MipSize(uint8_t mip) const
+    {
+        assert_format(mip <= MipCount, "Mip ", mip, " is out of bounds");
+        Geometry::Dimensions mipDimensions = Dimensions.XYZMultiplied(1.0f / powf(2.0f, mip));
+        mipDimensions.Depth = std::max(mipDimensions.Depth, 1ull);
+        return mipDimensions;
+    }
+
 
 
     Texture::Texture(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr)
