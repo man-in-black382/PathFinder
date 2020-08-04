@@ -6,7 +6,7 @@ namespace Memory
 
     template <class Element>
     Buffer::Buffer(
-        const HAL::Buffer::Properties<Element>& properties, 
+        const HAL::BufferProperties<Element>& properties, 
         GPUResource::UploadStrategy uploadStrategy, 
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator, 
@@ -29,7 +29,7 @@ namespace Memory
 
     template <class Element>
     Buffer::Buffer(
-        const HAL::Buffer::Properties<Element>& properties, 
+        const HAL::BufferProperties<Element>& properties, 
         ResourceStateTracker* stateTracker, 
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator, 

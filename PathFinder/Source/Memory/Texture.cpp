@@ -4,7 +4,7 @@ namespace Memory
 {
 
     Texture::Texture(
-        const HAL::Texture::Properties& properties, 
+        const HAL::TextureProperties& properties, 
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator,
@@ -19,7 +19,7 @@ namespace Memory
     }
 
     Texture::Texture(
-        const HAL::Texture::Properties& properties, 
+        const HAL::TextureProperties& properties, 
         ResourceStateTracker* stateTracker, 
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator, 

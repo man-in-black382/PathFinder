@@ -46,14 +46,14 @@ namespace PathFinder
     {
         if ((!mVertexBuffer || mVertexBuffer->Capacity<ImDrawVert>() < drawData.TotalVtxCount) && drawData.TotalVtxCount > 0)
         {
-            HAL::Buffer::Properties<ImDrawVert> properties{ (uint64_t)drawData.TotalVtxCount };
+            HAL::BufferProperties<ImDrawVert> properties{ (uint64_t)drawData.TotalVtxCount };
             mVertexBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
             mVertexBuffer->SetDebugName("ImGUI Vertex Buffer");
         }
 
         if ((!mIndexBuffer || mIndexBuffer->Capacity<ImDrawIdx>() < drawData.TotalIdxCount) && drawData.TotalIdxCount > 0)
         {
-            HAL::Buffer::Properties<ImDrawIdx> properties{ (uint64_t)drawData.TotalIdxCount };
+            HAL::BufferProperties<ImDrawIdx> properties{ (uint64_t)drawData.TotalIdxCount };
             mIndexBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
             mIndexBuffer->SetDebugName("ImGUI Index Buffer");
         }
@@ -108,7 +108,7 @@ namespace PathFinder
 
         if (!mFontTexture || mFontTexture->HALTexture()->Dimensions().Width != width || mFontTexture->HALTexture()->Dimensions().Height != height)
         {
-            HAL::Texture::Properties properties{
+            HAL::TextureProperties properties{
                 HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture2D,
                 Geometry::Dimensions{(uint64_t)width, (uint64_t)height}, HAL::ResourceState::AnyShaderAccess
             };

@@ -4,15 +4,15 @@
 namespace PathFinder
 {
 
-    ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage, const RenderPassGraph::Node* passNode)
-        : mResourceStorage{ storage }, mPassNode{ passNode } {}
+    ResourceProvider::ResourceProvider(const PipelineResourceStorage* storage, const RenderPassGraph* passGraph, uint64_t graphNodeIndex)
+        : mResourceStorage{ storage }, mPassGraph{ passGraph }, mGraphNodeIndex{ graphNodeIndex } {}
 
     uint32_t ResourceProvider::GetUATextureIndex(Foundation::Name textureName, uint8_t mipLevel) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(textureName);
         assert_format(resourceObjects && resourceObjects->Texture, "Resource ", textureName.ToString(), " does not exist");
 
-        Foundation::Name passName = mPassNode->PassMetadata().Name;
+        Foundation::Name passName = mPassGraph->Nodes()[mGraphNodeIndex].PassMetadata().Name;
         const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceObjects->SchedulingInfo.GetInfoForPass(passName);
 
         assert_format(passInfo && passInfo->SubresourceInfos[mipLevel],
@@ -35,7 +35,7 @@ namespace PathFinder
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(textureName);
         assert_format(resourceObjects && resourceObjects->Texture, "Resource ", textureName.ToString(), " does not exist");
 
-        Foundation::Name passName = mPassNode->PassMetadata().Name;
+        Foundation::Name passName = mPassGraph->Nodes()[mGraphNodeIndex].PassMetadata().Name;
 
         // Mip level only used for sanity check. It doesn't alter SRV in any way in current implementation.
         const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceObjects->SchedulingInfo.GetInfoForPass(passName);
@@ -55,7 +55,7 @@ namespace PathFinder
         return resourceObjects->Texture->GetSRDescriptor()->IndexInHeapRange();
     }
 
-    const HAL::Texture::Properties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName) const
+    const HAL::TextureProperties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(resourceName);
         assert_format(resourceObjects && resourceObjects->Texture, "Resource ", resourceName.ToString(), " does not exist");

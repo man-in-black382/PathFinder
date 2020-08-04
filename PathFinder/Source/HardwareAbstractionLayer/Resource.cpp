@@ -13,8 +13,7 @@ namespace HAL
     Resource::Resource(const Microsoft::WRL::ComPtr<ID3D12Resource>& existingResourcePtr)
         : mResource(existingResourcePtr), mDescription(mResource->GetDesc()) {}
 
-    Resource::Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
-        : mInitialStates{ initialStateMask }, mExpectedStates{ expectedStateMask | initialStateMask }
+    Resource::Resource(const Device& device, const ResourceFormat& format)
     {
         D3D12_HEAP_PROPERTIES heapProperties{};
         heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -23,16 +22,26 @@ namespace HAL
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
 
-        bool isSubjectForClearing = 
-            EnumMaskBitSet(expectedStateMask, ResourceState::RenderTarget) || 
-            EnumMaskBitSet(expectedStateMask, ResourceState::DepthWrite);
-
+        bool isSubjectForClearing = false;
         D3D12_CLEAR_VALUE d3dClearValue{};
 
-        if (isSubjectForClearing && format.OptimizedClearValue())
-        {
-            d3dClearValue = D3DClearValue(*format.OptimizedClearValue(), mDescription.Format);
-        }
+        std::visit(Foundation::MakeVisitor(
+            [&](const TextureProperties& props)
+            {
+                d3dClearValue = D3DClearValue(props.OptimizedClearValue, ResourceFormat::D3DFormat(props.Format));
+                mInitialStates = props.InitialStateMask;
+                mExpectedStates = props.ExpectedStateMask;
+
+                isSubjectForClearing = 
+                    EnumMaskBitSet(mExpectedStates, ResourceState::RenderTarget) ||
+                    EnumMaskBitSet(mExpectedStates, ResourceState::DepthWrite);
+            },
+            [&](const BufferProperties<uint8_t>& props)
+            {
+                mInitialStates = props.InitialStateMask;
+                mExpectedStates = props.ExpectedStateMask;
+            }),
+            format.ResourceProperties());
 
         ThrowIfFailed(device.D3DDevice()->CreateCommittedResource(
             &heapProperties,
@@ -77,11 +86,12 @@ namespace HAL
         ));
     }
 
-    Resource::Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask)
-        : mInitialStates{ initialStateMask },
-        mExpectedStates{ expectedStateMask | initialStateMask },
-        mHeapOffset{ heapOffset }
+    Resource::Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format)
+        : mHeapOffset{ heapOffset }
     {
+        bool isSubjectForClearing = false;
+        D3D12_CLEAR_VALUE d3dClearValue{};
+
         // Force correct states for Upload/Readback heaps
         if (heap.CPUAccessibleType())
         {
@@ -91,21 +101,30 @@ namespace HAL
             case HAL::CPUAccessibleHeapType::Readback: mInitialStates = mExpectedStates = ResourceState::CopyDestination; break;
             }
         }
+        else
+        {
+            std::visit(Foundation::MakeVisitor(
+                [&](const TextureProperties& props)
+                {
+                    d3dClearValue = D3DClearValue(props.OptimizedClearValue, ResourceFormat::D3DFormat(props.Format));
+                    mInitialStates = props.InitialStateMask;
+                    mExpectedStates = props.ExpectedStateMask;
 
-        bool isSubjectForClearing =
-            EnumMaskBitSet(mExpectedStates, ResourceState::RenderTarget) ||
-            EnumMaskBitSet(mExpectedStates, ResourceState::DepthWrite);
+                    isSubjectForClearing =
+                        EnumMaskBitSet(mExpectedStates, ResourceState::RenderTarget) ||
+                        EnumMaskBitSet(mExpectedStates, ResourceState::DepthWrite);
+                },
+                [&](const BufferProperties<uint8_t>& props)
+                {
+                    mInitialStates = props.InitialStateMask;
+                    mExpectedStates = props.ExpectedStateMask;
+                }),
+                format.ResourceProperties());
+        }
 
         mDescription = format.D3DResourceDescription();
         mResourceAlignment = format.ResourceAlighnment();
         mTotalMemory = format.ResourceSizeInBytes();
-
-        D3D12_CLEAR_VALUE d3dClearValue{};
-
-        if (isSubjectForClearing && format.OptimizedClearValue())
-        {
-            d3dClearValue = D3DClearValue(*format.OptimizedClearValue(), mDescription.Format);
-        }
 
         ThrowIfFailed(device.D3DDevice()->CreatePlacedResource(
             heap.D3DHeap(),

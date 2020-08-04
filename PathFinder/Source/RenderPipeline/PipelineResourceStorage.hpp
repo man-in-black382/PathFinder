@@ -16,13 +16,12 @@
 #include "../Memory/ResourceStateTracker.hpp"
 
 #include <vector>
-#include <unordered_map>
-#include <unordered_set>
 #include <functional>
 #include <tuple>
 #include <memory>
 #include <optional>
 
+#include <robinhood/robin_hood.h>
 #include <dtl/dtl.hpp>
 
 namespace PathFinder
@@ -50,9 +49,13 @@ namespace PathFinder
 
         const HAL::RTDescriptor* GetRenderTargetDescriptor(Foundation::Name resourceName, Foundation::Name passName, uint64_t mipIndex = 0);
         const HAL::DSDescriptor* GetDepthStencilDescriptor(Foundation::Name resourceName, Foundation::Name passName);
+
+        void BeginFrame();
+        void EndFrame();
+
         bool HasMemoryLayoutChange() const;
         
-        void CreatePerPassData();
+        PipelineResourceStoragePass& CreatePerPassData(PassName name);
 
         void StartResourceScheduling();
         void EndResourceScheduling();
@@ -79,7 +82,7 @@ namespace PathFinder
 
         void QueueTextureAllocationIfNeeded(
             ResourceName resourceName,
-            HAL::ResourceFormat::FormatVariant format,
+            HAL::FormatVariant format,
             HAL::TextureKind kind,
             const Geometry::Dimensions& dimensions,
             const HAL::ClearValue& optimizedClearValue,
@@ -98,7 +101,8 @@ namespace PathFinder
         void QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator);
 
     private:
-        using ResourceMap = std::unordered_map<ResourceName, uint64_t>;
+        using ResourceMap = robin_hood::unordered_flat_map<ResourceName, uint64_t>;
+        using ResourceAliasMap = robin_hood::unordered_flat_map<ResourceName, ResourceName>;
         using ResourceList = std::vector<PipelineResourceStorageResource>;
         using DiffEntryList = std::vector<PipelineResourceStorageResource::DiffEntry>;
 
@@ -106,13 +110,10 @@ namespace PathFinder
         {
             SchedulingInfoConfigurator Configurator;
             Foundation::Name ResourceName;
-            std::optional<Foundation::Name> NameAlias;
         };
 
-        PipelineResourceStoragePass& CreatePerPassData(PassName name);
         PipelineResourceStorageResource& CreatePerResourceData(ResourceName name, const HAL::ResourceFormat& resourceFormat);
 
-        void CreateDebugBuffers();
         bool TransferPreviousFrameResources();
 
         HAL::Device* mDevice;
@@ -139,7 +140,8 @@ namespace PathFinder
         // Constant buffer for data that changes every frame
         Memory::GPUResourceProducer::BufferPtr mPerFrameRootConstantsBuffer;
 
-        std::unordered_map<PassName, PipelineResourceStoragePass> mPerPassData;
+        robin_hood::unordered_node_map<PassName, PipelineResourceStoragePass> mPerPassData;
+
         std::vector<std::function<void()>> mAllocationActions;
         std::vector<SchedulingRequest> mSchedulingCreationRequests;
         std::vector<SchedulingRequest> mSchedulingUsageRequests;
@@ -151,6 +153,7 @@ namespace PathFinder
         ResourceList* mCurrentFrameResources = &mResourceLists.second;
         ResourceMap* mPreviousFrameResourceMap = &mResourceMaps.first;
         ResourceMap* mCurrentFrameResourceMap = &mResourceMaps.second;
+        ResourceAliasMap mAliasMap;
 
         // Resource diff entries to determine resource allocation needs
         std::pair<DiffEntryList, DiffEntryList> mDiffEntries;

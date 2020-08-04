@@ -3,6 +3,8 @@
 #include "../RenderPass.hpp"
 #include "../RenderPassContentMediator.hpp"
 
+#include "PipelineNames.hpp"
+
 #include <glm/mat4x4.hpp>
 
 namespace PathFinder
@@ -12,7 +14,6 @@ namespace PathFinder
     {
         glm::mat4 ProjectionMatrix;
         uint32_t UITextureSRVIndex;
-        
     };
 
     // Separate root constants to version vertex/index 

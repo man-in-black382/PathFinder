@@ -30,10 +30,10 @@ namespace PathFinder
     {
         // Preallocate 
         mGlobalRootConstantsBuffer = mResourceProducer->NewBuffer(
-            HAL::Buffer::Properties<uint8_t>{1024, 1, HAL::ResourceState::ConstantBuffer});
+            HAL::BufferProperties<uint8_t>{1024, 1, HAL::ResourceState::ConstantBuffer});
 
         mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(
-            HAL::Buffer::Properties<uint8_t>{1024, 1, HAL::ResourceState::ConstantBuffer},
+            HAL::BufferProperties<uint8_t>{1024, 1, HAL::ResourceState::ConstantBuffer},
             Memory::GPUResource::UploadStrategy::DirectAccess);
     }
 
@@ -64,33 +64,32 @@ namespace PathFinder
         return texture->GetDSDescriptor();
     }
 
+    void PipelineResourceStorage::BeginFrame()
+    {
+        mPreviousFrameResources->clear();
+        mPreviousFrameResourceMap->clear();
+        mPreviousFrameDiffEntries->clear();
+        mAliasMap.clear();
+
+        std::swap(mPreviousFrameDiffEntries, mCurrentFrameDiffEntries);
+        std::swap(mPreviousFrameResources, mCurrentFrameResources);
+        std::swap(mPreviousFrameResourceMap, mCurrentFrameResourceMap);
+    }
+
+    void PipelineResourceStorage::EndFrame()
+    {
+
+    }
+
     bool PipelineResourceStorage::HasMemoryLayoutChange() const
     {
         return mMemoryLayoutChanged;
     }
 
-    void PipelineResourceStorage::CreatePerPassData()
-    {
-        for (const RenderPassGraph::Node& passNode : mPassExecutionGraph->Nodes())
-        {
-            CreatePerPassData(passNode.PassMetadata().Name);
-        }
-
-        CreateDebugBuffers();
-    }
-
     void PipelineResourceStorage::StartResourceScheduling()
     {
-        mPreviousFrameResources->clear();
-        mPreviousFrameResourceMap->clear();
-        mPreviousFrameDiffEntries->clear();
-        mAllocationActions.clear();
         mSchedulingCreationRequests.clear();
         mSchedulingUsageRequests.clear();
-
-        std::swap(mPreviousFrameDiffEntries, mCurrentFrameDiffEntries);
-        std::swap(mPreviousFrameResources, mCurrentFrameResources);
-        std::swap(mPreviousFrameResourceMap, mCurrentFrameResourceMap);
     }
 
     void PipelineResourceStorage::EndResourceScheduling()
@@ -102,18 +101,37 @@ namespace PathFinder
             request.Configurator(resourceData.SchedulingInfo);
         }
 
+        std::vector<ResourceName> aliases;
+
         for (SchedulingRequest& request : mSchedulingUsageRequests)
         {
-            auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
-            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", request.ResourceName.ToString());
+            aliases.clear();
+
+            ResourceName resourceName = request.ResourceName;
+
+            // If resource name is an alias
+            auto aliasIt = mAliasMap.find(resourceName);
+
+            while (aliasIt != mAliasMap.end())
+            {
+                aliases.push_back(resourceName);
+                // Take next name in chain
+                resourceName = aliasIt->second;
+                // See whether that name is also an alias
+                aliasIt = mAliasMap.find(resourceName);
+            }
+
+            auto indexIt = mCurrentFrameResourceMap->find(resourceName);
+            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", resourceName.ToString());
 
             PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
             request.Configurator(resourceData.SchedulingInfo);
 
-            if (request.NameAlias)
+            // Associate aliases with original resource
+            for (ResourceName alias : aliases)
             {
-                mCurrentFrameResourceMap->emplace(*request.NameAlias, indexIt->second);
-                resourceData.SchedulingInfo.AddNameAlias(*request.NameAlias);
+                mCurrentFrameResourceMap->emplace(alias, indexIt->second);
+                resourceData.SchedulingInfo.AddNameAlias(alias);
             }
         }
     }
@@ -158,36 +176,36 @@ namespace PathFinder
         // See whether resource reallocation and therefore memory layout invalidation is required
         mMemoryLayoutChanged = !TransferPreviousFrameResources();
 
-        if (!mMemoryLayoutChanged)
+        if (mMemoryLayoutChanged)
         {
-            return;
+            // Re-alias memory, then reallocate resources only if memory was invalidated
+            // which can happen on first run or when resource properties were changed by the user.
+            //
+            if (!mRTDSMemoryAliaser.IsEmpty()) mRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::RTDSTextures);
+            if (!mNonRTDSMemoryAliaser.IsEmpty()) mNonRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mNonRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::NonRTDSTextures);
+            if (!mBufferMemoryAliaser.IsEmpty()) mBufferHeap = std::make_unique<HAL::Heap>(*mDevice, mBufferMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Buffers);
+            if (!mUniversalMemoryAliaser.IsEmpty()) mUniversalHeap = std::make_unique<HAL::Heap>(*mDevice, mUniversalMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Universal);
+
+            for (auto& allocationAction : mAllocationActions)
+            {
+                allocationAction();
+            }
         }
 
-        // Re-alias memory, then reallocate resources only if memory was invalidated
-        // which can happen on first run or when resource properties were changed by the user.
-        //
-        if (!mRTDSMemoryAliaser.IsEmpty()) mRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::RTDSTextures);
-        if (!mNonRTDSMemoryAliaser.IsEmpty()) mNonRTDSHeap = std::make_unique<HAL::Heap>(*mDevice, mNonRTDSMemoryAliaser.Alias(), HAL::HeapAliasingGroup::NonRTDSTextures);
-        if (!mBufferMemoryAliaser.IsEmpty()) mBufferHeap = std::make_unique<HAL::Heap>(*mDevice, mBufferMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Buffers);
-        if (!mUniversalMemoryAliaser.IsEmpty()) mUniversalHeap = std::make_unique<HAL::Heap>(*mDevice, mUniversalMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Universal);
-
-        for (auto& allocationAction : mAllocationActions)
-        {
-            allocationAction();
-        }
+        mAllocationActions.clear();
     }
 
     void PipelineResourceStorage::QueueTextureAllocationIfNeeded(
         ResourceName resourceName,
-        HAL::ResourceFormat::FormatVariant format,
+        HAL::FormatVariant format,
         HAL::TextureKind kind,
         const Geometry::Dimensions& dimensions,
         const HAL::ClearValue& optimizedClearValue,
         uint16_t mipCount,
         const SchedulingInfoConfigurator& siConfigurator)
     {
-        HAL::Texture::Properties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
-        HAL::ResourceFormat textureFormat = HAL::Texture::ConstructResourceFormat(mDevice, textureProperties);
+        HAL::TextureProperties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
+        HAL::ResourceFormat textureFormat{ mDevice, textureProperties };
 
         assert_format(!GetPerResourceData(resourceName), "Texture ", resourceName.ToString(), " allocation is already requested");
         CreatePerResourceData(resourceName, textureFormat);
@@ -207,7 +225,7 @@ namespace PathFinder
             case HAL::HeapAliasingGroup::Universal: heap = mUniversalHeap.get(); break;
             }
 
-            HAL::Texture::Properties completeProperties{
+            HAL::TextureProperties completeProperties{
                 format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, resourceObjects->SchedulingInfo.ExpectedStates(), mipCount };
 
             if (resourceObjects->SchedulingInfo.CanBeAliased)
@@ -223,17 +241,32 @@ namespace PathFinder
         };
 
         mAllocationActions.push_back(allocationAction);
-        mSchedulingCreationRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName, std::nullopt });
+        mSchedulingCreationRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName });
     }
 
     void PipelineResourceStorage::QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator)
     {
-        mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName, aliasName });
+        mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName });
+
+        if (aliasName)
+        {
+            mAliasMap[*aliasName] = resourceName;
+        }
     }
 
     PipelineResourceStoragePass& PipelineResourceStorage::CreatePerPassData(PassName name)
     {
         auto [it, success] = mPerPassData.emplace(name, PipelineResourceStoragePass{});
+
+        HAL::BufferProperties<float> properties{ 1024 };
+        it->second.PassDebugBuffer = mResourceProducer->NewBuffer(properties);
+        it->second.PassDebugBuffer->SetDebugName(name.ToString() + " Debug Constant Buffer");
+        it->second.PassDebugBuffer->RequestWrite();
+
+        // Avoid garbage on first use
+        uint8_t* uploadMemory = it->second.PassDebugBuffer->WriteOnlyPtr();
+        memset(uploadMemory, 0, sizeof(float) * 1024);
+
         return it->second;
     }
 
@@ -242,21 +275,6 @@ namespace PathFinder
         PipelineResourceStorageResource& resourceObjects = mCurrentFrameResources->emplace_back(name, resourceFormat);
         mCurrentFrameResourceMap->emplace(name, mCurrentFrameResources->size() - 1);
         return resourceObjects;
-    }
-
-    void PipelineResourceStorage::CreateDebugBuffers()
-    {
-        for (auto& [passName, passObjects] : mPerPassData)
-        {
-            HAL::Buffer::Properties<float> properties{ 1024 };
-            passObjects.PassDebugBuffer = mResourceProducer->NewBuffer(properties);
-            passObjects.PassDebugBuffer->SetDebugName(passName.ToString() + " Debug Constant Buffer");
-            passObjects.PassDebugBuffer->RequestWrite();
-
-            // Avoid garbage on first use
-            uint8_t* uploadMemory = passObjects.PassDebugBuffer->WriteOnlyPtr();
-            memset(uploadMemory, 0, sizeof(float) * 1024);
-        }
     }
 
     bool PipelineResourceStorage::TransferPreviousFrameResources()

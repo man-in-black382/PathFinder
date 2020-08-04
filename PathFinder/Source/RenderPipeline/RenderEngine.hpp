@@ -34,6 +34,7 @@
 #include "RootSignatureCreator.hpp"
 #include "RenderPassGraph.hpp"
 #include "CommandRecorder.hpp"
+#include "SubPassScheduler.hpp"
 #include "UIGPUStorage.hpp"
 #include "BottomRTAS.hpp"
 #include "TopRTAS.hpp"
@@ -53,7 +54,6 @@ namespace PathFinder
 
         void AddRenderPass(RenderPass<ContentMediator>* pass);
 
-        void CommitRenderPasses();
         void UploadProcessAndTransferAssets();
         void Render();
         void FlushAllQueuedFrames();
@@ -79,7 +79,6 @@ namespace PathFinder
         void ScheduleFrame();
 
         RenderPassGraph mRenderPassGraph;
-        std::unordered_map<Foundation::Name, std::pair<RenderPass<ContentMediator>*, uint64_t>> mRenderPasses;
 
         uint8_t mCurrentBackBufferIndex = 0;
         uint8_t mSimultaneousFramesInFlight = 1;
@@ -108,15 +107,12 @@ namespace PathFinder
         std::unique_ptr<PipelineStateCreator> mPipelineStateCreator;
         std::unique_ptr<RootSignatureCreator> mRootSignatureCreator;
         std::unique_ptr<RenderDevice> mRenderDevice;
+        std::unique_ptr<RenderPassContainer<ContentMediator>> mRenderPassContainer;
 
         std::unique_ptr<HAL::SwapChain> mSwapChain;
         std::unique_ptr<HAL::Fence> mFrameFence;
 
         ContentMediator* mContentMediator = nullptr;
-        std::vector<CommandRecorder> mCommandRecorders;
-        std::vector<ResourceProvider> mResourceProviders;
-        std::vector<RootConstantsUpdater> mRootConstantUpdaters;
-        std::vector<RenderContext<ContentMediator>> mRenderContexts;
 
         Event mPreRenderEvent;
         Event mPostRenderEvent;

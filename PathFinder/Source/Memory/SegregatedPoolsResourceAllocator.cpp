@@ -25,9 +25,9 @@ namespace Memory
         });
     }
 
-    SegregatedPoolsResourceAllocator::TexturePtr SegregatedPoolsResourceAllocator::AllocateTexture(const HAL::Texture::Properties& properties)
+    SegregatedPoolsResourceAllocator::TexturePtr SegregatedPoolsResourceAllocator::AllocateTexture(const HAL::TextureProperties& properties)
     {
-        HAL::ResourceFormat format = HAL::Texture::ConstructResourceFormat(mDevice, properties);
+        HAL::ResourceFormat format{ mDevice, properties };
         Allocation allocation = FindOrAllocateMostFittingFreeSlot(format.ResourceSizeInBytes(), format, std::nullopt);
         PoolsAllocation& poolAllocation = allocation.PoolAllocation;
 

@@ -9,8 +9,7 @@
 #include "RenderContext.hpp"
 #include "PipelineStateCreator.hpp"
 #include "RootSignatureCreator.hpp"
-
-#include "RenderPasses/PipelineNames.hpp"
+#include "SubPassScheduler.hpp"
 
 namespace PathFinder
 {
@@ -26,6 +25,7 @@ namespace PathFinder
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) {};
         virtual void ScheduleResources(ResourceScheduler* scheduler) {};
+        virtual void ScheduleSubPasses(SubPassScheduler<ContentMediator>* scheduler) {};
         virtual void Render(RenderContext<ContentMediator>* context) {};
 
     private:

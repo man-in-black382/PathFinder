@@ -86,6 +86,12 @@ namespace PathFinder
             HAL::ColorFormat::RGBA8_Usigned_Norm, 
             mRenderSurfaceDescription.Dimensions());
 
+        mRenderPassContainer = std::make_unique<RenderPassContainer<ContentMediator>>(
+            mRenderDevice.get(),
+            mPipelineResourceStorage.get(), 
+            mPassUtilityProvider.get(),
+            &mRenderPassGraph);
+
         mFrameFence = std::make_unique<HAL::Fence>(*mDevice);
 
         for (auto& backBufferPtr : mSwapChain->BackBuffers())
@@ -103,7 +109,7 @@ namespace PathFinder
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::AddRenderPass(RenderPass<ContentMediator>* pass)
     {
-        mRenderPasses.emplace(pass->Metadata().Name, std::pair<RenderPass<ContentMediator>*, uint64_t>{ pass, 0 });
+        mRenderPassContainer->AddRenderPass(pass);
     }
 
     template <class ContentMediator>
@@ -122,54 +128,6 @@ namespace PathFinder
     void RenderEngine<ContentMediator>::SetContentMediator(ContentMediator* mediator)
     {
         mContentMediator = mediator;
-    }
-
-    template <class ContentMediator>
-    void RenderEngine<ContentMediator>::CommitRenderPasses()
-    {
-        mRenderContexts.clear();
-        mCommandRecorders.clear();
-        mResourceProviders.clear();
-        mRootConstantUpdaters.clear();
-
-        mRenderContexts.reserve(mRenderPasses.size());
-        mCommandRecorders.reserve(mRenderPasses.size());
-        mResourceProviders.reserve(mRenderPasses.size());
-        mRootConstantUpdaters.reserve(mRenderPasses.size());
-
-        for (auto& [passName, passPtrAndContextIdx] : mRenderPasses)
-        {
-            auto& [passPtr, contextIdx] = passPtrAndContextIdx;
-
-            // Populate graph with nodes first
-            mRenderPassGraph.AddPass(passPtr->Metadata());
-            // Run PSO setup
-            passPtr->SetupPipelineStates(mPipelineStateCreator.get(), mRootSignatureCreator.get());
-        }
-
-        auto nodeIdx = 0;
-
-        for (auto& [passName, passPtrAndContextIdx] : mRenderPasses)
-        {
-            auto& [passPtr, contextIdx] = passPtrAndContextIdx;
-
-            // Create a separate command recorder for each pass
-            CommandRecorder& commandRecorder = mCommandRecorders.emplace_back(mRenderDevice.get(), &mRenderPassGraph.Nodes()[nodeIdx]);
-            ResourceProvider& resourceProvider = mResourceProviders.emplace_back(mPipelineResourceStorage.get(), &mRenderPassGraph.Nodes()[nodeIdx]);
-            RootConstantsUpdater& constantsUpdater = mRootConstantUpdaters.emplace_back(mPipelineResourceStorage.get(), &mRenderPassGraph.Nodes()[nodeIdx]);
-            RenderContext<ContentMediator> context{ &commandRecorder, &constantsUpdater, &resourceProvider, mPassUtilityProvider.get() };
-            context.SetContent(mContentMediator);
-            mRenderContexts.push_back(context);
-            contextIdx = mRenderContexts.size() - 1;
-
-            ++nodeIdx;
-        }
-
-        // Make resource storage allocate necessary info using graph nodes
-        mPipelineResourceStorage->CreatePerPassData();
-
-        // Compile states
-        mPipelineStateManager->CompileSignaturesAndStates();
     }
 
     template <class ContentMediator>
@@ -222,14 +180,11 @@ namespace PathFinder
             mResourceProducer->SetCommandList(mRenderDevice->PreRenderUploadsCommandList());
         }
 
-        // Recompile states that were modified
-        if (mPipelineStateManager->HasModifiedStates())
-        {
-            mPipelineStateManager->RecompileModifiedStates();
-        }
-
         // Scheduler resources, build graph
         ScheduleFrame();
+
+        // Compile new states and signatures, if any
+        mPipelineStateManager->CompileUncompiledSignaturesAndStates();
 
         // Update render device with current frame back buffer
         mRenderDevice->SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
@@ -252,7 +207,6 @@ namespace PathFinder
 
         // Issue a CPU wait if necessary
         mRenderDevice->GraphicsCommandQueue().SignalFence(*mFrameFence);
-
         mFrameFence->StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
         // Notify internal listeners
@@ -274,6 +228,7 @@ namespace PathFinder
     void RenderEngine<ContentMediator>::NotifyStartFrame(uint64_t newFrameNumber)
     {
         mShaderManager->BeginFrame();
+        mPipelineResourceStorage->BeginFrame();
         mResourceAllocator->BeginFrame(newFrameNumber);
         mDescriptorAllocator->BeginFrame(newFrameNumber);
         mCommandListAllocator->BeginFrame(newFrameNumber);
@@ -286,6 +241,7 @@ namespace PathFinder
     void RenderEngine<ContentMediator>::NotifyEndFrame(uint64_t completedFrameNumber)
     {
         mShaderManager->EndFrame();
+        mPipelineResourceStorage->EndFrame();
         mResourceProducer->EndFrame(completedFrameNumber);
         mResourceAllocator->EndFrame(completedFrameNumber);
         mDescriptorAllocator->EndFrame(completedFrameNumber);
@@ -358,15 +314,26 @@ namespace PathFinder
         Memory::Texture* currentBackBuffer = mBackBuffers[mCurrentBackBufferIndex].get();
         mRenderDevice->SetBackBuffer(currentBackBuffer);
 
+        auto recordCommandList = [this](auto&& passHelpers, const RenderPassGraph::Node& passNode)
+        {
+            mRenderDevice->RecordWorkerCommandList(passNode, [this, passHelpers]
+            {
+                RenderContext<ContentMediator> context = passHelpers->GetContext();
+                context.SetContent(mContentMediator);
+                passHelpers->Pass->Render(&context);
+            });
+        };
+
         for (const RenderPassGraph::Node* passNode : mRenderPassGraph.NodesInGlobalExecutionOrder())
         {
-            auto& [passPtr, passContextIdx] = mRenderPasses[passNode->PassMetadata().Name];
-            RenderContext<ContentMediator>& context = mRenderContexts[passContextIdx];
-
-            mRenderDevice->RecordWorkerCommandList(*passNode, [passPtr, &context]
+            if (auto passHelpers = mRenderPassContainer->GetRenderPass(passNode->PassMetadata().Name))
             {
-                passPtr->Render(&context);
-            });
+                recordCommandList(passHelpers, *passNode);
+            } 
+            else if (auto passHelpers = mRenderPassContainer->GetRenderSubPass(passNode->PassMetadata().Name))
+            {
+                recordCommandList(passHelpers, *passNode);
+            }
         }
 
         // TODO: When multi threading is implemented, insert a sync here
@@ -379,17 +346,36 @@ namespace PathFinder
     void RenderEngine<ContentMediator>::ScheduleFrame()
     {
         mRenderPassGraph.Clear();
+
+        // Run scheduling for standard render passes
         mPipelineResourceStorage->StartResourceScheduling();
 
-        // Schedule resources and states
-        for (RenderPassGraph::Node& passNode : mRenderPassGraph.Nodes())
+        for (auto& [passName, passHelpers] : mRenderPassContainer->RenderPasses())
         {
-            auto& [passPtr, passContextIdx] = mRenderPasses[passNode.PassMetadata().Name];
-            mResourceScheduler->SetCurrentlySchedulingPassNode(&passNode);
-            passPtr->ScheduleResources(mResourceScheduler.get());
+            mResourceScheduler->SetCurrentlySchedulingPassNode(&mRenderPassGraph.Nodes()[passHelpers.GraphNodeIndex]);
+            passHelpers.Pass->ScheduleResources(mResourceScheduler.get());
+
+            if (!passHelpers.ArePipelineStatesScheduled)
+            {
+                passHelpers.Pass->SetupPipelineStates(mPipelineStateCreator.get(), mRootSignatureCreator.get());
+                passHelpers.ArePipelineStatesScheduled = true;
+            }
         }
 
         mPipelineResourceStorage->EndResourceScheduling();
+
+        // Run scheduling for sub render passes
+        mPipelineResourceStorage->StartResourceScheduling();
+
+        for (auto& [passName, passHelpers] : mRenderPassContainer->RenderSubPasses())
+        {
+            mResourceScheduler->SetCurrentlySchedulingPassNode(&mRenderPassGraph.Nodes()[passHelpers.GraphNodeIndex]);
+            passHelpers.Pass->ScheduleResources(mResourceScheduler.get());
+        }
+
+        mPipelineResourceStorage->EndResourceScheduling();
+
+        // Finish graph and allocate memory 
         mRenderPassGraph.Build();
         mPipelineResourceStorage->AllocateScheduledResources();
     }

@@ -37,7 +37,7 @@ namespace PathFinder
         GenerateMips(ResourceNames::GBufferViewDepth[frameIndex], context, DownsamplingCBContent::Filter::Min, DownsamplingStrategy::WriteAllLevels);
         GenerateMips(ResourceNames::StochasticUnshadowedShadingPreBlurred, context, DownsamplingCBContent::Filter::Average, DownsamplingStrategy::WriteAllLevels);
         GenerateMips(ResourceNames::StochasticShadowedShadingPreBlurred, context, DownsamplingCBContent::Filter::Average, DownsamplingStrategy::WriteAllLevels);
-        GenerateMips(ResourceNames::StochasticShadingGradientNormFactor, context, DownsamplingCBContent::Filter::Max, DownsamplingStrategy::WriteAllLevels);
+        GenerateMips(ResourceNames::StochasticShadingGradientNormFactor, context, DownsamplingCBContent::Filter::Max, DownsamplingStrategy::WriteOnlyLastLevel);
     }
 
     void DenoiserMipGenerationRenderPass::GenerateMips(Foundation::Name resourceName, RenderContext<RenderPassContentMediator>* context, DownsamplingCBContent::Filter filter, DownsamplingStrategy strategy)

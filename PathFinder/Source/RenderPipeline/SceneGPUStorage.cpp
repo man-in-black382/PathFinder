@@ -35,7 +35,7 @@ namespace PathFinder
 
         if (!mMaterialTable || mMaterialTable->Capacity<GPUMaterialTableEntry>() < materials.size())
         {
-            HAL::Buffer::Properties<GPUMaterialTableEntry> props{ materials.size() };
+            HAL::BufferProperties<GPUMaterialTableEntry> props{ materials.size() };
             mMaterialTable = mResourceProducer->NewBuffer(props);
             mMaterialTable->SetDebugName("Material Table");
         }
@@ -81,7 +81,7 @@ namespace PathFinder
 
         if (!mMeshInstanceTable || mMeshInstanceTable->Capacity<GPUMeshInstanceTableEntry>() < requiredBufferSize)
         {
-            HAL::Buffer::Properties<GPUMeshInstanceTableEntry> props{ requiredBufferSize };
+            HAL::BufferProperties<GPUMeshInstanceTableEntry> props{ requiredBufferSize };
             mMeshInstanceTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
             mMeshInstanceTable->SetDebugName("Mesh Instance Table");
         }
@@ -124,7 +124,7 @@ namespace PathFinder
 
         if (!mLightTable || mLightTable->Capacity<GPULightTableEntry>() < requiredBufferSize)
         {
-            HAL::Buffer::Properties<GPULightTableEntry> props{ requiredBufferSize };
+            HAL::BufferProperties<GPULightTableEntry> props{ requiredBufferSize };
             mLightTable = mResourceProducer->NewBuffer(props, Memory::GPUResource::UploadStrategy::DirectAccess);
             mLightTable->SetDebugName("Lights Instance Table");
         }

@@ -3,6 +3,8 @@
 #include "../RenderPass.hpp"
 #include "../RenderPassContentMediator.hpp"
 
+#include "PipelineNames.hpp"
+
 #include <glm/mat4x4.hpp>
 
 namespace PathFinder

@@ -10,7 +10,7 @@ namespace PathFinder
 
         if (!mPerFrameRootConstantsBuffer || mPerFrameRootConstantsBuffer->Capacity<Constants>(Alignment) < 1)
         {
-            HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
+            HAL::BufferProperties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
             mPerFrameRootConstantsBuffer->SetDebugName("Frame Constant Buffer");
         }
@@ -26,7 +26,7 @@ namespace PathFinder
 
         if (!mGlobalRootConstantsBuffer || mGlobalRootConstantsBuffer->Capacity<Constants>(Alignment) < 1)
         {
-            HAL::Buffer::Properties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
+            HAL::BufferProperties<Constants> properties{ 1, Alignment, HAL::ResourceState::ConstantBuffer };
             mGlobalRootConstantsBuffer = mResourceProducer->NewBuffer(properties);
             mGlobalRootConstantsBuffer->SetDebugName("Global Constant Buffer");
         }
@@ -60,7 +60,7 @@ namespace PathFinder
         if (!passData->PassConstantBuffer || passData->PassConstantBuffer->Capacity() < newBufferSize)
         {
             uint64_t grownBufferSize = Foundation::MemoryUtils::Align(newBufferSize, GrowAlignment);
-            HAL::Buffer::Properties properties{ grownBufferSize, 1, HAL::ResourceState::ConstantBuffer };
+            HAL::BufferProperties properties{ grownBufferSize, 1, HAL::ResourceState::ConstantBuffer };
             passData->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
             passData->PassConstantBuffer->SetDebugName(passNode.PassMetadata().Name.ToString() + " Constant Buffer");
             passData->PassConstantData.resize(grownBufferSize);
@@ -76,7 +76,7 @@ namespace PathFinder
     template <class BufferDataT>
     void PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, const SchedulingInfoConfigurator& siConfigurator)
     {
-        HAL::Buffer::Properties<BufferDataT> properties{ capacity, perElementAlignment };
+        HAL::BufferProperties<BufferDataT> properties{ capacity, perElementAlignment };
         HAL::ResourceFormat bufferFormat = HAL::Buffer::ConstructResourceFormat(mDevice, properties);
 
         PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
@@ -96,7 +96,7 @@ namespace PathFinder
                 assert_format(false, "Should never be hit");
             }
 
-            HAL::Buffer::Properties<BufferDataT> finalProperties{
+            HAL::BufferProperties<BufferDataT> finalProperties{
                 capacity, perElementAlignment, HAL::ResourceState::Common, resourceObjects->SchedulingInfo.ExpectedStates()
             };
 

@@ -13,14 +13,14 @@ namespace Memory
     {
     public:
         Texture(
-            const HAL::Texture::Properties& properties, 
+            const HAL::TextureProperties& properties, 
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
             CopyCommandListProvider* commandListProvider);
 
         Texture(
-            const HAL::Texture::Properties& properties,
+            const HAL::TextureProperties& properties,
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
@@ -55,7 +55,7 @@ namespace Memory
 
     private:
         SegregatedPoolsResourceAllocator::TexturePtr mTexturePtr;
-        HAL::Texture::Properties mProperties;
+        HAL::TextureProperties mProperties;
 
         mutable PoolDescriptorAllocator::DSDescriptorPtr mDSDescriptor;
         mutable PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;

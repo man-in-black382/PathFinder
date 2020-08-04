@@ -21,7 +21,7 @@ namespace PathFinder
 
         bool canBeReadAcrossFrames = EnumMaskBitSet(properties->Flags, Flags::CrossFrameRead);
 
-        HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
+        HAL::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
         mResourceStorage->QueueTextureAllocationIfNeeded(
@@ -37,7 +37,7 @@ namespace PathFinder
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, writtenMips, resourceName, schedulingInfo.ResourceFormat().MipCount(), true);
+                RegisterGraphDependency(*passNode, writtenMips, resourceName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     writtenMips,
@@ -65,7 +65,7 @@ namespace PathFinder
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, schedulingInfo.ResourceFormat().MipCount(), true);
+                RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     MipSet::FirstMip(),
@@ -87,7 +87,7 @@ namespace PathFinder
         NewTextureProperties props = FillMissingFields(properties);
         bool canBeReadAcrossFrames = EnumMaskBitSet(properties->Flags, Flags::CrossFrameRead);
 
-        HAL::ResourceFormat::FormatVariant format = *props.ShaderVisibleFormat;
+        HAL::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
         mResourceStorage->QueueTextureAllocationIfNeeded(
@@ -103,7 +103,7 @@ namespace PathFinder
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, writtenMips, resourceName, schedulingInfo.ResourceFormat().MipCount(), true);
+                RegisterGraphDependency(*passNode, writtenMips, resourceName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     writtenMips,
@@ -133,12 +133,12 @@ namespace PathFinder
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
         {
-            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*schedulingInfo.ResourceFormat().DataType());
+            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(schedulingInfo.ResourceFormat().GetTextureProperties().Format);
 
             assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
             assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
 
-            RegisterGraphDependency(*passNode, writtenMips, name, schedulingInfo.ResourceFormat().MipCount(), true);
+            RegisterGraphDependency(*passNode, writtenMips, name, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 writtenMips,
@@ -166,9 +166,9 @@ namespace PathFinder
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
         {
-            assert_format(std::holds_alternative<HAL::DepthStencilFormat>(*schedulingInfo.ResourceFormat().DataType()), "Cannot reuse non-depth-stencil texture");
+            assert_format(std::holds_alternative<HAL::DepthStencilFormat>(schedulingInfo.ResourceFormat().GetTextureProperties().Format), "Cannot reuse non-depth-stencil texture");
 
-            RegisterGraphDependency(*passNode, MipSet::FirstMip(), name, schedulingInfo.ResourceFormat().MipCount(), true);
+            RegisterGraphDependency(*passNode, MipSet::FirstMip(), name, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 MipSet::FirstMip(),
@@ -189,17 +189,17 @@ namespace PathFinder
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
         {
-            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*schedulingInfo.ResourceFormat().DataType());
+            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(schedulingInfo.ResourceFormat().GetTextureProperties().Format);
             assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
 
             HAL::ResourceState state = HAL::ResourceState::AnyShaderAccess;
 
-            if (std::holds_alternative<HAL::DepthStencilFormat>(*schedulingInfo.ResourceFormat().DataType()))
+            if (std::holds_alternative<HAL::DepthStencilFormat>(schedulingInfo.ResourceFormat().GetTextureProperties().Format))
             {
                 state |= HAL::ResourceState::DepthRead;
             }
 
-            RegisterGraphDependency(*passNode, readMips, resourceName, schedulingInfo.ResourceFormat().MipCount(), false);
+            RegisterGraphDependency(*passNode, readMips, resourceName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, false);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 readMips,
@@ -228,12 +228,12 @@ namespace PathFinder
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
         {
-            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(*schedulingInfo.ResourceFormat().DataType());
+            bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(schedulingInfo.ResourceFormat().GetTextureProperties().Format);
 
             assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
             assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-            RegisterGraphDependency(*passNode, writtenMips, name, schedulingInfo.ResourceFormat().MipCount(), true);
+            RegisterGraphDependency(*passNode, writtenMips, name, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 writtenMips,
@@ -392,7 +392,7 @@ namespace PathFinder
         }
 
         uint32_t firstMip = 0;
-        uint32_t lastMip = resourceShcedulingInfo.ResourceFormat().MipCount() - 1;
+        uint32_t lastMip = resourceShcedulingInfo.ResourceFormat().GetTextureProperties().MipCount - 1;
 
         if (const MipList* explicitMipList = std::get_if<0>(&mips.Combination.value()))
         {

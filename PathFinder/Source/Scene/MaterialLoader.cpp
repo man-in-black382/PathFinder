@@ -37,7 +37,7 @@ namespace PathFinder
 
             if (!material.DistanceField)
             {
-                HAL::Texture::Properties distFieldProperties{
+                HAL::TextureProperties distFieldProperties{
                     HAL::ColorFormat::RGBA32_Unsigned, HAL::TextureKind::Texture3D,
                     DistanceFieldTextureSize, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::AnyShaderAccess };
 
@@ -84,7 +84,7 @@ namespace PathFinder
         }
     }
 
-    Memory::Texture* MaterialLoader::AllocateAndStoreTexture(const HAL::Texture::Properties& properties, const std::string& relativePath)
+    Memory::Texture* MaterialLoader::AllocateAndStoreTexture(const HAL::TextureProperties& properties, const std::string& relativePath)
     {
         auto [iter, success] = mMaterialTextures.emplace(relativePath, mResourceProducer->NewTexture(properties));
         return iter->second.get();
@@ -92,11 +92,11 @@ namespace PathFinder
 
     void MaterialLoader::CreateDefaultTextures()
     {
-        HAL::Texture::Properties dummy2DTextureProperties{
+        HAL::TextureProperties dummy2DTextureProperties{
             HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture2D,
             Geometry::Dimensions{1, 1}, HAL::ResourceState::AnyShaderAccess };
 
-        HAL::Texture::Properties dummy3DTextureProperties{
+        HAL::TextureProperties dummy3DTextureProperties{
             HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture3D,
             Geometry::Dimensions{1, 1}, HAL::ResourceState::AnyShaderAccess };
 

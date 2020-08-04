@@ -4,6 +4,8 @@
 #include "../HardwareAbstractionLayer/PipelineState.hpp"
 #include "../Memory/GPUResourceProducer.hpp"
 
+#include <robinhood/robin_hood.h>
+
 #include "ShaderManager.hpp"
 #include "RenderSurfaceDescription.hpp"
 #include "PipelineStateProxy.hpp"
@@ -53,13 +55,12 @@ namespace PathFinder
         const HAL::RootSignature* GetRootSignature(RootSignatureName name) const;
         const HAL::RootSignature& BaseRootSignature() const;
 
-        void CompileSignaturesAndStates();
-        void RecompileModifiedStates();
-        bool HasModifiedStates() const;
+        void CompileUncompiledSignaturesAndStates();
 
     private:
         struct RayTracingStateWrapper
         {
+            PSOName Name;
             HAL::RayTracingPipelineState State;
             Memory::GPUResourceProducer::BufferPtr ShaderTableBuffer;
 
@@ -80,7 +81,7 @@ namespace PathFinder
 
         void ConfigureDefaultStates();
         void AddCommonRootSignatureParameters(HAL::RootSignature& signature) const;
-        void CompileRayTracingState(RayTracingStateWrapper& stateWrapper, Foundation::Name psoName);
+        void CompileRayTracingState(RayTracingStateWrapper& stateWrapper);
 
         void RecompileStatesWithNewShader(const HAL::Shader* oldShader, const HAL::Shader* newShader);
         void RecompileStatesWithNewLibrary(const HAL::Library* oldLibrary, const HAL::Library* newLibrary);
@@ -93,11 +94,12 @@ namespace PathFinder
         HAL::RootSignature mBaseRootSignature;
         HAL::GraphicsPipelineState mDefaultGraphicsState;
 
-        std::unordered_map<PSOName, PipelineStateVariantInternal> mPipelineStates;
-        std::unordered_map<RootSignatureName, HAL::RootSignature> mRootSignatures;
-        std::unordered_map<const HAL::Shader*, std::unordered_set<PipelineStateVariantInternal*>> mShaderToPSOAssociations;
-        std::unordered_map<const HAL::Library*, std::unordered_set<PipelineStateVariantInternal*>> mLibraryToPSOAssociations;
-        std::unordered_set<PipelineStateVariantInternal*> mStatesToRecompile;
+        robin_hood::unordered_node_map<PSOName, PipelineStateVariantInternal> mPipelineStates;
+        robin_hood::unordered_node_map<RootSignatureName, HAL::RootSignature> mRootSignatures;
+        robin_hood::unordered_map<const HAL::Shader*, robin_hood::unordered_flat_set<PipelineStateVariantInternal*>> mShaderToPSOAssociations;
+        robin_hood::unordered_map<const HAL::Library*, robin_hood::unordered_flat_set<PipelineStateVariantInternal*>> mLibraryToPSOAssociations;
+        robin_hood::unordered_set<PipelineStateVariantInternal*> mStatesToCompile;
+        robin_hood::unordered_set<HAL::RootSignature*> mSignaturesToCompile;
 
         std::string mDefaultVertexEntryPointName = "VSMain";
         std::string mDefaultPixelEntryPointName = "PSMain";

@@ -2,7 +2,7 @@ namespace Memory
 {
 
     template <class Element>
-    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::Buffer::Properties<Element>& properties, GPUResource::UploadStrategy uploadStrategy)
+    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::BufferProperties<Element>& properties, GPUResource::UploadStrategy uploadStrategy)
     {
         Buffer* buffer = new Buffer{ properties, uploadStrategy, mStateTracker, mResourceAllocator, mDescriptorAllocator, this };
         auto [iter, success] = mAllocatedResources.insert(buffer);
@@ -17,7 +17,7 @@ namespace Memory
     }
 
     template <class Element>
-    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::Buffer::Properties<Element>& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset)
+    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::BufferProperties<Element>& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset)
     {
         Buffer* buffer = new Buffer{ 
             properties, mStateTracker, mResourceAllocator, 

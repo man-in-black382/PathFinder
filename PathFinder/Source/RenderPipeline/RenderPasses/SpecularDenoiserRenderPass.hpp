@@ -4,6 +4,7 @@
 #include "../RenderPassContentMediator.hpp"
 
 #include "GBufferTextureIndices.hpp"
+#include "PipelineNames.hpp"
 
 namespace PathFinder
 {

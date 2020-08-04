@@ -9,7 +9,7 @@ namespace PathFinder
     class CommandRecorder
     {
     public:
-        CommandRecorder(RenderDevice* graphicsDevice, const RenderPassGraph::Node* passNode);
+        CommandRecorder(RenderDevice* graphicsDevice, const RenderPassGraph* passGraph, uint64_t graphNodeIndex);
 
         template <class T> 
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
@@ -36,7 +36,8 @@ namespace PathFinder
 
     private:
         RenderDevice* mGraphicsDevice;
-        const RenderPassGraph::Node* mPassNode;
+        const RenderPassGraph* mPassGraph;
+        uint64_t mGraphNodeIndex;
     };
 
 }

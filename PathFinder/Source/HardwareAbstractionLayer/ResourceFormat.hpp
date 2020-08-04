@@ -60,59 +60,102 @@ namespace HAL
         Depth24_Float_Stencil8_Unsigned, Depth32_Float
     };
 
-    enum class BufferKind { Buffer };
-
     enum class TextureKind { Texture1D, Texture2D, Texture3D };
+
+    using FormatVariant = std::variant<TypelessColorFormat, ColorFormat, DepthStencilFormat>;
+
+
+
+    struct TextureProperties
+    {
+        FormatVariant Format;
+        TextureKind Kind;
+        Geometry::Dimensions Dimensions;
+        ClearValue OptimizedClearValue;
+        ResourceState InitialStateMask;
+        ResourceState ExpectedStateMask;
+        uint16_t MipCount;
+
+        TextureProperties(FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
+            const ClearValue& optimizedClearValue, ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount = 1);
+
+        TextureProperties(FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
+            ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount = 1);
+
+        TextureProperties(FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
+            const ClearValue& optimizedClearValue, ResourceState initialStateMask, uint16_t mipCount = 1);
+
+        TextureProperties(FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
+            ResourceState initialStateMask, uint16_t mipCount = 1);
+
+        Geometry::Dimensions MipSize(uint8_t mip) const;
+    };
+
+
+
+    template <class Element = uint8_t>
+    struct BufferProperties
+    {
+        uint64_t ElementCapacity = 1;
+        uint64_t ElementAlighnment = 1;
+        ResourceState InitialStateMask = ResourceState::Common;
+        ResourceState ExpectedStateMask = ResourceState::Common;
+
+        BufferProperties(uint64_t capacity);
+        BufferProperties(uint64_t capacity, uint64_t alignment);
+        BufferProperties(uint64_t capacity, uint64_t alignment, ResourceState initialStates);
+        BufferProperties(uint64_t capacity, uint64_t alignment, ResourceState initialStates, ResourceState expectedStates);
+    };
+
+
+
+    using ResourcePropertiesVariant = std::variant<TextureProperties, BufferProperties<uint8_t>>;
 
     class ResourceFormat
     {
     public:
-        using FormatVariant = std::variant<TypelessColorFormat, ColorFormat, DepthStencilFormat>;
+        ResourceFormat(const Device* device, const TextureProperties& textureProperties);
 
-        ResourceFormat(const Device* device, FormatVariant dataType, TextureKind kind, const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue);
-        ResourceFormat(const Device* device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions);
+        template <typename BufferDataT>
+        ResourceFormat(const Device* device, const BufferProperties<BufferDataT>& bufferProperties);
 
         void SetExpectedStates(ResourceState expectedStates);
 
         static DXGI_FORMAT D3DFormat(TypelessColorFormat type);
         static DXGI_FORMAT D3DFormat(ColorFormat type);
         static DXGI_FORMAT D3DFormat(DepthStencilFormat type);
+        static DXGI_FORMAT D3DFormat(FormatVariant type);
 
         static std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> D3DDepthStecilShaderAccessFormats(DepthStencilFormat type);
 
         static FormatVariant FormatFromD3DFormat(DXGI_FORMAT format);
 
     private:
-        using KindVariant = std::variant<BufferKind, TextureKind>;
-
-        void ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions);
-        void ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions, uint8_t mipCount);
+        void ResolveBufferDemensionData(uint64_t byteCount);
+        void ResolveTextureDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions, uint8_t mipCount);
         void QueryAllocationInfo();
         void DetermineExpectedUsageFlags(ResourceState expectedStates);
         void DetermineAliasingGroup(ResourceState expectedStates);
 
         const Device* mDevice;
         D3D12_RESOURCE_DESC mDescription{};
-        std::optional<FormatVariant> mDataType;
-        std::optional<ClearValue> mClearValue;
+        ResourcePropertiesVariant mResourceProperties;
+        HeapAliasingGroup mAliasingGroup = HeapAliasingGroup::Universal;
+        uint64_t mSubresourceCount = 1;
         uint64_t mResourceAlignment = 0;
         uint64_t mResourceSizeInBytes = 0;
-        uint64_t mSubresourceCount = 0;
-        uint64_t mMipCount = 1;
-        KindVariant mKind;
-        HeapAliasingGroup mAliasingGroup = HeapAliasingGroup::Universal;
 
     public:
         inline const D3D12_RESOURCE_DESC& D3DResourceDescription() const { return mDescription; }
-        inline auto OptimizedClearValue() const { return mClearValue; }
+        inline const auto& GetTextureProperties() const { return std::get<TextureProperties>(mResourceProperties); }
+        inline const auto& GetBufferProperties() const { return std::get<BufferProperties<uint8_t>>(mResourceProperties); }
+        inline const auto& ResourceProperties() const { return mResourceProperties; }
+        inline auto ResourceAliasingGroup() const { return mAliasingGroup; }
+        inline auto SubresourceCount() const { return mSubresourceCount; }
         inline auto ResourceAlighnment() const { return mResourceAlignment; }
         inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }
-        inline auto SubresourceCount() const { return mSubresourceCount; }
-        inline auto MipCount() const { return mMipCount; }
-        inline auto DataType() const { return mDataType; }
-        inline auto Kind() const { return mKind; }
-        inline auto ResourceAliasingGroup() const { return mAliasingGroup; }
     };
 
 }
 
+#include "ResourceFormat.inl"

@@ -20,6 +20,8 @@
 #include "../Memory/GPUResource.hpp"
 #include "../Memory/ResourceStateTracker.hpp"
 
+#include <robinhood/robin_hood.h>
+
 #include "DrawablePrimitive.hpp"
 
 namespace PathFinder
@@ -39,25 +41,25 @@ namespace PathFinder
             const RenderSurfaceDescription& defaultRenderSurface
         );
 
-        void ApplyPipelineState(const RenderPassGraph::Node* passNode, Foundation::Name psoName);
+        void ApplyPipelineState(const RenderPassGraph::Node& passNode, Foundation::Name psoName);
 
-        void SetRenderTarget(const RenderPassGraph::Node* passNode, Foundation::Name rtName, std::optional<Foundation::Name> dsName = std::nullopt);
-        void SetBackBufferAsRenderTarget(const RenderPassGraph::Node* passNode, std::optional<Foundation::Name> dsName = std::nullopt);
-        void ClearRenderTarget(const RenderPassGraph::Node* passNode, Foundation::Name rtName);
-        void ClearDepth(const RenderPassGraph::Node* passNode, Foundation::Name dsName);
-        void SetViewport(const RenderPassGraph::Node* passNode, const HAL::Viewport& viewport);
-        void Draw(const RenderPassGraph::Node* passNode, uint32_t vertexCount, uint32_t instanceCount = 1);
-        void Draw(const RenderPassGraph::Node* passNode, const DrawablePrimitive& primitive);
-        void Dispatch(const RenderPassGraph::Node* passNode, uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
-        void DispatchRays(const RenderPassGraph::Node* passNode, uint32_t width, uint32_t height = 1, uint32_t depth = 1);
-        void BindBuffer(const RenderPassGraph::Node* passNode, Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
-        void BindExternalBuffer(const RenderPassGraph::Node* passNode, const Memory::Buffer& resource, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void SetRenderTarget(const RenderPassGraph::Node& passNode, Foundation::Name rtName, std::optional<Foundation::Name> dsName = std::nullopt);
+        void SetBackBufferAsRenderTarget(const RenderPassGraph::Node& passNode, std::optional<Foundation::Name> dsName = std::nullopt);
+        void ClearRenderTarget(const RenderPassGraph::Node& passNode, Foundation::Name rtName);
+        void ClearDepth(const RenderPassGraph::Node& passNode, Foundation::Name dsName);
+        void SetViewport(const RenderPassGraph::Node& passNode, const HAL::Viewport& viewport);
+        void Draw(const RenderPassGraph::Node& passNode, uint32_t vertexCount, uint32_t instanceCount = 1);
+        void Draw(const RenderPassGraph::Node& passNode, const DrawablePrimitive& primitive);
+        void Dispatch(const RenderPassGraph::Node& passNode, uint32_t groupCountX, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
+        void DispatchRays(const RenderPassGraph::Node& passNode, uint32_t width, uint32_t height = 1, uint32_t depth = 1);
+        void BindBuffer(const RenderPassGraph::Node& passNode, Foundation::Name resourceName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
+        void BindExternalBuffer(const RenderPassGraph::Node& passNode, const Memory::Buffer& resource, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
 
         template <class T>
-        void SetRootConstants(const RenderPassGraph::Node* passNode, const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
+        void SetRootConstants(const RenderPassGraph::Node& passNode, const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
 
         template <size_t RTCount>
-        void SetRenderTargets(const RenderPassGraph::Node* passNode, const std::array<Foundation::Name, RTCount>& rtNames, std::optional<Foundation::Name> dsName = std::nullopt);
+        void SetRenderTargets(const RenderPassGraph::Node& passNode, const std::array<Foundation::Name, RTCount>& rtNames, std::optional<Foundation::Name> dsName = std::nullopt);
 
         void SetBackBuffer(Memory::Texture* backBuffer);
 
@@ -140,14 +142,14 @@ namespace PathFinder
         void ExetuteCommandLists();
         void UploadPassConstants();
 
-        void ApplyState(const RenderPassGraph::Node* passNode, const HAL::GraphicsPipelineState* state);
-        void ApplyState(const RenderPassGraph::Node* passNode, const HAL::ComputePipelineState* state);
-        void ApplyState(const RenderPassGraph::Node* passNode, const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo);
+        void ApplyState(const RenderPassGraph::Node& passNode, const HAL::GraphicsPipelineState* state);
+        void ApplyState(const RenderPassGraph::Node& passNode, const HAL::ComputePipelineState* state);
+        void ApplyState(const RenderPassGraph::Node& passNode, const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo);
 
-        void BindGraphicsCommonResources(const RenderPassGraph::Node* passNode, const HAL::RootSignature* rootSignature, HAL::GraphicsCommandListBase* cmdList);
-        void BindComputeCommonResources(const RenderPassGraph::Node* passNode, const HAL::RootSignature* rootSignature, HAL::ComputeCommandListBase* cmdList);
-        void BindGraphicsPassRootConstantBuffer(const RenderPassGraph::Node* passNode, HAL::GraphicsCommandListBase* cmdList);
-        void BindComputePassRootConstantBuffer(const RenderPassGraph::Node* passNode, HAL::ComputeCommandListBase* cmdList);
+        void BindGraphicsCommonResources(const RenderPassGraph::Node& passNode, const HAL::RootSignature* rootSignature, HAL::GraphicsCommandListBase* cmdList);
+        void BindComputeCommonResources(const RenderPassGraph::Node& passNode, const HAL::RootSignature* rootSignature, HAL::ComputeCommandListBase* cmdList);
+        void BindGraphicsPassRootConstantBuffer(const RenderPassGraph::Node& passNode, HAL::GraphicsCommandListBase* cmdList);
+        void BindComputePassRootConstantBuffer(const RenderPassGraph::Node& passNode, HAL::ComputeCommandListBase* cmdList);
 
         void CreatePassHelpers();
         void GatherResourceTransitionKnowledge(const RenderPassGraph::DependencyLevel& dependencyLevel);
@@ -162,7 +164,7 @@ namespace PathFinder
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState beforeState, HAL::ResourceState afterState) const;
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState afterState) const;
         HAL::CommandQueue& GetCommandQueue(uint64_t queueIndex);
-        uint64_t FindMostCompetentQueueIndex(const std::unordered_set<RenderPassGraph::Node::QueueIndex>& queueIndices) const;
+        uint64_t FindMostCompetentQueueIndex(const robin_hood::unordered_flat_set<RenderPassGraph::Node::QueueIndex>& queueIndices) const;
         CommandListPtrVariant AllocateCommandListForQueue(uint64_t queueIndex) const;
         HAL::ComputeCommandListBase* GetComputeCommandListBase(CommandListPtrVariant& variant) const;
         HAL::ComputeCommandListBase* GetComputeCommandListBase(HALCommandListPtrVariant& variant) const;
@@ -198,13 +200,13 @@ namespace PathFinder
         uint64_t mBVHBuildsQueueIndex = 1;
 
         // Keep track of nodes where transitions previously occurred to insert Begin part of split barriers there
-        std::unordered_map<RenderPassGraph::SubresourceName, SubresourcePreviousTransitionInfo> mSubresourcesPreviousTransitionInfo;
+        robin_hood::unordered_flat_map<RenderPassGraph::SubresourceName, SubresourcePreviousTransitionInfo> mSubresourcesPreviousTransitionInfo;
 
         // Keep list of separate barriers gathered for dependency level so we could cull them, if conditions are met, when command list batches are determined
         std::vector<std::vector<SubresourceTransitionInfo>> mDependencyLevelTransitionBarriers;
 
         // Keep track of queues inside a graph dependency layer that require transition rerouting
-        std::unordered_set<RenderPassGraph::Node::QueueIndex> mDependencyLevelQueuesThatRequireTransitionRerouting;
+        robin_hood::unordered_flat_set<RenderPassGraph::Node::QueueIndex> mDependencyLevelQueuesThatRequireTransitionRerouting;
 
         // Collect begin barriers for passes that may issue them to be applied in batches after all nodes are processed
         std::vector<HAL::ResourceBarrierCollection> mPerNodeBeginBarriers;

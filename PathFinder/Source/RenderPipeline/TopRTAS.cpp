@@ -54,7 +54,7 @@ namespace PathFinder
     {
         if (!mInstanceBuffer || mInstanceBuffer->Capacity() < bufferSize)
         {
-            HAL::Buffer::Properties properties{ bufferSize };
+            HAL::BufferProperties properties{ bufferSize };
             mInstanceBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
         }
 

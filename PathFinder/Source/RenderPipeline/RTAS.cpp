@@ -12,14 +12,14 @@ namespace PathFinder
     {
         if (!mDestinationBuffer || mDestinationBuffer->Capacity() < destinationBufferSize)
         {
-            HAL::Buffer::Properties properties{ destinationBufferSize, 1, HAL::ResourceState::RaytracingAccelerationStructure, HAL::ResourceState::UnorderedAccess };
+            HAL::BufferProperties properties{ destinationBufferSize, 1, HAL::ResourceState::RaytracingAccelerationStructure, HAL::ResourceState::UnorderedAccess };
             mDestinationBuffer = mResourceProducer->NewBuffer(properties);
             mUABarrier = HAL::UnorderedAccessResourceBarrier{ mDestinationBuffer->HALBuffer() };
         }
 
         if (!mScratchBuffer || mScratchBuffer->Capacity() < scratchBufferSize)
         {
-            HAL::Buffer::Properties properties{ scratchBufferSize, 1, HAL::ResourceState::UnorderedAccess };
+            HAL::BufferProperties properties{ scratchBufferSize, 1, HAL::ResourceState::UnorderedAccess };
             mScratchBuffer = mResourceProducer->NewBuffer(properties);
         }
 
@@ -37,14 +37,14 @@ namespace PathFinder
 
         if (!mDestinationBuffer || mDestinationBuffer->Capacity() < destinationBufferSize)
         {
-            HAL::Buffer::Properties properties{ destinationBufferSize, 1, HAL::ResourceState::RaytracingAccelerationStructure, HAL::ResourceState::UnorderedAccess };
+            HAL::BufferProperties properties{ destinationBufferSize, 1, HAL::ResourceState::RaytracingAccelerationStructure, HAL::ResourceState::UnorderedAccess };
             mDestinationBuffer = mResourceProducer->NewBuffer(properties);
             mUABarrier = HAL::UnorderedAccessResourceBarrier{ mDestinationBuffer->HALBuffer() };
         }
 
         if (!mScratchBuffer || mScratchBuffer->Capacity() < scratchBufferSize)
         {
-            HAL::Buffer::Properties properties{ scratchBufferSize, 1, HAL::ResourceState::UnorderedAccess };
+            HAL::BufferProperties properties{ scratchBufferSize, 1, HAL::ResourceState::UnorderedAccess };
             mScratchBuffer = mResourceProducer->NewBuffer(properties);
         }
 

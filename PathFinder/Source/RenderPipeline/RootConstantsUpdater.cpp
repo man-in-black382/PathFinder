@@ -3,7 +3,7 @@
 namespace PathFinder
 {
 
-    RootConstantsUpdater::RootConstantsUpdater(PipelineResourceStorage* storage, const RenderPassGraph::Node* passNode)
-        : mResourceStorage{ storage }, mPassNode{ passNode } {}
+    RootConstantsUpdater::RootConstantsUpdater(PipelineResourceStorage* storage, const RenderPassGraph* passGraph, uint64_t graphNodeIndex)
+        : mResourceStorage{ storage }, mPassGraph{ passGraph }, mGraphNodeIndex{ graphNodeIndex } {}
 
 }

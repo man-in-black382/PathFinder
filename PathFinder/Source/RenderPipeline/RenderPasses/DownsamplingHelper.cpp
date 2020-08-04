@@ -13,7 +13,7 @@ namespace PathFinder
         DownsamplingStrategy strategy,
         std::optional<uint64_t> maxMipLevel)
     {
-        const HAL::Texture::Properties& textureProperties = resourceProvider.GetTextureProperties(textureName);
+        const HAL::TextureProperties& textureProperties = resourceProvider.GetTextureProperties(textureName);
 
         int64_t mipCount = textureProperties.MipCount;
         const Geometry::Dimensions& textureDimensions = textureProperties.Dimensions;
@@ -26,43 +26,51 @@ namespace PathFinder
         std::vector<DownsamplingInvocationInputs> inputsArray;
 
         constexpr int64_t DownsampleLevelsProducedByOneInvocation = 4;
-        int64_t invocationCount = std::ceil(float(mipCount - 1) / DownsampleLevelsProducedByOneInvocation);
-        int64_t mipLevel = 0;
 
-        for (auto invocationIdx = 0ll; invocationIdx < invocationCount; ++invocationIdx)
+        for (int64_t mipLevel = 0, localIndex = 0; mipLevel < mipCount - 1; ++mipLevel)
         {
-            int64_t mipsLeftToProcess = std::max(0ll, mipCount - invocationIdx * DownsampleLevelsProducedByOneInvocation - 1);
+            DownsamplingInvocationInputs* inputs = localIndex == 0 ?
+                &inputsArray.emplace_back() : &inputsArray.back();
 
-            DownsamplingInvocationInputs& inputs = inputsArray.emplace_back();
-            DownsamplingCBContent& cbContent = inputs.CBContent;
+            Geometry::Dimensions mipDimensions = textureProperties.MipSize(mipLevel);
 
-            inputs.DispatchDimensions = textureDimensions.XYMultiplied(1.0 / pow(2.0, mipLevel + 1));
-
-            bool isSourceSRV = invocationIdx == 0;
-            cbContent.IsSourceTexSRV = isSourceSRV;
-
-            cbContent.SourceTexIdx = isSourceSRV ?
-                resourceProvider.GetSRTextureIndex(textureName, mipLevel) :
-                resourceProvider.GetUATextureIndex(textureName, mipLevel);
-
-            cbContent.FilterType = filter;
-            cbContent.NumberOfOutputsToCompute = std::min(mipsLeftToProcess, DownsampleLevelsProducedByOneInvocation);
-            
-            auto localMipIndex = 0u;
-
-            for (; localMipIndex < cbContent.NumberOfOutputsToCompute; ++localMipIndex)
+            if (localIndex == 0)
             {
-                ++mipLevel;
-                cbContent.OutputsToWrite[localMipIndex] = strategy == DownsamplingStrategy::WriteAllLevels;
-                cbContent.OutputTexIndices[localMipIndex] = resourceProvider.GetUATextureIndex(textureName, mipLevel);
+                bool isSourceSRV = mipLevel == 0;
 
-                Geometry::Dimensions mipDimensions = textureProperties.MipSize(mipLevel);
-                cbContent.OutputSizes[localMipIndex] = { mipDimensions.Width, mipDimensions.Height };
+                inputs->DispatchDimensions = textureDimensions.XYMultiplied(1.0 / pow(2.0, mipLevel + 1));
+                inputs->CBContent.InputSize = { mipDimensions.Width, mipDimensions.Height };
+                inputs->CBContent.IsSourceTexSRV = isSourceSRV;
+                inputs->CBContent.FilterType = filter;
+                inputs->CBContent.SourceTexIdx = isSourceSRV ?
+                    resourceProvider.GetSRTextureIndex(textureName, mipLevel) :
+                    resourceProvider.GetUATextureIndex(textureName, mipLevel);
             }
 
-            if (strategy == DownsamplingStrategy::WriteOnlyLastLevel)
+            inputs->CBContent.NumberOfOutputsToCompute = localIndex + 1;
+            inputs->CBContent.OutputsToWrite[localIndex] = strategy == DownsamplingStrategy::WriteAllLevels;
+            inputs->CBContent.OutputTexIndices[localIndex] = resourceProvider.GetUATextureIndex(textureName, mipLevel + 1);
+
+            auto lastLocalIndex = localIndex;
+            localIndex = (localIndex + 1) % (DownsampleLevelsProducedByOneInvocation - 1);
+
+            // Check if the height or width of the next generated mip is odd
+            // For odd dimensions, create a new dispatch so that undersampling doesn't occur
+            // If offsets have to be calculated while swizzling threads for odd width/height,
+            // we will have to read thread values from neighboring threadgroups as well,
+            // which will lead to sync barriers which we want to avoid and so we have a new dispatch
+            // for odd sized mips.
+            inputs->CBContent.IsInputSizeOddHorizontally = (mipDimensions.Width & 1) != 0;
+            inputs->CBContent.IsInputSizeOddVertically = (mipDimensions.Height & 1) != 0;
+
+            if (inputs->CBContent.IsInputSizeOddHorizontally || inputs->CBContent.IsInputSizeOddVertically)
             {
-                cbContent.OutputsToWrite[localMipIndex - 1] = true;
+                localIndex = 0;
+            }
+
+            if (localIndex == 0 && strategy == DownsamplingStrategy::WriteOnlyLastLevel)
+            {
+                inputs->CBContent.OutputsToWrite[lastLocalIndex] = true;
             }
         }
 

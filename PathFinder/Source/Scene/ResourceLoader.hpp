@@ -19,7 +19,7 @@ namespace PathFinder
 
     private:
         HAL::TextureKind ToKind(const ddsktx_texture_info& textureInfo) const;
-        HAL::ResourceFormat::FormatVariant ToResourceFormat(const ddsktx_format& parserFormat) const;
+        HAL::FormatVariant ToResourceFormat(const ddsktx_format& parserFormat) const;
         Memory::GPUResourceProducer::TexturePtr AllocateTexture(const ddsktx_texture_info& textureInfo) const;
 
         std::filesystem::path mRootPath;

@@ -13,7 +13,7 @@ struct PassData
     uint NumberOfOutputsToCompute;
     uint4 OutputTexIndices;
     bool4 OutputsToWrite;
-    uint2 OutputSizes[4];
+    uint2 InputSize;
 };
 
 #define PassDataType PassData
@@ -33,6 +33,17 @@ float4 Filter(float4 v0, float4 v1, float4 v2, float4 v3)
     case FilterTypeMax:     return max(v0, max(v1, max(v2, v3)));   break;
     case FilterTypeAverage: 
     default:                return 0.25 * (v0 + v1 + v2 + v3);      break;
+    }
+}
+
+float4 Filter(float4 v0, float4 v1)
+{
+    [branch] switch (PassDataCB.FilterType)
+    {
+    case FilterTypeMin:     return min(v0, v1);     break;
+    case FilterTypeMax:     return max(v0, v1);     break;
+    case FilterTypeAverage:
+    default:                return 0.5 * (v0 + v1); break;
     }
 }
 

@@ -43,9 +43,9 @@ namespace HAL
         virtual void SetDebugName(const std::string& name) override;
 
     protected:
-        Resource(const Device& device, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask);
+        Resource(const Device& device, const ResourceFormat& format);
         Resource(const Device& device, const ResourceFormat& format, CPUAccessibleHeapType heapType);
-        Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format, ResourceState initialStateMask, ResourceState expectedStateMask);
+        Resource(const Device& device, const Heap& heap, uint64_t heapOffset, const ResourceFormat& format);
 
         Microsoft::WRL::ComPtr<ID3D12Resource> mResource;
         ResourceState mInitialStates = ResourceState::Common;

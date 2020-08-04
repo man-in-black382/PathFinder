@@ -2,7 +2,9 @@
 
 #include "../RenderPass.hpp"
 #include "../RenderPassContentMediator.hpp"
+
 #include "BlurCBContent.hpp"
+#include "PipelineNames.hpp"
 
 #include <glm/mat4x4.hpp>
 

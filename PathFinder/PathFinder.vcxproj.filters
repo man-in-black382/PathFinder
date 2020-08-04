@@ -2438,6 +2438,18 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingHelper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\SubPassScheduler.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPassContainer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\robinhood\robin_hood.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderSubPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -2948,6 +2960,15 @@
     <None Include="Libs\Optick\OptickCore.pdb" />
     <None Include="Libs\Assimp\assimp-vc140-mt.exp" />
     <None Include="Libs\Aftermath\llvm_7_0_1.dll" />
+    <None Include="Source\RenderPipeline\SubPassScheduler.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\RenderPipeline\RenderPassContainer.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\HardwareAbstractionLayer\ResourceFormat.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />

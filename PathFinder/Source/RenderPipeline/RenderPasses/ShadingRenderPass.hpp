@@ -4,6 +4,7 @@
 #include "../RenderPassContentMediator.hpp"
 
 #include "GBufferTextureIndices.hpp"
+#include "PipelineNames.hpp"
 
 #include <glm/mat4x4.hpp>
 

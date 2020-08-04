@@ -33,16 +33,12 @@ namespace PathFinder
         return timelineIt->second;
     }
 
-    void RenderPassGraph::AddPass(const RenderPassMetadata& passMetadata)
+    uint64_t RenderPassGraph::AddPass(const RenderPassMetadata& passMetadata)
     {
         EnsureRenderPassUniqueness(passMetadata.Name);
         mPassNodes.emplace_back(Node{ passMetadata, &mGlobalWriteDependencyRegistry });
         mPassNodes.back().mIndexInUnorderedList = mPassNodes.size() - 1;
-    }
-
-    void RenderPassGraph::RemovePass(NodeListIterator it)
-    {
-        mPassNodes.erase(it);
+        return mPassNodes.size() - 1;
     }
 
     void RenderPassGraph::Build()

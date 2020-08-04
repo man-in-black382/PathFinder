@@ -6,39 +6,85 @@
 namespace HAL
 {
 
-    ResourceFormat::ResourceFormat(
-        const Device* device, FormatVariant dataType, TextureKind kind, 
-        const Geometry::Dimensions& dimensions, uint16_t mipCount, ClearValue optimizedClearValue)
-        : mDevice{ device }, mDataType{ dataType }, mKind{ kind }, mClearValue{ optimizedClearValue }
+    TextureProperties::TextureProperties(
+        FormatVariant format,
+        TextureKind kind,
+        const Geometry::Dimensions& dimensions,
+        const ClearValue& optimizedClearValue,
+        ResourceState initialStateMask,
+        ResourceState expectedStateMask,
+        uint16_t mipCount)
+        :
+        Format{ format },
+        Kind{ kind },
+        Dimensions{ dimensions },
+        OptimizedClearValue{ optimizedClearValue },
+        InitialStateMask{ initialStateMask },
+        ExpectedStateMask{ expectedStateMask },
+        MipCount{ mipCount } {}
+
+    TextureProperties::TextureProperties(
+        FormatVariant format,
+        TextureKind kind,
+        const Geometry::Dimensions& dimensions,
+        ResourceState initialStateMask,
+        ResourceState expectedStateMask,
+        uint16_t mipCount)
+        :
+        TextureProperties(
+            format, kind, dimensions,
+            ColorClearValue{ 0, 0, 0, 0 },
+            initialStateMask, expectedStateMask, mipCount) {}
+
+    TextureProperties::TextureProperties(
+        FormatVariant format,
+        TextureKind kind,
+        const Geometry::Dimensions& dimensions,
+        const ClearValue& optimizedClearValue,
+        ResourceState initialStateMask,
+        uint16_t mipCount)
+        :
+        TextureProperties(
+            format, kind, dimensions, optimizedClearValue,
+            initialStateMask, initialStateMask, mipCount) {}
+
+    TextureProperties::TextureProperties(
+        FormatVariant format,
+        TextureKind kind,
+        const Geometry::Dimensions& dimensions,
+        ResourceState initialStateMask,
+        uint16_t mipCount)
+        :
+        TextureProperties(
+            format, kind, dimensions,
+            ColorClearValue{ 0, 0, 0, 0 },
+            initialStateMask, initialStateMask, mipCount) {}
+
+    Geometry::Dimensions TextureProperties::MipSize(uint8_t mip) const
     {
-        std::visit([this](auto&& t) { mDescription.Format = D3DFormat(t); }, dataType);
-        
-        ResolveDemensionData(kind, dimensions, mipCount);
-
-        mDescription.MipLevels = mipCount;
-
-        QueryAllocationInfo();
+        assert_format(mip <= MipCount, "Mip ", mip, " is out of bounds");
+        Geometry::Dimensions mipDimensions = Dimensions.XYZMultiplied(1.0f / powf(2.0f, mip));
+        mipDimensions.Depth = std::max(mipDimensions.Depth, 1ull);
+        return mipDimensions;
     }
 
-    ResourceFormat::ResourceFormat(const Device* device, std::optional<FormatVariant> dataType, BufferKind kind, const Geometry::Dimensions& dimensions)
-        : mDevice{ device }, mDataType{ dataType }, mKind{ kind }
-    {
-        if (dataType)
-        {
-            std::visit([this](auto&& t) { mDescription.Format = D3DFormat(t); }, dataType.value());
-        }
 
-        ResolveDemensionData(kind, dimensions);
-        QueryAllocationInfo();
+
+    ResourceFormat::ResourceFormat(const Device* device, const TextureProperties& textureProperties)
+        : mDevice{ device }, mResourceProperties{ textureProperties }
+    {
+        std::visit([this](auto&& t) { mDescription.Format = D3DFormat(t); }, textureProperties.Format);
+
+        ResolveTextureDemensionData(textureProperties.Kind, textureProperties.Dimensions, textureProperties.MipCount);
+        SetExpectedStates(textureProperties.InitialStateMask | textureProperties.ExpectedStateMask);
     }
 
-    void ResourceFormat::ResolveDemensionData(BufferKind kind, const Geometry::Dimensions& dimensions)
+    void ResourceFormat::ResolveBufferDemensionData(uint64_t byteCount)
     {
         mSubresourceCount = 1;
-        mMipCount = 1;
 
         mDescription.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-        mDescription.Width = dimensions.Width;
+        mDescription.Width = byteCount;
         mDescription.Height = 1;
         mDescription.DepthOrArraySize = 1;
         mDescription.MipLevels = 1;
@@ -47,7 +93,7 @@ namespace HAL
         mDescription.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     }
 
-    void ResourceFormat::ResolveDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions, uint8_t mipCount)
+    void ResourceFormat::ResolveTextureDemensionData(TextureKind kind, const Geometry::Dimensions& dimensions, uint8_t mipCount)
     {
         switch (kind)
         {
@@ -58,7 +104,6 @@ namespace HAL
 
         bool isArray = (kind == TextureKind::Texture1D || kind == TextureKind::Texture2D) && dimensions.Depth > 1;
         mSubresourceCount = isArray ? dimensions.Depth * mipCount : mipCount;
-        mMipCount = mipCount;
 
         assert_format(!isArray, "Texture arrays are not supported currently. Add proper handling of texture array scheduling first, then remove this assert.");
 
@@ -67,10 +112,13 @@ namespace HAL
         mDescription.DepthOrArraySize = (UINT16)dimensions.Depth;
         mDescription.SampleDesc.Count = 1;
         mDescription.SampleDesc.Quality = 0;
+        mDescription.MipLevels = mipCount;
     }
 
     void ResourceFormat::SetExpectedStates(ResourceState expectedStates)
     {
+        std::visit([expectedStates](auto&& resourceProperties) { resourceProperties.ExpectedStateMask = expectedStates; }, mResourceProperties);
+
         DetermineExpectedUsageFlags(expectedStates);
         QueryAllocationInfo();
         DetermineAliasingGroup(expectedStates);
@@ -125,15 +173,15 @@ namespace HAL
         }
 
         std::visit(Foundation::MakeVisitor(
-            [this](const HAL::BufferKind& kind)
+            [this](const BufferProperties<uint8_t>& bufferProperties)
             {
                 mAliasingGroup = HAL::HeapAliasingGroup::Buffers;
             },
-            [this, expectedStates](const HAL::TextureKind& kind)
+            [this, expectedStates](const TextureProperties& textureProperties)
             {
-                if (EnumMaskBitSet(expectedStates, HAL::ResourceState::RenderTarget) ||
-                    EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthWrite) ||
-                    EnumMaskBitSet(expectedStates, HAL::ResourceState::DepthRead))
+                if (EnumMaskBitSet(textureProperties.ExpectedStateMask, HAL::ResourceState::RenderTarget) ||
+                    EnumMaskBitSet(textureProperties.ExpectedStateMask, HAL::ResourceState::DepthWrite) ||
+                    EnumMaskBitSet(textureProperties.ExpectedStateMask, HAL::ResourceState::DepthRead))
                 {
                     mAliasingGroup = HAL::HeapAliasingGroup::RTDSTextures;
                 }
@@ -141,7 +189,7 @@ namespace HAL
                     mAliasingGroup = HAL::HeapAliasingGroup::NonRTDSTextures;
                 }
             }),
-            mKind);
+            mResourceProperties);
     }
 
     DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColorFormat type)
@@ -232,6 +280,13 @@ namespace HAL
         }
     }
 
+    DXGI_FORMAT ResourceFormat::D3DFormat(FormatVariant type)
+    {
+        DXGI_FORMAT d3dFormat{};
+        std::visit([&d3dFormat](auto&& concreteFormat) {d3dFormat = D3DFormat(concreteFormat); }, type);
+        return d3dFormat;
+    }
+
     std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> ResourceFormat::D3DDepthStecilShaderAccessFormats(DepthStencilFormat type)
     {
         switch (type)
@@ -242,7 +297,7 @@ namespace HAL
         }
     }
 
-    ResourceFormat::FormatVariant ResourceFormat::FormatFromD3DFormat(DXGI_FORMAT format)
+    FormatVariant ResourceFormat::FormatFromD3DFormat(DXGI_FORMAT format)
     {
         switch (format)
         {

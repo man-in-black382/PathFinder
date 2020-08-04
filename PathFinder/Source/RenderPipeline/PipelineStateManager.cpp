@@ -21,6 +21,8 @@ namespace PathFinder
         ConfigureDefaultStates();
         AddCommonRootSignatureParameters(mBaseRootSignature);
 
+        mSignaturesToCompile.insert(&mBaseRootSignature);
+
         mShaderManager->ShaderRecompilationEvent() += { "shader.recompilation", this, &PipelineStateManager::RecompileStatesWithNewShader };
         mShaderManager->LibraryRecompilationEvent() += { "library.recompilation", this, &PipelineStateManager::RecompileStatesWithNewLibrary };
     }
@@ -50,7 +52,8 @@ namespace PathFinder
 
         AddCommonRootSignatureParameters(newSignature);
 
-        mRootSignatures.emplace(name, std::move(newSignature));
+        auto [iterator, success] = mRootSignatures.emplace(name, std::move(newSignature));
+        mSignaturesToCompile.insert(&iterator->second);
     }
 
     void PipelineStateManager::CreateGraphicsState(PSOName name, const GraphicsStateConfigurator& configurator)
@@ -115,6 +118,7 @@ namespace PathFinder
         newState.SetDebugName(name.ToString());
 
         auto [iter, success] = mPipelineStates.emplace(name, std::move(newState));
+        mStatesToCompile.insert(&iter->second);
 
         AssociateStateWithShader(&iter->second, vertexShader);
         AssociateStateWithShader(&iter->second, pixelShader);
@@ -140,6 +144,7 @@ namespace PathFinder
         newState.SetDebugName(name.ToString());
 
         auto [iter, success] = mPipelineStates.emplace(name, std::move(newState));
+        mStatesToCompile.insert(&iter->second);
 
         AssociateStateWithShader(&iter->second, computeShader);
     }
@@ -158,7 +163,9 @@ namespace PathFinder
         // but DX validation layer will not say anything. Driver version 442.74.
         assert_format(proxy.ShaderConfig.MaxAttributesSize() >= 8, "Shader config attributes size was not set to proper value"); 
 
-        auto [iter, success] = mPipelineStates.emplace(name, RayTracingStateWrapper{ HAL::RayTracingPipelineState{ mDevice }, nullptr });
+        auto [iter, success] = mPipelineStates.emplace(name, RayTracingStateWrapper{ name, HAL::RayTracingPipelineState{ mDevice }, nullptr });
+        mStatesToCompile.insert(&iter->second);
+
         RayTracingStateWrapper& newStateWrapper = std::get<RayTracingStateWrapper>(iter->second);
 
         HAL::Library* rayGenLibrary = mShaderManager->LoadLibrary(proxy.RayGenerationShaderFileName);
@@ -257,56 +264,31 @@ namespace PathFinder
         return mBaseRootSignature;
     }
 
-    void PipelineStateManager::CompileSignaturesAndStates()
+    void PipelineStateManager::CompileUncompiledSignaturesAndStates()
     {
-        mBaseRootSignature.Compile();
-
-        for (auto& [name, signature] : mRootSignatures)
+        for (HAL::RootSignature* signature : mSignaturesToCompile)
         {
-            signature.Compile();
+            signature->Compile();
         }
 
-        for (auto& [name, state] : mPipelineStates)
-        {
-            if (auto pso = std::get_if<HAL::GraphicsPipelineState>(&state))
-            {
-                pso->Compile();
-            }
-            else if (auto pso = std::get_if<HAL::ComputePipelineState>(&state))
-            {
-                pso->Compile();
-            }
-            else if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(&state))
-            {
-                CompileRayTracingState(*psoWrapper, name);
-            }
-        }
-    }
-
-    void PipelineStateManager::RecompileModifiedStates()
-    {
-        for (PipelineStateVariantInternal* state : mStatesToRecompile)
+        for (PipelineStateVariantInternal* state : mStatesToCompile)
         {
             if (auto pso = std::get_if<HAL::GraphicsPipelineState>(state))
-            { 
+            {
                 pso->Compile();
             }
             else if (auto pso = std::get_if<HAL::ComputePipelineState>(state))
             {
-                pso->Compile(); 
+                pso->Compile();
             }
             else if (auto psoWrapper = std::get_if<RayTracingStateWrapper>(state))
             {
-                CompileRayTracingState(*psoWrapper, {});
+                CompileRayTracingState(*psoWrapper);
             }
         }
 
-        mStatesToRecompile.clear();
-    }
-
-    bool PipelineStateManager::HasModifiedStates() const
-    {
-        return !mStatesToRecompile.empty();
+        mSignaturesToCompile.clear();
+        mStatesToCompile.clear();
     }
 
     void PipelineStateManager::AssociateStateWithShader(PipelineStateVariantInternal* state, const HAL::Shader* shader)
@@ -401,19 +383,15 @@ namespace PathFinder
         signature.AddDescriptorParameter(debugBuffer);
     }
 
-    void PipelineStateManager::CompileRayTracingState(RayTracingStateWrapper& stateWrapper, Foundation::Name psoName)
+    void PipelineStateManager::CompileRayTracingState(RayTracingStateWrapper& stateWrapper)
     {
         stateWrapper.State.Compile();
         HAL::ShaderTable& shaderTable = stateWrapper.State.GetShaderTable();
-        HAL::Buffer::Properties properties{ shaderTable.GetMemoryRequirements().TableSizeInBytes };
+        HAL::BufferProperties properties{ shaderTable.GetMemoryRequirements().TableSizeInBytes };
         stateWrapper.ShaderTableBuffer = mResourceProducer->NewBuffer(properties);
         stateWrapper.ShaderTableBuffer->RequestWrite();
         stateWrapper.BaseRayDispatchInfo = shaderTable.UploadToGPUMemory(stateWrapper.ShaderTableBuffer->WriteOnlyPtr(), stateWrapper.ShaderTableBuffer->HALBuffer());
-
-        if (psoName.IsValid())
-        {
-            stateWrapper.ShaderTableBuffer->SetDebugName(StringFormat("%s Shader Table", psoName.ToString().c_str()));
-        }
+        stateWrapper.ShaderTableBuffer->SetDebugName(StringFormat("%s Shader Table", stateWrapper.Name.ToString().c_str()));
     }
 
     void PipelineStateManager::RecompileStatesWithNewShader(const HAL::Shader* oldShader, const HAL::Shader* newShader)
@@ -428,13 +406,12 @@ namespace PathFinder
             if (auto pso = std::get_if<HAL::GraphicsPipelineState>(stateVariant)) pso->ReplaceShader(oldShader, newShader);
             else if (auto pso = std::get_if<HAL::ComputePipelineState>(stateVariant)) pso->ReplaceShader(oldShader, newShader);
 
-            mStatesToRecompile.insert(stateVariant);
+            mStatesToCompile.insert(stateVariant);
         }
 
         // Re associate states 
-        auto nodeHandle = mShaderToPSOAssociations.extract(associationsIt);
-        nodeHandle.key() = newShader;
-        mShaderToPSOAssociations.insert(std::move(nodeHandle));
+        mShaderToPSOAssociations[newShader] = std::move(associationsIt->second);
+        mShaderToPSOAssociations.erase(associationsIt);
     }
 
     void PipelineStateManager::RecompileStatesWithNewLibrary(const HAL::Library* oldLibrary, const HAL::Library* newLibrary)
@@ -450,13 +427,12 @@ namespace PathFinder
             {
                 psoWrapper->State.ReplaceLibrary(oldLibrary, newLibrary);
             }
-            mStatesToRecompile.insert(stateVariant);
+            mStatesToCompile.insert(stateVariant);
         }
 
         // Re associate states 
-        auto nodeHandle = mLibraryToPSOAssociations.extract(associationsIt);
-        nodeHandle.key() = newLibrary;
-        mLibraryToPSOAssociations.insert(std::move(nodeHandle));
+        mLibraryToPSOAssociations[newLibrary] = std::move(associationsIt->second);
+        mLibraryToPSOAssociations.erase(associationsIt);
     }
 
 }

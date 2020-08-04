@@ -141,7 +141,7 @@ namespace Memory
     }
 
     void PoolDescriptorAllocator::ValidateRTFormatsCompatibility(
-        HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat)
+        HAL::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
         if (shaderVisibleFormat)
         {
@@ -153,7 +153,7 @@ namespace Memory
     }
 
     void PoolDescriptorAllocator::ValidateSRUAFormatsCompatibility(
-        HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat)
+        HAL::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat)
     {
         assert_format(!shaderVisibleFormat || std::holds_alternative<HAL::TypelessColorFormat>(textureFormat), "Format redefinition for typed texture");
     }

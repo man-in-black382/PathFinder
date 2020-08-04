@@ -106,7 +106,7 @@ namespace PathFinder
         return HAL::TextureKind::Texture1D;
     }
 
-    HAL::ResourceFormat::FormatVariant ResourceLoader::ToResourceFormat(const ddsktx_format& parserFormat) const
+    HAL::FormatVariant ResourceLoader::ToResourceFormat(const ddsktx_format& parserFormat) const
     {
         switch (parserFormat)
         {
@@ -167,11 +167,11 @@ namespace PathFinder
 
     Memory::GPUResourceProducer::TexturePtr ResourceLoader::AllocateTexture(const ddsktx_texture_info& textureInfo) const
     {
-        HAL::ResourceFormat::FormatVariant format = ToResourceFormat(textureInfo.format);
+        HAL::FormatVariant format = ToResourceFormat(textureInfo.format);
         Geometry::Dimensions dimensions(textureInfo.width, textureInfo.height, textureInfo.depth);
         HAL::TextureKind kind = ToKind(textureInfo);
 
-        HAL::Texture::Properties properties{ format, kind, dimensions, HAL::ResourceState::AnyShaderAccess, (uint16_t)textureInfo.num_mips };
+        HAL::TextureProperties properties{ format, kind, dimensions, HAL::ResourceState::AnyShaderAccess, (uint16_t)textureInfo.num_mips };
 
         return mResourceProducer->NewTexture(properties);
     }

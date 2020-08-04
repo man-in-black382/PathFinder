@@ -9,7 +9,7 @@ namespace PathFinder
     class RootConstantsUpdater
     {
     public:
-        RootConstantsUpdater(PipelineResourceStorage* storage, const RenderPassGraph::Node* passNode);
+        RootConstantsUpdater(PipelineResourceStorage* storage, const RenderPassGraph* passGraph, uint64_t graphNodeIndex);
 
         /// Uploads data to current pass' constant buffer.
         /// Data is versioned between each draw/dispatch call
@@ -18,13 +18,14 @@ namespace PathFinder
 
     private:
         PipelineResourceStorage* mResourceStorage;
-        const RenderPassGraph::Node* mPassNode;
+        const RenderPassGraph* mPassGraph;
+        uint64_t mGraphNodeIndex;
     };
 
     template <class RootCBufferContent>
     void RootConstantsUpdater::UpdateRootConstantBuffer(const RootCBufferContent& data)
     {
-        mResourceStorage->UpdatePassRootConstants(data, *mPassNode);
+        mResourceStorage->UpdatePassRootConstants(data, mPassGraph->Nodes()[mGraphNodeIndex]);
     }
 
 }

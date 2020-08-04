@@ -14,7 +14,7 @@ namespace Memory
         mStateTracker{ stateTracker }, 
         mDescriptorAllocator{ descriptorAllocator } {}
 
-    GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::Texture::Properties& properties)
+    GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::TextureProperties& properties)
     {
         Texture* texture = new Texture{ properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, this };
         auto [iter, success] = mAllocatedResources.insert(texture);
@@ -28,7 +28,7 @@ namespace Memory
         return TexturePtr{ texture, deallocationCallback };
     }
 
-    GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::Texture::Properties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset)
+    GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::TextureProperties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset)
     {
         Texture* texture = new Texture{
             properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, 

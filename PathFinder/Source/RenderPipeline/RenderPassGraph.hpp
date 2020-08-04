@@ -3,11 +3,11 @@
 #include "../Foundation/Name.hpp"
 #include "../HardwareAbstractionLayer/ResourceState.hpp"
 
+#include <robinhood/robin_hood.h>
+
 #include "RenderPassMetadata.hpp"
 
 #include <vector>
-#include <unordered_set>
-#include <unordered_map>
 #include <list>
 #include <functional>
 #include <stack>
@@ -19,7 +19,7 @@ namespace PathFinder
     {
     public:
         using SubresourceName = uint64_t;
-        using WriteDependencyRegistry = std::unordered_set<SubresourceName>;
+        using WriteDependencyRegistry = robin_hood::unordered_flat_set<SubresourceName>;
 
         class Node
         {
@@ -63,10 +63,10 @@ namespace PathFinder
 
             RenderPassMetadata mPassMetadata;
             WriteDependencyRegistry* mWriteDependencyRegistry = nullptr;
-            std::unordered_set<SubresourceName> mReadSubresources;
-            std::unordered_set<SubresourceName> mWrittenSubresources;
-            std::unordered_set<SubresourceName> mAllSubresources;
-            std::unordered_set<Foundation::Name> mAllResources;
+            robin_hood::unordered_flat_set<SubresourceName> mReadSubresources;
+            robin_hood::unordered_flat_set<SubresourceName> mWrittenSubresources;
+            robin_hood::unordered_flat_set<SubresourceName> mAllSubresources;
+            robin_hood::unordered_flat_set<Foundation::Name> mAllResources;
             SynchronizationIndexSet mSynchronizationIndexSet;
             std::vector<const Node*> mNodesToSyncWith;
             bool mSyncSignalRequired = false;
@@ -103,8 +103,8 @@ namespace PathFinder
 
             // Storage for queues that read at least one common resource. Resource state transitions
             // for such queues need to be handled differently.
-            std::unordered_set<Node::QueueIndex> mQueuesInvoledInCrossQueueResourceReads;
-            std::unordered_set<SubresourceName> mSubresourcesReadByMultipleQueues;
+            robin_hood::unordered_flat_set<Node::QueueIndex> mQueuesInvoledInCrossQueueResourceReads;
+            robin_hood::unordered_flat_set<SubresourceName> mSubresourcesReadByMultipleQueues;
 
         public:
             inline const auto& Nodes() const { return mNodes; }
@@ -117,7 +117,7 @@ namespace PathFinder
         using NodeList = std::vector<Node>;
         using NodeListIterator = NodeList::iterator;
         using ResourceUsageTimeline = std::pair<uint64_t, uint64_t>;
-        using ResourceUsageTimelines = std::unordered_map<Foundation::Name, ResourceUsageTimeline>;
+        using ResourceUsageTimelines = robin_hood::unordered_flat_map<Foundation::Name, ResourceUsageTimeline>;
 
         static SubresourceName ConstructSubresourceName(Foundation::Name resourceName, uint32_t subresourceIndex);
         static std::pair<Foundation::Name, uint32_t> DecodeSubresourceName(SubresourceName name);
@@ -125,8 +125,7 @@ namespace PathFinder
         uint64_t NodeCountForQueue(uint64_t queueIndex) const;
         const ResourceUsageTimeline& GetResourceUsageTimeline(Foundation::Name resourceName) const;
 
-        void AddPass(const RenderPassMetadata& passMetadata);
-        void RemovePass(NodeListIterator it);
+        uint64_t AddPass(const RenderPassMetadata& passMetadata);
 
         void Build();
         void Clear();
@@ -134,14 +133,9 @@ namespace PathFinder
     private:
         using DependencyLevelList = std::vector<DependencyLevel>;
         using OrderedNodeList = std::vector<Node*>;
-        using RenderPassRegistry = std::unordered_set<Foundation::Name>;
-        using QueueNodeCounters = std::unordered_map<uint64_t, uint64_t>;
+        using RenderPassRegistry = robin_hood::unordered_flat_set<Foundation::Name>;
+        using QueueNodeCounters = robin_hood::unordered_flat_map<uint64_t, uint64_t>;
         using AdjacencyLists = std::vector<std::vector<uint64_t>>;
-
-        enum class NodeMark
-        {
-            Temporary, Permanent
-        };
 
         void EnsureRenderPassUniqueness(Foundation::Name passName);
         void BuildAdjacencyLists();

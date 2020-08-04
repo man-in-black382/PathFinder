@@ -61,8 +61,8 @@ namespace Memory
         };
 
         void ExecutePendingDeallocations(uint64_t frameIndex);
-        void ValidateRTFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
-        void ValidateSRUAFormatsCompatibility(HAL::ResourceFormat::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
+        void ValidateRTFormatsCompatibility(HAL::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
+        void ValidateSRUAFormatsCompatibility(HAL::FormatVariant textureFormat, std::optional<HAL::ColorFormat> shaderVisibleFormat);
 
         uint64_t mDescriptorRangeCapacity = 1000;
         uint64_t mCurrentFrameIndex = 0;

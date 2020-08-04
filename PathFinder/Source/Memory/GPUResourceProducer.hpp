@@ -25,12 +25,12 @@ namespace Memory
         );
 
         template <class Element>
-        BufferPtr NewBuffer(const HAL::Buffer::Properties<Element>& properties, GPUResource::UploadStrategy uploadStrategy = GPUResource::UploadStrategy::Automatic);
-        TexturePtr NewTexture(const HAL::Texture::Properties& properties);
+        BufferPtr NewBuffer(const HAL::BufferProperties<Element>& properties, GPUResource::UploadStrategy uploadStrategy = GPUResource::UploadStrategy::Automatic);
+        TexturePtr NewTexture(const HAL::TextureProperties& properties);
 
         template <class Element>
-        BufferPtr NewBuffer(const HAL::Buffer::Properties<Element>& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
-        TexturePtr NewTexture(const HAL::Texture::Properties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
+        BufferPtr NewBuffer(const HAL::BufferProperties<Element>& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
+        TexturePtr NewTexture(const HAL::TextureProperties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
 
         TexturePtr NewTexture(HAL::Texture* existingTexture);
         

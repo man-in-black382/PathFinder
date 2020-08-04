@@ -226,7 +226,6 @@ int main(int argc, char** argv)
     sceneStorage.UploadMeshes();
     sceneStorage.UploadMaterials();
 
-    engine.CommitRenderPasses();
     engine.UploadProcessAndTransferAssets();
 
     // Build bottom AS only once. A production-level application would build every frame

@@ -3,6 +3,8 @@
 #include "../RenderPass.hpp"
 #include "../RenderPassContentMediator.hpp"
 
+#include "PipelineNames.hpp"
+
 #include <glm/vec2.hpp>
 
 namespace PathFinder

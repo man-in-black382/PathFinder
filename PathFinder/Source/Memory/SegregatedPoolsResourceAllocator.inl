@@ -4,9 +4,9 @@ namespace Memory
 {
     template <class Element>
     SegregatedPoolsResourceAllocator::BufferPtr SegregatedPoolsResourceAllocator::AllocateBuffer(
-        const HAL::Buffer::Properties<Element>& properties, std::optional<HAL::CPUAccessibleHeapType> heapType)
+        const HAL::BufferProperties<Element>& properties, std::optional<HAL::CPUAccessibleHeapType> heapType)
     {
-        HAL::ResourceFormat format = HAL::Buffer::ConstructResourceFormat(mDevice, properties);
+        HAL::ResourceFormat format{ mDevice, properties };
         Allocation allocation = FindOrAllocateMostFittingFreeSlot(format.ResourceSizeInBytes(), format, heapType);
         PoolsAllocation& poolAllocation = allocation.PoolAllocation;
 
@@ -19,7 +19,7 @@ namespace Memory
             if (!poolAllocation.Slot.UserData.Buffer)
             {
                 // We need CPU accessible buffers to match slot size so that they can be reused properly
-                HAL::Buffer::Properties cpuAccessibleBufferProperties{ allocation.PoolsPtr->SlotSizeInBucket(poolAllocation.BucketIndex) };
+                HAL::BufferProperties cpuAccessibleBufferProperties{ allocation.PoolsPtr->SlotSizeInBucket(poolAllocation.BucketIndex) };
 
                 // Allocate buffer with slot size, not requested size, to make it more generic and suitable for later reuse in other allocations
                 poolAllocation.Slot.UserData.Buffer = new HAL::Buffer{ *mDevice, cpuAccessibleBufferProperties, *allocation.HeapPtr, offsetInHeap };

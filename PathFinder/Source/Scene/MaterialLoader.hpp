@@ -40,7 +40,7 @@ namespace PathFinder
         };
 
         Memory::Texture* GetOrAllocateTexture(const std::string& relativePath);
-        Memory::Texture* AllocateAndStoreTexture(const HAL::Texture::Properties& properties, const std::string& relativePath);
+        Memory::Texture* AllocateAndStoreTexture(const HAL::TextureProperties& properties, const std::string& relativePath);
 
         void CreateDefaultTextures();
         void LoadLTCLookupTables();

@@ -23,8 +23,8 @@ namespace Memory
         SegregatedPoolsResourceAllocator(const HAL::Device* device, uint8_t simultaneousFramesInFlight);
 
         template <class Element>
-        BufferPtr AllocateBuffer(const HAL::Buffer::Properties<Element>& properties, std::optional<HAL::CPUAccessibleHeapType> heapType = std::nullopt);
-        TexturePtr AllocateTexture(const HAL::Texture::Properties& properties);
+        BufferPtr AllocateBuffer(const HAL::BufferProperties<Element>& properties, std::optional<HAL::CPUAccessibleHeapType> heapType = std::nullopt);
+        TexturePtr AllocateTexture(const HAL::TextureProperties& properties);
 
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);

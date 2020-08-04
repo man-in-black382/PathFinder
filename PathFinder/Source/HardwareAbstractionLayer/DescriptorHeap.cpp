@@ -219,7 +219,7 @@ namespace HAL
             return desc;
         }
 
-        ResourceFormat::FormatVariant format = ResourceFormat::FormatFromD3DFormat(resourceDesc.Format);
+        FormatVariant format = ResourceFormat::FormatFromD3DFormat(resourceDesc.Format);
 
         if (std::holds_alternative<DepthStencilFormat>(format))
         {
