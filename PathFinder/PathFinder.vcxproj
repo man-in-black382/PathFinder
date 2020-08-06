@@ -1236,7 +1236,11 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <None Include="Source\ThirdParty\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientConstruction.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientConstruction.hlsl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
