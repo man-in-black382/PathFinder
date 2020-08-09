@@ -374,9 +374,10 @@ namespace PathFinder
         RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 14 });
         signature.AddDescriptorTableParameter(RWTexture2DArrays);
 
-        signature.AddStaticSampler(HAL::StaticSampler::AnisotropicClamp(0));
-        signature.AddStaticSampler(HAL::StaticSampler::LinearClamp(1));
-        signature.AddStaticSampler(HAL::StaticSampler::PointClamp(2));
+        // Unbounded Samplers range
+        HAL::RootDescriptorTableParameter samplers;
+        samplers.AddDescriptorRange(HAL::SamplerDescriptorTableRange{ 0, 10 });
+        signature.AddDescriptorTableParameter(samplers);
 
         // Debug readback buffer
         HAL::RootUnorderedAccessParameter debugBuffer{ 0, 15 };

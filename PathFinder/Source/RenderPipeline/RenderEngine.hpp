@@ -20,21 +20,23 @@
 #include "../Memory/ResourceStateTracker.hpp"
 #include "../Memory/GPUResourceProducer.hpp"
 
+#include "RenderPassMediators/ResourceScheduler.hpp"
+#include "RenderPassMediators/RootConstantsUpdater.hpp"
+#include "RenderPassMediators/PipelineStateCreator.hpp"
+#include "RenderPassMediators/RootSignatureCreator.hpp"
+#include "RenderPassMediators/CommandRecorder.hpp"
+#include "RenderPassMediators/SubPassScheduler.hpp"
+#include "RenderPassMediators/SamplerCreator.hpp"
+#include "RenderPassMediators/RenderPassUtilityProvider.hpp"
+
 #include "SceneGPUStorage.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "PreprocessableAssetStorage.hpp"
-#include "RenderPassUtilityProvider.hpp"
-#include "ResourceScheduler.hpp"
-#include "RootConstantsUpdater.hpp"
 #include "RenderDevice.hpp"
 #include "ShaderManager.hpp"
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
-#include "PipelineStateCreator.hpp"
-#include "RootSignatureCreator.hpp"
 #include "RenderPassGraph.hpp"
-#include "CommandRecorder.hpp"
-#include "SubPassScheduler.hpp"
 #include "UIGPUStorage.hpp"
 #include "BottomRTAS.hpp"
 #include "TopRTAS.hpp"
@@ -102,6 +104,8 @@ namespace PathFinder
         std::unique_ptr<PipelineResourceStorage> mPipelineResourceStorage;
         std::unique_ptr<PreprocessableAssetStorage> mAssetStorage;
         std::unique_ptr<ResourceScheduler> mResourceScheduler;
+        std::unique_ptr<SamplerCreator> mSamplerCreator;
+        std::unique_ptr<SubPassScheduler<ContentMediator>> mSubPassScheduler;
         std::unique_ptr<ShaderManager> mShaderManager;
         std::unique_ptr<PipelineStateManager> mPipelineStateManager;
         std::unique_ptr<PipelineStateCreator> mPipelineStateCreator;
@@ -123,6 +127,7 @@ namespace PathFinder
 
     public:
         inline PreprocessableAssetStorage* AssetStorage() { return mAssetStorage.get(); }
+        inline PipelineResourceStorage* ResourceStorage() { return mPipelineResourceStorage.get(); }
         inline const RenderSurfaceDescription& RenderSurface() const { return mRenderSurfaceDescription; }
         inline Memory::GPUResourceProducer* ResourceProducer() { return mResourceProducer.get(); }
         inline HAL::Device* Device() { return mDevice.get(); }

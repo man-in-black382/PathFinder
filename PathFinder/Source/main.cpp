@@ -249,12 +249,17 @@ int main(int argc, char** argv)
         // Top RT needs to be rebuilt every frame
         engine.AddTopRayTracingAccelerationStructure(&sceneStorage.TopAccelerationStructure());
 
-        globalConstants.PipelineRTResolution = { 
-            engine.RenderSurface().Dimensions().Width, 
-            engine.RenderSurface().Dimensions().Height 
+        globalConstants.PipelineRTResolution = {
+            engine.RenderSurface().Dimensions().Width,
+            engine.RenderSurface().Dimensions().Height
         };
 
         globalConstants.PipelineRTResolutionInverse = 1.0f / globalConstants.PipelineRTResolution;
+        globalConstants.AnisotropicClampSamplerIdx = engine.ResourceStorage()->GetSamplerDescriptor(PathFinder::SamplerNames::AnisotropicClamp)->IndexInHeapRange();
+        globalConstants.LinearClampSamplerIdx = engine.ResourceStorage()->GetSamplerDescriptor(PathFinder::SamplerNames::LinearClamp)->IndexInHeapRange();
+        globalConstants.PointClampSamplerIdx = engine.ResourceStorage()->GetSamplerDescriptor(PathFinder::SamplerNames::PointClamp)->IndexInHeapRange();
+        globalConstants.MinSamplerIdx = engine.ResourceStorage()->GetSamplerDescriptor(PathFinder::SamplerNames::Minimim)->IndexInHeapRange();
+        globalConstants.MaxSamplerIdx = engine.ResourceStorage()->GetSamplerDescriptor(PathFinder::SamplerNames::Maximum)->IndexInHeapRange();
 
         perFrameConstants.PreviousFrameCamera = perFrameConstants.CurrentFrameCamera;
         perFrameConstants.CurrentFrameCamera = sceneStorage.CameraGPURepresentation();

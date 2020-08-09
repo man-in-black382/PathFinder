@@ -14,6 +14,7 @@
 #include "Device.hpp"
 #include "Utils.h"
 #include "Types.hpp"
+#include "Sampler.hpp"
 
 namespace HAL
 {
@@ -113,6 +114,20 @@ namespace HAL
             uint64_t bufferStride,
             uint8_t mipLevel = 0,
             std::optional<ColorFormat> explicitFormat = std::nullopt) const;
+    };
+
+
+
+    class SamplerDescriptorHeap : public DescriptorHeap<GPUDescriptor> {
+    public:
+        SamplerDescriptorHeap(const Device* device, uint32_t capacity);
+        ~SamplerDescriptorHeap() = default;
+
+        const SamplerDescriptor EmplaceSamplerDescriptor(uint64_t indexInHeap, const Sampler& sampler);
+
+        DescriptorAddress StartGPUAddress() const;
+
+    private:
     };
 
 }

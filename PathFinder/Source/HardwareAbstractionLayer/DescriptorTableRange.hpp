@@ -53,6 +53,7 @@ namespace HAL
     class SamplerDescriptorTableRange : public RootDescriprorTableRange
     {
     public:
+        SamplerDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize = UnboundedRangeSize);
         ~SamplerDescriptorTableRange() = default;
     };
 

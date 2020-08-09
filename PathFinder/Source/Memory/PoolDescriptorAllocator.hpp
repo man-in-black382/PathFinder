@@ -27,6 +27,7 @@ namespace Memory
         using SRDescriptorPtr = DescriptorPtr<HAL::SRDescriptor>;
         using UADescriptorPtr = DescriptorPtr<HAL::UADescriptor>;
         using CBDescriptorPtr = DescriptorPtr<HAL::CBDescriptor>;
+        using SamplerDescriptorPtr = DescriptorPtr<HAL::SamplerDescriptor>;
 
         RTDescriptorPtr AllocateRTDescriptor(const HAL::Texture& texture, uint8_t mipLevel = 0, std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt);
         DSDescriptorPtr AllocateDSDescriptor(const HAL::Texture& texture);
@@ -36,6 +37,8 @@ namespace Memory
         SRDescriptorPtr AllocateSRDescriptor(const HAL::Buffer& buffer, uint64_t stride);
         UADescriptorPtr AllocateUADescriptor(const HAL::Buffer& buffer, uint64_t stride);
         CBDescriptorPtr AllocateCBDescriptor(const HAL::Buffer& buffer, uint64_t stride);
+
+        SamplerDescriptorPtr AllocateSamplerDescriptor(const HAL::Sampler& sampler);
 
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);
@@ -70,6 +73,7 @@ namespace Memory
         HAL::CBSRUADescriptorHeap mCBSRUADescriptorHeap;
         HAL::RTDescriptorHeap mRTDescriptorHeap;
         HAL::DSDescriptorHeap mDSDescriptorHeap;
+        HAL::SamplerDescriptorHeap mSamplerDescriptorHeap;
 
         Ring mRingFrameTracker;
 
@@ -78,17 +82,20 @@ namespace Memory
         Pool<> mSRPool;
         Pool<> mUAPool;
         Pool<> mCBPool;
+        Pool<> mSamplerPool;
 
         std::list<Allocation<HAL::RTDescriptor>> mAllocatedRTDescriptors;
         std::list<Allocation<HAL::DSDescriptor>> mAllocatedDSDescriptors;
         std::list<Allocation<HAL::SRDescriptor>> mAllocatedSRDescriptors;
         std::list<Allocation<HAL::UADescriptor>> mAllocatedUADescriptors;
         std::list<Allocation<HAL::CBDescriptor>> mAllocatedCBDescriptors;
+        std::list<Allocation<HAL::SamplerDescriptor>> mAllocatedSamplerDescriptors;
 
         std::vector<std::vector<Deallocation>> mPendingDeallocations;
 
     public:
         inline const HAL::CBSRUADescriptorHeap& CBSRUADescriptorHeap() const { return mCBSRUADescriptorHeap; }
+        inline const HAL::SamplerDescriptorHeap& SamplerDescriptorHeap() const { return mSamplerDescriptorHeap; }
     };
 
 }

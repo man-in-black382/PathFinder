@@ -1,8 +1,9 @@
 #pragma once
 
-#include "PipelineResourceStorage.hpp"
+#include "../PipelineResourceStorage.hpp"
+#include "../RenderPassGraph.hpp"
+
 #include "RenderPassUtilityProvider.hpp"
-#include "RenderPassGraph.hpp"
 
 #include "../Foundation/BitwiseEnum.hpp"
 

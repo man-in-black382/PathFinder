@@ -67,8 +67,8 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
     float2 mipSize = GlobalDataCB.PipelineRTResolution / (1 << mipLevel);
     Bilinear bilinearFilter = GetBilinearFilter(uv, 1.0 / mipSize, mipSize);
 
-    float baseViewDepth = viewDepthTexture.SampleLevel(PointClampSampler, uv, 0.0).r;
-    float4 mipViewDepths = GatherRedManually(viewDepthTexture, bilinearFilter, mipLevel, PointClampSampler);
+    float baseViewDepth = viewDepthTexture.SampleLevel(PointClampSampler(), uv, 0.0).r;
+    float4 mipViewDepths = GatherRedManually(viewDepthTexture, bilinearFilter, mipLevel, PointClampSampler());
 
     float4 depthsRelativeDistance = abs(baseViewDepth / mipViewDepths - 1.0);
     float4 weights = GetBilinearCustomWeights(bilinearFilter, 1.0);
@@ -97,8 +97,8 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
         weights[closestSampleIdx] = 1.0;
     }
 
-    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingPreBlurred, bilinearFilter, mipLevel, PointClampSampler);
-    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingPreBlurred, bilinearFilter, mipLevel, PointClampSampler);
+    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingPreBlurred, bilinearFilter, mipLevel, PointClampSampler());
+    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingPreBlurred, bilinearFilter, mipLevel, PointClampSampler());
 
     float3 shadowedShadingFixed = float3(
         ApplyBilinearCustomWeights(shadowedShadingGatherResult.Red, weights),

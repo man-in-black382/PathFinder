@@ -3,10 +3,11 @@
 #include "../Foundation/Name.hpp"
 #include "../Scene/Scene.hpp"
 
-#include "CommandRecorder.hpp"
-#include "RootConstantsUpdater.hpp"
-#include "ResourceProvider.hpp"
-#include "RenderPassUtilityProvider.hpp"
+#include "RenderPassMediators/CommandRecorder.hpp"
+#include "RenderPassMediators/RootConstantsUpdater.hpp"
+#include "RenderPassMediators/ResourceProvider.hpp"
+#include "RenderPassMediators/RenderPassUtilityProvider.hpp"
+
 #include "UIGPUStorage.hpp"
 #include "SceneGPUStorage.hpp"
 

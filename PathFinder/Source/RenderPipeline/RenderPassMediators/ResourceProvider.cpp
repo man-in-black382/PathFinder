@@ -55,6 +55,13 @@ namespace PathFinder
         return resourceObjects->Texture->GetSRDescriptor()->IndexInHeapRange();
     }
 
+    uint32_t ResourceProvider::GetSamplerIndex(Foundation::Name samplerName) const
+    {
+        const HAL::SamplerDescriptor* descriptor = mResourceStorage->GetSamplerDescriptor(samplerName);
+        assert_format(descriptor, "Sampler ", samplerName.ToString(), " does not exist");
+        return descriptor->IndexInHeapRange();
+    }
+
     const HAL::TextureProperties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(resourceName);

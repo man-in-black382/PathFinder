@@ -25,7 +25,8 @@ namespace PathFinder
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
         mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, *props.MipCount, 
+            resourceName, 
+            HAL::TextureProperties{ format, *props.Kind, *props.Dimensions, *props.ClearValues, HAL::ResourceState::Common, *props.MipCount },
 
             [canBeReadAcrossFrames,
             passNode = mCurrentlySchedulingPassNode,
@@ -56,7 +57,8 @@ namespace PathFinder
         HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
 
         mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, *props.MipCount,
+            resourceName,
+            HAL::TextureProperties{ *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, HAL::ResourceState::Common, *props.MipCount },
 
             [canBeReadAcrossFrames,
             passNode = mCurrentlySchedulingPassNode,
@@ -91,7 +93,8 @@ namespace PathFinder
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
         mResourceStorage->QueueTextureAllocationIfNeeded(
-            resourceName, format, *props.Kind, *props.Dimensions, *props.ClearValues, *props.MipCount,
+            resourceName,
+            HAL::TextureProperties{ format, *props.Kind, *props.Dimensions, *props.ClearValues, HAL::ResourceState::Common, *props.MipCount },
 
             [canBeReadAcrossFrames,
             passNode = mCurrentlySchedulingPassNode,

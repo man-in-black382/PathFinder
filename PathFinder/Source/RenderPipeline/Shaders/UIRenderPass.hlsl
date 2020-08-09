@@ -58,7 +58,7 @@ PS_INPUT VSMain(uint indexId : SV_VertexID)
 float4 PSMain(PS_INPUT input) : SV_TARGET
 {
     Texture2D uiTexture = Textures2D[PassDataCB.UITextureSRVIndex];
-    return uiTexture.Sample(LinearClampSampler, input.uv).aaaa * input.col;
+    return uiTexture.Sample(LinearClampSampler(), input.uv).aaaa * input.col;
 };
 
 #endif

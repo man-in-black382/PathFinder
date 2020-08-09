@@ -74,9 +74,8 @@ namespace PathFinder
     }
 
     template <class BufferDataT>
-    void PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, uint64_t capacity, uint64_t perElementAlignment, const SchedulingInfoConfigurator& siConfigurator)
+    void PipelineResourceStorage::QueueBufferAllocationIfNeeded(ResourceName resourceName, const HAL::BufferProperties<BufferDataT>& properties, const SchedulingInfoConfigurator& siConfigurator)
     {
-        HAL::BufferProperties<BufferDataT> properties{ capacity, perElementAlignment };
         HAL::ResourceFormat bufferFormat = HAL::Buffer::ConstructResourceFormat(mDevice, properties);
 
         PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
@@ -96,9 +95,8 @@ namespace PathFinder
                 assert_format(false, "Should never be hit");
             }
 
-            HAL::BufferProperties<BufferDataT> finalProperties{
-                capacity, perElementAlignment, HAL::ResourceState::Common, resourceObjects->SchedulingInfo.ExpectedStates()
-            };
+            HAL::BufferProperties<BufferDataT> finalProperties = properties;
+            finalProperties.ExpectedStateMask = resourceObjects->SchedulingInfo.ExpectedStates();
 
             if (resourceObjects->SchedulingInfo.CanBeAliased)
             {

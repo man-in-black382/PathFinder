@@ -74,19 +74,19 @@ namespace HAL
         ClearValue OptimizedClearValue;
         ResourceState InitialStateMask;
         ResourceState ExpectedStateMask;
-        uint16_t MipCount;
+        uint32_t MipCount;
 
         TextureProperties(FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
-            const ClearValue& optimizedClearValue, ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount = 1);
+            const ClearValue& optimizedClearValue, ResourceState initialStateMask, ResourceState expectedStateMask, uint32_t mipCount = 1);
 
         TextureProperties(FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
-            ResourceState initialStateMask, ResourceState expectedStateMask, uint16_t mipCount = 1);
+            ResourceState initialStateMask, ResourceState expectedStateMask, uint32_t mipCount = 1);
 
         TextureProperties(FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
-            const ClearValue& optimizedClearValue, ResourceState initialStateMask, uint16_t mipCount = 1);
+            const ClearValue& optimizedClearValue, ResourceState initialStateMask, uint32_t mipCount = 1);
 
         TextureProperties(FormatVariant format, TextureKind kind, const Geometry::Dimensions& dimensions,
-            ResourceState initialStateMask, uint16_t mipCount = 1);
+            ResourceState initialStateMask, uint32_t mipCount = 1);
 
         Geometry::Dimensions MipSize(uint8_t mip) const;
     };

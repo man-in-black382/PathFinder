@@ -9,7 +9,7 @@
 #include "GraphicAPIObject.hpp"
 #include "Device.hpp"
 #include "RootParameters.hpp"
-#include "StaticSampler.hpp"
+#include "Sampler.hpp"
 
 namespace HAL
 {

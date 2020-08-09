@@ -28,5 +28,8 @@ namespace HAL
     UADescriptorTableRange::UADescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize)
         : RootDescriprorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND, rangeSize, baseRegister, registerSpace, ShaderRegister::UnorderedAccess) {}
 
+    SamplerDescriptorTableRange::SamplerDescriptorTableRange(uint32_t baseRegister, uint32_t registerSpace, uint32_t rangeSize)
+        : RootDescriprorTableRange(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND, rangeSize, baseRegister, registerSpace, ShaderRegister::Sampler) {}
+
 }
 

@@ -9,12 +9,14 @@ namespace Memory
         : mCBSRUADescriptorHeap{ device, mDescriptorRangeCapacity, mDescriptorRangeCapacity, mDescriptorRangeCapacity },
         mRTDescriptorHeap{ device, mDescriptorRangeCapacity },
         mDSDescriptorHeap{ device, mDescriptorRangeCapacity },
+        mSamplerDescriptorHeap{ device, mDescriptorRangeCapacity },
         mRingFrameTracker{ simultaneousFramesInFlight },
         mRTPool{ 1, mDescriptorRangeCapacity },
         mDSPool{ 1, mDescriptorRangeCapacity },
         mCBPool{ 1, mDescriptorRangeCapacity },
         mSRPool{ 1, mDescriptorRangeCapacity },
-        mUAPool{ 1, mDescriptorRangeCapacity }
+        mUAPool{ 1, mDescriptorRangeCapacity },
+        mSamplerPool{ 1, mDescriptorRangeCapacity }
     {
         // Just allocate pools and descriptor heaps with fixed size and hope nobody needs more than N descriptors of each type
         // TODO: add grow logic similar to how stl vector grows if more descriptors is actually needed
@@ -118,6 +120,18 @@ namespace Memory
         };
 
         return CBDescriptorPtr(&allocation.Descriptor, deallocationCallback);
+    }
+
+    PoolDescriptorAllocator::SamplerDescriptorPtr PoolDescriptorAllocator::AllocateSamplerDescriptor(const HAL::Sampler& sampler)
+    {
+        auto slot = mSamplerPool.Allocate();
+        auto descriptor = mSamplerDescriptorHeap.EmplaceSamplerDescriptor(slot.MemoryOffset, sampler);
+        auto& allocation = mAllocatedSamplerDescriptors.emplace_back(descriptor, slot);
+        auto deallocationCallback = [this, &allocation](HAL::SamplerDescriptor* descriptor) {
+            mPendingDeallocations[mCurrentFrameIndex].emplace_back(allocation.Slot, &mSamplerPool);
+        };
+
+        return SamplerDescriptorPtr(&allocation.Descriptor, deallocationCallback);
     }
 
     void PoolDescriptorAllocator::BeginFrame(uint64_t frameNumber)

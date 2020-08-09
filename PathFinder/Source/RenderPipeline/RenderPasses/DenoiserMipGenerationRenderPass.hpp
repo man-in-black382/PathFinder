@@ -4,8 +4,8 @@
 #include "../RenderPassContentMediator.hpp"
 
 #include "PipelineNames.hpp"
-
 #include "DownsamplingHelper.hpp"
+#include "DownsamplingRenderSubPass.hpp"
 
 namespace PathFinder
 {
@@ -16,12 +16,10 @@ namespace PathFinder
         DenoiserMipGenerationRenderPass();
         ~DenoiserMipGenerationRenderPass() = default;
 
-        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
-        virtual void ScheduleResources(ResourceScheduler* scheduler) override;
-        virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
+        virtual void ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler) override;
 
     private:
-        void GenerateMips(Foundation::Name resourceName, RenderContext<RenderPassContentMediator>* context, DownsamplingCBContent::Filter filter, DownsamplingStrategy strategy);
+        std::vector<std::unique_ptr<DownsamplingRenderSubPass>> mDownsamplingSubPasses;
     };
 
 }

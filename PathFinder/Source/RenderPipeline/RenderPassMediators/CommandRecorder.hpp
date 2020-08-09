@@ -1,7 +1,7 @@
 #pragma once
 
-#include "RenderDevice.hpp"
-#include "RenderPassGraph.hpp"
+#include "../RenderDevice.hpp"
+#include "../RenderPassGraph.hpp"
 
 namespace PathFinder
 {

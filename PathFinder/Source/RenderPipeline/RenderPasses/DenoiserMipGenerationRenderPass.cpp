@@ -2,52 +2,70 @@
 
 #include "../Foundation/Gaussian.hpp"
 
+#include <array>
+#include <vector>
+
 namespace PathFinder
 {
 
     DenoiserMipGenerationRenderPass::DenoiserMipGenerationRenderPass()
         : RenderPass("DenoiserMipGeneration") {}
 
-    void DenoiserMipGenerationRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
-    {
-    }
-
-    void DenoiserMipGenerationRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserMipGenerationRenderPass::ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler)
     {
         auto frameIndex = scheduler->FrameNumber() % 2;
 
-        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[frameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceScheduler::MipSet::FirstMip());
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceScheduler::MipSet::FirstMip());
-        scheduler->ReadTexture(ResourceNames::StochasticShadingGradientNormFactor, ResourceScheduler::MipSet::FirstMip());
+        std::array<std::vector<DownsamplingInvocationInputs>, 4> perResourceDownsamplingInvocationInputs{
+            GenerateDownsamplingShaderInvocationInputs(
+            ResourceNames::GBufferViewDepth[frameIndex],
+            scheduler->GetTextureProperties(ResourceNames::GBufferViewDepth[frameIndex]),
+            DownsamplingCBContent::Filter::Min,
+            DownsamplingStrategy::WriteAllLevels),
 
-        scheduler->WriteTexture(ResourceNames::GBufferViewDepth[frameIndex], ResourceScheduler::MipSet::Range(1, std::nullopt));
-        scheduler->WriteTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceScheduler::MipSet::Range(1, std::nullopt));
-        scheduler->WriteTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceScheduler::MipSet::Range(1, std::nullopt));
-        scheduler->WriteTexture(ResourceNames::StochasticShadingGradientNormFactor, ResourceScheduler::MipSet::Range(1, std::nullopt));
-    }
-     
-    void DenoiserMipGenerationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
-    {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::Downsampling);
+             GenerateDownsamplingShaderInvocationInputs(
+            ResourceNames::StochasticShadowedShadingPreBlurred,
+            scheduler->GetTextureProperties(ResourceNames::StochasticShadowedShadingPreBlurred),
+            DownsamplingCBContent::Filter::Average,
+            DownsamplingStrategy::WriteAllLevels),
 
-        auto resourceProvider = context->GetResourceProvider();
-        auto frameIndex = context->FrameNumber() % 2;
+             GenerateDownsamplingShaderInvocationInputs(
+            ResourceNames::StochasticUnshadowedShadingPreBlurred,
+            scheduler->GetTextureProperties(ResourceNames::StochasticUnshadowedShadingPreBlurred),
+            DownsamplingCBContent::Filter::Average,
+            DownsamplingStrategy::WriteAllLevels),
 
-        GenerateMips(ResourceNames::GBufferViewDepth[frameIndex], context, DownsamplingCBContent::Filter::Min, DownsamplingStrategy::WriteAllLevels);
-        GenerateMips(ResourceNames::StochasticUnshadowedShadingPreBlurred, context, DownsamplingCBContent::Filter::Average, DownsamplingStrategy::WriteAllLevels);
-        GenerateMips(ResourceNames::StochasticShadowedShadingPreBlurred, context, DownsamplingCBContent::Filter::Average, DownsamplingStrategy::WriteAllLevels);
-        GenerateMips(ResourceNames::StochasticShadingGradientNormFactor, context, DownsamplingCBContent::Filter::Max, DownsamplingStrategy::WriteOnlyLastLevel);
-    }
+             GenerateDownsamplingShaderInvocationInputs(
+            ResourceNames::StochasticShadingGradientNormFactor,
+            scheduler->GetTextureProperties(ResourceNames::StochasticShadingGradientNormFactor),
+            DownsamplingCBContent::Filter::Max,
+            DownsamplingStrategy::WriteOnlyLastLevel)
+        };
 
-    void DenoiserMipGenerationRenderPass::GenerateMips(Foundation::Name resourceName, RenderContext<RenderPassContentMediator>* context, DownsamplingCBContent::Filter filter, DownsamplingStrategy strategy)
-    {
-        auto inputs = GenerateDownsamplingShaderInvocationInputs(*context->GetResourceProvider(), resourceName, filter, strategy);
+        auto longestInvocationArrayIt = std::max_element(
+            perResourceDownsamplingInvocationInputs.begin(),
+            perResourceDownsamplingInvocationInputs.end(), 
+            [](auto& first, auto& second) -> bool { return first.size() < second.size(); });
 
-        for (const DownsamplingInvocationInputs& inputs : inputs)
+        for (auto invocation = 0; invocation < longestInvocationArrayIt->size(); ++invocation)
         {
-            context->GetConstantsUpdater()->UpdateRootConstantBuffer(inputs.CBContent);
-            context->GetCommandRecorder()->Dispatch(inputs.DispatchDimensions, { 8, 8 });
+            if (mDownsamplingSubPasses.size() <= invocation)
+            {
+                mDownsamplingSubPasses.emplace_back(std::make_unique<DownsamplingRenderSubPass>("DenoiserMipGeneration", invocation));
+            }
+
+            std::vector<DownsamplingInvocationInputs> subPassInvocationInputs;
+
+            for (const std::vector<DownsamplingInvocationInputs>& inputs : perResourceDownsamplingInvocationInputs)
+            {
+                if (invocation < inputs.size())
+                {
+                    subPassInvocationInputs.push_back(inputs[invocation]);
+                }
+            }
+
+            DownsamplingRenderSubPass* subPass = mDownsamplingSubPasses[invocation].get();
+            subPass->SetInvocationInputs(subPassInvocationInputs);
+            scheduler->AddRenderSubPass(subPass);
         }
     }
 

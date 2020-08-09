@@ -37,7 +37,7 @@ namespace PathFinder
             Memory::GPUResource::UploadStrategy::DirectAccess);
     }
 
-    const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName, Foundation::Name passName, uint64_t mipIndex)
+    const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName, Foundation::Name passName, uint64_t mipIndex) const
     {
         const PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
         const Memory::Texture* texture = resourceObjects->Texture.get();
@@ -52,7 +52,7 @@ namespace PathFinder
         return texture->GetRTDescriptor(mipIndex);
     }
 
-    const HAL::DSDescriptor* PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName, Foundation::Name passName)
+    const HAL::DSDescriptor* PipelineResourceStorage::GetDepthStencilDescriptor(ResourceName resourceName, Foundation::Name passName) const
     {
         const PipelineResourceStorageResource* resourceObjects = GetPerResourceData(resourceName);
         const Memory::Texture* texture = resourceObjects->Texture.get();
@@ -62,6 +62,13 @@ namespace PathFinder
         assert_format(passInfo && passInfo->SubresourceInfos[0], "Resource ", resourceName.ToString(), " was not scheduled to be used as depth-stencil attachment");
 
         return texture->GetDSDescriptor();
+    }
+
+    const HAL::SamplerDescriptor* PipelineResourceStorage::GetSamplerDescriptor(Foundation::Name resourceName) const
+    {
+        auto samplerIt = mSamplers.find(resourceName);
+        if (samplerIt == mSamplers.end()) return nullptr;
+        return samplerIt->second.second.get();
     }
 
     void PipelineResourceStorage::BeginFrame()
@@ -195,17 +202,9 @@ namespace PathFinder
         mAllocationActions.clear();
     }
 
-    void PipelineResourceStorage::QueueTextureAllocationIfNeeded(
-        ResourceName resourceName,
-        HAL::FormatVariant format,
-        HAL::TextureKind kind,
-        const Geometry::Dimensions& dimensions,
-        const HAL::ClearValue& optimizedClearValue,
-        uint16_t mipCount,
-        const SchedulingInfoConfigurator& siConfigurator)
+    void PipelineResourceStorage::QueueTextureAllocationIfNeeded(ResourceName resourceName, const HAL::TextureProperties& properties, const SchedulingInfoConfigurator& siConfigurator)
     {
-        HAL::TextureProperties textureProperties{ format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, mipCount };
-        HAL::ResourceFormat textureFormat{ mDevice, textureProperties };
+        HAL::ResourceFormat textureFormat{ mDevice, properties };
 
         assert_format(!GetPerResourceData(resourceName), "Texture ", resourceName.ToString(), " allocation is already requested");
         CreatePerResourceData(resourceName, textureFormat);
@@ -225,8 +224,8 @@ namespace PathFinder
             case HAL::HeapAliasingGroup::Universal: heap = mUniversalHeap.get(); break;
             }
 
-            HAL::TextureProperties completeProperties{
-                format, kind, dimensions, optimizedClearValue, HAL::ResourceState::Common, resourceObjects->SchedulingInfo.ExpectedStates(), mipCount };
+            HAL::TextureProperties completeProperties = properties;
+            completeProperties.ExpectedStateMask = resourceObjects->SchedulingInfo.ExpectedStates();
 
             if (resourceObjects->SchedulingInfo.CanBeAliased)
             {
@@ -252,6 +251,12 @@ namespace PathFinder
         {
             mAliasMap[*aliasName] = resourceName;
         }
+    }
+
+    void PipelineResourceStorage::AddSampler(Foundation::Name samplerName, const HAL::Sampler& sampler)
+    {
+        assert_format(!mSamplers.contains(samplerName), "Sampler ", samplerName.ToString(), " already exists");
+        mSamplers.emplace(samplerName, SamplerDescriptorPair{ sampler, mDescriptorAllocator->AllocateSamplerDescriptor(sampler) });
     }
 
     PipelineResourceStoragePass& PipelineResourceStorage::CreatePerPassData(PassName name)

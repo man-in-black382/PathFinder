@@ -2,11 +2,11 @@ namespace PathFinder
 {
 
     template <class ContentMediator>
-    SubPassScheduler<ContentMediator>::SubPassScheduler(const RenderPassContainer<ContentMediator>* passContainer, const PipelineResourceStorage* resourceStorage, const RenderPassUtilityProvider* utilityProvider)
+    SubPassScheduler<ContentMediator>::SubPassScheduler(RenderPassContainer<ContentMediator>* passContainer, const PipelineResourceStorage* resourceStorage, const RenderPassUtilityProvider* utilityProvider)
         : mPassContainer{ passContainer }, mResourceStorage{ resourceStorage }, mUtilityProvider{ utilityProvider } {}
 
     template <class ContentMediator>
-    void SubPassScheduler<ContentMediator>::AddRenderSubPass(const RenderSubPass<ContentMediator>* pass)
+    void SubPassScheduler<ContentMediator>::AddRenderSubPass(RenderSubPass<ContentMediator>* pass)
     {
         mPassContainer->AddRenderSubPass(pass);
     }
@@ -20,7 +20,7 @@ namespace PathFinder
     template <class ContentMediator>
     const HAL::TextureProperties& SubPassScheduler<ContentMediator>::GetTextureProperties(Foundation::Name textureName) const
     {
-        PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(textureName);
+        const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(textureName);
         assert_format(resourceObjects, "Resource ", textureName.ToString(), " wasn't scheduled for creation");
         return resourceObjects->SchedulingInfo.ResourceFormat().GetTextureProperties();
     }

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "RenderSurfaceDescription.hpp"
+#include "../RenderSurfaceDescription.hpp"
 
 namespace PathFinder
 {

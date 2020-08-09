@@ -5,7 +5,10 @@
 #include "RenderPassGraph.hpp"
 #include "RenderDevice.hpp"
 #include "PipelineResourceStorage.hpp"
-#include "RenderPassUtilityProvider.hpp"
+#include "RenderContext.hpp"
+
+#include "RenderPassMediators/RenderPassUtilityProvider.hpp"
+#include "RenderPassMediators/ResourceProvider.hpp"
 
 #include <robinhood/robin_hood.h>
 
@@ -45,6 +48,7 @@ namespace PathFinder
             uint64_t GraphNodeIndex;
 
             bool ArePipelineStatesScheduled = false;
+            bool AreSamplersScheduled = false;
 
             RenderContext<ContentMediator> GetContext();
         };

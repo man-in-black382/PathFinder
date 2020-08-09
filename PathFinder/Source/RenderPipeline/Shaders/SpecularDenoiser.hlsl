@@ -169,7 +169,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         float2 sampleUV = NDCToUV(projectedSample);
 
         // Get neighbor properties
-        float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler, sampleUV, 0);
+        float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler(), sampleUV, 0);
 
         float3 neighborNormal = ExpandGBufferNormal(neighborNormalRoughness.xyz);
         float neighborRoughness = neighborNormalRoughness.w;
@@ -182,8 +182,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         float sampleWeight = normalWeight * geometryWeight * roughnessWeight;
 
         // Sample neighbor value and weight accordingly
-        denoisedShadowed += currentShadowedShadingTexture.SampleLevel(LinearClampSampler, sampleUV, 0).rgb * sampleWeight;
-        denoisedUnshadowed += currentUnshadowedShadingTexture.SampleLevel(LinearClampSampler, sampleUV, 0).rgb * sampleWeight;
+        denoisedShadowed += currentShadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb * sampleWeight;
+        denoisedUnshadowed += currentUnshadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb * sampleWeight;
 
         totalWeight += sampleWeight;
     }

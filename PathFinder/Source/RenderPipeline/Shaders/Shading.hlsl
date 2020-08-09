@@ -126,9 +126,9 @@ LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDi
     float2 uv = float2(gBuffer.Roughness, sqrt(1.0 - NdotV));
     uv = Refit0to1ValuesToTexelCenter(uv, LTC_LUT_Size);
 
-    float4 inverseMatrixComponentsSpecular = LTC_LUT_Specular_MatrixInverse.SampleLevel(LinearClampSampler, uv, 0);
-    float4 matrixComponentsSpecular = LTC_LUT_Specular_Matrix.SampleLevel(LinearClampSampler, uv, 0);
-    float4 maskingFresnelAndScaleSpecular = LTC_LUT_Specular_Terms.SampleLevel(LinearClampSampler, uv, 0);
+    float4 inverseMatrixComponentsSpecular = LTC_LUT_Specular_MatrixInverse.SampleLevel(LinearClampSampler(), uv, 0);
+    float4 matrixComponentsSpecular = LTC_LUT_Specular_Matrix.SampleLevel(LinearClampSampler(), uv, 0);
+    float4 maskingFresnelAndScaleSpecular = LTC_LUT_Specular_Terms.SampleLevel(LinearClampSampler(), uv, 0);
 
     float3x3 MInvSpecular = Matrix3x3ColumnMajor(
         float3(inverseMatrixComponentsSpecular.x, 0, inverseMatrixComponentsSpecular.y),
@@ -142,8 +142,8 @@ LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDi
         float3(matrixComponentsSpecular.z, 0, matrixComponentsSpecular.w)
     );
 
-    float4 inverseMatrixComponentsDiffuse = LTC_LUT_Diffuse_MatrixInverse.SampleLevel(LinearClampSampler, uv, 0);
-    float4 matrixComponentsDiffuse = LTC_LUT_Diffuse_Matrix.SampleLevel(LinearClampSampler, uv, 0);
+    float4 inverseMatrixComponentsDiffuse = LTC_LUT_Diffuse_MatrixInverse.SampleLevel(LinearClampSampler(), uv, 0);
+    float4 matrixComponentsDiffuse = LTC_LUT_Diffuse_Matrix.SampleLevel(LinearClampSampler(), uv, 0);
 
     float3x3 MInvDiffuse = Matrix3x3ColumnMajor(
         float3(inverseMatrixComponentsDiffuse.x, 0, inverseMatrixComponentsDiffuse.y),
@@ -187,7 +187,7 @@ LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDi
     terms.LUT_Specular_Terms = LTC_LUT_Specular_Terms;
     terms.LUT_Diffuse_Terms = LTC_LUT_Diffuse_Terms;
     terms.LUTSize = material.LTC_LUT_TextureSize;
-    terms.LUTSampler = LinearClampSampler;
+    terms.LUTSampler = LinearClampSampler();
 
     return terms;
 }

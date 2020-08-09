@@ -26,10 +26,10 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float2 centerUV = (float2(dispatchThreadID.xy) + 0.5f) * PassDataCB.InverseTextureDimensions;
 
-    float3 color0 = deferredLightingOutput.SampleLevel(LinearClampSampler, centerUV, 0.0).rgb;
-    float3 color1 = bloomBlurOutput.SampleLevel(LinearClampSampler, centerUV, 0.0).rgb;
-    float3 color2 = bloomBlurOutput.SampleLevel(LinearClampSampler, centerUV, 1.0).rgb;
-    float3 color3 = bloomBlurOutput.SampleLevel(LinearClampSampler, centerUV, 2.0).rgb;
+    float3 color0 = deferredLightingOutput.SampleLevel(LinearClampSampler(), centerUV, 0.0).rgb;
+    float3 color1 = bloomBlurOutput.SampleLevel(LinearClampSampler(), centerUV, 0.0).rgb;
+    float3 color2 = bloomBlurOutput.SampleLevel(LinearClampSampler(), centerUV, 1.0).rgb;
+    float3 color3 = bloomBlurOutput.SampleLevel(LinearClampSampler(), centerUV, 2.0).rgb;
 
     float totalWeight = PassDataCB.SmallBloomWeight + PassDataCB.MediumBloomWeight + PassDataCB.LargeBloomWeight;
     float3 weights = float3(PassDataCB.SmallBloomWeight, PassDataCB.MediumBloomWeight, PassDataCB.LargeBloomWeight) / totalWeight;

@@ -72,7 +72,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     // Custom binary weights based on disocclusion help us get rid of ghosting
     Bilinear bilinearFilterAtPrevPos = GetBilinearFilter(reprojectedUV, GlobalDataCB.PipelineRTResolutionInv, GlobalDataCB.PipelineRTResolution);
 
-    float4 viewDepthPrev = GatherRedManually(prevViewDepthTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler);
+    float4 viewDepthPrev = GatherRedManually(prevViewDepthTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
 
     // Compute disocclusion
     float4 isInScreen = float4(
@@ -98,7 +98,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     float4 weights = GetBilinearCustomWeights(bilinearFilterAtPrevPos, occlusion);
 
-    float4 accumCountPrev = GatherRedManually(prevAccumulationCounterTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler);
+    float4 accumCountPrev = GatherRedManually(prevAccumulationCounterTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
     float accumCountNew = ApplyBilinearCustomWeights(min(accumCountPrev + 1.0, MaxAccumulatedFrames), weights);
 
     // Force an aggressive counter reset when 
@@ -108,8 +108,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         accumCountNew = 0.0; 
     }
 
-    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler);
-    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler);
+    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
+    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
 
     float3 shadowedShadingReprojected = float3(
         ApplyBilinearCustomWeights(shadowedShadingGatherResult.Red, weights),

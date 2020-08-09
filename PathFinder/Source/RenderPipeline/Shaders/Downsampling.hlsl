@@ -9,11 +9,13 @@ struct PassData
 {
     uint FilterType;
     uint SourceTexIdx;
-    bool IsSourceTexSRV;
+    uint SourceMipIdx;
     uint NumberOfOutputsToCompute;
     uint4 OutputTexIndices;
     bool4 OutputsToWrite;
-    uint2 InputSize;
+    float2 DispatchDimensionsInv;
+    bool IsInputSizeOddVertically;
+    bool IsInputSizeOddHorizontally;
 };
 
 #define PassDataType PassData
@@ -29,10 +31,10 @@ float4 Filter(float4 v0, float4 v1, float4 v2, float4 v3)
 {
     [branch] switch (PassDataCB.FilterType)
     {
-    case FilterTypeMin:     return min(v0, min(v1, min(v2, v3)));   break;
-    case FilterTypeMax:     return max(v0, max(v1, max(v2, v3)));   break;
+    case FilterTypeMin:     return min(v0, min(v1, min(v2, v3)));  
+    case FilterTypeMax:     return max(v0, max(v1, max(v2, v3)));  
     case FilterTypeAverage: 
-    default:                return 0.25 * (v0 + v1 + v2 + v3);      break;
+    default:                return 0.25 * (v0 + v1 + v2 + v3);     
     }
 }
 
@@ -40,54 +42,102 @@ float4 Filter(float4 v0, float4 v1)
 {
     [branch] switch (PassDataCB.FilterType)
     {
-    case FilterTypeMin:     return min(v0, v1);     break;
-    case FilterTypeMax:     return max(v0, v1);     break;
+    case FilterTypeMin:     return min(v0, v1);    
+    case FilterTypeMax:     return max(v0, v1);    
     case FilterTypeAverage:
-    default:                return 0.5 * (v0 + v1); break;
+    default:                return 0.5 * (v0 + v1);
+    }
+}
+
+sampler GetSampler()
+{
+    switch (PassDataCB.FilterType)
+    {
+    case FilterTypeMin:     return MinSampler();
+    case FilterTypeMax:     return MaxSampler();
+    case FilterTypeAverage:
+    default:                return LinearClampSampler();
     }
 }
 
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/MiniEngine/Core/Shaders/DownsampleBloomAllCS.hlsl
+// https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/MiniEngine/Core/Shaders/GenerateMipsCS.hlsli
 //
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
 {
+    if (PassDataCB.NumberOfOutputsToCompute < 1)
+    {
+        return;
+    }
+
     // Should dispatch for 1/2 resolution 
     RWTexture2D<float4> destination0 = RW_Float4_Textures2D[PassDataCB.OutputTexIndices[0]];
     RWTexture2D<float4> destination1 = RW_Float4_Textures2D[PassDataCB.OutputTexIndices[1]];
     RWTexture2D<float4> destination2 = RW_Float4_Textures2D[PassDataCB.OutputTexIndices[2]];
     RWTexture2D<float4> destination3 = RW_Float4_Textures2D[PassDataCB.OutputTexIndices[3]];
 
-    uint2 sourceCoord = DTid.xy * 2;
+    float2 texelSize = PassDataCB.DispatchDimensionsInv;
 
     // You can tell if both x and y are divisible by a power of two with this value
     uint parity = DTid.x | DTid.y;
 
     // Downsample and store the 8x8 block
-    float4 color0, color1, color2, color3;
+    float4 filteredPixel;
+    Texture2D source = Textures2D[PassDataCB.SourceTexIdx];
 
-    if (PassDataCB.IsSourceTexSRV)
+    // One bilinear sample is insufficient when scaling down by more than 2x.
+    // You will slightly undersample in the case where the source dimension
+    // is odd.  This is why it's a really good idea to only generate mips on
+    // power-of-two sized textures.  Trying to handle the undersampling case
+    // will force this shader to be slower and more complicated as it will
+    // have to take more source texture samples.
+
+    sampler samplerState = GetSampler();
+
+    if (!PassDataCB.IsInputSizeOddVertically && !PassDataCB.IsInputSizeOddHorizontally)
     {
-        Texture2D source = Textures2D[PassDataCB.SourceTexIdx];
-        color0 = source[sourceCoord];
-        color1 = source[sourceCoord + uint2(1, 0)];
-        color2 = source[sourceCoord + uint2(1, 1)];
-        color3 = source[sourceCoord + uint2(0, 1)];
+        float2 UV = texelSize * (DTid.xy + 0.5);
+        filteredPixel = source.SampleLevel(samplerState, UV, PassDataCB.SourceMipIdx);
     }
-    else
+    else if (PassDataCB.IsInputSizeOddHorizontally && PassDataCB.IsInputSizeOddVertically)
     {
-        RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.SourceTexIdx];
-        color0 = source[sourceCoord];
-        color1 = source[sourceCoord + uint2(1, 0)];
-        color2 = source[sourceCoord + uint2(1, 1)];
-        color3 = source[sourceCoord + uint2(0, 1)];
+        // > 2:1 in in both dimensions
+        // Use 4 bilinear samples to guarantee we don't undersample when downsizing by more than 2x
+        // in both directions.
+        float2 UV1 = texelSize * (DTid.xy + float2(0.25, 0.25));
+        float2 O = texelSize * 0.5;
+        filteredPixel = Filter(
+            source.SampleLevel(samplerState, UV1, PassDataCB.SourceMipIdx),
+            source.SampleLevel(samplerState, UV1 + float2(O.x, 0.0), PassDataCB.SourceMipIdx),
+            source.SampleLevel(samplerState, UV1 + float2(0.0, O.y), PassDataCB.SourceMipIdx),
+            source.SampleLevel(samplerState, UV1 + float2(O.x, O.y), PassDataCB.SourceMipIdx)
+        );
     }
-
-    float4 filteredPixel = Filter(color0, color1, color2, color3);
-
-    if (PassDataCB.NumberOfOutputsToCompute < 1)
+    else if (PassDataCB.IsInputSizeOddHorizontally)
     {
-        return;
+        // > 2:1 in X dimension
+        // Use 2 bilinear samples to guarantee we don't undersample when downsizing by more than 2x
+        // horizontally.
+        float2 UV1 = texelSize * (DTid.xy + float2(0.25, 0.5));
+        float2 Off = texelSize * float2(0.5, 0.0);
+        filteredPixel = Filter(
+            source.SampleLevel(samplerState, UV1, PassDataCB.SourceMipIdx),
+            source.SampleLevel(samplerState, UV1 + Off, PassDataCB.SourceMipIdx)
+        );
+    }
+    else if (PassDataCB.IsInputSizeOddVertically)
+    {
+        // > 2:1 in Y dimension
+        // Use 2 bilinear samples to guarantee we don't undersample when downsizing by more than 2x
+        // vertically.
+        float2 UV1 = texelSize * (DTid.xy + float2(0.5, 0.25));
+        float2 Off = texelSize * float2(0.0, 0.5);
+
+        filteredPixel = Filter(
+            source.SampleLevel(samplerState, UV1, PassDataCB.SourceMipIdx),
+            source.SampleLevel(samplerState, UV1 + Off, PassDataCB.SourceMipIdx)
+        );
     }
 
     gTile[GI] = filteredPixel;

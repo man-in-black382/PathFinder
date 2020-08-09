@@ -18,17 +18,17 @@ namespace PathFinder
     class SubPassScheduler
     {
     public:
-        SubPassScheduler(const RenderPassContainer<ContentMediator>* passContainer, const PipelineResourceStorage* resourceStorage, const RenderPassUtilityProvider* utilityProvider);
+        SubPassScheduler(RenderPassContainer<ContentMediator>* passContainer, const PipelineResourceStorage* resourceStorage, const RenderPassUtilityProvider* utilityProvider);
 
-        void AddRenderSubPass(const RenderSubPass<ContentMediator>* pass);
+        void AddRenderSubPass(RenderSubPass<ContentMediator>* pass);
 
         const HAL::TextureProperties& GetTextureProperties(Foundation::Name textureName) const;
-        const HAL::BufferProperties<uint8_t>& GetBufferProperties(Foundation::Name textureName) const;
+        const HAL::BufferProperties<uint8_t>& GetBufferProperties(Foundation::Name bufferName) const;
 
     private:
         const PipelineResourceStorage* mResourceStorage;
         const RenderPassUtilityProvider* mUtilityProvider;
-        const RenderPassContainer<ContentMediator>* mPassContainer;
+        RenderPassContainer<ContentMediator>* mPassContainer;
 
     public:
         inline const RenderSurfaceDescription& GetDefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }

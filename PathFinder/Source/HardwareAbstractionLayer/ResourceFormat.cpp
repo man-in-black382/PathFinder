@@ -13,7 +13,7 @@ namespace HAL
         const ClearValue& optimizedClearValue,
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
-        uint16_t mipCount)
+        uint32_t mipCount)
         :
         Format{ format },
         Kind{ kind },
@@ -29,7 +29,7 @@ namespace HAL
         const Geometry::Dimensions& dimensions,
         ResourceState initialStateMask,
         ResourceState expectedStateMask,
-        uint16_t mipCount)
+        uint32_t mipCount)
         :
         TextureProperties(
             format, kind, dimensions,
@@ -42,7 +42,7 @@ namespace HAL
         const Geometry::Dimensions& dimensions,
         const ClearValue& optimizedClearValue,
         ResourceState initialStateMask,
-        uint16_t mipCount)
+        uint32_t mipCount)
         :
         TextureProperties(
             format, kind, dimensions, optimizedClearValue,
@@ -53,7 +53,7 @@ namespace HAL
         TextureKind kind,
         const Geometry::Dimensions& dimensions,
         ResourceState initialStateMask,
-        uint16_t mipCount)
+        uint32_t mipCount)
         :
         TextureProperties(
             format, kind, dimensions,

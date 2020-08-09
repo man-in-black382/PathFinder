@@ -323,11 +323,6 @@ namespace HAL
 
         assert_format(!shaderVisibleFormat || std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for typed texture");
 
-        if (!(texture.D3DDescription().Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS))
-        {
-            printf("");
-        }
-
         D3D12_UNORDERED_ACCESS_VIEW_DESC desc = ResourceToUAVDescription(texture.D3DDescription(), 1, mipLevel, shaderVisibleFormat);
         mDevice->D3DDevice()->CreateUnorderedAccessView(texture.D3DResource(), nullptr, &desc, cpuHandle);
 
@@ -384,6 +379,27 @@ namespace HAL
         mDevice->D3DDevice()->CreateUnorderedAccessView(buffer.D3DResource(), nullptr, &desc, cpuHandle);
 
         return UADescriptor{ cpuHandle, gpuHandle, indexInHeapRange };
+    }
+
+
+
+    SamplerDescriptorHeap::SamplerDescriptorHeap(const Device* device, uint32_t capacity)
+        : DescriptorHeap(device, { capacity }, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {}
+
+    const SamplerDescriptor SamplerDescriptorHeap::EmplaceSamplerDescriptor(uint64_t indexInHeap, const Sampler& sampler)
+    {
+        D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{ GetCPUAddress(indexInHeap, 0) };
+        D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle{ GetGPUAddress(indexInHeap, 0) };
+
+        mDevice->D3DDevice()->CreateSampler(&sampler.D3DSampler(), cpuHandle);
+
+        return SamplerDescriptor{ cpuHandle, gpuHandle, indexInHeap };
+    }
+
+    HAL::DescriptorAddress SamplerDescriptorHeap::StartGPUAddress() const
+    {
+        const RangeAllocationInfo& allocInfo = GetRange(0);
+        return allocInfo.StartGPUHandle.ptr;
     }
 
  }

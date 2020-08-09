@@ -3,8 +3,9 @@
 #include "../Foundation/Name.hpp"
 
 #include "RenderPassMetadata.hpp"
-#include "ResourceScheduler.hpp"
 #include "RenderContext.hpp"
+
+#include "RenderPassMediators/ResourceScheduler.hpp"
 
 namespace PathFinder
 {

@@ -37,20 +37,21 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
            shadow[i] = unshadowedShading[i] < 1e-05 ? 1.0 : shadowedShading[i] / unshadowedShading[i];
        }*/
 
-    float g = gradient[dispatchThreadID.xy].r / normFactor.SampleLevel(PointClampSampler, 0.xx, 11).r;
+    float g = gradient[dispatchThreadID.xy].r / normFactor.SampleLevel(PointClampSampler(), 0.xx, 11).r;
     // shadow* analytic[dispatchThreadID.xy].rgb;
+    float3 color = inputImage.SampleLevel(LinearClampSampler(), uv, 0);
 
     GTTonemappingParams params = PassDataCB.TonemappingParams;
     // Luminance was exposed using Saturation Based Sensitivity method 
     // hence the 1.0 for maximum luminance
     params.MaximumLuminance = 1.0;// ConvertEV100ToMaxHsbsLuminance(FrameDataCB.CurrentFrameCamera.ExposureValue100);
 
-    //color = float3(
-    //    GTToneMap(color.r, params),
-    //    GTToneMap(color.g, params),
-    //    GTToneMap(color.b, params));
+    color = float3(
+        GTToneMap(color.r, params),
+        GTToneMap(color.g, params),
+        GTToneMap(color.b, params));
 
-    outputImage[dispatchThreadID.xy] = float4(/*SRGBFromLinear*/(g > 1.0 ? float3(0, 1, 0) : g.xxx), 1.0);
+    outputImage[dispatchThreadID.xy] = float4(SRGBFromLinear(color), 1.0);
 }
 
 #endif

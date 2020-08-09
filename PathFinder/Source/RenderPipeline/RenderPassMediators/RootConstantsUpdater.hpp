@@ -1,7 +1,7 @@
 #pragma once
 
-#include "PipelineResourceStorage.hpp"
-#include "RenderPassGraph.hpp"
+#include "../PipelineResourceStorage.hpp"
+#include "../RenderPassGraph.hpp"
 
 namespace PathFinder
 {

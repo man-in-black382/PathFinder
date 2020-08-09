@@ -68,10 +68,11 @@ namespace PathFinder
 
         mPipelineStateCreator = std::make_unique<PipelineStateCreator>(mPipelineStateManager.get());
         mRootSignatureCreator = std::make_unique<RootSignatureCreator>(mPipelineStateManager.get());
+        mSamplerCreator = std::make_unique<SamplerCreator>(mPipelineResourceStorage.get());
 
         mRenderDevice = std::make_unique<RenderDevice>(
             *mDevice,
-            &mDescriptorAllocator->CBSRUADescriptorHeap(), 
+            mDescriptorAllocator.get(),
             mCommandListAllocator.get(), 
             mResourceStateTracker.get(), 
             mPipelineResourceStorage.get(), 
@@ -91,6 +92,11 @@ namespace PathFinder
             mPipelineResourceStorage.get(), 
             mPassUtilityProvider.get(),
             &mRenderPassGraph);
+
+        mSubPassScheduler = std::make_unique<SubPassScheduler<ContentMediator>>(
+            mRenderPassContainer.get(),
+            mPipelineResourceStorage.get(),
+            mPassUtilityProvider.get());
 
         mFrameFence = std::make_unique<HAL::Fence>(*mDevice);
 
@@ -360,9 +366,21 @@ namespace PathFinder
                 passHelpers.Pass->SetupPipelineStates(mPipelineStateCreator.get(), mRootSignatureCreator.get());
                 passHelpers.ArePipelineStatesScheduled = true;
             }
+
+            if (!passHelpers.AreSamplersScheduled)
+            {
+                passHelpers.Pass->ScheduleSamplers(mSamplerCreator.get());
+                passHelpers.AreSamplersScheduled = true;
+            }
         }
 
         mPipelineResourceStorage->EndResourceScheduling();
+
+        // Run sub pass scheduling after scheduling first wave of resources
+        for (auto& [passName, passHelpers] : mRenderPassContainer->RenderPasses())
+        {
+            passHelpers.Pass->ScheduleSubPasses(mSubPassScheduler.get());
+        }
 
         // Run scheduling for sub render passes
         mPipelineResourceStorage->StartResourceScheduling();

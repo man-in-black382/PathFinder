@@ -17,6 +17,7 @@
 #include "../HardwareAbstractionLayer/RenderTarget.hpp"
 
 #include "../Memory/PoolCommandListAllocator.hpp"
+#include "../Memory/PoolDescriptorAllocator.hpp"
 #include "../Memory/GPUResource.hpp"
 #include "../Memory/ResourceStateTracker.hpp"
 
@@ -32,7 +33,7 @@ namespace PathFinder
     public:
         RenderDevice(
             const HAL::Device& device,
-            const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
+            Memory::PoolDescriptorAllocator* descriptorAllocator,
             Memory::PoolCommandListAllocator* commandListAllocator,
             Memory::ResourceStateTracker* resourceStateTracker,
             PipelineResourceStorage* resourceStorage,
@@ -175,7 +176,7 @@ namespace PathFinder
         template <class CommandQueueT, class CommandListT>
         void ExecuteCommandListBatch(CommandListBatch& batch, HAL::CommandQueue& queue);
 
-        const HAL::CBSRUADescriptorHeap* mUniversalGPUDescriptorHeap;
+        Memory::PoolDescriptorAllocator* mDescriptorAllocator;
         Memory::PoolCommandListAllocator* mCommandListAllocator;
         Memory::ResourceStateTracker* mResourceStateTracker;
         PipelineResourceStorage* mResourceStorage;

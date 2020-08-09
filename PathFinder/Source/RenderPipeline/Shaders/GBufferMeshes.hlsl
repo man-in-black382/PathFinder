@@ -71,14 +71,14 @@ float3 FetchAlbedoMap(VertexOut vertex, Material material)
     return 0.8;//
 
     Texture2D albedoMap = Textures2D[material.AlbedoMapIndex];
-    return LinearFromSRGB(albedoMap.Sample(AnisotropicClampSampler, vertex.UV).rgb);
+    return LinearFromSRGB(albedoMap.Sample(AnisotropicClampSampler(), vertex.UV).rgb);
 }
 
 float3 FetchNormalMap(VertexOut vertex, Material material)
 {
     Texture2D normalMap = Textures2D[material.NormalMapIndex];
     
-    float3 normal = normalMap.Sample(AnisotropicClampSampler, vertex.UV).xyz; 
+    float3 normal = normalMap.Sample(AnisotropicClampSampler(), vertex.UV).xyz;
     normal = normal * 2.0 - 1.0;
 
     normal = float3(0, 0, 1); 
@@ -91,7 +91,7 @@ float FetchMetallnessMap(VertexOut vertex, Material material)
     return 0.0;//
 
     Texture2D metalnessMap = Textures2D[material.MetalnessMapIndex];
-    return metalnessMap.Sample(AnisotropicClampSampler, vertex.UV).r; 
+    return metalnessMap.Sample(AnisotropicClampSampler(), vertex.UV).r;
 }
 
 float FetchRoughnessMap(VertexOut vertex, Material material)
@@ -99,19 +99,19 @@ float FetchRoughnessMap(VertexOut vertex, Material material)
     return 0.1;//
 
     Texture2D roughnessMap = Textures2D[material.RoughnessMapIndex];
-    return roughnessMap.Sample(AnisotropicClampSampler, vertex.UV).r;
+    return roughnessMap.Sample(AnisotropicClampSampler(), vertex.UV).r;
 }
 
 float FetchAOMap(VertexOut vertex, Material material)
 {
     Texture2D aoMap = Textures2D[material.AOMapIndex];
-    return aoMap.Sample(AnisotropicClampSampler, vertex.UV).r;
+    return aoMap.Sample(AnisotropicClampSampler(), vertex.UV).r;
 }
 
 float FetchDisplacementMap(VertexOut vertex, Material material)
 {
     Texture2D displacementMap = Textures2D[material.DisplacementMapIndex];
-    return displacementMap.Sample(AnisotropicClampSampler, vertex.UV).r;
+    return displacementMap.Sample(AnisotropicClampSampler(), vertex.UV).r;
 }
 
 GBufferPixelOut PSMain(VertexOut pin)

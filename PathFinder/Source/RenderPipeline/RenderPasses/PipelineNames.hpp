@@ -88,4 +88,13 @@ namespace PathFinder
         inline Foundation::Name DisplacementDistanceMapGeneration{ "Distance_Map_Generation_Root_Sig" };
     }
 
+    namespace SamplerNames
+    {
+        inline Foundation::Name AnisotropicClamp{ "Sampler_Anisotropic_Clamp" };
+        inline Foundation::Name LinearClamp{ "Sampler_Linear_Clamp" };
+        inline Foundation::Name PointClamp{ "Sampler_Point_Clamp" };
+        inline Foundation::Name Minimim{ "Sampler_Minimum" };
+        inline Foundation::Name Maximum{ "Sampler_Maximum" };
+    }
+
 }

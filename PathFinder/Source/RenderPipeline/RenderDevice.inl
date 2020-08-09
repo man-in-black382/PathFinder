@@ -17,7 +17,7 @@ namespace PathFinder
             AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_SetEventMarker(*worker->AftermathHandle(), passName.c_str(), passName.size() + 1));
         }
 
-        worker->SetDescriptorHeap(*mUniversalGPUDescriptorHeap);
+        worker->SetDescriptorHeaps(mDescriptorAllocator->CBSRUADescriptorHeap(), mDescriptorAllocator->SamplerDescriptorHeap());
         action();
         mEventTracker.EndGPUEvent(*worker);
         worker->Close();

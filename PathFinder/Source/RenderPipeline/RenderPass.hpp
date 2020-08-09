@@ -3,13 +3,15 @@
 #include "../Foundation/Name.hpp"
 
 #include "RenderPassMetadata.hpp"
-#include "ResourceScheduler.hpp"
-#include "ResourceProvider.hpp"
 #include "RenderDevice.hpp"
 #include "RenderContext.hpp"
-#include "PipelineStateCreator.hpp"
-#include "RootSignatureCreator.hpp"
-#include "SubPassScheduler.hpp"
+
+#include "RenderPassMediators/ResourceScheduler.hpp"
+#include "RenderPassMediators/ResourceProvider.hpp"
+#include "RenderPassMediators/PipelineStateCreator.hpp"
+#include "RenderPassMediators/RootSignatureCreator.hpp"
+#include "RenderPassMediators/SubPassScheduler.hpp"
+#include "RenderPassMediators/SamplerCreator.hpp"
 
 namespace PathFinder
 {
@@ -26,6 +28,7 @@ namespace PathFinder
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) {};
         virtual void ScheduleResources(ResourceScheduler* scheduler) {};
         virtual void ScheduleSubPasses(SubPassScheduler<ContentMediator>* scheduler) {};
+        virtual void ScheduleSamplers(SamplerCreator* samplerCreator) {};
         virtual void Render(RenderContext<ContentMediator>* context) {};
 
     private:

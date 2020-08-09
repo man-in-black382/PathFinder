@@ -75,6 +75,7 @@ namespace HAL
     class SamplerDescriptor : public GPUDescriptor
     {
     public:
+        using GPUDescriptor::GPUDescriptor;
         ~SamplerDescriptor() = default;
     };
 

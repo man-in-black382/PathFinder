@@ -7,7 +7,7 @@ namespace PathFinder
 
     RenderDevice::RenderDevice(
         const HAL::Device& device, 
-        const HAL::CBSRUADescriptorHeap* universalGPUDescriptorHeap,
+        Memory::PoolDescriptorAllocator* descriptorAllocator,
         Memory::PoolCommandListAllocator* commandListAllocator,
         Memory::ResourceStateTracker* resourceStateTracker,
         PipelineResourceStorage* resourceStorage,
@@ -17,7 +17,7 @@ namespace PathFinder
         :
         mGraphicsQueue{ device },
         mComputeQueue{ device },
-        mUniversalGPUDescriptorHeap{ universalGPUDescriptorHeap },
+        mDescriptorAllocator{ descriptorAllocator },
         mCommandListAllocator{ commandListAllocator },
         mResourceStateTracker{ resourceStateTracker },
         mResourceStorage{ resourceStorage },
@@ -217,8 +217,9 @@ namespace PathFinder
         auto commonParametersIndexOffset = rootSignature->ParameterCount() - mPipelineStateManager->CommonRootSignatureParameterCount();
 
         // Look at PipelineStateManager for base root signature parameter ordering
-        HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
-        HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
+        HAL::DescriptorAddress SRRangeAddress = mDescriptorAllocator->CBSRUADescriptorHeap().RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
+        HAL::DescriptorAddress UARangeAddress = mDescriptorAllocator->CBSRUADescriptorHeap().RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
+        HAL::DescriptorAddress samplerRangeAddress = mDescriptorAllocator->SamplerDescriptorHeap().StartGPUAddress();
 
         const PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
 
@@ -235,9 +236,11 @@ namespace PathFinder
         cmdList->SetGraphicsRootDescriptorTable(UARangeAddress, 11 + commonParametersIndexOffset);
         cmdList->SetGraphicsRootDescriptorTable(UARangeAddress, 12 + commonParametersIndexOffset);
 
+        cmdList->SetGraphicsRootDescriptorTable(samplerRangeAddress, 13 + commonParametersIndexOffset);
+
         cmdList->SetGraphicsRootConstantBuffer(*mResourceStorage->GlobalRootConstantsBuffer()->HALBuffer(), 0 + commonParametersIndexOffset);
         cmdList->SetGraphicsRootConstantBuffer(*mResourceStorage->PerFrameRootConstantsBuffer()->HALBuffer(), 1 + commonParametersIndexOffset);
-        cmdList->SetGraphicsRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 13 + commonParametersIndexOffset);
+        cmdList->SetGraphicsRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 14 + commonParametersIndexOffset);
     }
 
     void RenderDevice::BindComputeCommonResources(const RenderPassGraph::Node& passNode, const HAL::RootSignature* rootSignature, HAL::ComputeCommandListBase* cmdList)
@@ -245,8 +248,9 @@ namespace PathFinder
         auto commonParametersIndexOffset = rootSignature->ParameterCount() - mPipelineStateManager->CommonRootSignatureParameterCount();
 
         // Look at PipelineStateManager for base root signature parameter ordering
-        HAL::DescriptorAddress SRRangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
-        HAL::DescriptorAddress UARangeAddress = mUniversalGPUDescriptorHeap->RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
+        HAL::DescriptorAddress SRRangeAddress = mDescriptorAllocator->CBSRUADescriptorHeap().RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::ShaderResource);
+        HAL::DescriptorAddress UARangeAddress = mDescriptorAllocator->CBSRUADescriptorHeap().RangeStartGPUAddress(HAL::CBSRUADescriptorHeap::Range::UnorderedAccess);
+        HAL::DescriptorAddress samplerRangeAddress = mDescriptorAllocator->SamplerDescriptorHeap().StartGPUAddress();
 
         const PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
 
@@ -263,9 +267,11 @@ namespace PathFinder
         cmdList->SetComputeRootDescriptorTable(UARangeAddress, 11 + commonParametersIndexOffset);
         cmdList->SetComputeRootDescriptorTable(UARangeAddress, 12 + commonParametersIndexOffset);
 
+        cmdList->SetComputeRootDescriptorTable(samplerRangeAddress, 13 + commonParametersIndexOffset);
+
         cmdList->SetComputeRootConstantBuffer(*mResourceStorage->GlobalRootConstantsBuffer()->HALBuffer(), 0 + commonParametersIndexOffset);
         cmdList->SetComputeRootConstantBuffer(*mResourceStorage->PerFrameRootConstantsBuffer()->HALBuffer(), 1 + commonParametersIndexOffset);
-        cmdList->SetComputeRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 13 + commonParametersIndexOffset);
+        cmdList->SetComputeRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 14 + commonParametersIndexOffset);
     }
 
     void RenderDevice::BindGraphicsPassRootConstantBuffer(const RenderPassGraph::Node& passNode, HAL::GraphicsCommandListBase* cmdList)

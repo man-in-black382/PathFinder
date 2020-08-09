@@ -97,6 +97,7 @@ namespace HAL
         void SetComputeRootUnorderedAccessResource(const Resource& resource, uint32_t rootParameterIndex);
         void SetComputeRootDescriptorTable(DescriptorAddress tableStartAddress, uint32_t rootParameterIndex);
         void SetDescriptorHeap(const CBSRUADescriptorHeap& heap);
+        void SetDescriptorHeaps(const CBSRUADescriptorHeap& cbsruaHeap, const SamplerDescriptorHeap& samplerHeap);
         void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
         void DispatchRays(const RayDispatchInfo& dispatchInfo);
     };

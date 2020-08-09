@@ -21,8 +21,13 @@ namespace PathFinder
         });
     }
 
-    void CommonSetupRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void CommonSetupRenderPass::ScheduleSamplers(SamplerCreator* samplerCreator)
     {
+        samplerCreator->CreateSampler(SamplerNames::AnisotropicClamp, HAL::Sampler{ HAL::Sampler::UnifiedAlgorithm::Anisotropic, HAL::Sampler::AddressMode::Clamp });
+        samplerCreator->CreateSampler(SamplerNames::LinearClamp, HAL::Sampler{ HAL::Sampler::UnifiedAlgorithm::Linear, HAL::Sampler::AddressMode::Clamp });
+        samplerCreator->CreateSampler(SamplerNames::PointClamp, HAL::Sampler{ HAL::Sampler::UnifiedAlgorithm::Point, HAL::Sampler::AddressMode::Clamp });
+        samplerCreator->CreateSampler(SamplerNames::Minimim, HAL::Sampler{ HAL::Sampler::MinMaxFilter::Minimum, HAL::Sampler::AddressMode::Clamp });
+        samplerCreator->CreateSampler(SamplerNames::Maximum, HAL::Sampler{ HAL::Sampler::MinMaxFilter::Maximum, HAL::Sampler::AddressMode::Clamp });
     }
 
 }

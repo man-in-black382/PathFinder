@@ -7,7 +7,7 @@
 #include <glm/vec4.hpp>
 
 #include "../Geometry/Dimensions.hpp"
-#include "../ResourceProvider.hpp"
+#include "../RenderPassMediators/ResourceProvider.hpp"
 
 namespace PathFinder
 {
@@ -21,13 +21,13 @@ namespace PathFinder
 
         Filter FilterType = Filter::Average;
         uint32_t SourceTexIdx = 0;
-        bool IsSourceTexSRV = true;
+        uint32_t SourceMipIdx = 0;
         uint32_t NumberOfOutputsToCompute = 0;
         glm::uvec4 OutputTexIndices;
         glm::uvec4 OutputsToWrite;
-        glm::uvec2 InputSize;
-        bool IsInputSizeOddVertically = false;
-        bool IsInputSizeOddHorizontally = false;
+        glm::vec2 DispatchDimensionsInv;
+        uint32_t IsInputSizeOddVertically = false;
+        uint32_t IsInputSizeOddHorizontally = false;
     };
 
     enum class DownsamplingStrategy
@@ -37,15 +37,23 @@ namespace PathFinder
 
     struct DownsamplingInvocationInputs
     {
+        static const uint8_t MaxMipsProcessedByInvocation = 4;
+
         DownsamplingCBContent CBContent;
         Geometry::Dimensions DispatchDimensions;
+        Foundation::Name ResourceName;
+        uint64_t SourceMip = 0;
     };
 
     std::vector<DownsamplingInvocationInputs> GenerateDownsamplingShaderInvocationInputs(
-        const ResourceProvider& resourceProvider,
         Foundation::Name textureName,
+        const HAL::TextureProperties& textureProperties,
         DownsamplingCBContent::Filter filter,
         DownsamplingStrategy strategy,
         std::optional<uint64_t> maxMipLevel = std::nullopt);
+
+    void UpdateDownsamplingInputsWithTextureIndices(
+        DownsamplingInvocationInputs& inputs, 
+        const ResourceProvider* resourceProvider);
 
 }

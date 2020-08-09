@@ -17,7 +17,7 @@ namespace PathFinder
         ~CommonSetupRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
-        virtual void ScheduleResources(ResourceScheduler* scheduler) override;
+        virtual void ScheduleSamplers(SamplerCreator* samplerCreator) override;
     };
 
 }
