@@ -193,7 +193,7 @@ namespace Memory
         // Transition is redundant if either states completely match 
         // or current state is a read state and new state is a partial or complete subset of the current 
         // (which implies that it is also a read state)
-        return (currentState == newState) || (HAL::IsResourceStateReadOnly(currentState) && EnumMaskBitSet(currentState, newState));
+        return (currentState == newState) || (HAL::IsResourceStateReadOnly(currentState) && EnumMaskEquals(currentState, newState));
     }
 
     bool ResourceStateTracker::CanTransitionToStateImplicitly(const HAL::Resource* resource, HAL::ResourceState currentState, HAL::ResourceState newState, bool tryApplyImplicitly)

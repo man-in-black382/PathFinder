@@ -50,7 +50,7 @@ namespace HAL
             ResourceState::CopyDestination |
             ResourceState::CopySource;
 
-        return EnumMaskBitSet(compatibleStatesMask, state);
+        return EnumMaskEquals(compatibleStatesMask, state);
     }
 
     bool Texture::CanImplicitlyDecayToCommonStateFromState(ResourceState state) const
@@ -63,7 +63,7 @@ namespace HAL
             ResourceState::PixelShaderAccess |
             ResourceState::CopySource;
 
-        return EnumMaskBitSet(compatibleStatesMask, state);
+        return EnumMaskEquals(compatibleStatesMask, state);
     }
 
     TextureProperties Texture::ConstructProperties() const

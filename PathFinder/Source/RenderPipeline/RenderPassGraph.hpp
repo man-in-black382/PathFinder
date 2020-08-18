@@ -11,6 +11,7 @@
 #include <list>
 #include <functional>
 #include <stack>
+#include <optional>
 
 namespace PathFinder
 {
@@ -24,7 +25,6 @@ namespace PathFinder
         class Node
         {
         public:
-            using SynchronizationIndexSet = std::vector<uint64_t>;
             using SubresourceList = std::vector<uint32_t>;
             using QueueIndex = uint64_t;
 
@@ -37,9 +37,9 @@ namespace PathFinder
             void AddReadDependency(Foundation::Name resourceName, uint32_t firstSubresourceIndex, uint32_t lastSubresourceIndex);
             void AddReadDependency(Foundation::Name resourceName, const SubresourceList& subresources);
 
-            void AddWriteDependency(Foundation::Name resourceName, uint32_t subresourceCount);
-            void AddWriteDependency(Foundation::Name resourceName, uint32_t firstSubresourceIndex, uint32_t lastSubresourceIndex);
-            void AddWriteDependency(Foundation::Name resourceName, const SubresourceList& subresources);
+            void AddWriteDependency(Foundation::Name resourceName, std::optional<Foundation::Name> originalResourceName, uint32_t subresourceCount);
+            void AddWriteDependency(Foundation::Name resourceName, std::optional<Foundation::Name> originalResourceName, uint32_t firstSubresourceIndex, uint32_t lastSubresourceIndex);
+            void AddWriteDependency(Foundation::Name resourceName, std::optional<Foundation::Name> originalResourceName, const SubresourceList& subresources);
 
             bool HasDependency(Foundation::Name resourceName, uint32_t subresourceIndex) const;
             bool HasDependency(SubresourceName subresourceName) const;
@@ -50,6 +50,9 @@ namespace PathFinder
             bool WritesToBackBuffer = false;
 
         private:
+            using SynchronizationIndexSet = std::vector<uint64_t>;
+            inline static const uint64_t InvalidSynchronizationIndex = std::numeric_limits<uint64_t>::max();
+
             friend RenderPassGraph;
 
             void EnsureSingleWriteDependency(SubresourceName name);
@@ -63,10 +66,16 @@ namespace PathFinder
 
             RenderPassMetadata mPassMetadata;
             WriteDependencyRegistry* mWriteDependencyRegistry = nullptr;
+
             robin_hood::unordered_flat_set<SubresourceName> mReadSubresources;
             robin_hood::unordered_flat_set<SubresourceName> mWrittenSubresources;
-            robin_hood::unordered_flat_set<SubresourceName> mAllSubresources;
+            robin_hood::unordered_flat_set<SubresourceName> mReadAndWrittenSubresources;
+
+            // Aliased subresources form node dependencies same as read resources, 
+            // but are not actually being read and not participating in state transitions
+            robin_hood::unordered_flat_set<SubresourceName> mAliasedSubresources;
             robin_hood::unordered_flat_set<Foundation::Name> mAllResources;
+
             SynchronizationIndexSet mSynchronizationIndexSet;
             std::vector<const Node*> mNodesToSyncWith;
             bool mSyncSignalRequired = false;
@@ -75,7 +84,7 @@ namespace PathFinder
             inline const auto& PassMetadata() const { return mPassMetadata; }
             inline const auto& ReadSubresources() const { return mReadSubresources; }
             inline const auto& WrittenSubresources() const { return mWrittenSubresources; }
-            inline const auto& AllSubresources() const { return mAllSubresources; }
+            inline const auto& ReadAndWritten() const { return mReadAndWrittenSubresources; }
             inline const auto& AllResources() const { return mAllResources; }
             inline const auto& NodesToSyncWith() const { return mNodesToSyncWith; }
             inline auto GlobalExecutionIndex() const { return mGlobalExecutionIndex; }
@@ -136,6 +145,13 @@ namespace PathFinder
         using RenderPassRegistry = robin_hood::unordered_flat_set<Foundation::Name>;
         using QueueNodeCounters = robin_hood::unordered_flat_map<uint64_t, uint64_t>;
         using AdjacencyLists = std::vector<std::vector<uint64_t>>;
+
+        struct SyncCoverage
+        {
+            const Node* NodeToSyncWith = nullptr;
+            uint64_t NodeToSyncWithIndex = 0;
+            std::vector<uint64_t> SyncedQueueIndices;
+        };
 
         void EnsureRenderPassUniqueness(Foundation::Name passName);
         void BuildAdjacencyLists();

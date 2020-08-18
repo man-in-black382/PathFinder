@@ -17,8 +17,8 @@ namespace HAL
         CommandQueue(const Device& device, D3D12_COMMAND_LIST_TYPE commandListType);
         virtual ~CommandQueue() = 0;
 
-        void SignalFence(const Fence& fence);
-        void WaitFence(const Fence& fence);
+        void SignalFence(const Fence& fence, std::optional<uint64_t> explicitFenceValue = std::nullopt);
+        void WaitFence(const Fence& fence, std::optional<uint64_t> explicitFenceValue = std::nullopt);
         void SetDebugName(const std::string& name) override;
 
     protected:

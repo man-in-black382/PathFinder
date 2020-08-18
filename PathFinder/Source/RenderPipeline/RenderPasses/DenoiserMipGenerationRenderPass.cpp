@@ -32,13 +32,7 @@ namespace PathFinder
             ResourceNames::StochasticUnshadowedShadingPreBlurred,
             scheduler->GetTextureProperties(ResourceNames::StochasticUnshadowedShadingPreBlurred),
             DownsamplingCBContent::Filter::Average,
-            DownsamplingStrategy::WriteAllLevels),
-
-             GenerateDownsamplingShaderInvocationInputs(
-            ResourceNames::StochasticShadingGradientNormFactor,
-            scheduler->GetTextureProperties(ResourceNames::StochasticShadingGradientNormFactor),
-            DownsamplingCBContent::Filter::Max,
-            DownsamplingStrategy::WriteOnlyLastLevel)
+            DownsamplingStrategy::WriteAllLevels)
         };
 
         auto longestInvocationArrayIt = std::max_element(

@@ -25,7 +25,8 @@ namespace PathFinder
         mRenderPassGraph{ renderPassGraph },
         mDefaultRenderSurface{ defaultRenderSurface },
         mGraphicsQueueFence{ device },
-        mComputeQueueFence{ device }
+        mComputeQueueFence{ device },
+        mBVHFence{ device }
     {
         mGraphicsQueue.SetDebugName("Graphics Command Queue");
         mComputeQueue.SetDebugName("Async Compute Command Queue");
@@ -181,6 +182,7 @@ namespace PathFinder
     {
         mPreRenderUploadsCommandList = mCommandListAllocator->AllocateGraphicsCommandList();
         mPreRenderUploadsCommandList->Reset();
+        mPreRenderUploadsCommandList->SetDebugName("Prerender Data Upload Cmd List");
         mEventTracker.StartGPUEvent("Prerender Data Upload", *mPreRenderUploadsCommandList);
     }
 
@@ -188,6 +190,7 @@ namespace PathFinder
     {
         mRTASBuildsCommandList = mCommandListAllocator->AllocateComputeCommandList();
         mRTASBuildsCommandList->Reset();
+        mPreRenderUploadsCommandList->SetDebugName("Ray Tracing BVH Build Cmd List");
         mEventTracker.StartGPUEvent("Ray Tracing BVH Build", *mRTASBuildsCommandList);
     }
 
@@ -201,12 +204,17 @@ namespace PathFinder
         for (const RenderPassGraph::Node* node : mRenderPassGraph->NodesInGlobalExecutionOrder())
         {
             CommandListPtrVariant cmdListVariant = AllocateCommandListForQueue(node->ExecutionQueueIndex);
+            GetComputeCommandListBase(cmdListVariant)->SetDebugName(node->PassMetadata().Name.ToString() + " Worker Cmd List");
             mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList = std::move(cmdListVariant);
         }
     }
 
     void RenderDevice::ExecuteRenderGraph()
     {
+        // Execute fixed workloads early to save correct fence values
+        ExecuteUploadCommands();
+        ExecuteBVHBuildCommands();
+
         BatchCommandLists();
         UploadPassConstants();
         ExetuteCommandLists();
@@ -419,7 +427,7 @@ namespace PathFinder
                 {
                     return;
                 }
-
+                
                 // Render graph works with resource name aliases, so we need to track transitions for the resource using its original name,
                 // otherwise we would lose transition history and place incorrect Begin/End barriers
                 RenderPassGraph::SubresourceName originalSubresourceName = RenderPassGraph::ConstructSubresourceName(resourceData->ResourceName(), subresourceIndex);
@@ -432,6 +440,8 @@ namespace PathFinder
                 if (!IsStateTransitionSupportedOnQueue(node->ExecutionQueueIndex, barrier->BeforeStates(), barrier->AfterStates()))
                 {
                     mDependencyLevelQueuesThatRequireTransitionRerouting.insert(node->ExecutionQueueIndex);
+                    // If queue doesn't support the transition then we need to also involve queue that does
+                    mDependencyLevelQueuesThatRequireTransitionRerouting.insert(FindQueueSupportingTransition(barrier->BeforeStates(), barrier->AfterStates()));
                 }
             };
 
@@ -531,12 +541,14 @@ namespace PathFinder
         mReroutedTransitionsCommandLists[dependencyLevel.LevelIndex()] = AllocateCommandListForQueue(mostCompetentQueueIndex);
         CommandListPtrVariant& commandListVariant = mReroutedTransitionsCommandLists[dependencyLevel.LevelIndex()];
         HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(commandListVariant);
+        transitionsCommandList->SetDebugName(StringFormat("Dependency Level %d Rerouted Transitions Cmd List", dependencyLevel.LevelIndex()));
 
         std::vector<CommandListBatch>& mostCompetentQueueBatches = mCommandListBatches[mostCompetentQueueIndex];
         CommandListBatch* reroutedTransitionsBatch = &mostCompetentQueueBatches.emplace_back();
 
-        reroutedTransitionsBatch->FenceToSignal = &FenceForQueueIndex(mostCompetentQueueIndex);
-        reroutedTransitionsBatch->EventNameThatSignals = StringFormat("Dependency Level %d Rerouted Transitions Signal", dependencyLevel.LevelIndex());
+        HAL::Fence* fence = &FenceForQueueIndex(mostCompetentQueueIndex);
+        reroutedTransitionsBatch->FenceToSignal = { fence, fence->IncrementExpectedValue() };
+        reroutedTransitionsBatch->SignalName = StringFormat("Dependency Level %d Rerouted Transitions Signal", dependencyLevel.LevelIndex());
 
         reroutedTransitionsBatch->CommandLists.emplace_back(GetHALCommandListVariant(commandListVariant));
         uint64_t reroutedTransitionsBatchIndex = mostCompetentQueueBatches.size() - 1;
@@ -547,10 +559,12 @@ namespace PathFinder
 
         for (RenderPassGraph::Node::QueueIndex queueIndex : mDependencyLevelQueuesThatRequireTransitionRerouting)
         {
-            // Make rerouted transitions wait for fences from involved queues
-            if (queueIndex != mostCompetentQueueIndex)
+            // Make rerouted transitions wait for fences from involved queues,
+            // but only if it's not 0 dependency level, because there is nothing really to sync with in such case
+            if (queueIndex != mostCompetentQueueIndex && dependencyLevel.LevelIndex() != 0)
             {
-                mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FencesToWait.push_back(&FenceForQueueIndex(queueIndex));
+                const HAL::Fence* fence = &FenceForQueueIndex(queueIndex);
+                mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FencesToWait.push_back({ fence, fence->ExpectedValue() });
                 mostCompetentQueueBatches[reroutedTransitionsBatchIndex].EventNamesToWait.emplace_back(StringFormat("Waiting Queue %d (Rerouting Transitions)", queueIndex));
             }
 
@@ -559,7 +573,7 @@ namespace PathFinder
                 // A special case of waiting for BVH build fence, if of course pass is not executed on the same queue as BVH build
                 if (mRenderPassGraph->FirstNodeThatUsesRayTracing() == node && mBVHBuildsQueueIndex != mostCompetentQueueIndex)
                 {
-                    mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FencesToWait.push_back(&FenceForQueueIndex(mBVHBuildsQueueIndex));
+                    mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FencesToWait.push_back({ &mBVHFence, mBVHFence.ExpectedValue() });
                     mostCompetentQueueBatches[reroutedTransitionsBatchIndex].EventNamesToWait.emplace_back(StringFormat("Waiting Queue %d (BVH Build)", mBVHBuildsQueueIndex));
                 }
 
@@ -573,7 +587,8 @@ namespace PathFinder
                     // Insert fence before first pass after rerouted transitions
                     if (node->ExecutionQueueIndex != mostCompetentQueueIndex)
                     {
-                        latestBatchAfterRerouting->FencesToWait.push_back(mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FenceToSignal);
+                        auto& fenceAndValue = mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FenceToSignal;
+                        latestBatchAfterRerouting->FencesToWait.push_back(fenceAndValue);
                         latestBatchAfterRerouting->EventNamesToWait.push_back(StringFormat("Pass %s Waiting For Rerouted Transitions", node->PassMetadata().Name.ToString().c_str()));
                     }
                 }
@@ -590,8 +605,9 @@ namespace PathFinder
 
                 if (node->IsSyncSignalRequired())
                 {
-                    latestBatchAfterRerouting->FenceToSignal = &FenceForQueueIndex(node->ExecutionQueueIndex);
-                    latestBatchAfterRerouting->EventNameThatSignals = StringFormat("Pass %s Signals", node->PassMetadata().Name.ToString().c_str());
+                    HAL::Fence* fence = &FenceForQueueIndex(node->ExecutionQueueIndex);
+                    latestBatchAfterRerouting->FenceToSignal = { fence, fence->IncrementExpectedValue() };
+                    latestBatchAfterRerouting->SignalName = StringFormat("Pass %s Signals", node->PassMetadata().Name.ToString().c_str());
                     dependencyLevelPerQueueBatches[node->ExecutionQueueIndex] = &mCommandListBatches[node->ExecutionQueueIndex].emplace_back();
                 }
             }
@@ -644,13 +660,14 @@ namespace PathFinder
 
                     for (const RenderPassGraph::Node* nodeToWait : node->NodesToSyncWith())
                     {
-                        currentBatch->FencesToWait.push_back(&FenceForQueueIndex(nodeToWait->ExecutionQueueIndex));
+                        const HAL::Fence* fence = &FenceForQueueIndex(nodeToWait->ExecutionQueueIndex);
+                        currentBatch->FencesToWait.push_back({ fence, fence->ExpectedValue() });
                         currentBatch->EventNamesToWait.push_back(StringFormat("Waiting %s Pass", nodeToWait->PassMetadata().Name.ToString().c_str()));
                     }
 
                     if (usesRT && node->ExecutionQueueIndex != mBVHBuildsQueueIndex)
                     {
-                        currentBatch->FencesToWait.emplace_back(&FenceForQueueIndex(mBVHBuildsQueueIndex));
+                        currentBatch->FencesToWait.push_back({ &mBVHFence, mBVHFence.ExpectedValue() });
                         currentBatch->EventNamesToWait.emplace_back(StringFormat("Waiting Queue %d (BVH Build)", mBVHBuildsQueueIndex));
                     }
                 }
@@ -673,6 +690,7 @@ namespace PathFinder
                     mPassCommandLists[node->GlobalExecutionIndex()].TransitionsCommandList = AllocateCommandListForQueue(queueIdx);
                     CommandListPtrVariant& cmdListVariant = mPassCommandLists[node->GlobalExecutionIndex()].TransitionsCommandList;
                     HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(cmdListVariant);
+                    transitionsCommandList->SetDebugName(node->PassMetadata().Name.ToString() + " Transitions Cmd List");
                     transitionsCommandList->Reset();
                     transitionsCommandList->InsertBarriers(nodeBarriers);
                     transitionsCommandList->Close();
@@ -683,8 +701,9 @@ namespace PathFinder
 
                 if (node->IsSyncSignalRequired())
                 {
-                    currentBatch->EventNameThatSignals = StringFormat("Pass %s Signals", node->PassMetadata().Name.ToString().c_str());
-                    currentBatch->FenceToSignal = &FenceForQueueIndex(queueIdx);
+                    HAL::Fence* fence = &FenceForQueueIndex(queueIdx);
+                    currentBatch->SignalName = StringFormat("Pass %s Signals", node->PassMetadata().Name.ToString().c_str());
+                    currentBatch->FenceToSignal = { fence, fence->IncrementExpectedValue() };
                     mCommandListBatches[queueIdx].emplace_back();
                 }
             }
@@ -729,6 +748,7 @@ namespace PathFinder
 
             mPassCommandLists[node->GlobalExecutionIndex()].PostWorkCommandList = AllocateCommandListForQueue(node->ExecutionQueueIndex);
             HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[node->GlobalExecutionIndex()].PostWorkCommandList);
+            cmdList->SetDebugName(node->PassMetadata().Name.ToString() + " Post-Work Cmd List");
             cmdList->Reset();
             cmdList->InsertBarriers(barriers);
             cmdList->Close();
@@ -769,7 +789,7 @@ namespace PathFinder
     void RenderDevice::ExecuteBVHBuildCommands()
     {
         // Wait for uploads, run RT AS builds
-        mComputeQueueFence.IncrementExpectedValue();
+        mBVHFence.IncrementExpectedValue();
 
         mEventTracker.StartGPUEvent("Waiting Data Upload on Graphic Queue", mComputeQueue);
         mComputeQueue.WaitFence(mGraphicsQueueFence);
@@ -779,15 +799,12 @@ namespace PathFinder
         mEventTracker.EndGPUEvent(mComputeQueue);
 
         mEventTracker.StartGPUEvent("BVH Builds Done Signal", mComputeQueue);
-        mComputeQueue.SignalFence(mComputeQueueFence);
+        mComputeQueue.SignalFence(mBVHFence);
         mEventTracker.EndGPUEvent(mComputeQueue);
     }
 
     void RenderDevice::ExetuteCommandLists()
     {
-        ExecuteUploadCommands();
-        ExecuteBVHBuildCommands();
-
         for (auto queueIdx = 0; queueIdx < mQueueCount; ++queueIdx)
         {
             std::vector<CommandListBatch>& batches = mCommandListBatches[queueIdx];
@@ -799,8 +816,9 @@ namespace PathFinder
 
                 for (auto fenceIdx = 0; fenceIdx < batch.FencesToWait.size(); ++fenceIdx)
                 {
+                    auto& [fence, value] = batch.FencesToWait[fenceIdx];
                     mEventTracker.StartGPUEvent(batch.EventNamesToWait[fenceIdx], queue);
-                    queue.WaitFence(*batch.FencesToWait[fenceIdx]);
+                    queue.WaitFence(*fence, value);
                     mEventTracker.EndGPUEvent(queue);
                 }
                 
@@ -812,12 +830,10 @@ namespace PathFinder
                     ExecuteCommandListBatch<HAL::ComputeCommandQueue, HAL::ComputeCommandList>(batch, queue);
                 }
 
-                if (batch.FenceToSignal)
+                if (const HAL::Fence* fence = batch.FenceToSignal.first)
                 {
-                    batch.FenceToSignal->IncrementExpectedValue();
-
-                    mEventTracker.StartGPUEvent(batch.EventNameThatSignals, queue);
-                    queue.SignalFence(*batch.FenceToSignal);
+                    mEventTracker.StartGPUEvent(batch.SignalName, queue);
+                    queue.SignalFence(*fence, batch.FenceToSignal.second);
                     mEventTracker.EndGPUEvent(queue);
                 }
             }
@@ -876,6 +892,15 @@ namespace PathFinder
         }
 
         return mostCompetentQueueIndex;
+    }
+
+    uint64_t RenderDevice::FindQueueSupportingTransition(HAL::ResourceState beforeStates, HAL::ResourceState afterStates) const
+    {
+        // At the moment engine only supports 1 graphics and 1 compute queue,
+        // so if we're searching for a queue that supports a transition that means
+        // that compute queue can't do it and we're left with graphics only.
+        // If more queues are introduced we should search for a queue, intelligently.
+        return 0;
     }
 
     RenderDevice::CommandListPtrVariant RenderDevice::AllocateCommandListForQueue(uint64_t queueIndex) const

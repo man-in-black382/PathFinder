@@ -12,11 +12,12 @@
 #include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
+#include "RenderPipeline/RenderPasses/RngSeedGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserPreBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserMipGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/DenoiserGradientConstructionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserForwardProjectionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserHistoryFixRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserPostStabilizationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SpecularDenoiserRenderPass.hpp"
@@ -85,11 +86,12 @@ int main(int argc, char** argv)
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
+    auto rgnSeedGenerationPass = std::make_unique<PathFinder::RngSeedGenerationRenderPass>();
     auto shadingPass = std::make_unique<PathFinder::ShadingRenderPass>();
     auto denoiserPreBlurPass = std::make_unique<PathFinder::DenoiserPreBlurRenderPass>();
     auto denoiserMipGenerationPass = std::make_unique<PathFinder::DenoiserMipGenerationRenderPass>();
     auto denoiserReprojectionPass = std::make_unique<PathFinder::DenoiserReprojectionRenderPass>();
-    auto denoiserGradientConstructionPass = std::make_unique<PathFinder::DenoiserGradientConstructionRenderPass>();
+    auto denoiserForwardProjectionPass = std::make_unique<PathFinder::DenoiserForwardProjectionRenderPass>();
     auto denoiserHistoryFixPass = std::make_unique<PathFinder::DenoiserHistoryFixRenderPass>();
     auto denoiserPostStabilizationPass = std::make_unique<PathFinder::DenoiserPostStabilizationRenderPass>();
     auto specularDenoiserPass = std::make_unique<PathFinder::SpecularDenoiserRenderPass>();
@@ -102,11 +104,12 @@ int main(int argc, char** argv)
     engine.SetContentMediator(&contentMediator);
     engine.AddRenderPass(commonSetupPass.get());
     engine.AddRenderPass(GBufferPass.get());
+    engine.AddRenderPass(rgnSeedGenerationPass.get());
     engine.AddRenderPass(shadingPass.get());
     engine.AddRenderPass(denoiserPreBlurPass.get());
     engine.AddRenderPass(denoiserMipGenerationPass.get());
     engine.AddRenderPass(denoiserReprojectionPass.get());
-    engine.AddRenderPass(denoiserGradientConstructionPass.get());
+    engine.AddRenderPass(denoiserForwardProjectionPass.get());
     engine.AddRenderPass(denoiserHistoryFixPass.get());
     engine.AddRenderPass(specularDenoiserPass.get());
     engine.AddRenderPass(denoiserPostStabilizationPass.get());

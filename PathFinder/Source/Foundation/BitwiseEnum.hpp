@@ -88,7 +88,11 @@ struct EnableBitMaskOperators<x>     \
 static const bool enable = true; \
 }; \
 \
-inline bool EnumMaskBitSet(x mask, x component) \
+inline bool EnumMaskEquals(x mask, x component) \
 { \
     return (mask & component) == component; \
-}
+} \
+inline bool EnumMaskContains(x mask, x component) \
+{ \
+    return std::underlying_type_t<x>(mask & component) != 0; \
+} 

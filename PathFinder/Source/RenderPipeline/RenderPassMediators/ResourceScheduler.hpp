@@ -199,7 +199,8 @@ namespace PathFinder
         void RegisterGraphDependency(
             RenderPassGraph::Node& passNode, 
             const MipSet& subresources, 
-            Foundation::Name resourceName, 
+            Foundation::Name resourceName,
+            Foundation::Name outputAliasName,
             uint32_t resourceMipCount, 
             bool isWriteDependency);
 

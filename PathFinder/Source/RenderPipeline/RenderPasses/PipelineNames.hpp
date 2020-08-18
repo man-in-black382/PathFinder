@@ -40,8 +40,10 @@ namespace PathFinder
         inline Foundation::Name StochasticUnshadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
         inline Foundation::Name StochasticShadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
         inline Foundation::Name StochasticShadingGradient{ "Resource_Stochastic_Shading_Gradient" };
-        inline Foundation::Name StochasticShadingGradientNormFactor{ "Resource_Stochastic_Shading_Gradient_Norm_Factor" };
+        inline NameArray<2> RngSeeds{ "Resource_Stochastic_Rng_Seeds[0]", "Resource_Stochastic_Rng_Seeds[1]" };
+        inline Foundation::Name RngSeedsCorrelated{ "Resource_Stochastic_Rng_Seeds_Correlated" };
 
+        inline NameArray<2> DenoiserGradientSamplePositions{ "Resource_Denoiser_Gradient_Sample_Positions[0]", "Resource_Denoiser_Gradient_Sample_Positions[1]" };
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
         inline NameArray<2> DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count[0]", "Resource_Denoiser_Reprojected_Frames_Count[1]" };
         inline Foundation::Name DenoisedCombinedDirectShading{ "Resource_Denoised_Combined_Direct_Shading" };
@@ -67,7 +69,8 @@ namespace PathFinder
         inline Foundation::Name BloomBlur{ "PSO_BloomBlur" };
         inline Foundation::Name BloomComposition{ "PSO_BloomComposition" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
-        inline Foundation::Name DenoiserGradientConstruction{ "PSO_DenoiserGradientConstruction" };
+        inline Foundation::Name RngSeedGeneration{ "PSO_RngSeedGeneration" };
+        inline Foundation::Name DenoiserForwardProjection{ "PSO_DenoiserForwardProjection" };
         inline Foundation::Name DenoiserReprojection{ "PSO_DenoiserReprojection" };
         inline Foundation::Name DenoiserHistoryFix{ "PSO_DenoiserHistoryFix" };
         inline Foundation::Name DenoiserPostStabilization{ "PSO_DenoiserPostStabilization" };

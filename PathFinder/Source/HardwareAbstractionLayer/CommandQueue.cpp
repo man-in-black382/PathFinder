@@ -18,14 +18,14 @@ namespace HAL
 
     CommandQueue::~CommandQueue() {}
 
-    void CommandQueue::SignalFence(const Fence& fence)
+    void CommandQueue::SignalFence(const Fence& fence, std::optional<uint64_t> explicitFenceValue)
     {
-        mQueue->Signal(fence.D3DFence(), fence.ExpectedValue());
+        mQueue->Signal(fence.D3DFence(), explicitFenceValue.value_or(fence.ExpectedValue()));
     }
 
-    void CommandQueue::WaitFence(const Fence& fence)
+    void CommandQueue::WaitFence(const Fence& fence, std::optional<uint64_t> explicitFenceValue)
     {
-        mQueue->Wait(fence.D3DFence(), fence.ExpectedValue());
+        mQueue->Wait(fence.D3DFence(), explicitFenceValue.value_or(fence.ExpectedValue()));
     }
 
     void CommandQueue::SetDebugName(const std::string& name)

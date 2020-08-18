@@ -237,9 +237,6 @@
     <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\PipelineStateCreator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\GraphicAPIObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -369,9 +366,6 @@
     <ClCompile Include="Source\RenderPipeline\RootSignatureProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RootSignatureCreator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -426,9 +420,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\CommandRecorder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -436,9 +427,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Utility\AftermathCrashTracker.cpp">
@@ -465,9 +453,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassMediators\PipelineStateCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPassMediators\PipelineStateProxy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPassMediators\ResourceProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -480,10 +465,13 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassMediators\RootSignatureCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPassMediators\RootSignatureProxy.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPassMediators\SamplerCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPassMediators\SamplerCreator.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserForwardProjectionRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1907,15 +1895,6 @@
     <ClInclude Include="Source\Scene\Scene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceScheduler.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\ResourceProvider.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RootConstantsUpdater.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Foundation\MemoryUtils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1968,9 +1947,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\PipelineStateProxy.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\PipelineStateCreator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\HardwareAbstractionLayer\GraphicAPIObject.hpp">
@@ -2303,9 +2279,6 @@
     <ClInclude Include="Source\RenderPipeline\RootSignatureProxy.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RootSignatureCreator.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2408,9 +2381,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderPassGraph.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\CommandRecorder.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2421,9 +2391,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\ThirdParty\aftermath\GFSDK_Aftermath.h">
@@ -2480,9 +2447,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderPassMediators\PipelineStateCreator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPassMediators\PipelineStateProxy.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPassMediators\ResourceProvider.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2495,9 +2459,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderPassMediators\RootSignatureCreator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPassMediators\RootSignatureProxy.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPassMediators\SamplerCreator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2505,6 +2466,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPassMediators\RenderPassUtilityProvider.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserForwardProjectionRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -3004,9 +2971,6 @@
     <None Include="Source\Foundation\Halton.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\RenderPipeline\CommandRecorder.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Source\RenderPipeline\RenderDevice.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -3030,9 +2994,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\RenderPassMediators\ResourceScheduler.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\RenderPipeline\RenderPassMediators\RootSignatureProxy.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\RenderPassMediators\SubPassScheduler.inl">
@@ -3089,7 +3050,8 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SeparableBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientConstruction.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserForwardProjection.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\RngSeedGeneration.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

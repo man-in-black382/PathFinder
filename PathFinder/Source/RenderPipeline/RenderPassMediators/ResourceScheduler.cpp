@@ -19,7 +19,7 @@ namespace PathFinder
     {
         NewTextureProperties props = FillMissingFields(properties);
 
-        bool canBeReadAcrossFrames = EnumMaskBitSet(properties->Flags, Flags::CrossFrameRead);
+        bool canBeReadAcrossFrames = EnumMaskEquals(properties->Flags, Flags::CrossFrameRead);
 
         HAL::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
@@ -38,7 +38,7 @@ namespace PathFinder
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, writtenMips, resourceName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
+                RegisterGraphDependency(*passNode, writtenMips, resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     writtenMips,
@@ -53,7 +53,7 @@ namespace PathFinder
     void ResourceScheduler::NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties)
     {
         NewDepthStencilProperties props = FillMissingFields(properties);
-        bool canBeReadAcrossFrames = EnumMaskBitSet(properties->Flags, Flags::CrossFrameRead);
+        bool canBeReadAcrossFrames = EnumMaskEquals(properties->Flags, Flags::CrossFrameRead);
         HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
 
         mResourceStorage->QueueTextureAllocationIfNeeded(
@@ -67,7 +67,7 @@ namespace PathFinder
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
+                RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     MipSet::FirstMip(),
@@ -87,7 +87,7 @@ namespace PathFinder
     void ResourceScheduler::NewTexture(Foundation::Name resourceName, const MipSet& writtenMips, std::optional<NewTextureProperties> properties)
     {
         NewTextureProperties props = FillMissingFields(properties);
-        bool canBeReadAcrossFrames = EnumMaskBitSet(properties->Flags, Flags::CrossFrameRead);
+        bool canBeReadAcrossFrames = EnumMaskEquals(properties->Flags, Flags::CrossFrameRead);
 
         HAL::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
@@ -106,7 +106,7 @@ namespace PathFinder
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
-                RegisterGraphDependency(*passNode, writtenMips, resourceName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
+                RegisterGraphDependency(*passNode, writtenMips, resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
                     writtenMips,
@@ -125,14 +125,13 @@ namespace PathFinder
 
     void ResourceScheduler::AliasAndUseRenderTarget(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipSet& writtenMips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        Foundation::Name name = outputAliasName.IsValid() ? outputAliasName : resourceName;
-
         mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt,
 
             [passNode = mCurrentlySchedulingPassNode,
             concreteFormat,
             writtenMips,
-            name,
+            resourceName,
+            outputAliasName,
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
         {
@@ -141,7 +140,7 @@ namespace PathFinder
             assert_format(concreteFormat || !isTypeless, "Redefinition of Render target format is not allowed");
             assert_format(!concreteFormat || isTypeless, "Render target is typeless and concrete color format was not provided");
 
-            RegisterGraphDependency(*passNode, writtenMips, name, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
+            RegisterGraphDependency(*passNode, writtenMips, resourceName, outputAliasName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 writtenMips,
@@ -159,19 +158,17 @@ namespace PathFinder
 
     void ResourceScheduler::AliasAndUseDepthStencil(Foundation::Name resourceName, Foundation::Name outputAliasName)
     {
-        Foundation::Name name = outputAliasName.IsValid() ? outputAliasName : resourceName;
-        mCurrentlySchedulingPassNode->AddWriteDependency(name, 1);
-
         mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt, 
 
             [passNode = mCurrentlySchedulingPassNode,
-            name,
+            resourceName,
+            outputAliasName,
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
         {
             assert_format(std::holds_alternative<HAL::DepthStencilFormat>(schedulingInfo.ResourceFormat().GetTextureProperties().Format), "Cannot reuse non-depth-stencil texture");
 
-            RegisterGraphDependency(*passNode, MipSet::FirstMip(), name, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
+            RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, outputAliasName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 MipSet::FirstMip(),
@@ -202,7 +199,7 @@ namespace PathFinder
                 state |= HAL::ResourceState::DepthRead;
             }
 
-            RegisterGraphDependency(*passNode, readMips, resourceName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, false);
+            RegisterGraphDependency(*passNode, readMips, resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, false);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 readMips,
@@ -220,13 +217,12 @@ namespace PathFinder
 
     void ResourceScheduler::AliasAndWriteTexture(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipSet& writtenMips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        Foundation::Name name = outputAliasName.IsValid() ? outputAliasName : resourceName;
-
         mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt, 
 
             [passNode = mCurrentlySchedulingPassNode,
             concreteFormat,
-            name,
+            resourceName,
+            outputAliasName,
             writtenMips,
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
@@ -236,7 +232,7 @@ namespace PathFinder
             assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
             assert_format(!concreteFormat || isTypeless, "Texture is typeless and concrete color format was not provided");
 
-            RegisterGraphDependency(*passNode, writtenMips, name, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
+            RegisterGraphDependency(*passNode, writtenMips, resourceName, outputAliasName, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
             UpdateSubresourceInfos(
                 schedulingInfo,
                 writtenMips,
@@ -343,7 +339,13 @@ namespace PathFinder
         return 1 + floor(log2(dimensions.LargestDimension()));
     }
 
-    void ResourceScheduler::RegisterGraphDependency(RenderPassGraph::Node& passNode, const MipSet& mips, Foundation::Name resourceName, uint32_t resourceMipCount, bool isWriteDependency)
+    void ResourceScheduler::RegisterGraphDependency(
+        RenderPassGraph::Node& passNode, 
+        const MipSet& mips, 
+        Foundation::Name resourceName,
+        Foundation::Name outputAliasName,
+        uint32_t resourceMipCount, 
+        bool isWriteDependency)
     {
         if (!mips.Combination)
         {
@@ -351,33 +353,37 @@ namespace PathFinder
             return;
         }
 
+        // If resource name aliasing is involved we need to provide both new name and old name to the graph
+        Foundation::Name newResourceName = outputAliasName.IsValid() ? outputAliasName : resourceName;
+        std::optional<Foundation::Name> originalResourceName = outputAliasName.IsValid() ? std::optional(resourceName) : std::nullopt;
+
         if (const MipList* explicitMipList = std::get_if<0>(&mips.Combination.value()))
         {
             isWriteDependency ?
-                passNode.AddWriteDependency(resourceName, *explicitMipList) :
-                passNode.AddReadDependency(resourceName, *explicitMipList);
+                passNode.AddWriteDependency(newResourceName, originalResourceName, *explicitMipList) :
+                passNode.AddReadDependency(newResourceName, *explicitMipList);
         }
         else if (const MipRange* mipRange = std::get_if<1>(&mips.Combination.value()))
         {
             uint32_t lastMip = mipRange->second.value_or(resourceMipCount - 1);
 
             isWriteDependency ?
-                passNode.AddWriteDependency(resourceName, mipRange->first, lastMip) :
-                passNode.AddReadDependency(resourceName, mipRange->first, lastMip);
+                passNode.AddWriteDependency(newResourceName, originalResourceName, mipRange->first, lastMip) :
+                passNode.AddReadDependency(newResourceName, mipRange->first, lastMip);
         }
         else if (const uint32_t* indexFromStart = std::get_if<2>(&mips.Combination.value()))
         {
             isWriteDependency ?
-                passNode.AddWriteDependency(resourceName, *indexFromStart, *indexFromStart) :
-                passNode.AddReadDependency(resourceName, *indexFromStart, *indexFromStart);
+                passNode.AddWriteDependency(newResourceName, originalResourceName, *indexFromStart, *indexFromStart) :
+                passNode.AddReadDependency(newResourceName, *indexFromStart, *indexFromStart);
         }
         else if (const uint32_t* indexFromEnd = std::get_if<3>(&mips.Combination.value()))
         {
             uint32_t index = resourceMipCount - *indexFromEnd - 1;
 
             isWriteDependency ?
-                passNode.AddWriteDependency(resourceName, index, index) :
-                passNode.AddReadDependency(resourceName, index, index);
+                passNode.AddWriteDependency(newResourceName, originalResourceName, index, index) :
+                passNode.AddReadDependency(newResourceName, index, index);
         }
     }
 
@@ -418,8 +424,8 @@ namespace PathFinder
         }
         else if (const uint32_t* indexFromEnd = std::get_if<3>(&mips.Combination.value()))
         {
-            firstMip = lastMip - *indexFromStart;
-            lastMip = lastMip - *indexFromStart;
+            firstMip = lastMip - *indexFromEnd;
+            lastMip = lastMip - *indexFromEnd;
         }
 
         for (auto mip = firstMip; mip <= lastMip; ++mip)

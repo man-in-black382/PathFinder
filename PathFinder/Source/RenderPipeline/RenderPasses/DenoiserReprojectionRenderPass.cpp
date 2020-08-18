@@ -25,18 +25,10 @@ namespace PathFinder
         frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R16_Float;
         frameCountProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
 
-        ResourceScheduler::NewTextureProperties gradientProperties{ HAL::ColorFormat::RG16_Float };
-
-        ResourceScheduler::NewTextureProperties gradientNormFactorProperties{ HAL::ColorFormat::RG16_Float };
-        gradientNormFactorProperties.MipCount = ResourceScheduler::FullMipChain;
-        
         scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount[frameIndex], frameCountProperties);
         scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount[previousFrameIndex], ResourceScheduler::MipSet::Empty(), frameCountProperties);
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingReprojected);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
-
-        scheduler->NewTexture(ResourceNames::StochasticShadingGradient, gradientProperties);
-        scheduler->NewTexture(ResourceNames::StochasticShadingGradientNormFactor, gradientNormFactorProperties);
 
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
@@ -71,8 +63,7 @@ namespace PathFinder
         cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred);
         cbContent.ShadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingReprojected);
         cbContent.UnshadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingReprojected);
-        cbContent.ShadingGradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradient);
-        cbContent.ShadingGradientNormFactorTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradientNormFactor);
+        //cbContent.ShadingGradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradient);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });

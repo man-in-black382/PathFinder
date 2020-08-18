@@ -1,0 +1,33 @@
+#pragma once
+
+#include "../RenderPass.hpp"
+#include "../RenderPassContentMediator.hpp"
+
+#include "PipelineNames.hpp"
+
+namespace PathFinder
+{
+
+    struct DenoiserForwardProjectionCBContent
+    {
+        uint32_t GBufferViewDepthPrevTexIdx;
+        uint32_t StochasticShadowedShadingPrevTexIdx;
+        uint32_t StochasticUnshadowedShadingPrevTexIdx;
+        uint32_t StochasticRngSeedsPrevTexIdx;
+        uint32_t GradientSamplePositionsPrevTexIdx;
+        uint32_t StochasticRngSeedsTexIdx;
+        uint32_t GradientSamplePositionsTexIdx;
+    };
+
+    class DenoiserForwardProjectionRenderPass : public RenderPass<RenderPassContentMediator>
+    { 
+    public: 
+        DenoiserForwardProjectionRenderPass();
+        ~DenoiserForwardProjectionRenderPass() = default;
+
+        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
+        virtual void ScheduleResources(ResourceScheduler* scheduler) override;
+        virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
+    };
+
+}

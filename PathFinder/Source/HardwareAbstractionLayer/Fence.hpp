@@ -14,7 +14,7 @@ namespace HAL
     public:
         Fence(const Device& device);
 
-        void IncrementExpectedValue();
+        uint64_t IncrementExpectedValue();
         bool IsCompleted() const;
         void StallCurrentThreadUntilCompletion(uint8_t allowedSimultaneousFramesCount = 1);
     

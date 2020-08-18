@@ -161,15 +161,15 @@ namespace PathFinder
 
         for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
         {
-            joinAliasingLifetimes(resourceData, resourceData.SchedulingInfo.ResourceName());
-
-            for (Foundation::Name alias : resourceData.SchedulingInfo.Aliases())
-            {
-                joinAliasingLifetimes(resourceData, alias);
-            }
-
             if (resourceData.SchedulingInfo.CanBeAliased)
             {
+                joinAliasingLifetimes(resourceData, resourceData.SchedulingInfo.ResourceName());
+
+                for (Foundation::Name alias : resourceData.SchedulingInfo.Aliases())
+                {
+                    joinAliasingLifetimes(resourceData, alias);
+                }
+
                 switch (resourceData.SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
                 {
                 case HAL::HeapAliasingGroup::RTDSTextures: mRTDSMemoryAliaser.AddSchedulingInfo(&resourceData.SchedulingInfo); break;
@@ -227,11 +227,11 @@ namespace PathFinder
             HAL::TextureProperties completeProperties = properties;
             completeProperties.ExpectedStateMask = resourceObjects->SchedulingInfo.ExpectedStates();
 
-            if (resourceObjects->SchedulingInfo.CanBeAliased)
+          /*  if (resourceObjects->SchedulingInfo.CanBeAliased)
             {
                 resourceObjects->Texture = mResourceProducer->NewTexture(completeProperties, *heap, resourceObjects->SchedulingInfo.HeapOffset);
             }
-            else
+            else*/
             {
                 resourceObjects->Texture = mResourceProducer->NewTexture(completeProperties);
             }

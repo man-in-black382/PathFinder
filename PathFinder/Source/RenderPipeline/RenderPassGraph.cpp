@@ -29,7 +29,7 @@ namespace PathFinder
     const RenderPassGraph::ResourceUsageTimeline& RenderPassGraph::GetResourceUsageTimeline(Foundation::Name resourceName) const
     {
         auto timelineIt = mResourceUsageTimelines.find(resourceName);
-        assert_format(timelineIt != mResourceUsageTimelines.end(), "Resource timeline doesn't exist");
+        assert_format(timelineIt != mResourceUsageTimelines.end(), "Resource timeline (", resourceName.ToString(), ") doesn't exist");
         return timelineIt->second;
     }
 
@@ -98,10 +98,11 @@ namespace PathFinder
 
                 Node& otherNode = mPassNodes[otherNodeIdx];
 
-                for (SubresourceName otherNodeReadResource : otherNode.ReadSubresources())
+                auto establishAdjacency = [&](SubresourceName otherNodeReadResource) -> bool
                 {
                     // If other node reads a subresource written by the current node, then it depends on current node and is an adjacent dependency
-                    bool otherNodeDependsOnCurrentNode = node.WrittenSubresources().find(otherNodeReadResource) != node.WrittenSubresources().end();
+                    bool otherNodeDependsOnCurrentNode =
+                        node.WrittenSubresources().find(otherNodeReadResource) != node.WrittenSubresources().end();
 
                     if (otherNodeDependsOnCurrentNode)
                     {
@@ -113,8 +114,20 @@ namespace PathFinder
                             otherNode.mNodesToSyncWith.push_back(&node);
                         }
 
-                        break;
+                        return true;
                     }
+
+                    return false;
+                };
+
+                for (SubresourceName otherNodeReadResource : otherNode.ReadSubresources())
+                {
+                    if (establishAdjacency(otherNodeReadResource)) break;
+                }
+
+                for (SubresourceName otherNodeReadResource : otherNode.mAliasedSubresources)
+                {
+                    if (establishAdjacency(otherNodeReadResource)) break;
                 }
             }
         }
@@ -247,7 +260,7 @@ namespace PathFinder
 
                 perQueuePreviousNodes[node->ExecutionQueueIndex] = node;
 
-                for (SubresourceName subresourceName : node->AllSubresources())
+                for (SubresourceName subresourceName : node->ReadAndWritten())
                 {
                     // Timeline for resource is determined as an enclosing range of all of its subresource timelines
                     auto [resourceName, subresourceIndex] = DecodeSubresourceName(subresourceName);
@@ -300,10 +313,8 @@ namespace PathFinder
         // Initialize synchronization index sets
         for (Node& node : mPassNodes)
         {
-            node.mSynchronizationIndexSet.resize(mDetectedQueueCount, 0);
+            node.mSynchronizationIndexSet.resize(mDetectedQueueCount, Node::InvalidSynchronizationIndex);
         }
-
-        std::vector<std::vector<const Node*>> nodesPerQueue{ mDetectedQueueCount };
 
         for (DependencyLevel& dependencyLevel : mDependencyLevels)
         {
@@ -316,14 +327,12 @@ namespace PathFinder
                 // Find closest dependencies from other queues for the current node
                 for (const Node* dependencyNode : node->mNodesToSyncWith)
                 {
-                    uint64_t closestDependencyNodeIndexInQueue = dependencyNode->LocalToQueueExecutionIndex();
+                    const Node* closestNode = closestNodesToSyncWith[dependencyNode->ExecutionQueueIndex];
 
-                    if (const Node* closestNode = closestNodesToSyncWith[node->ExecutionQueueIndex])
+                    if (!closestNode || dependencyNode->LocalToQueueExecutionIndex() > closestNode->LocalToQueueExecutionIndex())
                     {
-                        closestDependencyNodeIndexInQueue = std::max(closestNode->LocalToQueueExecutionIndex(), closestDependencyNodeIndexInQueue);
+                        closestNodesToSyncWith[dependencyNode->ExecutionQueueIndex] = dependencyNode;
                     }
-
-                    closestNodesToSyncWith[node->ExecutionQueueIndex] = dependencyNode;
                 }
 
                 // Get rid of nodes to sync that may have had redundancies
@@ -348,8 +357,6 @@ namespace PathFinder
 
                 // Use node's execution index as synchronization index on its own queue
                 node->mSynchronizationIndexSet[node->ExecutionQueueIndex] = node->LocalToQueueExecutionIndex();
-
-                nodesPerQueue[node->ExecutionQueueIndex].push_back(node);
             }
 
             // Second pass: cull redundant dependencies by searching for indirect synchronizations
@@ -359,7 +366,7 @@ namespace PathFinder
                 std::unordered_set<uint64_t> queueToSyncWithIndices;
 
                 // Store nodes and queue syncs they cover
-                std::vector<std::pair<const Node*, std::vector<uint64_t>>> syncCoverage;
+                std::vector<SyncCoverage> syncCoverageArray;
 
                 // Final optimized list of nodes without redundant dependencies
                 std::vector<const Node*> optimalNodesToSyncWith;
@@ -373,59 +380,71 @@ namespace PathFinder
                 {
                     uint64_t maxNumberOfSyncsCoveredBySingleNode = 0;
 
-                    for (const Node* dependencyNode : node->mNodesToSyncWith)
+                    for (auto dependencyNodeIdx = 0u; dependencyNodeIdx < node->mNodesToSyncWith.size(); ++dependencyNodeIdx)
                     {
+                        const Node* dependencyNode = node->mNodesToSyncWith[dependencyNodeIdx];
+
                         // Take a dependency node and check how many queues we would sync with 
                         // if we would only sync with this one node. We very well may encounter a case
                         // where by synchronizing with just one node we will sync with more then one queue
                         // or even all of them through indirect synchronizations, 
                         // which will make other synchronizations previously detected for this node redundant.
 
-                        uint64_t numberOfSyncsCoveredByDependency = 0;
+                        std::vector<uint64_t> syncedQueueIndices;
 
                         for (uint64_t queueIndex : queueToSyncWithIndices)
                         {
                             uint64_t currentNodeDesiredSyncIndex = node->mSynchronizationIndexSet[queueIndex];
                             uint64_t dependencyNodeSyncIndex = dependencyNode->mSynchronizationIndexSet[queueIndex];
 
+                            assert_format(currentNodeDesiredSyncIndex != Node::InvalidSynchronizationIndex,
+                                "Bug! Node that wants to sync with some queue must have a valid sync index for that queue.");
+
                             if (queueIndex == node->ExecutionQueueIndex)
                             {
                                 currentNodeDesiredSyncIndex -= 1;
                             }
 
-                            if (dependencyNodeSyncIndex >= currentNodeDesiredSyncIndex)
+                            if (dependencyNodeSyncIndex != Node::InvalidSynchronizationIndex &&
+                                dependencyNodeSyncIndex >= currentNodeDesiredSyncIndex)
                             {
-                                ++numberOfSyncsCoveredByDependency;
+                                syncedQueueIndices.push_back(queueIndex);
                             }
                         }
 
-                        syncCoverage.emplace_back(dependencyNode, numberOfSyncsCoveredByDependency);
-                        maxNumberOfSyncsCoveredBySingleNode = std::max(maxNumberOfSyncsCoveredBySingleNode, numberOfSyncsCoveredByDependency);
+                        syncCoverageArray.emplace_back(SyncCoverage{ dependencyNode, dependencyNodeIdx, syncedQueueIndices });
+                        maxNumberOfSyncsCoveredBySingleNode = std::max(maxNumberOfSyncsCoveredBySingleNode, syncedQueueIndices.size());
                     }
 
-                    for (auto& [nodeToSyncWith, syncedQueues] : syncCoverage)
+                    for (const SyncCoverage& syncCoverage : syncCoverageArray)
                     {
-                        auto coveredSyncCount = syncedQueues.size();
+                        auto coveredSyncCount = syncCoverage.SyncedQueueIndices.size();
 
                         if (coveredSyncCount >= maxNumberOfSyncsCoveredBySingleNode)
                         {
                             // Optimal list of synchronizations should not contain nodes from the same queue,
                             // because work on the same queue is synchronized automatically and implicitly
-                            if (nodeToSyncWith->ExecutionQueueIndex != node->ExecutionQueueIndex)
+                            if (syncCoverage.NodeToSyncWith->ExecutionQueueIndex != node->ExecutionQueueIndex)
                             {
-                                optimalNodesToSyncWith.push_back(nodeToSyncWith);
+                                optimalNodesToSyncWith.push_back(syncCoverage.NodeToSyncWith);
 
                                 // Update SSIS
-                                auto& index = node->mSynchronizationIndexSet[nodeToSyncWith->ExecutionQueueIndex];
-                                index = std::max(index, node->mSynchronizationIndexSet[nodeToSyncWith->ExecutionQueueIndex]);
+                                auto& index = node->mSynchronizationIndexSet[syncCoverage.NodeToSyncWith->ExecutionQueueIndex];
+                                index = std::max(index, node->mSynchronizationIndexSet[syncCoverage.NodeToSyncWith->ExecutionQueueIndex]);
                             }
 
                             // Remove covered queues from the list of queues we need to sync with
-                            for (uint64_t syncedQueueIndex : syncedQueues)
+                            for (uint64_t syncedQueueIndex : syncCoverage.SyncedQueueIndices)
                             {
                                 queueToSyncWithIndices.erase(syncedQueueIndex);
                             }
                         }
+                    }
+
+                    // Remove nodes that we synced with from the original list. Reverse iterating to avoid index invalidation.
+                    for (auto syncCoverageIt = syncCoverageArray.rbegin(); syncCoverageIt != syncCoverageArray.rend(); ++syncCoverageIt)
+                    {
+                        node->mNodesToSyncWith.erase(node->mNodesToSyncWith.begin() + syncCoverageIt->NodeToSyncWithIndex);
                     }
                 }
 
@@ -454,7 +473,7 @@ namespace PathFinder
         {
             SubresourceName name = ConstructSubresourceName(resourceName, i);
             mReadSubresources.insert(name);
-            mAllSubresources.insert(name);
+            mReadAndWrittenSubresources.insert(name);
             mAllResources.insert(resourceName);
         }
     }
@@ -471,7 +490,7 @@ namespace PathFinder
             {
                 SubresourceName name = ConstructSubresourceName(resourceName, subresourceIndex);
                 mReadSubresources.insert(name);
-                mAllSubresources.insert(name);
+                mReadAndWrittenSubresources.insert(name);
                 mAllResources.insert(resourceName);
             }
         }
@@ -483,23 +502,30 @@ namespace PathFinder
         AddReadDependency(resourceName, 0, subresourceCount - 1);
     }
 
-    void RenderPassGraph::Node::AddWriteDependency(Foundation::Name resourceName, uint32_t firstSubresourceIndex, uint32_t lastSubresourceIndex)
+    void RenderPassGraph::Node::AddWriteDependency(Foundation::Name resourceName, std::optional<Foundation::Name> originalResourceName, uint32_t firstSubresourceIndex, uint32_t lastSubresourceIndex)
     {
         for (auto i = firstSubresourceIndex; i <= lastSubresourceIndex; ++i)
         {
             SubresourceName name = ConstructSubresourceName(resourceName, i);
             EnsureSingleWriteDependency(name);
             mWrittenSubresources.insert(name);
-            mAllSubresources.insert(name);
+            mReadAndWrittenSubresources.insert(name);
             mAllResources.insert(resourceName);
+
+            if (originalResourceName)
+            {
+                SubresourceName originalSubresoruce = ConstructSubresourceName(*originalResourceName, i);
+                mAliasedSubresources.insert(originalSubresoruce);
+                mAllResources.insert(*originalResourceName);
+            }
         }
     }
 
-    void RenderPassGraph::Node::AddWriteDependency(Foundation::Name resourceName, const SubresourceList& subresources)
+    void RenderPassGraph::Node::AddWriteDependency(Foundation::Name resourceName, std::optional<Foundation::Name> originalResourceName, const SubresourceList& subresources)
     {
         if (subresources.empty())
         {
-            AddWriteDependency(resourceName, 1);
+            AddWriteDependency(resourceName, originalResourceName, 1);
         }
         else
         {
@@ -508,16 +534,16 @@ namespace PathFinder
                 SubresourceName name = ConstructSubresourceName(resourceName, subresourceIndex);
                 EnsureSingleWriteDependency(name);
                 mWrittenSubresources.insert(name);
-                mAllSubresources.insert(name);
+                mReadAndWrittenSubresources.insert(name);
                 mAllResources.insert(resourceName);
             }
         }
     }
 
-    void RenderPassGraph::Node::AddWriteDependency(Foundation::Name resourceName, uint32_t subresourceCount)
+    void RenderPassGraph::Node::AddWriteDependency(Foundation::Name resourceName, std::optional<Foundation::Name> originalResourceName, uint32_t subresourceCount)
     {
         assert_format(subresourceCount > 0, "0 subresource count");
-        AddWriteDependency(resourceName, 0, subresourceCount - 1);
+        AddWriteDependency(resourceName, originalResourceName, 0, subresourceCount - 1);
     }
 
     bool RenderPassGraph::Node::HasDependency(Foundation::Name resourceName, uint32_t subresourceIndex) const
@@ -527,26 +553,28 @@ namespace PathFinder
 
     bool RenderPassGraph::Node::HasDependency(SubresourceName subresourceName) const
     {
-        return mAllSubresources.find(subresourceName) != mAllSubresources.end();
+        return mReadAndWrittenSubresources.find(subresourceName) != mReadAndWrittenSubresources.end();
     }
 
     bool RenderPassGraph::Node::HasAnyDependencies() const
     {
-        return !mAllSubresources.empty() || WritesToBackBuffer;
+        return !mReadAndWrittenSubresources.empty() || WritesToBackBuffer;
     }
 
     void RenderPassGraph::Node::Clear()
     {
         mReadSubresources.clear();
         mWrittenSubresources.clear();
-        mAllSubresources.clear();
+        mReadAndWrittenSubresources.clear();
         mAllResources.clear();
+        mAliasedSubresources.clear();
         mNodesToSyncWith.clear();
         mSynchronizationIndexSet.clear();
         mDependencyLevelIndex = 0;
         mSyncSignalRequired = false;
         ExecutionQueueIndex = 0;
         UsesRayTracing = false;
+        WritesToBackBuffer = false;
         mGlobalExecutionIndex = 0;
         mLocalToDependencyLevelExecutionIndex = 0;
     }

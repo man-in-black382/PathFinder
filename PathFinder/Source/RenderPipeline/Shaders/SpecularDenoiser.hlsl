@@ -13,6 +13,7 @@ struct PassData
     uint CurrentUnshadowedShadingTexIdx;
     uint ShadowedShadingDenoiseTargetTexIdx;
     uint UnshadowedShadingDenoiseTargetTexIdx;
+    uint ShadingGradientTexIdx;
 };
 
 #define PassDataType PassData
@@ -87,6 +88,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     Texture2D currentUnshadowedShadingTexture = Textures2D[PassDataCB.CurrentUnshadowedShadingTexIdx];
     Texture2D shadowedShadingHistoryTexture = Textures2D[PassDataCB.ShadowedShadingHistoryTexIdx];
     Texture2D unshadowedShadingHistoryTexture = Textures2D[PassDataCB.UnshadowedShadingHistoryTexIdx];
+    Texture2D shadingGradientTexture = Textures2D[PassDataCB.ShadingGradientTexIdx];
 
     RWTexture2D<float4> shadowedShadingDenoiseTargetTexture = RW_Float4_Textures2D[PassDataCB.ShadowedShadingDenoiseTargetTexIdx];
     RWTexture2D<float4> unshadowedShadingDenoiseTargetTexture = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingDenoiseTargetTexIdx];
@@ -127,8 +129,9 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     // Decrease maximum frame number on surface motion which will effectively decrease history weight,
     // which is mandatory to combat ghosting
-    float maxAllowedAccumFrames = MaxAllowedAccumulatedFrames(roughness, NdotV, parallax);
+    float maxAllowedAccumFrames = MaxAccumulatedFrames;// MaxAllowedAccumulatedFrames(roughness, NdotV, parallax);
     //accumFramesCount = min(accumFramesCount, maxAllowedAccumFrames);
+
     float accumFramesCountNorm = accumFramesCount / maxAllowedAccumFrames;
     float accumulationSpeed = 1.0 / (1.0 + accumFramesCount);
 

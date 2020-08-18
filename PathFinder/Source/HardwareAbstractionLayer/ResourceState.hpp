@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include <cstdint>
+#include <string>
 
 #include "../Foundation/BitwiseEnum.hpp"
 
@@ -42,6 +43,7 @@ namespace HAL
     bool IsResourceStateTransitionSupportedOnCopyQueue(ResourceState state);
 
     D3D12_RESOURCE_STATES D3DResourceState(ResourceState state);
+    std::string StateString(ResourceState state);
 
 }
 

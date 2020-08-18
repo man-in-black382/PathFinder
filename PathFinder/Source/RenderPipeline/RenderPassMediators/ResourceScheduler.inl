@@ -4,9 +4,7 @@ namespace PathFinder
     template <class T>
     void ResourceScheduler::NewBuffer(Foundation::Name resourceName, const NewBufferProperties<T>& bufferProperties)
     {
-        mCurrentlySchedulingPassNode->AddWriteDependency(resourceName, 1);
-
-
+        assert_format(false, "Not implemented");
 
         //Foundation::Name passName = mResourceStorage->CurrentPassGraphNode()->PassMetadata().Name;
 

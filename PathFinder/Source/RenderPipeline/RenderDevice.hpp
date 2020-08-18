@@ -78,6 +78,7 @@ namespace PathFinder
         using ComputeCommandListPtr = Memory::PoolCommandListAllocator::ComputeCommandListPtr;
         using CommandListPtrVariant = std::variant<GraphicsCommandListPtr, ComputeCommandListPtr>;
         using HALCommandListPtrVariant = std::variant<HAL::GraphicsCommandList*, HAL::ComputeCommandList*>;
+        using FenceAndValue = std::pair<const HAL::Fence*, uint64_t>;
 
         struct PassCommandLists
         {
@@ -117,13 +118,13 @@ namespace PathFinder
         {
             bool IsEmpty = true;
             std::vector<HALCommandListPtrVariant> CommandLists;
-            std::vector<const HAL::Fence*> FencesToWait;
-            HAL::Fence* FenceToSignal = nullptr;
+            std::vector<FenceAndValue> FencesToWait;
+            FenceAndValue FenceToSignal;
 
             // Debug info
             std::vector<std::optional<std::string>> CommandListNames;
             std::vector<std::string> EventNamesToWait;
-            std::string EventNameThatSignals;
+            std::string SignalName;
         };
 
         struct SubresourceTransitionInfo
@@ -166,6 +167,7 @@ namespace PathFinder
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState afterState) const;
         HAL::CommandQueue& GetCommandQueue(uint64_t queueIndex);
         uint64_t FindMostCompetentQueueIndex(const robin_hood::unordered_flat_set<RenderPassGraph::Node::QueueIndex>& queueIndices) const;
+        uint64_t FindQueueSupportingTransition(HAL::ResourceState beforeStates, HAL::ResourceState afterStates) const;
         CommandListPtrVariant AllocateCommandListForQueue(uint64_t queueIndex) const;
         HAL::ComputeCommandListBase* GetComputeCommandListBase(CommandListPtrVariant& variant) const;
         HAL::ComputeCommandListBase* GetComputeCommandListBase(HALCommandListPtrVariant& variant) const;
@@ -197,6 +199,7 @@ namespace PathFinder
 
         HAL::Fence mGraphicsQueueFence;
         HAL::Fence mComputeQueueFence;
+        HAL::Fence mBVHFence;
         uint64_t mQueueCount = 2;
         uint64_t mBVHBuildsQueueIndex = 1;
 

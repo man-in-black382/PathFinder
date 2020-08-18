@@ -20,9 +20,8 @@ namespace PathFinder
     {
         //scheduler->ReadTexture(ResourceNames::BloomCompositionOutput);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
-        scheduler->ReadTexture(ResourceNames::StochasticShadingGradientNormFactor);
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred);
-        scheduler->ReadTexture(ResourceNames::StochasticShadingGradient);
+        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingOutput);
+        //scheduler->ReadTexture(ResourceNames::StochasticShadingGradient);
     }
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -30,15 +29,15 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred);
-        cbContent._Pad0 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadingGradient);
-        cbContent._Pad1 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadingGradientNormFactor);
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingOutput);
+        //cbContent._Pad0 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadingGradient);
+        //cbContent._Pad1 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadingGradientNormFactor, 10);
         cbContent.OutputTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 
-        auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(32, 32);
+        auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(16, 16);
         context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);
     }
 

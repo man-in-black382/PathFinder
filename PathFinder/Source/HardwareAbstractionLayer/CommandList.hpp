@@ -43,6 +43,8 @@ namespace HAL
         void Reset();
         void Close();
 
+        void SetDebugName(const std::string& name) override;
+
     protected:
         CommandAllocator* mCommandAllocator = nullptr;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList4> mList;

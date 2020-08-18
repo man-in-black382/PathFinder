@@ -41,6 +41,11 @@ namespace HAL
         }
     }
 
+    void CommandList::SetDebugName(const std::string& name)
+    {
+        mList->SetName(StringToWString(name).c_str());
+    }
+
 
 
     void CopyCommandListBase::InsertBarrier(const ResourceBarrier& barrier)

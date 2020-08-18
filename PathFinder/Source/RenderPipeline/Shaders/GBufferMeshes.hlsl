@@ -96,7 +96,7 @@ float FetchMetallnessMap(VertexOut vertex, Material material)
 
 float FetchRoughnessMap(VertexOut vertex, Material material)
 {
-    return 0.1;//
+    return 0.2;//
 
     Texture2D roughnessMap = Textures2D[material.RoughnessMapIndex];
     return roughnessMap.Sample(AnisotropicClampSampler(), vertex.UV).r;

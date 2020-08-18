@@ -33,8 +33,8 @@ namespace HAL
                 mExpectedStates = props.ExpectedStateMask;
 
                 isSubjectForClearing = 
-                    EnumMaskBitSet(mExpectedStates, ResourceState::RenderTarget) ||
-                    EnumMaskBitSet(mExpectedStates, ResourceState::DepthWrite);
+                    EnumMaskEquals(mExpectedStates, ResourceState::RenderTarget) ||
+                    EnumMaskEquals(mExpectedStates, ResourceState::DepthWrite);
             },
             [&](const BufferProperties<uint8_t>& props)
             {
@@ -111,8 +111,8 @@ namespace HAL
                     mExpectedStates = props.ExpectedStateMask;
 
                     isSubjectForClearing =
-                        EnumMaskBitSet(mExpectedStates, ResourceState::RenderTarget) ||
-                        EnumMaskBitSet(mExpectedStates, ResourceState::DepthWrite);
+                        EnumMaskEquals(mExpectedStates, ResourceState::RenderTarget) ||
+                        EnumMaskEquals(mExpectedStates, ResourceState::DepthWrite);
                 },
                 [&](const BufferProperties<uint8_t>& props)
                 {

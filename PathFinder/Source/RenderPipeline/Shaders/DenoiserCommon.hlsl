@@ -56,4 +56,14 @@ float RoughnessWeight(float roughness0, float roughness)
     return saturate(1.0 - weight);
 }
 
+float CombineAccumulationNormWithGradientNorm(float accumFrameCountNorm, float gradientNorm)
+{
+    return accumFrameCountNorm * (1.0 - gradientNorm);
+}
+
+float2 CombineAccumulationNormWithGradientNorm(float2 accumFrameCountNorm, float2 gradientNorm)
+{
+    return accumFrameCountNorm * (1.0 - gradientNorm);
+}
+
 #endif

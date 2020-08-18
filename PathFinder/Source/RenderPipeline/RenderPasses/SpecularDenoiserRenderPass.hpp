@@ -19,6 +19,7 @@ namespace PathFinder
         uint32_t CurrentUnshadowedShadingTexIdx;
         uint32_t ShadowedShadingDenoiseTargetTexIdx;
         uint32_t UnshadowedShadingDenoiseTargetTexIdx;
+        uint32_t ShadingGradientTexIdx;
     };
 
     class SpecularDenoiserRenderPass : public RenderPass<RenderPassContentMediator>

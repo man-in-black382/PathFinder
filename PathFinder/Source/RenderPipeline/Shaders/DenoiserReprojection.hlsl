@@ -22,7 +22,6 @@ struct PassData
     uint ShadowedShadingReprojectionTargetTexIdx;
     uint UnshadowedShadingReprojectionTargetTexIdx;
     uint ShadingGradientTexIdx;
-    uint ShadingGradientNormFactorTexIdx;
 };
 
 #define PassDataType PassData
@@ -56,7 +55,6 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     RWTexture2D<float4> shadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.ShadowedShadingReprojectionTargetTexIdx];
     RWTexture2D<float4> unshadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingReprojectionTargetTexIdx];
     RWTexture2D<float4> shadingGradientTarget = RW_Float4_Textures2D[PassDataCB.ShadingGradientTexIdx];
-    RWTexture2D<float4> shadingGradientNormFactorTarget = RW_Float4_Textures2D[PassDataCB.ShadingGradientNormFactorTexIdx];
 
     float roughness;
     float3 surfaceNormal;
@@ -121,18 +119,28 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Green, weights),
         ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Blue, weights));
 
-    currentAccumulationCounterTexture[pixelIndex] = accumCountNew;
     shadowedShadingReprojectionTarget[pixelIndex].rgb = shadowedShadingReprojected;
     unshadowedShadingReprojectionTarget[pixelIndex].rgb = unshadowedShadingReprojected;
 
-    float shadowedShadingLuminance = CIELuminance(shadowedShadingReprojected);
-    float unshadowedShadingLuminance = CIELuminance(unshadowedShadingReprojected);
+  /*  float shadowedShadingLuminanceHistory = CIELuminance(shadowedShadingReprojected);
+    float unshadowedShadingLuminanceHistory = CIELuminance(unshadowedShadingReprojected);
+    float shadowedShadingLuminance = CIELuminance(shadowedShadingTexture[pixelIndex].rgb);
+    float unshadowedShadingLuminance = CIELuminance(unshadowedShadingTexture[pixelIndex].rgb);*/
 
-    float shadowedShadingGradient = CIELuminance(shadowedShadingTexture[pixelIndex].rgb) - shadowedShadingLuminance;
-    float unshadowedShadingGradient = CIELuminance(unshadowedShadingTexture[pixelIndex].rgb) - unshadowedShadingLuminance;
+   /* float2 maxLuminences = float2(
+        max(shadowedShadingLuminanceHistory, shadowedShadingLuminance),
+        max(unshadowedShadingLuminanceHistory, unshadowedShadingLuminance));*/
 
-    shadingGradientTarget[pixelIndex].rg = float2(abs(shadowedShadingGradient), abs(unshadowedShadingGradient));
-    shadingGradientNormFactorTarget[pixelIndex].rg = float2(shadowedShadingLuminance, unshadowedShadingLuminance);
+    /*   float2 gradients;
+
+       if (maxLuminences.x > 0.0) gradients.x = abs(shadowedShadingLuminance - shadowedShadingLuminanceHistory) / maxLuminences.x;
+       if (maxLuminences.y > 0.0) gradients.y = abs(shadowedShadingLuminance - shadowedShadingLuminanceHistory) / maxLuminences.y;
+
+       gradients *= gradients;
+
+       shadingGradientTarget[pixelIndex].rg = gradients;*/
+
+    currentAccumulationCounterTexture[pixelIndex] = accumCountNew;// *(1.0 - gradients.x);
 }
 
 #endif

@@ -30,6 +30,7 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingFixed);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingFixed);
+        //scheduler->ReadTexture(ResourceNames::StochasticShadingGradient);
 
         ResourceScheduler::NewTextureProperties outputProperties{};
         outputProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
@@ -60,6 +61,7 @@ namespace PathFinder
         cbContent.UnshadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingReprojected);
         cbContent.ShadowedShadingDenoiseTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingDenoised[currentFrameIndex]);
         cbContent.UnshadowedShadingDenoiseTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[currentFrameIndex]);
+        //cbContent.ShadingGradientTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadingGradient);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });

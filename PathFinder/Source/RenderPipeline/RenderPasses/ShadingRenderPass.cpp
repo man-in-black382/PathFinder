@@ -39,6 +39,7 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
+        scheduler->ReadTexture(ResourceNames::RngSeedsCorrelated);
 
         scheduler->UseRayTracing();
     } 
@@ -69,7 +70,7 @@ namespace PathFinder
         auto frameNumber = context->FrameNumber();
 
         // Correlate every Nth frame 
-        auto startIndex = frameNumber % 8 == 0 ? 0 : frameNumber * ShadingCBContent::MaxSupportedLights;
+        auto startIndex = frameNumber * ShadingCBContent::MaxSupportedLights;
         auto endIndex = startIndex + ShadingCBContent::MaxSupportedLights - 1;
 
         auto haltonSequence = Foundation::Halton::Sequence<4>(startIndex, endIndex);

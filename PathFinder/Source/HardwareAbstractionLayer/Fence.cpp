@@ -13,9 +13,9 @@ namespace HAL
         ThrowIfFailed(device.D3DDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
     }
 
-    void Fence::IncrementExpectedValue()
+    uint64_t Fence::IncrementExpectedValue()
     {
-        mExpectedValue++;
+        return ++mExpectedValue;
     }
 
     bool Fence::IsCompleted() const

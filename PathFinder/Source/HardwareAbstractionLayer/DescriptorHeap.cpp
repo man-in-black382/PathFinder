@@ -354,8 +354,8 @@ namespace HAL
 
         D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
         
-        if (EnumMaskBitSet(buffer.InitialStates(), ResourceState::RaytracingAccelerationStructure) ||
-            EnumMaskBitSet(buffer.ExpectedStates(), ResourceState::RaytracingAccelerationStructure))
+        if (EnumMaskEquals(buffer.InitialStates(), ResourceState::RaytracingAccelerationStructure) ||
+            EnumMaskEquals(buffer.ExpectedStates(), ResourceState::RaytracingAccelerationStructure))
         {
             desc = BufferToAccelerationStructureDescription(buffer);
             // Resource pointer is not required for AS SR view, 

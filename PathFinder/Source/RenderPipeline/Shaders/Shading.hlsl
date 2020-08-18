@@ -94,7 +94,7 @@ ShadingResult ZeroShadingResult()
 float4 RandomNumbersForLight(uint lightIndex, uint rayIndex, float4 blueNoise)
 {
     // Halton sequence array must accommodate RaysPerLight number of sets
-    float4 halton = PassDataCB.HaltonSequence[lightIndex * RaysPerLight + rayIndex];
+    float4 halton = 0;// PassDataCB.HaltonSequence[lightIndex * RaysPerLight + rayIndex];
 
     // Used for 2D position on light/BRDF
     float u1 = frac(halton.r + blueNoise.r);

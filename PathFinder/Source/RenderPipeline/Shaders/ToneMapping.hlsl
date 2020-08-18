@@ -19,7 +19,7 @@ struct PassData
 #include "MandatoryEntryPointInclude.hlsl"
 #include "ColorConversion.hlsl"
 
-[numthreads(32, 32, 1)]
+[numthreads(16, 16, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
 {
     float2 uv = dispatchThreadID.xy * GlobalDataCB.PipelineRTResolutionInv;
@@ -37,9 +37,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
            shadow[i] = unshadowedShading[i] < 1e-05 ? 1.0 : shadowedShading[i] / unshadowedShading[i];
        }*/
 
-    float g = gradient[dispatchThreadID.xy].r / normFactor.SampleLevel(PointClampSampler(), 0.xx, 11).r;
-    // shadow* analytic[dispatchThreadID.xy].rgb;
-    float3 color = inputImage.SampleLevel(LinearClampSampler(), uv, 0);
+    float g = gradient[dispatchThreadID.xy].r;// / normFactor.SampleLevel(PointClampSampler(), 0.xx, 10).r;
+    float3 color = inputImage[dispatchThreadID.xy].rgb;
 
     GTTonemappingParams params = PassDataCB.TonemappingParams;
     // Luminance was exposed using Saturation Based Sensitivity method 
@@ -51,6 +50,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         GTToneMap(color.g, params),
         GTToneMap(color.b, params));
 
+    //outputImage[dispatchThreadID.xy] = float4(/*SRGBFromLinear*/(g.xxx), 1.0);
     outputImage[dispatchThreadID.xy] = float4(SRGBFromLinear(color), 1.0);
 }
 
