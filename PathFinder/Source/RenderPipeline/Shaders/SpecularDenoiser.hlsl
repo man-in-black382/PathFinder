@@ -195,8 +195,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     denoisedUnshadowed /= totalWeight;
 
     // Combine with history
-    denoisedShadowed = lerp(shadowedShadingHistoryTexture[pixelIndex].rgb, denoisedShadowed, accumulationSpeed);
-    denoisedUnshadowed = lerp(unshadowedShadingHistoryTexture[pixelIndex].rgb, denoisedUnshadowed, accumulationSpeed);
+  /*  denoisedShadowed = lerp(shadowedShadingHistoryTexture[pixelIndex].rgb, denoisedShadowed, accumulationSpeed);
+    denoisedUnshadowed = lerp(unshadowedShadingHistoryTexture[pixelIndex].rgb, denoisedUnshadowed, accumulationSpeed);*/
     
     // Output final denoised value
     shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedShadowed;

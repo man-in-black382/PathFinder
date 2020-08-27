@@ -4,7 +4,7 @@
 struct PassData
 {
     uint RngSeedTexIdx;
-    uint FrameIdx;
+    uint FrameNumber;
     uint BlueNoiseTexSize;
 };
 
@@ -18,12 +18,12 @@ static const int GroupDimensionSize = 16;
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
 {
     uint2 pixelIndex = dispatchThreadID.xy;
-    RWTexture2D<float4> rngSeedTexture = RW_Float4_Textures2D[PassDataCB.RngSeedTexIdx];
+    RWTexture2D<uint4> rngSeedTexture = RW_UInt4_Textures2D[PassDataCB.RngSeedTexIdx];
 
     uint4 rngSeed = uint4(
         pixelIndex.x % PassDataCB.BlueNoiseTexSize,
         pixelIndex.y % PassDataCB.BlueNoiseTexSize,
-        PassDataCB.FrameIdx % PassDataCB.BlueNoiseTexSize,
+        PassDataCB.FrameNumber % PassDataCB.BlueNoiseTexSize,
         0);
 
     rngSeedTexture[pixelIndex] = rngSeed;

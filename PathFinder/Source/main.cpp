@@ -18,6 +18,8 @@
 #include "RenderPipeline/RenderPasses/DenoiserMipGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserForwardProjectionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserGradientConstructionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserGradientFilteringRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserHistoryFixRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserPostStabilizationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SpecularDenoiserRenderPass.hpp"
@@ -91,6 +93,8 @@ int main(int argc, char** argv)
     auto denoiserPreBlurPass = std::make_unique<PathFinder::DenoiserPreBlurRenderPass>();
     auto denoiserMipGenerationPass = std::make_unique<PathFinder::DenoiserMipGenerationRenderPass>();
     auto denoiserReprojectionPass = std::make_unique<PathFinder::DenoiserReprojectionRenderPass>();
+    auto denoiserGradientConstructionPass = std::make_unique<PathFinder::DenoiserGradientConstructionRenderPass>();
+    auto denoiserGradientFilteringPass = std::make_unique<PathFinder::DenoiserGradientFilteringRenderPass>();
     auto denoiserForwardProjectionPass = std::make_unique<PathFinder::DenoiserForwardProjectionRenderPass>();
     auto denoiserHistoryFixPass = std::make_unique<PathFinder::DenoiserHistoryFixRenderPass>();
     auto denoiserPostStabilizationPass = std::make_unique<PathFinder::DenoiserPostStabilizationRenderPass>();
@@ -109,6 +113,8 @@ int main(int argc, char** argv)
     engine.AddRenderPass(denoiserPreBlurPass.get());
     engine.AddRenderPass(denoiserMipGenerationPass.get());
     engine.AddRenderPass(denoiserReprojectionPass.get());
+    engine.AddRenderPass(denoiserGradientConstructionPass.get());
+    engine.AddRenderPass(denoiserGradientFilteringPass.get());
     engine.AddRenderPass(denoiserForwardProjectionPass.get());
     engine.AddRenderPass(denoiserHistoryFixPass.get());
     engine.AddRenderPass(specularDenoiserPass.get());
@@ -213,7 +219,7 @@ int main(int argc, char** argv)
     cubeInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
-    camera.SetFarPlane(80);
+    camera.SetFarPlane(500);
     camera.SetNearPlane(0.1);
     camera.MoveTo({ 0.0, 2.0f, -25.f });
     camera.LookAt({ 0.f, 4.0f, 0.f });

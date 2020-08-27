@@ -42,7 +42,7 @@ namespace PathFinder
 
         RngSeedGenerationCBContent cbContent{};
         cbContent.RngSeedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::RngSeeds[frameIndex]);
-        cbContent.FrameIdx = frameIndex;
+        cbContent.FrameNumber = context->FrameNumber();
         cbContent.BlueNoiseTexSize = blueNoiseTexture->Properties().Dimensions.Width; // W = H = D
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);

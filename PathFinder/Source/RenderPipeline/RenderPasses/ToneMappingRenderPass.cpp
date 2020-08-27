@@ -21,6 +21,8 @@ namespace PathFinder
         //scheduler->ReadTexture(ResourceNames::BloomCompositionOutput);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingOutput);
+        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
+        scheduler->ReadTexture(ResourceNames::StochasticShadingGradientFiltered);
         //scheduler->ReadTexture(ResourceNames::StochasticShadingGradient);
     }
      
@@ -29,7 +31,7 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingOutput);
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadingGradientFiltered);
         //cbContent._Pad0 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadingGradient);
         //cbContent._Pad1 = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::StochasticShadingGradientNormFactor, 10);
         cbContent.OutputTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);

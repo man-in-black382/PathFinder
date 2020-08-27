@@ -5,6 +5,7 @@
 #include "../ThirdParty/dds/dds-ktx.h"
 
 #include <filesystem>
+#include <vector>
 
 namespace PathFinder 
 {

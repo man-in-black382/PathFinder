@@ -39,7 +39,10 @@ namespace PathFinder
         inline NameArray<2> StochasticShadowedShadingDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised[0]", "Resource_Shading_Stochastic_Shadowed_Denoised[1]" };
         inline Foundation::Name StochasticUnshadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
         inline Foundation::Name StochasticShadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
+        inline Foundation::Name StochasticShadingGradientInputs{ "Resource_Stochastic_Shading_Gradient_Inputs" };
         inline Foundation::Name StochasticShadingGradient{ "Resource_Stochastic_Shading_Gradient" };
+        inline Foundation::Name StochasticShadingGradientFiltered{ "Resource_Stochastic_Shading_Gradient_Filtered" };
+        inline Foundation::Name StochasticShadingGradientFilteredIntermediate{ "Resource_Stochastic_Shading_Gradient_Filtered_Intermediate" };
         inline NameArray<2> RngSeeds{ "Resource_Stochastic_Rng_Seeds[0]", "Resource_Stochastic_Rng_Seeds[1]" };
         inline Foundation::Name RngSeedsCorrelated{ "Resource_Stochastic_Rng_Seeds_Correlated" };
 
@@ -74,11 +77,12 @@ namespace PathFinder
         inline Foundation::Name DenoiserReprojection{ "PSO_DenoiserReprojection" };
         inline Foundation::Name DenoiserHistoryFix{ "PSO_DenoiserHistoryFix" };
         inline Foundation::Name DenoiserPostStabilization{ "PSO_DenoiserPostStabilization" };
+        inline Foundation::Name DenoiserGradientConstruction{ "PSO_DenoiserGradientConstruction" };
+        inline Foundation::Name DenoiserGradientFiltering{ "PSO_DenoiserGradientFiltering" };
         inline Foundation::Name SpecularDenoiser{ "PSO_SpecularDenoiser" };
         inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
-
-        inline Foundation::Name DebugComputePSO{ "PSO_Debug_Compute" };
+        inline Foundation::Name UAVClear{ "PSO_UAVClear" };
     }  
    
     namespace RootSignatureNames

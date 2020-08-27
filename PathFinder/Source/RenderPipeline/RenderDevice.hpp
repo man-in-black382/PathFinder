@@ -99,7 +99,8 @@ namespace PathFinder
 
         struct PassHelpers
         {
-            // Keep a set of UAV barriers to be inserted between draws/dispatches
+            // Keep a set of UAV barriers to be inserted between draws/dispatches.
+            // UAV barriers to be inserted between render passes (if needed) are handled separately.
             HAL::ResourceBarrierCollection UAVBarriers;
 
             // Storage for pass constant buffer and its information
@@ -153,7 +154,6 @@ namespace PathFinder
         void BindGraphicsPassRootConstantBuffer(const RenderPassGraph::Node& passNode, HAL::GraphicsCommandListBase* cmdList);
         void BindComputePassRootConstantBuffer(const RenderPassGraph::Node& passNode, HAL::ComputeCommandListBase* cmdList);
 
-        void CreatePassHelpers();
         void GatherResourceTransitionKnowledge(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void CollectNodeTransitions(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection);
         void CreateBatchesWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
@@ -208,6 +208,9 @@ namespace PathFinder
 
         // Keep list of separate barriers gathered for dependency level so we could cull them, if conditions are met, when command list batches are determined
         std::vector<std::vector<SubresourceTransitionInfo>> mDependencyLevelTransitionBarriers;
+
+        // UAV barriers to be applied between passes (not between draw/dispatch calls) when UAV->UAV usage is detected
+        std::vector<HAL::ResourceBarrierCollection> mDependencyLevelInterpassUAVBarriers;
 
         // Keep track of queues inside a graph dependency layer that require transition rerouting
         robin_hood::unordered_flat_set<RenderPassGraph::Node::QueueIndex> mDependencyLevelQueuesThatRequireTransitionRerouting;

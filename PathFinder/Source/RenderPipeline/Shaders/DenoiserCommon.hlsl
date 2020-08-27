@@ -9,6 +9,24 @@ static const float MaxFrameCountWithHistoryFix = 3;
 static const float MaxAccumulatedFramesInv = 1.0 / MaxAccumulatedFrames;
 static const float MaxFrameCountWithHistoryFixInv = 1.0 / MaxFrameCountWithHistoryFix;
 
+static const uint StrataPositionPackingMask = 7; // 0b111
+static const uint StrataPositionPackingShift = 3; // 3 bits
+static const uint GradientUpscaleCoefficient = 3;
+static const float GradientUpscaleCoefficientInv = 1.0 / GradientUpscaleCoefficient;
+
+uint PackStratumPosition(uint2 position)
+{
+    uint packed = 0;
+    packed = (position.y & StrataPositionPackingMask) << StrataPositionPackingShift;
+    packed |= position.x & StrataPositionPackingMask;
+    return packed;
+}
+
+uint2 UnpackStratumPosition(uint packed)
+{
+    return uint2(packed & StrataPositionPackingMask, packed >> StrataPositionPackingShift);
+}
+
 // https://developer.nvidia.com/gtc/2020/video/s22699
 
 float GeometryWeight(float3 p0, float3 n0, float3 p, float p0ViewZ)
@@ -54,16 +72,6 @@ float RoughnessWeight(float roughness0, float roughness)
     float weight = abs(roughness0 - roughness) / norm;
 
     return saturate(1.0 - weight);
-}
-
-float CombineAccumulationNormWithGradientNorm(float accumFrameCountNorm, float gradientNorm)
-{
-    return accumFrameCountNorm * (1.0 - gradientNorm);
-}
-
-float2 CombineAccumulationNormWithGradientNorm(float2 accumFrameCountNorm, float2 gradientNorm)
-{
-    return accumFrameCountNorm * (1.0 - gradientNorm);
 }
 
 #endif

@@ -5,6 +5,7 @@
 #include "Mesh.hlsl"
 #include "GBuffer.hlsl"
 #include "ShadingPacking.hlsl"
+#include "Random.hlsl"
 
 struct ShadingResult
 {
@@ -21,8 +22,6 @@ struct ShadowRayPayload
 struct PassData
 {
     GBufferTextureIndices GBufferIndices;
-    // 1 4-component set of Halton numbers for rays of each light
-    float4 HaltonSequence[MaxSupportedLights * RaysPerLight];
     // 16 byte boundary
     uint BlueNoiseTexIdx;
     uint AnalyticOutputTexIdx;
@@ -30,8 +29,8 @@ struct PassData
     uint StochasticUnshadowedOutputTexIdx;
     // 16 byte boundary
     uint2 BlueNoiseTextureSize;
-    uint __Pad0;
-    uint __Pad1;
+    uint RngSeedsTexIdx;
+    uint FrameNumber;
 };
 
 struct RootConstants
@@ -89,25 +88,31 @@ ShadingResult ZeroShadingResult()
     return result;
 }
 
-//--------------------------------------------------------------------------------------------------
-
 float4 RandomNumbersForLight(uint lightIndex, uint rayIndex, float4 blueNoise)
 {
     // Halton sequence array must accommodate RaysPerLight number of sets
-    float4 halton = 0;// PassDataCB.HaltonSequence[lightIndex * RaysPerLight + rayIndex];
+    float4 additionalShift =
+        float4(Random(lightIndex * RaysPerLight + rayIndex + PassDataCB.FrameNumber),
+            Random(lightIndex * RaysPerLight + rayIndex + PassDataCB.FrameNumber + 1),
+            Random(lightIndex * RaysPerLight + rayIndex + PassDataCB.FrameNumber + 2),
+            Random(lightIndex * RaysPerLight + rayIndex + PassDataCB.FrameNumber + 3));
+
+    additionalShift = 0;
 
     // Used for 2D position on light/BRDF
-    float u1 = frac(halton.r + blueNoise.r);
-    float u2 = frac(halton.g + blueNoise.g);
+    float u1 = frac(additionalShift.r + blueNoise.r);
+    float u2 = frac(additionalShift.g + blueNoise.g);
 
     // Choosing BRDF lobes
-    float u3 = frac(halton.b + blueNoise.b);
+    float u3 = frac(additionalShift.b + blueNoise.b);
 
     // Choosing between light and BRDF sampling
-    float u4 = frac(halton.a + blueNoise.a);
+    float u4 = frac(additionalShift.a + blueNoise.a);
 
     return float4(u1, u2, u3, u4);
 }
+
+//--------------------------------------------------------------------------------------------------
 
 LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDirWS)
 {
@@ -438,7 +443,9 @@ void CombineStochasticLightingAndShadows(RTData rtData, inout ShadingResult shad
 
 ShadingResult EvaluateStandardGBufferLighting(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float depth)
 {
-    Texture2D blueNoiseTexture = Textures2D[PassDataCB.BlueNoiseTexIdx];
+    Texture3D blueNoiseTexture = Textures3D[PassDataCB.BlueNoiseTexIdx];
+    //Texture2D blueNoiseTexture = Textures2D[PassDataCB.BlueNoiseTexIdx];
+    Texture2D<uint4> rngSeeds = UInt4_Textures2D[PassDataCB.RngSeedsTexIdx];
 
     GBufferStandard gBuffer;
     LoadStandardGBuffer(gBuffer, gBufferTextures, pixelIndex);
@@ -446,7 +453,8 @@ ShadingResult EvaluateStandardGBufferLighting(GBufferTexturePack gBufferTextures
     Material material = MaterialTable[gBuffer.MaterialIndex];
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
 
-    float4 blueNoise = blueNoiseTexture.Load(uint3(pixelIndex % PassDataCB.BlueNoiseTextureSize, 0));
+    float4 blueNoise = blueNoiseTexture[rngSeeds[pixelIndex].xyz];
+    //float4 blueNoise = blueNoiseTexture[rngSeeds[pixelIndex].xy];
     float3 surfacePosition = ReconstructWorldSpacePosition(depth, uv, FrameDataCB.CurrentFrameCamera);
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
 

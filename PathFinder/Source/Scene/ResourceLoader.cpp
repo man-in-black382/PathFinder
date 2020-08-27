@@ -50,39 +50,41 @@ namespace PathFinder
 
         uint64_t uploadMemoryOffset = 0;
 
-        for (int mip = 0; mip < textureInfo.num_mips; mip++)
+        for (int mip = 0; mip < textureInfo.num_mips; ++mip)
         {
-            uint64_t readMemoryOffset = 0;
-
-            ddsktx_sub_data subData;
-            ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, 0, mip);
-            
             const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
-
             uploadMemoryOffset = mipFootprint.Offset();
 
-            assert_format(uploadMemoryOffset == mipFootprint.Offset(), "Memory offset is calculated incorrectly");
-
-            bool imageDataSatisfiesTextureRowAlignment = mipFootprint.RowPitch() == subData.row_pitch_bytes == mipFootprint.RowSizeInBytes();
-
-            if (imageDataSatisfiesTextureRowAlignment)
+            for (int depthLayer = 0; depthLayer < textureInfo.depth; ++depthLayer)
             {
-                // Copy whole subresource
-                texture->Write((uint8_t*)subData.buff, uploadMemoryOffset, subData.size_bytes);
-            }
-            else {
-                // Have to copy row-by-row
-                uint8_t* rowData = (uint8_t*)subData.buff;
-                uint64_t rowReadCountAtOnce = mipFootprint.RowSizeInBytes() / subData.row_pitch_bytes;
+                ddsktx_sub_data subData;
+                ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, depthLayer, mip);
 
-                for (auto row = 0; row < subData.height; row += rowReadCountAtOnce)
+                bool imageDataSatisfiesTextureRowAlignment =
+                    mipFootprint.RowPitch() == subData.row_pitch_bytes &&
+                    mipFootprint.RowSizeInBytes() == subData.row_pitch_bytes;
+
+                if (imageDataSatisfiesTextureRowAlignment)
                 {
-                    uint64_t bytesToRead = subData.row_pitch_bytes * rowReadCountAtOnce;
-                    texture->Write((uint8_t*)subData.buff + readMemoryOffset, uploadMemoryOffset, bytesToRead);
-                    uploadMemoryOffset += mipFootprint.RowPitch();
-                    readMemoryOffset += bytesToRead;
+                    // Copy whole subresource
+                    texture->Write((uint8_t*)subData.buff, uploadMemoryOffset, subData.size_bytes);
+                    uploadMemoryOffset += subData.size_bytes;
                 }
-            }  
+                else {
+                    // Have to copy row-by-row
+                    uint8_t* rowData = (uint8_t*)subData.buff;
+                    uint64_t rowReadCountAtOnce = mipFootprint.RowSizeInBytes() / subData.row_pitch_bytes;
+                    uint64_t readMemoryOffset = 0;
+
+                    for (auto row = 0; row < subData.height; row += rowReadCountAtOnce)
+                    {
+                        uint64_t bytesToRead = subData.row_pitch_bytes * rowReadCountAtOnce;
+                        texture->Write((uint8_t*)subData.buff + readMemoryOffset, uploadMemoryOffset, bytesToRead);
+                        uploadMemoryOffset += mipFootprint.RowPitch();
+                        readMemoryOffset += bytesToRead;
+                    }
+                }
+            }
         }
 
         texture->SetDebugName(fullPath.filename().string());

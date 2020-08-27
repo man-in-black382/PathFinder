@@ -27,6 +27,14 @@ float LinearizeDepth(float hyperbolicDepth, Camera camera)
     return n * f / (f + hyperbolicDepth * (n - f));
 }
 
+float HyperbolizeDepth(float linearDepth, Camera camera)
+{
+    float n = camera.NearPlane;
+    float f = camera.FarPlane;
+
+    return (((n * f) / linearDepth) - f) / (n - f);
+}
+
 float3 ReconstructViewSpacePosition(
     float hyperbolicDepth, // Depth value after viewport transformation in [0; 1] range
     float2 ssuv, // Normalized screen-space (texture) coordinates [0; 1]

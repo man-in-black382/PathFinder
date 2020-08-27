@@ -27,6 +27,7 @@ namespace PathFinder
         mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName, 
             HAL::TextureProperties{ format, *props.Kind, *props.Dimensions, *props.ClearValues, HAL::ResourceState::Common, *props.MipCount },
+            props.TextureToCopyPropertiesFrom,
 
             [canBeReadAcrossFrames,
             passNode = mCurrentlySchedulingPassNode,
@@ -59,6 +60,7 @@ namespace PathFinder
         mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName,
             HAL::TextureProperties{ *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, HAL::ResourceState::Common, *props.MipCount },
+            props.TextureToCopyPropertiesFrom,
 
             [canBeReadAcrossFrames,
             passNode = mCurrentlySchedulingPassNode,
@@ -95,6 +97,7 @@ namespace PathFinder
         mResourceStorage->QueueTextureAllocationIfNeeded(
             resourceName,
             HAL::TextureProperties{ format, *props.Kind, *props.Dimensions, *props.ClearValues, HAL::ResourceState::Common, *props.MipCount },
+            props.TextureToCopyPropertiesFrom,
 
             [canBeReadAcrossFrames,
             passNode = mCurrentlySchedulingPassNode,
@@ -304,6 +307,7 @@ namespace PathFinder
             }
 
             if (properties->MipCount) filledProperties.MipCount = properties->MipCount;
+            if (properties->TextureToCopyPropertiesFrom) filledProperties.TextureToCopyPropertiesFrom = properties->TextureToCopyPropertiesFrom;
         }
 
         return filledProperties;
@@ -329,6 +333,7 @@ namespace PathFinder
             }
 
             if (properties->MipCount) filledProperties.MipCount = properties->MipCount;
+            if (properties->TextureToCopyPropertiesFrom) filledProperties.TextureToCopyPropertiesFrom = properties->TextureToCopyPropertiesFrom;
         }
 
         return filledProperties;

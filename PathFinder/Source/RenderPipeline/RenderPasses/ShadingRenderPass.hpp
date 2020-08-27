@@ -13,11 +13,7 @@ namespace PathFinder
 
     struct ShadingCBContent
     {
-        static const uint32_t MaxSupportedLights = 4;
-
         GBufferTextureIndices GBufferIndices;
-        // 16 byte boundary
-        glm::vec4 HaltonSequence[MaxSupportedLights];
         // 16 byte boundary
         uint32_t BlueNoiseTexIdx;
         uint32_t AnalyticOutputTexIdx;
@@ -25,8 +21,8 @@ namespace PathFinder
         uint32_t StochasticUnshadowedOutputTexIdx;
         // 16 byte boundary
         glm::uvec2 BlueNoiseTextureSize;
-        uint32_t __Pad0;
-        uint32_t __Pad1;
+        uint32_t RngSeedsTexIdx;
+        uint32_t FrameNumber;
     };
 
     class ShadingRenderPass : public RenderPass<RenderPassContentMediator>

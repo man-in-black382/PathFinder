@@ -107,9 +107,10 @@ namespace HAL
         BufferProperties(uint64_t capacity, uint64_t alignment, ResourceState initialStates, ResourceState expectedStates);
     };
 
+    using ByteBufferProperties = BufferProperties<uint8_t>;
+    using ResourcePropertiesVariant = std::variant<TextureProperties, ByteBufferProperties>;
 
 
-    using ResourcePropertiesVariant = std::variant<TextureProperties, BufferProperties<uint8_t>>;
 
     class ResourceFormat
     {

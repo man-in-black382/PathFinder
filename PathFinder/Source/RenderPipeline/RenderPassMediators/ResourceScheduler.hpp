@@ -59,6 +59,9 @@ namespace PathFinder
                 TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat }, 
                 Kind{ kind }, Dimensions{ dimensions }, ClearValues{ clearValues }, MipCount{ mipCount }, Flags{ readFlags } {}
 
+            NewTextureProperties(Foundation::Name textureNameToCopyPropertiesFrom)
+                : TextureToCopyPropertiesFrom{ textureNameToCopyPropertiesFrom } {}
+
             std::optional<HAL::TypelessColorFormat> TypelessFormat;
             std::optional<HAL::ColorFormat> ShaderVisibleFormat;
             std::optional<HAL::TextureKind> Kind;
@@ -66,6 +69,8 @@ namespace PathFinder
             std::optional<HAL::ColorClearValue> ClearValues;
             std::optional<uint32_t> MipCount;
             Flags Flags;
+
+            std::optional<Foundation::Name> TextureToCopyPropertiesFrom;
         };
 
         struct NewDepthStencilProperties
@@ -78,10 +83,15 @@ namespace PathFinder
                 : 
                 Format{ format }, Dimensions{ dimensions }, MipCount{ mipCount }, Flags{ readFlags } {}
 
+            NewDepthStencilProperties(Foundation::Name textureNameToCopyPropertiesFrom)
+                : TextureToCopyPropertiesFrom{ textureNameToCopyPropertiesFrom } {}
+
             std::optional<HAL::DepthStencilFormat> Format;
             std::optional<Geometry::Dimensions> Dimensions;
             std::optional<uint32_t> MipCount;
             Flags Flags;
+
+            std::optional<Foundation::Name> TextureToCopyPropertiesFrom;
         };
 
         template <class T>
@@ -90,9 +100,14 @@ namespace PathFinder
             NewBufferProperties(uint64_t capacity = 1, uint64_t perElementAlignment = 1, Flags readFlags = Flags::None)
                 : Capacity{ capacity }, PerElementAlignment{ perElementAlignment }, Flags{ readFlags } {}
 
+            NewBufferProperties(Foundation::Name bufferNameToCopyPropertiesFrom)
+                : BufferToCopyPropertiesFrom{ bufferNameToCopyPropertiesFrom } {}
+
             uint64_t Capacity;
             uint64_t PerElementAlignment;
             Flags Flags;
+
+            std::optional<Foundation::Name> BufferToCopyPropertiesFrom;
         };
 
         struct NewByteBufferProperties : public NewBufferProperties<uint32_t> {};

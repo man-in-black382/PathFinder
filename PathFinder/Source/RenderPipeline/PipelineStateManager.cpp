@@ -315,6 +315,8 @@ namespace PathFinder
 
     void PipelineStateManager::AddCommonRootSignatureParameters(HAL::RootSignature& signature) const
     {
+        // Must match BaseEngineLayout.hlsl
+
         // Global data CB
         signature.AddDescriptorParameter(HAL::RootConstantBufferParameter{ 0, 10 });
 
@@ -359,19 +361,24 @@ namespace PathFinder
         RWTextures2DUInt4.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 11 });
         signature.AddDescriptorTableParameter(RWTextures2DUInt4);
 
+        // Unbounded RWTexture2D<uint> range
+        HAL::RootDescriptorTableParameter RWTextures2DUInt;
+        RWTextures2DUInt.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 12 });
+        signature.AddDescriptorTableParameter(RWTextures2DUInt);
+
         // Unbounded RWTexture3D range
         HAL::RootDescriptorTableParameter RWTextures3D;
-        RWTextures3D.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 12 });
+        RWTextures3D.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 13 });
         signature.AddDescriptorTableParameter(RWTextures3D);
 
         // Unbounded RWTexture3D<uint4> range
         HAL::RootDescriptorTableParameter RWTextures3DUInt4;
-        RWTextures3DUInt4.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 13 });
+        RWTextures3DUInt4.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 14 });
         signature.AddDescriptorTableParameter(RWTextures3DUInt4);
 
         // Unbounded RWTexture2DArray range
         HAL::RootDescriptorTableParameter RWTexture2DArrays;
-        RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 14 });
+        RWTexture2DArrays.AddDescriptorRange(HAL::UADescriptorTableRange{ 0, 15 });
         signature.AddDescriptorTableParameter(RWTexture2DArrays);
 
         // Unbounded Samplers range
@@ -380,7 +387,7 @@ namespace PathFinder
         signature.AddDescriptorTableParameter(samplers);
 
         // Debug readback buffer
-        HAL::RootUnorderedAccessParameter debugBuffer{ 0, 15 };
+        HAL::RootUnorderedAccessParameter debugBuffer{ 0, 16 };
         signature.AddDescriptorParameter(debugBuffer);
     }
 

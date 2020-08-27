@@ -474,6 +474,15 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\UAVClearHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientFilteringRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2474,6 +2483,15 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\UAVClearHelper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientFilteringRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -3052,6 +3070,9 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserForwardProjection.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\RngSeedGeneration.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientConstruction.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\UAVClear.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientAtrousWaveletFIlter.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

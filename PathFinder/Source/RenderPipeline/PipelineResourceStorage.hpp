@@ -81,10 +81,18 @@ namespace PathFinder
 
         void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
-        void QueueTextureAllocationIfNeeded(ResourceName resourceName, const HAL::TextureProperties& properties, const SchedulingInfoConfigurator& siConfigurator);
+        void QueueTextureAllocationIfNeeded(
+            ResourceName resourceName, 
+            const HAL::TextureProperties& properties, 
+            std::optional<Foundation::Name> propertyCopySourceName,
+            const SchedulingInfoConfigurator& siConfigurator);
 
         template <class BufferDataT>
-        void QueueBufferAllocationIfNeeded(ResourceName resourceName, const HAL::BufferProperties<BufferDataT>& properties, const SchedulingInfoConfigurator& siConfigurator);
+        void QueueBufferAllocationIfNeeded(
+            ResourceName resourceName, 
+            const HAL::BufferProperties<BufferDataT>& properties, 
+            std::optional<Foundation::Name> propertyCopySourceName,
+            const SchedulingInfoConfigurator& siConfigurator);
 
         void QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator);
         void AddSampler(Foundation::Name samplerName, const HAL::Sampler& sampler);
@@ -97,6 +105,13 @@ namespace PathFinder
         using ResourceList = std::vector<PipelineResourceStorageResource>;
         using DiffEntryList = std::vector<PipelineResourceStorageResource::DiffEntry>;
 
+        struct ResourceCreationRequest
+        {
+            HAL::ResourcePropertiesVariant ResourceProperties;
+            Foundation::Name ResourceName;
+            Foundation::Name ResourceNameToCopyPropertiesFrom;
+        };
+
         struct SchedulingRequest
         {
             SchedulingInfoConfigurator Configurator;
@@ -104,6 +119,7 @@ namespace PathFinder
         };
 
         PipelineResourceStorageResource& CreatePerResourceData(ResourceName name, const HAL::ResourceFormat& resourceFormat);
+        HAL::Heap* GetHeapForAliasingGroup(HAL::HeapAliasingGroup group);
 
         bool TransferPreviousFrameResources();
 
@@ -133,9 +149,10 @@ namespace PathFinder
 
         robin_hood::unordered_node_map<PassName, PipelineResourceStoragePass> mPerPassData;
 
-        std::vector<std::function<void()>> mAllocationActions;
         std::vector<SchedulingRequest> mSchedulingCreationRequests;
         std::vector<SchedulingRequest> mSchedulingUsageRequests;
+        std::vector<ResourceCreationRequest> mPrimaryResourceCreationRequests;
+        std::vector<ResourceCreationRequest> mSecondaryResourceCreationRequests;
 
         // Two sets of resources: current and previous frame
         std::pair<ResourceList, ResourceList> mResourceLists;

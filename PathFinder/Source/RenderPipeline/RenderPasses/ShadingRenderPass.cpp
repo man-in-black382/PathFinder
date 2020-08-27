@@ -66,22 +66,8 @@ namespace PathFinder
         cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingOutput);
         cbContent.StochasticUnshadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingOutput);
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
-
-        auto frameNumber = context->FrameNumber();
-
-        // Correlate every Nth frame 
-        auto startIndex = frameNumber * ShadingCBContent::MaxSupportedLights;
-        auto endIndex = startIndex + ShadingCBContent::MaxSupportedLights - 1;
-
-        auto haltonSequence = Foundation::Halton::Sequence<4>(startIndex, endIndex);
-
-        for (auto i = 0; i < haltonSequence.size(); ++i)
-        {
-            for (auto j = 0; j < haltonSequence[i].size(); ++j)
-            {
-                cbContent.HaltonSequence[i][j] = haltonSequence[i][j];
-            }
-        }
+        cbContent.RngSeedsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::RngSeedsCorrelated);
+        cbContent.FrameNumber = context->FrameNumber();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->SetRootConstants(CompressLightPartitionInfo(sceneStorage->LightTablePartitionInfo()), 0, 0);

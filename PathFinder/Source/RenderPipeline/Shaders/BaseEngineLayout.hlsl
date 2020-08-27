@@ -26,7 +26,8 @@ ConstantBuffer<FrameDataType>   FrameDataCB     : register(b1, space10);
 ConstantBuffer<PassDataType>    PassDataCB      : register(b2, space10);
 
 // Discussion on texture/buffer casting to avoid occupying multiple registers 
-// by unbounded texture arrays when different types (raw, uint, int, float etc.) are required
+// by unbounded texture arrays when different types (raw, uint, int, float etc.) are required.
+// Solution will hopefuly arrive in HLSL 6.6 (2020?)
 // https://github.com/microsoft/DirectXShaderCompiler/issues/1067
 //
 // For now we have to declare and bind each type separately
@@ -43,11 +44,12 @@ Texture2DArray   Texture2DArrays[]  : register(t0, space14);
 // UAV Raw and Typed boundless descriptor ranges
 RWTexture2D<float4>      RW_Float4_Textures2D[]       : register(u0, space10);
 RWTexture2D<uint4>       RW_UInt4_Textures2D[]        : register(u0, space11);
+RWTexture2D<uint>        RW_UInt_Textures2D[]         : register(u0, space12);
 
-RWTexture3D<float4>      RW_Float4_Textures3D[]       : register(u0, space12);
-RWTexture3D<uint4>       RW_UInt4_Textures3D[]        : register(u0, space13);
+RWTexture3D<float4>      RW_Float4_Textures3D[]       : register(u0, space13);
+RWTexture3D<uint4>       RW_UInt4_Textures3D[]        : register(u0, space14);
 
-RWTexture2DArray<float4> RW_Float4_Texture2DArrays[]  : register(u0, space14);
+RWTexture2DArray<float4> RW_Float4_Texture2DArrays[]  : register(u0, space15);
 
 // Static samplers
 SamplerState Samplers[] : register(s0, space10);
@@ -58,7 +60,7 @@ struct ReadBackData
     float Value;
 };
 
-RWStructuredBuffer<ReadBackData> DebugReadbackBuffer : register(u0, space15);
+RWStructuredBuffer<ReadBackData> DebugReadbackBuffer : register(u0, space16);
 
 static uint DebugBufferWriteIndex = 1;
 

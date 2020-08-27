@@ -83,7 +83,7 @@ namespace PathFinder
         RenderPassGraph mRenderPassGraph;
 
         uint8_t mCurrentBackBufferIndex = 0;
-        uint8_t mSimultaneousFramesInFlight = 3;
+        uint8_t mSimultaneousFramesInFlight = 2;
         uint64_t mFrameNumber = 0;
         std::chrono::time_point<std::chrono::steady_clock> mFrameStartTimestamp;
         std::chrono::microseconds mFrameDuration = std::chrono::microseconds::zero();

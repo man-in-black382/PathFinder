@@ -28,11 +28,6 @@ namespace PathFinder
             state.BlendState = AlphaBlendingState();
             state.RenderTargetFormats = { HAL::ColorFormat::RGBA8_Usigned_Norm };
         });
-
-        stateCreator->CreateComputeState(PSONames::DebugComputePSO, [](ComputeStateProxy& state)
-        {
-            state.ComputeShaderFileName = "SeparableBlur.hlsl";
-        });
     }
       
     void UIRenderPass::ScheduleResources(ResourceScheduler* scheduler)
@@ -42,8 +37,6 @@ namespace PathFinder
 
     void UIRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::DebugComputePSO);
-
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::UI);
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
 

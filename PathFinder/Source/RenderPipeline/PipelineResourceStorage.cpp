@@ -85,7 +85,6 @@ namespace PathFinder
 
     void PipelineResourceStorage::EndFrame()
     {
-
     }
 
     bool PipelineResourceStorage::HasMemoryLayoutChange() const
@@ -97,10 +96,33 @@ namespace PathFinder
     {
         mSchedulingCreationRequests.clear();
         mSchedulingUsageRequests.clear();
+        mPrimaryResourceCreationRequests.clear();
+        mSecondaryResourceCreationRequests.clear();
     }
 
     void PipelineResourceStorage::EndResourceScheduling()
     {
+        // Create resource data 
+        for (ResourceCreationRequest& request : mPrimaryResourceCreationRequests)
+        {
+            assert_format(!GetPerResourceData(request.ResourceName), "Texture ", request.ResourceName.ToString(), " allocation is already requested");
+
+            std::visit([&](auto&& properties) 
+            { 
+                CreatePerResourceData(request.ResourceName, HAL::ResourceFormat{ mDevice, properties }); 
+            }, 
+            request.ResourceProperties);
+        }
+
+        // Create resource data that wants to clone properties of other resources
+        for (ResourceCreationRequest& request : mSecondaryResourceCreationRequests)
+        {
+            PipelineResourceStorageResource* resourceData = GetPerResourceData(request.ResourceNameToCopyPropertiesFrom);
+            assert_format(resourceData, "Trying to clone properties of a resource that doesn't exist (", request.ResourceNameToCopyPropertiesFrom.ToString(), ")");
+            CreatePerResourceData(request.ResourceName, resourceData->SchedulingInfo.ResourceFormat());
+        }
+
+        // Run scheduling callbacks
         for (SchedulingRequest& request : mSchedulingCreationRequests)
         {
             uint64_t resourceDataIndex = mCurrentFrameResourceMap->at(request.ResourceName);
@@ -110,6 +132,7 @@ namespace PathFinder
 
         std::vector<ResourceName> aliases;
 
+        // Run scheduling callbacks
         for (SchedulingRequest& request : mSchedulingUsageRequests)
         {
             aliases.clear();
@@ -117,15 +140,15 @@ namespace PathFinder
             ResourceName resourceName = request.ResourceName;
 
             // If resource name is an alias
-            auto aliasIt = mAliasMap.find(resourceName);
+            auto originalNameIt = mAliasMap.find(resourceName);
 
-            while (aliasIt != mAliasMap.end())
+            while (originalNameIt != mAliasMap.end())
             {
                 aliases.push_back(resourceName);
                 // Take next name in chain
-                resourceName = aliasIt->second;
+                resourceName = originalNameIt->second;
                 // See whether that name is also an alias
-                aliasIt = mAliasMap.find(resourceName);
+                originalNameIt = mAliasMap.find(resourceName);
             }
 
             auto indexIt = mCurrentFrameResourceMap->find(resourceName);
@@ -193,63 +216,59 @@ namespace PathFinder
             if (!mBufferMemoryAliaser.IsEmpty()) mBufferHeap = std::make_unique<HAL::Heap>(*mDevice, mBufferMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Buffers);
             if (!mUniversalMemoryAliaser.IsEmpty()) mUniversalHeap = std::make_unique<HAL::Heap>(*mDevice, mUniversalMemoryAliaser.Alias(), HAL::HeapAliasingGroup::Universal);
 
-            for (auto& allocationAction : mAllocationActions)
+            for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
             {
-                allocationAction();
+                const HAL::ResourceFormat& format = resourceData.SchedulingInfo.ResourceFormat();
+                HAL::Heap* heap = GetHeapForAliasingGroup(format.ResourceAliasingGroup());
+
+                std::visit(Foundation::MakeVisitor(
+                    [&resourceData, heap, this](const HAL::TextureProperties& textureProps)
+                    {
+                        resourceData.Texture = resourceData.SchedulingInfo.CanBeAliased ?
+                            mResourceProducer->NewTexture(textureProps, *heap, resourceData.SchedulingInfo.HeapOffset) :
+                            mResourceProducer->NewTexture(textureProps);
+
+                        resourceData.Texture->SetDebugName(resourceData.ResourceName().ToString());
+                    },
+                    [&resourceData, heap, this](const HAL::ByteBufferProperties& bufferProps)
+                    {
+                        resourceData.Buffer = resourceData.SchedulingInfo.CanBeAliased ?
+                            mResourceProducer->NewBuffer(bufferProps, *heap, resourceData.SchedulingInfo.HeapOffset) :
+                            mResourceProducer->NewBuffer(bufferProps);
+
+                        resourceData.Buffer->SetDebugName(resourceData.ResourceName().ToString());
+                    }),
+                    format.ResourceProperties());
             }
         }
-
-        mAllocationActions.clear();
     }
 
-    void PipelineResourceStorage::QueueTextureAllocationIfNeeded(ResourceName resourceName, const HAL::TextureProperties& properties, const SchedulingInfoConfigurator& siConfigurator)
+    void PipelineResourceStorage::QueueTextureAllocationIfNeeded(
+        ResourceName resourceName,
+        const HAL::TextureProperties& properties,
+        std::optional<Foundation::Name> propertyCopySourceName,
+        const SchedulingInfoConfigurator& siConfigurator)
     {
-        HAL::ResourceFormat textureFormat{ mDevice, properties };
-
-        assert_format(!GetPerResourceData(resourceName), "Texture ", resourceName.ToString(), " allocation is already requested");
-        CreatePerResourceData(resourceName, textureFormat);
-
-        uint64_t resourceDataIndex = mCurrentFrameResources->size() - 1;
-
-        auto allocationAction = [=]()
-        {
-            HAL::Heap* heap = nullptr;
-            PipelineResourceStorageResource* resourceObjects = &mCurrentFrameResources->at(resourceDataIndex);
-
-            switch (resourceObjects->SchedulingInfo.ResourceFormat().ResourceAliasingGroup())
-            {
-            case HAL::HeapAliasingGroup::RTDSTextures: heap = mRTDSHeap.get(); break;
-            case HAL::HeapAliasingGroup::NonRTDSTextures: heap = mNonRTDSHeap.get(); break;
-            case HAL::HeapAliasingGroup::Buffers: heap = mBufferHeap.get(); break;
-            case HAL::HeapAliasingGroup::Universal: heap = mUniversalHeap.get(); break;
-            }
-
-            HAL::TextureProperties completeProperties = properties;
-            completeProperties.ExpectedStateMask = resourceObjects->SchedulingInfo.ExpectedStates();
-
-          /*  if (resourceObjects->SchedulingInfo.CanBeAliased)
-            {
-                resourceObjects->Texture = mResourceProducer->NewTexture(completeProperties, *heap, resourceObjects->SchedulingInfo.HeapOffset);
-            }
-            else*/
-            {
-                resourceObjects->Texture = mResourceProducer->NewTexture(completeProperties);
-            }
-
-            resourceObjects->Texture->SetDebugName(resourceName.ToString());
-        };
-
-        mAllocationActions.push_back(allocationAction);
         mSchedulingCreationRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName });
+
+        if (propertyCopySourceName)
+        {
+            mSecondaryResourceCreationRequests.emplace_back(ResourceCreationRequest{ properties, resourceName, *propertyCopySourceName });
+        }
+        else {
+            mPrimaryResourceCreationRequests.emplace_back(ResourceCreationRequest{ properties, resourceName, {} });
+        }
     }
 
     void PipelineResourceStorage::QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator)
     {
-        mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName });
-
         if (aliasName)
         {
+            mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, *aliasName });
             mAliasMap[*aliasName] = resourceName;
+        }
+        else {
+            mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName });
         }
     }
 
@@ -280,6 +299,18 @@ namespace PathFinder
         PipelineResourceStorageResource& resourceObjects = mCurrentFrameResources->emplace_back(name, resourceFormat);
         mCurrentFrameResourceMap->emplace(name, mCurrentFrameResources->size() - 1);
         return resourceObjects;
+    }
+
+    HAL::Heap* PipelineResourceStorage::GetHeapForAliasingGroup(HAL::HeapAliasingGroup group)
+    {
+        switch (group)
+        {
+        case HAL::HeapAliasingGroup::RTDSTextures: return mRTDSHeap.get(); 
+        case HAL::HeapAliasingGroup::NonRTDSTextures: return mNonRTDSHeap.get(); 
+        case HAL::HeapAliasingGroup::Buffers: return mBufferHeap.get(); 
+        case HAL::HeapAliasingGroup::Universal: return mUniversalHeap.get();
+        default: return nullptr;
+        }
     }
 
     bool PipelineResourceStorage::TransferPreviousFrameResources()

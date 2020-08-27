@@ -178,50 +178,8 @@ namespace PathFinder
         BindExternalBuffer(passNode, *resourceData->Buffer, shaderRegister, registerSpace, registerType);
     }
 
-    void RenderDevice::AllocateUploadCommandList()
-    {
-        mPreRenderUploadsCommandList = mCommandListAllocator->AllocateGraphicsCommandList();
-        mPreRenderUploadsCommandList->Reset();
-        mPreRenderUploadsCommandList->SetDebugName("Prerender Data Upload Cmd List");
-        mEventTracker.StartGPUEvent("Prerender Data Upload", *mPreRenderUploadsCommandList);
-    }
-
-    void RenderDevice::AllocateRTASBuildsCommandList()
-    {
-        mRTASBuildsCommandList = mCommandListAllocator->AllocateComputeCommandList();
-        mRTASBuildsCommandList->Reset();
-        mPreRenderUploadsCommandList->SetDebugName("Ray Tracing BVH Build Cmd List");
-        mEventTracker.StartGPUEvent("Ray Tracing BVH Build", *mRTASBuildsCommandList);
-    }
-
-    void RenderDevice::AllocateWorkerCommandLists()
-    {
-        CreatePassHelpers();
-
-        mPassCommandLists.clear();
-        mPassCommandLists.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
-
-        for (const RenderPassGraph::Node* node : mRenderPassGraph->NodesInGlobalExecutionOrder())
-        {
-            CommandListPtrVariant cmdListVariant = AllocateCommandListForQueue(node->ExecutionQueueIndex);
-            GetComputeCommandListBase(cmdListVariant)->SetDebugName(node->PassMetadata().Name.ToString() + " Worker Cmd List");
-            mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList = std::move(cmdListVariant);
-        }
-    }
-
-    void RenderDevice::ExecuteRenderGraph()
-    {
-        // Execute fixed workloads early to save correct fence values
-        ExecuteUploadCommands();
-        ExecuteBVHBuildCommands();
-
-        BatchCommandLists();
-        UploadPassConstants();
-        ExetuteCommandLists();
-    }
-
     void RenderDevice::BindGraphicsCommonResources(const RenderPassGraph::Node& passNode, const HAL::RootSignature* rootSignature, HAL::GraphicsCommandListBase* cmdList)
-    {   
+    {
         auto commonParametersIndexOffset = rootSignature->ParameterCount() - mPipelineStateManager->CommonRootSignatureParameterCount();
 
         // Look at PipelineStateManager for base root signature parameter ordering
@@ -243,12 +201,13 @@ namespace PathFinder
         cmdList->SetGraphicsRootDescriptorTable(UARangeAddress, 10 + commonParametersIndexOffset);
         cmdList->SetGraphicsRootDescriptorTable(UARangeAddress, 11 + commonParametersIndexOffset);
         cmdList->SetGraphicsRootDescriptorTable(UARangeAddress, 12 + commonParametersIndexOffset);
+        cmdList->SetGraphicsRootDescriptorTable(UARangeAddress, 13 + commonParametersIndexOffset);
 
-        cmdList->SetGraphicsRootDescriptorTable(samplerRangeAddress, 13 + commonParametersIndexOffset);
+        cmdList->SetGraphicsRootDescriptorTable(samplerRangeAddress, 14 + commonParametersIndexOffset);
 
         cmdList->SetGraphicsRootConstantBuffer(*mResourceStorage->GlobalRootConstantsBuffer()->HALBuffer(), 0 + commonParametersIndexOffset);
         cmdList->SetGraphicsRootConstantBuffer(*mResourceStorage->PerFrameRootConstantsBuffer()->HALBuffer(), 1 + commonParametersIndexOffset);
-        cmdList->SetGraphicsRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 14 + commonParametersIndexOffset);
+        cmdList->SetGraphicsRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 15 + commonParametersIndexOffset);
     }
 
     void RenderDevice::BindComputeCommonResources(const RenderPassGraph::Node& passNode, const HAL::RootSignature* rootSignature, HAL::ComputeCommandListBase* cmdList)
@@ -274,12 +233,13 @@ namespace PathFinder
         cmdList->SetComputeRootDescriptorTable(UARangeAddress, 10 + commonParametersIndexOffset);
         cmdList->SetComputeRootDescriptorTable(UARangeAddress, 11 + commonParametersIndexOffset);
         cmdList->SetComputeRootDescriptorTable(UARangeAddress, 12 + commonParametersIndexOffset);
+        cmdList->SetComputeRootDescriptorTable(UARangeAddress, 13 + commonParametersIndexOffset);
 
-        cmdList->SetComputeRootDescriptorTable(samplerRangeAddress, 13 + commonParametersIndexOffset);
+        cmdList->SetComputeRootDescriptorTable(samplerRangeAddress, 14 + commonParametersIndexOffset);
 
         cmdList->SetComputeRootConstantBuffer(*mResourceStorage->GlobalRootConstantsBuffer()->HALBuffer(), 0 + commonParametersIndexOffset);
         cmdList->SetComputeRootConstantBuffer(*mResourceStorage->PerFrameRootConstantsBuffer()->HALBuffer(), 1 + commonParametersIndexOffset);
-        cmdList->SetComputeRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 14 + commonParametersIndexOffset);
+        cmdList->SetComputeRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 15 + commonParametersIndexOffset);
     }
 
     void RenderDevice::BindGraphicsPassRootConstantBuffer(const RenderPassGraph::Node& passNode, HAL::GraphicsCommandListBase* cmdList)
@@ -293,8 +253,8 @@ namespace PathFinder
             return;
         }
 
-        HAL::GPUAddress address = 
-            passHelpers.ResourceStoragePassData->PassConstantBuffer->HALBuffer()->GPUVirtualAddress() + 
+        HAL::GPUAddress address =
+            passHelpers.ResourceStoragePassData->PassConstantBuffer->HALBuffer()->GPUVirtualAddress() +
             passHelpers.ResourceStoragePassData->PassConstantBufferMemoryOffset;
 
         // Already bound
@@ -332,7 +292,135 @@ namespace PathFinder
         cmdList->SetComputeRootConstantBuffer(address, 2 + commonParametersIndexOffset);
     }
 
-    void RenderDevice::CreatePassHelpers()
+    void RenderDevice::ApplyPipelineState(const RenderPassGraph::Node& passNode, Foundation::Name psoName)
+    {
+        std::optional<PipelineStateManager::PipelineStateVariant> state = mPipelineStateManager->GetPipelineState(psoName);
+        assert_format(state, "Pipeline state doesn't exist");
+
+        if (state->ComputePSO) ApplyState(passNode, state->ComputePSO);
+        else if (state->GraphicPSO) ApplyState(passNode, state->GraphicPSO);
+        else if (state->RayTracingPSO) ApplyState(passNode, state->RayTracingPSO, state->BaseRayDispatchInfo);
+
+        PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
+        passHelpers.LastSetPipelineState = state;
+    }
+
+    void RenderDevice::ApplyState(const RenderPassGraph::Node& passNode, const HAL::GraphicsPipelineState* state)
+    {
+        RenderPassExecutionQueue queueType{ passNode.ExecutionQueueIndex };
+        assert_format(queueType != RenderPassExecutionQueue::AsyncCompute, "Cannot apply Graphics State on Async Compute queue");
+        auto cmdList = std::get<GraphicsCommandListPtr>(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList).get();
+
+        cmdList->SetPipelineState(*state);
+        cmdList->SetPrimitiveTopology(state->GetPrimitiveTopology());
+        cmdList->SetGraphicsRootSignature(*state->GetRootSignature());
+
+        PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
+        passHelpers.LastSetRootSignature = state->GetRootSignature();
+
+        BindGraphicsCommonResources(passNode, state->GetRootSignature(), cmdList);
+    }
+
+    void RenderDevice::ApplyState(const RenderPassGraph::Node& passNode, const HAL::ComputePipelineState* state)
+    {
+        HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
+
+        cmdList->SetPipelineState(*state);
+        cmdList->SetComputeRootSignature(*state->GetRootSignature());
+
+        PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
+        passHelpers.LastSetRootSignature = state->GetRootSignature();
+
+        BindComputeCommonResources(passNode, state->GetRootSignature(), cmdList);
+    }
+
+    void RenderDevice::ApplyState(const RenderPassGraph::Node& passNode, const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo)
+    {
+        assert_format(passNode.UsesRayTracing, "Render pass ", passNode.PassMetadata().Name.ToString(), " didn't schedule Ray Tracing usage");
+
+        HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
+
+        cmdList->SetPipelineState(*state);
+        cmdList->SetComputeRootSignature(*state->GetGlobalRootSignature());
+
+        PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
+        passHelpers.LastSetRootSignature = state->GetGlobalRootSignature();
+        passHelpers.LastAppliedRTStateDispatchInfo = dispatchInfo;
+
+        BindComputeCommonResources(passNode, state->GetGlobalRootSignature(), cmdList);
+    }
+
+    void RenderDevice::BindExternalBuffer(const RenderPassGraph::Node& passNode, const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
+    {
+        PassHelpers& helpers = mPassHelpers[passNode.GlobalExecutionIndex()];
+
+        assert_format(helpers.LastSetPipelineState, "No pipeline state applied before binding a buffer in ", passNode.PassMetadata().Name.ToString(), " render pass");
+
+        // Ray Tracing bindings go to compute 
+        if (helpers.LastSetPipelineState->ComputePSO || helpers.LastSetPipelineState->RayTracingPSO)
+        {
+            const HAL::RootSignature* signature = helpers.LastSetPipelineState->ComputePSO ?
+                helpers.LastSetPipelineState->ComputePSO->GetRootSignature() :
+                helpers.LastSetPipelineState->RayTracingPSO->GetGlobalRootSignature();
+
+            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
+
+            auto index = signature->GetParameterIndex({ shaderRegister, registerSpace, registerType });
+
+            assert_format(index, "Root signature parameter doesn't exist. It either wasn't created or register/space/type aren't correctly specified.");
+
+            switch (registerType)
+            {
+            case HAL::ShaderRegister::ConstantBuffer: cmdList->SetComputeRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::ShaderResource: cmdList->SetComputeRootDescriptorTable(buffer.GetSRDescriptor()->GPUAddress(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::UnorderedAccess: cmdList->SetComputeRootDescriptorTable(buffer.GetUADescriptor()->GPUAddress(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::Sampler: assert_format(false, "Incompatible register type");
+            }
+        }
+        else if (helpers.LastSetPipelineState->GraphicPSO)
+        {
+            const HAL::RootSignature* signature = helpers.LastSetPipelineState->GraphicPSO->GetRootSignature();
+            auto cmdList = std::get<GraphicsCommandListPtr>(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList).get();
+            auto index = signature->GetParameterIndex({ shaderRegister, registerSpace, registerType });
+
+            assert_format(index, "Root signature parameter doesn't exist. It either wasn't created or register/space/type aren't correctly specified.");
+
+            switch (registerType)
+            {
+            case HAL::ShaderRegister::ConstantBuffer: cmdList->SetGraphicsRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::ShaderResource: cmdList->SetGraphicsRootDescriptorTable(buffer.GetSRDescriptor()->GPUAddress(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::UnorderedAccess: cmdList->SetGraphicsRootDescriptorTable(buffer.GetUADescriptor()->GPUAddress(), index->IndexInSignature); break;
+            case HAL::ShaderRegister::Sampler: assert_format(false, "Incompatible register type");
+            }
+        }
+    }
+
+    void RenderDevice::SetBackBuffer(Memory::Texture* backBuffer)
+    {
+        mBackBuffer = backBuffer;
+    }
+
+    //************************************************************************************************//
+    //------------------------------------------------------------------------------------------------//
+    //************************************************************************************************//
+
+    void RenderDevice::AllocateUploadCommandList()
+    {
+        mPreRenderUploadsCommandList = mCommandListAllocator->AllocateGraphicsCommandList();
+        mPreRenderUploadsCommandList->Reset();
+        mPreRenderUploadsCommandList->SetDebugName("Prerender Data Upload Cmd List");
+        mEventTracker.StartGPUEvent("Prerender Data Upload", *mPreRenderUploadsCommandList);
+    }
+
+    void RenderDevice::AllocateRTASBuildsCommandList()
+    {
+        mRTASBuildsCommandList = mCommandListAllocator->AllocateComputeCommandList();
+        mRTASBuildsCommandList->Reset();
+        mPreRenderUploadsCommandList->SetDebugName("Ray Tracing BVH Build Cmd List");
+        mEventTracker.StartGPUEvent("Ray Tracing BVH Build", *mRTASBuildsCommandList);
+    }
+
+    void RenderDevice::AllocateWorkerCommandLists()
     {
         mPassHelpers.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
 
@@ -346,6 +434,53 @@ namespace PathFinder
             helpers.ResourceStoragePassData->PassConstantBufferMemoryOffset = 0;
             helpers.ResourceStoragePassData->IsAllowedToAdvanceConstantBufferOffset = false;
         }
+
+        mPassCommandLists.clear();
+        mPassCommandLists.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
+
+        // If memory layout did not change we reuse aliasing barriers from previous frame.
+        // Otherwise we start from scratch.
+        if (mResourceStorage->HasMemoryLayoutChange())
+        {
+            mPerNodeAliasingBarriers.clear();
+            mPerNodeAliasingBarriers.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
+        }
+
+        for (const RenderPassGraph::Node* node : mRenderPassGraph->NodesInGlobalExecutionOrder())
+        {
+            CommandListPtrVariant cmdListVariant = AllocateCommandListForQueue(node->ExecutionQueueIndex);
+            GetComputeCommandListBase(cmdListVariant)->SetDebugName(node->PassMetadata().Name.ToString() + " Worker Cmd List");
+            mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList = std::move(cmdListVariant);
+
+            // UAV barriers must be ready before command list recording.
+            // Process aliasing barriers while we're at it too.
+            for (Foundation::Name resourceName : node->AllResources())
+            {
+                const PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceName);
+                const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceData->SchedulingInfo.GetInfoForPass(node->PassMetadata().Name);
+
+                if (passInfo->NeedsAliasingBarrier)
+                {
+                    mPerNodeAliasingBarriers[node->GlobalExecutionIndex()].AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resourceData->GetGPUResource()->HALResource() });
+                }
+
+                if (passInfo->NeedsUnorderedAccessBarrier)
+                {
+                    mPassHelpers[node->GlobalExecutionIndex()].UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resourceData->GetGPUResource()->HALResource() });
+                }
+            }
+        }
+    }
+
+    void RenderDevice::ExecuteRenderGraph()
+    {
+        // Execute fixed workloads early to save correct fence values
+        ExecuteUploadCommands();
+        ExecuteBVHBuildCommands();
+
+        BatchCommandLists();
+        UploadPassConstants();
+        ExetuteCommandLists();
     }
 
     void RenderDevice::BatchCommandLists()
@@ -359,20 +494,14 @@ namespace PathFinder
         mPerNodeBeginBarriers.clear();
         mPerNodeBeginBarriers.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
 
-        // If memory layout did not change we reuse aliasing barriers from previous frame.
-        // Otherwise we start from scratch.
-        if (mResourceStorage->HasMemoryLayoutChange())
-        {
-            mPerNodeAliasingBarriers.clear();
-            mPerNodeAliasingBarriers.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
-        }
-
         mSubresourcesPreviousTransitionInfo.clear();
 
         for (const RenderPassGraph::DependencyLevel& dependencyLevel : mRenderPassGraph->DependencyLevels())
         {
             mDependencyLevelTransitionBarriers.clear();
             mDependencyLevelTransitionBarriers.resize(dependencyLevel.Nodes().size());
+            mDependencyLevelInterpassUAVBarriers.clear();
+            mDependencyLevelInterpassUAVBarriers.resize(dependencyLevel.Nodes().size());
 
             GatherResourceTransitionKnowledge(dependencyLevel);
             CreateBatchesWithTransitionRerouting(dependencyLevel);
@@ -425,6 +554,13 @@ namespace PathFinder
                 // Redundant transition
                 if (!barrier)
                 {
+                    // If barrier is redundant but new state contains UnorderedAccess, we have a case of UAV->UAV usage between render passes
+                    if (EnumMaskContains(newState, HAL::ResourceState::UnorderedAccess))
+                    {
+                        mDependencyLevelInterpassUAVBarriers[node->LocalToDependencyLevelExecutionIndex()].AddBarrier(
+                            HAL::UnorderedAccessResourceBarrier{ resourceData->GetGPUResource()->HALResource() });
+                    }
+
                     return;
                 }
                 
@@ -454,31 +590,17 @@ namespace PathFinder
             {
                 requestTransition(subresourceName, false);
             }
-
-            for (Foundation::Name resourceName : node->AllResources())
-            {
-                const PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceName);
-                const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceData->SchedulingInfo.GetInfoForPass(node->PassMetadata().Name);
-
-                if (passInfo->NeedsAliasingBarrier)
-                {
-                    mPerNodeAliasingBarriers[node->GlobalExecutionIndex()].AddBarrier(HAL::ResourceAliasingBarrier{ nullptr, resourceData->GetGPUResource()->HALResource() });
-                }
-
-                if (passInfo->NeedsUnorderedAccessBarrier)
-                {
-                    mPassHelpers[node->GlobalExecutionIndex()].UAVBarriers.AddBarrier(HAL::UnorderedAccessResourceBarrier{ resourceData->GetGPUResource()->HALResource() });
-                }
-            }
         }
     }
 
     void RenderDevice::CollectNodeTransitions(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection)
     {
         const std::vector<SubresourceTransitionInfo>& nodeTransitionBarriers = mDependencyLevelTransitionBarriers[node->LocalToDependencyLevelExecutionIndex()];
+        const HAL::ResourceBarrierCollection& nodeInterpassUAVBarriers = mDependencyLevelInterpassUAVBarriers[node->LocalToDependencyLevelExecutionIndex()];
         const HAL::ResourceBarrierCollection& nodeAliasingBarriers = mPerNodeAliasingBarriers[node->GlobalExecutionIndex()];
 
         collection.AddBarriers(nodeAliasingBarriers);
+        collection.AddBarriers(nodeInterpassUAVBarriers);
 
         for (const SubresourceTransitionInfo& transitionInfo : nodeTransitionBarriers)
         {
@@ -549,8 +671,9 @@ namespace PathFinder
         HAL::Fence* fence = &FenceForQueueIndex(mostCompetentQueueIndex);
         reroutedTransitionsBatch->FenceToSignal = { fence, fence->IncrementExpectedValue() };
         reroutedTransitionsBatch->SignalName = StringFormat("Dependency Level %d Rerouted Transitions Signal", dependencyLevel.LevelIndex());
-
         reroutedTransitionsBatch->CommandLists.emplace_back(GetHALCommandListVariant(commandListVariant));
+        reroutedTransitionsBatch->IsEmpty = false;
+
         uint64_t reroutedTransitionsBatchIndex = mostCompetentQueueBatches.size() - 1;
 
         HAL::ResourceBarrierCollection reroutedTransitionBarrires;
@@ -560,8 +683,9 @@ namespace PathFinder
         for (RenderPassGraph::Node::QueueIndex queueIndex : mDependencyLevelQueuesThatRequireTransitionRerouting)
         {
             // Make rerouted transitions wait for fences from involved queues,
-            // but only if it's not 0 dependency level, because there is nothing really to sync with in such case
-            if (queueIndex != mostCompetentQueueIndex && dependencyLevel.LevelIndex() != 0)
+            // but only if there is actually any work to wait for in the current frame,
+            // otherwise we would establish a dependency between frames, which we don't really want
+            if (queueIndex != mostCompetentQueueIndex && mCommandListBatches[queueIndex].size() > 1)
             {
                 const HAL::Fence* fence = &FenceForQueueIndex(queueIndex);
                 mostCompetentQueueBatches[reroutedTransitionsBatchIndex].FencesToWait.push_back({ fence, fence->ExpectedValue() });
@@ -940,114 +1064,6 @@ namespace PathFinder
     {
         assert_format(index < 2, "There are currently only 2 queues and 2 respective fences");
         return index == 0 ? mGraphicsQueueFence : mComputeQueueFence;
-    }
-
-    void RenderDevice::ApplyPipelineState(const RenderPassGraph::Node& passNode, Foundation::Name psoName)
-    {
-        std::optional<PipelineStateManager::PipelineStateVariant> state = mPipelineStateManager->GetPipelineState(psoName);
-        assert_format(state, "Pipeline state doesn't exist");
-
-        if (state->ComputePSO) ApplyState(passNode, state->ComputePSO);
-        else if (state->GraphicPSO) ApplyState(passNode, state->GraphicPSO);
-        else if (state->RayTracingPSO) ApplyState(passNode, state->RayTracingPSO, state->BaseRayDispatchInfo);
-
-        PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
-        passHelpers.LastSetPipelineState = state;
-    }
-
-    void RenderDevice::ApplyState(const RenderPassGraph::Node& passNode, const HAL::GraphicsPipelineState* state)
-    {
-        RenderPassExecutionQueue queueType{ passNode.ExecutionQueueIndex };
-        assert_format(queueType != RenderPassExecutionQueue::AsyncCompute, "Cannot apply Graphics State on Async Compute queue");
-        auto cmdList = std::get<GraphicsCommandListPtr>(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList).get();
-
-        cmdList->SetPipelineState(*state);
-        cmdList->SetPrimitiveTopology(state->GetPrimitiveTopology());
-        cmdList->SetGraphicsRootSignature(*state->GetRootSignature());
-
-        PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
-        passHelpers.LastSetRootSignature = state->GetRootSignature();
-
-        BindGraphicsCommonResources(passNode, state->GetRootSignature(), cmdList);
-    }
-    
-    void RenderDevice::ApplyState(const RenderPassGraph::Node& passNode, const HAL::ComputePipelineState* state)
-    {
-        HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
-
-        cmdList->SetPipelineState(*state);
-        cmdList->SetComputeRootSignature(*state->GetRootSignature());
-
-        PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
-        passHelpers.LastSetRootSignature = state->GetRootSignature();
-
-        BindComputeCommonResources(passNode, state->GetRootSignature(), cmdList);
-    }
-
-    void RenderDevice::ApplyState(const RenderPassGraph::Node& passNode, const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo)
-    {
-        assert_format(passNode.UsesRayTracing, "Render pass ", passNode.PassMetadata().Name.ToString(), " didn't schedule Ray Tracing usage");
-
-        HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
-
-        cmdList->SetPipelineState(*state);
-        cmdList->SetComputeRootSignature(*state->GetGlobalRootSignature());
-
-        PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
-        passHelpers.LastSetRootSignature = state->GetGlobalRootSignature();
-        passHelpers.LastAppliedRTStateDispatchInfo = dispatchInfo;
-
-        BindComputeCommonResources(passNode, state->GetGlobalRootSignature(), cmdList);
-    }
-
-    void RenderDevice::BindExternalBuffer(const RenderPassGraph::Node& passNode, const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
-    {
-        PassHelpers& helpers = mPassHelpers[passNode.GlobalExecutionIndex()];
-
-        assert_format(helpers.LastSetPipelineState, "No pipeline state applied before binding a buffer in ", passNode.PassMetadata().Name.ToString(), " render pass");
-
-        // Ray Tracing bindings go to compute 
-        if (helpers.LastSetPipelineState->ComputePSO || helpers.LastSetPipelineState->RayTracingPSO)
-        {
-            const HAL::RootSignature* signature = helpers.LastSetPipelineState->ComputePSO ?
-                helpers.LastSetPipelineState->ComputePSO->GetRootSignature() : 
-                helpers.LastSetPipelineState->RayTracingPSO->GetGlobalRootSignature();
-
-            HAL::ComputeCommandListBase* cmdList = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
-
-            auto index = signature->GetParameterIndex({ shaderRegister, registerSpace, registerType });
-
-            assert_format(index, "Root signature parameter doesn't exist. It either wasn't created or register/space/type aren't correctly specified.");
-
-            switch (registerType)
-            {
-            case HAL::ShaderRegister::ConstantBuffer: cmdList->SetComputeRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::ShaderResource: cmdList->SetComputeRootDescriptorTable(buffer.GetSRDescriptor()->GPUAddress(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::UnorderedAccess: cmdList->SetComputeRootDescriptorTable(buffer.GetUADescriptor()->GPUAddress(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::Sampler: assert_format(false, "Incompatible register type");
-            }
-        }
-        else if (helpers.LastSetPipelineState->GraphicPSO)
-        {
-            const HAL::RootSignature* signature = helpers.LastSetPipelineState->GraphicPSO->GetRootSignature();
-            auto cmdList = std::get<GraphicsCommandListPtr>(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList).get();
-            auto index = signature->GetParameterIndex({ shaderRegister, registerSpace, registerType });
-
-            assert_format(index, "Root signature parameter doesn't exist. It either wasn't created or register/space/type aren't correctly specified.");
-
-            switch (registerType)
-            {
-            case HAL::ShaderRegister::ConstantBuffer: cmdList->SetGraphicsRootConstantBuffer(*buffer.HALBuffer(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::ShaderResource: cmdList->SetGraphicsRootDescriptorTable(buffer.GetSRDescriptor()->GPUAddress(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::UnorderedAccess: cmdList->SetGraphicsRootDescriptorTable(buffer.GetUADescriptor()->GPUAddress(), index->IndexInSignature); break;
-            case HAL::ShaderRegister::Sampler: assert_format(false, "Incompatible register type");
-            }
-        }
-    }
-
-    void RenderDevice::SetBackBuffer(Memory::Texture* backBuffer)
-    {
-        mBackBuffer = backBuffer;
     }
 
 }

@@ -17,6 +17,8 @@ namespace PathFinder
         uint32_t GradientSamplePositionsPrevTexIdx;
         uint32_t StochasticRngSeedsTexIdx;
         uint32_t GradientSamplePositionsTexIdx;
+        uint32_t GradientTexIdx;
+        uint32_t FrameNumber;
     };
 
     class DenoiserForwardProjectionRenderPass : public RenderPass<RenderPassContentMediator>

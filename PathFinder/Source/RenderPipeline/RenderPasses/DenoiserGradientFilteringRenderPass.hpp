@@ -8,18 +8,19 @@
 namespace PathFinder
 {
 
-    struct RngSeedGenerationCBContent
-    {
-        uint32_t RngSeedTexIdx;
-        uint32_t FrameNumber;
-        uint32_t BlueNoiseTexSize;
-    };
+     struct DenoiserGradientFilteringCBContent
+     {
+         glm::uvec2 ImageSize;
+         uint32_t InputTexIdx;
+         uint32_t OutputTexIdx;
+         uint32_t CurrentIteration;
+     };
 
-    class RngSeedGenerationRenderPass : public RenderPass<RenderPassContentMediator>
+    class DenoiserGradientFilteringRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
-        RngSeedGenerationRenderPass();
-        ~RngSeedGenerationRenderPass() = default;
+        DenoiserGradientFilteringRenderPass();
+        ~DenoiserGradientFilteringRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;
