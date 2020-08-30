@@ -30,7 +30,7 @@ float GetHFGradient(float currLuminance, float prevLuminance)
     float gradient = abs(currLuminance - prevLuminance) / maxLuminance;
     gradient *= gradient; // Make small changes less significant
 
-    return gradient;
+    return saturate(gradient);
 }
 
 static const int GroupDimensionSize = 16;

@@ -33,7 +33,7 @@ namespace PathFinder
             state.RenderTargetFormats = {
                 HAL::ColorFormat::RGBA8_Usigned_Norm,
                 HAL::ColorFormat::RGBA8_Usigned_Norm,
-                HAL::ColorFormat::R32_Unsigned,
+                HAL::ColorFormat::RG32_Unsigned,
                 HAL::ColorFormat::R8_Unsigned,
                 HAL::ColorFormat::R32_Float
             };
@@ -49,7 +49,7 @@ namespace PathFinder
             state.RenderTargetFormats = {
                 HAL::ColorFormat::RGBA8_Usigned_Norm,
                 HAL::ColorFormat::RGBA8_Usigned_Norm,
-                HAL::ColorFormat::R32_Unsigned,
+                HAL::ColorFormat::RG32_Unsigned,
                 HAL::ColorFormat::R8_Unsigned,
                 HAL::ColorFormat::R32_Float
             };
@@ -60,7 +60,7 @@ namespace PathFinder
     { 
         ResourceScheduler::NewTextureProperties albedoMetalnessProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm };
         ResourceScheduler::NewTextureProperties normalRoughnessProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm };
-        ResourceScheduler::NewTextureProperties motionVectorProperties{ HAL::ColorFormat::R32_Unsigned };
+        ResourceScheduler::NewTextureProperties motionVectorProperties{ HAL::ColorFormat::RG32_Unsigned };
         ResourceScheduler::NewTextureProperties typeAndMaterialIndexProperties{ HAL::ColorFormat::R8_Unsigned };
 
         ResourceScheduler::NewTextureProperties viewDepthProperties{};

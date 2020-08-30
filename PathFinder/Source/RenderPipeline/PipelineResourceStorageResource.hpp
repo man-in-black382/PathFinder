@@ -36,7 +36,6 @@ namespace PathFinder
 
         PipelineResourceStorageResource(Foundation::Name resourceName, const HAL::ResourceFormat& format);
 
-        // An array of resources can be requested per resource name
         PipelineResourceSchedulingInfo SchedulingInfo;
         Memory::GPUResourceProducer::TexturePtr Texture;
         Memory::GPUResourceProducer::BufferPtr Buffer;

@@ -14,6 +14,7 @@ namespace PathFinder
     {
         uint32_t GBufferNormalRoughnessTexIdx;
         uint32_t DepthTexIdx;
+        uint32_t MotionTexIdx;
         uint32_t CurrentViewDepthTexIdx;
         uint32_t PreviousViewDepthTexIdx;
         uint32_t CurrentAccumulationCounterTexIdx;

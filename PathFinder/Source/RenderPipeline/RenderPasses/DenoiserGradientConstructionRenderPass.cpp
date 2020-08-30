@@ -1,4 +1,5 @@
 #include "DenoiserGradientConstructionRenderPass.hpp"
+#include "UAVClearHelper.hpp"
 
 #include "../Foundation/Gaussian.hpp"
 
@@ -25,8 +26,8 @@ namespace PathFinder
 
         scheduler->NewTexture(ResourceNames::StochasticShadingGradient, gradientProps);
 
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[currentFrameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingDenoised[currentFrameIndex]);
+        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred);
+        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred);
         scheduler->ReadTexture(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
         scheduler->ReadTexture(ResourceNames::StochasticShadingGradientInputs);
     }
@@ -41,8 +42,8 @@ namespace PathFinder
         DenoiserGradientConstructionCBContent cbContent{};
         cbContent.GradientInputsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadingGradientInputs);
         cbContent.SamplePositionsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
-        cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[currentFrameIndex]);
-        cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[currentFrameIndex]);
+        cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred);
+        cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred);
         cbContent.GradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradient);
 
         const Geometry::Dimensions& outputDimensions = resourceProvider->GetTextureProperties(ResourceNames::StochasticShadingGradient).Dimensions;

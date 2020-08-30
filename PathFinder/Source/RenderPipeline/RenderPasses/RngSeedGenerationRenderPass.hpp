@@ -13,6 +13,7 @@ namespace PathFinder
         uint32_t RngSeedTexIdx;
         uint32_t FrameNumber;
         uint32_t BlueNoiseTexSize;
+        uint32_t BlueNoiseTexDepth;
     };
 
     class RngSeedGenerationRenderPass : public RenderPass<RenderPassContentMediator>

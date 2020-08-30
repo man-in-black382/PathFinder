@@ -136,7 +136,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         return;
     }
 
-    rngSeedsOutputTexture[currPixelIdx] = rngSeedsPrevTexture[prevPixelIdx];
+    //rngSeedsOutputTexture[currPixelIdx] = rngSeedsPrevTexture[prevPixelIdx];
     gradientOutputTexture[currDownsampledPixelIdx].rg = prevLuminances;
 }
 

@@ -5,7 +5,7 @@
 #include "ImportanceSampling.hlsl"
 
 static const float MaxAccumulatedFrames = 16;
-static const float MaxFrameCountWithHistoryFix = 3;
+static const float MaxFrameCountWithHistoryFix = 4;
 static const float MaxAccumulatedFramesInv = 1.0 / MaxAccumulatedFrames;
 static const float MaxFrameCountWithHistoryFixInv = 1.0 / MaxFrameCountWithHistoryFix;
 
@@ -29,14 +29,16 @@ uint2 UnpackStratumPosition(uint packed)
 
 // https://developer.nvidia.com/gtc/2020/video/s22699
 
-float GeometryWeight(float3 p0, float3 n0, float3 p, float p0ViewZ)
+float GeometryWeight(float3 p0, float3 n0, float3 p)
 {
     // Weight based on distance from current sample "p"
     // and tangent plane to center sample "{p0, n0}"
 
-    float frameAccumulationSpeed = 1.0;
+    // https://www.desmos.com/calculator/qqtksm0fv2
+
+    const float Sensitivity = 20;
     // Norm represents "1 / max possible allowed distance between a point and a plane"
-    float norm = frameAccumulationSpeed / (1.0 + p0ViewZ);
+    float norm = Sensitivity / (1.0 + p0.z);
 
     Plane plane = InitPlane(n0, p0);
     float distanceToPlane = PointDistanceToPlane(p, plane);
@@ -48,7 +50,6 @@ float GeometryWeight(float3 p0, float3 n0, float3 p, float p0ViewZ)
 float NormalWeight(float3 n0, float3 n, float roughness, float accumulatedFrameCount)
 {
     // Rejects samples if the angle between two normals is higher than the specular lobe half angle
-
     float a0 = GGXLobeHalfAngle(roughness);
 
     // Close to zero if accumulation goes well
@@ -63,7 +64,7 @@ float NormalWeight(float3 n0, float3 n, float roughness, float accumulatedFrameC
     // Remapping: 1 when angle is 0 and 0 when angle approaches half GGX lobe angle
     float weight = a > a0 ? 0.0 : (1.0 - a / a0); 
 
-    return weight;
+    return weight; 
 }
 
 float RoughnessWeight(float roughness0, float roughness)

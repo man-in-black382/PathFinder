@@ -12,6 +12,7 @@ namespace PathFinder
 
     struct DenoiserPostStabilizationCBContent
     {
+        uint32_t VarianceSourceTexIdx;
         uint32_t InputTexIdx;
         uint32_t OutputTexIdx;
     };

@@ -95,6 +95,7 @@ namespace PathFinder
         {
             GPUMeshInstanceTableEntry instanceEntry{
                 instance.Transformation().ModelMatrix(),
+                instance.PrevTransformation().ModelMatrix(),
                 instance.Transformation().NormalMatrix(),
                 instance.AssosiatedMaterial()->GPUMaterialTableIndex,
                 instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
@@ -109,6 +110,8 @@ namespace PathFinder
             mMeshInstanceTable->Write(&instanceEntry, index, 1);
 
             ++index;
+
+            instance.UpdatePreviousTransform();
         }
 
         mTopAccelerationStructure.Build();

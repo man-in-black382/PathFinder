@@ -32,6 +32,7 @@ namespace PathFinder
 
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
+        scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[previousFrameIndex]);
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[frameIndex]);
         scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[previousFrameIndex]);
@@ -53,6 +54,7 @@ namespace PathFinder
         DenoiserReprojectionCBContent cbContent{};
         cbContent.GBufferNormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
         cbContent.DepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
         cbContent.PreviousViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[previousFrameIndex]);
         cbContent.CurrentViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[frameIndex]);
         cbContent.PreviousAccumulationCounterTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserReprojectedFramesCount[previousFrameIndex]);

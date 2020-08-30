@@ -14,11 +14,11 @@ namespace PathFinder
          uint32_t OutputTexIdx;
      };*/
 
-    class DenoiserGradientGuidedBlurRenderPass : public RenderPass<RenderPassContentMediator>
+    class DenoiserPostBlurRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
-        DenoiserGradientGuidedBlurRenderPass();
-        ~DenoiserGradientGuidedBlurRenderPass() = default;
+        DenoiserPostBlurRenderPass();
+        ~DenoiserPostBlurRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;

@@ -1,22 +1,22 @@
-#include "DenoiserGradientGuidedBlurRenderPass.hpp"
+#include "DenoiserPostBlurRenderPass.hpp"
 
 #include "../Foundation/Gaussian.hpp"
 
 namespace PathFinder
 {
 
-    DenoiserGradientGuidedBlurRenderPass::DenoiserGradientGuidedBlurRenderPass()
-        : RenderPass("DenoiserGradientGuidedBlur") {}
+    DenoiserPostBlurRenderPass::DenoiserPostBlurRenderPass()
+        : RenderPass("DenoiserPostBlur") {}
 
-    void DenoiserGradientGuidedBlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DenoiserPostBlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
         stateCreator->CreateComputeState(PSONames::DenoiserPostStabilization, [](ComputeStateProxy& state)
         {
-            state.ComputeShaderFileName = "DenoiserGradientGuidedBlur.hlsl";
+            state.ComputeShaderFileName = "DenoiserPostBlur.hlsl";
         });
     }
 
-    void DenoiserGradientGuidedBlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserPostBlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         /*scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoisedStabilized);*/
@@ -24,7 +24,7 @@ namespace PathFinder
         scheduler->ReadWriteTexture(ResourceNames::StochasticUnshadowedShadingDenoised);*/
     }
      
-    void DenoiserGradientGuidedBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
+    void DenoiserPostBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserPostStabilization);
 

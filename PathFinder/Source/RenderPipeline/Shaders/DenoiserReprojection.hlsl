@@ -11,6 +11,7 @@ struct PassData
 {
     uint GBufferNormalRoughnessTexIdx;
     uint DepthTexIdx;
+    uint MotionTexIdx;
     uint CurrentViewDepthTexIdx;
     uint PreviousViewDepthTexIdx;
     uint CurrentAccumulationCounterTexIdx;
@@ -43,6 +44,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     Texture2D normalRoughnessTexture = Textures2D[PassDataCB.GBufferNormalRoughnessTexIdx];
     Texture2D depthTexture = Textures2D[PassDataCB.DepthTexIdx];
+    Texture2D<uint4> motionTexture = UInt4_Textures2D[PassDataCB.MotionTexIdx];
     Texture2D prevViewDepthTexture = Textures2D[PassDataCB.PreviousViewDepthTexIdx];
     Texture2D currentViewDepthTexture = Textures2D[PassDataCB.CurrentViewDepthTexIdx];
     Texture2D prevAccumulationCounterTexture = Textures2D[PassDataCB.PreviousAccumulationCounterTexIdx];
@@ -62,7 +64,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     float currentDepth = depthTexture.Load(uint3(pixelIndex, 0)).r;
     float3 currentPosition = ReconstructWorldSpacePosition(currentDepth, uv, FrameDataCB.CurrentFrameCamera);
-    float3 motionVector = float3(0.0, 0.0, 0.0); // TODO: Implement motion vectors
+    float3 motionVector = LoadGBufferMotion(motionTexture, pixelIndex);
     float3 previousPosition = currentPosition - motionVector;
     float3 reprojectedCoord = ViewProjectPoint(previousPosition, FrameDataCB.PreviousFrameCamera); 
     float2 reprojectedUV = NDCToUV(reprojectedCoord);
@@ -86,7 +88,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     // Distance to plane for each sampled view depth
     float NoVprev = NoXprev / previousViewPosition.z;
-    float4 planeDist = abs(NoVprev * viewDepthPrev - NoXprev);  
+    float4 planeDist = abs(NoVprev * viewDepthPrev - NoXprev);   
 
     // Relative distance determines occlusion
     float4 occlusion = step(DisocclusionThreshold, planeDist / NoXprev);
@@ -122,25 +124,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     shadowedShadingReprojectionTarget[pixelIndex].rgb = shadowedShadingReprojected;
     unshadowedShadingReprojectionTarget[pixelIndex].rgb = unshadowedShadingReprojected;
 
-  /*  float shadowedShadingLuminanceHistory = CIELuminance(shadowedShadingReprojected);
-    float unshadowedShadingLuminanceHistory = CIELuminance(unshadowedShadingReprojected);
-    float shadowedShadingLuminance = CIELuminance(shadowedShadingTexture[pixelIndex].rgb);
-    float unshadowedShadingLuminance = CIELuminance(unshadowedShadingTexture[pixelIndex].rgb);*/
-
-   /* float2 maxLuminences = float2(
-        max(shadowedShadingLuminanceHistory, shadowedShadingLuminance),
-        max(unshadowedShadingLuminanceHistory, unshadowedShadingLuminance));*/
-
-    /*   float2 gradients;
-
-       if (maxLuminences.x > 0.0) gradients.x = abs(shadowedShadingLuminance - shadowedShadingLuminanceHistory) / maxLuminences.x;
-       if (maxLuminences.y > 0.0) gradients.y = abs(shadowedShadingLuminance - shadowedShadingLuminanceHistory) / maxLuminences.y;
-
-       gradients *= gradients;
-
-       shadingGradientTarget[pixelIndex].rg = gradients;*/
-
-    currentAccumulationCounterTexture[pixelIndex] = accumCountNew;// *(1.0 - gradients.x);
+    currentAccumulationCounterTexture[pixelIndex] = accumCountNew;
 }
 
 #endif

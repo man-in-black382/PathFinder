@@ -6,6 +6,7 @@ struct PassData
     uint RngSeedTexIdx;
     uint FrameNumber;
     uint BlueNoiseTexSize;
+    uint BlueNoiseTexDepth;
 };
 
 #define PassDataType PassData
@@ -23,7 +24,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     uint4 rngSeed = uint4(
         pixelIndex.x % PassDataCB.BlueNoiseTexSize,
         pixelIndex.y % PassDataCB.BlueNoiseTexSize,
-        PassDataCB.FrameNumber % PassDataCB.BlueNoiseTexSize,
+        PassDataCB.FrameNumber % PassDataCB.BlueNoiseTexDepth,
         0);
 
     rngSeedTexture[pixelIndex] = rngSeed;

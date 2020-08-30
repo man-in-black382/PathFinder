@@ -27,7 +27,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::RngSeeds[currentFrameIndex], rngSeedsProperties);
         scheduler->NewTexture(ResourceNames::RngSeeds[previousFrameIndex], ResourceScheduler::MipSet::Empty(), rngSeedsProperties);
 
-        scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
+        //scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     }
      
     void RngSeedGenerationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -43,7 +43,8 @@ namespace PathFinder
         RngSeedGenerationCBContent cbContent{};
         cbContent.RngSeedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::RngSeeds[frameIndex]);
         cbContent.FrameNumber = context->FrameNumber();
-        cbContent.BlueNoiseTexSize = blueNoiseTexture->Properties().Dimensions.Width; // W = H = D
+        cbContent.BlueNoiseTexSize = blueNoiseTexture->Properties().Dimensions.Width; // W = H
+        cbContent.BlueNoiseTexDepth = blueNoiseTexture->Properties().Dimensions.Depth;
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });

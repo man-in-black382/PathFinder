@@ -37,6 +37,8 @@
 #include "IO/Input.hpp"
 #include "IO/InputHandlerWindows.hpp"
 
+#include "choreograph/Choreograph.h"
+
 #include "../resource.h"
 
 #include "../Foundation/Halton.hpp"
@@ -174,8 +176,8 @@ int main(int argc, char** argv)
     flatLight1->SetLuminousPower(10000);*/
 
     auto flatLight3 = scene.EmplaceRectangularLight();
-    flatLight3->SetWidth(2);
-    flatLight3->SetHeight(2);
+    flatLight3->SetWidth(4);
+    flatLight3->SetHeight(4);
     flatLight3->SetPosition({ 0, 2, 0.0 });
     flatLight3->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, -1.0 }));
     flatLight3->SetColor({ 255 / 255, 255 / 255, 255 / 255 });
@@ -203,7 +205,7 @@ int main(int argc, char** argv)
         "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
 
     PathFinder::Mesh& plane = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &metalMaterial });
+    PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &concrete19Material });
 
     PathFinder::Mesh& cube = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
     PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &metalMaterial });
@@ -214,7 +216,7 @@ int main(int argc, char** argv)
     planeInstance.SetTransformation(t);
 
     t = cubeInstance.Transformation();
-    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+    //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
     t.Translation = glm::vec3{ 0.0, 1.0, -4.0 };
     cubeInstance.SetTransformation(t);
 
@@ -229,6 +231,17 @@ int main(int argc, char** argv)
     camera.SetShutterTime(1.0 / 125.0);
 
     input.SetInvertVerticalDelta(true);
+
+    choreograph::Timeline animationTimeline{};
+    choreograph::Output<float> rotationOutput;
+
+    choreograph::PhraseRef<float> rotationPhrase = choreograph::makeRamp(0.0f, 2.0f * 3.1415f, 1.0f);
+    animationTimeline.apply(&rotationOutput, rotationPhrase).finishFn(
+        [&m = *rotationOutput.inputPtr()]
+        {
+            m.resetTime();
+        }
+    );
 
     // ---------------------------------------------------------------------------- //
 
@@ -248,6 +261,9 @@ int main(int argc, char** argv)
 
     engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
+        t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 0.f, 1.f, 1.f }));
+        cubeInstance.SetTransformation(t);
+
         uiStorage.StartNewFrame();
         //ImGui::ShowDemoWindow();
         uiStorage.UploadUI();
@@ -307,6 +323,7 @@ int main(int argc, char** argv)
         cameraInteractor.PollInputs(engine.FrameDurationMicroseconds());
         engine.Render();
         windowsInputHandler.EndFrame();
+        animationTimeline.step(1.0 / 60.0);
     }
 
     engine.FlushAllQueuedFrames();

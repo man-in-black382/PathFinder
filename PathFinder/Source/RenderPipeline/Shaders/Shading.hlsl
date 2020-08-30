@@ -97,8 +97,6 @@ float4 RandomNumbersForLight(uint lightIndex, uint rayIndex, float4 blueNoise)
             Random(lightIndex * RaysPerLight + rayIndex + PassDataCB.FrameNumber + 2),
             Random(lightIndex * RaysPerLight + rayIndex + PassDataCB.FrameNumber + 3));
 
-    additionalShift = 0;
-
     // Used for 2D position on light/BRDF
     float u1 = frac(additionalShift.r + blueNoise.r);
     float u2 = frac(additionalShift.g + blueNoise.g);

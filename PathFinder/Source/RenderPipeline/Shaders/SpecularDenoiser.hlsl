@@ -39,7 +39,7 @@ float MaxAllowedAccumulatedFrames(float roughness, float NdotV, float parallax)
      
     // Controls sensitivity to parallax in general
     // Smaller values - more aggressive accumulation
-    static const float SpecularAccumulationBasePower = 0.25;
+    static const float SpecularAccumulationBasePower = 0.25; 
 
     float acos01sq = saturate(1.0 - NdotV); // ~ "normalized acos" ^ 2
     float a = pow(acos01sq, SpecularAccumulationCurve);
@@ -48,6 +48,12 @@ float MaxAllowedAccumulatedFrames(float roughness, float NdotV, float parallax)
     float power = SpecularAccumulationBasePower * (1.0 + parallax * angularSensitivity);
 
     return MaxAccumulatedFrames * pow(roughness, power);
+}
+
+float MaxAllowedAccumulatedFrames(float gradient)
+{
+    static const float Antilag = 5.0;
+    return MaxAccumulatedFrames * pow(1.0 - saturate(Antilag * gradient), 10) + 1.0;
 }
 
 float3x3 SamplingBasis(float3 Xview, float3 Nview, float roughness, float radiusScale, float normAccumFrameCount)
@@ -96,23 +102,23 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     float accumFramesCount = accumulatedFramesCountTexture.Load(uint3(pixelIndex, 0)).r;
     float depth = gBufferTextures.DepthStencil.Load(uint3(pixelIndex, 0)).r;
 
-    if (depth >= 1.0)
+    float roughness;
+    float3 worldNormal;
+
+    LoadGBufferNormalAndRoughness(gBufferTextures.NormalRoughness, pixelIndex, worldNormal, roughness);
+
+    if (depth >= 1.0 || roughness == 0.0)
     {
         shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = 0.0;
         unshadowedShadingDenoiseTargetTexture[pixelIndex].rgb = 0.0;
         return;
     }
 
-    float3 motion = 0.0;// LoadGBufferMotion(gBufferTextures.Motion, pixelIndex);
+    float3 motion = LoadGBufferMotion(gBufferTextures.Motion, pixelIndex);
     float frameTime = 1.0 / 60.0; // TODO: pass from CPU
 
-    float3 worldPosition, viewPosition; 
+    float3 worldPosition, viewPosition;
     ReconstructPositions(depth, uv, FrameDataCB.CurrentFrameCamera, viewPosition, worldPosition);
-
-    float roughness;
-    float3 worldNormal;
-
-    LoadGBufferNormalAndRoughness(gBufferTextures.NormalRoughness, pixelIndex, worldNormal, roughness);
 
     // Compute algorithm inputs
     float3 viewNormal = mul(ReduceTo3x3(FrameDataCB.CurrentFrameCamera.View), worldNormal);
@@ -127,20 +133,32 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     // Measure of relative surface-camera motion.
     float parallax = length(movemenDelta) / (distanceToPoint * frameTime);
 
-    // Decrease maximum frame number on surface motion which will effectively decrease history weight,
+    // Decrease maximum frame number on surface motion and on lighting invalidation,
+    // which will effectively decrease history weight,
     // which is mandatory to combat ghosting
-    float maxAllowedAccumFrames = MaxAccumulatedFrames;// MaxAllowedAccumulatedFrames(roughness, NdotV, parallax);
-    //accumFramesCount = min(accumFramesCount, maxAllowedAccumFrames);
 
-    float accumFramesCountNorm = accumFramesCount / maxAllowedAccumFrames;
+    float2 gradients = shadingGradientTexture[pixelIndex * GradientUpscaleCoefficientInv].rg;
+
+    float maxAllowedAccumFrames = min(MaxAllowedAccumulatedFrames(gradients.x), MaxAllowedAccumulatedFrames(roughness, NdotV, parallax));
+    maxAllowedAccumFrames = min(maxAllowedAccumFrames, MaxAccumulatedFrames);
+
+    // Adjust the history length, taking the antilag factors into account
+    accumFramesCount = min(MaxAllowedAccumulatedFrames(gradients.x), accumFramesCount);
+    accumFramesCount = min(MaxAllowedAccumulatedFrames(roughness, NdotV, parallax), accumFramesCount);
+    accumFramesCount = min(accumFramesCount, MaxAccumulatedFrames);
+
+    float accumFramesCountNorm = accumFramesCount / MaxAccumulatedFrames;
     float accumulationSpeed = 1.0 / (1.0 + accumFramesCount);
 
     // Define blur radius range
-    const float MinBlurRadius = 0.01;
-    const float MaxBlurRadius = 0.1;
+    const float MinBlurRadius = 0.04;
+    const float MaxBlurRadius = 0.3;
     
     // Decrease blur radius as more frames are accumulated
-    float blurRadius = lerp(MinBlurRadius, MaxBlurRadius, 1.0 - accumFramesCountNorm);
+    float blurRadius = lerp(MinBlurRadius, MaxBlurRadius, accumulationSpeed);
+
+    // Shrink blur window the farther we get from the surface
+    blurRadius *= viewPosition.z / 10;
 
     // Prepare sampling basis which is a scale and rotation matrix
     float3x3 samplingBasis = SamplingBasis(viewPosition, viewNormal, roughness, blurRadius, accumFramesCountNorm);
@@ -154,7 +172,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     
     float totalWeight = 1.0;
 
-    [unroll]
+    [loop]
     for (int i = 0; i < DenoiseSampleCount; ++i)
     {
         // Generate sample in 2D
@@ -171,6 +189,12 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         float3 projectedSample = ProjectPoint(viewSpaceSample, FrameDataCB.CurrentFrameCamera);
         float2 sampleUV = NDCToUV(projectedSample);
 
+        // Now that we know screen-space sample location, we need to obtain view-space 3d position of 
+        // a surface that lives at that location. We basically need to cast a ray through sample UV into depth buffer.
+        // Unprojection will do just what we need.
+        float neightborDepth = gBufferTextures.DepthStencil.SampleLevel(LinearClampSampler(), sampleUV, 0).r;
+        float3 neighborViewPos = ReconstructViewSpacePosition(neightborDepth, sampleUV, FrameDataCB.CurrentFrameCamera);
+
         // Get neighbor properties
         float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler(), sampleUV, 0);
 
@@ -179,8 +203,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
         // Compute weights
         float normalWeight = NormalWeight(worldNormal, neighborNormal, roughness, accumFramesCount);
-        float geometryWeight = GeometryWeight(viewPosition, viewNormal, viewSpaceSample, viewPosition.z);
-        float roughnessWeight = RoughnessWeight(roughness, neighborRoughness);
+        float geometryWeight = GeometryWeight(viewPosition, viewNormal, neighborViewPos);
+        float roughnessWeight = RoughnessWeight(roughness, neighborRoughness); 
 
         float sampleWeight = normalWeight * geometryWeight * roughnessWeight;
 
@@ -195,9 +219,9 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     denoisedUnshadowed /= totalWeight;
 
     // Combine with history
-  /*  denoisedShadowed = lerp(shadowedShadingHistoryTexture[pixelIndex].rgb, denoisedShadowed, accumulationSpeed);
-    denoisedUnshadowed = lerp(unshadowedShadingHistoryTexture[pixelIndex].rgb, denoisedUnshadowed, accumulationSpeed);*/
-    
+    denoisedShadowed = lerp(shadowedShadingHistoryTexture[pixelIndex].rgb, denoisedShadowed, accumulationSpeed);
+    denoisedUnshadowed = lerp(unshadowedShadingHistoryTexture[pixelIndex].rgb, denoisedUnshadowed, accumulationSpeed);
+
     // Output final denoised value
     shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedShadowed;
     unshadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedUnshadowed;

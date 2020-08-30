@@ -31,6 +31,8 @@ namespace PathFinder
     {
         glm::mat4 InstanceWorldMatrix;
         // 16 byte boundary
+        glm::mat4 InstancePrevWorldMatrix;
+        // 16 byte boundary
         glm::mat4 InstanceNormalMatrix;
         // 16 byte boundary
         uint32_t MaterialIndex;

@@ -419,7 +419,7 @@ namespace PathFinder
 
         // Re associate states 
         mShaderToPSOAssociations[newShader] = std::move(associationsIt->second);
-        mShaderToPSOAssociations.erase(associationsIt);
+        mShaderToPSOAssociations.erase(oldShader);
     }
 
     void PipelineStateManager::RecompileStatesWithNewLibrary(const HAL::Library* oldLibrary, const HAL::Library* newLibrary)
@@ -440,7 +440,7 @@ namespace PathFinder
 
         // Re associate states 
         mLibraryToPSOAssociations[newLibrary] = std::move(associationsIt->second);
-        mLibraryToPSOAssociations.erase(associationsIt);
+        mLibraryToPSOAssociations.erase(oldLibrary);
     }
 
 }

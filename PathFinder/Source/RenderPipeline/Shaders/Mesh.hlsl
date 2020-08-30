@@ -4,6 +4,7 @@
 struct MeshInstance
 {
     float4x4 ModelMatrix;
+    float4x4 PrevModelMatrix;
     float4x4 NormalMatrix;
     uint MaterialIndex;
     uint UnifiedVertexBufferOffset;

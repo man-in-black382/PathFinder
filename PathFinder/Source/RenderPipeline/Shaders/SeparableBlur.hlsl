@@ -29,7 +29,6 @@ groupshared float3 gCache[BlurGroupSharedBufferSize]; // Around 5KB
 [numthreads(BlurGroupSize, 1, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
 {
-    
     RWTexture2D<float4> destination = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
 
     int2 texelIndex = PassDataCB.IsHorizontal ? dispatchThreadID.xy : dispatchThreadID.yx;

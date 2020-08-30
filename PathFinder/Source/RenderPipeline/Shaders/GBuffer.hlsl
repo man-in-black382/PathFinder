@@ -35,7 +35,7 @@ struct GBufferPixelOut
 {
     float4 AlbedoMetalness : SV_Target0;
     float4 NormalRoughness : SV_Target1;
-    uint Motion : SV_Target2;
+    uint2 Motion : SV_Target2;
     uint TypeAndMaterialIndex : SV_Target3;
     float ViewDepth : SV_Target4;
 };
@@ -58,10 +58,13 @@ struct GBufferEmissive
 
 GBufferPixelOut GetStandardGBufferPixelOutput(float3 albedo, float metalness, float roughness, float3 normal, float3 motion, uint materialIndex, float viewDepth)
 {
+    float motionMagnitude = length(motion);
+    float3 motionNorm = motion / motionMagnitude;
+
     GBufferPixelOut output;
     output.AlbedoMetalness = float4(albedo, metalness);
     output.NormalRoughness = float4(normal * 0.5 + 0.5, roughness);
-    output.Motion = EncodeNormalSignedOct(motion);
+    output.Motion = uint2(EncodeNormalSignedOct(motionNorm), asuint(motionMagnitude));
     output.TypeAndMaterialIndex = (GBufferTypeStandard << 4) | (materialIndex & 0x0000000F);
     output.ViewDepth = viewDepth;
     return output;
@@ -69,10 +72,13 @@ GBufferPixelOut GetStandardGBufferPixelOutput(float3 albedo, float metalness, fl
 
 GBufferPixelOut GetEmissiveGBufferPixelOutput(uint lightIndex, float3 motion, float viewDepth)
 {
+    float motionMagnitude = length(motion);
+    float3 motionNorm = motion / motionMagnitude;
+
     GBufferPixelOut output;
     output.AlbedoMetalness = 0.0;
     output.NormalRoughness = 0.0;
-    output.Motion = EncodeNormalSignedOct(motion);
+    output.Motion = uint2(EncodeNormalSignedOct(motionNorm), asuint(motionMagnitude));
     output.TypeAndMaterialIndex = (GBufferTypeEmissive << 4) | (lightIndex & 0x0000000F);
     output.ViewDepth = viewDepth;
     return output;
@@ -89,13 +95,26 @@ uint LoadGBufferType(GBufferTexturePack textures, uint2 texelIndex)
     return type >> 4;
 }
 
+float3 LoadGBufferMotion(Texture2D<uint4> motion, uint2 texelIndex)
+{
+    uint2 motionEncoded = motion[texelIndex].rg;
+    return DecodeNormalSignedOct(motionEncoded.x) * asfloat(motionEncoded.y);
+}
+
+void LoadGBufferNormalAndRoughness(Texture2D normalRoughness, uint2 texelIndex, out float3 normal, out float roughness)
+{
+    float4 nr = normalRoughness.Load(uint3(texelIndex, 0));
+    normal = ExpandGBufferNormal(nr.xyz);
+    roughness = nr.w;
+}
+
 void LoadStandardGBuffer(inout GBufferStandard gBuffer, GBufferTexturePack textures, uint2 texelIndex)
 {
     uint3 loadIndex = uint3(texelIndex, 0);
 
     float4 albedoMetalness = textures.AlbedoMetalness.Load(loadIndex).xyzw;
     float4 normalRoughness = textures.NormalRoughness.Load(loadIndex).xyzw;
-    float3 motion = DecodeNormalSignedOct(textures.Motion.Load(loadIndex).x);
+    float3 motion = LoadGBufferMotion(textures.Motion, texelIndex);
     uint typeAndMaterialIndex = textures.TypeAndMaterialIndex.Load(loadIndex).x;
     uint materialIndex = typeAndMaterialIndex & 0x0000000F;
 
@@ -113,22 +132,10 @@ void LoadEmissiveGBuffer(inout GBufferEmissive gBuffer, GBufferTexturePack textu
 
     uint typeAndMaterialIndex = textures.TypeAndMaterialIndex.Load(loadIndex).x;
     uint lightIndex = typeAndMaterialIndex & 0x0000000F;
-    float3 motion = DecodeNormalSignedOct(textures.Motion.Load(loadIndex).x);
+    float3 motion = LoadGBufferMotion(textures.Motion, texelIndex);
 
     gBuffer.LightIndex = lightIndex;
     gBuffer.Motion = motion;
-}
-
-float3 LoadGBufferMotion(Texture2D<uint4> motion, uint2 texelIndex)
-{
-    return DecodeNormalSignedOct(motion.Load(uint3(texelIndex, 0)).x);
-}
-
-void LoadGBufferNormalAndRoughness(Texture2D normalRoughness, uint2 texelIndex, out float3 normal, out float roughness)
-{
-    float4 nr = normalRoughness.Load(uint3(texelIndex, 0));
-    normal = ExpandGBufferNormal(nr.xyz);
-    roughness = nr.w;
 }
 
 #endif

@@ -19,6 +19,7 @@ namespace PathFinder
         uint32_t UnshadowedShadingFixedTexIdx;
         uint32_t ShadowedShadingPreBlurredTexIdx;
         uint32_t UnshadowedShadingPreBlurredTexIdx;
+        uint32_t GradientTexIdx;
     };
 
     class DenoiserHistoryFixRenderPass : public RenderPass<RenderPassContentMediator>
