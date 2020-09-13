@@ -201,6 +201,11 @@ namespace PathFinder
         gpuCamera.ExposureValue100 = camera.ExposureValue100();
         gpuCamera.FarPlane = camera.FarClipPlane();
         gpuCamera.NearPlane = camera.NearClipPlane();
+        gpuCamera.FoVH = glm::radians(camera.FOVH());
+        gpuCamera.FoVV = glm::radians(camera.FOVV());
+        gpuCamera.FoVHTan = tan(gpuCamera.FoVH);
+        gpuCamera.FoVVTan = tan(gpuCamera.FoVV);
+        gpuCamera.AspectRatio = camera.AspectRatio();
 
         return gpuCamera;
     }

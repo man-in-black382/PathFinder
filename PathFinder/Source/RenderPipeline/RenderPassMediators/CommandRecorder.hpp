@@ -33,6 +33,7 @@ namespace PathFinder
         void BindBuffer(Foundation::Name bufferName, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         void BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType);
         
+        static Geometry::Dimensions DispatchGroupCount(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize);
 
     private:
         RenderDevice* mGraphicsDevice;

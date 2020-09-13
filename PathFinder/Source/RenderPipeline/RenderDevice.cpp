@@ -245,6 +245,7 @@ namespace PathFinder
     void RenderDevice::BindGraphicsPassRootConstantBuffer(const RenderPassGraph::Node& passNode, HAL::GraphicsCommandListBase* cmdList)
     {
         PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
+        CheckSignatureAndStatePresense(passHelpers);
 
         auto commonParametersIndexOffset = passHelpers.LastSetRootSignature->ParameterCount() - mPipelineStateManager->CommonRootSignatureParameterCount();
 
@@ -270,6 +271,7 @@ namespace PathFinder
     void RenderDevice::BindComputePassRootConstantBuffer(const RenderPassGraph::Node& passNode, HAL::ComputeCommandListBase* cmdList)
     {
         PassHelpers& passHelpers = mPassHelpers[passNode.GlobalExecutionIndex()];
+        CheckSignatureAndStatePresense(passHelpers);
 
         auto commonParametersIndexOffset = passHelpers.LastSetRootSignature->ParameterCount() - mPipelineStateManager->CommonRootSignatureParameterCount();
 
@@ -1064,6 +1066,12 @@ namespace PathFinder
     {
         assert_format(index < 2, "There are currently only 2 queues and 2 respective fences");
         return index == 0 ? mGraphicsQueueFence : mComputeQueueFence;
+    }
+
+    void RenderDevice::CheckSignatureAndStatePresense(const PassHelpers& passHelpers) const
+    {
+        assert_format(passHelpers.LastSetPipelineState != std::nullopt, "No pipeline state was set in this render pass");
+        assert_format(passHelpers.LastSetRootSignature != nullptr, "No root signature was set in this render pass");
     }
 
 }

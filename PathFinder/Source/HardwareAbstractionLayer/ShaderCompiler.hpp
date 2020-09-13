@@ -58,8 +58,8 @@ namespace HAL
 
         ShaderCompiler();
 
-        ShaderCompilationResult CompileShader(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild);
-        LibraryCompilationResult CompileLibrary(const std::filesystem::path& path, bool debugBuild);
+        ShaderCompilationResult CompileShader(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild, bool separatePDB);
+        LibraryCompilationResult CompileLibrary(const std::filesystem::path& path, bool debugBuild, bool separatePDB);
 
     private:
         struct BlobCompilationResult
@@ -72,7 +72,7 @@ namespace HAL
 
         std::string ProfileString(Shader::Stage stage, Profile profile);
         std::string LibProfileString(Profile profile);
-        BlobCompilationResult CompileBlob(const std::filesystem::path& path, const std::string& profileString, const std::string& entryPoint, bool debugBuild);
+        BlobCompilationResult CompileBlob(const std::filesystem::path& path, const std::string& profileString, const std::string& entryPoint, bool debugBuild, bool separatePDB);
 
         Microsoft::WRL::ComPtr<IDxcLibrary> mLibrary;
         Microsoft::WRL::ComPtr<IDxcCompiler2> mCompiler;

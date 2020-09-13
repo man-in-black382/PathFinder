@@ -15,23 +15,7 @@ struct PassCBData
 #include "MandatoryEntryPointInclude.hlsl"
 #include "DenoiserCommon.hlsl"
 #include "ColorConversion.hlsl"
-
-// Gradient for HF and SPEC channels is computed as the relative difference between
-// path tracer outputs on the current and previous frame, for a given gradient pixel. 
-float GetHFGradient(float currLuminance, float prevLuminance)
-{
-    float maxLuminance = max(currLuminance, prevLuminance);
-
-    if (maxLuminance == 0)
-    {
-        return 0.0;
-    }
-        
-    float gradient = abs(currLuminance - prevLuminance) / maxLuminance;
-    gradient *= gradient; // Make small changes less significant
-
-    return saturate(gradient);
-}
+#include "Constants.hlsl"
 
 static const int GroupDimensionSize = 16;
 

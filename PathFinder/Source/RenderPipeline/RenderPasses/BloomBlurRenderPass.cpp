@@ -1,4 +1,5 @@
 #include "BloomBlurRenderPass.hpp"
+#include "BlurCBContent.hpp"
 
 #include "../Foundation/Gaussian.hpp"
 
@@ -8,161 +9,75 @@ namespace PathFinder
     BloomBlurRenderPass::BloomBlurRenderPass()
         : RenderPass("BloomBlur") {}
 
-    void BloomBlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void BloomBlurRenderPass::ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler)
     {
-        stateCreator->CreateComputeState(PSONames::BloomBlur, [this](ComputeStateProxy& state)
+        if (!mMipGenerationSubPass)
         {
-            state.ComputeShaderFileName = "SeparableBlur.hlsl";
-        });
+            mMipGenerationSubPass = std::make_unique<DownsamplingRenderSubPass>("BloomMipGeneration");
+        }
 
-        stateCreator->CreateComputeState(PSONames::BloomDownscaling, [](ComputeStateProxy& state)
-        {
-            state.ComputeShaderFileName = "BloomDownscaling.hlsl";
-        });
+        auto invocationInputs = GenerateDownsamplingShaderInvocationInputs(
+            ResourceNames::CombinedShadingOverexposed,
+            scheduler->GetTextureProperties(ResourceNames::CombinedShadingOverexposed),
+            DownsamplingCBContent::Filter::Average,
+            DownsamplingStrategy::WriteAllLevels);
+
+        mMipGenerationSubPass->SetInvocationInputs(invocationInputs);
+        scheduler->AddRenderSubPass(mMipGenerationSubPass.get());
     }
 
     void BloomBlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        ResourceScheduler::NewTextureProperties blurTextureProps{};
-        blurTextureProps.MipCount = 3; 
+        auto fullMipRange = ResourceScheduler::MipSet::Range(0, std::nullopt);
 
-        //scheduler->ReadWriteTexture(ResourceNames::DeferredLightingOverexposedOutput);
-        scheduler->NewTexture(ResourceNames::BloomBlurIntermediate, blurTextureProps);
-        scheduler->NewTexture(ResourceNames::BloomBlurOutput, blurTextureProps);
+        scheduler->ReadTexture(ResourceNames::CombinedShadingOverexposed, fullMipRange);
+        scheduler->NewTexture(ResourceNames::BloomBlurIntermediate, fullMipRange, ResourceScheduler::NewTextureProperties{ ResourceNames::CombinedShadingOverexposed });
+        scheduler->NewTexture(ResourceNames::BloomBlurOutput, fullMipRange, ResourceScheduler::NewTextureProperties{ ResourceNames::CombinedShadingOverexposed });
     }
      
     void BloomBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        /* BlurFullResolution(context);
-         DownscaleAndBlurHalfResolution(context);
-         DownscaleAndBlurQuadResolution(context);*/
+        const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
+
+        Blur(context, 0, parameters.SmallBlurRadius, parameters.SmallBlurSigma);
+        Blur(context, 1, parameters.MediumBlurRadius, parameters.MediumBlurSigma);
+        Blur(context, 2, parameters.LargeBlurRadius, parameters.LargeBlurSigma);
     }
 
-    void BloomBlurRenderPass::BlurFullResolution(RenderContext<RenderPassContentMediator>* context)
+    void BloomBlurRenderPass::Blur(RenderContext<RenderPassContentMediator>* context, uint8_t mipLevel, uint64_t radius, float sigma)
     {
-        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomBlur);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::SeparableBlur);
 
-        //const auto& defaultRenderSurfaceDesc = context->GetDefaultRenderSurfaceDesc();
-        //auto fullResDimensions = defaultRenderSurfaceDesc.Dimensions();
-        //auto resourceProvider = context->GetResourceProvider();
+        const auto& defaultRenderSurfaceDesc = context->GetDefaultRenderSurfaceDesc();
+        
+        auto resourceProvider = context->GetResourceProvider();
+        auto dimensions = resourceProvider->GetTextureProperties(ResourceNames::CombinedShadingOverexposed).MipSize(mipLevel);
 
-        //BlurCBContent blurInputs{};
+        SeparableBlurCBContent blurInputs{};
 
-        //// Blur horizontal
-        //const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
-        //auto kernel = Foundation::Gaussian::Kernel1D(parameters.SmallBlurRadius, parameters.SmallBlurSigma);
-        //std::move(kernel.begin(), kernel.end(), blurInputs.Weights.begin());
+        // Blur horizontal
+        auto kernel = Foundation::Gaussian::Kernel1D(radius, sigma);
+        std::move(kernel.begin(), kernel.end(), blurInputs.Weights.begin());
 
-        //blurInputs.IsHorizontal = true;
-        //blurInputs.BlurRadius = parameters.SmallBlurRadius;
-        //blurInputs.ImageSize = { fullResDimensions.Width, fullResDimensions.Height };
-        //blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingOverexposedOutput);
-        //blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 0);
+        blurInputs.IsHorizontal = true;
+        blurInputs.BlurRadius = radius;
+        blurInputs.ImageSize = { dimensions.Width, dimensions.Height };
+        blurInputs.InputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::CombinedShadingOverexposed, mipLevel);
+        blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, mipLevel);
+        blurInputs.MipLevel = mipLevel;
 
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
-        //context->GetCommandRecorder()->Dispatch(fullResDimensions, { 256, 1 });
+        context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
+        context->GetCommandRecorder()->Dispatch(dimensions, { 256, 1 });
 
-        //// Blur vertical
-        //std::swap(fullResDimensions.Width, fullResDimensions.Height);
+        // Blur vertical
+        std::swap(dimensions.Width, dimensions.Height);
 
-        //blurInputs.IsHorizontal = false;
-        //blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 0);
-        //blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 0);
+        blurInputs.IsHorizontal = false;
+        blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, mipLevel);
+        blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, mipLevel);
 
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
-        //context->GetCommandRecorder()->Dispatch(fullResDimensions, { 256, 1 });
-    }
-
-    void BloomBlurRenderPass::DownscaleAndBlurHalfResolution(RenderContext<RenderPassContentMediator>* context)
-    {
-        //const auto& defaultRenderSurfaceDesc = context->GetDefaultRenderSurfaceDesc();
-        //auto halfResDimensions = defaultRenderSurfaceDesc.Dimensions().XYMultiplied(0.5);
-        //auto resourceProvider = context->GetResourceProvider();
-
-        //// Downscale
-        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomDownscaling);
-
-        //BloomDownscalingCBContent downscalingInputs{};
-        //downscalingInputs.FullResSourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 0);
-        //downscalingInputs.HalfResDestinationTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
-
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(downscalingInputs);
-        //context->GetCommandRecorder()->Dispatch(halfResDimensions, { 8, 8 });
-
-        //// Blur
-        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomBlur);
-
-        //BlurCBContent blurInputs{};
-
-        //// Blur horizontal
-        //const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
-        //auto kernel = Foundation::Gaussian::Kernel1D(parameters.MediumBlurRadius, parameters.MediumBlurSigma);
-        //std::move(kernel.begin(), kernel.end(), blurInputs.Weights.begin());
-
-        //blurInputs.IsHorizontal = true;
-        //blurInputs.BlurRadius = parameters.MediumBlurRadius;
-        //blurInputs.ImageSize = { halfResDimensions.Width, halfResDimensions.Height };
-        //blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
-        //blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 1);
-
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
-        //context->GetCommandRecorder()->Dispatch(halfResDimensions, { 256, 1 });
-
-        //// Blur vertical
-        //std::swap(halfResDimensions.Width, halfResDimensions.Height);
-
-        //blurInputs.IsHorizontal = false;
-        //blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 1);
-        //blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
-
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
-        //context->GetCommandRecorder()->Dispatch(halfResDimensions, { 256, 1 });
-    }
-
-    void BloomBlurRenderPass::DownscaleAndBlurQuadResolution(RenderContext<RenderPassContentMediator>* context)
-    {
-        //const auto& defaultRenderSurfaceDesc = context->GetDefaultRenderSurfaceDesc();
-        //auto quadResDimensions = defaultRenderSurfaceDesc.Dimensions().XYMultiplied(0.25);
-        //auto resourceProvider = context->GetResourceProvider();
-
-        //// Downscale
-        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomDownscaling);
-
-        //BloomDownscalingCBContent downscalingInputs{};
-        //downscalingInputs.FullResSourceTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 1);
-        //downscalingInputs.HalfResDestinationTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
-
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(downscalingInputs);
-        //context->GetCommandRecorder()->Dispatch(quadResDimensions, { 8, 8 });
-
-        //// Blur
-        //context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomBlur);
-
-        //BlurCBContent blurInputs{};
-
-        //// Blur horizontal
-        //const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
-        //auto kernel = Foundation::Gaussian::Kernel1D(parameters.LargeBlurRadius, parameters.LargeBlurSigma);
-        //std::move(kernel.begin(), kernel.end(), blurInputs.Weights.begin());
-
-        //blurInputs.IsHorizontal = true;
-        //blurInputs.BlurRadius = parameters.LargeBlurRadius;
-        //blurInputs.ImageSize = { quadResDimensions.Width, quadResDimensions.Height };
-        //blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
-        //blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 2);
-
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
-        //context->GetCommandRecorder()->Dispatch(quadResDimensions, { 256, 1 });
-
-        //// Blur vertical
-        //std::swap(quadResDimensions.Width, quadResDimensions.Height);
-
-        //blurInputs.IsHorizontal = false;
-        //blurInputs.InputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, 2);
-        //blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurOutput, 2);
-
-        //context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
-        //context->GetCommandRecorder()->Dispatch(quadResDimensions, { 256, 1 });
+        context->GetConstantsUpdater()->UpdateRootConstantBuffer(blurInputs);
+        context->GetCommandRecorder()->Dispatch(dimensions, { 256, 1 });
     }
 
 }

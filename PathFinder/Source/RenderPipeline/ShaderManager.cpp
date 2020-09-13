@@ -8,13 +8,14 @@
 namespace PathFinder
 {
 
-    ShaderManager::ShaderManager(const std::filesystem::path& executableFolder, bool useProjectDirShaders, bool buildDebugShaders, AftermathShaderDatabase* aftermathShaderDatabase)
+    ShaderManager::ShaderManager(const std::filesystem::path& executableFolder, bool useProjectDirShaders, bool buildDebugShaders, bool separatePDBFiles, AftermathShaderDatabase* aftermathShaderDatabase)
         : mUseProjectDirShaders{ useProjectDirShaders },
         mBuildDebugShaders{ buildDebugShaders },
+        mOutputPDBInSeparateFiles{ separatePDBFiles },
         mExecutableFolderPath{ executableFolder }, 
         mAftermathShaderDatabase{ aftermathShaderDatabase }
     {
-        mShaderSourceRootPath = mUseProjectDirShaders ?
+        mShaderSourceRootPath = mUseProjectDirShaders ? 
             std::filesystem::path{ std::string(PROJECT_DIR) + "Source\\RenderPipeline\\Shaders" } :
             mExecutableFolderPath / "Shaders";
 
@@ -108,7 +109,7 @@ namespace PathFinder
     {
         auto fullPath = mShaderSourceRootPath / relativePath;
 
-        HAL::ShaderCompiler::ShaderCompilationResult compilationResult = mCompiler.CompileShader(fullPath, pipelineStage, entryPoint, mBuildDebugShaders);
+        HAL::ShaderCompiler::ShaderCompilationResult compilationResult = mCompiler.CompileShader(fullPath, pipelineStage, entryPoint, mBuildDebugShaders, mOutputPDBInSeparateFiles);
         
         if (!compilationResult.CompiledShader.Blob())
         {
@@ -174,7 +175,7 @@ namespace PathFinder
     {
         auto fullPath = mShaderSourceRootPath / relativePath;
 
-        HAL::ShaderCompiler::LibraryCompilationResult compilationResult = mCompiler.CompileLibrary(fullPath, mBuildDebugShaders);
+        HAL::ShaderCompiler::LibraryCompilationResult compilationResult = mCompiler.CompileLibrary(fullPath, mBuildDebugShaders, mOutputPDBInSeparateFiles);
 
         if (!compilationResult.CompiledLibrary.Blob())
         {
@@ -246,6 +247,7 @@ namespace PathFinder
     void ShaderManager::FindAndAddEntryPointShaderFileForRecompilation(const std::string& modifiedFile)
     {
         const std::unordered_set<std::string>& entryPointFileNames = mIncludedFilePathToEntryPointFilePathAssociations[modifiedFile];
+
         for (auto& entryPointFilePath : entryPointFileNames)
         {
             mEntryPointShaderFilesToRecompile.insert(entryPointFilePath);

@@ -77,6 +77,7 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
     GroupMemoryBarrierWithGroupSync();
 
     outputTexture[DTid.xy].rgb = ClipVariance(GTid.xy, inputTexture[DTid.xy].rgb);
+    //outputTexture[DTid.xy].rgb = inputTexture[DTid.xy].rgb;
 }
 
 #endif

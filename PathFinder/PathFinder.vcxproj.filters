@@ -492,6 +492,15 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPostBlurRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\SMAABlendingWeightCalculationRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\SMAAEdgeDetectionRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\SMAANeighborhoodBlendingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2561,6 +2570,15 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPostBlurRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\SMAABlendingWeightCalculationRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\SMAAEdgeDetectionRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\SMAANeighborhoodBlendingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -3136,12 +3154,19 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserPostStabilization.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SeparableBlur.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientGuidedBlur.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserForwardProjection.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\RngSeedGeneration.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientConstruction.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\UAVClear.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientAtrousWaveletFIlter.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientAtrousWaveletFilter.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ThreadGroupTilingX.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BoxBlur.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserPostBlur.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\SMAA.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\SMAANeighborhoodBlending.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\SMAABlendingWeightCalculation.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\SMAAEdgeDetection.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\SMAACommon.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

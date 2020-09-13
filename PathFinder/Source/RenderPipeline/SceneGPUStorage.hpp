@@ -113,7 +113,12 @@ namespace PathFinder
         float NearPlane = 0.0f;
         float FarPlane = 0.0f;
         float ExposureValue100 = 0.0f;
-        uint32_t __Pad0;
+        float FoVH = 0.0f;
+        // 16 byte boundary
+        float FoVV = 0.0f;
+        float FoVHTan = 0.0f;
+        float FoVVTan = 0.0f;
+        float AspectRatio = 0;
         // 16 byte boundary
     };
 

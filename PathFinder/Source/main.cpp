@@ -22,7 +22,11 @@
 #include "RenderPipeline/RenderPasses/DenoiserGradientFilteringRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserHistoryFixRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserPostStabilizationRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserPostBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SpecularDenoiserRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/SMAAEdgeDetectionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/SMAABlendingWeightCalculationRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/SMAANeighborhoodBlendingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/ToneMappingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DisplacementDistanceMapRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/UIRenderPass.hpp"
@@ -100,10 +104,14 @@ int main(int argc, char** argv)
     auto denoiserForwardProjectionPass = std::make_unique<PathFinder::DenoiserForwardProjectionRenderPass>();
     auto denoiserHistoryFixPass = std::make_unique<PathFinder::DenoiserHistoryFixRenderPass>();
     auto denoiserPostStabilizationPass = std::make_unique<PathFinder::DenoiserPostStabilizationRenderPass>();
+    auto denoiserPostBlurPass = std::make_unique<PathFinder::DenoiserPostBlurRenderPass>();
     auto specularDenoiserPass = std::make_unique<PathFinder::SpecularDenoiserRenderPass>();
     auto bloomBlurPass = std::make_unique<PathFinder::BloomBlurRenderPass>();
     auto bloomCompositionPass = std::make_unique<PathFinder::BloomCompositionRenderPass>();
     auto toneMappingPass = std::make_unique<PathFinder::ToneMappingRenderPass>();
+    auto SMAAEdgeDetectionPass = std::make_unique<PathFinder::SMAAEdgeDetectionRenderPass>();
+    auto SMAABlendingWeightCalculationPass = std::make_unique<PathFinder::SMAABlendingWeightCalculationRenderPass>();
+    auto SMAANeighborhoodBlendingPass = std::make_unique<PathFinder::SMAANeighborhoodBlendingRenderPass>();
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
     auto uiPass = std::make_unique<PathFinder::UIRenderPass>();
 
@@ -121,23 +129,21 @@ int main(int argc, char** argv)
     engine.AddRenderPass(denoiserHistoryFixPass.get());
     engine.AddRenderPass(specularDenoiserPass.get());
     engine.AddRenderPass(denoiserPostStabilizationPass.get());
-    //engine.AddRenderPass(bloomBlurPass.get());
-    //engine.AddRenderPass(bloomCompositionPass.get());
+    engine.AddRenderPass(denoiserPostBlurPass.get());
+    engine.AddRenderPass(bloomBlurPass.get());
+    engine.AddRenderPass(bloomCompositionPass.get());
+    engine.AddRenderPass(SMAAEdgeDetectionPass.get());
+    engine.AddRenderPass(SMAABlendingWeightCalculationPass.get());
+    engine.AddRenderPass(SMAANeighborhoodBlendingPass.get());
     engine.AddRenderPass(toneMappingPass.get());
     engine.AddRenderPass(backBufferOutputPass.get());
     engine.AddRenderPass(uiPass.get());
 
-   /* auto sphereLight0 = scene.EmplaceSphericalLight();
-    sphereLight0->SetRadius(7);
-    sphereLight0->SetPosition({ 2.5, 0.0, 0.0 });
-    sphereLight0->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
-    sphereLight0->SetLuminousPower(50000);*/
-
-    //auto sphereLight1 = scene.EmplaceSphericalLight();
-    //sphereLight1->SetRadius(2);
-    //sphereLight1->SetPosition({ -2.5, 0.0, 0.0 });
-    //sphereLight1->SetColor({ 201.0 / 255, 226.0 / 255, 255.0 / 255 });
-    //sphereLight1->SetLuminousPower(50000);
+   /* auto sphereLight1 = scene.EmplaceSphericalLight();
+    sphereLight1->SetRadius(2);
+    sphereLight1->SetPosition({ -3.5, 2.0, 0.0 });
+    sphereLight1->SetColor({ 255.0 / 255, 241.0 / 255, 224.1 / 255 });
+    sphereLight1->SetLuminousPower(200000);*/
 
     /*auto sphereLight2 = scene.EmplaceSphericalLight();
     sphereLight2->SetRadius(2);
@@ -151,7 +157,7 @@ int main(int argc, char** argv)
     sphereLight3->SetColor({ 201.0 / 255, 226.0 / 255, 50.0 / 255 });
     sphereLight3->SetLuminousPower(50000);*/
 
-   /* auto flatLight0 = scene.EmplaceRectangularLight();
+    auto flatLight0 = scene.EmplaceRectangularLight();
     flatLight0->SetWidth(2);
     flatLight0->SetHeight(2);
     flatLight0->SetPosition({ 7.5, 0.0, 0.0 });
@@ -165,23 +171,23 @@ int main(int argc, char** argv)
     flatLight2->SetPosition({ -7.5, 0.0, 0.0 });
     flatLight2->SetNormal({ 0.0, .0, 1.0 });
     flatLight2->SetColor({ 201.0 / 255, 125.0 / 255, 255.0 / 255 });
-    flatLight2->SetLuminousPower(5000);*/
+    flatLight2->SetLuminousPower(5000);
 
-  /*  auto flatLight1 = scene.EmplaceRectangularLight();
+    auto flatLight1 = scene.EmplaceRectangularLight();
     flatLight1->SetWidth(2);
-    flatLight1->SetHeight(2);
-    flatLight1->SetPosition({ -2.5, 0.0, 0.0 });
-    flatLight1->SetNormal({ 0.0, .0, -1.0 });
-    flatLight1->SetColor({ 200.0 / 255, 50.0 / 255, 50.0 / 255 });
-    flatLight1->SetLuminousPower(10000);*/
+    flatLight1->SetHeight(5);
+    flatLight1->SetPosition({ 2.5, 2.0, 0.0 });
+    flatLight1->SetNormal({ 0.0, -1.0, -1.0 });
+    flatLight1->SetColor({ 201.0 / 255, 226.0 / 255.0, 255.0 / 255 });
+    flatLight1->SetLuminousPower(20000);
 
     auto flatLight3 = scene.EmplaceRectangularLight();
-    flatLight3->SetWidth(4);
-    flatLight3->SetHeight(4);
+    flatLight3->SetWidth(2);
+    flatLight3->SetHeight(1);
     flatLight3->SetPosition({ 0, 2, 0.0 });
     flatLight3->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, -1.0 }));
-    flatLight3->SetColor({ 255 / 255, 255 / 255, 255 / 255 });
-    flatLight3->SetLuminousPower(10000);
+    flatLight3->SetColor({ 255.0 / 255, 147.0 / 255, 41.0 / 255 });
+    flatLight3->SetLuminousPower(20000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
@@ -189,13 +195,6 @@ int main(int argc, char** argv)
         "/MediaResources/Textures/Metal07/Metal07_rgh.dds",
         "/MediaResources/Textures/Metal07/Metal07_met.dds",
         "/MediaResources/Textures/Metal07/Metal07_disp.dds"));
-
-    //PathFinder::Material& harshBricksMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
-    //    "/MediaResources/Textures/HarshBricks/harshbricks-albedo.dds",
-    //    "/MediaResources/Textures/HarshBricks/harshbricks-normal.dds", 
-    //    "/MediaResources/Textures/HarshBricks/harshbricks-roughness.dds",
-    //    "/MediaResources/Textures/HarshBricks/harshbricks-metalness.dds", 
-    //    "/MediaResources/Textures/HarshBricks/harshbricks-height.dds"));
 
     PathFinder::Material& concrete19Material = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Concrete19/Concrete19_col.dds",
@@ -216,32 +215,42 @@ int main(int argc, char** argv)
     planeInstance.SetTransformation(t);
 
     t = cubeInstance.Transformation();
-    //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-    t.Translation = glm::vec3{ 0.0, 1.0, -4.0 };
+    t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+    t.Translation = glm::vec3{ 0.0, 0.8, -4.0 };
     cubeInstance.SetTransformation(t);
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(500);
-    camera.SetNearPlane(0.1);
+    camera.SetNearPlane(1);
     camera.MoveTo({ 0.0, 2.0f, -25.f });
     camera.LookAt({ 0.f, 4.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
     camera.SetAperture(0.8);
-    camera.SetFilmSpeed(400);
+    camera.SetFilmSpeed(200);
     camera.SetShutterTime(1.0 / 125.0);
 
     input.SetInvertVerticalDelta(true);
 
     choreograph::Timeline animationTimeline{};
     choreograph::Output<float> rotationOutput;
+    choreograph::Output<float> lightSizeOutput;
 
-    choreograph::PhraseRef<float> rotationPhrase = choreograph::makeRamp(0.0f, 2.0f * 3.1415f, 1.0f);
+    choreograph::PhraseRef<float> rotationPhrase = choreograph::makeRamp(0.0f, 2.0f * 3.1415f, 1.f);
     animationTimeline.apply(&rotationOutput, rotationPhrase).finishFn(
         [&m = *rotationOutput.inputPtr()]
         {
             m.resetTime();
         }
     );
+
+    choreograph::PhraseRef<float> lightSizePhrase = choreograph::makeRamp(1.0f, 5.0f, 1.f);
+    animationTimeline.apply(&lightSizeOutput, lightSizePhrase).finishFn(
+        [&m = *lightSizeOutput.inputPtr()]
+        {
+            m.setPlaybackSpeed(m.getPlaybackSpeed() * -1);
+            m.resetTime();
+        }
+        );
 
     // ---------------------------------------------------------------------------- //
 
@@ -261,8 +270,10 @@ int main(int argc, char** argv)
 
     engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
-        t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 0.f, 1.f, 1.f }));
-        cubeInstance.SetTransformation(t);
+        t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 1.f, 0.f, 1.f }));
+        //cubeInstance.SetTransformation(t);
+    /*    flatLight3->SetWidth(lightSizeOutput.value());
+        flatLight3->SetHeight(lightSizeOutput.value());*/
 
         uiStorage.StartNewFrame();
         //ImGui::ShowDemoWindow();

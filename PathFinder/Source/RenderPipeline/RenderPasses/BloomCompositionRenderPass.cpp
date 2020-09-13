@@ -16,14 +16,14 @@ namespace PathFinder
 
     void BloomCompositionRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        //scheduler->ReadTexture(ResourceNames::DeferredLightingFullOutput);
+        scheduler->ReadTexture(ResourceNames::CombinedShading);
         scheduler->ReadTexture(ResourceNames::BloomBlurOutput);
         scheduler->NewTexture(ResourceNames::BloomCompositionOutput);
     }
      
     void BloomCompositionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-      /*  context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomComposition);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::BloomComposition);
 
         auto resourceProvider = context->GetResourceProvider();
         auto dimensions = context->GetDefaultRenderSurfaceDesc().Dimensions();
@@ -32,7 +32,7 @@ namespace PathFinder
 
         BloomCompositionCBContent inputs{};
         inputs.InverseTextureDimensions = { 1.0f / dimensions.Width, 1.0f / dimensions.Height };
-        inputs.DeferredLightingOutputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingFullOutput);
+        inputs.CombinedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::CombinedShading);
         inputs.BloomBlurOutputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::BloomBlurOutput);
         inputs.CompositionOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomCompositionOutput);
         inputs.SmallBloomWeight = parameters.SmallBloomWeight;
@@ -40,7 +40,7 @@ namespace PathFinder
         inputs.LargeBloomWeight = parameters.LargeBloomWeight;
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(inputs);
-        context->GetCommandRecorder()->Dispatch(dimensions, { 32, 32 });*/
+        context->GetCommandRecorder()->Dispatch(dimensions, { 32, 32 });
     }
 
 }

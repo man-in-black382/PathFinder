@@ -6,6 +6,9 @@ namespace PathFinder
     DownsamplingRenderSubPass::DownsamplingRenderSubPass(const std::string& name, uint64_t invocationIndex)
         : RenderSubPass(CombineNameAndInvocation(name, invocationIndex)) {}
 
+    DownsamplingRenderSubPass::DownsamplingRenderSubPass(const std::string& name)
+        : RenderSubPass(name) {}
+
     void DownsamplingRenderSubPass::ScheduleResources(ResourceScheduler* scheduler)
     {
         for (const DownsamplingInvocationInputs& inputs : mInvocationInputs)

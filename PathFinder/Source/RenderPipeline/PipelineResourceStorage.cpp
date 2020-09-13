@@ -6,6 +6,8 @@
 #include "../Foundation/Assert.hpp"
 #include "../Foundation/STDHelpers.hpp"
 
+#include "RenderPasses/PipelineNames.hpp"
+
 namespace PathFinder
 {
 
@@ -184,6 +186,17 @@ namespace PathFinder
 
         for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
         {
+            // Accumulate expected states for resource from previous frame to avoid reallocations 
+            // when resource's states ping-pong between frames or change frequently for other reasons.
+            auto prevResourceDataIndexIt = mPreviousFrameResourceMap->find(resourceData.ResourceName());
+            if (prevResourceDataIndexIt != mPreviousFrameResourceMap->end())
+            {
+                PipelineResourceStorageResource& previousResourceData = mPreviousFrameResources->at(prevResourceDataIndexIt->second);
+                resourceData.SchedulingInfo.AddExpectedStates(previousResourceData.SchedulingInfo.ExpectedStates());
+            }
+
+            resourceData.SchedulingInfo.ApplyExpectedStates();
+
             if (resourceData.SchedulingInfo.CanBeAliased)
             {
                 joinAliasingLifetimes(resourceData, resourceData.SchedulingInfo.ResourceName());
@@ -224,8 +237,8 @@ namespace PathFinder
                 std::visit(Foundation::MakeVisitor(
                     [&resourceData, heap, this](const HAL::TextureProperties& textureProps)
                     {
-                        resourceData.Texture = resourceData.SchedulingInfo.CanBeAliased ?
-                            mResourceProducer->NewTexture(textureProps, *heap, resourceData.SchedulingInfo.HeapOffset) :
+                        resourceData.Texture = resourceData.SchedulingInfo.CanBeAliased  ?
+                            mResourceProducer->NewTexture(textureProps/*, *heap, resourceData.SchedulingInfo.HeapOffset*/) :
                             mResourceProducer->NewTexture(textureProps);
 
                         resourceData.Texture->SetDebugName(resourceData.ResourceName().ToString());
@@ -317,16 +330,6 @@ namespace PathFinder
     {
         for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
         {
-            // Accumulate expected states for resource from previous frame to avoid reallocations 
-            // when resource's states ping-pong between frames or change frequently for other reasons.
-            auto prevResourceDataIndexIt = mPreviousFrameResourceMap->find(resourceData.ResourceName());
-            if (prevResourceDataIndexIt != mPreviousFrameResourceMap->end())
-            {
-                PipelineResourceStorageResource& previousResourceData = mPreviousFrameResources->at(prevResourceDataIndexIt->second);
-                resourceData.SchedulingInfo.AddExpectedStates(previousResourceData.SchedulingInfo.ExpectedStates());
-            }
-
-            resourceData.SchedulingInfo.ApplyExpectedStates();
             PipelineResourceStorageResource::DiffEntry diffEntry = resourceData.GetDiffEntry();
             mCurrentFrameDiffEntries->push_back(diffEntry);
         }

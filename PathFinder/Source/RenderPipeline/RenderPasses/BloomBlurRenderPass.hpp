@@ -5,17 +5,13 @@
 
 #include "BlurCBContent.hpp"
 #include "PipelineNames.hpp"
+#include "DownsamplingHelper.hpp"
+#include "DownsamplingRenderSubPass.hpp"
 
 #include <glm/mat4x4.hpp>
 
 namespace PathFinder
 {
-
-    struct BloomDownscalingCBContent
-    {
-        uint32_t FullResSourceTexIdx;
-        uint32_t HalfResDestinationTexIdx;
-    };
 
     class BloomBlurRenderPass : public RenderPass<RenderPassContentMediator>
     { 
@@ -23,14 +19,14 @@ namespace PathFinder
         BloomBlurRenderPass();
         ~BloomBlurRenderPass() = default;
 
-        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;
+        virtual void ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler) override;
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
 
     private:
-        void BlurFullResolution(RenderContext<RenderPassContentMediator>* context);
-        void DownscaleAndBlurHalfResolution(RenderContext<RenderPassContentMediator>* context);
-        void DownscaleAndBlurQuadResolution(RenderContext<RenderPassContentMediator>* context);
+        void Blur(RenderContext<RenderPassContentMediator>* context, uint8_t mipLevel, uint64_t radius, float sigma);
+
+        std::unique_ptr<DownsamplingRenderSubPass> mMipGenerationSubPass;
     };
 
 }

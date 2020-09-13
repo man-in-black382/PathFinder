@@ -12,6 +12,7 @@ namespace PathFinder
 
     struct DenoiserReprojectionCBContent
     {
+        glm::uvec2 DispatchGroupCount;
         uint32_t GBufferNormalRoughnessTexIdx;
         uint32_t DepthTexIdx;
         uint32_t MotionTexIdx;

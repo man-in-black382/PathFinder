@@ -18,6 +18,7 @@ struct PassCBData
     uint BlurRadius;
     uint InputTexIdx;
     uint OutputTexIdx;
+    uint MipLevel;
 };
 
 #define PassDataType PassCBData
@@ -45,10 +46,10 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         // Source texture for horizontal blur comes as SRV
         Texture2D source = Textures2D[PassDataCB.InputTexIdx];
 
-        gCache[loadStoreCoords.StoreCoord0] = source[loadStoreCoords.LoadCoord0].rgb;
+        gCache[loadStoreCoords.StoreCoord0] = source.mips[PassDataCB.MipLevel][loadStoreCoords.LoadCoord0].rgb;
 
         if (loadStoreCoords.IsLoadStore1Required)
-            gCache[loadStoreCoords.StoreCoord1] = source[loadStoreCoords.LoadCoord1].rgb;
+            gCache[loadStoreCoords.StoreCoord1] = source.mips[PassDataCB.MipLevel][loadStoreCoords.LoadCoord1].rgb;
     }
     else
     {

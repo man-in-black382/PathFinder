@@ -51,7 +51,10 @@ namespace PathFinder
         auto previousFrameIndex = (context->FrameNumber() - 1) % 2;
         auto frameIndex = context->FrameNumber() % 2;
 
+        auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+
         DenoiserReprojectionCBContent cbContent{};
+        cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
         cbContent.GBufferNormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
         cbContent.DepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
@@ -68,7 +71,7 @@ namespace PathFinder
         //cbContent.ShadingGradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradient);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+        context->GetCommandRecorder()->Dispatch(groupCount.Width, groupCount.Height);
     }
 
 }

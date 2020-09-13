@@ -84,12 +84,12 @@ float2 Refit0to1ValuesToTexelCenter(float2 values, float2 textureSize)
 
 float2 TexelIndexToUV(uint2 index, uint2 textureSize)
 {
-    return float2(index) / textureSize;
+    return float2(index + 0.5) / textureSize;
 }
 
 float3 VoxelIndexToUVW(uint3 index, uint3 textureSize)
 {
-    return float3(index) / textureSize;
+    return float3(index + 0.5) / textureSize;
 }
 
 uint2 UVToTexelIndex(float2 uv, uint2 textureSize)

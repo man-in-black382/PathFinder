@@ -58,6 +58,7 @@ namespace PathFinder
             commandLineParser.ExecutableFolderPath(),
             commandLineParser.ShouldUseShadersFromProjectFolder(),
             commandLineParser.ShouldBuildDebugShaders(),
+            commandLineParser.ShouldEnableAftermath(),
             &mAftermathCrashTracker->ShaderDatabase());
 
         mPipelineStateManager = std::make_unique<PipelineStateManager>(

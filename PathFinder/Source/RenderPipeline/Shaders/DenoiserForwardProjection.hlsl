@@ -5,9 +5,11 @@
 #include "Random.hlsl"
 #include "Utils.hlsl"
 #include "DenoiserCommon.hlsl"
+#include "ThreadGroupTilingX.hlsl"
 
 struct PassData
 {
+    uint2 DispatchGroupCount;
     uint GBufferViewDepthPrevTexIdx;
     uint StochasticShadowedShadingPrevTexIdx;
     uint StochasticUnshadowedShadingPrevTexIdx;
@@ -28,9 +30,9 @@ static const int GroupDimensionSize = 16;
 // https://github.com/NVIDIA/Q2RTX/blob/master/src/refresh/vkpt/shader/asvgf_fwd_project.comp
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
-void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
+void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 {
-    uint2 prevDownsampledPixelIdx = dispatchThreadID.xy;
+    uint2 prevDownsampledPixelIdx = ThreadGroupTilingX(PassDataCB.DispatchGroupCount, GroupDimensionSize.xx, 16, groupThreadID.xy, groupID.xy);
     uint2 prevPixelIdx = prevDownsampledPixelIdx * GradientUpscaleCoefficient;
 
     Texture2D GBufferViewDepthPrevTexture = Textures2D[PassDataCB.GBufferViewDepthPrevTexIdx];
@@ -112,10 +114,16 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
        
     // Pixel coordinate of forward projected sample 
     float prevViewDepth = GBufferViewDepthPrevTexture[prevPixelIdx].r;
-    float prevNDCDepth = HyperbolizeDepth(prevViewDepth, FrameDataCB.PreviousFrameCamera);
+    float prevDepth = HyperbolizeDepth(prevViewDepth, FrameDataCB.PreviousFrameCamera);
+
+    if (prevViewDepth > FrameDataCB.PreviousFrameCamera.FarPlane)
+    {
+        return;
+    }
+
     float2 prevUV = TexelIndexToUV(prevPixelIdx, GlobalDataCB.PipelineRTResolution);
-    float3 prevWorldPos = ReconstructWorldSpacePosition(prevNDCDepth, prevUV, FrameDataCB.PreviousFrameCamera);
-    float3 currNDCPos = ViewProjectPoint(prevWorldPos, FrameDataCB.CurrentFrameCamera);
+    float3 prevWorldPos = NDCDepthToWorldPosition(prevDepth, prevUV, FrameDataCB.PreviousFrameCamera);
+    float3 currNDCPos = ViewProject(prevWorldPos, FrameDataCB.CurrentFrameCamera);
     float2 currUV = NDCToUV(currNDCPos);
     uint2 currPixelIdx = UVToTexelIndex(currUV, GlobalDataCB.PipelineRTResolution);
 
@@ -136,8 +144,8 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         return;
     }
 
-    //rngSeedsOutputTexture[currPixelIdx] = rngSeedsPrevTexture[prevPixelIdx];
-    gradientOutputTexture[currDownsampledPixelIdx].rg = prevLuminances;
+    rngSeedsOutputTexture[currPixelIdx] = rngSeedsPrevTexture[prevPixelIdx];
+    gradientOutputTexture[currDownsampledPixelIdx].rg = prevLuminances.rg;
 }
 
 #endif

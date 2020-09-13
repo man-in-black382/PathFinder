@@ -67,7 +67,7 @@ namespace HAL
     ULONG ShaderFileReader::Release()
     {
         ULONG ulRefCount = InterlockedDecrement(&mRefCount);
-        if (mRefCount == 0) delete this;
+        //if (mRefCount == 0) delete this; // Crashes, even though it's from MS docs 
         return ulRefCount;
     }
 
@@ -79,17 +79,17 @@ namespace HAL
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(mCompiler.GetAddressOf()))); 
     }
 
-    ShaderCompiler::ShaderCompilationResult ShaderCompiler::CompileShader(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild)
+    ShaderCompiler::ShaderCompilationResult ShaderCompiler::CompileShader(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild, bool separatePDB)
     {
-        BlobCompilationResult blobCompilationResult = CompileBlob(path, ProfileString(stage, Profile::P6_3), entryPoint, debugBuild);
+        BlobCompilationResult blobCompilationResult = CompileBlob(path, ProfileString(stage, Profile::P6_3), entryPoint, debugBuild, separatePDB);
         ShaderCompilationResult shaderCompilationResult{ Shader{ blobCompilationResult.Blob, blobCompilationResult.PDBBlob, entryPoint, stage }, blobCompilationResult.CompiledFileRelativePaths };
         shaderCompilationResult.CompiledShader.SetDebugName(blobCompilationResult.DebugName);
         return shaderCompilationResult;
     }
 
-    ShaderCompiler::LibraryCompilationResult ShaderCompiler::CompileLibrary(const std::filesystem::path& path, bool debugBuild)
+    ShaderCompiler::LibraryCompilationResult ShaderCompiler::CompileLibrary(const std::filesystem::path& path, bool debugBuild, bool separatePDB)
     {
-        BlobCompilationResult blobCompilationResult = CompileBlob(path, LibProfileString(Profile::P6_3), "", debugBuild);
+        BlobCompilationResult blobCompilationResult = CompileBlob(path, LibProfileString(Profile::P6_3), "", debugBuild, separatePDB);
         LibraryCompilationResult libraryCompilationResult{ Library{ blobCompilationResult.Blob, blobCompilationResult.PDBBlob }, blobCompilationResult.CompiledFileRelativePaths };
         libraryCompilationResult.CompiledLibrary.SetDebugName(blobCompilationResult.DebugName);
         return libraryCompilationResult;
@@ -130,7 +130,7 @@ namespace HAL
         }
     }
 
-    ShaderCompiler::BlobCompilationResult ShaderCompiler::CompileBlob(const std::filesystem::path& path, const std::string& profileString, const std::string& entryPoint, bool debugBuild)
+    ShaderCompiler::BlobCompilationResult ShaderCompiler::CompileBlob(const std::filesystem::path& path, const std::string& profileString, const std::string& entryPoint, bool debugBuild, bool separatePDB)
     {
         assert_format(std::filesystem::exists(path), "Shader file ", path.filename(), " doesn't exist");
 
@@ -146,8 +146,10 @@ namespace HAL
             arguments.push_back(L"/Zi");
             arguments.push_back(L"/Od");
 
-            // Produce a smaller shader without duplicated debug information
-            arguments.push_back(L"/Qstrip_debug"); 
+            if (separatePDB)
+            {
+                arguments.push_back(L"/Qstrip_debug");
+            }
         }
 
         std::vector<LPCWSTR> argumentPtrs;
@@ -167,7 +169,7 @@ namespace HAL
 
         // Note: when compiling libraries, entry point and profile are ignored
 
-        if (debugBuild)
+        if (debugBuild && separatePDB)
         {
             mCompiler->CompileWithDebug(
                 sourceBlob.Get(),                   // Program text
@@ -179,7 +181,7 @@ namespace HAL
                 nullptr, 0,                         // Name/value defines and their count
                 &reader,                            // Handler for #include directives
                 result.GetAddressOf(),              // Compiler output status, buffer, and errors
-                &suggestedDebugName,                            // Suggested file name for debug blob.
+                &suggestedDebugName,                // Suggested file name for debug blob.
                 pdbBlob.GetAddressOf());            // Debug info blob
         }
         else

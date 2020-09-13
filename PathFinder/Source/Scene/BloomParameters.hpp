@@ -7,12 +7,12 @@ namespace PathFinder
 
     struct BloomParameters
     {
-        uint32_t SmallBlurRadius = 12;
-        uint32_t SmallBlurSigma = 4;
-        uint32_t MediumBlurRadius = 28;
-        uint32_t MediumBlurSigma = 8;
-        uint32_t LargeBlurRadius = 56;
-        uint32_t LargeBlurSigma = 16;
+        uint32_t SmallBlurRadius = 6;
+        uint32_t SmallBlurSigma = 1.0;
+        uint32_t MediumBlurRadius = 20;
+        uint32_t MediumBlurSigma = 2.0;
+        uint32_t LargeBlurRadius = 60;
+        uint32_t LargeBlurSigma = 15.0;
 
         uint32_t SmallBloomWeight = 2;
         uint32_t MediumBloomWeight = 1;

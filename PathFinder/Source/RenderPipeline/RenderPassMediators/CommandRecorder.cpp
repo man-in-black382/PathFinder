@@ -55,11 +55,8 @@ namespace PathFinder
 
     void CommandRecorder::Dispatch(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize)
     {
-        float x = std::max(ceilf((float)viewportDimensions.Width / groupSize.Width), 1.f);
-        float y = std::max(ceilf((float)viewportDimensions.Height / groupSize.Height), 1.f);
-        float z = std::max(ceilf((float)viewportDimensions.Depth / groupSize.Depth), 1.f);
-        
-        Dispatch(x, y, z);
+        auto dims = DispatchGroupCount(viewportDimensions, groupSize);
+        Dispatch(dims.Width, dims.Height, dims.Depth);
     }
 
     void CommandRecorder::DispatchRays(const Geometry::Dimensions& dispatchDimensions)
@@ -75,6 +72,15 @@ namespace PathFinder
     void CommandRecorder::BindExternalBuffer(const Memory::Buffer& buffer, uint16_t shaderRegister, uint16_t registerSpace, HAL::ShaderRegister registerType)
     {
         mGraphicsDevice->BindExternalBuffer(mPassGraph->Nodes()[mGraphNodeIndex], buffer, shaderRegister, registerSpace, registerType);
+    }
+
+    Geometry::Dimensions CommandRecorder::DispatchGroupCount(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize)
+    {
+        uint64_t x = std::max(ceilf((float)viewportDimensions.Width / groupSize.Width), 1.f);
+        uint64_t y = std::max(ceilf((float)viewportDimensions.Height / groupSize.Height), 1.f);
+        uint64_t z = std::max(ceilf((float)viewportDimensions.Depth / groupSize.Depth), 1.f);
+
+        return { x,y,z };
     }
 
 }

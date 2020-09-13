@@ -178,6 +178,8 @@ namespace PathFinder
         template <class CommandQueueT, class CommandListT>
         void ExecuteCommandListBatch(CommandListBatch& batch, HAL::CommandQueue& queue);
 
+        void CheckSignatureAndStatePresense(const PassHelpers& passHelpers) const;
+
         Memory::PoolDescriptorAllocator* mDescriptorAllocator;
         Memory::PoolCommandListAllocator* mCommandListAllocator;
         Memory::ResourceStateTracker* mResourceStateTracker;

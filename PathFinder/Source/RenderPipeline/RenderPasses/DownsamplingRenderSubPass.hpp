@@ -15,6 +15,7 @@ namespace PathFinder
     { 
     public: 
         DownsamplingRenderSubPass(const std::string& name, uint64_t invocationIndex);
+        DownsamplingRenderSubPass(const std::string& name);
         ~DownsamplingRenderSubPass() = default;
 
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;
@@ -26,7 +27,6 @@ namespace PathFinder
         Foundation::Name CombineNameAndInvocation(const std::string& name, uint64_t invocationIndex) const;
 
         std::vector<DownsamplingInvocationInputs> mInvocationInputs;
-        //void GenerateMips(Foundation::Name resourceName, RenderContext<RenderPassContentMediator>* context, DownsamplingCBContent::Filter filter, DownsamplingStrategy strategy);
     };
 
 }

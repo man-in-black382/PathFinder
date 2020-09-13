@@ -1,4 +1,5 @@
 #include "DenoiserGradientFilteringRenderPass.hpp"
+#include "UAVClearHelper.hpp"
 
 #include "../Foundation/Gaussian.hpp"
 
@@ -18,8 +19,8 @@ namespace PathFinder
 
     void DenoiserGradientFilteringRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
-        scheduler->AliasAndWriteTexture(ResourceNames::StochasticShadingGradient, ResourceNames::StochasticShadingGradientFilteredIntermediate);
-        scheduler->NewTexture(ResourceNames::StochasticShadingGradientFiltered, ResourceScheduler::NewTextureProperties{ ResourceNames::StochasticShadingGradient });
+        scheduler->AliasAndWriteTexture(ResourceNames::DenoiserPrimaryGradient, ResourceNames::DenoiserPrimaryGradientFilteredIntermediate);
+        scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradientFiltered, ResourceScheduler::NewTextureProperties{ ResourceNames::DenoiserPrimaryGradientInputs });
     }
      
     void DenoiserGradientFilteringRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -28,9 +29,9 @@ namespace PathFinder
 
         auto resourceProvider = context->GetResourceProvider();
 
-        const Geometry::Dimensions& outputDimensions = resourceProvider->GetTextureProperties(ResourceNames::StochasticShadingGradientFiltered).Dimensions;
-        auto inputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradientFilteredIntermediate);
-        auto outputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradientFiltered);
+        const Geometry::Dimensions& outputDimensions = resourceProvider->GetTextureProperties(ResourceNames::DenoiserPrimaryGradientFiltered).Dimensions;
+        auto inputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserPrimaryGradientFilteredIntermediate);
+        auto outputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserPrimaryGradientFiltered);
 
         DenoiserGradientFilteringCBContent cbContent{};
         cbContent.ImageSize = { outputDimensions.Width, outputDimensions.Height };

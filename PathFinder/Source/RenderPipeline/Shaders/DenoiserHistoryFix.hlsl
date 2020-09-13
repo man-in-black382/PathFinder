@@ -15,7 +15,6 @@ struct PassData
     uint UnshadowedShadingFixedTexIdx;
     uint ShadowedShadingPreBlurredTexIdx;
     uint UnshadowedShadingPreBlurredTexIdx;
-    uint GradientTexIdx;
 };
 
 #define PassDataType PassData
@@ -98,14 +97,12 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
     Texture2D accumulationCounterTexture = Textures2D[PassDataCB.AccumulationCounterTexIdx];
     Texture2D shadowedShadingPreBlurred = Textures2D[PassDataCB.ShadowedShadingPreBlurredTexIdx];
     Texture2D unshadowedShadingPreBlurred = Textures2D[PassDataCB.UnshadowedShadingPreBlurredTexIdx];
-    Texture2D gradientTexture = Textures2D[PassDataCB.GradientTexIdx];
 
     RWTexture2D<float4> shadowedShadingFixedTexture = RW_Float4_Textures2D[PassDataCB.ShadowedShadingFixedTexIdx];
     RWTexture2D<float4> unshadowedShadingFixedTexture = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingFixedTexIdx];
 
     float accumulatedFramesCount = accumulationCounterTexture[pixelIndex].r;
     float normAccumulatedFrameCount = accumulatedFramesCount * MaxFrameCountWithHistoryFixInv;
-    float2 gradients = gradientTexture[pixelIndex * GradientUpscaleCoefficientInv].rg;
 
     // Separate weights for shadowed and unshadowed stochastic shading textures
     float2 historyWeights = normAccumulatedFrameCount.xx;

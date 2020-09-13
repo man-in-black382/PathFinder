@@ -31,7 +31,7 @@ namespace PathFinder
 
         scheduler->NewTexture(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex], gradientSamplePositionsProps);
         scheduler->NewTexture(ResourceNames::DenoiserGradientSamplePositions[previousFrameIndex], ResourceScheduler::MipSet::Empty(), gradientSamplePositionsProps);
-        scheduler->NewTexture(ResourceNames::StochasticShadingGradientInputs, gradientProps);
+        scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradientInputs, gradientProps);
 
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[previousFrameIndex]);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
@@ -48,11 +48,15 @@ namespace PathFinder
         auto currentFrameIndex = context->FrameNumber() % 2;
         auto previousFrameIndex = (context->FrameNumber() - 1) % 2;
 
+        ClearUAVFloat(context, ResourceNames::DenoiserPrimaryGradientInputs, glm::vec4{ -1.0f });
         ClearUAVUInt(context, ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex], glm::uvec4{ 0 });
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserForwardProjection);
 
+        auto groupCount = CommandRecorder::DispatchGroupCount(resourceProvider->GetTextureProperties(ResourceNames::DenoiserPrimaryGradientInputs).Dimensions, { 16, 16 });
+
         DenoiserForwardProjectionCBContent cbContent{};
+        cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
         cbContent.GBufferViewDepthPrevTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[previousFrameIndex]);
         cbContent.StochasticShadowedShadingPrevTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
         cbContent.StochasticUnshadowedShadingPrevTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
@@ -60,13 +64,11 @@ namespace PathFinder
         cbContent.GradientSamplePositionsPrevTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserGradientSamplePositions[previousFrameIndex]);
         cbContent.StochasticRngSeedsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::RngSeedsCorrelated);
         cbContent.GradientSamplePositionsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
-        cbContent.GradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradientInputs);
+        cbContent.GradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserPrimaryGradientInputs);
         cbContent.FrameNumber = context->FrameNumber();
 
-        const Geometry::Dimensions& outputDimensions = resourceProvider->GetTextureProperties(ResourceNames::StochasticShadingGradientInputs).Dimensions;
-
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(outputDimensions, { 16, 16 });
+        context->GetCommandRecorder()->Dispatch(groupCount.Width, groupCount.Height);
     }
 
 }

@@ -17,6 +17,12 @@ namespace PathFinder
             return primitive;
         }
 
+        inline static const DrawablePrimitive& Triangle()
+        {
+            static DrawablePrimitive primitive{ 3, HAL::PrimitiveTopology::TriangleStrip };
+            return primitive;
+        }
+
         inline auto VertexCount() const { return mVertexCount; }
         inline auto Topology() const { return mTopology; }
 

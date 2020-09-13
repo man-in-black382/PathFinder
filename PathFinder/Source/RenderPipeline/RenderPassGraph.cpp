@@ -260,11 +260,8 @@ namespace PathFinder
 
                 perQueuePreviousNodes[node->ExecutionQueueIndex] = node;
 
-                for (SubresourceName subresourceName : node->ReadAndWritten())
+                for (Foundation::Name resourceName : node->AllResources())
                 {
-                    // Timeline for resource is determined as an enclosing range of all of its subresource timelines
-                    auto [resourceName, subresourceIndex] = DecodeSubresourceName(subresourceName);
-
                     auto timelineIt = mResourceUsageTimelines.find(resourceName);
                     bool timelineExists = timelineIt != mResourceUsageTimelines.end();
 

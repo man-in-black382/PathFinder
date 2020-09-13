@@ -24,6 +24,11 @@ namespace PathFinder
         {
             state.ComputeShaderFileName = "UAVClear.hlsl";
         });
+
+        stateCreator->CreateComputeState(PSONames::BoxBlur, [](ComputeStateProxy& state)
+        {
+            state.ComputeShaderFileName = "BoxBlur.hlsl";
+        });
     }
 
     void CommonSetupRenderPass::ScheduleSamplers(SamplerCreator* samplerCreator)

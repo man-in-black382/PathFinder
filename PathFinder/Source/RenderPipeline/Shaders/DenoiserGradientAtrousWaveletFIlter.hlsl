@@ -1,5 +1,5 @@
-#ifndef _DenoiserGradientAtrousWaveletFIlter__
-#define _DenoiserGradientAtrousWaveletFIlter__
+#ifndef _DenoiserGradientAtrousWaveletFilter__
+#define _DenoiserGradientAtrousWaveletFilter__
 
 struct PassCBData
 {
@@ -29,13 +29,13 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupThreadID : 
     RWTexture2D<float4> inputTexture = RW_Float4_Textures2D[PassDataCB.InputTexIdx];
     RWTexture2D<float4> outputTexture = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
 
-    float2 gradients = inputTexture[pixelIdx].rg;
+    float2 gradients = inputTexture[pixelIdx].rg; 
     float totalWeight = 1.0;
     float2 sum = 0.0;
 
     const int StepSize = int(1u << PassDataCB.CurrentIteration);
 
-    const int r = 1;
+    const int r = 1; 
     for (int yy = -r; yy <= r; yy++)
     {
         for (int xx = -r; xx <= r; xx++)

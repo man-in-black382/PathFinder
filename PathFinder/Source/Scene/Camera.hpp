@@ -79,6 +79,7 @@ namespace PathFinder
         inline FStop Aperture() const { return mLenseAperture; }
         inline ISO FilmSpeed() const { return mFilmSpeed; }
         inline float ShutterTime() const { return mShutterTime; }
+        inline float AspectRatio() const { return mViewportAspectRatio; }
     };
 
 }

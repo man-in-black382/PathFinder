@@ -8,11 +8,19 @@
 namespace PathFinder
 {
 
-    /* struct DenoiserPostStabilizationCBContent
-     {
-         uint32_t InputTexIdx;
-         uint32_t OutputTexIdx;
-     };*/
+    struct DenoiserPostBlurCBContent
+    {
+        glm::uvec2 DispatchGroupCount;
+        uint32_t AccumulatedFramesCountTexIdx;
+        uint32_t AnalyticShadingTexIdx;
+        uint32_t SecondaryGradientTexIdx;
+        uint32_t ShadowedShadingTexIdx;
+        uint32_t UnshadowedShadingTexIdx;
+        uint32_t ShadowedShadingBlurredOutputTexIdx;
+        uint32_t UnshadowedShadingBlurredOutputTexIdx;
+        uint32_t CombinedShadingTexIdx;
+        uint32_t CombinedShadingOversaturatedTexIdx;
+    };
 
     class DenoiserPostBlurRenderPass : public RenderPass<RenderPassContentMediator>
     { 

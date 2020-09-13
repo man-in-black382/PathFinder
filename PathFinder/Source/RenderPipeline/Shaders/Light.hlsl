@@ -142,6 +142,15 @@ LightSample ZeroLightSample()
     return lightSample;
 }
 
+LTCAnalyticEvaluationResult ZeroLTCAnalyticEvaluationResult()
+{
+    LTCAnalyticEvaluationResult result;
+    result.BRDFProbability = 0.0;
+    result.DiffuseProbability = 0.0;
+    result.OutgoingLuminance = 0.0;
+    return result;
+}
+
 float LTCSampleVectorPDF(float3x3 MInv, float MDet, float3 L)
 {
     float3 LCosine = mul(MInv, L);
@@ -229,6 +238,11 @@ LTCAnalyticEvaluationResult EvaluateDirectRectangularLighting(
     float3 viewDirection,
     float3 surfacePosition)
 {
+    if (dot(light.Orientation.xyz, -gBuffer.Normal) <= 0)
+    {
+        return ZeroLTCAnalyticEvaluationResult();
+    }
+
     float specularLobe = LTCEvaluateRectangle(gBuffer.Normal, viewDirection, surfacePosition, ltcTerms.MInvSpecular, lightPoints.Points);
     float diffuseLobe = LTCEvaluateRectangle(gBuffer.Normal, viewDirection, surfacePosition, ltcTerms.MInvDiffuse, lightPoints.Points);
 
@@ -248,7 +262,7 @@ LightPoints ComputeLightPoints(Light light, float3 surfacePositionWS)
     // strictly toward the surface point.
     // A slightly more wide light is almost imperceptible, so I guess it will have to do.
     //
-    halfWidth += light.LightType == LightTypeSphere ? 0.1 : 0.0;
+    halfWidth += light.LightType == LightTypeSphere ? 0.5 : 0.0;
 
     // Get billboard points at the origin
     float3 p0 = float3(halfWidth, -halfHeight, 0.0);

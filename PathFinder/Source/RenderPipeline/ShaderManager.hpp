@@ -23,7 +23,7 @@ namespace PathFinder
         using ShaderEvent = Foundation::Event<ShaderManager, std::string, void(const HAL::Shader*, const HAL::Shader*)>;
         using LibraryEvent = Foundation::Event<ShaderManager, std::string, void(const HAL::Library*, const HAL::Library*)>;
 
-        ShaderManager(const std::filesystem::path& executableFolder, bool useProjectDirShaders, bool buildDebugShaders, AftermathShaderDatabase* aftermathShaderDatabase);
+        ShaderManager(const std::filesystem::path& executableFolder, bool useProjectDirShaders, bool buildDebugShaders, bool separatePDBFiles, AftermathShaderDatabase* aftermathShaderDatabase);
 
         HAL::Shader* LoadShader(HAL::Shader::Stage pipelineStage, const std::string& entryPoint, const std::filesystem::path& relativePath);
         HAL::Library* LoadLibrary(const std::filesystem::path& relativePath);
@@ -69,6 +69,7 @@ namespace PathFinder
 
         bool mUseProjectDirShaders = false;
         bool mBuildDebugShaders = false;
+        bool mOutputPDBInSeparateFiles = false;
 
         std::filesystem::path mExecutableFolderPath;
         std::filesystem::path mShaderSourceRootPath;

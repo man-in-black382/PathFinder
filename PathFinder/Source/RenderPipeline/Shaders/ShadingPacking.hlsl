@@ -6,12 +6,6 @@
 #include "Packing.hlsl"
 #include "Utils.hlsl"
 
-// Turing-level hardware can realistically work with 4 lights and 1 ray per light, per tile.
-// We should not bother with more to make space for other rendering workloads.
-static const uint MaxSupportedLights = 1;
-static const uint RaysPerLight = 4;
-static const float RaysPerLightInverse = 1.0 / RaysPerLight;
-
 static const uint YBitCount = 16;
 static const uint CoBitCount = 8;
 static const uint CgBitCount = 8;

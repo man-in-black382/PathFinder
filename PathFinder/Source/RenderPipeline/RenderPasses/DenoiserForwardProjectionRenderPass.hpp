@@ -10,6 +10,7 @@ namespace PathFinder
 
     struct DenoiserForwardProjectionCBContent
     {
+        glm::uvec2 DispatchGroupCount;
         uint32_t GBufferViewDepthPrevTexIdx;
         uint32_t StochasticShadowedShadingPrevTexIdx;
         uint32_t StochasticUnshadowedShadingPrevTexIdx;

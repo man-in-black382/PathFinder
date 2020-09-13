@@ -7,7 +7,7 @@
 namespace PathFinder
 {
 
-    struct BlurCBContent
+    struct SeparableBlurCBContent
     {
         static const int MaximumRadius = 64;
 
@@ -15,6 +15,14 @@ namespace PathFinder
         glm::vec2 ImageSize;
         uint32_t IsHorizontal;
         uint32_t BlurRadius;
+        uint32_t InputTexIdx;
+        uint32_t OutputTexIdx;
+        uint32_t MipLevel;
+    };
+
+    struct BoxBlurCBContent
+    {
+        glm::uvec2 DispatchGroupCount;
         uint32_t InputTexIdx;
         uint32_t OutputTexIdx;
     };

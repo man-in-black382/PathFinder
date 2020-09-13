@@ -48,6 +48,9 @@ namespace PathFinder
     void Scene::LoadUtilityResources()
     {
         mBlueNoiseTexture = mResourceLoader.LoadTexture("/Precompiled/BlueNoise3DIndependent.dds");
+        mSMAAAreaTexture = mResourceLoader.LoadTexture("/Precompiled/SMAAAreaTex.dds");
+        mSMAASearchTexture = mResourceLoader.LoadTexture("/Precompiled/SMAASearchTex.dds");
+        mTestTexture = mResourceLoader.LoadTexture("/Precompiled/TestImage.dds");
         //mBlueNoiseTexture = mResourceLoader.LoadTexture("/Precompiled/BlueNoise3D16.dds");
         //mBlueNoiseTexture = mResourceLoader.LoadTexture("/Precompiled/Blue_Noise_RGBA_0.dds");
     }

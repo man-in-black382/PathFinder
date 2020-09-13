@@ -75,4 +75,35 @@ float RoughnessWeight(float roughness0, float roughness)
     return saturate(1.0 - weight);
 }
 
+// Gradient for HF and SPEC channels is computed as the relative difference between
+// path tracer outputs on the current and previous frame, for a given gradient pixel. 
+float GetHFGradient(float currLuminance, float prevLuminance)
+{
+    float maxLuminance = max(currLuminance, prevLuminance);
+
+    // Prev. lum. is negative when we left a hole during reprojection
+    if (maxLuminance == 0 || prevLuminance < 0.0)
+    {
+        return 0.0;
+    }
+
+    float gradient = abs(currLuminance - prevLuminance) / maxLuminance;
+    gradient *= gradient; // Make small changes less significant
+
+    return gradient;
+}
+
+float3 CombineShading(float3 analytic, float3 stochasticShadowed, float3 stochasticUnshadowed)
+{
+    float3 shadow = 0;
+
+    [unroll] 
+    for (int i = 0; i < 3; ++i)
+    {
+        shadow[i] = stochasticUnshadowed[i] < 1e-05 ? 1.0 : stochasticShadowed[i] / stochasticUnshadowed[i];
+    }
+
+    return analytic * shadow;
+}
+
 #endif

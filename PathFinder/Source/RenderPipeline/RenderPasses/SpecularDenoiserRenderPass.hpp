@@ -12,6 +12,7 @@ namespace PathFinder
     struct SpecularDenoiserCBContent
     {
         GBufferTextureIndices GBufferIndices;
+        glm::uvec2 DispatchGroupCount;
         uint32_t AccumulatedFramesCountTexIdx;
         uint32_t ShadowedShadingHistoryTexIdx;
         uint32_t UnshadowedShadingHistoryTexIdx;
@@ -19,7 +20,8 @@ namespace PathFinder
         uint32_t CurrentUnshadowedShadingTexIdx;
         uint32_t ShadowedShadingDenoiseTargetTexIdx;
         uint32_t UnshadowedShadingDenoiseTargetTexIdx;
-        uint32_t ShadingGradientTexIdx;
+        uint32_t PrimaryGradientTexIdx;
+        uint32_t SecondaryGradientTexIdx;
     };
 
     class SpecularDenoiserRenderPass : public RenderPass<RenderPassContentMediator>

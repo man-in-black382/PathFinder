@@ -6,9 +6,11 @@
 #include "Utils.hlsl"
 #include "Filtering.hlsl"
 #include "ColorConversion.hlsl"
+#include "ThreadGroupTilingX.hlsl"
 
 struct PassData
 {
+    uint2 DispatchGroupCount;
     uint GBufferNormalRoughnessTexIdx;
     uint DepthTexIdx;
     uint MotionTexIdx;
@@ -33,14 +35,14 @@ static const int GroupDimensionSize = 16;
 static const float DisocclusionThreshold = 0.01;
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
-void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
+void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 {
     //------------------------------------//
     // Ghosting free history reprojection //
     //------------------------------------//
 
-    uint2 pixelIndex = dispatchThreadID.xy;
-    float2 uv = (float2(pixelIndex) + 0.5) * GlobalDataCB.PipelineRTResolutionInv; 
+    uint2 pixelIndex = ThreadGroupTilingX(PassDataCB.DispatchGroupCount, GroupDimensionSize.xx, 16, groupThreadID.xy, groupID.xy);
+    float2 uv = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
 
     Texture2D normalRoughnessTexture = Textures2D[PassDataCB.GBufferNormalRoughnessTexIdx];
     Texture2D depthTexture = Textures2D[PassDataCB.DepthTexIdx];
@@ -63,10 +65,10 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     LoadGBufferNormalAndRoughness(normalRoughnessTexture, pixelIndex, surfaceNormal, roughness);
 
     float currentDepth = depthTexture.Load(uint3(pixelIndex, 0)).r;
-    float3 currentPosition = ReconstructWorldSpacePosition(currentDepth, uv, FrameDataCB.CurrentFrameCamera);
+    float3 currentPosition = NDCDepthToWorldPosition(currentDepth, uv, FrameDataCB.CurrentFrameCamera);
     float3 motionVector = LoadGBufferMotion(motionTexture, pixelIndex);
     float3 previousPosition = currentPosition - motionVector;
-    float3 reprojectedCoord = ViewProjectPoint(previousPosition, FrameDataCB.PreviousFrameCamera); 
+    float3 reprojectedCoord = ViewProject(previousPosition, FrameDataCB.PreviousFrameCamera); 
     float2 reprojectedUV = NDCToUV(reprojectedCoord);
 
     // Custom binary weights based on disocclusion help us get rid of ghosting

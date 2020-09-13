@@ -38,11 +38,16 @@ namespace PathFinder
         inline NameArray<2> StochasticUnshadowedShadingDenoised{ "Resource_Shading_Stochastic_Unshadowed_Denoised[0]", "Resource_Shading_Stochastic_Unshadowed_Denoised[1]" };
         inline NameArray<2> StochasticShadowedShadingDenoised{ "Resource_Shading_Stochastic_Shadowed_Denoised[0]", "Resource_Shading_Stochastic_Shadowed_Denoised[1]" };
         inline Foundation::Name StochasticUnshadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Unshadowed_Denoised_Stabilized" };
-        inline Foundation::Name StochasticShadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Denoised_Stabilized" };
-        inline Foundation::Name StochasticShadingGradientInputs{ "Resource_Stochastic_Shading_Gradient_Inputs" };
-        inline Foundation::Name StochasticShadingGradient{ "Resource_Stochastic_Shading_Gradient" };
-        inline Foundation::Name StochasticShadingGradientFiltered{ "Resource_Stochastic_Shading_Gradient_Filtered" };
-        inline Foundation::Name StochasticShadingGradientFilteredIntermediate{ "Resource_Stochastic_Shading_Gradient_Filtered_Intermediate" };
+        inline Foundation::Name StochasticShadowedShadingDenoisedStabilized{ "Resource_Shading_Stochastic_Shadowed_Post_Blurred" };
+        inline Foundation::Name StochasticUnshadowedShadingPostBlurred{ "Resource_Shading_Stochastic_Unshadowed_Post_Blurred" };
+        inline Foundation::Name StochasticShadowedShadingPostBlurred{ "Resource_Shading_Stochastic_Shadowed_Post_Blurred" };
+        inline Foundation::Name CombinedShading{ "Resource_Shading_Combined" };
+        inline Foundation::Name CombinedShadingOverexposed{ "Resource_Shading_Combined_Overexposed" };
+        inline Foundation::Name DenoiserPrimaryGradientInputs{ "Denoiser_Primary_Gradient_Inputs" };
+        inline Foundation::Name DenoiserPrimaryGradient{ "Denoiser_Primary_Gradient" };
+        inline Foundation::Name DenoiserSecondaryGradient{ "Denoiser_Secondary_Gradient" };
+        inline Foundation::Name DenoiserPrimaryGradientFiltered{ "Denoiser_Primary_Gradient_Filtered" };
+        inline Foundation::Name DenoiserPrimaryGradientFilteredIntermediate{ "Denoiser_Primary_Gradient_Filtered_Intermediate" };
         inline NameArray<2> RngSeeds{ "Resource_Stochastic_Rng_Seeds[0]", "Resource_Stochastic_Rng_Seeds[1]" };
         inline Foundation::Name RngSeedsCorrelated{ "Resource_Stochastic_Rng_Seeds_Correlated" };
 
@@ -54,6 +59,10 @@ namespace PathFinder
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
         inline Foundation::Name BloomCompositionOutput{ "Resource_Bloom_Composition_Output" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
+
+        inline Foundation::Name SMAADetectedEdges{ "Resource_SMAA_Detected_Edges" };
+        inline Foundation::Name SMAABlendingWeights{ "Resource_SMAA_Blending_Weights" };
+        inline Foundation::Name SMAAAntialiased{ "Resource_SMAA_Antialiased_Image" };
     }
 
     namespace PSONames
@@ -68,7 +77,6 @@ namespace PathFinder
         inline Foundation::Name Shading{ "PSO_Shading" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name SeparableBlur{ "PSO_SeparableBlur" };
-        inline Foundation::Name BloomDownscaling{ "PSO_BloomDownscaling" };
         inline Foundation::Name BloomBlur{ "PSO_BloomBlur" };
         inline Foundation::Name BloomComposition{ "PSO_BloomComposition" };
         inline Foundation::Name ToneMapping{ "PSO_ToneMapping" };
@@ -77,12 +85,17 @@ namespace PathFinder
         inline Foundation::Name DenoiserReprojection{ "PSO_DenoiserReprojection" };
         inline Foundation::Name DenoiserHistoryFix{ "PSO_DenoiserHistoryFix" };
         inline Foundation::Name DenoiserPostStabilization{ "PSO_DenoiserPostStabilization" };
+        inline Foundation::Name DenoiserPostBlur{ "PSO_DenoiserPostBlur" };
         inline Foundation::Name DenoiserGradientConstruction{ "PSO_DenoiserGradientConstruction" };
         inline Foundation::Name DenoiserGradientFiltering{ "PSO_DenoiserGradientFiltering" };
         inline Foundation::Name SpecularDenoiser{ "PSO_SpecularDenoiser" };
+        inline Foundation::Name SMAAEdgeDetection{ "PSO_SMAAEdgeDetection" };
+        inline Foundation::Name SMAABlendingWeightCalculation{ "PSO_SMAABlendingWeightCalculation" };
+        inline Foundation::Name SMAANeighborhoodBlending{ "PSO_SMAANeighborhoodBlending" };
         inline Foundation::Name UI{ "PSO_UI" };
         inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
         inline Foundation::Name UAVClear{ "PSO_UAVClear" };
+        inline Foundation::Name BoxBlur{ "PSO_BoxBlur" };
     }  
    
     namespace RootSignatureNames

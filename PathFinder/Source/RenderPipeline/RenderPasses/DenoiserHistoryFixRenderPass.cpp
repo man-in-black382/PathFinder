@@ -20,7 +20,6 @@ namespace PathFinder
     {
         auto frameIndex = scheduler->FrameNumber() % 2;
 
-        scheduler->ReadTexture(ResourceNames::StochasticShadingGradientFiltered);
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[frameIndex]);
         scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
@@ -49,7 +48,6 @@ namespace PathFinder
         cbContent.AccumulationCounterTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
         cbContent.ShadowedShadingPreBlurredTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred, 1);
         cbContent.UnshadowedShadingPreBlurredTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred, 1);
-        cbContent.GradientTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadingGradientFiltered);
         cbContent.ShadowedShadingFixedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingFixed);
         cbContent.UnshadowedShadingFixedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingFixed);
 

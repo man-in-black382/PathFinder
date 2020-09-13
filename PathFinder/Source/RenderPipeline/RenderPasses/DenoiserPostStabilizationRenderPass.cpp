@@ -18,6 +18,8 @@ namespace PathFinder
 
     void DenoiserPostStabilizationRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     {
+        return; // Disable 
+
         auto frameIndex = scheduler->FrameNumber() % 2;
 
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
