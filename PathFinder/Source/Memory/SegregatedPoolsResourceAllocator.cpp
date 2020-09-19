@@ -58,6 +58,7 @@ namespace Memory
         uint64_t allocationSizeInBytes, const HAL::ResourceFormat& resourceFormat, std::optional<HAL::CPUAccessibleHeapType> cpuHeapType)
     {
         assert_format(allocationSizeInBytes > 0, "0 bytes allocations are forbidden");
+        assert_format(allocationSizeInBytes < std::numeric_limits<uint32_t>::max(), "Ridiculous allocation size");
 
         Pools* pools = nullptr;
         std::vector<HeapList>* heapLists = nullptr;

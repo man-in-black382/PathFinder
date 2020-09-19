@@ -21,6 +21,7 @@ namespace PathFinder
         const Geometry::AxisAlignedBox3D& BoundingBox() const;
         const VertexStorageLocation& LocationInVertexStorage() const;
         float SurfaceArea() const;
+        bool HasTangentSpace() const;
 
         void SetName(const std::string& name);
         void SetMaterialName(const std::string& name);
@@ -36,6 +37,7 @@ namespace PathFinder
         VertexStorageLocation mVertexStorageLocation;
         Geometry::AxisAlignedBox3D mBoundingBox = Geometry::AxisAlignedBox3D::MaximumReversed();
         float mArea = 0.0;
+        bool mHasTangentSpace = true;
     };
 
 }

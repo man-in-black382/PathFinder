@@ -16,6 +16,7 @@ namespace PathFinder
         std::string fullPath{ rootPath.append(fileName).string() };
 
         auto postProcessSteps = (aiPostProcessSteps)(
+            aiProcess_Triangulate |
             aiProcess_CalcTangentSpace | 
             aiProcess_FlipUVs |
             aiProcess_GenUVCoords | 

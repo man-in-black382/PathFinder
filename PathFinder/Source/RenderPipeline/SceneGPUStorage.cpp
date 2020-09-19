@@ -100,7 +100,8 @@ namespace PathFinder
                 instance.AssosiatedMaterial()->GPUMaterialTableIndex,
                 instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
                 instance.AssosiatedMesh()->LocationInVertexStorage().IndexBufferOffset,
-                instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount
+                instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount,
+                instance.AssosiatedMesh()->HasTangentSpace()
             };
 
             BottomRTAS& blas = mBottomAccelerationStructures[instance.AssosiatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex];

@@ -49,15 +49,6 @@ namespace HAL
         mD3DGeometries.clear();
     }
 
-    void RayTracingBottomAccelerationStructure::SetBuffers(const Buffer* destinationBuffer, const Buffer* scratchBuffer, const Buffer* updateBuffer)
-    {
-        mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-        mD3DInputs.NumDescs = (UINT)mD3DGeometries.size();
-        mD3DInputs.pGeometryDescs = mD3DGeometries.data();
-
-        RayTracingAccelerationStructure::SetBuffers(destinationBuffer, scratchBuffer, updateBuffer);
-    }
-
     void RayTracingBottomAccelerationStructure::AddGeometry(const RayTracingGeometry& geometry)
     {
         D3D12_RAYTRACING_GEOMETRY_DESC d3dGeometry{};
@@ -78,6 +69,10 @@ namespace HAL
         if (geometry.IsOpaque) d3dGeometry.Flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 
         mD3DGeometries.push_back(d3dGeometry);
+
+        mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+        mD3DInputs.NumDescs = (UINT)mD3DGeometries.size();
+        mD3DInputs.pGeometryDescs = mD3DGeometries.data();
     }
 
     RayTracingBottomAccelerationStructure::MemoryRequirements RayTracingBottomAccelerationStructure::QueryMemoryRequirements() const
@@ -100,7 +95,7 @@ namespace HAL
         instance.InstanceID = instanceId;
         instance.InstanceContributionToHitGroupIndex = 0; // Choose hit group shader
         instance.InstanceMask = 1; // Bitwise AND with TraceRay() parameter, has to be non-zero or else will never be hit by a ray
-        instance.Flags =  D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE; // Right now, only opaque, for simplicity
+        instance.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_FORCE_OPAQUE; // Right now, only opaque, for simplicity
 
         instance.AccelerationStructure = blas.FinalBuffer()->GPUVirtualAddress();
 
@@ -112,6 +107,9 @@ namespace HAL
         }
 
         mD3DInstances.push_back(instance);
+
+        mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+        mD3DInputs.NumDescs = (UINT)mD3DInstances.size();
     }
 
     RayTracingTopAccelerationStructure::MemoryRequirements RayTracingTopAccelerationStructure::QueryMemoryRequirements() const
@@ -132,11 +130,9 @@ namespace HAL
     {
         mInstanceBuffer = instanceBuffer;
 
-        memcpy(instanceDataUploadPtr, mD3DInstances.data(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * mD3DInstances.size());
+        mD3DInputs.InstanceDescs = instanceBuffer->GPUVirtualAddress();
 
-        mD3DInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-        mD3DInputs.NumDescs = (UINT)mD3DInstances.size();
-        mD3DInputs.InstanceDescs = mInstanceBuffer->GPUVirtualAddress();
+        memcpy(instanceDataUploadPtr, mD3DInstances.data(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * mD3DInstances.size());
 
         RayTracingAccelerationStructure::SetBuffers(destinationBuffer, scratchBuffer, updateBuffer);
     }

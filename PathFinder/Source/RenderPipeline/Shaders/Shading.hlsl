@@ -40,7 +40,6 @@ struct RootConstants
 
 // Turing-level hardware can realistically work with 4 lights and 1 ray per light, per tile.
 // We should not bother with more to make space for other rendering workloads.
-static const uint MaxSupportedLights = 4;
 static const uint TotalMaxRayCount = 4;
 
 #define PassDataType PassData
@@ -96,7 +95,7 @@ ShadingResult ZeroShadingResult()
 // Distributes rays between lights depending on their total amount
 uint RaysPerLight(LightTablePartitionInfo lightTableInfo)
 {
-    uint raysPerLight = MaxSupportedLights / lightTableInfo.TotalLightsCount;
+    uint raysPerLight = TotalMaxRayCount / lightTableInfo.TotalLightsCount;
     return raysPerLight;
 }
 

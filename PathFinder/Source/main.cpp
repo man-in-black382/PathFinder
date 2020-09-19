@@ -77,6 +77,7 @@ int main(int argc, char** argv)
     // Show the window
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
+    ::SetWindowPos(hwnd, 0, 0, 0, 1920, 1080, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
     PathFinder::CommandLineParser cmdLineParser{ argc, argv };    
 
@@ -139,11 +140,11 @@ int main(int argc, char** argv)
     engine.AddRenderPass(backBufferOutputPass.get());
     engine.AddRenderPass(uiPass.get());
 
-   /* auto sphereLight1 = scene.EmplaceSphericalLight();
-    sphereLight1->SetRadius(2);
-    sphereLight1->SetPosition({ -3.5, 2.0, 0.0 });
+    auto sphereLight1 = scene.EmplaceSphericalLight();
+    sphereLight1->SetRadius(4);
+    sphereLight1->SetPosition({ -3.5, 2.0, -10.0 });
     sphereLight1->SetColor({ 255.0 / 255, 241.0 / 255, 224.1 / 255 });
-    sphereLight1->SetLuminousPower(200000);*/
+    sphereLight1->SetLuminousPower(600000);
 
     /*auto sphereLight2 = scene.EmplaceSphericalLight();
     sphereLight2->SetRadius(2);
@@ -157,7 +158,7 @@ int main(int argc, char** argv)
     sphereLight3->SetColor({ 201.0 / 255, 226.0 / 255, 50.0 / 255 });
     sphereLight3->SetLuminousPower(50000);*/
 
-    auto flatLight0 = scene.EmplaceRectangularLight();
+  /*  auto flatLight0 = scene.EmplaceRectangularLight();
     flatLight0->SetWidth(2);
     flatLight0->SetHeight(2);
     flatLight0->SetPosition({ 7.5, 0.0, 0.0 });
@@ -179,45 +180,146 @@ int main(int argc, char** argv)
     flatLight1->SetPosition({ 2.5, 2.0, 0.0 });
     flatLight1->SetNormal({ 0.0, -1.0, -1.0 });
     flatLight1->SetColor({ 201.0 / 255, 226.0 / 255.0, 255.0 / 255 });
-    flatLight1->SetLuminousPower(20000);
+    flatLight1->SetLuminousPower(20000);*/
 
     auto flatLight3 = scene.EmplaceRectangularLight();
-    flatLight3->SetWidth(2);
-    flatLight3->SetHeight(1);
-    flatLight3->SetPosition({ 0, 2, 0.0 });
+    flatLight3->SetWidth(8);
+    flatLight3->SetHeight(4);
+    flatLight3->SetPosition({ 0, 2, 5.0 });
     flatLight3->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, -1.0 }));
     flatLight3->SetColor({ 255.0 / 255, 147.0 / 255, 41.0 / 255 });
-    flatLight3->SetLuminousPower(20000);
+    flatLight3->SetLuminousPower(100000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
         "/MediaResources/Textures/Metal07/Metal07_nrm.dds", 
         "/MediaResources/Textures/Metal07/Metal07_rgh.dds",
-        "/MediaResources/Textures/Metal07/Metal07_met.dds",
-        "/MediaResources/Textures/Metal07/Metal07_disp.dds"));
+        "/MediaResources/Textures/Metal07/Metal07_met.dds"));
 
     PathFinder::Material& concrete19Material = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Concrete19/Concrete19_col.dds",
         "/MediaResources/Textures/Concrete19/Concrete19_nrm.dds",
-        "/MediaResources/Textures/Concrete19/Concrete19_rgh.dds",
-        std::nullopt,
-        "/MediaResources/Textures/Concrete19/Concrete19_disp.dds"));
+        "/MediaResources/Textures/Concrete19/Concrete19_rgh.dds"));
+
+    PathFinder::Material& bambooWoodMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/BambooWood/bamboo-wood-semigloss-albedo.dds",
+        "/MediaResources/Textures/BambooWood/bamboo-wood-semigloss-normal.dds",
+        "/MediaResources/Textures/BambooWood/bamboo-wood-semigloss-roughness.dds"));
+
+    PathFinder::Material& charcoalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/Charcoal/charcoal-albedo2.dds",
+        "/MediaResources/Textures/Charcoal/charcoal-normal.dds",
+        "/MediaResources/Textures/Charcoal/charcoal-roughness.dds"));
+
+    PathFinder::Material& grimyMetalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/GrimyMetal/grimy-metal-albedo.dds",
+        "/MediaResources/Textures/GrimyMetal/grimy-metal-normal-dx.dds",
+        "/MediaResources/Textures/GrimyMetal/grimy-metal-roughness.dds",
+        "/MediaResources/Textures/GrimyMetal/grimy-metal-metalness.dds"));
+
+    PathFinder::Material& marble006Material = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/Marble006/Marble006_4K_Color.dds",
+        "/MediaResources/Textures/Marble006/Marble006_4K_Normal.dds",
+        "/MediaResources/Textures/Marble006/Marble006_4K_Roughness.dds"));
+
+    PathFinder::Material& marbleTilesMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Base_Color.dds",
+        "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Normal.dds",
+        "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Roughness.dds"));
+
+    PathFinder::Material& redPlasticMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/RedPlastic/plasticpattern1-albedo.dds",
+        "/MediaResources/Textures/RedPlastic/plasticpattern1-normal2b.dds",
+        "/MediaResources/Textures/RedPlastic/plasticpattern1-roughness2.dds"));
+
+    PathFinder::Material& rustedIronMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/RustedIron/rustediron2_basecolor.dds",
+        "/MediaResources/Textures/RustedIron/rustediron2_normal.dds",
+        "/MediaResources/Textures/RustedIron/rustediron2_roughness.dds",
+        "/MediaResources/Textures/RustedIron/rustediron2_metallic.dds"));
+
+    PathFinder::Material& scuffedTitamiumMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_basecolor.dds",
+        "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_normal.dds",
+        "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_roughness.dds",
+        "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_metallic.dds"));
+
+    PathFinder::Material& synthRubberMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
+        "/MediaResources/Textures/SynthRubber/synth-rubber-albedo.dds",
+        "/MediaResources/Textures/SynthRubber/synth-rubber-normal.dds",
+        "/MediaResources/Textures/SynthRubber/synth-rubber-roughness.dds"));
 
     PathFinder::Mesh& plane = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
-    PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &concrete19Material });
+
+    for (float x = -100; x < 100; x += 20)
+    {
+        for (float z = -100; z < 100; z += 20)
+        {
+            PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &concrete19Material });
+            Geometry::Transformation t;
+            t.Translation = glm::vec3{ x, -3.50207, z };
+            planeInstance.SetTransformation(t);
+        }
+    }
 
     PathFinder::Mesh& cube = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
-    PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &metalMaterial });
+    PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &scuffedTitamiumMaterial });
 
-    auto t = planeInstance.Transformation();
-    //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 0.0)));
-    t.Translation = glm::vec3{ 0.0, -2.50207 - 1, 0.0 };
-    planeInstance.SetTransformation(t);
+    PathFinder::Mesh& sphereType1 = scene.AddMesh(std::move(meshLoader.Load("sphere1.obj").back()));
+    PathFinder::MeshInstance& sphereType1Instance0 = scene.AddMeshInstance({ &sphereType1, &marbleTilesMaterial });
 
-    t = cubeInstance.Transformation();
+    PathFinder::Mesh& sphereType2 = scene.AddMesh(std::move(meshLoader.Load("sphere2.obj").back()));
+    PathFinder::MeshInstance& sphereType2Instance0 = scene.AddMeshInstance({ &sphereType2, &marbleTilesMaterial });
+
+    PathFinder::Mesh& sphereType3 = scene.AddMesh(std::move(meshLoader.Load("sphere3.obj").back()));
+    PathFinder::MeshInstance& sphereType3Instance0 = scene.AddMeshInstance({ &sphereType3, &grimyMetalMaterial });
+    PathFinder::MeshInstance& sphereType3Instance1 = scene.AddMeshInstance({ &sphereType3, &redPlasticMaterial });
+    PathFinder::MeshInstance& sphereType3Instance2 = scene.AddMeshInstance({ &sphereType3, &marble006Material });
+    PathFinder::MeshInstance& sphereType3Instance3 = scene.AddMeshInstance({ &sphereType3, &charcoalMaterial });
+    PathFinder::MeshInstance& sphereType3Instance4 = scene.AddMeshInstance({ &sphereType3, &concrete19Material });
+    PathFinder::MeshInstance& sphereType3Instance5 = scene.AddMeshInstance({ &sphereType3, &metalMaterial });
+
+    Geometry::Transformation t = cubeInstance.Transformation();
     t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-    t.Translation = glm::vec3{ 0.0, 0.8, -4.0 };
+    t.Translation = glm::vec3{ 0.0, 2, -4.0 };
+    t.Scale = glm::vec3{ 2.0f };
     cubeInstance.SetTransformation(t);
+
+    //t.Scale = glm::vec3{ 0.1f }; // Large version
+    //t.Translation = glm::vec3{ 0.0, -2, -4.0 }; // Large version
+    t.Scale = glm::vec3{ 0.11f };
+    t.Translation = glm::vec3{ -6.0, 5, -4.0 };
+    sphereType1Instance0.SetTransformation(t);
+     
+    t.Scale = glm::vec3{ 0.21f };
+    t.Translation = glm::vec3{ 12.0, 0.0, -4.0 };
+    sphereType2Instance0.SetTransformation(t);
+
+    // Normal spheres
+    t.Scale = glm::vec3{ 0.1 };
+    t.Translation = glm::vec3{ 12.0, 2.0, -4.0 };
+    sphereType3Instance0.SetTransformation(t);
+
+    t.Scale = glm::vec3{ 0.1 };
+    t.Translation = glm::vec3{ 16.0, 2.0, -4.0 };
+    sphereType3Instance1.SetTransformation(t);
+
+    t.Scale = glm::vec3{ 0.1 };
+    t.Translation = glm::vec3{ 20.0, 2.0, -4.0 };
+    sphereType3Instance2.SetTransformation(t);
+
+    t.Scale = glm::vec3{ 0.1 };
+    t.Translation = glm::vec3{ -12.0, 2.0, -4.0 };
+    sphereType3Instance3.SetTransformation(t);
+
+    t.Scale = glm::vec3{ 0.1 };
+    t.Translation = glm::vec3{ -12.0, 2.0, -7.0 };
+    sphereType3Instance4.SetTransformation(t);
+
+    t.Scale = glm::vec3{ 0.1 };
+    t.Translation = glm::vec3{ -12.0, 2.0, -10.0 };
+    sphereType3Instance5.SetTransformation(t);
+
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(500);
@@ -226,16 +328,16 @@ int main(int argc, char** argv)
     camera.LookAt({ 0.f, 4.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
     camera.SetAperture(0.8);
-    camera.SetFilmSpeed(200);
+    camera.SetFilmSpeed(400);
     camera.SetShutterTime(1.0 / 125.0);
 
     input.SetInvertVerticalDelta(true);
 
     choreograph::Timeline animationTimeline{};
     choreograph::Output<float> rotationOutput;
-    choreograph::Output<float> lightSizeOutput;
+    choreograph::Output<float> lightSizeOutput; 
 
-    choreograph::PhraseRef<float> rotationPhrase = choreograph::makeRamp(0.0f, 2.0f * 3.1415f, 1.f);
+    choreograph::PhraseRef<float> rotationPhrase = choreograph::makeRamp(0.0f, 2.0f * 3.1415f, 4.f);
     animationTimeline.apply(&rotationOutput, rotationPhrase).finishFn(
         [&m = *rotationOutput.inputPtr()]
         {
@@ -270,8 +372,13 @@ int main(int argc, char** argv)
 
     engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
+        t = cubeInstance.Transformation();
         t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 1.f, 0.f, 1.f }));
-        //cubeInstance.SetTransformation(t);
+        cubeInstance.SetTransformation(t);
+
+        t = sphereType2Instance0.Transformation();
+        t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 0.f, 1.f, 0.f }));
+        sphereType2Instance0.SetTransformation(t);
     /*    flatLight3->SetWidth(lightSizeOutput.value());
         flatLight3->SetHeight(lightSizeOutput.value());*/
 

@@ -40,6 +40,7 @@ namespace PathFinder
         uint32_t UnifiedIndexBufferOffset;
         uint32_t IndexCount;
         // 16 byte boundary
+        uint32_t HasTangentSpace;
     };
 
     struct GPUMaterialTableEntry

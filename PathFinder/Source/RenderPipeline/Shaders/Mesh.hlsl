@@ -10,6 +10,7 @@ struct MeshInstance
     uint UnifiedVertexBufferOffset;
     uint UnifiedIndexBufferOffset;
     uint IndexCount;
+    bool HasTangentSpace;
 };
 
 static const uint MaterialTypeCookTorrance = 0;

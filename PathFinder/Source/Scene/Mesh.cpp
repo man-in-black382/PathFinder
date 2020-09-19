@@ -45,6 +45,11 @@ namespace PathFinder
         return mArea;
     }
 
+    bool Mesh::HasTangentSpace() const
+    {
+        return mHasTangentSpace;
+    }
+
     void Mesh::SetName(const std::string& name)
     {
         mName = name;
@@ -74,6 +79,11 @@ namespace PathFinder
 
             Geometry::Triangle3D triangle(v0.Position, v1.Position, v2.Position);
             mArea += triangle.area();
+        }
+
+        if (glm::length2(vertex.Tangent) <= 0.0 || glm::length2(vertex.Bitangent) <= 0)
+        {
+            mHasTangentSpace = false;
         }
     }
 

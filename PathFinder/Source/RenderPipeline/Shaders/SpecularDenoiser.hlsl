@@ -162,7 +162,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
     // Define blur radius range
     const float MinBlurRadius = 0.03;
-    const float MaxBlurRadius = 0.3;
+    const float MaxBlurRadius = 0.2;
     
     // Decrease blur radius as more frames are accumulated
     float blurRadius = lerp(MinBlurRadius, MaxBlurRadius, accumulationSpeed);

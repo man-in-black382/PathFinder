@@ -34,8 +34,8 @@ struct VertexOut
 
 float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, MeshInstance instanceData)
 {
-    float3 N = mul(instanceData.ModelMatrix, float4(normalize(vertex.Normal), 0.0)).xyz;
-    float3 T = mul(instanceData.ModelMatrix, float4(normalize(vertex.Tangent), 0.0)).xyz;
+    float3 N = mul(instanceData.NormalMatrix, float4(normalize(vertex.Normal), 0.0)).xyz;
+    float3 T = mul(instanceData.NormalMatrix, float4(normalize(vertex.Tangent), 0.0)).xyz;
     float3 B = normalize(cross(N, T));
 
     return Matrix3x3ColumnMajor(T, B, N);
@@ -116,11 +116,15 @@ GBufferPixelOut PSMain(VertexOut pin)
     MeshInstance instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
     Material material = MaterialTable[instanceData.MaterialIndex];
 
+    float3 normal = instanceData.HasTangentSpace ?
+        FetchNormalMap(pin, material) :
+        float3(pin.TBN[0][2], pin.TBN[1][2], pin.TBN[2][2]);
+
     GBufferPixelOut pixelOut = GetStandardGBufferPixelOutput(
         FetchAlbedoMap(pin, material),
         FetchMetallnessMap(pin, material),
         FetchRoughnessMap(pin, material),
-        FetchNormalMap(pin, material),
+        normal,
         pin.CurrWorldPos - pin.PrevWorldPos,
         instanceData.MaterialIndex,
         pin.ViewDepth

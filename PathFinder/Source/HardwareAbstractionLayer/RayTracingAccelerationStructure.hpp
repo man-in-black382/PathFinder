@@ -92,7 +92,6 @@ namespace HAL
 
         void AddGeometry(const RayTracingGeometry& geometry);
         MemoryRequirements QueryMemoryRequirements() const;
-        void SetBuffers(const Buffer* destinationBuffer, const Buffer* scratchBuffer, const Buffer* updateBuffer = nullptr) override;
 
         virtual void Clear() override;
 

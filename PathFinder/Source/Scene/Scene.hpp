@@ -34,9 +34,6 @@ namespace PathFinder
         FlatLightIt EmplaceRectangularLight();
         SphericalLightIt EmplaceSphericalLight();
 
-        // DEBUG
-        Memory::GPUResourceProducer::TexturePtr mTestTexture;
-
     private:
         void LoadUtilityResources();
 
