@@ -69,6 +69,13 @@ namespace PathFinder
         cbContent.RngSeedsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::RngSeedsCorrelated);
         cbContent.FrameNumber = context->FrameNumber();
 
+        auto haltonSequence = Foundation::Halton::Sequence(0, 3);
+
+        for (auto i = 0; i < 4; ++i)
+        {
+            cbContent.Halton[i] = haltonSequence[i];
+        }
+
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->SetRootConstants(CompressLightPartitionInfo(sceneStorage->LightTablePartitionInfo()), 0, 0);
 

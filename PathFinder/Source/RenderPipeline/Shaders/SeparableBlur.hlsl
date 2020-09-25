@@ -34,6 +34,15 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     int2 texelIndex = PassDataCB.IsHorizontal ? dispatchThreadID.xy : dispatchThreadID.yx;
 
+    if (PassDataCB.BlurRadius == 0)
+    {
+        destination[texelIndex] = PassDataCB.IsHorizontal ?
+            Textures2D[PassDataCB.InputTexIdx][texelIndex] :
+            RW_Float4_Textures2D[PassDataCB.InputTexIdx][texelIndex];
+
+        return;
+    }
+
     GSLineLoadStoreCoords loadStoreCoords = GetGSLineLoadStoreCoords(
         texelIndex, groupThreadID.x, PassDataCB.ImageSize, BlurGroupSize, PassDataCB.BlurRadius, PassDataCB.IsHorizontal
     );

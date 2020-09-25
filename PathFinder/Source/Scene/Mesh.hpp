@@ -24,6 +24,7 @@ namespace PathFinder
         bool HasTangentSpace() const;
 
         void SetName(const std::string& name);
+        void SetHasTangentSpace(bool hts);
         void SetMaterialName(const std::string& name);
         void SetVertexStorageLocation(const VertexStorageLocation& location);
         void AddVertex(const Vertex1P1N1UV1T1BT& vertex);

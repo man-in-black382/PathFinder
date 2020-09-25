@@ -51,6 +51,8 @@ namespace PathFinder
 
         auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
 
+        const RenderSettings* settings = context->GetContent()->GetSettings();
+
         SpecularDenoiserCBContent cbContent{};
 
         cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);

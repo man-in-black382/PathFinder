@@ -55,6 +55,11 @@ namespace PathFinder
         mName = name;
     }
 
+    void Mesh::SetHasTangentSpace(bool hts)
+    {
+        mHasTangentSpace = hts;
+    }
+
     void Mesh::SetMaterialName(const std::string& name)
     {
         mMaterialName = name;

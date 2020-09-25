@@ -19,6 +19,12 @@ struct FrameData
 {
     Camera CurrentFrameCamera;
     Camera PreviousFrameCamera;
+
+    bool IsDenoiserEnabled;
+    bool IsReprojectionHistoryDebugEnabled;
+    bool IsGradientDebugEnabled;
+    bool IsMotionDebugEnabled;
+    bool IsDenoiserAntilagEnabled;
 }; 
 
 #define GlobalDataType GlobalData

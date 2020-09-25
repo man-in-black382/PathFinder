@@ -12,6 +12,12 @@ namespace PathFinder
     {
         GPUCamera CurrentFrameCamera;
         GPUCamera PreviousFrameCamera;
+        // Cameras are 16 byte aligned
+        uint32_t IsDenoiserEnabled;
+        uint32_t IsReprojectionHistoryDebugEnabled;
+        uint32_t IsGradientDebugEnabled;
+        uint32_t IsMotionDebugEnabled;
+        uint32_t IsDenoiserAntilagEnabled;
     };
 
 }

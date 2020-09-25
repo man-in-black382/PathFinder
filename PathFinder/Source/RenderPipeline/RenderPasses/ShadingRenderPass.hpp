@@ -14,6 +14,7 @@ namespace PathFinder
     struct ShadingCBContent
     {
         GBufferTextureIndices GBufferIndices;
+        glm::vec4 Halton;
         // 16 byte boundary
         uint32_t BlueNoiseTexIdx;
         uint32_t AnalyticOutputTexIdx;

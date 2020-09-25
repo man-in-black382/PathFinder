@@ -39,6 +39,7 @@ namespace PathFinder
         using MouseButton = uint16_t;
         using MouseButtonMask = uint16_t;
         using KeyboardKeySet = std::unordered_set<KeyboardKey>;
+        using KeyboardEvent = Foundation::Event<Input, std::string, void(KeyboardKey, const Input*)>;
 
         Input() = default;
         ~Input() = default;
@@ -81,6 +82,9 @@ namespace PathFinder
         std::chrono::time_point<std::chrono::steady_clock> mMouseDownTimeStamp;
         Geometry::Dimensions mWindowDimensions = { 1, 1 };
 
+        KeyboardEvent mKeyDownEvent;
+        KeyboardEvent mKeyUpEvent;
+
     public:
         inline auto CurrentClickCount() const { return mClickCountFinal; }
         inline const glm::vec2& ScrollDelta() const { return mScrollDelta; }
@@ -88,6 +92,9 @@ namespace PathFinder
         inline const glm::vec2& MousePosition() const { return mMousePosition; }
         inline MouseButtonMask PressedMouseButtonsMask() const { return mPressedMouseButtonsMask; }
         inline const KeyboardKeySet& PressedKeyboardButtons() const { return mCurrentFramePressedKeyboardKeys; }
+
+        inline KeyboardEvent& KeyDownEvent() { return mKeyDownEvent; }
+        inline KeyboardEvent& KeyUpEvent() { return mKeyUpEvent; }
     };
 
 }

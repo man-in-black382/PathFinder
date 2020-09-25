@@ -22,6 +22,7 @@ struct ShadowRayPayload
 struct PassData
 {
     GBufferTextureIndices GBufferIndices;
+    float4 Halton;
     // 16 byte boundary
     uint BlueNoiseTexIdx;
     uint AnalyticOutputTexIdx;
@@ -102,11 +103,7 @@ uint RaysPerLight(LightTablePartitionInfo lightTableInfo)
 float4 RandomNumbersForLight(uint lightIndex, uint rayIndex, uint raysPerLight, float4 blueNoise)
 {
     // Halton sequence array must accommodate RaysPerLight number of sets
-    float4 additionalShift = float4(
-        Random(lightIndex * raysPerLight + rayIndex + PassDataCB.FrameNumber),
-        Random(lightIndex * raysPerLight + rayIndex + PassDataCB.FrameNumber + 1),
-        Random(lightIndex * raysPerLight + rayIndex + PassDataCB.FrameNumber + 2),
-        Random(lightIndex * raysPerLight + rayIndex + PassDataCB.FrameNumber + 3));
+    float4 additionalShift = PassDataCB.Halton;
 
     // Used for 2D position on light/BRDF
     float u1 = frac(additionalShift.r + blueNoise.r);
@@ -220,11 +217,18 @@ float3 SampleBRDF(Light light, LTCTerms ltcTerms, LTCAnalyticEvaluationResult di
 
     // This test should almost never fail because we just importance sampled from the BRDF.
     // Only an all black BRDF or a precision issue could trigger this.
-    return directLightingEvaluationResult.BRDFProbability > 0.0f ?
+    float3 brdf = directLightingEvaluationResult.BRDFProbability > 0.0f ?
         // Stochastic estimate of incident light, without shadow
         // Note: projection cosine dot(w_i, n) is baked into the LTC-based BRDF
-        brdfRayLightingEvaluationResult.BRDFMagnitude / misPDF :
+        brdfRayLightingEvaluationResult.BRDFMagnitude / misPDF:
         0.xxx; 
+
+    // This is a sad hack due to ray-traced lighting samples having lower magnitude than analytic ones.
+    // In low lighting environment dim unshadowed/shadowed images produce artifacts where values approach 0.
+    // We increase luminance by a constant factor to move problematic areas out of the visible range.
+    //brdf *= 10.0; // Looks like the hack is not even universal and depends on the situation. Oh well, need to figure out something smarter.
+
+    return brdf;
 }
 
 void ShadeWithSphericalLights(
@@ -410,8 +414,8 @@ float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, f
 
         float3 lightToSurface = surfacePosition - lightIntersectionPoint;
         float vectorLength = length(lightToSurface);
-        float tmax = vectorLength - 1e-03;
-        float tmin = 1e-03;
+        float tmax = vectorLength - 1e-02;
+        float tmin = 1e-02;
 
         RayDesc dxrRay;
         dxrRay.Origin = lightIntersectionPoint;

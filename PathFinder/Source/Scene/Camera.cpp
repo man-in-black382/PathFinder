@@ -17,14 +17,8 @@ namespace PathFinder
         mUp(glm::vec3(0, 1, 0)),
         mPitch(0),
         mYaw(-90.f),
-        mMaximumPitch(85.f) {}
-
-    Camera::Camera(float fieldOfView, float zNear, float zFar) : Camera()
+        mMaximumPitch(85.f) 
     {
-        mFieldOfView = fieldOfView;
-        mNearClipPlane = zNear;
-        mFarClipPlane = zFar;
-
         UpdateVectors();
     }
 
@@ -51,8 +45,8 @@ namespace PathFinder
     void Camera::LookAt(const glm::vec3 &point)
     {
         glm::vec3 direction = glm::normalize(point - mPosition);
-        mPitch = glm::degrees(asin(-direction.y));
-        mYaw = glm::degrees(atan2(direction.x, direction.z)) + 90;
+        mPitch = glm::degrees(asin(direction.y));
+        mYaw = glm::degrees(atan2(direction.x, -direction.z)) - 90;
 
         UpdateVectors();
     }
@@ -162,6 +156,11 @@ namespace PathFinder
     void Camera::SetShutterTime(float time)
     {
         mShutterTime = time;
+    }
+
+    void Camera::SetFieldOfView(float degrees)
+    {
+        mFieldOfView = degrees;
     }
 
 }

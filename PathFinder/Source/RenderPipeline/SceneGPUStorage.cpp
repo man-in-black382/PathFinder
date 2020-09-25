@@ -139,17 +139,20 @@ namespace PathFinder
 
         uint32_t index = 0;
         mLightTablePartitionInfo = {};
-        mLightTablePartitionInfo.TotalLightsCount = requiredBufferSize;
+        mLightTablePartitionInfo.TotalLightsCount = 0;
         mLightTablePartitionInfo.SphericalLightsOffset = index;
 
         for (SphericalLight& light : sphericalLights)
         {
+            if (light.LuminousPower() <= 0.0) continue;
+
             GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
             mLightTable->Write(&lightEntry, index, 1);
             light.SetGPULightTableIndex(index);
 
             ++index;
             ++mLightTablePartitionInfo.SphericalLightsCount;
+            ++mLightTablePartitionInfo.TotalLightsCount;
 
             mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(), 
                 std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));
@@ -159,12 +162,15 @@ namespace PathFinder
 
         for (FlatLight& light : rectangularLights)
         {
+            if (light.LuminousPower() <= 0.0) continue;
+
             GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
             mLightTable->Write(&lightEntry, index, 1);
             light.SetGPULightTableIndex(index);
 
             ++index;
             ++mLightTablePartitionInfo.RectangularLightsCount;
+            ++mLightTablePartitionInfo.TotalLightsCount;
 
             mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(),
                 std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));
@@ -174,12 +180,15 @@ namespace PathFinder
 
         for (FlatLight& light : diskLights)
         {
+            if (light.LuminousPower() <= 0.0) continue;
+
             GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
             mLightTable->Write(&lightEntry, index, 1);
             light.SetGPULightTableIndex(index);
 
             ++index;
             ++mLightTablePartitionInfo.EllipticalLightsCount;
+            ++mLightTablePartitionInfo.TotalLightsCount;
 
             mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(),
                 std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));

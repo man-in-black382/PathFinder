@@ -39,7 +39,7 @@ namespace PathFinder
 
         if (glm::any(glm::epsilonNotEqual(direction, glm::zero<glm::vec3>(), glm::vec3(0.0001f))))
         {
-            mKeyboardMoveDirection = glm::normalize(direction) * 0.05f;
+            mKeyboardMoveDirection = glm::normalize(direction) * mInputScaleTimeAdjusted.KeyboardMovementScale;
         } 
         else
         {
@@ -111,8 +111,8 @@ namespace PathFinder
         }
 
         mInputScaleTimeAdjusted = mInputScale;
-        /*  mInputScaleTimeAdjusted.KeyboardMovementScale /= frameDeltaTimeMicroseconds / 1000;
-          mInputScaleTimeAdjusted.MouseMovementScale /= frameDeltaTimeMicroseconds / 1000;*/
+     /*   mInputScaleTimeAdjusted.KeyboardMovementScale /= frameDeltaTimeMicroseconds / 1000;
+        mInputScaleTimeAdjusted.MouseMovementScale /= frameDeltaTimeMicroseconds / 1000;*/
 
         if (mIsEnabled) 
         {

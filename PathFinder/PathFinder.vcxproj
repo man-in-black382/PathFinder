@@ -319,6 +319,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPassMediators\RootSignatureCreator.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPassMediators\SamplerCreator.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorage.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderSettings.cpp" />
     <ClCompile Include="Source\RenderPipeline\RootSignatureProxy.cpp" />
     <ClCompile Include="Source\RenderPipeline\RTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\TopRTAS.cpp" />
@@ -365,9 +366,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\ThirdParty\imgui\imgui.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui_demo.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui_draw.cpp" />
-    <ClCompile Include="Source\ThirdParty\imgui\imgui_impl_dx12.cpp" />
-    <ClCompile Include="Source\ThirdParty\imgui\imgui_impl_win32.cpp" />
-    <ClCompile Include="Source\ThirdParty\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="Source\ThirdParty\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Source\Utility\EventTracker.cpp" />
   </ItemGroup>
@@ -520,6 +518,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPassMediators\SubPassScheduler.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassMetadata.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassUtilityProvider.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderSettings.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderSubPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\IShaderManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\RootDataStructures.hpp" />

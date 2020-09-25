@@ -99,11 +99,17 @@ namespace PathFinder
     void Input::KeyboardKeyDown(KeyboardKey key)
     {
         mCurrentFramePressedKeyboardKeys.insert(key);
+
+        if (!WasKeyboardKeyPressedPrevously(key))
+        {
+            mKeyDownEvent.Raise(key, this);
+        }
     }
 
     void Input::KeyboardKeyUp(KeyboardKey key)
     {
         mCurrentFramePressedKeyboardKeys.erase(key);
+        mKeyUpEvent.Raise(key, this);
     }
 
     void Input::BeginFrame()

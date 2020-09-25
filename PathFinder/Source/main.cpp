@@ -10,6 +10,7 @@
 #include "Scene/CameraInteractor.hpp"
 
 #include "RenderPipeline/RenderEngine.hpp"
+#include "RenderPipeline/RenderSettings.hpp"
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/RngSeedGenerationRenderPass.hpp"
@@ -51,6 +52,7 @@
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 #include <glm/common.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -80,18 +82,18 @@ int main(int argc, char** argv)
     ::SetWindowPos(hwnd, 0, 0, 0, 1920, 1080, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
     PathFinder::CommandLineParser cmdLineParser{ argc, argv };    
-
     PathFinder::RenderEngine<PathFinder::RenderPassContentMediator> engine{ hwnd, cmdLineParser };
     PathFinder::Scene scene{ cmdLineParser.ExecutableFolderPath(), engine.ResourceProducer() };
     PathFinder::SceneGPUStorage sceneStorage{ &scene, engine.Device(), engine.ResourceProducer() };
     PathFinder::UIGPUStorage uiStorage{ engine.ResourceProducer() };
     PathFinder::Input input{};
+    PathFinder::RenderSettingsController settingsContainer{ &input };
     PathFinder::InputHandlerWindows windowsInputHandler{ &input, hwnd };
     PathFinder::UIInteractor uiInteractor{ hwnd, &input };
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
     PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath(), engine.AssetStorage(), engine.ResourceProducer() };
-    PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene };
+    PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene, &settingsContainer };
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
@@ -139,56 +141,6 @@ int main(int argc, char** argv)
     engine.AddRenderPass(toneMappingPass.get());
     engine.AddRenderPass(backBufferOutputPass.get());
     engine.AddRenderPass(uiPass.get());
-
-    auto sphereLight1 = scene.EmplaceSphericalLight();
-    sphereLight1->SetRadius(4);
-    sphereLight1->SetPosition({ -3.5, 2.0, -10.0 });
-    sphereLight1->SetColor({ 255.0 / 255, 241.0 / 255, 224.1 / 255 });
-    sphereLight1->SetLuminousPower(600000);
-
-    /*auto sphereLight2 = scene.EmplaceSphericalLight();
-    sphereLight2->SetRadius(2);
-    sphereLight2->SetPosition({ 7.5, 0.0, 0.0 });
-    sphereLight2->SetColor({ 50.0 / 255, 50.0 / 255, 255.0 / 255 });
-    sphereLight2->SetLuminousPower(50000);
-
-    auto sphereLight3 = scene.EmplaceSphericalLight();
-    sphereLight3->SetRadius(2);
-    sphereLight3->SetPosition({ -7.5, 0.0, 0.0 });
-    sphereLight3->SetColor({ 201.0 / 255, 226.0 / 255, 50.0 / 255 });
-    sphereLight3->SetLuminousPower(50000);*/
-
-  /*  auto flatLight0 = scene.EmplaceRectangularLight();
-    flatLight0->SetWidth(2);
-    flatLight0->SetHeight(2);
-    flatLight0->SetPosition({ 7.5, 0.0, 0.0 });
-    flatLight0->SetNormal({ 0.0, .0, 1.0 });
-    flatLight0->SetColor({ 249.0 / 255, 215.0 / 255, 28.0 / 255 });
-    flatLight0->SetLuminousPower(5000);
-
-    auto flatLight2 = scene.EmplaceRectangularLight();
-    flatLight2->SetWidth(2);
-    flatLight2->SetHeight(2);
-    flatLight2->SetPosition({ -7.5, 0.0, 0.0 });
-    flatLight2->SetNormal({ 0.0, .0, 1.0 });
-    flatLight2->SetColor({ 201.0 / 255, 125.0 / 255, 255.0 / 255 });
-    flatLight2->SetLuminousPower(5000);
-
-    auto flatLight1 = scene.EmplaceRectangularLight();
-    flatLight1->SetWidth(2);
-    flatLight1->SetHeight(5);
-    flatLight1->SetPosition({ 2.5, 2.0, 0.0 });
-    flatLight1->SetNormal({ 0.0, -1.0, -1.0 });
-    flatLight1->SetColor({ 201.0 / 255, 226.0 / 255.0, 255.0 / 255 });
-    flatLight1->SetLuminousPower(20000);*/
-
-    auto flatLight3 = scene.EmplaceRectangularLight();
-    flatLight3->SetWidth(8);
-    flatLight3->SetHeight(4);
-    flatLight3->SetPosition({ 0, 2, 5.0 });
-    flatLight3->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, -1.0 }));
-    flatLight3->SetColor({ 255.0 / 255, 147.0 / 255, 41.0 / 255 });
-    flatLight3->SetLuminousPower(100000);
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
@@ -251,11 +203,11 @@ int main(int argc, char** argv)
 
     PathFinder::Mesh& plane = scene.AddMesh(std::move(meshLoader.Load("plane.obj").back()));
 
-    for (float x = -100; x < 100; x += 20)
+    for (float x = -200; x < 200; x += 20)
     {
-        for (float z = -100; z < 100; z += 20)
+        for (float z = -200; z < 200; z += 20)
         {
-            PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &concrete19Material });
+            PathFinder::MeshInstance& planeInstance = scene.AddMeshInstance({ &plane, &scuffedTitamiumMaterial });
             Geometry::Transformation t;
             t.Translation = glm::vec3{ x, -3.50207, z };
             planeInstance.SetTransformation(t);
@@ -263,7 +215,7 @@ int main(int argc, char** argv)
     }
 
     PathFinder::Mesh& cube = scene.AddMesh(std::move(meshLoader.Load("cube.obj").back()));
-    PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &scuffedTitamiumMaterial });
+    PathFinder::MeshInstance& cubeInstance = scene.AddMeshInstance({ &cube, &marbleTilesMaterial });
 
     PathFinder::Mesh& sphereType1 = scene.AddMesh(std::move(meshLoader.Load("sphere1.obj").back()));
     PathFinder::MeshInstance& sphereType1Instance0 = scene.AddMeshInstance({ &sphereType1, &marbleTilesMaterial });
@@ -281,61 +233,114 @@ int main(int argc, char** argv)
 
     Geometry::Transformation t = cubeInstance.Transformation();
     t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-    t.Translation = glm::vec3{ 0.0, 2, -4.0 };
-    t.Scale = glm::vec3{ 2.0f };
+    t.Translation = glm::vec3{ -4.88, 3.25, -3.42 };
+    t.Scale = glm::vec3{ 0/*2.0f*/ };
     cubeInstance.SetTransformation(t);
 
     //t.Scale = glm::vec3{ 0.1f }; // Large version
     //t.Translation = glm::vec3{ 0.0, -2, -4.0 }; // Large version
     t.Scale = glm::vec3{ 0.11f };
-    t.Translation = glm::vec3{ -6.0, 5, -4.0 };
+    t.Translation = glm::vec3{ -6.0, 8.0, -4.0 };
     sphereType1Instance0.SetTransformation(t);
      
-    t.Scale = glm::vec3{ 0.21f };
-    t.Translation = glm::vec3{ 12.0, 0.0, -4.0 };
+    // Small sphere
+    t.Scale = glm::vec3{ 0/*0.21f*/ };
+    t.Translation = glm::vec3{ 6.0, -14.0, -9.0 };
     sphereType2Instance0.SetTransformation(t);
 
     // Normal spheres
-    t.Scale = glm::vec3{ 0.1 };
-    t.Translation = glm::vec3{ 12.0, 2.0, -4.0 };
+    t.Scale = glm::vec3{ 0.12 };
+    t.Translation = glm::vec3{ 9.0, 2.0, -17.5 }; 
     sphereType3Instance0.SetTransformation(t);
 
-    t.Scale = glm::vec3{ 0.1 };
-    t.Translation = glm::vec3{ 16.0, 2.0, -4.0 };
+    t.Scale = glm::vec3{ 0.085 };
+    t.Translation = glm::vec3{ 8.88, 1.2, 0.1 };
     sphereType3Instance1.SetTransformation(t);
 
-    t.Scale = glm::vec3{ 0.1 };
-    t.Translation = glm::vec3{ 20.0, 2.0, -4.0 };
+    t.Scale = glm::vec3{ 0.15 };
+    t.Translation = glm::vec3{ 3.88, 3, -23.77 };
     sphereType3Instance2.SetTransformation(t);
 
     t.Scale = glm::vec3{ 0.1 };
-    t.Translation = glm::vec3{ -12.0, 2.0, -4.0 };
+    t.Translation = glm::vec3{ -13.2, 1.5, -18.6 };
     sphereType3Instance3.SetTransformation(t);
 
-    t.Scale = glm::vec3{ 0.1 };
-    t.Translation = glm::vec3{ -12.0, 2.0, -7.0 };
+    t.Scale = glm::vec3{ 0.09 };
+    t.Translation = glm::vec3{ -4.07, 1.25, -19.25 };
     sphereType3Instance4.SetTransformation(t);
 
     t.Scale = glm::vec3{ 0.1 };
-    t.Translation = glm::vec3{ -12.0, 2.0, -10.0 };
+    t.Translation = glm::vec3{ 12.47, 1.7, -9.26 };
     sphereType3Instance5.SetTransformation(t);
 
+    Foundation::Color light0Color{ 255.0 / 255, 241.0 / 255, 224.1 / 255 };
+    Foundation::Color light1Color{ 64.0 / 255, 156.0 / 255, 255.0 / 255 };
+    Foundation::Color light2Color{ 255.0 / 255, 147.0 / 255, 41.0 / 255 };
+    Foundation::Color light3Color{ 250.0 / 255, 110.0 / 255, 100.0 / 255 };
+
+    auto sphereLight0 = scene.EmplaceSphericalLight();
+    sphereLight0->SetRadius(7);
+    sphereLight0->SetPosition({ -5.65, 12.0, -4.6 });
+    sphereLight0->SetColor(light0Color);
+    sphereLight0->SetLuminousPower(300000);
+
+    auto sphereLight1 = scene.EmplaceSphericalLight();
+    sphereLight1->SetRadius(7.5);
+    sphereLight1->SetPosition({ -5.65, 12.0, -4.6 });
+    sphereLight1->SetColor(light1Color);
+    sphereLight1->SetLuminousPower(300000);
+
+    auto sphereLight2 = scene.EmplaceSphericalLight();
+    sphereLight2->SetRadius(6);
+    sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
+    sphereLight2->SetColor(light2Color);
+    sphereLight2->SetLuminousPower(300000);
+
+    auto sphereLight3 = scene.EmplaceSphericalLight();
+    sphereLight3->SetRadius(8);
+    sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
+    sphereLight3->SetColor(light3Color);
+    sphereLight3->SetLuminousPower(300000);
+   
+
+
+
+    //auto flatLight3 = scene.EmplaceRectangularLight();
+    //flatLight3->SetWidth(100);
+    //flatLight3->SetHeight(40);
+    //flatLight3->SetPosition({ -33.1, 21, 25.6 });
+    ////flatLight3->SetNormal(-glm::normalize(glm::vec3{ -30.6, 6, 23 }));
+    //flatLight3->SetColor(light2Color);
+    //flatLight3->SetLuminousPower(200000);
+
+    //auto dir = glm::normalize(glm::vec3{ -23.9, 6, 15.15 } - flatLight3->Position());
+    //dir.y = -0.5;
+    //dir = glm::normalize(dir);
+    //flatLight3->SetNormal(dir);
+
+     /*   auto flatLight4 = scene.EmplaceRectangularLight();
+        flatLight4->SetWidth(10);
+        flatLight4->SetHeight(5);
+        flatLight4->SetPosition({ -4.5, 3, -30.0 });
+        flatLight4->SetNormal(glm::normalize(glm::vec3{ 1, -0.5, 1.0 }));
+        flatLight4->SetColor({ 216.0 / 255, 247.0 / 255, 255.0 / 255 });
+        flatLight4->SetLuminousPower(20000);*/
 
     PathFinder::Camera& camera = scene.MainCamera();
     camera.SetFarPlane(500);
     camera.SetNearPlane(1);
-    camera.MoveTo({ 0.0, 2.0f, -25.f });
-    camera.LookAt({ 0.f, 4.0f, 0.f });
+    camera.MoveTo({ 63.65, 6.41, -32.7 });
+    camera.LookAt({ 0.f, 0.0f, 0.f });
     camera.SetViewportAspectRatio(16.0f / 9.0f);
-    camera.SetAperture(0.8);
-    camera.SetFilmSpeed(400);
+    camera.SetAperture(1.2);
+    camera.SetFilmSpeed(800);
     camera.SetShutterTime(1.0 / 125.0);
+    camera.SetFieldOfView(90);
 
     input.SetInvertVerticalDelta(true);
 
     choreograph::Timeline animationTimeline{};
     choreograph::Output<float> rotationOutput;
-    choreograph::Output<float> lightSizeOutput; 
 
     choreograph::PhraseRef<float> rotationPhrase = choreograph::makeRamp(0.0f, 2.0f * 3.1415f, 4.f);
     animationTimeline.apply(&rotationOutput, rotationPhrase).finishFn(
@@ -345,11 +350,63 @@ int main(int argc, char** argv)
         }
     );
 
-    choreograph::PhraseRef<float> lightSizePhrase = choreograph::makeRamp(1.0f, 5.0f, 1.f);
-    animationTimeline.apply(&lightSizeOutput, lightSizePhrase).finishFn(
-        [&m = *lightSizeOutput.inputPtr()]
+    float light0Power = 300000;
+    float light1Power = 300000;
+    float light2Power = 300000;
+    float light3Power = 300000;
+
+    // Animate lights
+    choreograph::Output<float> light0PowerOutput;
+    animationTimeline.apply(&light0PowerOutput).set(0.0f).holdUntil(1.0).rampTo(light0Power, 1.0f).holdUntil(28.f).rampTo(0.0f, 1.0f, choreograph::EaseOutQuad());
+
+    choreograph::Output<float> light1PowerOutput;
+    animationTimeline.apply(&light1PowerOutput).set(0.0f).holdUntil(2.0).rampTo(light1Power, 1.0f).holdUntil(29.f).rampTo(0.0f, 1.0f, choreograph::EaseOutQuad());
+
+    choreograph::Output<float> light2PowerOutput;
+    animationTimeline.apply(&light2PowerOutput).set(0.0f).holdUntil(3.0).rampTo(light2Power, 1.0f).holdUntil(30.f).rampTo(0.0f, 1.0f, choreograph::EaseOutQuad());
+
+    choreograph::Output<float> light3PowerOutput;
+    animationTimeline.apply(&light3PowerOutput).set(0.0f).holdUntil(4.0).rampTo(light3Power, 2.0f).holdUntil(31.f).rampTo(0.0f, 1.0f, choreograph::EaseOutQuad());
+
+    //choreograph::Output<float> lightRotationOutput;
+    //animationTimeline.apply(&lightRotationOutput).set(0.0f).rampTo(glm::pi<float>() * 2.0f, 2.0f).finishFn([&] {lightRotationOutput.inputPtr()->resetTime(); });
+
+    choreograph::Output<float> lightSizeOutput;
+    animationTimeline.apply(&lightSizeOutput).set(0.2f).holdUntil(10).rampTo(1.0f, 12.0f, choreograph::EaseOutQuad());
+
+    // Light positions
+    choreograph::Output<glm::vec3> light0PositionOutput;
+    animationTimeline.apply(&light0PositionOutput).set({ -57, 10, 2 }).rampTo({ 7, 15, 36 }, 1.5f, choreograph::EaseInOutSine()).finishFn([&] {
+        light0PositionOutput.inputPtr()->setPlaybackSpeed(light0PositionOutput.inputPtr()->getPlaybackSpeed() * -1);
+        light0PositionOutput.inputPtr()->resetTime(); 
+        });
+
+    choreograph::Output<glm::vec3> light1PositionOutput;
+    animationTimeline.apply(&light1PositionOutput).set({ 20,23,37 }).rampTo({ -68, 9, -13 }, 2.0f, choreograph::EaseInOutSine()).finishFn([&] {
+        light1PositionOutput.inputPtr()->setPlaybackSpeed(light1PositionOutput.inputPtr()->getPlaybackSpeed() * -1);
+        light1PositionOutput.inputPtr()->resetTime(); 
+        });
+
+    choreograph::Output<glm::vec3> light2PositionOutput;
+    animationTimeline.apply(&light2PositionOutput).set({ 33,2.5,8 }).rampTo({ -35, 17, 31 }, 2.0f, choreograph::EaseInOutSine()).finishFn([&] {
+        light2PositionOutput.inputPtr()->setPlaybackSpeed(light2PositionOutput.inputPtr()->getPlaybackSpeed() * -1);
+        light2PositionOutput.inputPtr()->resetTime();
+        });
+
+    choreograph::Output<glm::vec3> light3PositionOutput;
+    animationTimeline.apply(&light3PositionOutput).set({ -49, 7, -2.6 }).rampTo({ 30, 5, 30 }, 2.0f, choreograph::EaseInOutSine()).finishFn([&] {
+        light3PositionOutput.inputPtr()->setPlaybackSpeed(light3PositionOutput.inputPtr()->getPlaybackSpeed() * -1);
+        light3PositionOutput.inputPtr()->resetTime();
+        });
+
+    glm::vec3 cameraStartPos{ 44.8, 8.6, -106.0 };
+    glm::vec3 cameraEndPos{ 3.83, 6.7, -23 };
+    choreograph::Output<glm::vec3> cameraPosOutput;
+    choreograph::PhraseRef<glm::vec3> cameraPosPhrase = choreograph::makeRamp(cameraStartPos, cameraEndPos, 34.f);
+    animationTimeline.apply(&cameraPosOutput, cameraPosPhrase).finishFn(
+        [&m = *cameraPosOutput.inputPtr()]
         {
-            m.setPlaybackSpeed(m.getPlaybackSpeed() * -1);
+            //m.setPlaybackSpeed(m.getPlaybackSpeed() * -1);
             m.resetTime();
         }
         );
@@ -372,16 +429,43 @@ int main(int argc, char** argv)
 
     engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
-        t = cubeInstance.Transformation();
-        t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 1.f, 0.f, 1.f }));
-        cubeInstance.SetTransformation(t);
+            /*camera.MoveTo(cameraPosOutput.value());
+            camera.LookAt(glm::vec3{ -6.17, 4.58, -4.66 });*/
+            //sphereLight0->SetLuminousPower(light0PowerOutput.value());
+            //sphereLight1->SetLuminousPower(light1PowerOutput.value());
+            //sphereLight2->SetLuminousPower(light2PowerOutput.value());
+            //sphereLight3->SetLuminousPower(light3PowerOutput.value());
+            //flatLight3->SetLuminousPower(light3PowerOutput.value());
+            //flatLight4->SetLuminousPower(light3PowerOutput.value());
 
-        t = sphereType2Instance0.Transformation();
+        /*    sphereLight0->SetPosition(light0PositionOutput.value());
+            sphereLight1->SetPosition(light1PositionOutput.value());
+            sphereLight2->SetPosition(light2PositionOutput.value());
+            sphereLight3->SetPosition(light3PositionOutput.value());*/
+
+          /*  flatLight3->SetWidth(40.0 * lightSizeOutput.value());
+            flatLight3->SetHeight(20.0 * lightSizeOutput.value());*/
+
+        /*t = cubeInstance.Transformation();
+        t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 1.f, 0.f, 1.f }));
+        cubeInstance.SetTransformation(t);*/
+
+            t = sphereType1Instance0.Transformation();
+            t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 0.f, 1.f, 0.f }));
+            sphereType1Instance0.SetTransformation(t);
+
+       /* glm::vec3 rotCenter{ -5.65, 9.0, -4.6 };
+        glm::vec3 rotated = glm::rotate(glm::vec3{ 1.0, 0.0, 0.0 }, lightRotationOutput.value(), glm::vec3(0.0, 1.0, 0.0));*/
+
+        //sphereLight1->SetPosition(rotCenter + rotated * 4.0f);
+
+       /* t = sphereType2Instance0.Transformation();
         t.Rotation = glm::angleAxis(rotationOutput.value(), glm::normalize(glm::vec3{ 0.f, 1.f, 0.f }));
-        sphereType2Instance0.SetTransformation(t);
+        sphereType2Instance0.SetTransformation(t);*/
     /*    flatLight3->SetWidth(lightSizeOutput.value());
         flatLight3->SetHeight(lightSizeOutput.value());*/
 
+        settingsContainer.ApplyVolatileSettings();
         uiStorage.StartNewFrame();
         //ImGui::ShowDemoWindow();
         uiStorage.UploadUI();
@@ -393,7 +477,7 @@ int main(int argc, char** argv)
         engine.AddTopRayTracingAccelerationStructure(&sceneStorage.TopAccelerationStructure());
 
         globalConstants.PipelineRTResolution = {
-            engine.RenderSurface().Dimensions().Width,
+            engine.RenderSurface().Dimensions().Width, 
             engine.RenderSurface().Dimensions().Height
         };
 
@@ -407,9 +491,19 @@ int main(int argc, char** argv)
         perFrameConstants.PreviousFrameCamera = perFrameConstants.CurrentFrameCamera;
         perFrameConstants.CurrentFrameCamera = sceneStorage.CameraGPURepresentation();
 
+        const PathFinder::RenderSettings& settings = settingsContainer.AppliedSettings();
+
+        perFrameConstants.IsDenoiserEnabled = settings.IsDenoiserEnabled;
+        perFrameConstants.IsReprojectionHistoryDebugEnabled = settings.IsReprojectionHistoryDebugRenderingEnabled;
+        perFrameConstants.IsGradientDebugEnabled = settings.IsDenoiserGradientDebugRenderingEnabled;
+        perFrameConstants.IsMotionDebugEnabled = settings.IsDenoiserMotionDebugRenderingEnabled;
+        perFrameConstants.IsDenoiserAntilagEnabled = settings.IsDenoiserAntilagEnabled;
+
         engine.SetGlobalRootConstants(globalConstants);
         engine.SetFrameRootConstants(perFrameConstants);
     }};
+
+    ::ShowCursor(false);
 
     // Main loop
     MSG msg;
@@ -442,6 +536,8 @@ int main(int argc, char** argv)
         engine.Render();
         windowsInputHandler.EndFrame();
         animationTimeline.step(1.0 / 60.0);
+
+        IC(camera.Position().x, camera.Position().y, camera.Position().z);
     }
 
     engine.FlushAllQueuedFrames();

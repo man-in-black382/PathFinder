@@ -15,6 +15,7 @@ struct PassData
     uint UnshadowedShadingFixedTexIdx;
     uint ShadowedShadingPreBlurredTexIdx;
     uint UnshadowedShadingPreBlurredTexIdx;
+    bool IsDenoiserEnabled;
 };
 
 #define PassDataType PassData
@@ -89,6 +90,11 @@ void Fix(Texture2D inputTexture, RWTexture2D<float4> outputTexture, Texture2D vi
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
 {
+    if (!FrameDataCB.IsDenoiserEnabled)
+    {
+        return;
+    }
+
     uint2 pixelIndex = DTid.xy;
     float2 uv = (float2(pixelIndex) + 0.5) * GlobalDataCB.PipelineRTResolutionInv; 
 

@@ -15,7 +15,7 @@ namespace PathFinder
     public:
         struct InputScale
         {
-            float KeyboardMovementScale = 0.1f;
+            float KeyboardMovementScale = 0.2f;
             float MouseMovementScale = 0.07f;
         };
 

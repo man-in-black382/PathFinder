@@ -32,6 +32,12 @@ static const int BlurSampleCount = 8;
 float3 Blur(Texture2D image, float2 uv, uint2 pixelIdx, float2 texelSize, float gradient, float diskRotation)
 {
     float3 blurred = image[pixelIdx].rgb;
+
+    if (FrameDataCB.IsDenoiserEnabled)
+    {
+        return blurred;
+    }
+
     float2 diskScale = texelSize * BlurSampleCount * gradient;
     int sampleCount = BlurSampleCount * gradient;
 
@@ -74,6 +80,17 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float3 stochasticUnshadowed = Blur(unshadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);
 
     float3 combinedShading = CombineShading(analyticShadingTexture[pixelIndex].rgb, stochasticShadowed, stochasticUnshadowed);
+
+    if (FrameDataCB.IsReprojectionHistoryDebugEnabled ||
+        FrameDataCB.IsGradientDebugEnabled ||
+        FrameDataCB.IsMotionDebugEnabled)
+    {
+        // Debug data is encoded in gradients texture
+        if (any(gradients < 0.7))
+        {
+            combinedShading = float3(1.0 - gradients, 0.0);
+        }
+    }
 
     combinedShadingTargetTexture[pixelIndex].rgb = combinedShading;
     combinedOversaturatedShadingTargetTexture[pixelIndex].rgb = CIELuminance(combinedShading) > 1.0 ? combinedShading : 0.0;

@@ -45,6 +45,8 @@ namespace PathFinder
 
         auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
 
+        const RenderSettings* settings = context->GetContent()->GetSettings();
+
         DenoiserPostBlurCBContent cbContent{};
         cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
         cbContent.AnalyticShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ShadingAnalyticOutput);

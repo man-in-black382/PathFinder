@@ -21,7 +21,6 @@ struct PassData
     uint UnshadowedShadingDenoiseTargetTexIdx;
     uint PrimaryGradientTexIdx;
     uint SecondaryGradientTexIdx;
-    uint CombinedShadingTexIdx;
 };
 
 #define PassDataType PassData
@@ -58,7 +57,7 @@ float MaxAllowedAccumulatedFrames(float roughness, float NdotV, float parallax)
 float MaxAllowedAccumulatedFrames(float gradient, float roughness)
 {
     // Tweak to find balance of lag and noise. 
-    float Antilag = 3;    
+    float Antilag = 5;    
     float Power = lerp(1.0, 5.0, roughness);
 
     return MaxAccumulatedFrames * pow(1.0 - saturate(Antilag * gradient), Power) + 1.0;
@@ -153,12 +152,18 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float gradient = max(gradients.x, gradients.y);
 
     // Adjust the history length, taking the antilag factors into account
-    accumFramesCount = min(MaxAllowedAccumulatedFrames(gradient, roughness), accumFramesCount);
-    accumFramesCount = min(MaxAllowedAccumulatedFrames(roughness, NdotV, parallax), accumFramesCount);
-    accumFramesCount = min(accumFramesCount, MaxAccumulatedFrames);
+    float maxAccFramesDueToGradient = MaxAllowedAccumulatedFrames(gradient, roughness);
+    float maxAccFramesDueToMovement = MaxAllowedAccumulatedFrames(roughness, NdotV, parallax);
 
-    float accumFramesCountNorm = accumFramesCount / MaxAccumulatedFrames;
-    float accumulationSpeed = 1.0 / (1.0 + accumFramesCount);
+    float accumFramesCountAdjusted = min(accumFramesCount, MaxAccumulatedFrames);
+
+    if (FrameDataCB.IsDenoiserAntilagEnabled)
+    {
+        accumFramesCountAdjusted = min(min(accumFramesCount, maxAccFramesDueToGradient), maxAccFramesDueToMovement);
+    }
+
+    float accumFramesCountNorm = accumFramesCountAdjusted / MaxAccumulatedFrames;
+    float accumulationSpeed = 1.0 / (1.0 + accumFramesCountAdjusted);
 
     // Define blur radius range
     const float MinBlurRadius = 0.03;
@@ -182,68 +187,75 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     
     float totalWeight = 1.0;
 
-    [unroll]
-    for (int i = 0; i < DenoiseSampleCount; ++i)
+    if (FrameDataCB.IsDenoiserEnabled)
     {
-        // Generate sample in 2D
-        float2 vdSample = VogelDiskSample(i, DenoiseSampleCount, vogelDiskRotation);
+        [unroll]
+        for (int i = 0; i < DenoiseSampleCount; ++i)
+        {
+            // Generate sample in 2D
+            float2 vdSample = VogelDiskSample(i, DenoiseSampleCount, vogelDiskRotation);
 
-        // Make sample 3D and z-alighned
-        float3 vd3DSample = float3(vdSample, 0.0);
+            // Make sample 3D and z-alighned
+            float3 vd3DSample = float3(vdSample, 0.0);
 
-        // Transform sample into its basis.
-        // Then position it around surface point in camera view space.
-        float3 viewSpaceSample = mul(samplingBasis, vd3DSample) + viewPosition;
+            // Transform sample into its basis.
+            // Then position it around surface point in camera view space.
+            float3 viewSpaceSample = mul(samplingBasis, vd3DSample) + viewPosition;
 
-        // Project and obtain sample's UV
-        float3 projectedSample = Project(viewSpaceSample, FrameDataCB.CurrentFrameCamera);
-        float2 sampleUV = NDCToUV(projectedSample);
+            // Project and obtain sample's UV
+            float3 projectedSample = Project(viewSpaceSample, FrameDataCB.CurrentFrameCamera);
+            float2 sampleUV = NDCToUV(projectedSample);
 
-        // Now that we know screen-space sample location, we need to obtain view-space 3d position of 
-        // a surface that lives at that location. We basically need to cast a ray through sample UV into depth buffer.
-        // Unprojection will do just what we need.
-        float neightborDepth = gBufferTextures.DepthStencil.SampleLevel(LinearClampSampler(), sampleUV, 0).r;
-        float3 neighborViewPos = NDCDepthToViewPosition(neightborDepth, sampleUV, FrameDataCB.CurrentFrameCamera);
+            // Now that we know screen-space sample location, we need to obtain view-space 3d position of 
+            // a surface that lives at that location. We basically need to cast a ray through sample UV into depth buffer.
+            // Unprojection will do just what we need.
+            float neightborDepth = gBufferTextures.DepthStencil.SampleLevel(LinearClampSampler(), sampleUV, 0).r;
+            float3 neighborViewPos = NDCDepthToViewPosition(neightborDepth, sampleUV, FrameDataCB.CurrentFrameCamera);
 
-        // Get neighbor properties
-        float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler(), sampleUV, 0);
+            // Get neighbor properties
+            float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler(), sampleUV, 0);
 
-        float3 neighborNormal = ExpandGBufferNormal(neighborNormalRoughness.xyz);
-        float neighborRoughness = neighborNormalRoughness.w;
+            float3 neighborNormal = ExpandGBufferNormal(neighborNormalRoughness.xyz);
+            float neighborRoughness = neighborNormalRoughness.w;
 
-        // Compute weights
-        float normalWeight = NormalWeight(worldNormal, neighborNormal, roughness, accumFramesCount);
-        float geometryWeight = GeometryWeight(viewPosition, viewNormal, neighborViewPos);
-        float roughnessWeight = RoughnessWeight(roughness, neighborRoughness); 
+            // Compute weights
+            float normalWeight = NormalWeight(worldNormal, neighborNormal, roughness, accumFramesCount);
+            float geometryWeight = GeometryWeight(viewPosition, viewNormal, neighborViewPos);
+            float roughnessWeight = RoughnessWeight(roughness, neighborRoughness);
 
-        float sampleWeight = normalWeight * geometryWeight * roughnessWeight;
+            float sampleWeight = normalWeight * geometryWeight * roughnessWeight;
 
-        // Sample neighbor value and weight accordingly
-        denoisedShadowed += currentShadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb * sampleWeight;
-        denoisedUnshadowed += currentUnshadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb * sampleWeight;
+            // Sample neighbor value and weight accordingly
+            denoisedShadowed += currentShadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb * sampleWeight;
+            denoisedUnshadowed += currentUnshadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb * sampleWeight;
 
-        totalWeight += sampleWeight;
+            totalWeight += sampleWeight;
+        }
+
+        denoisedShadowed /= totalWeight;
+        denoisedUnshadowed /= totalWeight;
+
+        float3 shadowedShadingHistory = shadowedShadingHistoryTexture[pixelIndex].rgb;
+        float3 unshadowedShadingHistory = unshadowedShadingHistoryTexture[pixelIndex].rgb;
+
+        // Combine with history
+        denoisedShadowed = lerp(shadowedShadingHistory, denoisedShadowed, accumulationSpeed);
+        denoisedUnshadowed = lerp(unshadowedShadingHistory, denoisedUnshadowed, accumulationSpeed);
+
+        float2 secondaryGradients = float2(
+            GetHFGradient(CIELuminance(shadowedShadingHistory), CIELuminance(denoisedShadowed)),
+            GetHFGradient(CIELuminance(unshadowedShadingHistory), CIELuminance(denoisedUnshadowed)));
+
+        secondaryGradientTexture[pixelIndex].rg = secondaryGradients;
     }
 
-    denoisedShadowed /= totalWeight;
-    denoisedUnshadowed /= totalWeight;
-
-    float3 shadowedShadingHistory = shadowedShadingHistoryTexture[pixelIndex].rgb;
-    float3 unshadowedShadingHistory = unshadowedShadingHistoryTexture[pixelIndex].rgb;
-
-    // Combine with history
-    denoisedShadowed = lerp(shadowedShadingHistory, denoisedShadowed, accumulationSpeed);
-    denoisedUnshadowed = lerp(unshadowedShadingHistory, denoisedUnshadowed, accumulationSpeed);
+    if (FrameDataCB.IsReprojectionHistoryDebugEnabled) secondaryGradientTexture[pixelIndex].rg = accumFramesCount / MaxAccumulatedFrames;
+    if (FrameDataCB.IsGradientDebugEnabled) secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToGradient / MaxAccumulatedFrames;
+    if (FrameDataCB.IsMotionDebugEnabled) secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToMovement / MaxAccumulatedFrames;
 
     // Output final denoised value
     shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedShadowed;
     unshadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedUnshadowed;
-
-    float2 secondaryGradients = float2(
-        GetHFGradient(CIELuminance(shadowedShadingHistory), CIELuminance(denoisedShadowed)),
-        GetHFGradient(CIELuminance(unshadowedShadingHistory), CIELuminance(denoisedUnshadowed)));
-
-    secondaryGradientTexture[pixelIndex].rg = secondaryGradients;
 }
 
 #endif

@@ -118,7 +118,7 @@ GBufferPixelOut PSMain(VertexOut pin)
 
     float3 normal = instanceData.HasTangentSpace ?
         FetchNormalMap(pin, material) :
-        float3(pin.TBN[0][2], pin.TBN[1][2], pin.TBN[2][2]);
+        normalize(float3(pin.TBN[0][2], pin.TBN[1][2], pin.TBN[2][2]));
 
     GBufferPixelOut pixelOut = GetStandardGBufferPixelOutput(
         FetchAlbedoMap(pin, material),

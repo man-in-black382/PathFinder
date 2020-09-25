@@ -170,7 +170,7 @@ float LTCEvaluateDisk(float3 N, float3 V, float3 P, float3x3 Minv, float3 points
     float d11 = dot(V1, V1);
     float d22 = dot(V2, V2);
     float d12 = dot(V1, V2);
-    if (abs(d12) / sqrt(d11 * d22) > 0.0001)
+    if (abs(d12) / sqrt(d11 * d22) > 0.001)
     {
         float tr = d11 + d22;
         float det = -d12 * d12 + d11 * d22;
