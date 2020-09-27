@@ -131,13 +131,14 @@ namespace PathFinder
         struct SubresourceTransitionInfo
         {
             RenderPassGraph::SubresourceName SubresourceName;
-            HAL::ResourceTransitionBarrier TransitionBarrier;
-            const HAL::Resource* Resource;
+            // Optional, because we also track "omitted" transitions to maintain split barrier correctness
+            std::optional<HAL::ResourceTransitionBarrier> TransitionBarrier;
+            const HAL::Resource* Resource = nullptr;
         };
 
-        struct SubresourcePreviousTransitionInfo
+        struct SubresourcePreviousUsageInfo
         {
-            const RenderPassGraph::Node* Node;
+            const RenderPassGraph::Node* Node = nullptr;
             uint64_t CommandListBatchIndex = 0;
         };
 
@@ -205,8 +206,8 @@ namespace PathFinder
         uint64_t mQueueCount = 2;
         uint64_t mBVHBuildsQueueIndex = 1;
 
-        // Keep track of nodes where transitions previously occurred to insert Begin part of split barriers there
-        robin_hood::unordered_flat_map<RenderPassGraph::SubresourceName, SubresourcePreviousTransitionInfo> mSubresourcesPreviousTransitionInfo;
+        // Keep track of nodes where transitions previously occurred (where resource was used last) to insert Begin part of split barriers there
+        robin_hood::unordered_flat_map<RenderPassGraph::SubresourceName, SubresourcePreviousUsageInfo> mSubresourcesPreviousUsageInfo;
 
         // Keep list of separate barriers gathered for dependency level so we could cull them, if conditions are met, when command list batches are determined
         std::vector<std::vector<SubresourceTransitionInfo>> mDependencyLevelTransitionBarriers;

@@ -20,7 +20,7 @@ namespace PathFinder
      
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        scheduler->ReadTexture(ResourceNames::SMAAAntialiased);
+        scheduler->ReadTexture(ResourceNames::UIOutput);
         scheduler->WriteToBackBuffer();
     } 
 
@@ -30,7 +30,7 @@ namespace PathFinder
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
     
         BackBufferOutputPassData cbContent;
-        cbContent.SourceTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::SMAAAntialiased);
+        cbContent.SourceTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::UIOutput);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Draw(DrawablePrimitive::Quad());

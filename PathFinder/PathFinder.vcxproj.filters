@@ -495,6 +495,24 @@
     <ClCompile Include="Source\RenderPipeline\RenderSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ThirdParty\imguizmo\ImCurveEdit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ThirdParty\imguizmo\ImGradient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ThirdParty\imguizmo\ImGuizmo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ThirdParty\imguizmo\ImSequencer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\SceneManipulatorViewController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\SequencerViewController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2574,6 +2592,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderSettings.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\imguizmo\ImCurveEdit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\imguizmo\ImGradient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\imguizmo\ImGuizmo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\imguizmo\ImSequencer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\SceneManipulatorViewController.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\SequencerViewController.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\ViewController.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

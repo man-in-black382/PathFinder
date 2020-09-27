@@ -263,7 +263,7 @@ namespace PathFinder
 
     void ResourceScheduler::WriteToBackBuffer()
     {
-        mCurrentlySchedulingPassNode->WritesToBackBuffer = true;
+        mCurrentlySchedulingPassNode->AddWriteDependency(RenderPassGraph::Node::BackBufferName, std::nullopt, 1);
     }
 
     void ResourceScheduler::ExecuteOnQueue(RenderPassExecutionQueue queue)

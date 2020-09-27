@@ -59,6 +59,7 @@ namespace PathFinder
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
         inline Foundation::Name BloomCompositionOutput{ "Resource_Bloom_Composition_Output" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
+        inline Foundation::Name UIOutput{ "Resource_UI_Output" };
 
         inline Foundation::Name SMAADetectedEdges{ "Resource_SMAA_Detected_Edges" };
         inline Foundation::Name SMAABlendingWeights{ "Resource_SMAA_Blending_Weights" };

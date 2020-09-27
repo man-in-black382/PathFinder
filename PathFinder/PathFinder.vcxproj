@@ -115,7 +115,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -182,7 +182,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -349,6 +349,12 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\ThirdParty\choreograph\Cue.cpp" />
     <ClCompile Include="Source\ThirdParty\choreograph\Timeline.cpp" />
     <ClCompile Include="Source\ThirdParty\choreograph\TimelineItem.cpp" />
+    <ClCompile Include="Source\ThirdParty\imguizmo\ImCurveEdit.cpp" />
+    <ClCompile Include="Source\ThirdParty\imguizmo\ImGradient.cpp" />
+    <ClCompile Include="Source\ThirdParty\imguizmo\ImGuizmo.cpp" />
+    <ClCompile Include="Source\ThirdParty\imguizmo\ImSequencer.cpp" />
+    <ClCompile Include="Source\UI\SceneManipulatorViewController.cpp" />
+    <ClCompile Include="Source\UI\SequencerViewController.cpp" />
     <ClCompile Include="Source\Utility\AftermathCrashTracker.cpp" />
     <ClCompile Include="Source\Utility\AftermathShaderDatabase.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -1041,6 +1047,10 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\ThirdParty\glm\vector_relational.hpp" />
     <ClInclude Include="Source\ThirdParty\halton.hpp" />
     <ClInclude Include="Source\ThirdParty\icecream\icecream.hpp" />
+    <ClInclude Include="Source\ThirdParty\imguizmo\ImCurveEdit.h" />
+    <ClInclude Include="Source\ThirdParty\imguizmo\ImGradient.h" />
+    <ClInclude Include="Source\ThirdParty\imguizmo\ImGuizmo.h" />
+    <ClInclude Include="Source\ThirdParty\imguizmo\ImSequencer.h" />
     <ClInclude Include="Source\ThirdParty\imgui\imconfig.h" />
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h" />
     <ClInclude Include="Source\ThirdParty\imgui\imgui_impl_dx12.h" />
@@ -1055,6 +1065,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\ThirdParty\optick\optick.config.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
     <ClInclude Include="Source\ThirdParty\robinhood\robin_hood.h" />
+    <ClInclude Include="Source\UI\SceneManipulatorViewController.hpp" />
+    <ClInclude Include="Source\UI\SequencerViewController.hpp" />
+    <ClInclude Include="Source\UI\ViewController.hpp" />
     <ClInclude Include="Source\Utility\AftermathCrashTracker.hpp" />
     <ClInclude Include="Source\Utility\AftermathHelpers.hpp" />
     <ClInclude Include="Source\Utility\AftermathShaderDatabase.hpp" />

@@ -47,7 +47,7 @@ namespace PathFinder
         assert_format(RenderPassExecutionQueue{ passNode.ExecutionQueueIndex } != RenderPassExecutionQueue::AsyncCompute,
             "Render Target Set command is unsupported on asynchronous compute queue");
 
-        assert_format(passNode.WritesToBackBuffer, "Render pass has not scheduled writing to back buffer");
+        assert_format(passNode.HasDependency(RenderPassGraph::Node::BackBufferName, 0), "Render pass has not scheduled writing to back buffer");
 
         auto cmdList = std::get<GraphicsCommandListPtr>(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList).get();
         const HAL::DSDescriptor* dsDescriptor = dsName ? mResourceStorage->GetDepthStencilDescriptor(*dsName, passNode.PassMetadata().Name) : nullptr;
@@ -458,6 +458,12 @@ namespace PathFinder
             // Process aliasing barriers while we're at it too.
             for (Foundation::Name resourceName : node->AllResources())
             {
+                // Special case of back buffer
+                if (resourceName == RenderPassGraph::Node::BackBufferName)
+                {
+                    continue;
+                }
+
                 const PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceName);
                 const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceData->SchedulingInfo.GetInfoForPass(node->PassMetadata().Name);
 
@@ -496,7 +502,7 @@ namespace PathFinder
         mPerNodeBeginBarriers.clear();
         mPerNodeBeginBarriers.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
 
-        mSubresourcesPreviousTransitionInfo.clear();
+        mSubresourcesPreviousUsageInfo.clear();
 
         for (const RenderPassGraph::DependencyLevel& dependencyLevel : mRenderPassGraph->DependencyLevels())
         {
@@ -525,6 +531,14 @@ namespace PathFinder
             auto requestTransition = [&](RenderPassGraph::SubresourceName subresourceName, bool isReadDependency)
             {
                 auto [resourceName, subresourceIndex] = mRenderPassGraph->DecodeSubresourceName(subresourceName);
+
+                // Back buffer does not participate in normal transition handling,
+                // its state is changed at the beginning and at the end of a frame
+                if (resourceName == RenderPassGraph::Node::BackBufferName)
+                {
+                    return;
+                }
+
                 PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceName);
                 HAL::ResourceState newState{};
 
@@ -553,6 +567,14 @@ namespace PathFinder
                     backBufferTransitioned = true;
                 }
 
+                // Render graph works with resource name aliases, so we need to track transitions for the resource using its original name,
+                // otherwise we would lose transition history and place incorrect Begin/End barriers
+                RenderPassGraph::SubresourceName originalSubresourceName = RenderPassGraph::ConstructSubresourceName(resourceData->ResourceName(), subresourceIndex);
+                SubresourceTransitionInfo transitionInfo{ originalSubresourceName, barrier, resourceData->GetGPUResource()->HALResource() };
+
+                // Keep track even of redundant transitions for later stage to correctly keep track of resource usage history
+                mDependencyLevelTransitionBarriers[node->LocalToDependencyLevelExecutionIndex()].push_back(transitionInfo);
+
                 // Redundant transition
                 if (!barrier)
                 {
@@ -565,13 +587,6 @@ namespace PathFinder
 
                     return;
                 }
-                
-                // Render graph works with resource name aliases, so we need to track transitions for the resource using its original name,
-                // otherwise we would lose transition history and place incorrect Begin/End barriers
-                RenderPassGraph::SubresourceName originalSubresourceName = RenderPassGraph::ConstructSubresourceName(resourceData->ResourceName(), subresourceIndex);
-                SubresourceTransitionInfo transitionInfo{ originalSubresourceName, *barrier, resourceData->GetGPUResource()->HALResource() };
-
-                mDependencyLevelTransitionBarriers[node->LocalToDependencyLevelExecutionIndex()].push_back(transitionInfo);
 
                 // Another reason to reroute resource transitions into another queue is incompatibility 
                 // of resource state transitions with receiving queue
@@ -606,14 +621,24 @@ namespace PathFinder
 
         for (const SubresourceTransitionInfo& transitionInfo : nodeTransitionBarriers)
         {
-            auto previousTransitionInfoIt = mSubresourcesPreviousTransitionInfo.find(transitionInfo.SubresourceName);
-            bool foundPreviousTransition = previousTransitionInfoIt != mSubresourcesPreviousTransitionInfo.end();
+            // Transition is implicit, we need to only keep track of previous resource usage 
+            // to correctly place split barriers later, if needed, graphic API transition for this pass is not required
+            if (!transitionInfo.TransitionBarrier)
+            {
+                mSubresourcesPreviousUsageInfo[transitionInfo.SubresourceName] = { node, currentCommandListBatchIndex };
+                continue;
+            }
+
+            // Transition is explicit. Look for previous transition info to see whether current explicit transition can be made
+            // implicit due to automatic promotion/decay.
+            auto previousTransitionInfoIt = mSubresourcesPreviousUsageInfo.find(transitionInfo.SubresourceName);
+            bool foundPreviousTransition = previousTransitionInfoIt != mSubresourcesPreviousUsageInfo.end();
             bool subresourceTransitionedAtLeastOnce = foundPreviousTransition && previousTransitionInfoIt->second.CommandListBatchIndex == currentCommandListBatchIndex;
 
             if (!subresourceTransitionedAtLeastOnce)
             {
                 bool implicitTransitionPossible = Memory::ResourceStateTracker::CanResourceBeImplicitlyTransitioned(
-                    *transitionInfo.Resource, transitionInfo.TransitionBarrier.BeforeStates(), transitionInfo.TransitionBarrier.AfterStates());
+                    *transitionInfo.Resource, transitionInfo.TransitionBarrier->BeforeStates(), transitionInfo.TransitionBarrier->AfterStates());
 
                 if (implicitTransitionPossible)
                 {
@@ -621,13 +646,14 @@ namespace PathFinder
                 }
             }
 
+            // When previous transition is found we can try to split the barrier
             if (foundPreviousTransition)
             {
-                const SubresourcePreviousTransitionInfo& previousTransitionInfo = previousTransitionInfoIt->second;
+                const SubresourcePreviousUsageInfo& previousTransitionInfo = previousTransitionInfoIt->second;
 
                 // Split barrier is only possible when transmitting queue supports transitions for both before and after states
                 bool isSplitBarrierPossible = IsStateTransitionSupportedOnQueue(
-                    previousTransitionInfo.Node->ExecutionQueueIndex, transitionInfo.TransitionBarrier.BeforeStates(), transitionInfo.TransitionBarrier.AfterStates()
+                    previousTransitionInfo.Node->ExecutionQueueIndex, transitionInfo.TransitionBarrier->BeforeStates(), transitionInfo.TransitionBarrier->AfterStates()
                 );
 
                 // There is no sense in splitting barriers between two adjacent render passes. 
@@ -636,21 +662,21 @@ namespace PathFinder
 
                 if (isSplitBarrierPossible && !currentNodeIsNextToPrevious)
                 {
-                    auto [beginBarrier, endBarrier] = transitionInfo.TransitionBarrier.Split();
+                    auto [beginBarrier, endBarrier] = transitionInfo.TransitionBarrier->Split();
                     collection.AddBarrier(endBarrier);
                     mPerNodeBeginBarriers[previousTransitionInfo.Node->GlobalExecutionIndex()].AddBarrier(beginBarrier);
                 }
                 else
                 {
-                    collection.AddBarrier(transitionInfo.TransitionBarrier);
+                    collection.AddBarrier(*transitionInfo.TransitionBarrier);
                 }
             }
             else
             {
-                collection.AddBarrier(transitionInfo.TransitionBarrier);
+                collection.AddBarrier(*transitionInfo.TransitionBarrier);
             }
 
-            mSubresourcesPreviousTransitionInfo[transitionInfo.SubresourceName] = { node, currentCommandListBatchIndex };
+            mSubresourcesPreviousUsageInfo[transitionInfo.SubresourceName] = { node, currentCommandListBatchIndex };
         }
     }
 

@@ -50,9 +50,6 @@ namespace Memory
             std::optional<uint64_t> HeapListIndex = std::nullopt;
         };
 
-        // We store actual heaps inside segregated pool buckets 
-        // and resource and a reference to one of those heaps the 
-        // resource is allocated in inside pool slot
         using Pools = SegregatedPools<BucketUserData, SlotUserData>;
         using PoolsAllocation = SegregatedPoolsAllocation<BucketUserData, SlotUserData>;
         using PoolsBucket = SegregatedPoolsBucket<BucketUserData, SlotUserData>;

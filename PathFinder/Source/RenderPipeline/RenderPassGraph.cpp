@@ -555,7 +555,7 @@ namespace PathFinder
 
     bool RenderPassGraph::Node::HasAnyDependencies() const
     {
-        return !mReadAndWrittenSubresources.empty() || WritesToBackBuffer;
+        return !mReadAndWrittenSubresources.empty();
     }
 
     void RenderPassGraph::Node::Clear()
@@ -571,7 +571,6 @@ namespace PathFinder
         mSyncSignalRequired = false;
         ExecutionQueueIndex = 0;
         UsesRayTracing = false;
-        WritesToBackBuffer = false;
         mGlobalExecutionIndex = 0;
         mLocalToDependencyLevelExecutionIndex = 0;
     }

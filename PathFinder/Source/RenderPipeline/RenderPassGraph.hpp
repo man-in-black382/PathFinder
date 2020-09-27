@@ -25,6 +25,8 @@ namespace PathFinder
         class Node
         {
         public:
+            inline static const Foundation::Name BackBufferName = "BackBuffer_1TJWWnf7GA";
+
             using SubresourceList = std::vector<uint32_t>;
             using QueueIndex = uint64_t;
 
@@ -47,7 +49,6 @@ namespace PathFinder
 
             uint64_t ExecutionQueueIndex = 0;
             bool UsesRayTracing = false;
-            bool WritesToBackBuffer = false;
 
         private:
             using SynchronizationIndexSet = std::vector<uint64_t>;

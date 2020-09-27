@@ -78,7 +78,6 @@ namespace PathFinder
         mPreviousFrameResources->clear();
         mPreviousFrameResourceMap->clear();
         mPreviousFrameDiffEntries->clear();
-        mAliasMap.clear();
 
         std::swap(mPreviousFrameDiffEntries, mCurrentFrameDiffEntries);
         std::swap(mPreviousFrameResources, mCurrentFrameResources);
@@ -100,6 +99,7 @@ namespace PathFinder
         mSchedulingUsageRequests.clear();
         mPrimaryResourceCreationRequests.clear();
         mSecondaryResourceCreationRequests.clear();
+        mAliasMap.clear();
     }
 
     void PipelineResourceStorage::EndResourceScheduling()
@@ -124,40 +124,31 @@ namespace PathFinder
             CreatePerResourceData(request.ResourceName, resourceData->SchedulingInfo.ResourceFormat());
         }
 
-        // Run scheduling callbacks
-        for (SchedulingRequest& request : mSchedulingCreationRequests)
-        {
-            uint64_t resourceDataIndex = mCurrentFrameResourceMap->at(request.ResourceName);
-            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(resourceDataIndex);
-            request.Configurator(resourceData.SchedulingInfo);
-        }
-
         std::vector<ResourceName> aliases;
 
-        // Run scheduling callbacks
-        for (SchedulingRequest& request : mSchedulingUsageRequests)
+        // Flat out aliases
+        while (!mAliasMap.empty())
         {
             aliases.clear();
 
-            ResourceName resourceName = request.ResourceName;
+            auto aliasAndOriginalIt = mAliasMap.begin();
+            ResourceName originalName = aliasAndOriginalIt->second;
 
-            // If resource name is an alias
-            auto originalNameIt = mAliasMap.find(resourceName);
-
-            while (originalNameIt != mAliasMap.end())
+            while (aliasAndOriginalIt != mAliasMap.end())
             {
-                aliases.push_back(resourceName);
-                // Take next name in chain
-                resourceName = originalNameIt->second;
+                aliases.push_back(aliasAndOriginalIt->first);
+                // Take next name in chain`
+                originalName = aliasAndOriginalIt->second;
+                // Remove processed alias so we don't encounter it again on next iterations
+                mAliasMap.erase(aliasAndOriginalIt);
                 // See whether that name is also an alias
-                originalNameIt = mAliasMap.find(resourceName);
+                aliasAndOriginalIt = mAliasMap.find(originalName);
             }
 
-            auto indexIt = mCurrentFrameResourceMap->find(resourceName);
-            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", resourceName.ToString());
+            auto indexIt = mCurrentFrameResourceMap->find(originalName);
+            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", originalName.ToString());
 
             PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
-            request.Configurator(resourceData.SchedulingInfo);
 
             // Associate aliases with original resource
             for (ResourceName alias : aliases)
@@ -165,6 +156,24 @@ namespace PathFinder
                 mCurrentFrameResourceMap->emplace(alias, indexIt->second);
                 resourceData.SchedulingInfo.AddNameAlias(alias);
             }
+        }
+
+        // Run scheduling creation callbacks
+        for (SchedulingRequest& request : mSchedulingCreationRequests)
+        {
+            uint64_t resourceDataIndex = mCurrentFrameResourceMap->at(request.ResourceName);
+            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(resourceDataIndex);
+            request.Configurator(resourceData.SchedulingInfo);
+        }
+
+        // Run scheduling usage callbacks
+        for (SchedulingRequest& request : mSchedulingUsageRequests)
+        {
+            auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
+            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", request.ResourceName.ToString());
+
+            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
+            request.Configurator(resourceData.SchedulingInfo);
         }
     }
 
@@ -238,10 +247,10 @@ namespace PathFinder
                     [&resourceData, heap, this](const HAL::TextureProperties& textureProps)
                     {
                         resourceData.Texture = resourceData.SchedulingInfo.CanBeAliased  ?
-                            mResourceProducer->NewTexture(textureProps/*, *heap, resourceData.SchedulingInfo.HeapOffset*/) :
+                            mResourceProducer->NewTexture(textureProps, *heap, resourceData.SchedulingInfo.HeapOffset) :
                             mResourceProducer->NewTexture(textureProps);
 
-                        resourceData.Texture->SetDebugName(resourceData.ResourceName().ToString());
+                        resourceData.Texture->SetDebugName(resourceData.SchedulingInfo.CombinedResourceNames());
                     },
                     [&resourceData, heap, this](const HAL::ByteBufferProperties& bufferProps)
                     {
@@ -249,7 +258,7 @@ namespace PathFinder
                             mResourceProducer->NewBuffer(bufferProps, *heap, resourceData.SchedulingInfo.HeapOffset) :
                             mResourceProducer->NewBuffer(bufferProps);
 
-                        resourceData.Buffer->SetDebugName(resourceData.ResourceName().ToString());
+                        resourceData.Buffer->SetDebugName(resourceData.SchedulingInfo.CombinedResourceNames());
                     }),
                     format.ResourceProperties());
             }

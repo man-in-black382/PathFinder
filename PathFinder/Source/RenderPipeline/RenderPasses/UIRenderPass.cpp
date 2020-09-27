@@ -26,19 +26,18 @@ namespace PathFinder
             state.DepthStencilState.SetDepthTestEnabled(false);
             state.RasterizerState.SetFrontClockwise(true); // ImGui is Clockwise for front face
             state.BlendState = AlphaBlendingState();
-            state.RenderTargetFormats = { HAL::ColorFormat::RGBA8_Usigned_Norm };
         });
     }
       
     void UIRenderPass::ScheduleResources(ResourceScheduler* scheduler)
     { 
-        scheduler->WriteToBackBuffer();
+        scheduler->AliasAndUseRenderTarget(ResourceNames::SMAAAntialiased, ResourceNames::UIOutput);
     }  
 
     void UIRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::UI);
-        context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
+        context->GetCommandRecorder()->SetRenderTarget(ResourceNames::UIOutput);
 
         if (auto vertexBuffer = context->GetContent()->GetUIGPUStorage()->VertexBuffer())
         {

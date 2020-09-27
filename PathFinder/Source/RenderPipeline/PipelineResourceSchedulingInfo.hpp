@@ -69,6 +69,7 @@ namespace PathFinder
         Foundation::Name mResourceName;
         std::vector<Foundation::Name> mAliases;
         uint64_t mSubresourceCount = 0;
+        std::string mCombinedResourceNames;
 
         std::vector<HAL::ResourceState> mSubresourceCombinedReadStates;
 
@@ -79,6 +80,7 @@ namespace PathFinder
         inline const auto& Aliases() const { return mAliases; }
         inline auto SubresourceCount() const { return mSubresourceCount; }
         inline auto TotalRequiredMemory() const { return mResourceFormat.ResourceSizeInBytes(); }
+        inline auto CombinedResourceNames() const { return mCombinedResourceNames; }
     };
 
 }
