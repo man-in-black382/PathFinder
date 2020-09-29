@@ -4,17 +4,23 @@
 
 #include "../Scene/Camera.hpp"
 
-namespace UI
+namespace PathFinder
 {
    
     class SceneManipulatorViewController : ViewController
     {
     public:
-        void SetCamera(PathFinder::Camera* camera);
+        void SetCamera(Camera* camera);
         void Draw() override;
+        bool IsInteracting() const override;
 
     private:
-        PathFinder::Camera* mCamera;
+        bool EditTransform(const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition);
+
+        glm::mat4 modelMatDebug{ 1.0f };
+
+        bool mIsInteracting = false;
+        Camera* mCamera;
     };
 
 }

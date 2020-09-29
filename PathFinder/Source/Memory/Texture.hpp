@@ -17,14 +17,14 @@ namespace Memory
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
-            CopyCommandListProvider* commandListProvider);
+            CopyRequestManager* copyRequestManager);
 
         Texture(
             const HAL::TextureProperties& properties,
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
-            CopyCommandListProvider* commandListProvider,
+            CopyRequestManager* copyRequestManager,
             const HAL::Device& device,
             const HAL::Heap& mainResourceExplicitHeap,
             uint64_t explicitHeapOffset);
@@ -33,7 +33,7 @@ namespace Memory
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
-            CopyCommandListProvider* commandListProvider,
+            CopyRequestManager* copyRequestManager,
             HAL::Texture* existingTexture);
 
         ~Texture();
@@ -49,8 +49,8 @@ namespace Memory
     protected:
         uint64_t ResourceSizeInBytes() const override;
         void ApplyDebugName() override;
-        void RecordUploadCommands() override;
-        void RecordReadbackCommands() override;
+        CopyRequestManager::CopyCommand GetUploadCommands() override;
+        CopyRequestManager::CopyCommand GetReadbackCommands() override;
         void ReserveDiscriptorArrays(uint8_t mipCount);
 
     private:

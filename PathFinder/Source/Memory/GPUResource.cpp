@@ -8,17 +8,17 @@ namespace Memory
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator,
         PoolDescriptorAllocator* descriptorAllocator,
-        CopyCommandListProvider* commandListProvider)
+        CopyRequestManager* copyRequestManager)
         :
         mUploadStrategy{ uploadStrategy },
         mStateTracker{ uploadStrategy == UploadStrategy::DirectAccess ? nullptr : stateTracker },
         mResourceAllocator{ resourceAllocator },
         mDescriptorAllocator{ descriptorAllocator },
-        mCommandListProvider{ commandListProvider } {}
+        mCopyRequestManager{ copyRequestManager } {}
 
     GPUResource::~GPUResource() {}
 
-    void GPUResource::RequestWrite(HAL::CopyCommandListBase* customCmdList)
+    void GPUResource::RequestWrite()
     {
         // Upload is already requested in current frame
         if (!mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber)
@@ -30,19 +30,11 @@ namespace Memory
 
         if (mUploadStrategy != UploadStrategy::DirectAccess)
         {
-            const ResourceStateTracker::SubresourceStateList& previousStates = mStateTracker->ResourceCurrentStates(HALResource());
-
-            HAL::ResourceBarrierCollection barriers = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
-            HAL::CopyCommandListBase* commandList = customCmdList ? customCmdList : mCommandListProvider->CommandList();
-            commandList->InsertBarriers(barriers);
-
-            RecordUploadCommands();
-            // Request to apply old state after copy
-            mStateTracker->RequestTransitions(HALResource(), previousStates);
+            mCopyRequestManager->RequestUpload(HALResource(), GetUploadCommands());
         }
     }
 
-    void GPUResource::RequestRead(HAL::CopyCommandListBase* customCmdList)
+    void GPUResource::RequestRead()
     {
         assert_format(mUploadStrategy != UploadStrategy::DirectAccess, "DirectAccess upload resource does not support reads");
 
@@ -54,15 +46,7 @@ namespace Memory
 
         AllocateNewReadbackBuffer();
 
-        const ResourceStateTracker::SubresourceStateList& previousStates = mStateTracker->ResourceCurrentStates(HALResource());
-
-        HAL::ResourceBarrierCollection barriers = mStateTracker->TransitionToStateImmediately(HALResource(), HAL::ResourceState::CopyDestination);
-        HAL::CopyCommandListBase* commandList = customCmdList ? customCmdList : mCommandListProvider->CommandList();
-        commandList->InsertBarriers(barriers);
-        
-        RecordReadbackCommands();
-        // Request to apply old state after copy
-        mStateTracker->RequestTransitions(HALResource(), previousStates);
+        mCopyRequestManager->RequestReadback(HALResource(), GetReadbackCommands());
     }
 
     void GPUResource::RequestNewState(HAL::ResourceState newState)

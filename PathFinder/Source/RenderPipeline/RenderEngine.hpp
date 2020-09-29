@@ -19,6 +19,7 @@
 #include "../Memory/PoolDescriptorAllocator.hpp"
 #include "../Memory/ResourceStateTracker.hpp"
 #include "../Memory/GPUResourceProducer.hpp"
+#include "../Memory/CopyRequestManager.hpp"
 
 #include "RenderPassMediators/ResourceScheduler.hpp"
 #include "RenderPassMediators/RootConstantsUpdater.hpp"
@@ -29,7 +30,6 @@
 #include "RenderPassMediators/SamplerCreator.hpp"
 #include "RenderPassMediators/RenderPassUtilityProvider.hpp"
 
-#include "SceneGPUStorage.hpp"
 #include "PipelineResourceStorage.hpp"
 #include "PreprocessableAssetStorage.hpp"
 #include "RenderDevice.hpp"
@@ -37,7 +37,6 @@
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
 #include "RenderPassGraph.hpp"
-#include "UIGPUStorage.hpp"
 #include "BottomRTAS.hpp"
 #include "TopRTAS.hpp"
 
@@ -56,7 +55,6 @@ namespace PathFinder
 
         void AddRenderPass(RenderPass<ContentMediator>* pass);
 
-        void UploadProcessAndTransferAssets();
         void Render();
         void FlushAllQueuedFrames();
 
@@ -75,8 +73,8 @@ namespace PathFinder
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
+        void UploadAssets();
         void BuildAccelerationStructures();
-        void RunAssetProcessingPasses();
         void RecordCommandLists();
         void ScheduleFrame();
 
@@ -97,6 +95,7 @@ namespace PathFinder
         std::unique_ptr<Memory::PoolCommandListAllocator> mCommandListAllocator;
         std::unique_ptr<Memory::PoolDescriptorAllocator> mDescriptorAllocator;
         std::unique_ptr<Memory::ResourceStateTracker> mResourceStateTracker;
+        std::unique_ptr<Memory::CopyRequestManager> mCopyRequestManager;
         std::unique_ptr<Memory::GPUResourceProducer> mResourceProducer;
 
         std::unique_ptr<AftermathCrashTracker> mAftermathCrashTracker;

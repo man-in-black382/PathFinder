@@ -35,6 +35,7 @@ namespace PathFinder
             std::vector<std::optional<SubresourceInfo>> SubresourceInfos;
             bool NeedsUnorderedAccessBarrier = false;
             bool NeedsAliasingBarrier = false;
+            bool IsReadbackRequested = false;
         };
 
         PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format);

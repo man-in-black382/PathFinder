@@ -5,7 +5,7 @@
 
 #include <windef.h>
 
-namespace PathFinder 
+namespace PathFinder
 {
 
     class UIInteractor 
@@ -16,9 +16,12 @@ namespace PathFinder
         void PollInputs();
         void SetViewportSize(const Geometry::Dimensions& size);
 
+        bool IsInteracting() const;
+
     private:
         void UpdateCursor();
 
+        bool mIsInteracting = false;
         HWND mWindowHandle;
         Input* mInput;
     };

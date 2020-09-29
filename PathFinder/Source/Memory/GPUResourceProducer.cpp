@@ -7,16 +7,18 @@ namespace Memory
         const HAL::Device* device,
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         ResourceStateTracker* stateTracker, 
-        PoolDescriptorAllocator* descriptorAllocator)
+        PoolDescriptorAllocator* descriptorAllocator,
+        CopyRequestManager* copyRequestManager)
         : 
         mDevice{ device },
         mResourceAllocator{ resourceAllocator }, 
         mStateTracker{ stateTracker }, 
-        mDescriptorAllocator{ descriptorAllocator } {}
+        mDescriptorAllocator{ descriptorAllocator },
+        mCopyRequestManager{ copyRequestManager } {}
 
     GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::TextureProperties& properties)
     {
-        Texture* texture = new Texture{ properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, this };
+        Texture* texture = new Texture{ properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, mCopyRequestManager };
         auto [iter, success] = mAllocatedResources.insert(texture);
 
         auto deallocationCallback = [this, iter](Texture* texture)
@@ -32,7 +34,7 @@ namespace Memory
     {
         Texture* texture = new Texture{
             properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, 
-            this, *mDevice, explicitHeap, heapOffset 
+            mCopyRequestManager, *mDevice, explicitHeap, heapOffset
         };
 
         auto [iter, success] = mAllocatedResources.insert(texture);
@@ -48,7 +50,7 @@ namespace Memory
 
     GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(HAL::Texture* existingTexture)
     {
-        Texture* texture = new Texture{ mStateTracker, mResourceAllocator, mDescriptorAllocator, this, existingTexture };
+        Texture* texture = new Texture{ mStateTracker, mResourceAllocator, mDescriptorAllocator, mCopyRequestManager, existingTexture };
         auto [iter, success] = mAllocatedResources.insert(texture);
 
         auto deallocationCallback = [this, iter](Texture* texture)
@@ -58,11 +60,6 @@ namespace Memory
         };
 
         return TexturePtr{ texture, deallocationCallback };
-    }
-
-    void GPUResourceProducer::SetCommandList(HAL::CopyCommandListBase* commandList)
-    {
-        mCommandList = commandList;
     }
 
     void GPUResourceProducer::BeginFrame(uint64_t frameNumber)
@@ -81,11 +78,6 @@ namespace Memory
         {
             resource->EndFrame(frameNumber);
         }
-    }
-
-    HAL::CopyCommandListBase* GPUResourceProducer::CommandList()
-    {
-        return mCommandList;
     }
 
 }

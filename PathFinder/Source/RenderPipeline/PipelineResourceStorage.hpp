@@ -95,6 +95,7 @@ namespace PathFinder
             const SchedulingInfoConfigurator& siConfigurator);
 
         void QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator);
+        void QueueResourceReadback(ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator);
         void AddSampler(Foundation::Name samplerName, const HAL::Sampler& sampler);
 
     private:
@@ -151,6 +152,7 @@ namespace PathFinder
 
         std::vector<SchedulingRequest> mSchedulingCreationRequests;
         std::vector<SchedulingRequest> mSchedulingUsageRequests;
+        std::vector<SchedulingRequest> mSchedulingReadbackRequests;
         std::vector<ResourceCreationRequest> mPrimaryResourceCreationRequests;
         std::vector<ResourceCreationRequest> mSecondaryResourceCreationRequests;
 

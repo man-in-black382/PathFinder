@@ -1,4 +1,5 @@
 #include "../HardwareAbstractionLayer/DebugLayer.hpp"
+#include "CopyRequestHandling.hpp"
 
 #include <pix.h>
 
@@ -34,12 +35,14 @@ namespace PathFinder
         mResourceAllocator = std::make_unique<Memory::SegregatedPoolsResourceAllocator>(mDevice.get(), mSimultaneousFramesInFlight);
         mCommandListAllocator = std::make_unique<Memory::PoolCommandListAllocator>(mDevice.get(), mSimultaneousFramesInFlight);
         mDescriptorAllocator = std::make_unique<Memory::PoolDescriptorAllocator>(mDevice.get(), mSimultaneousFramesInFlight);
+        mCopyRequestManager = std::make_unique<Memory::CopyRequestManager>();
 
         mResourceProducer = std::make_unique<Memory::GPUResourceProducer>(
             mDevice.get(), 
             mResourceAllocator.get(), 
             mResourceStateTracker.get(), 
-            mDescriptorAllocator.get());
+            mDescriptorAllocator.get(),
+            mCopyRequestManager.get());
 
         mPipelineResourceStorage = std::make_unique<PipelineResourceStorage>(
             mDevice.get(), 
@@ -76,6 +79,7 @@ namespace PathFinder
             mDescriptorAllocator.get(),
             mCommandListAllocator.get(), 
             mResourceStateTracker.get(), 
+            mCopyRequestManager.get(),
             mPipelineResourceStorage.get(), 
             mPipelineStateManager.get(), 
             &mRenderPassGraph, 
@@ -92,6 +96,8 @@ namespace PathFinder
             mRenderDevice.get(),
             mPipelineResourceStorage.get(), 
             mPassUtilityProvider.get(),
+            mPipelineStateManager.get(),
+            mDescriptorAllocator.get(),
             &mRenderPassGraph);
 
         mSubPassScheduler = std::make_unique<SubPassScheduler<ContentMediator>>(
@@ -106,11 +112,9 @@ namespace PathFinder
             mBackBuffers.emplace_back(mResourceProducer->NewTexture(backBufferPtr.get()));
         }
 
-        // Prepare memory to be immediately used after engine construction
+        // Start first frame here to prepare engine for external data transfer requests
         mFrameFence->IncrementExpectedValue();
         NotifyStartFrame(mFrameFence->ExpectedValue());
-        mRenderDevice->AllocateUploadCommandList();
-        mResourceProducer->SetCommandList(mRenderDevice->PreRenderUploadsCommandList());
     }
 
     template <class ContentMediator>
@@ -138,53 +142,16 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
-    void RenderEngine<ContentMediator>::UploadProcessAndTransferAssets()
-    {
-        //// Let resources record upload commands into graphics cmd list
-        ////mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
-
-        //// Run resource scheduling
-        //ScheduleResources();
-
-        //// Run asset-processing passes
-        //RunAssetProcessingPasses();
-
-        //// Upload and process assets
-        //mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
-
-        //// Execute readback commands
-        //mGraphicsFence.IncrementExpectedValue();
-
-        //// Let resources record readback commands into graphics cmd list
-        ////mResourceProducer.SetCommandList(mGraphicsDevice.CommandList());
-
-        //// Read all requested to read resources
-        //mAssetStorage.ReadbackAllAssets();
-
-        //// Perform readbacks
-        //mGraphicsDevice.ExecuteCommands(nullptr, &mGraphicsFence);
-
-        //// Wait until both devices are finished
-        //mGraphicsFence.StallCurrentThreadUntilCompletion();
-        //mAsyncComputeFence.StallCurrentThreadUntilCompletion();
-
-        //mAssetStorage.ReportAllAssetsPostprocessed();
-    }
-
-    template <class ContentMediator>
     void RenderEngine<ContentMediator>::Render()
     {
         if (mRenderPassGraph.Nodes().empty()) return;
 
-        // First frame starts in engine constructor
+        // First frame statrts in constructor
         if (mFrameNumber > 0)
         {
             mFrameFence->IncrementExpectedValue();
             // Notify internal listeners
             NotifyStartFrame(mFrameFence->ExpectedValue());
-            // For first frame use upload cmd list allocated in constructor
-            mRenderDevice->AllocateUploadCommandList();
-            mResourceProducer->SetCommandList(mRenderDevice->PreRenderUploadsCommandList());
         }
 
         // Scheduler resources, build graph
@@ -199,9 +166,7 @@ namespace PathFinder
         // Notify external listeners
         mPreRenderEvent.Raise();
 
-        // Build AS
-        mRenderDevice->PreRenderUploadsCommandList()->Close();
-        mRenderDevice->AllocateRTASBuildsCommandList();
+        UploadAssets();
         BuildAccelerationStructures();
 
         // Render
@@ -270,6 +235,16 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
+    void RenderEngine<ContentMediator>::UploadAssets()
+    {
+        mRenderDevice->AllocateUploadCommandList();
+        RecordUploadRequests(*mRenderDevice->PreRenderUploadsCommandList(), *mResourceStateTracker, *mCopyRequestManager, true);
+        mRenderDevice->PreRenderUploadsCommandList()->Close();
+
+        assert_format(mCopyRequestManager->ReadbackRequests().empty(), "We shouldn't have any readback requests at this stage");
+    }
+
+    template <class ContentMediator>
     void RenderEngine<ContentMediator>::BuildAccelerationStructures()
     {
         if (!mRenderPassGraph.FirstNodeThatUsesRayTracing())
@@ -278,6 +253,8 @@ namespace PathFinder
             // if no render passes consume them
             return;
         }
+
+        mRenderDevice->AllocateRTASBuildsCommandList();
 
         HAL::ResourceBarrierCollection bottomRTASUABarriers{};
 
@@ -298,21 +275,7 @@ namespace PathFinder
         }
 
         mRenderDevice->RTASBuildsCommandList()->InsertBarriers(topRTASUABarriers);
-
         mRenderDevice->RTASBuildsCommandList()->Close();
-    }
-
-    template <class ContentMediator>
-    void RenderEngine<ContentMediator>::RunAssetProcessingPasses()
-    {
-        /*auto& nodes = mPassExecutionGraph.AssetProcessingPasses();
-
-        for (auto nodeIt = nodes.begin(); nodeIt != nodes.end(); ++nodeIt)
-        {
-            mGraphicsDevice.ResetViewportToDefault();
-            mPipelineResourceStorage.SetCurrentRenderPassGraphNode(*nodeIt);
-            mRenderPasses[nodeIt->PassMetadata.Name]->Render(&mContext);
-        }*/
     }
 
     template <class ContentMediator>

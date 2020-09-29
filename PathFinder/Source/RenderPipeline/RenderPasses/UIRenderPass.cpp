@@ -25,6 +25,7 @@ namespace PathFinder
             state.RootSignatureName = RootSignatureNames::UI;
             state.DepthStencilState.SetDepthTestEnabled(false);
             state.RasterizerState.SetFrontClockwise(true); // ImGui is Clockwise for front face
+            state.RasterizerState.SetCullMode(HAL::RasterizerState::CullMode::None);
             state.BlendState = AlphaBlendingState();
         });
     }

@@ -1,4 +1,5 @@
 #include "Texture.hpp"
+#include "CopyRequestManager.hpp"
 
 namespace Memory
 {
@@ -8,9 +9,9 @@ namespace Memory
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator,
-        CopyCommandListProvider* commandListProvider)
+        CopyRequestManager* copyRequestManager)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
         mTexturePtr{ resourceAllocator->AllocateTexture(properties) },
         mProperties{ properties }
     {
@@ -23,12 +24,12 @@ namespace Memory
         ResourceStateTracker* stateTracker, 
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator, 
-        CopyCommandListProvider* commandListProvider,
+        CopyRequestManager* copyRequestManager,
         const HAL::Device& device, 
         const HAL::Heap& mainResourceExplicitHeap, 
         uint64_t explicitHeapOffset)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
         mProperties{ properties }
     {
         mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{
@@ -44,10 +45,10 @@ namespace Memory
         ResourceStateTracker* stateTracker, 
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator, 
-        CopyCommandListProvider* commandListProvider, 
+        CopyRequestManager* copyRequestManager,
         HAL::Texture* existingTexture)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
         mProperties{
             existingTexture->Format(), existingTexture->Kind(),
             existingTexture->Dimensions(), existingTexture->OptimizedClearValue(),
@@ -129,24 +130,30 @@ namespace Memory
         }
     }
 
-    void Texture::RecordUploadCommands()
+    CopyRequestManager::CopyCommand Texture::GetUploadCommands()
     {
-        HAL::ResourceFootprint footprint{ *HALTexture() };
-
-        for (const HAL::SubresourceFootprint& subresourceFootprint : footprint.SubresourceFootprints())
+        return [&](HAL::CopyCommandListBase& cmdList)
         {
-            mCommandListProvider->CommandList()->CopyBufferToTexture(*CurrentFrameUploadBuffer(), *HALTexture(), subresourceFootprint);
-        }
+            HAL::ResourceFootprint footprint{ *HALTexture() };
+
+            for (const HAL::SubresourceFootprint& subresourceFootprint : footprint.SubresourceFootprints())
+            {
+                cmdList.CopyBufferToTexture(*CurrentFrameUploadBuffer(), *HALTexture(), subresourceFootprint);
+            }
+        };
     }
 
-    void Texture::RecordReadbackCommands()
+    CopyRequestManager::CopyCommand Texture::GetReadbackCommands()
     {
-        HAL::ResourceFootprint textureFootprint{ *HALTexture() };
-
-        for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())
+        return [&](HAL::CopyCommandListBase& cmdList)
         {
-            mCommandListProvider->CommandList()->CopyTextureToBuffer(*HALTexture(), *CurrentFrameReadbackBuffer(), subresourceFootprint);
-        }
+            HAL::ResourceFootprint textureFootprint{ *HALTexture() };
+
+            for (const HAL::SubresourceFootprint& subresourceFootprint : textureFootprint.SubresourceFootprints())
+            {
+                cmdList.CopyTextureToBuffer(*HALTexture(), *CurrentFrameReadbackBuffer(), subresourceFootprint);
+            }
+        };
     }
 
     void Texture::ReserveDiscriptorArrays(uint8_t mipCount)

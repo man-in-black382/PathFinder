@@ -5,7 +5,10 @@
 #include "RenderPassGraph.hpp"
 #include "RenderDevice.hpp"
 #include "PipelineResourceStorage.hpp"
+#include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
+
+#include "../Memory/PoolDescriptorAllocator.hpp"
 
 #include "RenderPassMediators/RenderPassUtilityProvider.hpp"
 #include "RenderPassMediators/ResourceProvider.hpp"
@@ -36,6 +39,8 @@ namespace PathFinder
                 RenderDevice* renderDevice,
                 PipelineResourceStorage* resourceStorage,
                 RenderPassUtilityProvider* utilityProvider,
+                PipelineStateManager* pipelineStateManager,
+                Memory::PoolDescriptorAllocator* descriptorAllocator,
                 RenderPassGraph* graph,
                 uint64_t graphNodeIndex
             );
@@ -56,7 +61,14 @@ namespace PathFinder
         using RenderPassHelpers = PassHelpers<RenderPass>;
         using RenderSubPassHelpers = PassHelpers<RenderSubPass>;
 
-        RenderPassContainer(RenderDevice* renderDevice, PipelineResourceStorage* resourceStorage, RenderPassUtilityProvider* utilityProvider, RenderPassGraph* graph);
+        RenderPassContainer(
+            RenderDevice* renderDevice,
+            PipelineResourceStorage* resourceStorage,
+            RenderPassUtilityProvider* utilityProvider, 
+            PipelineStateManager* pipelineStateManager,
+            Memory::PoolDescriptorAllocator* descriptorAllocator,
+            RenderPassGraph* graph
+        );
 
         void AddRenderPass(RenderPass<ContentMediator>* pass);
         void AddRenderSubPass(RenderSubPass<ContentMediator>* pass);
@@ -70,6 +82,8 @@ namespace PathFinder
 
         RenderDevice* mRenderDevice = nullptr;
         PipelineResourceStorage* mResourceStorage = nullptr;
+        PipelineStateManager* mPipelineStateManager = nullptr;
+        Memory::PoolDescriptorAllocator* mDescriptorAllocator = nullptr;
         RenderPassGraph* mRenderPassGraph = nullptr;
         RenderPassUtilityProvider* mUtilityProvider = nullptr;
 

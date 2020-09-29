@@ -3,6 +3,7 @@
 #include "SegregatedPoolsResourceAllocator.hpp"
 #include "ResourceStateTracker.hpp"
 #include "PoolDescriptorAllocator.hpp"
+#include "CopyRequestManager.hpp"
 #include "Buffer.hpp"
 #include "Texture.hpp"
 
@@ -11,7 +12,7 @@
 namespace Memory
 {
 
-    class GPUResourceProducer : public GPUResource::CopyCommandListProvider
+    class GPUResourceProducer
     {
     public:
         using BufferPtr = std::unique_ptr<Buffer, std::function<void(Buffer*)>>;
@@ -21,7 +22,8 @@ namespace Memory
             const HAL::Device* device, 
             SegregatedPoolsResourceAllocator* resourceAllocator,
             ResourceStateTracker* stateTracker,
-            PoolDescriptorAllocator* descriptorAllocator
+            PoolDescriptorAllocator* descriptorAllocator,
+            CopyRequestManager* copyRequestManager
         );
 
         template <class Element>
@@ -34,12 +36,8 @@ namespace Memory
 
         TexturePtr NewTexture(HAL::Texture* existingTexture);
         
-        void SetCommandList(HAL::CopyCommandListBase* commandList);
-
         void BeginFrame(uint64_t frameNumber);
         void EndFrame(uint64_t frameNumber);
-
-        HAL::CopyCommandListBase* CommandList() override;
 
     private:
         using ResourceSetIterator = std::unordered_set<GPUResource*>::iterator;
@@ -49,7 +47,7 @@ namespace Memory
         SegregatedPoolsResourceAllocator* mResourceAllocator = nullptr;
         ResourceStateTracker* mStateTracker = nullptr;
         PoolDescriptorAllocator* mDescriptorAllocator = nullptr;
-        HAL::CopyCommandListBase* mCommandList = nullptr;
+        CopyRequestManager* mCopyRequestManager = nullptr;
         std::unordered_set<GPUResource*> mAllocatedResources;
     };
 

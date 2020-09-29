@@ -107,6 +107,11 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBufferMeshes);
 
+        auto& instances = context->GetContent()->GetScene()->MeshInstances();
+
+        if (instances.empty()) 
+            return;
+
         // Use vertex and index buffers as normal structured buffers
         auto meshStorage = context->GetContent()->GetSceneGPUStorage();
         context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->UnifiedVertexBuffer(), 0, 0, HAL::ShaderRegister::ShaderResource);
@@ -114,7 +119,7 @@ namespace PathFinder
         context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->MeshInstanceTable(), 2, 0, HAL::ShaderRegister::ShaderResource);
         context->GetCommandRecorder()->BindExternalBuffer(*meshStorage->MaterialTable(), 3, 0, HAL::ShaderRegister::ShaderResource);
 
-        for (const MeshInstance& instance : context->GetContent()->GetScene()->MeshInstances())
+        for (const MeshInstance& instance : instances)
         {
             context->GetCommandRecorder()->SetRootConstants(instance.GPUInstanceIndex(), 0, 0);
             context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount);
@@ -125,23 +130,30 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBufferLights);
 
+        auto& rectLights = context->GetContent()->GetScene()->RectangularLights();
+        auto& diskLights = context->GetContent()->GetScene()->DiskLights();
+        auto& sphereLights = context->GetContent()->GetScene()->SphericalLights();
+
+        if (rectLights.empty() && diskLights.empty() && sphereLights.empty())
+            return;
+
         // Use vertex and index buffers as normal structured buffers
         auto lightStorage = context->GetContent()->GetSceneGPUStorage();
         context->GetCommandRecorder()->BindExternalBuffer(*lightStorage->LightTable(), 0, 0, HAL::ShaderRegister::ShaderResource);
 
-        for (const FlatLight& light : context->GetContent()->GetScene()->RectangularLights())
+        for (const FlatLight& light : rectLights)
         {
             context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
             context->GetCommandRecorder()->Draw(6); // Light is a rotated billboard: 2 triangles from 6 vertices
         }
 
-        for (const FlatLight& light : context->GetContent()->GetScene()->DiskLights())
+        for (const FlatLight& light : diskLights)
         {
             context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
             context->GetCommandRecorder()->Draw(6); // Light is a rotated billboard: 2 triangles from 6 vertices
         }
 
-        for (const SphericalLight& light : context->GetContent()->GetScene()->SphericalLights())
+        for (const SphericalLight& light : sphereLights)
         {
             context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
             context->GetCommandRecorder()->Draw(6); // Light is a rotated billboard: 2 triangles from 6 vertices

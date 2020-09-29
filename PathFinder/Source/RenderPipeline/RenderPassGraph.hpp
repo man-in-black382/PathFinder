@@ -16,6 +16,8 @@
 namespace PathFinder
 {
 
+    // https://levelup.gitconnected.com/organizing-gpu-work-with-directed-acyclic-graphs-f3fd5f2c2af3
+
     class RenderPassGraph
     {
     public:
@@ -134,6 +136,7 @@ namespace PathFinder
 
         uint64_t NodeCountForQueue(uint64_t queueIndex) const;
         const ResourceUsageTimeline& GetResourceUsageTimeline(Foundation::Name resourceName) const;
+        const Node* GetNodeThatWritesToSubresource(SubresourceName subresourceName) const;
 
         uint64_t AddPass(const RenderPassMetadata& passMetadata);
 
@@ -146,6 +149,7 @@ namespace PathFinder
         using RenderPassRegistry = robin_hood::unordered_flat_set<Foundation::Name>;
         using QueueNodeCounters = robin_hood::unordered_flat_map<uint64_t, uint64_t>;
         using AdjacencyLists = std::vector<std::vector<uint64_t>>;
+        using WrittenSubresourceToPassMap = robin_hood::unordered_flat_map<SubresourceName, const Node*>;
 
         struct SyncCoverage
         {
@@ -176,6 +180,7 @@ namespace PathFinder
         QueueNodeCounters mQueueNodeCounters;
         OrderedNodeList mTopologicallySortedNodes;
         OrderedNodeList mNodesInGlobalExecutionOrder;
+        WrittenSubresourceToPassMap mWrittenSubresourceToPassMap;
         const Node* mFirstNodeThatUsesRayTracing = nullptr;
         uint64_t mDetectedQueueCount = 1;
 

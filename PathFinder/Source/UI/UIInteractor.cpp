@@ -5,7 +5,7 @@
 
 #include "../Foundation/StringUtils.hpp"
 
-namespace PathFinder 
+namespace PathFinder
 {
 
     UIInteractor::UIInteractor(HWND windowHandle, Input* input)
@@ -61,6 +61,8 @@ namespace PathFinder
             io.MouseDown[i] = mInput->IsMouseButtonPressed(i);
         }
 
+        mIsInteracting = (ImGui::IsAnyWindowHovered() && ImGui::IsAnyMouseDown()) || ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused();
+
         UpdateCursor();
     }
 
@@ -68,6 +70,11 @@ namespace PathFinder
     {
         ImGuiIO& io = ImGui::GetIO();
         io.DisplaySize = ImVec2{ (float)size.Width, (float)size.Height };
+    }
+
+    bool UIInteractor::IsInteracting() const
+    {
+        return mIsInteracting;
     }
 
     void UIInteractor::UpdateCursor()

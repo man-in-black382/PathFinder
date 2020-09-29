@@ -6,7 +6,7 @@
 
 namespace Memory
 {
-   
+
     class Buffer : public GPUResource
     {
     public:
@@ -17,7 +17,7 @@ namespace Memory
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator, 
             PoolDescriptorAllocator* descriptorAllocator,
-            CopyCommandListProvider* commandListProvider
+            CopyRequestManager* copyRequestManager
         );
 
         template <class Element>
@@ -26,7 +26,7 @@ namespace Memory
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
-            CopyCommandListProvider* commandListProvider,
+            CopyRequestManager* copyRequestManager,
             const HAL::Device& device,
             const HAL::Heap& mainResourceExplicitHeap,
             uint64_t explicitHeapOffset
@@ -47,8 +47,8 @@ namespace Memory
     protected:
         uint64_t ResourceSizeInBytes() const override;
         void ApplyDebugName() override;
-        void RecordUploadCommands() override;
-        void RecordReadbackCommands() override;
+        CopyRequestManager::CopyCommand GetUploadCommands() override;
+        CopyRequestManager::CopyCommand GetReadbackCommands() override;
 
     private:
         uint64_t mRequstedStride = 1;

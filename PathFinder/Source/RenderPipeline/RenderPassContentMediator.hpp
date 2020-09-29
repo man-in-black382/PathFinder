@@ -1,10 +1,10 @@
 #pragma once
 
-#include "UIGPUStorage.hpp"
-#include "SceneGPUStorage.hpp"
 #include "RenderSettings.hpp"
 
+#include "SceneGPUStorage.hpp"
 #include "../Scene/Scene.hpp"
+#include "../UI/UIGPUStorage.hpp"
 
 namespace PathFinder
 {

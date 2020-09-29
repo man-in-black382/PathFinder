@@ -11,9 +11,9 @@ namespace Memory
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator,
-        CopyCommandListProvider* commandListProvider)
+        CopyRequestManager* copyRequestManager)
         :
-        GPUResource(uploadStrategy, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
+        GPUResource(uploadStrategy, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
         mRequstedStride{ Foundation::MemoryUtils::Align(sizeof(Element), properties.ElementAlighnment) }
     {
         if (uploadStrategy == GPUResource::UploadStrategy::Automatic)
@@ -33,12 +33,12 @@ namespace Memory
         ResourceStateTracker* stateTracker, 
         SegregatedPoolsResourceAllocator* resourceAllocator, 
         PoolDescriptorAllocator* descriptorAllocator, 
-        CopyCommandListProvider* commandListProvider,
+        CopyRequestManager* copyRequestManager,
         const HAL::Device& device, 
         const HAL::Heap& mainResourceExplicitHeap, 
         uint64_t explicitHeapOffset)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, commandListProvider),
+        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
         mRequstedStride{ Foundation::MemoryUtils::Align(sizeof(Element), properties.ElementAlighnment) }
     {
         mBufferPtr = SegregatedPoolsResourceAllocator::BufferPtr{

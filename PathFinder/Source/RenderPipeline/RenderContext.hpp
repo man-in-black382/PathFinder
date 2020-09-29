@@ -2,13 +2,13 @@
 
 #include "../Foundation/Name.hpp"
 #include "../Scene/Scene.hpp"
+#include "../UI/UIGPUStorage.hpp"
 
 #include "RenderPassMediators/CommandRecorder.hpp"
 #include "RenderPassMediators/RootConstantsUpdater.hpp"
 #include "RenderPassMediators/ResourceProvider.hpp"
 #include "RenderPassMediators/RenderPassUtilityProvider.hpp"
 
-#include "UIGPUStorage.hpp"
 #include "SceneGPUStorage.hpp"
 
 namespace PathFinder

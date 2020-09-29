@@ -97,6 +97,7 @@ namespace PathFinder
     {
         mSchedulingCreationRequests.clear();
         mSchedulingUsageRequests.clear();
+        mSchedulingReadbackRequests.clear();
         mPrimaryResourceCreationRequests.clear();
         mSecondaryResourceCreationRequests.clear();
         mAliasMap.clear();
@@ -171,6 +172,16 @@ namespace PathFinder
         {
             auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
             assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", request.ResourceName.ToString());
+
+            PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
+            request.Configurator(resourceData.SchedulingInfo);
+        }
+
+        // Run scheduling readback callbacks
+        for (SchedulingRequest& request : mSchedulingReadbackRequests)
+        {
+            auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
+            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to readback a resource that wasn't created: ", request.ResourceName.ToString());
 
             PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
             request.Configurator(resourceData.SchedulingInfo);
@@ -292,6 +303,11 @@ namespace PathFinder
         else {
             mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName });
         }
+    }
+
+    void PipelineResourceStorage::QueueResourceReadback(ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator)
+    {
+        mSchedulingReadbackRequests.push_back(SchedulingRequest{ siConfigurator, resourceName });
     }
 
     void PipelineResourceStorage::AddSampler(Foundation::Name samplerName, const HAL::Sampler& sampler)

@@ -33,6 +33,8 @@ namespace PathFinder
     {
         auto& materials = mScene->Materials();
 
+        if (materials.empty()) return;
+
         if (!mMaterialTable || mMaterialTable->Capacity<GPUMaterialTableEntry>() < materials.size())
         {
             HAL::BufferProperties<GPUMaterialTableEntry> props{ materials.size() };
@@ -76,6 +78,8 @@ namespace PathFinder
     void SceneGPUStorage::UploadMeshInstances()
     {
         auto& meshInstances = mScene->MeshInstances();
+
+        if (meshInstances.empty()) return;
 
         auto requiredBufferSize = meshInstances.size();
 

@@ -26,8 +26,8 @@ namespace PathFinder
 
         enum class Flags : uint32_t
         {
-            None = 0, 
-            CrossFrameRead = 1 << 0, // Resource will be read across frames so it cannot participate in memory aliasing
+            None = 0,
+            CrossFrameRead = 1 << 0 // Resource will be read across frames so it cannot participate in memory aliasing
         };
 
         struct MipSet
@@ -202,6 +202,10 @@ namespace PathFinder
         // Indicate that pass will use Ray Tracing Acceleration structures.
         // BVH builds will be synchronized to first pass in the graph that requests their usage.
         void UseRayTracing();
+
+        // Issue GPU -> CPU data transfer for subresources that are to be written in this render pass.
+        // Can only be called for resource that is being written in requesting render pass.
+        void Export(Foundation::Name resourceName);
 
         // To be called by the engine, not render passes
         void SetCurrentlySchedulingPassNode(RenderPassGraph::Node* node);

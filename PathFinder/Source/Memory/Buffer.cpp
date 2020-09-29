@@ -1,4 +1,5 @@
 #include "Buffer.hpp"
+#include "CopyRequestManager.hpp"
 
 namespace Memory
 {
@@ -77,17 +78,23 @@ namespace Memory
         }
     }
 
-    void Buffer::RecordUploadCommands()
+    CopyRequestManager::CopyCommand Buffer::GetUploadCommands()
     {
-        if (mUploadStrategy != GPUResource::UploadStrategy::DirectAccess)
+        return[&](HAL::CopyCommandListBase& cmdList)
         {
-            mCommandListProvider->CommandList()->CopyBufferRegion(*CurrentFrameUploadBuffer(), *HALBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
-        }
+            if (mUploadStrategy != GPUResource::UploadStrategy::DirectAccess)
+            {
+                cmdList.CopyBufferRegion(*CurrentFrameUploadBuffer(), *HALBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
+            }
+        };
     }
 
-    void Buffer::RecordReadbackCommands()
+    CopyRequestManager::CopyCommand Buffer::GetReadbackCommands()
     {
-        mCommandListProvider->CommandList()->CopyBufferRegion(*HALBuffer(), *CurrentFrameReadbackBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
+        return[&](HAL::CopyCommandListBase& cmdList)
+        {
+            cmdList.CopyBufferRegion(*HALBuffer(), *CurrentFrameReadbackBuffer(), 0, HALBuffer()->ElementCapacity(), 0);
+        };
     }
 
 }

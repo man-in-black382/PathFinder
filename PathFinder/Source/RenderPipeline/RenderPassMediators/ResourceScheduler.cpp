@@ -276,6 +276,16 @@ namespace PathFinder
         mCurrentlySchedulingPassNode->UsesRayTracing = true;
     }
 
+    void ResourceScheduler::Export(Foundation::Name resourceName)
+    {
+        mResourceStorage->QueueResourceReadback(resourceName, [resourceName, node = mCurrentlySchedulingPassNode](PipelineResourceSchedulingInfo& schedulingInfo)
+        {
+            PipelineResourceSchedulingInfo::PassInfo* passInfo = schedulingInfo.GetInfoForPass(node->PassMetadata().Name);
+            assert_format(passInfo, "Resource ", resourceName.ToString(), " wasn't scheduled for usage in ", node->PassMetadata().Name.ToString());
+            passInfo->IsReadbackRequested = true;
+        });
+    }
+
     void ResourceScheduler::SetCurrentlySchedulingPassNode(RenderPassGraph::Node* node)
     {
         mCurrentlySchedulingPassNode = node;

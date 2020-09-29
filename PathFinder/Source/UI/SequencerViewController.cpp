@@ -1,6 +1,6 @@
 #include "SequencerViewController.hpp"
 
-namespace UI
+namespace PathFinder
 {
 
 

@@ -1,7 +1,11 @@
 #pragma once
 
 #include "../RenderDevice.hpp"
+#include "../PipelineResourceStorage.hpp"
 #include "../RenderPassGraph.hpp"
+#include "../PipelineStateManager.hpp"
+
+#include "../Memory/PoolDescriptorAllocator.hpp"
 
 namespace PathFinder
 {
@@ -9,7 +13,14 @@ namespace PathFinder
     class CommandRecorder
     {
     public:
-        CommandRecorder(RenderDevice* graphicsDevice, const RenderPassGraph* passGraph, uint64_t graphNodeIndex);
+        CommandRecorder(
+            RenderDevice* renderDevice, 
+            PipelineResourceStorage* resourceStorage,
+            PipelineStateManager* pipelineStateManager,
+            Memory::PoolDescriptorAllocator* descriptorAllocator,
+            const RenderPassGraph* passGraph,
+            uint64_t graphNodeIndex
+        );
 
         template <class T> 
         void SetRootConstants(const T& constants, uint16_t shaderRegister, uint16_t registerSpace);
@@ -36,7 +47,27 @@ namespace PathFinder
         static Geometry::Dimensions DispatchGroupCount(const Geometry::Dimensions& viewportDimensions, const Geometry::Dimensions& groupSize);
 
     private:
-        RenderDevice* mGraphicsDevice;
+
+        void ApplyState(const HAL::GraphicsPipelineState* state);
+        void ApplyState(const HAL::ComputePipelineState* state);
+        void ApplyState(const HAL::RayTracingPipelineState* state, const HAL::RayDispatchInfo* dispatchInfo);
+
+        void BindGraphicsCommonResources(const HAL::RootSignature* rootSignature, HAL::GraphicsCommandListBase* cmdList);
+        void BindComputeCommonResources(const HAL::RootSignature* rootSignature, HAL::ComputeCommandListBase* cmdList);
+        void BindGraphicsPassRootConstantBuffer(HAL::GraphicsCommandListBase* cmdList);
+        void BindComputePassRootConstantBuffer(HAL::ComputeCommandListBase* cmdList);
+
+        void CheckSignatureAndStatePresense(const RenderDevice::PassHelpers& passHelpers) const;
+
+        const RenderPassGraph::Node& GetPassNode() const;
+        HAL::GraphicsCommandList* GetGraphicsCommandList() const;
+        HAL::ComputeCommandListBase* GetComputeCommandListBase() const;
+        RenderDevice::PassHelpers& GetPassHelpers() const;
+
+        RenderDevice* mRenderDevice;
+        PipelineResourceStorage* mResourceStorage;
+        PipelineStateManager* mPipelineStateManager;
+        Memory::PoolDescriptorAllocator* mDescriptorAllocator;
         const RenderPassGraph* mPassGraph;
         uint64_t mGraphNodeIndex;
     };

@@ -33,6 +33,13 @@ namespace PathFinder
         return timelineIt->second;
     }
 
+    const RenderPassGraph::Node* RenderPassGraph::GetNodeThatWritesToSubresource(SubresourceName subresourceName) const
+    {
+        auto it = mWrittenSubresourceToPassMap.find(subresourceName);
+        assert_format(it != mWrittenSubresourceToPassMap.end(), "Subresource ", DecodeSubresourceName(subresourceName).first.ToString(), " is not registered for writing in the graph.");
+        return it->second;
+    }
+
     uint64_t RenderPassGraph::AddPass(const RenderPassMetadata& passMetadata)
     {
         EnsureRenderPassUniqueness(passMetadata.Name);
@@ -242,6 +249,12 @@ namespace PathFinder
                 for (SubresourceName subresourceName : node->ReadSubresources())
                 {
                     resourceReadingQueueTracker[subresourceName].insert(node->ExecutionQueueIndex);
+                }
+
+                // Associate written subresource with render pass that writes to it for quick access when needed
+                for (SubresourceName subresourceName : node->WrittenSubresources())
+                {
+                    mWrittenSubresourceToPassMap[subresourceName] = node;
                 }
 
                 node->mGlobalExecutionIndex = globalExecutionIndex;
