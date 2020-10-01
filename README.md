@@ -14,6 +14,6 @@ Render pass system enables automatic behind-the-scenes resource state tracking a
 * Parametric Tonemapper
 * Bloom via camera's Saturation-based ISO Sensitivity
 
-
-![Current Feature Set Preview](https://i.imgur.com/QgSclKN.jpg)
+# Showcase
+[![PathFinder](hhttps://imgur.com/a/giWrJ4t)](https://youtu.be/vrCa5Fn-EMg)
 
