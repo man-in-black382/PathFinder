@@ -17,5 +17,5 @@ Render pass system enables automatic behind-the-scenes resource state tracking a
 * Spatiotemporal Denoising
 
 # Showcase
-[![PathFinder](https://imgur.com/a/giWrJ4t](https://youtu.be/vrCa5Fn-EMg)
+[![PathFinder](https://imgur.com/iWwM3OB.png)](https://youtu.be/vrCa5Fn-EMg)
 
