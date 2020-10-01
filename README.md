@@ -13,7 +13,9 @@ Render pass system enables automatic behind-the-scenes resource state tracking a
 * PBR Materials: Standard metal/dielectric material model with Height-Correlated GGX for specular and Disney diffuse
 * Parametric Tonemapper
 * Bloom via camera's Saturation-based ISO Sensitivity
+* Ray-traced shadows
+* Spatiotemporal Denoising
 
 # Showcase
-[![PathFinder](hhttps://imgur.com/a/giWrJ4t)](https://youtu.be/vrCa5Fn-EMg)
+[![PathFinder](https://imgur.com/a/giWrJ4t](https://youtu.be/vrCa5Fn-EMg)
 
