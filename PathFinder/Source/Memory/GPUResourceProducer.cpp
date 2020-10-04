@@ -62,6 +62,38 @@ namespace Memory
         return TexturePtr{ texture, deallocationCallback };
     }
 
+    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::BufferProperties& properties, GPUResource::UploadStrategy uploadStrategy)
+    {
+        Buffer* buffer = new Buffer{ properties, uploadStrategy, mStateTracker, mResourceAllocator, mDescriptorAllocator, mCopyRequestManager };
+        auto [iter, success] = mAllocatedResources.insert(buffer);
+
+        auto deallocationCallback = [this, iter](Buffer* buffer)
+        {
+            mAllocatedResources.erase(iter);
+            delete buffer;
+        };
+
+        return BufferPtr{ buffer, deallocationCallback };
+    }
+
+    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::BufferProperties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset)
+    {
+        Buffer* buffer = new Buffer{
+            properties, mStateTracker, mResourceAllocator,
+            mDescriptorAllocator, mCopyRequestManager, *mDevice, explicitHeap, heapOffset
+        };
+
+        auto [iter, success] = mAllocatedResources.insert(buffer);
+
+        auto deallocationCallback = [this, iter](Buffer* buffer)
+        {
+            mAllocatedResources.erase(iter);
+            delete buffer;
+        };
+
+        return BufferPtr{ buffer, deallocationCallback };
+    }
+
     void GPUResourceProducer::BeginFrame(uint64_t frameNumber)
     {
         mFrameNumber = frameNumber;

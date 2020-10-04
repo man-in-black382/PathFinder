@@ -5,6 +5,16 @@
 namespace HAL
 {
 
+    Buffer::Buffer(const Device& device, const BufferProperties& properties, std::optional<CPUAccessibleHeapType> heapType)
+        : Resource(device, ResourceFormat{ &device, properties }),
+        mCPUAccessibleHeapType{ heapType },
+        mProperties{ properties } {}
+
+    Buffer::Buffer(const Device& device, const BufferProperties& properties, const Heap& heap, uint64_t heapOffset)
+        : Resource(device, heap, heapOffset, ResourceFormat{ &device, properties }),
+        mCPUAccessibleHeapType{ heap.CPUAccessibleType() },
+        mProperties{ properties } {}
+
     Buffer::~Buffer()
     {
         Unmap();

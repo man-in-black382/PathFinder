@@ -14,6 +14,7 @@ namespace PathFinder
     public:
         ResourceProvider(const PipelineResourceStorage* storage, const RenderPassGraph* passGraph, uint64_t graphNodeIndex);
        
+        uint32_t GetUABufferIndex(Foundation::Name bufferName) const;
         uint32_t GetUATextureIndex(Foundation::Name textureName, uint8_t mipLevel = 0) const;
         uint32_t GetSRTextureIndex(Foundation::Name textureName, uint8_t mipLevel = 0) const;
         uint32_t GetSamplerIndex(Foundation::Name samplerName) const;

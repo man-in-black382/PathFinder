@@ -36,6 +36,7 @@
 #include "RenderPipeline/RenderPasses/CommonSetupRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BloomBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BloomCompositionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/GeometryPickingRenderPass.hpp"
 #include "RenderPipeline/GlobalRootConstants.hpp"
 #include "RenderPipeline/PerFrameRootConstants.hpp"
 #include "RenderPipeline/RenderPassContentMediator.hpp"
@@ -96,7 +97,7 @@ int main(int argc, char** argv)
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
     PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath(), engine.AssetStorage(), engine.ResourceProducer() };
-    PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene, &settingsContainer };
+    PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene, &input, &settingsContainer };
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
@@ -120,6 +121,7 @@ int main(int argc, char** argv)
     auto SMAANeighborhoodBlendingPass = std::make_unique<PathFinder::SMAANeighborhoodBlendingRenderPass>();
     auto backBufferOutputPass = std::make_unique<PathFinder::BackBufferOutputPass>();
     auto uiPass = std::make_unique<PathFinder::UIRenderPass>();
+    auto geometryPickingPass = std::make_unique<PathFinder::GeometryPickingRenderPass>();
 
     engine.SetContentMediator(&contentMediator);
     engine.AddRenderPass(commonSetupPass.get());
@@ -144,6 +146,7 @@ int main(int argc, char** argv)
     engine.AddRenderPass(toneMappingPass.get());
     engine.AddRenderPass(backBufferOutputPass.get());
     engine.AddRenderPass(uiPass.get());
+    engine.AddRenderPass(geometryPickingPass.get());
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
@@ -363,6 +366,18 @@ int main(int argc, char** argv)
 
         engine.SetGlobalRootConstants(globalConstants);
         engine.SetFrameRootConstants(perFrameConstants);
+    }};
+
+    engine.PostRenderEvent() += { "Engine.Post.Render", [&]()
+    {
+        const Memory::Buffer* pickedGeometryInfo = engine.ResourceStorage()->GetPerResourceData(PathFinder::ResourceNames::PickedGeometryInfo)->Buffer.get();
+
+        pickedGeometryInfo->Read<uint32_t>([](const uint32_t* info)
+        {
+            if (info)
+            {
+            }
+        });
     }};
 
     // Main loop

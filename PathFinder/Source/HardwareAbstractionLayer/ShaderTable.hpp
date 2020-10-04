@@ -45,6 +45,8 @@ namespace HAL
             uint64_t SizeInBytes; 
         };
 
+        void InsertNullRecordsWhereRequired();
+
         const Buffer* mGPUTable = nullptr;
 
         std::optional<ShaderRecord> mRayGenShaderRecord;
@@ -53,9 +55,9 @@ namespace HAL
         std::vector<ShaderRecord> mRayHitGroupRecords;
 
         // Shader table stride (maximum record size) for each RT shader type
-        uint64_t mRayMissRecordStride = 0;
-        uint64_t mRayHitGroupRecordStride = 0;
-        uint64_t mCallableRecordStride = 0;
+        uint64_t mRayMissRecordStride = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
+        uint64_t mRayHitGroupRecordStride = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
+        uint64_t mCallableRecordStride = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
     };
 
 }

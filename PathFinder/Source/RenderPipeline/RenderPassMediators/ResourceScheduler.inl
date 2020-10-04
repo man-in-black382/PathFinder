@@ -4,36 +4,27 @@ namespace PathFinder
     template <class T>
     void ResourceScheduler::NewBuffer(Foundation::Name resourceName, const NewBufferProperties<T>& bufferProperties)
     {
-        assert_format(false, "Not implemented");
+        bool canBeReadAcrossFrames = EnumMaskEquals(bufferProperties.Flags, Flags::CrossFrameRead);
 
-        //Foundation::Name passName = mResourceStorage->CurrentPassGraphNode()->PassMetadata().Name;
+        mResourceStorage->QueueResourceAllocationIfNeeded(
+            resourceName,
+            HAL::BufferProperties::Create<T>(bufferProperties.Capacity, bufferProperties.PerElementAlignment),
+            bufferProperties.BufferToCopyPropertiesFrom,
 
-        //// Wait until all allocations are requested by render passed to detach scheduling algorithm from scheduling order
-        //auto delayedAllocationRequest = [=, passGraphNode = mResourceStorage->CurrentPassGraphNode()]
-        //{
-        //    PipelineResourceStorageResource& resourceData = mResourceStorage->QueueBuffersAllocationIfNeeded<T>(
-        //        resourceName, bufferProperties.Capacity, bufferProperties.PerElementAlignment, bufferProperties.BuffersCount
-        //    );
+            [this, resourceName, canBeReadAcrossFrames, node = mCurrentlySchedulingPassNode](PipelineResourceSchedulingInfo& schedulingInfo)
+            {
+                RegisterGraphDependency(*node, MipSet::FirstMip(), resourceName, {}, 1, true);
 
-        //    for (auto bufferIdx = 0u; bufferIdx < resourceData.SchedulingInfo.ResourceCount(); ++bufferIdx)
-        //    {
-        //        for (auto subresourceIdx = 0u; subresourceIdx < resourceData.SchedulingInfo.SubresourceCount(); ++subresourceIdx)
-        //        {
-        //            PipelineResourceSchedulingInfo::PassInfo& passInfo = resourceData.SchedulingInfo.AllocateInfoForPass(
-        //                passGraphNode, bufferIdx, subresourceIdx
-        //            );
+                schedulingInfo.SetSubresourceInfo(
+                    node->PassMetadata().Name,
+                    0, 
+                    HAL::ResourceState::UnorderedAccess,
+                    PipelineResourceSchedulingInfo::SubresourceInfo::AccessFlag::BufferUA,
+                    std::nullopt);
 
-        //            passInfo.RequestedState = HAL::ResourceState::UnorderedAccess;
-        //            passInfo.SetBufferUARequested();
-        //        }
-        //    }
-
-        //    // Register resource usage for the render pass
-        //    PipelineResourceStoragePass* passData = mResourceStorage->GetPerPassData(passGraphNode.PassMetadata.Name);
-        //    passData->ScheduledResourceNames.insert(resourceName);
-        //};
-
-        //mResourceStorage->AddResourceCreationAction(delayedAllocationRequest, resourceName, passName);
+                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
+            }
+        );
     }
 
     template <class Lambda>

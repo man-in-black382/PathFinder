@@ -93,6 +93,8 @@ namespace HAL
 
         assert_format(mRayGenShaderRecord, "Ray Generation shader is mandatory");
 
+        InsertNullRecordsWhereRequired();
+
         // Upload ray generation table range
         auto rayGenTableStartFinalAddress = gpuTableBuffer->GPUVirtualAddress() + recordAddressOffset;
         auto rayGenTableStartUploadAddress = uploadGPUMemory + recordAddressOffset;
@@ -167,20 +169,30 @@ namespace HAL
         mRayGenShaderRecord = std::nullopt;
         mRayMissShaderRecords.clear();
         mRayHitGroupRecords.clear();
-        mRayMissRecordStride = 0;
-        mRayHitGroupRecordStride = 0;
+        mCallableShaderRecords.clear();
+        mRayMissRecordStride = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
+        mRayHitGroupRecordStride = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
+        mCallableRecordStride = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
         mGPUTable = nullptr;
     }
 
     ShaderTable::MemoryRequirements ShaderTable::GetMemoryRequirements() const
     {
         // Shader tables must be aligned
+        // Reserve at least 1 slot for each record type 
         auto tableSize = Foundation::MemoryUtils::Align(mRayGenShaderRecord->SizeInBytes, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
-            Foundation::MemoryUtils::Align(mRayMissRecordStride * mRayMissShaderRecords.size(), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
-            Foundation::MemoryUtils::Align(mCallableRecordStride * mCallableShaderRecords.size(), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
-            Foundation::MemoryUtils::Align(mRayHitGroupRecordStride * mRayHitGroupRecords.size(), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
+            Foundation::MemoryUtils::Align(mRayMissRecordStride * std::max(mRayMissShaderRecords.size(), (size_t)1), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
+            Foundation::MemoryUtils::Align(mCallableRecordStride * std::max(mCallableShaderRecords.size(), (size_t)1), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT) +
+            Foundation::MemoryUtils::Align(mRayHitGroupRecordStride * std::max(mRayHitGroupRecords.size(), (size_t)1), D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
 
         return { tableSize };
+    }
+
+    void ShaderTable::InsertNullRecordsWhereRequired()
+    {
+        if (mRayMissShaderRecords.empty()) AddRayMissShader(ShaderIdentifier(), nullptr);
+        if (mCallableShaderRecords.empty()) AddCallableShader(ShaderIdentifier(), nullptr);
+        if (mRayHitGroupRecords.empty()) AddRayTracingHitGroupShaders(ShaderIdentifier(), nullptr);
     }
 
 }

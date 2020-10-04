@@ -10,7 +10,7 @@ namespace PathFinder
 
     void ShadingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
-        rootSignatureCreator->CreateRootSignature(RootSignatureNames::RayTracing, [](RootSignatureProxy& signatureProxy)
+        rootSignatureCreator->CreateRootSignature(RootSignatureNames::Shading, [](RootSignatureProxy& signatureProxy)
         {
             signatureProxy.AddRootConstantsParameter<uint32_t>(0, 0);
             signatureProxy.AddShaderResourceBufferParameter(0, 0); // Scene BVH | t0 - s0
@@ -23,7 +23,7 @@ namespace PathFinder
             state.RayGenerationShaderFileName = "Shading.hlsl";
             state.AddMissShader("Shading.hlsl");
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
-            state.GlobalRootSignatureName = RootSignatureNames::RayTracing;
+            state.GlobalRootSignatureName = RootSignatureNames::Shading;
             state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
         });
     }

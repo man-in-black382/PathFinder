@@ -24,7 +24,7 @@ namespace PathFinder
         HAL::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
-        mResourceStorage->QueueTextureAllocationIfNeeded(
+        mResourceStorage->QueueResourceAllocationIfNeeded(
             resourceName, 
             HAL::TextureProperties{ format, *props.Kind, *props.Dimensions, *props.ClearValues, HAL::ResourceState::Common, *props.MipCount },
             props.TextureToCopyPropertiesFrom,
@@ -57,7 +57,7 @@ namespace PathFinder
         bool canBeReadAcrossFrames = EnumMaskEquals(properties->Flags, Flags::CrossFrameRead);
         HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
 
-        mResourceStorage->QueueTextureAllocationIfNeeded(
+        mResourceStorage->QueueResourceAllocationIfNeeded(
             resourceName,
             HAL::TextureProperties{ *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, HAL::ResourceState::Common, *props.MipCount },
             props.TextureToCopyPropertiesFrom,
@@ -94,7 +94,7 @@ namespace PathFinder
         HAL::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
-        mResourceStorage->QueueTextureAllocationIfNeeded(
+        mResourceStorage->QueueResourceAllocationIfNeeded(
             resourceName,
             HAL::TextureProperties{ format, *props.Kind, *props.Dimensions, *props.ClearValues, HAL::ResourceState::Common, *props.MipCount },
             props.TextureToCopyPropertiesFrom,

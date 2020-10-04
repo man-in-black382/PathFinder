@@ -32,10 +32,10 @@ namespace PathFinder
     {
         // Preallocate 
         mGlobalRootConstantsBuffer = mResourceProducer->NewBuffer(
-            HAL::BufferProperties<uint8_t>{1024, 1, HAL::ResourceState::ConstantBuffer});
+            HAL::BufferProperties::Create<uint8_t>(1024, 1, HAL::ResourceState::ConstantBuffer));
 
         mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(
-            HAL::BufferProperties<uint8_t>{1024, 1, HAL::ResourceState::ConstantBuffer},
+            HAL::BufferProperties::Create<uint8_t>(1024, 1, HAL::ResourceState::ConstantBuffer),
             Memory::GPUResource::UploadStrategy::DirectAccess);
     }
 
@@ -263,7 +263,7 @@ namespace PathFinder
 
                         resourceData.Texture->SetDebugName(resourceData.SchedulingInfo.CombinedResourceNames());
                     },
-                    [&resourceData, heap, this](const HAL::ByteBufferProperties& bufferProps)
+                    [&resourceData, heap, this](const HAL::BufferProperties& bufferProps)
                     {
                         resourceData.Buffer = resourceData.SchedulingInfo.CanBeAliased ?
                             mResourceProducer->NewBuffer(bufferProps, *heap, resourceData.SchedulingInfo.HeapOffset) :
@@ -276,9 +276,9 @@ namespace PathFinder
         }
     }
 
-    void PipelineResourceStorage::QueueTextureAllocationIfNeeded(
+    void PipelineResourceStorage::QueueResourceAllocationIfNeeded(
         ResourceName resourceName,
-        const HAL::TextureProperties& properties,
+        const HAL::ResourcePropertiesVariant& properties,
         std::optional<Foundation::Name> propertyCopySourceName,
         const SchedulingInfoConfigurator& siConfigurator)
     {
@@ -320,7 +320,7 @@ namespace PathFinder
     {
         auto [it, success] = mPerPassData.emplace(name, PipelineResourceStoragePass{});
 
-        HAL::BufferProperties<float> properties{ 1024 };
+        auto properties = HAL::BufferProperties::Create<float>(1024);
         it->second.PassDebugBuffer = mResourceProducer->NewBuffer(properties);
         it->second.PassDebugBuffer->SetDebugName(name.ToString() + " Debug Constant Buffer");
         it->second.PassDebugBuffer->RequestWrite();

@@ -36,7 +36,7 @@ namespace HAL
                     EnumMaskEquals(mExpectedStates, ResourceState::RenderTarget) ||
                     EnumMaskEquals(mExpectedStates, ResourceState::DepthWrite);
             },
-            [&](const BufferProperties<uint8_t>& props)
+            [&](const BufferProperties& props)
             {
                 mInitialStates = props.InitialStateMask;
                 mExpectedStates = props.ExpectedStateMask;
@@ -114,7 +114,7 @@ namespace HAL
                         EnumMaskEquals(mExpectedStates, ResourceState::RenderTarget) ||
                         EnumMaskEquals(mExpectedStates, ResourceState::DepthWrite);
                 },
-                [&](const BufferProperties<uint8_t>& props)
+                [&](const BufferProperties& props)
                 {
                     mInitialStates = props.InitialStateMask;
                     mExpectedStates = props.ExpectedStateMask;

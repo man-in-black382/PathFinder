@@ -10,9 +10,8 @@ namespace Memory
     class Buffer : public GPUResource
     {
     public:
-        template <class Element>
         Buffer(
-            const HAL::BufferProperties<Element>& properties,
+            const HAL::BufferProperties& properties,
             GPUResource::UploadStrategy uploadStrategy,
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator, 
@@ -20,9 +19,8 @@ namespace Memory
             CopyRequestManager* copyRequestManager
         );
 
-        template <class Element>
         Buffer(
-            const HAL::BufferProperties<Element>& properties,
+            const HAL::BufferProperties& properties,
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,

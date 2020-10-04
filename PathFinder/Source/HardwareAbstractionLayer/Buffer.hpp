@@ -10,12 +10,8 @@ namespace HAL
     class Buffer : public Resource
     {
     public:
-        template <class Element>
-        Buffer(const Device& device, const BufferProperties<Element>& properties, std::optional<CPUAccessibleHeapType> heapType = std::nullopt);
-
-        template <class Element>
-        Buffer(const Device& device, const BufferProperties<Element>& properties, const Heap& heap, uint64_t heapOffset);
-
+        Buffer(const Device& device, const BufferProperties& properties, std::optional<CPUAccessibleHeapType> heapType = std::nullopt);
+        Buffer(const Device& device, const BufferProperties& properties, const Heap& heap, uint64_t heapOffset);
         ~Buffer();
 
         uint8_t* Map();
@@ -31,12 +27,12 @@ namespace HAL
 
     private:
         uint8_t* mMappedMemory = nullptr;
-        BufferProperties<uint8_t> mProperties;
+        BufferProperties mProperties;
         std::optional<CPUAccessibleHeapType> mCPUAccessibleHeapType = std::nullopt;
 
     public:
         inline auto HeapType() const { return mCPUAccessibleHeapType; }
-        inline auto RequestedMemory() const { return mProperties.ElementCapacity; }
+        inline auto RequestedMemory() const { return mProperties.Size; }
         inline const auto& Properties() const { return mProperties; }
     };
 

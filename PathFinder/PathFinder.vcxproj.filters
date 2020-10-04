@@ -522,6 +522,9 @@
     <ClCompile Include="Source\RenderPipeline\CopyRequestHandling.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -2633,6 +2636,9 @@
     <ClInclude Include="Source\RenderPipeline\CopyRequestHandling.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -3091,9 +3097,6 @@
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\Memory\SegregatedPoolsResourceAllocator.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Source\Memory\Pool.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -3104,9 +3107,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\Memory\Buffer.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\Memory\GPUResourceProducer.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\Memory\PoolCommandListAllocator.inl">
@@ -3144,9 +3144,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\RenderPassContainer.inl">
-      <Filter>Header Files</Filter>
-    </None>
-    <None Include="Source\HardwareAbstractionLayer\ResourceFormat.inl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\RenderPassMediators\CommandRecorder.inl">
@@ -3221,6 +3218,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\SMAABlendingWeightCalculation.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SMAAEdgeDetection.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SMAACommon.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GeometryPicking.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

@@ -12,16 +12,18 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
-    const HAL::BufferProperties<uint8_t>& SubPassScheduler<ContentMediator>::GetBufferProperties(Foundation::Name textureName) const
+    const HAL::BufferProperties& SubPassScheduler<ContentMediator>::GetBufferProperties(Foundation::Name bufferName) const
     {
-        assert_format(false, "Buffers are not implemented");
+        const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(bufferName);
+        assert_format(resourceObjects, "Buffer ", bufferName.ToString(), " wasn't scheduled for creation");
+        return resourceObjects->SchedulingInfo.ResourceFormat().GetBufferProperties();
     }
 
     template <class ContentMediator>
     const HAL::TextureProperties& SubPassScheduler<ContentMediator>::GetTextureProperties(Foundation::Name textureName) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(textureName);
-        assert_format(resourceObjects, "Resource ", textureName.ToString(), " wasn't scheduled for creation");
+        assert_format(resourceObjects, "Texture ", textureName.ToString(), " wasn't scheduled for creation");
         return resourceObjects->SchedulingInfo.ResourceFormat().GetTextureProperties();
     }
 

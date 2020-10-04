@@ -33,7 +33,7 @@ namespace PathFinder
 
         if (!uploadBuffers.Vertices.empty())
         {
-            HAL::BufferProperties<Vertex> properties{ uploadBuffers.Vertices.size() };
+            auto properties = HAL::BufferProperties::Create<Vertex>(uploadBuffers.Vertices.size());
             finalBuffers.VertexBuffer = mResourceProducer->NewBuffer(properties);
             finalBuffers.VertexBuffer->RequestWrite();
             finalBuffers.VertexBuffer->Write(uploadBuffers.Vertices.data(), 0, uploadBuffers.Vertices.size());
@@ -43,7 +43,7 @@ namespace PathFinder
 
         if (!uploadBuffers.Indices.empty())
         {
-            HAL::BufferProperties<uint32_t> properties{ uploadBuffers.Indices.size() };
+            auto properties = HAL::BufferProperties::Create<uint32_t>(uploadBuffers.Indices.size());
             finalBuffers.IndexBuffer = mResourceProducer->NewBuffer(properties);
             finalBuffers.IndexBuffer->RequestWrite();
             finalBuffers.IndexBuffer->Write(uploadBuffers.Indices.data(), 0, uploadBuffers.Indices.size());

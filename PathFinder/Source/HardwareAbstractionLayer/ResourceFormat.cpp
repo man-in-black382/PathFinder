@@ -79,6 +79,13 @@ namespace HAL
         SetExpectedStates(textureProperties.InitialStateMask | textureProperties.ExpectedStateMask);
     }
 
+    ResourceFormat::ResourceFormat(const Device* device, const BufferProperties& bufferProperties)
+        : mDevice{ device }, mResourceProperties{ bufferProperties }
+    {
+        ResolveBufferDemensionData(bufferProperties.Size);
+        SetExpectedStates(bufferProperties.InitialStateMask | bufferProperties.ExpectedStateMask);
+    }
+
     void ResourceFormat::ResolveBufferDemensionData(uint64_t byteCount)
     {
         mSubresourceCount = 1;
@@ -173,7 +180,7 @@ namespace HAL
         }
 
         std::visit(Foundation::MakeVisitor(
-            [this](const BufferProperties<uint8_t>& bufferProperties)
+            [this](const BufferProperties& bufferProperties)
             {
                 mAliasingGroup = HAL::HeapAliasingGroup::Buffers;
             },

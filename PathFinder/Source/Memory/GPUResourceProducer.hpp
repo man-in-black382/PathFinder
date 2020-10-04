@@ -26,12 +26,10 @@ namespace Memory
             CopyRequestManager* copyRequestManager
         );
 
-        template <class Element>
-        BufferPtr NewBuffer(const HAL::BufferProperties<Element>& properties, GPUResource::UploadStrategy uploadStrategy = GPUResource::UploadStrategy::Automatic);
+        BufferPtr NewBuffer(const HAL::BufferProperties& properties, GPUResource::UploadStrategy uploadStrategy = GPUResource::UploadStrategy::Automatic);
         TexturePtr NewTexture(const HAL::TextureProperties& properties);
 
-        template <class Element>
-        BufferPtr NewBuffer(const HAL::BufferProperties<Element>& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
+        BufferPtr NewBuffer(const HAL::BufferProperties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
         TexturePtr NewTexture(const HAL::TextureProperties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
 
         TexturePtr NewTexture(HAL::Texture* existingTexture);
@@ -52,5 +50,3 @@ namespace Memory
     };
 
 }
-
-#include "GPUResourceProducer.inl"

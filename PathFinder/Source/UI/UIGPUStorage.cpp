@@ -46,14 +46,14 @@ namespace PathFinder
     {
         if ((!mVertexBuffer || mVertexBuffer->Capacity<ImDrawVert>() < drawData.TotalVtxCount) && drawData.TotalVtxCount > 0)
         {
-            HAL::BufferProperties<ImDrawVert> properties{ (uint64_t)drawData.TotalVtxCount };
+            auto properties = HAL::BufferProperties::Create<ImDrawVert>((uint64_t)drawData.TotalVtxCount);
             mVertexBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
             mVertexBuffer->SetDebugName("ImGUI Vertex Buffer");
         }
 
         if ((!mIndexBuffer || mIndexBuffer->Capacity<ImDrawIdx>() < drawData.TotalIdxCount) && drawData.TotalIdxCount > 0)
         {
-            HAL::BufferProperties<ImDrawIdx> properties{ (uint64_t)drawData.TotalIdxCount };
+            auto properties = HAL::BufferProperties::Create<ImDrawIdx>((uint64_t)drawData.TotalIdxCount);
             mIndexBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
             mIndexBuffer->SetDebugName("ImGUI Index Buffer");
         }

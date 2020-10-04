@@ -60,7 +60,7 @@ namespace PathFinder
         {
             mSubresourceCombinedReadStates[subresourceIndex] |= state;
         }
-        else if (EnumMaskEquals(state, HAL::ResourceState::UnorderedAccess))
+        else if (EnumMaskContains(state, HAL::ResourceState::UnorderedAccess))
         {
             passInfo.NeedsUnorderedAccessBarrier = true;
         }

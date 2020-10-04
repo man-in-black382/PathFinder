@@ -64,6 +64,8 @@ namespace PathFinder
         inline Foundation::Name SMAADetectedEdges{ "Resource_SMAA_Detected_Edges" };
         inline Foundation::Name SMAABlendingWeights{ "Resource_SMAA_Blending_Weights" };
         inline Foundation::Name SMAAAntialiased{ "Resource_SMAA_Antialiased_Image" };
+
+        inline Foundation::Name PickedGeometryInfo{ "Resource_Picked_Geometry_Info" };
     }
 
     namespace PSONames
@@ -76,6 +78,7 @@ namespace PathFinder
         inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
         inline Foundation::Name Shading{ "PSO_Shading" };
+        inline Foundation::Name GeometryPicking{ "PSO_GeometryPicking" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name SeparableBlur{ "PSO_SeparableBlur" };
         inline Foundation::Name BloomBlur{ "PSO_BloomBlur" };
@@ -104,7 +107,8 @@ namespace PathFinder
         inline Foundation::Name GBufferMeshes{ "GBuffer_Meshes_Root_Sig" };
         inline Foundation::Name GBufferLights{ "GBuffer_Lights_Root_Sig" };
         inline Foundation::Name DeferredLighting{ "Deferred_Lighting_Root_Sig" };
-        inline Foundation::Name RayTracing{ "Ray_Tracing_Root_Sig" };
+        inline Foundation::Name Shading{ "Shading_Root_Sig" };
+        inline Foundation::Name GeometryPicking{ "Geometry_Picking_Root_Sig" };
         inline Foundation::Name UI{ "UI_Root_Sig" };
         inline Foundation::Name DisplacementDistanceMapGeneration{ "Distance_Map_Generation_Root_Sig" };
     }

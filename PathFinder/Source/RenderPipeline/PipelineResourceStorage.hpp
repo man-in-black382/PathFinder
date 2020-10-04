@@ -81,16 +81,9 @@ namespace PathFinder
 
         void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
-        void QueueTextureAllocationIfNeeded(
+        void QueueResourceAllocationIfNeeded(
             ResourceName resourceName, 
-            const HAL::TextureProperties& properties, 
-            std::optional<Foundation::Name> propertyCopySourceName,
-            const SchedulingInfoConfigurator& siConfigurator);
-
-        template <class BufferDataT>
-        void QueueBufferAllocationIfNeeded(
-            ResourceName resourceName, 
-            const HAL::BufferProperties<BufferDataT>& properties, 
+            const HAL::ResourcePropertiesVariant& properties, 
             std::optional<Foundation::Name> propertyCopySourceName,
             const SchedulingInfoConfigurator& siConfigurator);
 

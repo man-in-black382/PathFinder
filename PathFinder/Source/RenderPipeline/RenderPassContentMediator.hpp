@@ -5,6 +5,7 @@
 #include "SceneGPUStorage.hpp"
 #include "../Scene/Scene.hpp"
 #include "../UI/UIGPUStorage.hpp"
+#include "../IO/Input.hpp"
 
 namespace PathFinder
 {
@@ -12,19 +13,21 @@ namespace PathFinder
     struct RenderPassContentMediator
     {
     public:
-        RenderPassContentMediator(const UIGPUStorage* uiStorage, const SceneGPUStorage* meshStorage, const Scene* scene, const RenderSettingsController* settingsContainer)
-            : mUIStorage{ uiStorage }, mSceneStorage{ meshStorage }, mScene{ scene }, mRenderSettingsContainer{ settingsContainer } {}
+        RenderPassContentMediator(const UIGPUStorage* uiStorage, const SceneGPUStorage* meshStorage, const Scene* scene, const Input* input, const RenderSettingsController* settingsContainer)
+            : mUIStorage{ uiStorage }, mSceneStorage{ meshStorage }, mScene{ scene }, mInput{ input }, mRenderSettingsContainer{ settingsContainer } {}
 
     private:
         const UIGPUStorage* mUIStorage;
         const SceneGPUStorage* mSceneStorage;
         const Scene* mScene;
+        const Input* mInput;
         const RenderSettingsController* mRenderSettingsContainer;
 
     public:
         inline const UIGPUStorage* GetUIGPUStorage() const { return mUIStorage; };
         inline const SceneGPUStorage* GetSceneGPUStorage() const { return mSceneStorage; };
         inline const Scene* GetScene() const { return mScene; };
+        inline const Input* GetInput() const { return mInput; };
         inline const RenderSettings* GetSettings() const { return &mRenderSettingsContainer->AppliedSettings(); };
     };
 
