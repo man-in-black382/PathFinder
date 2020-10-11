@@ -10,10 +10,10 @@
 #include "FlatLight.hpp"
 #include "SphericalLight.hpp"
 
-#include "../Memory/GPUResourceProducer.hpp"
+#include <Memory/GPUResourceProducer.hpp>
 
 #include <functional>
-#include <list>
+#include <vector>
 #include <memory>
 
 namespace PathFinder 
@@ -22,8 +22,8 @@ namespace PathFinder
     class Scene 
     {
     public:
-        using FlatLightIt = std::list<FlatLight>::iterator;
-        using SphericalLightIt = std::list<SphericalLight>::iterator;
+        using FlatLightIt = std::vector<FlatLight>::iterator;
+        using SphericalLightIt = std::vector<SphericalLight>::iterator;
 
         Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer);
 
@@ -37,12 +37,12 @@ namespace PathFinder
     private:
         void LoadUtilityResources();
 
-        std::list<Mesh> mMeshes;
-        std::list<MeshInstance> mMeshInstances;
-        std::list<Material> mMaterials;
-        std::list<FlatLight> mRectangularLights;
-        std::list<FlatLight> mDiskLights;
-        std::list<SphericalLight> mSphericalLights;
+        std::vector<Mesh> mMeshes;
+        std::vector<MeshInstance> mMeshInstances;
+        std::vector<Material> mMaterials;
+        std::vector<FlatLight> mRectangularLights;
+        std::vector<FlatLight> mDiskLights;
+        std::vector<SphericalLight> mSphericalLights;
 
         Camera mCamera;
         GTTonemappingParameterss mTonemappingParams;

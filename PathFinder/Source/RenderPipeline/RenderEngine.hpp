@@ -6,20 +6,20 @@
 #include <filesystem>
 #include <chrono>
 
-#include "../HardwareAbstractionLayer/Device.hpp"
-#include "../HardwareAbstractionLayer/SwapChain.hpp"
-#include "../HardwareAbstractionLayer/DisplayAdapterFetcher.hpp"
+#include <HardwareAbstractionLayer/Device.hpp>
+#include <HardwareAbstractionLayer/SwapChain.hpp>
+#include <HardwareAbstractionLayer/DisplayAdapterFetcher.hpp>
 
-#include "../Scene/Scene.hpp"
-#include "../Foundation/Event.hpp"
-#include "../IO/CommandLineParser.hpp"
-#include "../Utility/AftermathCrashTracker.hpp"
+#include <Scene/Scene.hpp>
+#include <Foundation/Event.hpp>
+#include <IO/CommandLineParser.hpp>
+#include <Utility/AftermathCrashTracker.hpp>
 
-#include "../Memory/SegregatedPoolsResourceAllocator.hpp"
-#include "../Memory/PoolDescriptorAllocator.hpp"
-#include "../Memory/ResourceStateTracker.hpp"
-#include "../Memory/GPUResourceProducer.hpp"
-#include "../Memory/CopyRequestManager.hpp"
+#include <Memory/SegregatedPoolsResourceAllocator.hpp>
+#include <Memory/PoolDescriptorAllocator.hpp>
+#include <Memory/ResourceStateTracker.hpp>
+#include <Memory/GPUResourceProducer.hpp>
+#include <Memory/CopyRequestManager.hpp>
 
 #include "RenderPassMediators/ResourceScheduler.hpp"
 #include "RenderPassMediators/RootConstantsUpdater.hpp"

@@ -4,7 +4,7 @@
 
 #include <aftermath/AftermathHelpers.hpp>
 
-#include "../HardwareAbstractionLayer/Shader.hpp"
+#include <HardwareAbstractionLayer/Shader.hpp>
 
 namespace PathFinder
 {

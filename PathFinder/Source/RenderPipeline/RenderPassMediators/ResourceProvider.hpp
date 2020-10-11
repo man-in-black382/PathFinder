@@ -3,8 +3,8 @@
 #include "../PipelineResourceStorage.hpp"
 #include "../RenderPassGraph.hpp"
 
-#include "../Foundation/Name.hpp"
-#include "../HardwareAbstractionLayer/ShaderRegister.hpp"
+#include <Foundation/Name.hpp>
+#include <HardwareAbstractionLayer/ShaderRegister.hpp>
 
 namespace PathFinder
 {

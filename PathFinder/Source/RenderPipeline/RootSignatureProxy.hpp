@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
-#include "../HardwareAbstractionLayer/RootParameters.hpp"
+#include <Foundation/Name.hpp>
+#include <HardwareAbstractionLayer/RootParameters.hpp>
 
 namespace PathFinder
 {

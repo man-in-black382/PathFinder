@@ -2,7 +2,7 @@
 
 #include "ResourceLoader.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 #include <fstream>
 #include <iterator>

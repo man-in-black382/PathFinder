@@ -4,7 +4,8 @@
 
 #include <glm/vec4.hpp>
 
-#include "../Geometry/Dimensions.hpp"
+#include <Geometry/Dimensions.hpp>
+
 #include "../RenderContext.hpp"
 #include "../RenderPassContentMediator.hpp"
 

@@ -1,7 +1,5 @@
 #include "ResourceScheduler.hpp"
 
-#include "../Foundation/Assert.hpp"
-
 #include <cmath>
 
 namespace PathFinder

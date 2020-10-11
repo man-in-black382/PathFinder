@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Vertex1P1N1UV.hpp"
-#include "../Geometry/Transformation.hpp"
+#include <Geometry/Transformation.hpp>
 
 namespace PathFinder
 {

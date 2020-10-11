@@ -1,6 +1,6 @@
 #include "ShaderTable.hpp"
 
-#include "../Foundation/MemoryUtils.hpp"
+#include <Foundation/MemoryUtils.hpp>
 
 #include <d3d12.h>
 #include <limits>

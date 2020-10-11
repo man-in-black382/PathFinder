@@ -1,7 +1,7 @@
 #include "DenoiserPreBlurRenderPass.hpp"
 #include "BlurCBContent.hpp"
 
-#include "../Foundation/Gaussian.hpp"
+#include <Foundation/Gaussian.hpp>
 
 namespace PathFinder
 {

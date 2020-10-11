@@ -9,8 +9,8 @@
 #include "ResourceState.hpp"
 #include "Heap.hpp"
 
-#include "../Geometry/Dimensions.hpp"
-#include "../Foundation/MemoryUtils.hpp"
+#include <Geometry/Dimensions.hpp>
+#include <Foundation/MemoryUtils.hpp>
 
 #include <glm/vec4.hpp>
 

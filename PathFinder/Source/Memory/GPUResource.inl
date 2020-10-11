@@ -1,5 +1,5 @@
-#include "../Foundation/MemoryUtils.hpp"
-#include "../Foundation/Assert.hpp"
+#include <Foundation/MemoryUtils.hpp>
+
 
 namespace Memory
 {

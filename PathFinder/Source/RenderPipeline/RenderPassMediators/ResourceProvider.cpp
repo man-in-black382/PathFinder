@@ -1,5 +1,4 @@
 #include "ResourceProvider.hpp"
-#include "../Foundation/Assert.hpp"
 
 namespace PathFinder
 {

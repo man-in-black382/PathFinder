@@ -1,6 +1,6 @@
 #include "ShadingRenderPass.hpp"
 
-#include "../Foundation/Halton.hpp"
+#include <Foundation/Halton.hpp>
 
 namespace PathFinder
 {

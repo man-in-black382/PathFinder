@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
-#include "../HardwareAbstractionLayer/ResourceState.hpp"
+#include <Foundation/Name.hpp>
+#include <HardwareAbstractionLayer/ResourceState.hpp>
 
 #include <robinhood/robin_hood.h>
 

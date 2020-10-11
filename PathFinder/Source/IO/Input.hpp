@@ -7,8 +7,8 @@
 #include <type_traits>
 #include <chrono>
 
-#include "../Foundation/Event.hpp"
-#include "../Geometry/Dimensions.hpp"
+#include <Foundation/Event.hpp>
+#include <Geometry/Dimensions.hpp>
 
 namespace PathFinder
 {
@@ -65,11 +65,12 @@ namespace PathFinder
         void SetInvertVerticalDelta(bool invert);
         void KeyboardKeyDown(KeyboardKey key);
         void KeyboardKeyUp(KeyboardKey key);
-        void BeginFrame();
+        void Clear();
+        void FinalizeInput();
         // ------------------------------------------------ //
 
     private:
-        std::chrono::milliseconds mClickDetectionTime = std::chrono::milliseconds{ 200 };
+        std::chrono::milliseconds mClickDetectionTime = std::chrono::milliseconds{ 100 };
         uint8_t mClickCountAccumulator = 0; // Accumulates clicks until no more clicks are performed in detection time
         uint8_t mClickCountFinal = 0; // Final detected amount of clicks
         glm::vec2 mScrollDelta;

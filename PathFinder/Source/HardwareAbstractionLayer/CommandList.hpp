@@ -19,7 +19,7 @@
 #include "ShaderRegister.hpp"
 #include "Types.hpp"
 
-#include "../Geometry/Rect2D.hpp"
+#include <Geometry/Rect2D.hpp>
 
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>

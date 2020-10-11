@@ -1,6 +1,6 @@
 #include "UIGPUStorage.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 #include <algorithm>
 #include <iterator>

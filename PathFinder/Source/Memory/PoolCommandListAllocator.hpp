@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../HardwareAbstractionLayer/Device.hpp"
-#include "../HardwareAbstractionLayer/CommandList.hpp"
+#include <HardwareAbstractionLayer/Device.hpp>
+#include <HardwareAbstractionLayer/CommandList.hpp>
 
 #include "Ring.hpp"
 #include "Pool.hpp"

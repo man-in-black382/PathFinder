@@ -1,6 +1,6 @@
 #include "Light.hpp"
 
-#include "../Foundation/Pi.hpp"
+#include <Foundation/Pi.hpp>
 
 namespace PathFinder
 {

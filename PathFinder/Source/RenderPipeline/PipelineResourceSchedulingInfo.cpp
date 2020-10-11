@@ -1,6 +1,6 @@
 #include "PipelineResourceSchedulingInfo.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 namespace PathFinder
 {

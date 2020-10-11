@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../HardwareAbstractionLayer/Shader.hpp"
-#include "../HardwareAbstractionLayer/ShaderCompiler.hpp"
-#include "../IO/CommandLineParser.hpp"
-#include "../Foundation/Event.hpp"
-#include "../Utility/AftermathShaderDatabase.hpp"
+#include <HardwareAbstractionLayer/Shader.hpp>
+#include <HardwareAbstractionLayer/ShaderCompiler.hpp>
+#include <IO/CommandLineParser.hpp>
+#include <Foundation/Event.hpp>
+#include <Utility/AftermathShaderDatabase.hpp>
 
 #include <vector>
 #include <list>

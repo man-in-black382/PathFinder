@@ -1,6 +1,6 @@
 #include "RayTracingAccelerationStructure.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 #include <type_traits>
 

@@ -1,6 +1,6 @@
 #include "DenoiserMipGenerationRenderPass.hpp"
 
-#include "../Foundation/Gaussian.hpp"
+#include <Foundation/Gaussian.hpp>
 
 #include <array>
 #include <vector>

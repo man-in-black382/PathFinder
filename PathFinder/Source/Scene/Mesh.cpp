@@ -1,6 +1,6 @@
 #include "Mesh.hpp"
 
-#include "../Geometry/Triangle3D.hpp"
+#include <Geometry/Triangle3D.hpp>
 
 namespace PathFinder
 {

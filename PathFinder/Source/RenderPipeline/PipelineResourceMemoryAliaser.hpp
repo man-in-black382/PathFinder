@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
-#include "../HardwareAbstractionLayer/Resource.hpp"
-#include "../HardwareAbstractionLayer/ResourceFormat.hpp"
+#include <Foundation/Name.hpp>
+#include <HardwareAbstractionLayer/Resource.hpp>
+#include <HardwareAbstractionLayer/ResourceFormat.hpp>
 
 #include "PipelineResourceSchedulingInfo.hpp"
 #include "RenderPassGraph.hpp"

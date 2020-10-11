@@ -8,7 +8,7 @@
 #include "CommandQueue.hpp"
 #include "Resource.hpp"
 
-#include "../Geometry/Dimensions.hpp"
+#include <Geometry/Dimensions.hpp>
 
 namespace HAL
 {

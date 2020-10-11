@@ -1,7 +1,7 @@
 #include "ResourceFormat.hpp"
 
-#include "../Foundation/Assert.hpp"
-#include "../Foundation/Visitor.hpp"
+
+#include <Foundation/Visitor.hpp>
 
 namespace HAL
 {

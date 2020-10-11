@@ -1,7 +1,7 @@
 #include "InputHandlerWindows.hpp"
 
-#include "../Foundation/Assert.hpp"
-#include "../Foundation/StringUtils.hpp"
+
+#include <Foundation/StringUtils.hpp>
 
 namespace PathFinder
 {
@@ -63,11 +63,6 @@ namespace PathFinder
             "Failed to register raw input devices. Error code: ", GetLastError());
 
         if (list) std::free(list);
-    }
-
-    void InputHandlerWindows::EndFrame()
-    {
-        mInput->BeginFrame();
     }
 
     void InputHandlerWindows::HandleMessage(const MSG& winMsg)

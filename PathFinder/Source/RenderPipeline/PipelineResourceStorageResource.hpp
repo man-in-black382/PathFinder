@@ -2,8 +2,8 @@
 
 #include "PipelineResourceSchedulingInfo.hpp"
 
-#include "../Foundation/Name.hpp"
-#include "../Memory/GPUResourceProducer.hpp"
+#include <Foundation/Name.hpp>
+#include <Memory/GPUResourceProducer.hpp>
 
 
 namespace PathFinder

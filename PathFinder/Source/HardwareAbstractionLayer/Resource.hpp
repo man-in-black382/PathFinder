@@ -17,8 +17,8 @@
 
 #include "GraphicAPIObject.hpp"
 
-#include "../Geometry/Dimensions.hpp"
-#include "../Foundation/BitwiseEnum.hpp"
+#include <Geometry/Dimensions.hpp>
+#include <Foundation/BitwiseEnum.hpp>
 
 namespace HAL
 {

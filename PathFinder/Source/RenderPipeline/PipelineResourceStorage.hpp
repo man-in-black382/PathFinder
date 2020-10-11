@@ -8,12 +8,12 @@
 #include "PipelineResourceStoragePass.hpp"
 #include "PipelineResourceStorageResource.hpp"
 
-#include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
-#include "../HardwareAbstractionLayer/SwapChain.hpp"
-#include "../Foundation/MemoryUtils.hpp"
-#include "../Memory/GPUResourceProducer.hpp"
-#include "../Memory/PoolDescriptorAllocator.hpp"
-#include "../Memory/ResourceStateTracker.hpp"
+#include <HardwareAbstractionLayer/DescriptorHeap.hpp>
+#include <HardwareAbstractionLayer/SwapChain.hpp>
+#include <Foundation/MemoryUtils.hpp>
+#include <Memory/GPUResourceProducer.hpp>
+#include <Memory/PoolDescriptorAllocator.hpp>
+#include <Memory/ResourceStateTracker.hpp>
 
 #include <vector>
 #include <functional>

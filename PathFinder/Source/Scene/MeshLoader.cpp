@@ -1,6 +1,6 @@
 #include "MeshLoader.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 namespace PathFinder
 {

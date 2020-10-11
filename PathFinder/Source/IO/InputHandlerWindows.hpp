@@ -13,7 +13,6 @@ namespace PathFinder
     public:
         InputHandlerWindows(Input* input, HWND hwnd);
 
-        void EndFrame();
         void HandleMessage(const MSG& winMsg);
 
     private:

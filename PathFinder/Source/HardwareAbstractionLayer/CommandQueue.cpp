@@ -1,7 +1,7 @@
 #include "CommandQueue.hpp"
 #include "Utils.h"
 
-#include "../Foundation/StringUtils.hpp"
+#include <Foundation/StringUtils.hpp>
 
 namespace HAL
 {

@@ -6,7 +6,8 @@
 
 #include <glm/vec4.hpp>
 
-#include "../Geometry/Dimensions.hpp"
+#include <Geometry/Dimensions.hpp>
+
 #include "../RenderPassMediators/ResourceProvider.hpp"
 
 namespace PathFinder

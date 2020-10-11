@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../Foundation/Assert.hpp"
-
 namespace HAL
 {
   

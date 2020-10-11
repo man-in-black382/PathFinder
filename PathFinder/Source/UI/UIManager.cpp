@@ -1,15 +1,15 @@
-#include "UIInteractor.hpp"
+#include "UIManager.hpp"
 
 #include <imgui/imgui.h>
 #include <windows.h>
 
-#include "../Foundation/StringUtils.hpp"
+#include <Foundation/StringUtils.hpp>
 
 namespace PathFinder
 {
 
-    UIInteractor::UIInteractor(HWND windowHandle, Input* input)
-        : mWindowHandle{ windowHandle }, mInput{ input }
+    UIManager::UIManager(HWND windowHandle, Input* input, PipelineResourceStorage* resourceStorage, Memory::GPUResourceProducer* resourceProducer)
+        : mWindowHandle{ windowHandle }, mInput{ input }, mGPUStorage{ resourceProducer }, mResourceStorage{ resourceStorage }
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -35,7 +35,7 @@ namespace PathFinder
         PollInputs();
     }
 
-    void UIInteractor::PollInputs()
+    void UIManager::PollInputs()
     {
         ImGuiIO& io = ImGui::GetIO();
         IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built!");
@@ -62,22 +62,41 @@ namespace PathFinder
         }
 
         mIsInteracting = (ImGui::IsAnyWindowHovered() && ImGui::IsAnyMouseDown()) || ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused();
+        mIsMouseOverUI = ImGui::IsAnyItemHovered();
 
         UpdateCursor();
     }
 
-    void UIInteractor::SetViewportSize(const Geometry::Dimensions& size)
+    void UIManager::Draw()
+    {
+        PollInputs();
+        mGPUStorage.StartNewFrame();
+
+        for (auto& vc : mViewControllers)
+        {
+            vc->Draw();
+        }
+
+        mGPUStorage.UploadUI();
+    }
+
+    void UIManager::SetViewportSize(const Geometry::Dimensions& size)
     {
         ImGuiIO& io = ImGui::GetIO();
         io.DisplaySize = ImVec2{ (float)size.Width, (float)size.Height };
     }
 
-    bool UIInteractor::IsInteracting() const
+    bool UIManager::IsInteracting() const
     {
         return mIsInteracting;
     }
 
-    void UIInteractor::UpdateCursor()
+    bool UIManager::IsMouseOverUI() const
+    {
+        return mIsMouseOverUI;
+    }
+
+    void UIManager::UpdateCursor()
     {
         ImGuiIO& io = ImGui::GetIO();
         if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)

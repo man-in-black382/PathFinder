@@ -4,8 +4,8 @@
 #include <string>
 
 #include "Vertices/Vertex1P1N1UV1T1BT.hpp"
-#include "../Geometry/AxisAlignedBox3D.hpp"
-#include "../RenderPipeline/VertexStorageLocation.hpp"
+#include <Geometry/AxisAlignedBox3D.hpp>
+#include "VertexStorageLocation.hpp"
 
 namespace PathFinder
 {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
-#include "../Geometry/Dimensions.hpp"
-#include "../HardwareAbstractionLayer/ResourceFormat.hpp"
+#include <Foundation/Name.hpp>
+#include <Geometry/Dimensions.hpp>
+#include <HardwareAbstractionLayer/ResourceFormat.hpp>
 
 #include <glm/vec2.hpp>
 

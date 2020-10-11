@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Memory/ResourceStateTracker.hpp"
-#include "../Memory/CopyRequestManager.hpp"
+#include <Memory/ResourceStateTracker.hpp>
+#include <Memory/CopyRequestManager.hpp>
 
 namespace PathFinder
 {

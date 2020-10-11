@@ -1,6 +1,6 @@
 #include "Buffer.hpp"
 
-#include "../Foundation/MemoryUtils.hpp"
+#include <Foundation/MemoryUtils.hpp>
 
 namespace HAL
 {

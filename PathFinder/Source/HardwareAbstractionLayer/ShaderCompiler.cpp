@@ -1,8 +1,8 @@
 #include "ShaderCompiler.hpp"
 #include "Utils.h"
 
-#include "../Foundation/StringUtils.hpp"
-#include "../Foundation/Assert.hpp"
+#include <Foundation/StringUtils.hpp>
+
 
 #include <d3dcompiler.h>
 #include <filewatch/FileWatcher.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Memory/GPUResourceProducer.hpp"
+#include <Memory/GPUResourceProducer.hpp>
 
 namespace PathFinder 
 {

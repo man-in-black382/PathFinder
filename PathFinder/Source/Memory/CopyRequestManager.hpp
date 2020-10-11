@@ -2,8 +2,8 @@
 
 #include <functional>
 
-#include "../HardwareAbstractionLayer/CommandList.hpp"
-#include "../HardwareAbstractionLayer/Resource.hpp"
+#include <HardwareAbstractionLayer/CommandList.hpp>
+#include <HardwareAbstractionLayer/Resource.hpp>
 
 namespace Memory
 {

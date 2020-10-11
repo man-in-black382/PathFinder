@@ -1,7 +1,7 @@
 #include "DenoiserForwardProjectionRenderPass.hpp"
 #include "UAVClearHelper.hpp"
 
-#include "../Foundation/Gaussian.hpp"
+#include <Foundation/Gaussian.hpp>
 
 namespace PathFinder
 {

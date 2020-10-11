@@ -3,7 +3,7 @@
 #include <limits>
 #include <algorithm>
 
-#include "../Foundation/StringUtils.hpp"
+#include <Foundation/StringUtils.hpp>
 
 namespace PathFinder
 {

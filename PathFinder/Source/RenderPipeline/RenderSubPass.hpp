@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
+#include <Foundation/Name.hpp>
 
 #include "RenderPassMetadata.hpp"
 #include "RenderContext.hpp"

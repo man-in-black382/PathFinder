@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../HardwareAbstractionLayer/PipelineState.hpp"
-#include "../Foundation/Name.hpp"
+#include <HardwareAbstractionLayer/PipelineState.hpp>
+#include <Foundation/Name.hpp>
 
 #include <vector>
 #include <string>

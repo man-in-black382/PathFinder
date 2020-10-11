@@ -5,22 +5,22 @@
 #include "PipelineStateManager.hpp"
 #include "RenderPassMetadata.hpp"
 
-#include "../Foundation/Name.hpp"
-#include "../Utility/EventTracker.hpp"
-#include "../Geometry/Dimensions.hpp"
+#include <Foundation/Name.hpp>
+#include <Utility/EventTracker.hpp>
+#include <Geometry/Dimensions.hpp>
 
-#include "../HardwareAbstractionLayer/ShaderRegister.hpp"
-#include "../HardwareAbstractionLayer/Resource.hpp"
-#include "../HardwareAbstractionLayer/CommandQueue.hpp"
-#include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
-#include "../HardwareAbstractionLayer/Viewport.hpp"
-#include "../HardwareAbstractionLayer/RenderTarget.hpp"
+#include <HardwareAbstractionLayer/ShaderRegister.hpp>
+#include <HardwareAbstractionLayer/Resource.hpp>
+#include <HardwareAbstractionLayer/CommandQueue.hpp>
+#include <HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp>
+#include <HardwareAbstractionLayer/Viewport.hpp>
+#include <HardwareAbstractionLayer/RenderTarget.hpp>
 
-#include "../Memory/PoolCommandListAllocator.hpp"
-#include "../Memory/PoolDescriptorAllocator.hpp"
-#include "../Memory/GPUResource.hpp"
-#include "../Memory/ResourceStateTracker.hpp"
-#include "../Memory/CopyRequestManager.hpp"
+#include <Memory/PoolCommandListAllocator.hpp>
+#include <Memory/PoolDescriptorAllocator.hpp>
+#include <Memory/GPUResource.hpp>
+#include <Memory/ResourceStateTracker.hpp>
+#include <Memory/CopyRequestManager.hpp>
 
 #include <robinhood/robin_hood.h>
 

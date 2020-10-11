@@ -4,8 +4,8 @@
 #include <glm/vec3.hpp>
 
 #include "Camera.hpp"
-#include "../IO/Input.hpp"
-#include "../Geometry/Dimensions.hpp"
+#include <IO/Input.hpp>
+#include <Geometry/Dimensions.hpp>
 
 namespace PathFinder
 {
@@ -23,6 +23,7 @@ namespace PathFinder
 
         bool IsEnabled() const;
         void SetIsEnabled(bool enabled);
+        void SetWASDControlsEnabled(bool enabled);
         void SetViewportSize(const Geometry::Dimensions& viewportSize);
         void PollInputs(uint64_t frameDeltaTime);
 
@@ -45,6 +46,7 @@ namespace PathFinder
         InputScale mInputScaleTimeAdjusted;
 
         bool mIsEnabled = true;
+        bool mIsWASDControlsEnabled = true;
     };
 
 }

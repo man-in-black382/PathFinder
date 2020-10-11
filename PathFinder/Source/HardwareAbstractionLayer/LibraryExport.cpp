@@ -2,7 +2,7 @@
 
 #include <d3d12.h>
 
-#include "../Foundation/StringUtils.hpp"
+#include <Foundation/StringUtils.hpp>
 
 namespace HAL
 {

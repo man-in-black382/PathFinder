@@ -1,7 +1,7 @@
 #include "ShaderManager.hpp"
 
-#include "../Foundation/StringUtils.hpp"
-#include "../Foundation/Assert.hpp"
+#include <Foundation/StringUtils.hpp>
+
 
 #include <fstream>
 

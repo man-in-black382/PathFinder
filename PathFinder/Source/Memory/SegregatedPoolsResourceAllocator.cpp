@@ -1,7 +1,5 @@
 #include "SegregatedPoolsResourceAllocator.hpp"
 
-#include "../Foundation/Assert.hpp"
-
 namespace Memory
 {
 

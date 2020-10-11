@@ -10,7 +10,7 @@
 
 #include "GraphicAPIObject.hpp"
 
-#include "../Foundation/Name.hpp"
+#include <Foundation/Name.hpp>
 
 namespace HAL
 {

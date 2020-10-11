@@ -2,7 +2,7 @@
 
 #include "GPUResource.hpp"
 
-#include "../HardwareAbstractionLayer/Buffer.hpp"
+#include <HardwareAbstractionLayer/Buffer.hpp>
 
 namespace Memory
 {

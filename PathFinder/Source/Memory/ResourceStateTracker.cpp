@@ -1,6 +1,6 @@
 #include "ResourceStateTracker.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 namespace Memory
 {

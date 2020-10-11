@@ -3,9 +3,9 @@
 #include "Pool.hpp"
 #include "Ring.hpp"
 
-#include "../HardwareAbstractionLayer/DescriptorHeap.hpp"
-#include "../HardwareAbstractionLayer/Buffer.hpp"
-#include "../HardwareAbstractionLayer/Texture.hpp"
+#include <HardwareAbstractionLayer/DescriptorHeap.hpp>
+#include <HardwareAbstractionLayer/Buffer.hpp>
+#include <HardwareAbstractionLayer/Texture.hpp>
 
 #include <memory>
 #include <functional>

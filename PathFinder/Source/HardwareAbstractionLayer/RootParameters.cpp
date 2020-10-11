@@ -1,7 +1,7 @@
 #include "RootParameters.hpp"
 #include "Utils.h"
 
-#include "../Foundation/Assert.hpp"
+
 
 namespace HAL
 {

@@ -1,24 +1,24 @@
 #pragma once
 
-#include "../HardwareAbstractionLayer/Device.hpp"
-#include "../HardwareAbstractionLayer/CommandQueue.hpp"
-#include "../HardwareAbstractionLayer/Buffer.hpp"
-#include "../HardwareAbstractionLayer/ResourceBarrier.hpp"
+#include <HardwareAbstractionLayer/Device.hpp>
+#include <HardwareAbstractionLayer/CommandQueue.hpp>
+#include <HardwareAbstractionLayer/Buffer.hpp>
+#include <HardwareAbstractionLayer/ResourceBarrier.hpp>
 
-#include "../Memory/GPUResourceProducer.hpp"
+#include <Memory/GPUResourceProducer.hpp>
 
-#include "../Scene/Scene.hpp"
-#include "../Scene/Mesh.hpp"
-#include "../Scene/MeshInstance.hpp"
-#include "../Scene/Vertices/Vertex1P1N1UV1T1BT.hpp"
-#include "../Scene/Vertices/Vertex1P1N1UV.hpp"
-#include "../Scene/Vertices/Vertex1P3.hpp"
-#include "../Scene/FlatLight.hpp"
-#include "../Scene/SphericalLight.hpp"
-
+#include "Scene.hpp"
+#include "Mesh.hpp"
+#include "MeshInstance.hpp"
+#include "Vertices/Vertex1P1N1UV1T1BT.hpp"
+#include "Vertices/Vertex1P1N1UV.hpp"
+#include "Vertices/Vertex1P3.hpp"
+#include "FlatLight.hpp"
+#include "SphericalLight.hpp"
 #include "VertexStorageLocation.hpp"
-#include "BottomRTAS.hpp"
-#include "TopRTAS.hpp"
+
+#include <RenderPipeline/BottomRTAS.hpp>
+#include <RenderPipeline/TopRTAS.hpp>
 
 #include <vector>
 #include <memory>

@@ -4,7 +4,7 @@
 #include <glm/gtc/constants.hpp>
 
 #include <windows.h>
-#include "../Foundation//StringUtils.hpp"
+#include <Foundation/StringUtils.hpp>
 
 namespace PathFinder
 {
@@ -112,12 +112,24 @@ namespace PathFinder
         mKeyUpEvent.Raise(key, this);
     }
 
-    void Input::BeginFrame()
+    void Input::Clear()
     {
         mPreviousFramePressedKeyboardKeys = mCurrentFramePressedKeyboardKeys;
         mClickCountFinal = 0;
         mScrollDelta = glm::vec2{ 0.0f };
         mMouseDelta = glm::vec2{ 0.0f };
+    }
+
+    void Input::FinalizeInput()
+    {
+        using namespace std::chrono;
+        milliseconds timeFromLastMouseClick = duration_cast<milliseconds>(steady_clock::now() - mMouseDownTimeStamp);
+
+        if (timeFromLastMouseClick > mClickDetectionTime)
+        {
+            mClickCountFinal = mClickCountAccumulator;
+            mClickCountAccumulator = 0;
+        }
     }
 
     constexpr uint16_t RawKeyboardKey(KeyboardKey key)

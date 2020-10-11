@@ -3,7 +3,7 @@
 #include "GraphicAPIObject.hpp"
 #include "Buffer.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 #include <cstdint>
 #include <d3d12.h>

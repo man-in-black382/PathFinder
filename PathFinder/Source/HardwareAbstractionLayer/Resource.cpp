@@ -2,8 +2,8 @@
 #include "Utils.h"
 #include "ResourceFootprint.hpp"
 
-#include "../Foundation/STDHelpers.hpp"
-#include "../Foundation/StringUtils.hpp"
+#include <Foundation/STDHelpers.hpp>
+#include <Foundation/StringUtils.hpp>
 
 #include <vector>
 

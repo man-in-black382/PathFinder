@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../HardwareAbstractionLayer/CommandQueue.hpp"
+#include <HardwareAbstractionLayer/CommandQueue.hpp>
 
 namespace PathFinder
 {

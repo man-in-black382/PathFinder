@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../HardwareAbstractionLayer/BlendState.hpp"
+#include <HardwareAbstractionLayer/BlendState.hpp>
 
 namespace PathFinder
 {

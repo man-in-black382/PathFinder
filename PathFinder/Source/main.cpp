@@ -8,8 +8,8 @@
 #include "Scene/MaterialLoader.hpp"
 #include "Scene/CameraInteractor.hpp"
 
-#include "UI/UIInteractor.hpp"
-#include "UI/SceneManipulatorViewController.hpp"
+#include <UI/UIManager.hpp>
+#include <UI/SceneManipulatorViewController.hpp>
 
 #include "RenderPipeline/RenderEngine.hpp"
 #include "RenderPipeline/RenderSettings.hpp"
@@ -41,16 +41,16 @@
 #include "RenderPipeline/PerFrameRootConstants.hpp"
 #include "RenderPipeline/RenderPassContentMediator.hpp"
 
-#include "IO/CommandLineParser.hpp"
-#include "IO/Input.hpp"
-#include "IO/InputHandlerWindows.hpp"
+#include <IO/CommandLineParser.hpp>
+#include <IO/Input.hpp>
+#include <IO/InputHandlerWindows.hpp>
 
-#include "choreograph/Choreograph.h"
+#include <choreograph/Choreograph.h>
 
 #include "../resource.h"
 
-#include "../Foundation/Halton.hpp"
-#include "../Foundation/StringUtils.hpp"
+#include <Foundation/Halton.hpp>
+#include <Foundation/StringUtils.hpp>
 
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
@@ -89,15 +89,14 @@ int main(int argc, char** argv)
     PathFinder::RenderEngine<PathFinder::RenderPassContentMediator> engine{ hwnd, cmdLineParser };
     PathFinder::Scene scene{ cmdLineParser.ExecutableFolderPath(), engine.ResourceProducer() };
     PathFinder::SceneGPUStorage sceneStorage{ &scene, engine.Device(), engine.ResourceProducer() };
-    PathFinder::UIGPUStorage uiStorage{ engine.ResourceProducer() };
     PathFinder::Input input{};
     PathFinder::RenderSettingsController settingsContainer{ &input };
     PathFinder::InputHandlerWindows windowsInputHandler{ &input, hwnd };
-    PathFinder::UIInteractor uiInteractor{ hwnd, &input };
+    PathFinder::UIManager uiManager{ hwnd, &input, engine.ResourceStorage(), engine.ResourceProducer() };
     PathFinder::CameraInteractor cameraInteractor{ &scene.MainCamera(), &input };
     PathFinder::MeshLoader meshLoader{ cmdLineParser.ExecutableFolderPath() / "MediaResources/Models/" };
     PathFinder::MaterialLoader materialLoader{ cmdLineParser.ExecutableFolderPath(), engine.AssetStorage(), engine.ResourceProducer() };
-    PathFinder::RenderPassContentMediator contentMediator{ &uiStorage, &sceneStorage, &scene, &input, &settingsContainer };
+    PathFinder::RenderPassContentMediator contentMediator{ &uiManager.GPUStorage(), &sceneStorage, &scene, &input, &settingsContainer };
 
     auto commonSetupPass = std::make_unique<PathFinder::CommonSetupRenderPass>();
     auto GBufferPass = std::make_unique<PathFinder::GBufferRenderPass>();
@@ -147,6 +146,8 @@ int main(int argc, char** argv)
     engine.AddRenderPass(backBufferOutputPass.get());
     engine.AddRenderPass(uiPass.get());
     engine.AddRenderPass(geometryPickingPass.get());
+
+    auto sceneManipulatorVC = uiManager.CreateViewController<PathFinder::SceneManipulatorViewController>();
 
     PathFinder::Material& metalMaterial = scene.AddMaterial(materialLoader.LoadMaterial(
         "/MediaResources/Textures/Metal07/Metal07_col.dds",
@@ -311,8 +312,8 @@ int main(int argc, char** argv)
 
     input.SetInvertVerticalDelta(true);
 
-    PathFinder::SceneManipulatorViewController sceneManipulatorVC{};
-    sceneManipulatorVC.SetCamera(&scene.MainCamera());
+    sceneManipulatorVC->CameraVM.SetCamera(&scene.MainCamera());
+    sceneManipulatorVC->MeshInstanceVM.SetScene(&scene);
 
     // ---------------------------------------------------------------------------- //
 
@@ -330,10 +331,24 @@ int main(int argc, char** argv)
 
     engine.PreRenderEvent() += { "Engine.Pre.Render", [&]()
     {
+        const Geometry::Dimensions& viewportSize = engine.RenderSurface().Dimensions();
+
+        RECT clientRect{ 0, 0, viewportSize.Width, viewportSize.Height };
+        ::AdjustWindowRect(&clientRect, windowStyle, false);
+        ::SetWindowPos(hwnd, 0, 0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+        // 'Top' is screen bottom
+        uiManager.SetViewportSize(viewportSize);
+        cameraInteractor.SetViewportSize(viewportSize);
+        uiManager.Draw();
+
+        bool interactingWithUI = uiManager.IsInteracting() || sceneManipulatorVC->IsInteracting();
+
+        cameraInteractor.SetWASDControlsEnabled(!interactingWithUI);
+        cameraInteractor.PollInputs(engine.FrameDurationMicroseconds());
+
+        settingsContainer.SetEnabled(!interactingWithUI);
         settingsContainer.ApplyVolatileSettings();
-        uiStorage.StartNewFrame();
-        sceneManipulatorVC.Draw();
-        uiStorage.UploadUI();
 
         sceneStorage.UploadMeshInstances();
         sceneStorage.UploadLights();
@@ -372,11 +387,9 @@ int main(int argc, char** argv)
     {
         const Memory::Buffer* pickedGeometryInfo = engine.ResourceStorage()->GetPerResourceData(PathFinder::ResourceNames::PickedGeometryInfo)->Buffer.get();
 
-        pickedGeometryInfo->Read<uint32_t>([](const uint32_t* info)
+        pickedGeometryInfo->Read<uint32_t>([&sceneManipulatorVC](const uint32_t* info)
         {
-            if (info)
-            {
-            }
+            if (info) sceneManipulatorVC->MeshInstanceVM.SetGeometryIntersectionInfo(*info);
         });
     }};
 
@@ -393,26 +406,10 @@ int main(int argc, char** argv)
             windowsInputHandler.HandleMessage(msg);
             continue;
         }
-
-        const Geometry::Dimensions& viewportSize = engine.RenderSurface().Dimensions();
-
-        RECT clientRect{ 0, 0, viewportSize.Width, viewportSize.Height };
-        ::AdjustWindowRect(&clientRect, windowStyle, false);
-        ::SetWindowPos(hwnd, 0, 0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-        // 'Top' is screen bottom
-        uiInteractor.SetViewportSize(viewportSize);
-        cameraInteractor.SetViewportSize(viewportSize);
-
-        uiInteractor.PollInputs();
-
-        if (!uiInteractor.IsInteracting() && !sceneManipulatorVC.IsInteracting())
-        {
-            cameraInteractor.PollInputs(engine.FrameDurationMicroseconds());
-        }
         
+        input.FinalizeInput();
         engine.Render();
-        windowsInputHandler.EndFrame();
+        input.Clear();
     }
 
     engine.FlushAllQueuedFrames();

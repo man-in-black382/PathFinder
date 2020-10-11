@@ -1,6 +1,6 @@
 #include "CommonSetupRenderPass.hpp"
 
-#include "../Foundation/Gaussian.hpp"
+#include <Foundation/Gaussian.hpp>
 
 namespace PathFinder
 {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
-#include "../Memory/GPUResourceProducer.hpp"
-#include "../Geometry/Rect2D.hpp"
+#include <Foundation/Name.hpp>
+#include <Memory/GPUResourceProducer.hpp>
+#include <Geometry/Rect2D.hpp>
 
 #include <vector>
 #include <memory>

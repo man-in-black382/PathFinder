@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
-#include "../Memory/GPUResourceProducer.hpp"
+#include <Foundation/Name.hpp>
+#include <Memory/GPUResourceProducer.hpp>
 
 #include "PipelineResourceStorageResource.hpp"
 

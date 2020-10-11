@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-#include "../Foundation/BitwiseEnum.hpp"
+#include <Foundation/BitwiseEnum.hpp>
 
 namespace HAL
 {

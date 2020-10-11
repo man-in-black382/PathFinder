@@ -2,7 +2,7 @@
 
 #include "GPUResource.hpp"
 
-#include "../HardwareAbstractionLayer/Texture.hpp"
+#include <HardwareAbstractionLayer/Texture.hpp>
 
 #include <vector>
 

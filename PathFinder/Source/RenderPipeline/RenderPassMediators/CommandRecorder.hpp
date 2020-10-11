@@ -5,7 +5,7 @@
 #include "../RenderPassGraph.hpp"
 #include "../PipelineStateManager.hpp"
 
-#include "../Memory/PoolDescriptorAllocator.hpp"
+#include <Memory/PoolDescriptorAllocator.hpp>
 
 namespace PathFinder
 {

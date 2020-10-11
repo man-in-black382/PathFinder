@@ -1,5 +1,4 @@
 #include "BlendState.hpp"
-#include "../Foundation/Assert.hpp"
 
 #include <type_traits>
 

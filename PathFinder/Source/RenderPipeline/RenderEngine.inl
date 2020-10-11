@@ -1,4 +1,4 @@
-#include "../HardwareAbstractionLayer/DebugLayer.hpp"
+#include <HardwareAbstractionLayer/DebugLayer.hpp>
 #include "CopyRequestHandling.hpp"
 
 #include <pix.h>

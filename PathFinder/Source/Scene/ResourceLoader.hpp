@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Memory/GPUResourceProducer.hpp"
-#include "../HardwareAbstractionLayer/Texture.hpp"
-#include "../ThirdParty/dds/dds-ktx.h"
+#include <Memory/GPUResourceProducer.hpp>
+#include <HardwareAbstractionLayer/Texture.hpp>
+#include <ThirdParty/dds/dds-ktx.h>
 
 #include <filesystem>
 #include <vector>

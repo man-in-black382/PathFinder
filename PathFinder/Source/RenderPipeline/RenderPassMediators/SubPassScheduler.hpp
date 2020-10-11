@@ -3,7 +3,7 @@
 #include "RenderPassUtilityProvider.hpp"
 #include "PipelineResourceStorage.hpp"
 
-#include "../Foundation/Name.hpp"
+#include <Foundation/Name.hpp>
 
 namespace PathFinder
 {

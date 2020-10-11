@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../IO/Input.hpp"
+#include <IO/Input.hpp>
 
 namespace PathFinder
 {
@@ -20,6 +20,7 @@ namespace PathFinder
         RenderSettingsController(Input* input);
         ~RenderSettingsController();
 
+        void SetEnabled(bool enabled);
         void ApplyVolatileSettings();
         
         RenderSettings VolatileSettings;
@@ -29,6 +30,8 @@ namespace PathFinder
 
         RenderSettings mAppliedSettings;
         Input* mInput;
+
+        bool mIsEnabled = true;
 
     public:
         inline const RenderSettings& AppliedSettings() const { return mAppliedSettings; }

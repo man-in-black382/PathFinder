@@ -31,7 +31,7 @@
 
 #include "AftermathShaderDatabase.hpp"
 
-#include "../HardwareAbstractionLayer/Device.hpp"
+#include <HardwareAbstractionLayer/Device.hpp>
 
 namespace PathFinder
 {

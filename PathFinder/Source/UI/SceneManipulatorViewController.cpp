@@ -1,6 +1,8 @@
 #include "SceneManipulatorViewController.hpp"
+#include "UIManager.hpp"
 
-#include <imguizmo/ImGuizmo.h>
+#include <RenderPipeline/RenderPasses/PipelineNames.hpp>
+
 #include <imgui/imgui.h>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -8,30 +10,10 @@
 namespace PathFinder
 {
 
-    void SceneManipulatorViewController::SetCamera(Camera* camera)
-    {
-        mCamera = camera;
-    }
-
     bool SceneManipulatorViewController::EditTransform(const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition)
     {
-        static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
-        static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
-        static bool useSnap = false;
-        static float snap[3] = { 1.f, 1.f, 1.f };
-        static float bounds[] = { -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f };
-        static float boundsSnap[] = { 0.1f, 0.1f, 0.1f };
-        static bool boundSizing = false;
-        static bool boundSizingSnap = false;
-
         if (editTransformDecomposition)
         {
-            if (ImGui::IsKeyPressed(90))
-                mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-            if (ImGui::IsKeyPressed(69))
-                mCurrentGizmoOperation = ImGuizmo::ROTATE;
-            if (ImGui::IsKeyPressed(82)) // r Key
-                mCurrentGizmoOperation = ImGuizmo::SCALE;
             if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
                 mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
             ImGui::SameLine();
@@ -56,29 +38,29 @@ namespace PathFinder
                     mCurrentGizmoMode = ImGuizmo::WORLD;
             }
             if (ImGui::IsKeyPressed(83))
-                useSnap = !useSnap;
-            ImGui::Checkbox("", &useSnap);
+                mUseSnap = !mUseSnap;
+            ImGui::Checkbox("", &mUseSnap);
             ImGui::SameLine();
 
             switch (mCurrentGizmoOperation)
             {
             case ImGuizmo::TRANSLATE:
-                ImGui::InputFloat3("Snap", &snap[0]);
+                ImGui::InputFloat3("Snap", &mSnap[0]);
                 break;
             case ImGuizmo::ROTATE:
-                ImGui::InputFloat("Angle Snap", &snap[0]);
+                ImGui::InputFloat("Angle Snap", &mSnap[0]);
                 break;
             case ImGuizmo::SCALE:
-                ImGui::InputFloat("Scale Snap", &snap[0]);
+                ImGui::InputFloat("Scale Snap", &mSnap[0]);
                 break;
             }
-            ImGui::Checkbox("Bound Sizing", &boundSizing);
-            if (boundSizing)
+            ImGui::Checkbox("Bound Sizing", &mBoundSizing);
+            if (mBoundSizing)
             {
                 ImGui::PushID(3);
-                ImGui::Checkbox("", &boundSizingSnap);
+                ImGui::Checkbox("", &mBoundSizingSnap);
                 ImGui::SameLine();
-                ImGui::InputFloat3("Snap", boundsSnap);
+                ImGui::InputFloat3("Snap", mBoundsSnap);
                 ImGui::PopID();
             }
         }
@@ -91,17 +73,28 @@ namespace PathFinder
             mCurrentGizmoMode, 
             matrix,
             nullptr, 
-            useSnap ? &snap[0] : nullptr, 
-            boundSizing ? bounds : nullptr, 
-            boundSizingSnap ? boundsSnap : nullptr);
+            mUseSnap ? &mSnap[0] : nullptr, 
+            mBoundSizing ? mBounds : nullptr, 
+            mBoundSizingSnap ? mBoundsSnap : nullptr);
     }
 
     void SceneManipulatorViewController::Draw()
     {
-        ImGuiIO& io = ImGui::GetIO();
+        if (mInput->CurrentClickCount() == 1 && !mUIManager->IsInteracting() && !mUIManager->IsMouseOverUI())
+        {
+            MeshInstanceVM.HandleClick();
+        }
 
-        glm::mat4 view = mCamera->View();
-        glm::mat4 projection = mCamera->Projection();
+        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::T)) mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::R)) mCurrentGizmoOperation = ImGuizmo::ROTATE;
+        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::S)) mCurrentGizmoOperation = ImGuizmo::SCALE;
+        
+        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::B)) mBoundSizing = !mBoundSizing;
+
+        CameraVM.Import();
+        MeshInstanceVM.Import();
+
+        ImGuiIO& io = ImGui::GetIO();
 
         ImGuizmo::BeginFrame();
 
@@ -114,18 +107,33 @@ namespace PathFinder
         ImGui::Begin("Editor");
         ImGui::Text("Camera");
 
-        float fov = 0.0f;
-        ImGui::SliderFloat("Fov", &fov, 20.f, 110.f);
+        ImGui::SliderFloat("FoV", &CameraVM.FOVH, 20.f, 110.f);
 
         ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
-        ImGuizmo::DrawCubes(glm::value_ptr(view), glm::value_ptr(projection), glm::value_ptr(modelMatDebug)/*&objectMatrix[0][0]*/, 1);
+        
         ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
         ImGui::Separator();
 
-        ImGuizmo::SetID(0/*matId*/);
-        mIsInteracting = EditTransform(glm::value_ptr(view), glm::value_ptr(projection), glm::value_ptr(modelMatDebug), true);
+        mIsInteracting = false;
+
+        if (MeshInstanceVM.ShouldDisplay)
+        {
+            ImGuizmo::SetID(0);
+            mIsInteracting = EditTransform(glm::value_ptr(CameraVM.View), glm::value_ptr(CameraVM.Projection), glm::value_ptr(MeshInstanceVM.ModelMatrix), MeshInstanceVM.ShouldDisplay);
+        
+            ImGui::Checkbox("Draw Cube", &mDrawCube);
+            if (mDrawCube)
+            {
+                ImGuizmo::DrawCubes(glm::value_ptr(CameraVM.View), glm::value_ptr(CameraVM.Projection), glm::value_ptr(MeshInstanceVM.ModelMatrix), 1);
+            }
+        }
+
+        mIsInteracting = mIsInteracting || MeshInstanceVM.ShouldDisplay;
 
         ImGui::End();
+
+        CameraVM.Export();
+        MeshInstanceVM.Export();
     }
 
     bool SceneManipulatorViewController::IsInteracting() const

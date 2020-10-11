@@ -2,9 +2,9 @@
 #include "RenderPass.hpp"
 #include "RenderPassGraph.hpp"
 
-#include "../Foundation/StringUtils.hpp"
-#include "../Foundation/Assert.hpp"
-#include "../Foundation/STDHelpers.hpp"
+#include <Foundation/StringUtils.hpp>
+
+#include <Foundation/STDHelpers.hpp>
 
 #include "RenderPasses/PipelineNames.hpp"
 

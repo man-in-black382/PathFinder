@@ -1,6 +1,6 @@
 #include "PipelineStateProxy.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 namespace PathFinder
 {

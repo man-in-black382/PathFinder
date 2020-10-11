@@ -1,9 +1,8 @@
 #include "PipelineState.hpp"
 #include "Utils.h"
 
-#include "../Foundation/Assert.hpp"
-#include "../Foundation/STDHelpers.hpp"
-#include "../Foundation/StringUtils.hpp"
+#include <Foundation/STDHelpers.hpp>
+#include <Foundation/StringUtils.hpp>
 
 #include <d3d12.h>
 

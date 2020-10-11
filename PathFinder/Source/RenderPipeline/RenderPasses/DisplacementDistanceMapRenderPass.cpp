@@ -1,5 +1,5 @@
 #include "DisplacementDistanceMapRenderPass.hpp"
-#include "../Scene/MaterialLoader.hpp"
+#include <Scene/MaterialLoader.hpp>
 
 namespace PathFinder
 {

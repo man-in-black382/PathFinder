@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../HardwareAbstractionLayer/Resource.hpp"
-#include "../HardwareAbstractionLayer/ResourceBarrier.hpp"
+#include <HardwareAbstractionLayer/Resource.hpp>
+#include <HardwareAbstractionLayer/ResourceBarrier.hpp>
 
 #include <unordered_map>
 

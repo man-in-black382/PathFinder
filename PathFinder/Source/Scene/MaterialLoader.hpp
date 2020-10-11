@@ -3,9 +3,9 @@
 #include "Material.hpp"
 #include "ResourceLoader.hpp"
 
-#include "../RenderPipeline/PreprocessableAssetStorage.hpp"
-#include "../HardwareAbstractionLayer/Buffer.hpp"
-#include "../Memory/GPUResourceProducer.hpp"
+#include <RenderPipeline/PreprocessableAssetStorage.hpp>
+#include <HardwareAbstractionLayer/Buffer.hpp>
+#include <Memory/GPUResourceProducer.hpp>
 
 #include <filesystem>
 #include <string>

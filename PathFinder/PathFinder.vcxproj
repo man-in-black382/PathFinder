@@ -112,7 +112,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/Source/;$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
@@ -179,7 +179,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/Source/;$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
@@ -326,7 +326,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RootSignatureProxy.cpp" />
     <ClCompile Include="Source\RenderPipeline\RTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\TopRTAS.cpp" />
-    <ClCompile Include="Source\RenderPipeline\SceneGPUStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateManager.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GBufferRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderSurfaceDescription.cpp" />
@@ -342,6 +341,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Scene\MeshLoader.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
     <ClCompile Include="Source\Scene\ResourceLoader.cpp" />
+    <ClCompile Include="Source\Scene\SceneGPUStorage.cpp" />
     <ClCompile Include="Source\Scene\SphericalLight.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV.cpp" />
     <ClCompile Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.cpp" />
@@ -355,10 +355,11 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\ThirdParty\imguizmo\ImGuizmo.cpp" />
     <ClCompile Include="Source\ThirdParty\imguizmo\ImSequencer.cpp" />
     <ClCompile Include="Source\UI\CameraViewModel.cpp" />
+    <ClCompile Include="Source\UI\MeshInstanceViewModel.cpp" />
     <ClCompile Include="Source\UI\SceneManipulatorViewController.cpp" />
     <ClCompile Include="Source\UI\SequencerViewController.cpp" />
     <ClCompile Include="Source\UI\UIGPUStorage.cpp" />
-    <ClCompile Include="Source\UI\UIInteractor.cpp" />
+    <ClCompile Include="Source\UI\UIManager.cpp" />
     <ClCompile Include="Source\Utility\AftermathCrashTracker.cpp" />
     <ClCompile Include="Source\Utility\AftermathShaderDatabase.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -540,7 +541,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\SFLGPUAllocator.hpp" />
     <ClInclude Include="Source\RenderPipeline\SubPassScheduler.hpp" />
     <ClInclude Include="Source\RenderPipeline\TopRTAS.hpp" />
-    <ClInclude Include="Source\RenderPipeline\SceneGPUStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateManager.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderContext.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderEngine.hpp" />
@@ -551,7 +551,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\ResourceView.hpp" />
     <ClInclude Include="Source\RenderPipeline\ShaderManager.hpp" />
-    <ClInclude Include="Source\RenderPipeline\VertexStorageLocation.hpp" />
     <ClInclude Include="Source\Scene\BloomParameters.hpp" />
     <ClInclude Include="Source\Scene\Camera.hpp" />
     <ClInclude Include="Source\Scene\CameraInteractor.hpp" />
@@ -565,7 +564,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Scene\MeshLoader.hpp" />
     <ClInclude Include="Source\Scene\Scene.hpp" />
     <ClInclude Include="Source\Scene\ResourceLoader.hpp" />
+    <ClInclude Include="Source\Scene\SceneGPUStorage.hpp" />
     <ClInclude Include="Source\Scene\SphericalLight.hpp" />
+    <ClInclude Include="Source\Scene\VertexStorageLocation.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P1N1UV1T1BT.hpp" />
     <ClInclude Include="Source\Scene\Vertices\Vertex1P3.hpp" />
@@ -1071,11 +1072,13 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
     <ClInclude Include="Source\ThirdParty\robinhood\robin_hood.h" />
     <ClInclude Include="Source\UI\CameraViewModel.hpp" />
+    <ClInclude Include="Source\UI\MeshInstanceViewModel.hpp" />
     <ClInclude Include="Source\UI\SceneManipulatorViewController.hpp" />
     <ClInclude Include="Source\UI\SequencerViewController.hpp" />
     <ClInclude Include="Source\UI\UIGPUStorage.hpp" />
-    <ClInclude Include="Source\UI\UIInteractor.hpp" />
+    <ClInclude Include="Source\UI\UIManager.hpp" />
     <ClInclude Include="Source\UI\ViewController.hpp" />
+    <ClInclude Include="Source\UI\ViewModel.hpp" />
     <ClInclude Include="Source\Utility\AftermathCrashTracker.hpp" />
     <ClInclude Include="Source\Utility\AftermathHelpers.hpp" />
     <ClInclude Include="Source\Utility\AftermathShaderDatabase.hpp" />
@@ -1136,7 +1139,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <None Include="Source\RenderPipeline\RenderPassMediators\ResourceScheduler.inl" />
     <None Include="Source\RenderPipeline\RenderPassMediators\SubPassScheduler.inl" />
     <None Include="Source\RenderPipeline\RootSignatureProxy.inl" />
-    <None Include="Source\RenderPipeline\SceneGPUStorage.inl" />
     <None Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.inl" />
     <None Include="Source\RenderPipeline\PipelineResourceStateOptimizer.inl" />
     <None Include="Source\RenderPipeline\RenderEngine.inl" />
@@ -1144,6 +1146,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <FileType>CppHeader</FileType>
     </None>
     <None Include="Source\RenderPipeline\SubPassScheduler.inl" />
+    <None Include="Source\Scene\SceneGPUStorage.inl" />
     <None Include="Source\ThirdParty\assimp\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\color4.inl" />
     <None Include="Source\ThirdParty\assimp\include\material.inl" />
@@ -1786,7 +1789,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.3</ShaderModel>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\GeometryPicking.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GeometryPicking.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\RngSeedGeneration.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">6.3</ShaderModel>

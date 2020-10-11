@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Foundation/Color.hpp"
+#include <Foundation/Color.hpp>
 
 namespace PathFinder 
 {

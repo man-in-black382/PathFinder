@@ -1,6 +1,6 @@
 #include "RayTracingShaderConfig.hpp"
 
-#include "../Foundation/Assert.hpp"
+
 
 #include <d3d12.h>
 

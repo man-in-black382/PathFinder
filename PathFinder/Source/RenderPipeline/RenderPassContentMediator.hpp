@@ -2,10 +2,10 @@
 
 #include "RenderSettings.hpp"
 
-#include "SceneGPUStorage.hpp"
-#include "../Scene/Scene.hpp"
-#include "../UI/UIGPUStorage.hpp"
-#include "../IO/Input.hpp"
+#include <Scene/SceneGPUStorage.hpp>
+#include <Scene/Scene.hpp>
+#include <UI/UIGPUStorage.hpp>
+#include <IO/Input.hpp>
 
 namespace PathFinder
 {

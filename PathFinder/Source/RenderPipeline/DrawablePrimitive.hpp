@@ -3,7 +3,7 @@
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "../HardwareAbstractionLayer/PrimitiveTopology.hpp"
+#include <HardwareAbstractionLayer/PrimitiveTopology.hpp>
 
 namespace PathFinder
 {

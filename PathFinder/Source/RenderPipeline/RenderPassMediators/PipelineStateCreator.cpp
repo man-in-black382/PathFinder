@@ -1,7 +1,5 @@
 #include "PipelineStateCreator.hpp"
 
-#include "../Foundation/Assert.hpp"
-
 namespace PathFinder
 {
 

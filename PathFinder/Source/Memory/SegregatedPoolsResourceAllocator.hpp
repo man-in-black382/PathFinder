@@ -3,10 +3,10 @@
 #include "SegregatedPools.hpp"
 #include "Ring.hpp"
 
-#include "../HardwareAbstractionLayer/Device.hpp"
-#include "../HardwareAbstractionLayer/Heap.hpp"
-#include "../HardwareAbstractionLayer/Buffer.hpp"
-#include "../HardwareAbstractionLayer/Texture.hpp"
+#include <HardwareAbstractionLayer/Device.hpp>
+#include <HardwareAbstractionLayer/Heap.hpp>
+#include <HardwareAbstractionLayer/Buffer.hpp>
+#include <HardwareAbstractionLayer/Texture.hpp>
 
 #include <memory>
 #include <vector>

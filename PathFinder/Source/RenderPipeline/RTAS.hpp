@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp"
-#include "../HardwareAbstractionLayer/ResourceBarrier.hpp"
+#include <HardwareAbstractionLayer/RayTracingAccelerationStructure.hpp>
+#include <HardwareAbstractionLayer/ResourceBarrier.hpp>
 
-#include "../Memory/GPUResourceProducer.hpp"
+#include <Memory/GPUResourceProducer.hpp>
 
 namespace PathFinder
 {

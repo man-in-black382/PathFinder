@@ -1,8 +1,8 @@
 #include "RootSignature.hpp"
 #include "Utils.h"
 
-#include "../Foundation/StringUtils.hpp"
-#include "../Foundation/Assert.hpp"
+#include <Foundation/StringUtils.hpp>
+
 
 namespace HAL
 {

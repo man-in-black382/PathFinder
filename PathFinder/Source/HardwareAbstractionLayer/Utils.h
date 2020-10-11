@@ -3,8 +3,8 @@
 #include <string>
 #include <comdef.h>
 
-#include "../Foundation/Assert.hpp"
-#include "../Foundation/StringUtils.hpp"
+
+#include <Foundation/StringUtils.hpp>
 
 namespace HAL 
 {

@@ -5,7 +5,7 @@
 
 #include "RenderPassUtilityProvider.hpp"
 
-#include "../Foundation/BitwiseEnum.hpp"
+#include <Foundation/BitwiseEnum.hpp>
 
 #include <vector>
 

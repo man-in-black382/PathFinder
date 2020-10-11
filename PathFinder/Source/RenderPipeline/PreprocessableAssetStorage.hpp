@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Memory/GPUResource.hpp"
+#include <Memory/GPUResource.hpp>
 
 #include <functional>
 

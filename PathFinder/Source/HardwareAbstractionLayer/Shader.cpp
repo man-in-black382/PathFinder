@@ -1,7 +1,7 @@
 #include "Shader.hpp"
 #include "Utils.h"
 
-#include "../Foundation/StringUtils.hpp"
+#include <Foundation/StringUtils.hpp>
 
 #include <d3dcompiler.h>
 #include <dxcapi.h>

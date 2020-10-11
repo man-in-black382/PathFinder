@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
-#include "../HardwareAbstractionLayer/PipelineState.hpp"
-#include "../Memory/GPUResourceProducer.hpp"
+#include <Foundation/Name.hpp>
+#include <HardwareAbstractionLayer/PipelineState.hpp>
+#include <Memory/GPUResourceProducer.hpp>
 
 #include <robinhood/robin_hood.h>
 

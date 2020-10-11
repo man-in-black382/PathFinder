@@ -2,7 +2,7 @@
 
 #include <glm/geometric.hpp>
 
-#include "../Foundation/Pi.hpp"
+#include <Foundation/Pi.hpp>
 
 namespace PathFinder
 {

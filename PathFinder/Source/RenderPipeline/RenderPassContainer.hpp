@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Foundation/Name.hpp"
+#include <Foundation/Name.hpp>
 
 #include "RenderPassGraph.hpp"
 #include "RenderDevice.hpp"
@@ -8,7 +8,7 @@
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
 
-#include "../Memory/PoolDescriptorAllocator.hpp"
+#include <Memory/PoolDescriptorAllocator.hpp>
 
 #include "RenderPassMediators/RenderPassUtilityProvider.hpp"
 #include "RenderPassMediators/ResourceProvider.hpp"

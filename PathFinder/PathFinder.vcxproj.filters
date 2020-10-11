@@ -342,9 +342,6 @@
     <ClCompile Include="Source\Scene\SphericalLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\SceneGPUStorage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Scene\FlatLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -513,9 +510,6 @@
     <ClCompile Include="Source\UI\UIGPUStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\UI\UIInteractor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Memory\CopyRequestManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -523,6 +517,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\UIManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\MeshInstanceViewModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\SceneGPUStorage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1940,9 +1943,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderEngine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\VertexStorageLocation.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Scene\Scene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2315,9 +2315,6 @@
     <ClInclude Include="Source\Scene\SphericalLight.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\SceneGPUStorage.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Scene\FlatLight.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2627,9 +2624,6 @@
     <ClInclude Include="Source\UI\UIGPUStorage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\UI\UIInteractor.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Memory\CopyRequestManager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2637,6 +2631,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\UIManager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\ViewModel.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\MeshInstanceViewModel.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\SceneGPUStorage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\VertexStorageLocation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -3121,9 +3130,6 @@
     <None Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="Source\RenderPipeline\SceneGPUStorage.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="Source\RenderPipeline\RootSignatureProxy.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -3153,6 +3159,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="Source\RenderPipeline\RenderPassMediators\SubPassScheduler.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="Source\Scene\SceneGPUStorage.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -5,8 +5,8 @@
 #include "PoolDescriptorAllocator.hpp"
 #include "CopyRequestManager.hpp"
 
-#include "../HardwareAbstractionLayer/Resource.hpp"
-#include "../HardwareAbstractionLayer/CommandList.hpp"
+#include <HardwareAbstractionLayer/Resource.hpp>
+#include <HardwareAbstractionLayer/CommandList.hpp>
 
 #include <queue>
 
