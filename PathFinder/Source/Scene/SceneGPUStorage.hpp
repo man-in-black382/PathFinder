@@ -132,8 +132,7 @@ namespace PathFinder
 
         void UploadMeshes();
         void UploadMaterials();
-        void UploadMeshInstances();
-        void UploadLights();
+        void UploadInstances();
 
         GPUCamera CameraGPURepresentation() const;
 
@@ -156,6 +155,11 @@ namespace PathFinder
         template <class Vertex>
         void SubmitTemporaryBuffersToGPU();
 
+        void UploadMeshInstances();
+        void UploadLights();
+
+        EntityID GetNextEntityID();
+
         GPULightTableEntry CreateLightGPUTableEntry(const FlatLight& light) const;
         GPULightTableEntry CreateLightGPUTableEntry(const SphericalLight& light) const;
 
@@ -172,12 +176,15 @@ namespace PathFinder
         Memory::GPUResourceProducer::BufferPtr mLightTable;
         Memory::GPUResourceProducer::BufferPtr mMaterialTable;
 
+        VertexStorageLocation mUnitQuadVertexLocation;
+        VertexStorageLocation mUnitCubeVertexLocation;
         GPULightTablePartitionInfo mLightTablePartitionInfo;
-        float mLightsMaximumLuminance;
-        
+
         Scene* mScene;
         const HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;
+
+        EntityID mUniqueEntityID = 0;
 
     public:
         inline const auto UnifiedVertexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get(); }
@@ -188,7 +195,6 @@ namespace PathFinder
         inline const auto& LightTablePartitionInfo() const { return mLightTablePartitionInfo; }
         inline const auto& TopAccelerationStructure() const { return mTopAccelerationStructure; }
         inline const auto& BottomAccelerationStructures() const { return mBottomAccelerationStructures; }
-        inline auto LightsMaximumLuminanance() const { return mLightsMaximumLuminance; }
     };
 
 }

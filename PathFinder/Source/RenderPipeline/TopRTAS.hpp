@@ -16,7 +16,7 @@ namespace PathFinder
         TopRTAS& operator=(const TopRTAS& that) = delete;
         ~TopRTAS() = default;
 
-        void AddInstance(const BottomRTAS& blas, uint32_t instanceId, const glm::mat4& transform);
+        void AddInstance(const BottomRTAS& blas, const HAL::RayTracingTopAccelerationStructure::InstanceInfo& instanceInfo, const glm::mat4& transform);
 
         void Build();
         void Update();

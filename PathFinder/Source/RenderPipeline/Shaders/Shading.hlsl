@@ -430,7 +430,7 @@ float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, f
             | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
             | RAY_FLAG_FORCE_OPAQUE             // Skip any hit shaders
             | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, // Skip closest hit shaders,
-            0xFF, // Instance mask
+            EntityMaskMeshInstance, // Instance mask
             0, // Contribution to hit group index
             0, // BLAS geometry multiplier for hit group index
             0, // Miss shader index

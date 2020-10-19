@@ -7,11 +7,6 @@ namespace PathFinder
 
     Light::~Light() {}
 
-    void Light::SetGPULightTableIndex(uint32_t index)
-    {
-        mGPULightTableIndex = index;
-    }
-
     void Light::SetColor(const Foundation::Color& color)
     {
         mColor = color;
@@ -29,6 +24,16 @@ namespace PathFinder
 
         // Luminance due to a point on a Lambertian emitter, emitted in any direction, 
         // is equal to its total luminous power Phi divided by the emitter area A and the projected solid angle (Pi)
+    }
+
+    void Light::SetEntityID(EntityID id)
+    {
+        mEntityID = id;
+    }
+
+    void Light::SetIndexInGPUTable(uint32_t index)
+    {
+        mIndexInGPUTable = index;
     }
 
     void Light::SetArea(float area)

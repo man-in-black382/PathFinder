@@ -62,10 +62,10 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
     case WM_DESTROY:
-        ::PostQuitMessage(0);
+        PostQuitMessage(0);
         return 0;
     }
-    return ::DefWindowProc(hWnd, msg, wParam, lParam);
+    return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
 int main(int argc, char** argv)
@@ -76,14 +76,14 @@ int main(int argc, char** argv)
 
     // Create application window
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), iconHandle, NULL, NULL, NULL, _T("PathFinder"), NULL };
-    ::RegisterClassEx(&wc);
+    RegisterClassEx(&wc);
     auto windowStyle = WS_OVERLAPPEDWINDOW;
-    HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("PathFinder"), windowStyle, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindow(wc.lpszClassName, _T("PathFinder"), windowStyle, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
     // Show the window
-    ::ShowWindow(hwnd, SW_SHOWDEFAULT);
-    ::UpdateWindow(hwnd);
-    ::SetWindowPos(hwnd, 0, 0, 0, 1920, 1080, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    ShowWindow(hwnd, SW_SHOWDEFAULT);
+    UpdateWindow(hwnd);
+    SetWindowPos(hwnd, 0, 0, 0, 1920, 1080, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
     PathFinder::CommandLineParser cmdLineParser{ argc, argv };
     PathFinder::RenderEngine<PathFinder::RenderPassContentMediator> engine{ hwnd, cmdLineParser };
@@ -313,7 +313,7 @@ int main(int argc, char** argv)
     input.SetInvertVerticalDelta(true);
 
     sceneManipulatorVC->CameraVM.SetCamera(&scene.MainCamera());
-    sceneManipulatorVC->MeshInstanceVM.SetScene(&scene);
+    sceneManipulatorVC->EntityVM.SetScene(&scene);
 
     // ---------------------------------------------------------------------------- //
 
@@ -333,9 +333,10 @@ int main(int argc, char** argv)
     {
         const Geometry::Dimensions& viewportSize = engine.RenderSurface().Dimensions();
 
+        // TODO: Implement a proper window controller class and make window influence viewport, not the other way around
         RECT clientRect{ 0, 0, viewportSize.Width, viewportSize.Height };
-        ::AdjustWindowRect(&clientRect, windowStyle, false);
-        ::SetWindowPos(hwnd, 0, 0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+        AdjustWindowRect(&clientRect, windowStyle, false);
+        SetWindowPos(hwnd, 0, 0, 0, clientRect.right - clientRect.left, clientRect.bottom - clientRect.top, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
         // 'Top' is screen bottom
         uiManager.SetViewportSize(viewportSize);
@@ -350,8 +351,8 @@ int main(int argc, char** argv)
         settingsContainer.SetEnabled(!interactingWithUI);
         settingsContainer.ApplyVolatileSettings();
 
-        sceneStorage.UploadMeshInstances();
-        sceneStorage.UploadLights();
+        sceneStorage.UploadInstances();
+        scene.RemapEntityIDs();
 
         // Top RT needs to be rebuilt every frame
         engine.AddTopRayTracingAccelerationStructure(&sceneStorage.TopAccelerationStructure());
@@ -389,7 +390,7 @@ int main(int argc, char** argv)
 
         pickedGeometryInfo->Read<uint32_t>([&sceneManipulatorVC](const uint32_t* info)
         {
-            if (info) sceneManipulatorVC->MeshInstanceVM.SetGeometryIntersectionInfo(*info);
+            if (info) sceneManipulatorVC->EntityVM.SetGeometryIntersectionInfo(*info);
         });
     }};
 
@@ -398,15 +399,14 @@ int main(int argc, char** argv)
     ZeroMemory(&msg, sizeof(msg));
     while (msg.message != WM_QUIT)
     {
-        if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+        while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
         {
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
 
             windowsInputHandler.HandleMessage(msg);
-            continue;
         }
-        
+
         input.FinalizeInput();
         engine.Render();
         input.Clear();
@@ -414,8 +414,8 @@ int main(int argc, char** argv)
 
     engine.FlushAllQueuedFrames();
 
-    ::DestroyWindow(hwnd);
-    ::UnregisterClass(wc.lpszClassName, wc.hInstance);
+    DestroyWindow(hwnd);
+    UnregisterClass(wc.lpszClassName, wc.hInstance);
 
     return 0;
 }

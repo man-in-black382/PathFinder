@@ -1,6 +1,9 @@
 #pragma once
 
 #include <Foundation/Color.hpp>
+#include <glm/mat4x4.hpp>
+
+#include "EntityID.hpp"
 
 namespace PathFinder 
 {
@@ -14,7 +17,6 @@ namespace PathFinder
     public:
         virtual ~Light() = 0;
 
-        void SetGPULightTableIndex(uint32_t index);
         void SetColor(const Foundation::Color& color);
         void SetColorTemperature(Kelvin temperature);
 
@@ -22,21 +24,29 @@ namespace PathFinder
         /// Measure of the perceived power of light.
         void SetLuminousPower(Lumen luminousPower);
 
+        void SetIndexInGPUTable(uint32_t index);
+        void SetEntityID(EntityID id);
+
     protected:
         void SetArea(float area);
+
+        glm::mat4 mModelMatrix;
+        EntityID mEntityID = 0;
+        uint32_t mIndexInGPUTable = 0;
 
     private:
         Lumen mLuminousPower = 0.0;
         Nit mLuminance = 0.0;
         Foundation::Color mColor = Foundation::Color::White();
         float mArea = 0.0;
-        uint32_t mGPULightTableIndex;
 
     public:
-        Lumen LuminousPower() const { return mLuminousPower; }
-        Nit Luminance() const { return mLuminance; }
-        auto GPULightTableIndex() const { return mGPULightTableIndex; }
-        const Foundation::Color& Color() const { return mColor; }
+        inline Lumen LuminousPower() const { return mLuminousPower; }
+        inline Nit Luminance() const { return mLuminance; }
+        inline const Foundation::Color& Color() const { return mColor; }
+        inline const glm::mat4& ModelMatrix() const { return mModelMatrix; }
+        inline const EntityID& ID() const { return mEntityID; }
+        inline auto IndexInGPUTable() const { return mIndexInGPUTable; }
     };
 
 }

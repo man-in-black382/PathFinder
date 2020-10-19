@@ -24,7 +24,7 @@ namespace PathFinder
         mAppliedSettings = VolatileSettings;
     }
 
-    void RenderSettingsController::HandleKeyUp(KeyboardKey key, const Input* input)
+    void RenderSettingsController::HandleKeyUp(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input)
     {
         if (!mIsEnabled)
             return;

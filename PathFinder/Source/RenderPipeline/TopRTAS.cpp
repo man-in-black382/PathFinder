@@ -7,9 +7,9 @@ namespace PathFinder
     TopRTAS::TopRTAS(const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer)
         : RTAS(resourceProducer), mAccelerationStructure{ device } {}
 
-    void TopRTAS::AddInstance(const BottomRTAS& blas, uint32_t instanceId, const glm::mat4& transform)
+    void TopRTAS::AddInstance(const BottomRTAS& blas, const HAL::RayTracingTopAccelerationStructure::InstanceInfo& instanceInfo, const glm::mat4& transform)
     {
-        mAccelerationStructure.AddInstance(blas.HALAccelerationStructure(), instanceId, transform);
+        mAccelerationStructure.AddInstance(blas.HALAccelerationStructure(), instanceInfo, transform);
     }
 
     void TopRTAS::Build()

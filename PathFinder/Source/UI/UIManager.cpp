@@ -30,23 +30,49 @@ namespace PathFinder
         io.Fonts->AddFontDefault();
         io.Fonts->Build();
 
-        io.KeyMap[ImGuiKey_Space] = VK_SPACE;
+        io.KeyMap[ImGuiKey_Space] = VK_SPACE; // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
+        io.KeyMap[ImGuiKey_Tab] = VK_TAB; 
+        io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
+        io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
+        io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
+        io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
+        io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
+        io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
+        io.KeyMap[ImGuiKey_Home] = VK_HOME;
+        io.KeyMap[ImGuiKey_End] = VK_END;
+        io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+        io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
+        io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
+        io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+        io.KeyMap[ImGuiKey_A] = 'A';
+        io.KeyMap[ImGuiKey_C] = 'C';
+        io.KeyMap[ImGuiKey_V] = 'V';
+        io.KeyMap[ImGuiKey_X] = 'X';
+        io.KeyMap[ImGuiKey_Y] = 'Y';
+        io.KeyMap[ImGuiKey_Z] = 'Z';
 
-        PollInputs();
+        UpdateCursor();
+
+        mInput->KeyUpEvent() += { "UIManager.Key.Up", this, &UIManager::HandleKeyUp };
+        mInput->KeyDownEvent() += { "UIManager.Key.Down", this, &UIManager::HandleKeyDown };
     }
 
-    void UIManager::PollInputs()
+    UIManager::~UIManager()
     {
-        ImGuiIO& io = ImGui::GetIO();
-        IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built!");
+        mInput->KeyUpEvent() -= "UIManager.Key.Up";
+        mInput->KeyDownEvent() -= "UIManager.Key.Down";
+    }
 
+    void UIManager::Draw()
+    {
         // Setup time step
         //INT64 current_time;
         //::QueryPerformanceCounter((LARGE_INTEGER*)& current_time);
         //io.DeltaTime = (float)(current_time - g_Time) / g_TicksPerSecond;
         //g_Time = current_time;
 
-        // Read keyboard modifiers inputs
+        ImGuiIO& io = ImGui::GetIO();
+
         io.KeyCtrl = mInput->IsKeyboardKeyPressed(KeyboardKey::Ctrl);
         io.KeyShift = mInput->IsKeyboardKeyPressed(KeyboardKey::Shift);
         io.KeyAlt = mInput->IsKeyboardKeyPressed(KeyboardKey::Alt);
@@ -54,22 +80,18 @@ namespace PathFinder
         io.KeySuper = mInput->IsKeyboardKeyPressed(KeyboardKey::SuperLeft) ||
             mInput->IsKeyboardKeyPressed(KeyboardKey::SuperRight);
 
-        io.MousePos = { mInput->MousePosition().x, mInput->MousePosition().y };
-
         for (auto i = 0; i < std::size(io.MouseDown); ++i)
         {
             io.MouseDown[i] = mInput->IsMouseButtonPressed(i);
         }
 
+        io.MousePos = { mInput->MousePosition().x, mInput->MousePosition().y };
+
         mIsInteracting = (ImGui::IsAnyWindowHovered() && ImGui::IsAnyMouseDown()) || ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused();
         mIsMouseOverUI = ImGui::IsAnyItemHovered();
 
         UpdateCursor();
-    }
 
-    void UIManager::Draw()
-    {
-        PollInputs();
         mGPUStorage.StartNewFrame();
 
         for (auto& vc : mViewControllers)
@@ -96,6 +118,17 @@ namespace PathFinder
         return mIsMouseOverUI;
     }
 
+    void UIManager::HandleKeyUp(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input)
+    {
+        ImGui::GetIO().KeysDown[info.VirtualKey] = false;
+    }
+
+    void UIManager::HandleKeyDown(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input)
+    {
+        ImGui::GetIO().KeysDown[info.VirtualKey] = true;
+        ImGui::GetIO().AddInputCharacter(info.VirtualKey);
+    }
+
     void UIManager::UpdateCursor()
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -108,7 +141,7 @@ namespace PathFinder
         if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor)
         {
             // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
-            ::SetCursor(NULL);
+            SetCursor(NULL);
         }
         else
         {
@@ -125,7 +158,7 @@ namespace PathFinder
             case ImGuiMouseCursor_ResizeNWSE:   win32_cursor = IDC_SIZENWSE; break;
             case ImGuiMouseCursor_Hand:         win32_cursor = IDC_HAND; break;
             }
-            ::SetCursor(::LoadCursor(NULL, win32_cursor));
+            SetCursor(LoadCursor(NULL, win32_cursor));
         }
     }
 

@@ -13,4 +13,8 @@ static const uint U12Max = 4095u;
 static const uint U14Max = 16383u;
 static const uint U32Max = 4294967295u;
 
+static const uint EntityMaskMeshInstance = 1 << 0;
+static const uint EntityMaskLight = 1 << 1;
+static const uint EntityMaskAll = 0xFFFFFFFF;
+
 #endif

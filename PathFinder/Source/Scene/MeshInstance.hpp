@@ -5,6 +5,7 @@
 
 #include "Mesh.hpp"
 #include "Material.hpp"
+#include "EntityID.hpp"
 
 #include <unordered_map>
 #include <glm/mat4x4.hpp>
@@ -29,7 +30,8 @@ namespace PathFinder
         Geometry::Transformation mTransformation;
         Geometry::Transformation mPrevTransformation;
         glm::mat4 mModelMatrix;
-        uint32_t mGPUInstanceIndex = 0;
+        EntityID mEntityID = 0;
+        uint32_t mIndexInGPUTable = 0;
 
     public:
         inline bool IsSelected() const { return mIsSelected; }
@@ -37,14 +39,16 @@ namespace PathFinder
         inline const Geometry::Transformation& Transformation() const { return mTransformation; }
         inline const Geometry::Transformation& PrevTransformation() { return mPrevTransformation; }
         inline Geometry::AxisAlignedBox3D BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
-        inline const Mesh* AssosiatedMesh() const { return mMesh; }
-        inline const Material* AssosiatedMaterial() const { return mMaterial; }
-        inline auto GPUInstanceIndex() const { return mGPUInstanceIndex; }
+        inline const Mesh* AssociatedMesh() const { return mMesh; }
+        inline const Material* AssociatedMaterial() const { return mMaterial; }
+        inline const EntityID& ID() const { return mEntityID; }
+        inline auto IndexInGPUTable () const { return mIndexInGPUTable; }
 
         inline void SetIsSelected(bool selected) { mIsSelected = selected; }
         inline void SetIsHighlighted(bool highlighted) { mIsHighlighted = highlighted; }
         inline void SetTransformation(const Geometry::Transformation& transform) { mTransformation = transform; }
-        inline void SetGPUInstanceIndex(uint32_t index) { mGPUInstanceIndex = index; }
+        inline void SetIndexInGPUTable(uint32_t index) { mIndexInGPUTable = index; }
+        inline void SetEntityID(EntityID id) { mEntityID = id; }
     };
 
 }

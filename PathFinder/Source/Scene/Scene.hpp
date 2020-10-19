@@ -7,6 +7,7 @@
 #include "GTTonemappingParameters.hpp"
 #include "BloomParameters.hpp"
 #include "ResourceLoader.hpp"
+#include "MeshLoader.hpp"
 #include "FlatLight.hpp"
 #include "SphericalLight.hpp"
 
@@ -15,6 +16,8 @@
 #include <functional>
 #include <vector>
 #include <memory>
+
+#include <robinhood/robin_hood.h>
 
 namespace PathFinder 
 {
@@ -25,6 +28,8 @@ namespace PathFinder
         using FlatLightIt = std::vector<FlatLight>::iterator;
         using SphericalLightIt = std::vector<SphericalLight>::iterator;
 
+        using EntityVariant = std::variant<MeshInstance*, FlatLight*, SphericalLight*>;
+
         Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer);
 
         Mesh& AddMesh(Mesh&& mesh);
@@ -33,6 +38,10 @@ namespace PathFinder
         FlatLightIt EmplaceDiskLight();
         FlatLightIt EmplaceRectangularLight();
         SphericalLightIt EmplaceSphericalLight();
+
+        std::optional<EntityVariant> GetEntityByID(const EntityID& id) const;
+
+        void RemapEntityIDs();
 
     private:
         void LoadUtilityResources();
@@ -44,6 +53,8 @@ namespace PathFinder
         std::vector<FlatLight> mDiskLights;
         std::vector<SphericalLight> mSphericalLights;
 
+        robin_hood::unordered_flat_map<EntityID, EntityVariant> mMappedEntities;
+
         Camera mCamera;
         GTTonemappingParameterss mTonemappingParams;
         BloomParameters mBloomParameters;
@@ -51,8 +62,10 @@ namespace PathFinder
         Memory::GPUResourceProducer::TexturePtr mBlueNoiseTexture;
         Memory::GPUResourceProducer::TexturePtr mSMAAAreaTexture;
         Memory::GPUResourceProducer::TexturePtr mSMAASearchTexture;
+        Mesh mUnitCube;
 
         ResourceLoader mResourceLoader;
+        MeshLoader mMeshLoader;
 
     public:
         inline Camera& MainCamera() { return mCamera; }
@@ -75,9 +88,12 @@ namespace PathFinder
         inline auto& TonemappingParams() { return mTonemappingParams; }
         inline auto& BloomParams() { return mBloomParameters; }
 
+        inline auto TotalLightCount() const { return mRectangularLights.size() + mDiskLights.size() + mSphericalLights.size(); }
+
         inline const auto BlueNoiseTexture() const { return mBlueNoiseTexture.get(); }
         inline const auto SMAASearchTexture() const { return mSMAASearchTexture.get(); }
         inline const auto SMAAAreaTexture() const { return mSMAAAreaTexture.get(); }
+        inline const Mesh& UnitCube() const { return mUnitCube; }
     };
 
 }

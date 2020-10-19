@@ -18,6 +18,7 @@ namespace PathFinder
     {
     public:
         UIManager(HWND windowHandle, Input* input, PipelineResourceStorage* resourceStorage, Memory::GPUResourceProducer* resourceProducer);
+        ~UIManager();
 
         void Draw();
         void SetViewportSize(const Geometry::Dimensions& size);
@@ -29,7 +30,8 @@ namespace PathFinder
         ViewControllerT* CreateViewController();
 
     private:
-        void PollInputs();
+        void HandleKeyUp(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input);
+        void HandleKeyDown(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input);
         void UpdateCursor();
 
         std::vector<std::unique_ptr<ViewController>> mViewControllers;

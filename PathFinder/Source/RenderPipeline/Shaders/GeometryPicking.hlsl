@@ -46,7 +46,7 @@ void RayGeneration()
         RAY_FLAG_CULL_BACK_FACING_TRIANGLES
         | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
         | RAY_FLAG_FORCE_OPAQUE, // Skip any hit shaders
-        0xFF, // Instance mask
+        EntityMaskAll, // Instance mask
         0, // Contribution to hit group index
         0, // BLAS geometry multiplier for hit group index
         0, // Miss shader index

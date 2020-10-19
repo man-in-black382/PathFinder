@@ -1,7 +1,11 @@
 #include "SceneGPUStorage.hpp"
+#include "EntityID.hpp"
 
 #include <algorithm>
 #include <iterator>
+
+#include <RenderPipeline/DrawablePrimitive.hpp>
+#include <fplus/fplus.hpp>
 
 namespace PathFinder
 {
@@ -25,6 +29,16 @@ namespace PathFinder
 
             mesh.SetVertexStorageLocation(locationInStorage);
         }
+
+        auto quadVertices = fplus::transform([](const glm::vec3& p) { return Vertex1P1N1UV1T1BT{ glm::vec4{p, 1.0f} }; }, DrawablePrimitive::UnitQuadVertices);
+
+        mUnitQuadVertexLocation = WriteToTemporaryBuffers(
+            quadVertices.data(), quadVertices.size(),
+            DrawablePrimitive::UnitQuadIndices.data(), DrawablePrimitive::UnitQuadIndices.size());
+
+        mUnitCubeVertexLocation = WriteToTemporaryBuffers(
+            mScene->UnitCube().Vertices().data(), mScene->UnitCube().Vertices().size(), 
+            mScene->UnitCube().Indices().data(), mScene->UnitCube().Indices().size());
 
         SubmitTemporaryBuffersToGPU<Vertex1P1N1UV1T1BT>();
     }
@@ -75,13 +89,26 @@ namespace PathFinder
         }
     }
 
+    void SceneGPUStorage::UploadInstances()
+    {
+        mUniqueEntityID = 0;
+        mTopAccelerationStructure.Clear();
+        UploadMeshInstances();
+        UploadLights();
+        mTopAccelerationStructure.Build();
+    }
+
     void SceneGPUStorage::UploadMeshInstances()
     {
         auto& meshInstances = mScene->MeshInstances();
+        auto& sphericalLights = mScene->SphericalLights();
+        auto& rectangularLights = mScene->RectangularLights();
+        auto& diskLights = mScene->DiskLights();
 
-        if (meshInstances.empty()) return;
+        auto requiredBufferSize = meshInstances.size() + mScene->TotalLightCount();
 
-        auto requiredBufferSize = meshInstances.size();
+        if (requiredBufferSize == 0)
+            return;
 
         if (!mMeshInstanceTable || mMeshInstanceTable->Capacity<GPUMeshInstanceTableEntry>() < requiredBufferSize)
         {
@@ -91,9 +118,8 @@ namespace PathFinder
         }
 
         mMeshInstanceTable->RequestWrite();
-        mTopAccelerationStructure.Clear();
 
-        uint32_t index = 0;
+        uint32_t instanceIdx = 0;
 
         for (MeshInstance& instance : meshInstances)
         {
@@ -101,25 +127,26 @@ namespace PathFinder
                 instance.Transformation().ModelMatrix(),
                 instance.PrevTransformation().ModelMatrix(),
                 instance.Transformation().NormalMatrix(),
-                instance.AssosiatedMaterial()->GPUMaterialTableIndex,
-                instance.AssosiatedMesh()->LocationInVertexStorage().VertexBufferOffset,
-                instance.AssosiatedMesh()->LocationInVertexStorage().IndexBufferOffset,
-                instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount,
-                instance.AssosiatedMesh()->HasTangentSpace()
+                instance.AssociatedMaterial()->GPUMaterialTableIndex,
+                instance.AssociatedMesh()->LocationInVertexStorage().VertexBufferOffset,
+                instance.AssociatedMesh()->LocationInVertexStorage().IndexBufferOffset,
+                instance.AssociatedMesh()->LocationInVertexStorage().IndexCount,
+                instance.AssociatedMesh()->HasTangentSpace()
             };
 
-            BottomRTAS& blas = mBottomAccelerationStructures[instance.AssosiatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex];
-            mTopAccelerationStructure.AddInstance(blas, index, instance.Transformation().ModelMatrix());
-            instance.SetGPUInstanceIndex(index);
+            EntityID entityId = GetNextEntityID();
 
-            mMeshInstanceTable->Write(&instanceEntry, index, 1);
+            instance.SetIndexInGPUTable(instanceIdx);
+            instance.SetEntityID(entityId);
 
-            ++index;
+            BottomRTAS& blas = mBottomAccelerationStructures[instance.AssociatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex];
+            mTopAccelerationStructure.AddInstance(blas, RTASInstanceInfoForEntity(entityId, EntityMask::MeshInstance), instance.Transformation().ModelMatrix());
+            mMeshInstanceTable->Write(&instanceEntry, instanceIdx, 1);
+
+            ++instanceIdx;
 
             instance.UpdatePreviousTransform();
         }
-
-        mTopAccelerationStructure.Build();
     }
 
     void SceneGPUStorage::UploadLights()
@@ -128,7 +155,7 @@ namespace PathFinder
         auto& rectangularLights = mScene->RectangularLights();
         auto& diskLights = mScene->DiskLights();
 
-        auto requiredBufferSize = sphericalLights.size() + rectangularLights.size() + diskLights.size();
+        auto requiredBufferSize = mScene->TotalLightCount();
 
         if (!mLightTable || mLightTable->Capacity<GPULightTableEntry>() < requiredBufferSize)
         {
@@ -139,64 +166,44 @@ namespace PathFinder
 
         mLightTable->RequestWrite();
 
-        mLightsMaximumLuminance = 0.0;
-
         uint32_t index = 0;
         mLightTablePartitionInfo = {};
         mLightTablePartitionInfo.TotalLightsCount = 0;
         mLightTablePartitionInfo.SphericalLightsOffset = index;
 
-        for (SphericalLight& light : sphericalLights)
+        auto uploadLights = [this, &index](auto&& lights, uint32_t& tableOffset, uint32_t& lightCount, const VertexStorageLocation& vertexLocation)
         {
-            if (light.LuminousPower() <= 0.0) continue;
+            tableOffset = index;
 
-            GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
-            mLightTable->Write(&lightEntry, index, 1);
-            light.SetGPULightTableIndex(index);
+            for (auto& light : lights)
+            {
+                if (light.LuminousPower() <= 0.0) continue;
 
-            ++index;
-            ++mLightTablePartitionInfo.SphericalLightsCount;
-            ++mLightTablePartitionInfo.TotalLightsCount;
+                GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
+                mLightTable->Write(&lightEntry, index, 1);
 
-            mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(), 
-                std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));
-        }
+                EntityID entityId = GetNextEntityID();
 
-        mLightTablePartitionInfo.RectangularLightsOffset = index;
+                light.SetEntityID(entityId);
+                light.SetIndexInGPUTable(index);
 
-        for (FlatLight& light : rectangularLights)
-        {
-            if (light.LuminousPower() <= 0.0) continue;
+                ++index;
+                ++lightCount;
+                ++mLightTablePartitionInfo.TotalLightsCount;
 
-            GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
-            mLightTable->Write(&lightEntry, index, 1);
-            light.SetGPULightTableIndex(index);
+                BottomRTAS& blas = mBottomAccelerationStructures[vertexLocation.BottomAccelerationStructureIndex];
+                mTopAccelerationStructure.AddInstance(blas, RTASInstanceInfoForEntity(entityId, EntityMask::Light), light.ModelMatrix());
+            }
+        };
 
-            ++index;
-            ++mLightTablePartitionInfo.RectangularLightsCount;
-            ++mLightTablePartitionInfo.TotalLightsCount;
+        uploadLights(mScene->SphericalLights(), mLightTablePartitionInfo.SphericalLightsOffset, mLightTablePartitionInfo.SphericalLightsCount, mUnitCubeVertexLocation);
+        uploadLights(mScene->DiskLights(), mLightTablePartitionInfo.EllipticalLightsOffset, mLightTablePartitionInfo.EllipticalLightsCount, mUnitQuadVertexLocation);
+        uploadLights(mScene->RectangularLights(), mLightTablePartitionInfo.RectangularLightsOffset, mLightTablePartitionInfo.RectangularLightsCount, mUnitQuadVertexLocation);
+    }
 
-            mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(),
-                std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));
-        }
-
-        mLightTablePartitionInfo.EllipticalLightsOffset = index;
-
-        for (FlatLight& light : diskLights)
-        {
-            if (light.LuminousPower() <= 0.0) continue;
-
-            GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
-            mLightTable->Write(&lightEntry, index, 1);
-            light.SetGPULightTableIndex(index);
-
-            ++index;
-            ++mLightTablePartitionInfo.EllipticalLightsCount;
-            ++mLightTablePartitionInfo.TotalLightsCount;
-
-            mLightsMaximumLuminance += std::max(light.Color().R() * light.Luminance(),
-                std::max(light.Color().G() * light.Luminance(), light.Color().B() * light.Luminance()));
-        }
+    EntityID SceneGPUStorage::GetNextEntityID()
+    {
+        return ++mUniqueEntityID;
     }
 
     GPUCamera SceneGPUStorage::CameraGPURepresentation() const

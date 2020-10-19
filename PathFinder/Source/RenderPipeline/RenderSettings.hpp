@@ -26,7 +26,7 @@ namespace PathFinder
         RenderSettings VolatileSettings;
 
     private:
-        void HandleKeyUp(KeyboardKey key, const Input* input);
+        void HandleKeyUp(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input);
 
         RenderSettings mAppliedSettings;
         Input* mInput;

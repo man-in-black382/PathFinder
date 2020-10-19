@@ -9,11 +9,21 @@
 namespace PathFinder
 {
 
-    bool Input::IsKeyboardKeyPressed(KeyboardKey key, bool reportOnlyFreshPress) const
+    bool Input::IsKeyboardKeyPressed(KeyboardKey key, KeyboardKeyInfo& info, bool reportOnlyFreshPress) const
     {
         const auto &it = mCurrentFramePressedKeyboardKeys.find(key);
         bool pressedInCurrentFrame = it != mCurrentFramePressedKeyboardKeys.end();
+
+        if (pressedInCurrentFrame)
+            info = it->second;
+
         return reportOnlyFreshPress ? pressedInCurrentFrame && !WasKeyboardKeyPressedPrevously(key) : pressedInCurrentFrame;
+    }
+
+    bool Input::IsKeyboardKeyPressed(KeyboardKey key, bool reportOnlyFreshPress) const
+    {
+        KeyboardKeyInfo info;
+        return IsKeyboardKeyPressed(key, info, reportOnlyFreshPress);
     }
 
     bool Input::WasKeyboardKeyPressedPrevously(KeyboardKey key) const
@@ -96,20 +106,22 @@ namespace PathFinder
         mInvertVerticalDelta = invert;
     }
 
-    void Input::KeyboardKeyDown(KeyboardKey key)
+    void Input::KeyboardKeyDown(KeyboardKey key, KeyboardScanCode scanCode, KeyboardVirtualKey vk)
     {
-        mCurrentFramePressedKeyboardKeys.insert(key);
+        KeyboardKeyInfo info{ scanCode, vk };
+        mCurrentFramePressedKeyboardKeys[key] = info;
 
         if (!WasKeyboardKeyPressedPrevously(key))
         {
-            mKeyDownEvent.Raise(key, this);
+            mKeyDownEvent.Raise(key, info, this);
         }
     }
 
-    void Input::KeyboardKeyUp(KeyboardKey key)
+    void Input::KeyboardKeyUp(KeyboardKey key, KeyboardScanCode scanCode, KeyboardVirtualKey vk)
     {
+        KeyboardKeyInfo info{ scanCode, vk };
         mCurrentFramePressedKeyboardKeys.erase(key);
-        mKeyUpEvent.Raise(key, this);
+        mKeyUpEvent.Raise(key, info, this);
     }
 
     void Input::Clear()

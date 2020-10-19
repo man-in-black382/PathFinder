@@ -25,6 +25,7 @@ namespace PathFinder
 
     private:
         void UpdateArea();
+        void ConstructModelMatrix();
 
         Type mType;
         glm::vec3 mNormal;

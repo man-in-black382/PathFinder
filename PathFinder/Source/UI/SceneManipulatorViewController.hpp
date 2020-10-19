@@ -2,7 +2,7 @@
 
 #include "ViewController.hpp"
 #include "CameraViewModel.hpp"
-#include "MeshInstanceViewModel.hpp"
+#include "PickedEntityViewModel.hpp"
 
 #include <Scene/Camera.hpp>
 #include <imguizmo/ImGuizmo.h>
@@ -17,10 +17,17 @@ namespace PathFinder
         bool IsInteracting() const override;
 
         CameraViewModel CameraVM;
-        MeshInstanceViewModel MeshInstanceVM;
+        PickedEntityViewModel EntityVM;
 
     private:
-        bool EditTransform(const float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition);
+        bool EditTransform(
+            const float* cameraView, 
+            float* cameraProjection, 
+            float* matrix, 
+            float* deltaMatrix, 
+            bool editTransformDecomposition, 
+            bool allowRotations);
+
         bool mIsInteracting = false;
         bool mDrawCube = false;
         ImGuizmo::OPERATION mCurrentGizmoOperation = ImGuizmo::TRANSLATE;

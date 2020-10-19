@@ -29,6 +29,15 @@ namespace PathFinder
         END, BEGIN = A
     };
 
+    using KeyboardScanCode = uint16_t;
+    using KeyboardVirtualKey = uint16_t;
+
+    struct KeyboardKeyInfo
+    {
+        KeyboardScanCode ScanCode = 0;
+        KeyboardVirtualKey VirtualKey = 0;
+    };
+
     constexpr uint16_t RawKeyboardKey(KeyboardKey key);
 
     /// A platform-independent input. 
@@ -38,8 +47,8 @@ namespace PathFinder
     public:
         using MouseButton = uint16_t;
         using MouseButtonMask = uint16_t;
-        using KeyboardKeySet = std::unordered_set<KeyboardKey>;
-        using KeyboardEvent = Foundation::Event<Input, std::string, void(KeyboardKey, const Input*)>;
+        using KeyboardKeyMap = std::unordered_map<KeyboardKey, KeyboardKeyInfo>;
+        using KeyboardEvent = Foundation::Event<Input, std::string, void(KeyboardKey, const KeyboardKeyInfo&, const Input*)>;
 
         Input() = default;
         ~Input() = default;
@@ -49,6 +58,7 @@ namespace PathFinder
         Input& operator=(const Input& rhs) = delete;
 
         bool IsKeyboardKeyPressed(KeyboardKey key, bool reportOnlyFreshPress = false) const;
+        bool IsKeyboardKeyPressed(KeyboardKey key, KeyboardKeyInfo& info, bool reportOnlyFreshPress = false) const;
         bool WasKeyboardKeyPressedPrevously(KeyboardKey key) const;
         bool WasKeyboardKeyUnpressed(KeyboardKey key) const;
         bool IsMouseButtonPressed(MouseButton button) const;
@@ -63,8 +73,8 @@ namespace PathFinder
         void SetScrollDelta(const glm::vec2& delta);
         void SetMouseDelta(const glm::vec2& delta);
         void SetInvertVerticalDelta(bool invert);
-        void KeyboardKeyDown(KeyboardKey key);
-        void KeyboardKeyUp(KeyboardKey key);
+        void KeyboardKeyDown(KeyboardKey key, KeyboardScanCode scanCode, KeyboardVirtualKey vk);
+        void KeyboardKeyUp(KeyboardKey key, KeyboardScanCode scanCode, KeyboardVirtualKey vk);
         void Clear();
         void FinalizeInput();
         // ------------------------------------------------ //
@@ -76,8 +86,8 @@ namespace PathFinder
         glm::vec2 mScrollDelta;
         glm::vec2 mMouseDelta;
         glm::vec2 mMousePosition;
-        KeyboardKeySet mCurrentFramePressedKeyboardKeys;
-        KeyboardKeySet mPreviousFramePressedKeyboardKeys;
+        KeyboardKeyMap mCurrentFramePressedKeyboardKeys;
+        KeyboardKeyMap mPreviousFramePressedKeyboardKeys;
         MouseButtonMask mPressedMouseButtonsMask;
         bool mInvertVerticalDelta = false;
         std::chrono::time_point<std::chrono::steady_clock> mMouseDownTimeStamp;
@@ -92,7 +102,7 @@ namespace PathFinder
         inline const glm::vec2& MouseDelta() const { return mMouseDelta; }
         inline const glm::vec2& MousePosition() const { return mMousePosition; }
         inline MouseButtonMask PressedMouseButtonsMask() const { return mPressedMouseButtonsMask; }
-        inline const KeyboardKeySet& PressedKeyboardButtons() const { return mCurrentFramePressedKeyboardKeys; }
+        inline const KeyboardKeyMap& PressedKeyboardButtons() const { return mCurrentFramePressedKeyboardKeys; }
 
         inline KeyboardEvent& KeyDownEvent() { return mKeyDownEvent; }
         inline KeyboardEvent& KeyUpEvent() { return mKeyUpEvent; }

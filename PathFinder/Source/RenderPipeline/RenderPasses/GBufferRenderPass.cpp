@@ -121,8 +121,8 @@ namespace PathFinder
 
         for (const MeshInstance& instance : instances)
         {
-            context->GetCommandRecorder()->SetRootConstants(instance.GPUInstanceIndex(), 0, 0);
-            context->GetCommandRecorder()->Draw(instance.AssosiatedMesh()->LocationInVertexStorage().IndexCount);
+            context->GetCommandRecorder()->SetRootConstants(instance.IndexInGPUTable(), 0, 0);
+            context->GetCommandRecorder()->Draw(instance.AssociatedMesh()->LocationInVertexStorage().IndexCount);
         }
     }
 
@@ -143,19 +143,19 @@ namespace PathFinder
 
         for (const FlatLight& light : rectLights)
         {
-            context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
+            context->GetCommandRecorder()->SetRootConstants(light.IndexInGPUTable(), 0, 0);
             context->GetCommandRecorder()->Draw(6); // Light is a rotated billboard: 2 triangles from 6 vertices
         }
 
         for (const FlatLight& light : diskLights)
         {
-            context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
+            context->GetCommandRecorder()->SetRootConstants(light.IndexInGPUTable(), 0, 0);
             context->GetCommandRecorder()->Draw(6); // Light is a rotated billboard: 2 triangles from 6 vertices
         }
 
         for (const SphericalLight& light : sphereLights)
         {
-            context->GetCommandRecorder()->SetRootConstants(light.GPULightTableIndex(), 0, 0);
+            context->GetCommandRecorder()->SetRootConstants(light.IndexInGPUTable(), 0, 0);
             context->GetCommandRecorder()->Draw(6); // Light is a rotated billboard: 2 triangles from 6 vertices
         }
     }
