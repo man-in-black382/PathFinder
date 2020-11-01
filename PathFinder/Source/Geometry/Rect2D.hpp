@@ -5,25 +5,23 @@
 
 namespace Geometry {
 
-    struct Rect2D {
-        glm::vec2 origin;
-        Size2D size;
+    struct Rect2D
+    {
+        glm::vec2 Origin;
+        Size2D Size;
 
-        static const Rect2D &zero();
+        static const Rect2D &Zero();
 
         Rect2D() = default;
-
         Rect2D(const Size2D &size);
-
         Rect2D(const glm::vec2 &origin, const Size2D &size);
 
-        float minX() const;
+        float MinX() const;
+        float MinY() const;
+        float MaxX() const;
+        float MaxY() const;
 
-        float minY() const;
-
-        float maxX() const;
-
-        float maxY() const;
+        bool Intersects(const Rect2D& otherRect, float& intersectionArea) const;
     };
 
 }

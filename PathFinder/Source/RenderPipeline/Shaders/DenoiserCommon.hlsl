@@ -103,8 +103,6 @@ float3 CombineShading(float3 analytic, float3 stochasticShadowed, float3 stochas
         shadow[i] = stochasticUnshadowed[i] < 1e-05 ? 1.0 : stochasticShadowed[i] / stochasticUnshadowed[i];
     }
 
-    //return analytic;
-    //return stochasticShadowed;
     return analytic * shadow;
 }
 

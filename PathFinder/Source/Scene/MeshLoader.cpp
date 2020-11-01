@@ -21,13 +21,13 @@ namespace PathFinder
             aiProcess_FlipUVs |
             aiProcess_GenUVCoords | 
             aiProcess_GenNormals | 
-            aiProcess_GenSmoothNormals |
+            aiProcess_GenSmoothNormals | 
             aiProcess_JoinIdenticalVertices |
             aiProcess_ConvertToLeftHanded);
 
         const aiScene* pScene = importer.ReadFile(fullPath, postProcessSteps);
 
-        assert_format(pScene, "Unable to read mesh file");
+        assert_format(pScene, "Unable to read mesh file"); 
 
         mLoadedMeshes.clear();
 

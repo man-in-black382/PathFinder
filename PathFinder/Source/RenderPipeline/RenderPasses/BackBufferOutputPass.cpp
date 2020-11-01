@@ -8,14 +8,25 @@ namespace PathFinder
 
     void BackBufferOutputPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
-        stateCreator->CreateGraphicsState(PSONames::BackBufferOutput, [](GraphicsStateProxy& state)
+        bool isHDR = false;
+
+        auto configurator = [&isHDR](GraphicsStateProxy& state)
         {
             state.VertexShaderFileName = "BackBufferOutput.hlsl";
             state.PixelShaderFileName = "BackBufferOutput.hlsl";
             state.PrimitiveTopology = HAL::PrimitiveTopology::TriangleStrip;
             state.DepthStencilState.SetDepthTestEnabled(false);
-            state.RenderTargetFormats = { HAL::ColorFormat::RGBA8_Usigned_Norm };
-        });
+            state.RenderTargetFormats = { 
+                isHDR ? 
+                HAL::SwapChain::HDRBackBufferFormat : 
+                HAL::SwapChain::SDRBackBufferFormat 
+            };
+        };
+
+        stateCreator->CreateGraphicsState(PSONames::SDRBackBufferOutput, configurator);
+
+        isHDR = true;
+        stateCreator->CreateGraphicsState(PSONames::HDRBackBufferOutput, configurator);
     }
      
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
@@ -26,7 +37,10 @@ namespace PathFinder
 
     void BackBufferOutputPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::BackBufferOutput);
+        Foundation::Name psoName = context->GetContent()->DisplayController()->IsHDREnabled() ? 
+            PSONames::HDRBackBufferOutput : PSONames::SDRBackBufferOutput;
+        
+        context->GetCommandRecorder()->ApplyPipelineState(psoName);
         context->GetCommandRecorder()->SetBackBufferAsRenderTarget();
     
         BackBufferOutputPassData cbContent;

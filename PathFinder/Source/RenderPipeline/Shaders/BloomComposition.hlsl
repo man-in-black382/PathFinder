@@ -7,6 +7,7 @@ struct PassData
     uint CombinedShadingTexIdx;
     uint BloomBlurOutputTexIdx;
     uint OutputTexIdx;
+    uint HistogramTexIdx;
     uint SmallBloomWeight;
     uint MediumBloomWeight;
     uint LargeBloomWeight;

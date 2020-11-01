@@ -26,10 +26,14 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
 
+        const DisplaySettingsController* dsc = context->GetContent()->DisplayController();
+
         ToneMappingCBContent cbContent{};
         cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::BloomCompositionOutput);
         cbContent.OutputTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
+        cbContent.IsHDREnabled = dsc->IsHDREnabled();
+        cbContent.DisplayMaximumLuminance = dsc->PrimaryDisplay()->MaxLuminance();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 

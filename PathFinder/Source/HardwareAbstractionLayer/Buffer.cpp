@@ -27,7 +27,8 @@ namespace HAL
             return mMappedMemory;
         }
 
-        ThrowIfFailed(mResource->Map(0, nullptr, (void**)& mMappedMemory));
+        D3D12_RANGE mapRange{ 0, mProperties.Size };
+        ThrowIfFailed(mResource->Map(0, &mapRange, (void**)& mMappedMemory));
         return mMappedMemory;
     }
 

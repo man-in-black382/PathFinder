@@ -4,6 +4,7 @@
 #include "../RenderPassContentMediator.hpp"
 
 #include "PipelineNames.hpp"
+#include "DownsamplingRenderSubPass.hpp"
 
 namespace PathFinder
 {
@@ -31,6 +32,10 @@ namespace PathFinder
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
         virtual void ScheduleResources(ResourceScheduler* scheduler) override;
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
+        virtual void ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler) override;
+
+    private:
+        std::vector<std::unique_ptr<DownsamplingRenderSubPass>> mMinMaxLuminanceSubPasses;
     };
 
 }

@@ -24,6 +24,8 @@ namespace PathFinder
 
         for (Mesh& mesh : meshes)
         {
+            assert_format(!mesh.Vertices().empty(), "Empty meshes are not allowed");
+
             VertexStorageLocation locationInStorage = WriteToTemporaryBuffers(
                 mesh.Vertices().data(), mesh.Vertices().size(), mesh.Indices().data(), mesh.Indices().size());
 
@@ -39,6 +41,10 @@ namespace PathFinder
         mUnitCubeVertexLocation = WriteToTemporaryBuffers(
             mScene->UnitCube().Vertices().data(), mScene->UnitCube().Vertices().size(), 
             mScene->UnitCube().Indices().data(), mScene->UnitCube().Indices().size());
+
+        mUnitSphereVertexLocation = WriteToTemporaryBuffers(
+            mScene->UnitSphere().Vertices().data(), mScene->UnitSphere().Vertices().size(),
+            mScene->UnitSphere().Indices().data(), mScene->UnitSphere().Indices().size());
 
         SubmitTemporaryBuffersToGPU<Vertex1P1N1UV1T1BT>();
     }
@@ -121,6 +127,20 @@ namespace PathFinder
 
         uint32_t instanceIdx = 0;
 
+        auto uploadInstance = [&](const GPUMeshInstanceTableEntry& gpuInstance, const VertexStorageLocation& vertexLocations, EntityMask mask, auto&& sceneObject)
+        {
+            EntityID entityId = GetNextEntityID();
+
+            sceneObject.SetIndexInGPUTable(instanceIdx);
+            sceneObject.SetEntityID(entityId);
+
+            BottomRTAS& blas = mBottomAccelerationStructures[vertexLocations.BottomAccelerationStructureIndex];
+            mTopAccelerationStructure.AddInstance(blas, RTASInstanceInfoForEntity(entityId, mask), gpuInstance.InstanceWorldMatrix);
+            mMeshInstanceTable->Write(&gpuInstance, instanceIdx, 1);
+
+            ++instanceIdx;
+        };
+
         for (MeshInstance& instance : meshInstances)
         {
             GPUMeshInstanceTableEntry instanceEntry{
@@ -134,17 +154,7 @@ namespace PathFinder
                 instance.AssociatedMesh()->HasTangentSpace()
             };
 
-            EntityID entityId = GetNextEntityID();
-
-            instance.SetIndexInGPUTable(instanceIdx);
-            instance.SetEntityID(entityId);
-
-            BottomRTAS& blas = mBottomAccelerationStructures[instance.AssociatedMesh()->LocationInVertexStorage().BottomAccelerationStructureIndex];
-            mTopAccelerationStructure.AddInstance(blas, RTASInstanceInfoForEntity(entityId, EntityMask::MeshInstance), instance.Transformation().ModelMatrix());
-            mMeshInstanceTable->Write(&instanceEntry, instanceIdx, 1);
-
-            ++instanceIdx;
-
+            uploadInstance(instanceEntry, instance.AssociatedMesh()->LocationInVertexStorage(), EntityMask::MeshInstance, instance);
             instance.UpdatePreviousTransform();
         }
     }
@@ -186,17 +196,18 @@ namespace PathFinder
 
                 light.SetEntityID(entityId);
                 light.SetIndexInGPUTable(index);
+                light.SetVertexStorageLocation(vertexLocation);
+
+                BottomRTAS& blas = mBottomAccelerationStructures[vertexLocation.BottomAccelerationStructureIndex];
+                mTopAccelerationStructure.AddInstance(blas, RTASInstanceInfoForEntity(entityId, EntityMask::Light), light.ModelMatrix());
 
                 ++index;
                 ++lightCount;
                 ++mLightTablePartitionInfo.TotalLightsCount;
-
-                BottomRTAS& blas = mBottomAccelerationStructures[vertexLocation.BottomAccelerationStructureIndex];
-                mTopAccelerationStructure.AddInstance(blas, RTASInstanceInfoForEntity(entityId, EntityMask::Light), light.ModelMatrix());
             }
         };
 
-        uploadLights(mScene->SphericalLights(), mLightTablePartitionInfo.SphericalLightsOffset, mLightTablePartitionInfo.SphericalLightsCount, mUnitCubeVertexLocation);
+        uploadLights(mScene->SphericalLights(), mLightTablePartitionInfo.SphericalLightsOffset, mLightTablePartitionInfo.SphericalLightsCount, mUnitSphereVertexLocation);
         uploadLights(mScene->DiskLights(), mLightTablePartitionInfo.EllipticalLightsOffset, mLightTablePartitionInfo.EllipticalLightsCount, mUnitQuadVertexLocation);
         uploadLights(mScene->RectangularLights(), mLightTablePartitionInfo.RectangularLightsOffset, mLightTablePartitionInfo.RectangularLightsCount, mUnitQuadVertexLocation);
     }
@@ -248,7 +259,11 @@ namespace PathFinder
                 light.Luminance(),
                 light.Width(),
                 light.Height(),
-                std::underlying_type_t<GPULightTableEntry::LightType>(lightType)
+                std::underlying_type_t<GPULightTableEntry::LightType>(lightType),
+                light.ModelMatrix(),
+                mUnitQuadVertexLocation.VertexBufferOffset,
+                mUnitQuadVertexLocation.IndexBufferOffset,
+                mUnitQuadVertexLocation.IndexCount
         };
     }
 
@@ -261,7 +276,11 @@ namespace PathFinder
                 light.Luminance(),
                 light.Radius(),
                 light.Radius(),
-                std::underlying_type_t<GPULightTableEntry::LightType>(GPULightTableEntry::LightType::Sphere)
+                std::underlying_type_t<GPULightTableEntry::LightType>(GPULightTableEntry::LightType::Sphere),
+                light.ModelMatrix(),
+                mUnitSphereVertexLocation.VertexBufferOffset,
+                mUnitSphereVertexLocation.IndexBufferOffset,
+                mUnitSphereVertexLocation.IndexCount
         };
     }
 

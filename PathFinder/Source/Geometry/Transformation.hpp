@@ -3,6 +3,8 @@
 #include <glm/vec3.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/mat4x4.hpp>
+#include <bitsery/bitsery.h>
+#include <Utility/SerializationAdapters.hpp>
 
 namespace Geometry 
 {
@@ -27,5 +29,13 @@ namespace Geometry
         glm::mat4 InverseRotationMatrix() const;
         glm::mat4 InverseTranslationMatrix() const;
     };
+
+    template <typename S>
+    void serialize(S& s, Transformation& t)
+    {
+        s.object(t.Scale);
+        s.object(t.Translation);
+        s.object(t.Rotation);
+    }
 
 }

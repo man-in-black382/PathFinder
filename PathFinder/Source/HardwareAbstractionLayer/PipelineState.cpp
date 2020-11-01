@@ -44,7 +44,7 @@ namespace HAL
         desc.InputLayout = mInputLayout.D3DLayout();
         desc.PrimitiveTopologyType = D3DPrimitiveTopologyType(mPrimitiveTopology);
         desc.NumRenderTargets = (UINT)mRenderTargetFormats.size();
-        desc.DSVFormat = ResourceFormat::D3DFormat(mDepthStencilFormat);
+        desc.DSVFormat = D3DFormat(mDepthStencilFormat);
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
         desc.SampleMask = 0xFFFFFFFF;
@@ -53,7 +53,7 @@ namespace HAL
         {
             auto rtIdx = std::underlying_type<RenderTarget>::type(keyValue.first);
             std::visit([&desc, rtIdx](auto&& format) {
-                desc.RTVFormats[rtIdx] = ResourceFormat::D3DFormat(format);
+                desc.RTVFormats[rtIdx] = D3DFormat(format);
             }, keyValue.second);
         }
 

@@ -17,7 +17,7 @@ namespace PathFinder
     {
         enum class Filter : uint32_t
         { 
-            Average = 0, Min = 1, Max = 2 
+            Average = 0, Min = 1, Max = 2, MinMaxLuminance = 3
         };
 
         Filter FilterType = Filter::Average;
@@ -26,9 +26,13 @@ namespace PathFinder
         uint32_t NumberOfOutputsToCompute = 0;
         glm::uvec4 OutputTexIndices;
         glm::uvec4 OutputsToWrite;
+        glm::vec2 DispatchDimensions;
         glm::vec2 DispatchDimensionsInv;
+        glm::vec2 SourceDimensions;
+        glm::vec2 SourceDimensionsInv;
         uint32_t IsInputSizeOddVertically = false;
         uint32_t IsInputSizeOddHorizontally = false;
+        uint32_t InvocationIdx = 0;
     };
 
     enum class DownsamplingStrategy

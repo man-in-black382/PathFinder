@@ -79,7 +79,7 @@ namespace HAL
         }
 
         return {
-            ResourceFormat::FormatFromD3DFormat(D3DDescription().Format),
+            FormatFromD3DFormat(D3DDescription().Format),
             kind,
             Geometry::Dimensions{ D3DDescription().Width, D3DDescription().Height, D3DDescription().DepthOrArraySize },
             HAL::ResourceState::Common,

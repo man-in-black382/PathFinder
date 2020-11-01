@@ -5,46 +5,105 @@ namespace HAL
 {
 
     SwapChain::SwapChain(
+        const Display* display,
         const GraphicsCommandQueue& commandQueue,
         HWND windowHandle,
+        bool enableHDRIfAvailable,
         BackBufferingStrategy strategy,
-        ColorFormat backBufferFormat,
         const Geometry::Dimensions& dimensions)
+        :
+        mWindowHandle{ windowHandle },
+        mQueue{ commandQueue.D3DQueue() }
     {
-        DXGI_SWAP_CHAIN_DESC chain{};
+        ThrowIfFailed(CreateDXGIFactory2(0, IID_PPV_ARGS(&mDXGIFactory)));
+
+        DXGI_SWAP_CHAIN_DESC1 desc{};
 
         uint8_t bufferCount = std::underlying_type<BackBufferingStrategy>::type(strategy);
 
-        chain.BufferDesc.Width = (UINT)dimensions.Width;
-        chain.BufferDesc.Height = (UINT)dimensions.Height;
-        chain.BufferDesc.Format = ResourceFormat::D3DFormat(backBufferFormat);
-        chain.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-        chain.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-        chain.SampleDesc.Count = 1;
-        chain.SampleDesc.Quality = 0;
-        chain.BufferUsage = DXGI_USAGE_BACK_BUFFER;
-        chain.BufferCount = bufferCount;
-        chain.OutputWindow = windowHandle;
-        chain.Windowed = true;
-        chain.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        chain.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+        desc.Width = (UINT)dimensions.Width;
+        desc.Height = (UINT)dimensions.Height;
+        desc.Format = D3DFormat(BackBufferFormatForSpace(display->DisplayColorSpace(), enableHDRIfAvailable));
+        desc.Scaling = DXGI_SCALING_NONE;
+        desc.SampleDesc.Count = 1;
+        desc.SampleDesc.Quality = 0;
+        desc.BufferUsage = DXGI_USAGE_BACK_BUFFER;
+        desc.BufferCount = bufferCount;
+        desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-        ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&mDXGIFactory)));
-        ThrowIfFailed(mDXGIFactory->CreateSwapChain(commandQueue.D3DQueue(), &chain, &mSwapChain));
+        CreateD3DSwapChain(desc);
+
+        mCurrentColorSpace = display->DisplayColorSpace();
+        mSwapChain->SetColorSpace1(D3DColorSpace(mCurrentColorSpace));
+    }
+
+    void SwapChain::SetDisplay(const Display* display, bool enableHDRIfAvailable)
+    {
+        DXGI_COLOR_SPACE_TYPE newSpace = D3DColorSpace(display->DisplayColorSpace());
+        DXGI_FORMAT newFormat = D3DFormat(BackBufferFormatForSpace(display->DisplayColorSpace(), enableHDRIfAvailable));
+
+        DXGI_SWAP_CHAIN_DESC1 desc{};
+        mSwapChain->GetDesc1(&desc);
+
+        if (display->DisplayColorSpace() == mCurrentColorSpace && newFormat == desc.Format)
+            return;
+
+        mCurrentColorSpace = display->DisplayColorSpace();
+
+        desc.Format = newFormat;
+        CreateD3DSwapChain(desc);
+        mSwapChain->SetColorSpace1(newSpace);
+    }
+
+    void SwapChain::SetDimensions(const Geometry::Dimensions& dimensions)
+    {
+        DXGI_SWAP_CHAIN_DESC1 desc{};
+        mSwapChain->GetDesc1(&desc);
+        
+        if (desc.Width == dimensions.Width && desc.Height == dimensions.Height)
+            return;
+
+        desc.Width = dimensions.Width;
+        desc.Height = dimensions.Height;
+
+        CreateD3DSwapChain(desc);
+    }
+
+    void SwapChain::CreateD3DSwapChain(const DXGI_SWAP_CHAIN_DESC1& desc)
+    {
+        Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
+        ThrowIfFailed(mDXGIFactory->CreateSwapChainForHwnd(mQueue, mWindowHandle, &desc, nullptr, nullptr, &swapChain));
+        ThrowIfFailed(swapChain.As(&mSwapChain));
 
         Microsoft::WRL::ComPtr<ID3D12Resource> backBufferResourcePtr;
 
-        for (int bufferIdx = 0; bufferIdx < bufferCount; bufferIdx++)
+        mBackBuffers.clear();
+
+        for (auto bufferIdx = 0u; bufferIdx < desc.BufferCount; bufferIdx++)
         {
             ThrowIfFailed(mSwapChain->GetBuffer(bufferIdx, IID_PPV_ARGS(&backBufferResourcePtr)));
             mBackBuffers.emplace_back(std::make_unique<Texture>(backBufferResourcePtr));
             mBackBuffers.back()->SetDebugName("Back Buffer " + std::to_string(bufferIdx));
+        }
+
+        mAreBackBuffersUpdated = true;
+    }
+
+    ColorFormat SwapChain::BackBufferFormatForSpace(ColorSpace space, bool preferHDR) const
+    {
+        switch (space)
+        {
+        case HAL::ColorSpace::Rec709: return SDRBackBufferFormat;
+        case HAL::ColorSpace::Rec2020: return preferHDR ? HDRBackBufferFormat : SDRBackBufferFormat;
+        default: return SDRBackBufferFormat;
         }
     }
 
     void SwapChain::Present()
     {
         ThrowIfFailed(mSwapChain->Present(1, 0));
+        mAreBackBuffersUpdated = false;
     }
 
 }

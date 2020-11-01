@@ -18,15 +18,11 @@ namespace Geometry
         glm::vec3 Max = glm::zero<glm::vec3>();
 
         static const AxisAlignedBox3D &Zero();
-
         static const AxisAlignedBox3D &Unit();
-
         static const AxisAlignedBox3D &NDC();
-
         static const AxisAlignedBox3D &MaximumReversed();
 
         AxisAlignedBox3D() = default;
-
         AxisAlignedBox3D(const glm::vec3 &min, const glm::vec3 &max);
 
         float Diagonal() const;
@@ -38,21 +34,13 @@ namespace Geometry
          @return orthographic projection matrix
          */
         glm::mat4 AsFrustum() const;
-
         glm::mat4 LocalSpaceMatrix() const;
-
         std::array<glm::vec4, 8> CornerPoints() const;
-
         float SmallestDimensionLength() const;
-
         float LargestDimensionLength() const;
-
         glm::vec3 Сenter() const;
-
         bool Contains(const glm::vec3 &point) const;
-
         bool Contains(const Triangle3D &triangle) const;
-
         bool Contains(const AxisAlignedBox3D &box) const;
 
         /**
@@ -70,11 +58,8 @@ namespace Geometry
          @return array of sub-boxes
          */
         std::array<AxisAlignedBox3D, 8> Octet() const;
-
         AxisAlignedBox3D TransformedBy(const Transformation &t) const;
-
         AxisAlignedBox3D TransformedBy(const glm::mat4 &m) const;
-
         AxisAlignedBox3D Union(const AxisAlignedBox3D& otherBox);
     };
 

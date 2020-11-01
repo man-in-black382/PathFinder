@@ -86,6 +86,13 @@ namespace PathFinder
 
         std::underlying_type_t<LightType> LightTypeRaw;
         // 16 byte boundary
+
+        glm::mat4 ModelMatrix;
+        // 16 byte boundary
+
+        uint32_t UnifiedVertexBufferOffset;
+        uint32_t UnifiedIndexBufferOffset;
+        uint32_t IndexCount;
     };
 
     struct GPULightTablePartitionInfo
@@ -178,6 +185,7 @@ namespace PathFinder
 
         VertexStorageLocation mUnitQuadVertexLocation;
         VertexStorageLocation mUnitCubeVertexLocation;
+        VertexStorageLocation mUnitSphereVertexLocation;
         GPULightTablePartitionInfo mLightTablePartitionInfo;
 
         Scene* mScene;

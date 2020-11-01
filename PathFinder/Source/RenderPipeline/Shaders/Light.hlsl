@@ -22,6 +22,10 @@ struct Light
     float Width;
     float Height;
     uint LightType;
+    float4x4 ModelMatrix;
+    uint UnifiedVertexBufferOffset;
+    uint UnifiedIndexBufferOffset;
+    uint IndexCount;
 };
 
 struct LightTablePartitionInfo
@@ -257,7 +261,7 @@ LightPoints ComputeLightPoints(Light light, float3 surfacePositionWS)
     // strictly toward the surface point.
     // A slightly more wide light is almost imperceptible, so I guess it will have to do.
     //
-    halfWidth += light.LightType == LightTypeSphere ? 0.1 : 0.0;
+    halfWidth += light.LightType == LightTypeSphere ? 0.5 : 0.0;
 
     // Get billboard points at the origin
     float3 p0 = float3(halfWidth, -halfHeight, 0.0);

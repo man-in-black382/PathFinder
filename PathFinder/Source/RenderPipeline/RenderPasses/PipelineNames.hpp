@@ -42,7 +42,7 @@ namespace PathFinder
         inline Foundation::Name StochasticUnshadowedShadingPostBlurred{ "Resource_Shading_Stochastic_Unshadowed_Post_Blurred" };
         inline Foundation::Name StochasticShadowedShadingPostBlurred{ "Resource_Shading_Stochastic_Shadowed_Post_Blurred" };
         inline Foundation::Name CombinedShading{ "Resource_Shading_Combined" };
-        inline Foundation::Name CombinedShadingOverexposed{ "Resource_Shading_Combined_Overexposed" };
+        inline Foundation::Name CombinedShadingOversaturated{ "Resource_Shading_Combined_Oversaturated" };
         inline Foundation::Name DenoiserPrimaryGradientInputs{ "Denoiser_Primary_Gradient_Inputs" };
         inline Foundation::Name DenoiserPrimaryGradient{ "Denoiser_Primary_Gradient" };
         inline Foundation::Name DenoiserSecondaryGradient{ "Denoiser_Secondary_Gradient" };
@@ -58,6 +58,7 @@ namespace PathFinder
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
         inline Foundation::Name BloomCompositionOutput{ "Resource_Bloom_Composition_Output" };
+        inline Foundation::Name LuminanceHistogram{ "Resource_Luminance_Histogram" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
         inline Foundation::Name UIOutput{ "Resource_UI_Output" };
 
@@ -97,7 +98,8 @@ namespace PathFinder
         inline Foundation::Name SMAABlendingWeightCalculation{ "PSO_SMAABlendingWeightCalculation" };
         inline Foundation::Name SMAANeighborhoodBlending{ "PSO_SMAANeighborhoodBlending" };
         inline Foundation::Name UI{ "PSO_UI" };
-        inline Foundation::Name BackBufferOutput{ "PSO_BackBufferOutput" };
+        inline Foundation::Name SDRBackBufferOutput{ "PSO_SDRBackBufferOutput" };
+        inline Foundation::Name HDRBackBufferOutput{ "PSO_HDRBackBufferOutput" };
         inline Foundation::Name UAVClear{ "PSO_UAVClear" };
         inline Foundation::Name BoxBlur{ "PSO_BoxBlur" };
     }  

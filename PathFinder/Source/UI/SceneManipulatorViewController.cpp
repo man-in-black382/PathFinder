@@ -10,6 +10,52 @@
 namespace PathFinder
 {
 
+    void SceneManipulatorViewController::DrawCameraControls()
+    {
+        ImGuiIO& io = ImGui::GetIO();
+
+        ImGui::Text("Camera");
+        ImGui::SliderFloat("FoV", &CameraVM.FOVH, 60.f, 120.f);
+        ImGui::SliderFloat("Aperture", &CameraVM.LenseAperture, 1.f, 16.f);
+        ImGui::SliderFloat("Film Speed (ISO)", &CameraVM.FilmSpeed, 100.f, 2000.f);
+        ImGui::SliderFloat("Shutter Speed", &CameraVM.ShutterTime, 30.f, 240.f);
+
+        ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+        ImGui::Separator();
+    }
+
+    void SceneManipulatorViewController::DrawImGuizmoControls()
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+
+        glm::mat4 modelMatrix = EntityVM.ModelMatrix();
+        glm::mat4 deltaMatrix{ 1.0f };
+
+        if (EntityVM.ShouldDisplay())
+        {
+            ImGuizmo::SetID(0);
+            mIsInteracting = EditTransform(
+                glm::value_ptr(CameraVM.View),
+                glm::value_ptr(CameraVM.Projection),
+                glm::value_ptr(modelMatrix),
+                glm::value_ptr(deltaMatrix),
+                EntityVM.ShouldDisplay(),
+                EntityVM.AreRotationsAllowed());
+
+            if (mIsInteracting)
+            {
+                EntityVM.SetModifiedModelMatrix(modelMatrix, deltaMatrix);
+            }
+
+            ImGui::Checkbox("Draw Cube", &mDrawCube);
+            if (mDrawCube)
+            {
+                ImGuizmo::DrawCubes(glm::value_ptr(CameraVM.View), glm::value_ptr(CameraVM.Projection), glm::value_ptr(modelMatrix), 1);
+            }
+        }
+    }
+
     bool SceneManipulatorViewController::EditTransform(
         const float* cameraView, 
         float* cameraProjection, 
@@ -112,7 +158,11 @@ namespace PathFinder
         if (mCurrentGizmoOperation == ImGuizmo::ROTATE && !EntityVM.AreRotationsAllowed())
             mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
         
-        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::B)) mBoundSizing = !mBoundSizing;
+        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::B))
+            mBoundSizing = !mBoundSizing;
+
+        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::W) && mCurrentGizmoOperation != ImGuizmo::SCALE)
+            mCurrentGizmoMode = mCurrentGizmoMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
 
         CameraVM.Import();
         EntityVM.Import();
@@ -121,47 +171,13 @@ namespace PathFinder
 
         ImGuizmo::BeginFrame();
 
-        ImGui::SetNextWindowPos(ImVec2(1024, 100));
-        ImGui::SetNextWindowSize(ImVec2(256, 256));
-
         // create a window and insert the inspector
         ImGui::SetNextWindowPos(ImVec2(10, 10));
-        ImGui::SetNextWindowSize(ImVec2(320, 340));
-        ImGui::Begin("Editor");
-        ImGui::Text("Camera");
+        //ImGui::SetNextWindowSize(ImVec2(320, 340));
+        ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
-        ImGui::SliderFloat("FoV", &CameraVM.FOVH, 20.f, 110.f);
-
-        ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
-        
-        ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-        ImGui::Separator();
-
-        glm::mat4 modelMatrix = EntityVM.ModelMatrix();
-        glm::mat4 deltaMatrix{ 1.0f };
-
-        if (EntityVM.ShouldDisplay())
-        {
-            ImGuizmo::SetID(0);
-            mIsInteracting = EditTransform(
-                glm::value_ptr(CameraVM.View),
-                glm::value_ptr(CameraVM.Projection),
-                glm::value_ptr(modelMatrix),
-                glm::value_ptr(deltaMatrix), 
-                EntityVM.ShouldDisplay(),
-                EntityVM.AreRotationsAllowed());
-        
-            if (mIsInteracting)
-            {
-                EntityVM.SetModifiedModelMatrix(modelMatrix, deltaMatrix);
-            }
-
-            ImGui::Checkbox("Draw Cube", &mDrawCube);
-            if (mDrawCube)
-            {
-                ImGuizmo::DrawCubes(glm::value_ptr(CameraVM.View), glm::value_ptr(CameraVM.Projection), glm::value_ptr(modelMatrix), 1);
-            }
-        }
+        DrawCameraControls();
+        DrawImGuizmoControls();
 
         mIsInteracting = EntityVM.ShouldDisplay() || ImGuizmo::IsUsing();
 

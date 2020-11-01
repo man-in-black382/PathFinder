@@ -51,9 +51,16 @@ namespace HAL
         R32_Signed, RG32_Signed, RGB32_Signed, RGBA32_Signed,
         R32_Unsigned, RG32_Unsigned, RGB32_Unsigned, RGBA32_Unsigned,
 
+        RGB10A2_Unorm,
+
         // Compressed formats
         BC1_Unsigned_Norm, BC2_Unsigned_Norm, BC3_Unsigned_Norm, BC4_Unsigned_Norm,
         BC5_Unsigned_Norm, BC5_Signed_Norm, BC7_Unsigned_Norm
+    };
+
+    enum class ColorSpace
+    {
+        Rec709, Rec2020
     };
 
     enum class DepthStencilFormat
@@ -64,6 +71,17 @@ namespace HAL
     enum class TextureKind { Texture1D, Texture2D, Texture3D };
 
     using FormatVariant = std::variant<TypelessColorFormat, ColorFormat, DepthStencilFormat>;
+
+    DXGI_FORMAT D3DFormat(TypelessColorFormat type);
+    DXGI_FORMAT D3DFormat(ColorFormat type);
+    DXGI_FORMAT D3DFormat(DepthStencilFormat type);
+    DXGI_FORMAT D3DFormat(FormatVariant type);
+    DXGI_COLOR_SPACE_TYPE D3DColorSpace(ColorSpace space);
+
+    std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> D3DDepthStecilShaderAccessFormats(DepthStencilFormat type);
+
+    FormatVariant FormatFromD3DFormat(DXGI_FORMAT format);
+    ColorSpace ColorSpaceFromD3DSpace(DXGI_COLOR_SPACE_TYPE space);
 
 
 
@@ -132,15 +150,6 @@ namespace HAL
         ResourceFormat(const Device* device, const BufferProperties& bufferProperties);
 
         void SetExpectedStates(ResourceState expectedStates);
-
-        static DXGI_FORMAT D3DFormat(TypelessColorFormat type);
-        static DXGI_FORMAT D3DFormat(ColorFormat type);
-        static DXGI_FORMAT D3DFormat(DepthStencilFormat type);
-        static DXGI_FORMAT D3DFormat(FormatVariant type);
-
-        static std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> D3DDepthStecilShaderAccessFormats(DepthStencilFormat type);
-
-        static FormatVariant FormatFromD3DFormat(DXGI_FORMAT format);
 
     private:
         void ResolveBufferDemensionData(uint64_t byteCount);

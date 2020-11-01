@@ -1,46 +1,49 @@
-//
-//  Rect.cpp
-//  Geometry
-//
-//  Created by Pavlo Muratov on 16.06.17.
-//  Copyright © 2017 MPO. All rights reserved.
-//
-
 #include "Rect2D.hpp"
 
-namespace Geometry {
+#include <algorithm>
 
-    const Rect2D &Rect2D::zero() {
+namespace Geometry
+{
+
+    const Rect2D &Rect2D::Zero() 
+    {
         static Rect2D zero;
         return zero;
     }
 
     Rect2D::Rect2D(const Size2D &size)
-            :
-            origin({0, 0}),
-            size(size) {
-    }
+        :Origin({ 0, 0 }), Size(size) {}
 
     Rect2D::Rect2D(const glm::vec2 &origin, const Size2D &size)
-            :
-            origin(origin),
-            size(size) {
+        : Origin(origin), Size(size) {}
+
+    float Rect2D::MinX() const
+    {
+        return Origin.x;
     }
 
-    float Rect2D::minX() const {
-        return origin.x;
+    float Rect2D::MinY() const 
+    {
+        return Origin.y;
     }
 
-    float Rect2D::minY() const {
-        return origin.y;
+    float Rect2D::MaxX() const 
+    {
+        return Origin.x + Size.width;
     }
 
-    float Rect2D::maxX() const {
-        return origin.x + size.width;
+    float Rect2D::MaxY() const 
+    {
+        return Origin.y + Size.height;
     }
 
-    float Rect2D::maxY() const {
-        return origin.y + size.height;
+    bool Rect2D::Intersects(const Rect2D& otherRect, float& intersectionArea) const
+    {
+        intersectionArea =
+            std::max(0.f, std::min(MaxX(), otherRect.MaxX()) - std::max(MinX(), otherRect.MinX())) *
+            std::max(0.f, std::min(MaxY(), otherRect.MaxY()) - std::max(MinY(), otherRect.MinY()));
+
+        return intersectionArea > 0.f;
     }
 
 }

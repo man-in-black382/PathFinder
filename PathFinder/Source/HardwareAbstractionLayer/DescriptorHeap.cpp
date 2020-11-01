@@ -19,7 +19,7 @@ namespace HAL
         if (shaderVisisbleFormat)
         {
             assert_format(std::holds_alternative<TypelessColorFormat>(texture.Format()), "Format redefinition for texture that has it's own format");
-            d3dDesc.Format = ResourceFormat::D3DFormat(*shaderVisisbleFormat);
+            d3dDesc.Format = D3DFormat(*shaderVisisbleFormat);
         }
         else {
             assert_format(std::holds_alternative<ColorFormat>(texture.Format()), "Texture format is not suited for render targets");
@@ -208,7 +208,7 @@ namespace HAL
         
         if (explicitFormat) 
         {
-            desc.Format = ResourceFormat::D3DFormat(*explicitFormat);
+            desc.Format = D3DFormat(*explicitFormat);
             return desc;
         }
         
@@ -219,11 +219,11 @@ namespace HAL
             return desc;
         }
 
-        FormatVariant format = ResourceFormat::FormatFromD3DFormat(resourceDesc.Format);
+        FormatVariant format = FormatFromD3DFormat(resourceDesc.Format);
 
         if (std::holds_alternative<DepthStencilFormat>(format))
         {
-            auto d3dDepthStencilSRVFormats = ResourceFormat::D3DDepthStecilShaderAccessFormats(std::get<DepthStencilFormat>(format));
+            auto d3dDepthStencilSRVFormats = D3DDepthStecilShaderAccessFormats(std::get<DepthStencilFormat>(format));
             // Current implementation ignores stencil
             desc.Format = d3dDepthStencilSRVFormats.first;
         }
@@ -298,7 +298,7 @@ namespace HAL
             break;
         }
 
-        desc.Format = explicitFormat.has_value() ? ResourceFormat::D3DFormat(explicitFormat.value()) : resourceDesc.Format;
+        desc.Format = explicitFormat.has_value() ? D3DFormat(explicitFormat.value()) : resourceDesc.Format;
 
         return desc;
     }

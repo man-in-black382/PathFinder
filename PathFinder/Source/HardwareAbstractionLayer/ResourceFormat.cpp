@@ -1,6 +1,5 @@
 #include "ResourceFormat.hpp"
 
-
 #include <Foundation/Visitor.hpp>
 
 namespace HAL
@@ -199,7 +198,7 @@ namespace HAL
             mResourceProperties);
     }
 
-    DXGI_FORMAT ResourceFormat::D3DFormat(TypelessColorFormat type)
+    DXGI_FORMAT D3DFormat(TypelessColorFormat type)
     {
         switch (type)
         {
@@ -217,10 +216,8 @@ namespace HAL
         }
     }
 
-    DXGI_FORMAT ResourceFormat::D3DFormat(ColorFormat type)
+    DXGI_FORMAT D3DFormat(ColorFormat type)
     {
-        //DXGI_FORMAT_B8G8R8A8_UNORM = 87,
-
         switch (type)
         {
         case ColorFormat::R8_Unsigned_Norm:      return DXGI_FORMAT_R8_UNORM;
@@ -265,6 +262,8 @@ namespace HAL
         case ColorFormat::RGB32_Unsigned:    return DXGI_FORMAT_R32G32B32_UINT;
         case ColorFormat::RGBA32_Unsigned:   return DXGI_FORMAT_R32G32B32A32_UINT;
 
+        case ColorFormat::RGB10A2_Unorm:     return DXGI_FORMAT_R10G10B10A2_UNORM;
+
         case ColorFormat::BC1_Unsigned_Norm: return DXGI_FORMAT_BC1_UNORM;
         case ColorFormat::BC2_Unsigned_Norm: return DXGI_FORMAT_BC2_UNORM;
         case ColorFormat::BC3_Unsigned_Norm: return DXGI_FORMAT_BC3_UNORM;
@@ -277,7 +276,7 @@ namespace HAL
         }
     }
 
-    DXGI_FORMAT ResourceFormat::D3DFormat(DepthStencilFormat type)
+    DXGI_FORMAT D3DFormat(DepthStencilFormat type)
     {
         switch (type)
         {
@@ -287,14 +286,24 @@ namespace HAL
         }
     }
 
-    DXGI_FORMAT ResourceFormat::D3DFormat(FormatVariant type)
+    DXGI_FORMAT D3DFormat(FormatVariant type)
     {
         DXGI_FORMAT d3dFormat{};
         std::visit([&d3dFormat](auto&& concreteFormat) {d3dFormat = D3DFormat(concreteFormat); }, type);
         return d3dFormat;
     }
 
-    std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> ResourceFormat::D3DDepthStecilShaderAccessFormats(DepthStencilFormat type)
+    DXGI_COLOR_SPACE_TYPE D3DColorSpace(ColorSpace space)
+    {
+        switch (space)
+        {
+        case ColorSpace::Rec709: return DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+        case ColorSpace::Rec2020: return DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+        default: assert_format("Should never be hit"); return {};
+        }
+    }
+
+    std::pair<DXGI_FORMAT, std::optional<DXGI_FORMAT>> D3DDepthStecilShaderAccessFormats(DepthStencilFormat type)
     {
         switch (type)
         {
@@ -304,7 +313,7 @@ namespace HAL
         }
     }
 
-    FormatVariant ResourceFormat::FormatFromD3DFormat(DXGI_FORMAT format)
+    FormatVariant FormatFromD3DFormat(DXGI_FORMAT format)
     {
         switch (format)
         {
@@ -364,6 +373,8 @@ namespace HAL
         case DXGI_FORMAT_D24_UNORM_S8_UINT: return DepthStencilFormat::Depth24_Float_Stencil8_Unsigned;
         case DXGI_FORMAT_D32_FLOAT: return DepthStencilFormat::Depth32_Float;
 
+        case DXGI_FORMAT_R10G10B10A2_UNORM: return ColorFormat::RGB10A2_Unorm;
+
             // Compressed formats
         case DXGI_FORMAT_BC1_UNORM: return ColorFormat::BC1_Unsigned_Norm;
         case DXGI_FORMAT_BC2_UNORM: return ColorFormat::BC2_Unsigned_Norm;
@@ -376,6 +387,18 @@ namespace HAL
         default:
             assert_format(false, "Unsupported D3D format");
             return TypelessColorFormat::R8;
+        }
+    }
+
+    ColorSpace ColorSpaceFromD3DSpace(DXGI_COLOR_SPACE_TYPE space)
+    {
+        switch (space)
+        {
+        case DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709: return ColorSpace::Rec709;
+        case DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020: return ColorSpace::Rec2020;
+        default:
+            assert_format(false, "Unsupported Color Space");
+            return ColorSpace::Rec709;
         }
     }
 

@@ -11,7 +11,7 @@ namespace HAL
 	{
 	public:
 	    DisplayAdapterFetcher();
-	
+
 	private:
 	    Microsoft::WRL::ComPtr<IDXGIFactory2> mDXGIFactory;
 		std::unique_ptr<DisplayAdapter> mWARPAdapter;
@@ -20,6 +20,7 @@ namespace HAL
 	public:
 		inline const auto& HardwareAdapters() const { return mHardwareAdapters; };
 		const DisplayAdapter* WARPAdapter() const { return mWARPAdapter.get(); }
+		DisplayAdapter& GetHardwareAdapter(uint32_t idx) { return mHardwareAdapters[idx]; }
 	};
 }
 

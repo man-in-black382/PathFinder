@@ -15,6 +15,9 @@ namespace PathFinder
         void Export() override;
 
         float FOVH = 0.0;
+        FStop LenseAperture;
+        ISO FilmSpeed;
+        float ShutterTime;
         glm::mat4 View;
         glm::mat4 Projection;
 

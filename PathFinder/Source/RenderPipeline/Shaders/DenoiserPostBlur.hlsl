@@ -7,6 +7,7 @@
 #include "Utils.hlsl"
 #include "DenoiserCommon.hlsl"
 #include "ColorConversion.hlsl"
+#include "Exposure.hlsl"
 
 struct PassData
 {
@@ -92,8 +93,10 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         }
     }
 
+    float maxLuminance = ConvertEV100ToMaxHsbsLuminance(FrameDataCB.CurrentFrameCamera.ExposureValue100);
+
     combinedShadingTargetTexture[pixelIndex].rgb = combinedShading;
-    combinedOversaturatedShadingTargetTexture[pixelIndex].rgb = CIELuminance(combinedShading) > 1.0 ? combinedShading : 0.0;
+    combinedOversaturatedShadingTargetTexture[pixelIndex].rgb = CIELuminance(combinedShading) > maxLuminance ? combinedShading : 0.0;
 }
 
 #endif

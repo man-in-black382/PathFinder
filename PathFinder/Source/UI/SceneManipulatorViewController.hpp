@@ -20,6 +20,9 @@ namespace PathFinder
         PickedEntityViewModel EntityVM;
 
     private:
+        void DrawCameraControls();
+        void DrawImGuizmoControls();
+
         bool EditTransform(
             const float* cameraView, 
             float* cameraProjection, 

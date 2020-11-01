@@ -3,9 +3,12 @@
 #include <vector>
 #include <string>
 
-#include "Vertices/Vertex1P1N1UV1T1BT.hpp"
-#include <Geometry/AxisAlignedBox3D.hpp>
 #include "VertexStorageLocation.hpp"
+#include "Vertices/Vertex1P1N1UV1T1BT.hpp"
+
+#include <bitsery/bitsery.h>
+#include <Geometry/AxisAlignedBox3D.hpp>
+
 
 namespace PathFinder
 {
@@ -14,7 +17,6 @@ namespace PathFinder
     {
     public:
         const std::string& Name() const;
-        const std::string& MaterialName() const;
         std::vector<Vertex1P1N1UV1T1BT>& Vertices();
         const std::vector<Vertex1P1N1UV1T1BT>& Vertices() const;
         const std::vector<uint32_t>& Indices() const;
@@ -25,14 +27,26 @@ namespace PathFinder
 
         void SetName(const std::string& name);
         void SetHasTangentSpace(bool hts);
-        void SetMaterialName(const std::string& name);
         void SetVertexStorageLocation(const VertexStorageLocation& location);
         void AddVertex(const Vertex1P1N1UV1T1BT& vertex);
         void AddIndex(uint32_t index);
 
     private:
+        friend bitsery::Access;
+
+        template <typename S>
+        void serialize(S& s)
+        {
+            s.text(mName);
+            s.container(mVertices);
+            s.container(mIndices);
+            s.object(mBoundingBox.Min);
+            s.object(mBoundingBox.Max);
+            s.value(mArea);
+            s.value(mHasTangentSpace);
+        }
+
         std::string mName;
-        std::string mMaterialName;
         std::vector<Vertex1P1N1UV1T1BT> mVertices;
         std::vector<uint32_t> mIndices;
         VertexStorageLocation mVertexStorageLocation;

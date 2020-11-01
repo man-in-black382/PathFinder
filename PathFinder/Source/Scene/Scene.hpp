@@ -12,12 +12,12 @@
 #include "SphericalLight.hpp"
 
 #include <Memory/GPUResourceProducer.hpp>
+#include <robinhood/robin_hood.h>
 
 #include <functional>
 #include <vector>
 #include <memory>
-
-#include <robinhood/robin_hood.h>
+#include <filesystem>
 
 namespace PathFinder 
 {
@@ -25,8 +25,8 @@ namespace PathFinder
     class Scene 
     {
     public:
-        using FlatLightIt = std::vector<FlatLight>::iterator;
-        using SphericalLightIt = std::vector<SphericalLight>::iterator;
+        using FlatLightIt = std::list<FlatLight>::iterator;
+        using SphericalLightIt = std::list<SphericalLight>::iterator;
 
         using EntityVariant = std::variant<MeshInstance*, FlatLight*, SphericalLight*>;
 
@@ -43,15 +43,18 @@ namespace PathFinder
 
         void RemapEntityIDs();
 
+        void Serialize(const std::filesystem::path& destination) const;
+        void Deserialize(const std::filesystem::path& source);
+
     private:
         void LoadUtilityResources();
 
-        std::vector<Mesh> mMeshes;
-        std::vector<MeshInstance> mMeshInstances;
-        std::vector<Material> mMaterials;
-        std::vector<FlatLight> mRectangularLights;
-        std::vector<FlatLight> mDiskLights;
-        std::vector<SphericalLight> mSphericalLights;
+        std::list<Mesh> mMeshes;
+        std::list<MeshInstance> mMeshInstances;
+        std::list<Material> mMaterials;
+        std::list<FlatLight> mRectangularLights;
+        std::list<FlatLight> mDiskLights;
+        std::list<SphericalLight> mSphericalLights;
 
         robin_hood::unordered_flat_map<EntityID, EntityVariant> mMappedEntities;
 
@@ -63,6 +66,7 @@ namespace PathFinder
         Memory::GPUResourceProducer::TexturePtr mSMAAAreaTexture;
         Memory::GPUResourceProducer::TexturePtr mSMAASearchTexture;
         Mesh mUnitCube;
+        Mesh mUnitSphere;
 
         ResourceLoader mResourceLoader;
         MeshLoader mMeshLoader;
@@ -94,6 +98,7 @@ namespace PathFinder
         inline const auto SMAASearchTexture() const { return mSMAASearchTexture.get(); }
         inline const auto SMAAAreaTexture() const { return mSMAAAreaTexture.get(); }
         inline const Mesh& UnitCube() const { return mUnitCube; }
+        inline const Mesh& UnitSphere() const { return mUnitSphere; }
     };
 
 }

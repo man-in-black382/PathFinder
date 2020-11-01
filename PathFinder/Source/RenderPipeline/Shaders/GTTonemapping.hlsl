@@ -7,7 +7,7 @@
 
 struct GTTonemappingParams
 {
-    float MaximumLuminance; // A max amount of nits a monitor can display
+    float MaximumLuminance; 
     float Contrast;
     float LinearSectionStart;
     float LinearSectionLength;
@@ -46,10 +46,8 @@ float GTToneMap(float x, GTTonemappingParams params)
     float w0x = 1.0 - GTW(x, 0.0, m);
     float w2x = x > (m + l0) ? 1 : 0;
     float w1x = 1.0 - w0x - w2x;
-    
-    // Divide by P to scale down to SDR [0;1] range. 
-    // Will have to make it condinional if HDR output will be implemented.
-    return (Tx * w0x + Lx * w1x + Sx * w2x) / P; 
+
+    return (Tx * w0x + Lx * w1x + Sx * w2x); 
 }
 
 #endif

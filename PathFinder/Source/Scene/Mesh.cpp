@@ -10,11 +10,6 @@ namespace PathFinder
         return mName;
     }
 
-    const std::string& Mesh::MaterialName() const
-    {
-        return mMaterialName;
-    }
-
     std::vector<Vertex1P1N1UV1T1BT>& Mesh::Vertices()
     {
         return mVertices;
@@ -58,11 +53,6 @@ namespace PathFinder
     void Mesh::SetHasTangentSpace(bool hts)
     {
         mHasTangentSpace = hts;
-    }
-
-    void Mesh::SetMaterialName(const std::string& name)
-    {
-        mMaterialName = name;
     }
 
     void Mesh::SetVertexStorageLocation(const VertexStorageLocation& location)

@@ -8,20 +8,21 @@ float Square(float v)
     return v * v;
 }
 
-float Max(float2 v)
-{
-    return max(v.x, v.y);
-}
+float Min(float2 v) { return min(v.x, v.y); }
+float Min(float3 v) { return min(v.x, min(v.y, v.z)); }
+float Min(float4 v) { return min(min(v.x, min(v.y, v.z)), v.w); }
 
-float Max(float3 v)
-{
-    return max(v.x, max(v.y, v.z));
-}
+float4 Min(float4 v0, float4 v1) { return min(v0, v1); }
+float4 Min(float4 v0, float4 v1, float4 v2) { return Min(v0, Min(v1, v2)); }
+float4 Min(float4 v0, float4 v1, float4 v2, float4 v3) { return Min(v0, Min(v1, v2, v3)); }
 
-float Max(float4 v)
-{
-    return max(max(v.x, max(v.y, v.z)), v.w);
-}
+float Max(float2 v) { return max(v.x, v.y); }
+float Max(float3 v) { return max(v.x, max(v.y, v.z)); }
+float Max(float4 v) { return max(max(v.x, max(v.y, v.z)), v.w); }
+
+float4 Max(float4 v0, float4 v1) { return max(v0, v1); }
+float4 Max(float4 v0, float4 v1, float4 v2) { return Max(v0, Max(v1, v2)); }
+float4 Max(float4 v0, float4 v1, float4 v2, float4 v3) { return Max(v0, Max(v1, v2, v3)); }
 
 float Flatten3DIndexFloat(float3 index3D, float3 dimensions)
 {

@@ -226,7 +226,7 @@ float3 SampleBRDF(Light light, LTCTerms ltcTerms, LTCAnalyticEvaluationResult di
     // This is a sad hack due to ray-traced lighting samples having lower magnitude than analytic ones.
     // In low lighting environment dim unshadowed/shadowed images produce artifacts where values approach 0.
     // We increase luminance by a constant factor to move problematic areas out of the visible range.
-    //brdf *= 10.0; // Looks like the hack is not even universal and depends on the situation. Oh well, need to figure out something smarter.
+    brdf *= 10.0; // Looks like the hack is not even universal and depends on the situation. Oh well, need to figure out something smarter.
 
     return brdf;
 }
@@ -519,10 +519,6 @@ void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
     RWTexture2D<float4> analyticOutput = RW_Float4_Textures2D[PassDataCB.AnalyticOutputTexIdx];
     RWTexture2D<float4> stochasticUnshadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTexIdx];
     RWTexture2D<float4> stochasticShadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTexIdx];
-
-    shadingResult.AnalyticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.AnalyticUnshadowedOutgoingLuminance, FrameDataCB.CurrentFrameCamera);
-    shadingResult.StochasticShadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticShadowedOutgoingLuminance, FrameDataCB.CurrentFrameCamera);
-    shadingResult.StochasticUnshadowedOutgoingLuminance = ExposeLuminance(shadingResult.StochasticUnshadowedOutgoingLuminance, FrameDataCB.CurrentFrameCamera);
 
     analyticOutput[pixelIndex] = float4(shadingResult.AnalyticUnshadowedOutgoingLuminance, 1.0);
     stochasticShadowedOutput[pixelIndex] = float4(shadingResult.StochasticShadowedOutgoingLuminance, 1.0);

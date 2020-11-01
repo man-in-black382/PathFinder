@@ -58,11 +58,11 @@ namespace HAL
         d3dGeometry.Triangles.VertexBuffer.StartAddress = geometry.VertexBuffer->GPUVirtualAddress() + geometry.VertexOffset * geometry.VertexStride;
         d3dGeometry.Triangles.VertexBuffer.StrideInBytes = geometry.VertexStride;
         d3dGeometry.Triangles.VertexCount = geometry.VertexCount;
-        d3dGeometry.Triangles.VertexFormat = ResourceFormat::D3DFormat(geometry.VertexPositionFormat);
+        d3dGeometry.Triangles.VertexFormat = D3DFormat(geometry.VertexPositionFormat);
 
         d3dGeometry.Triangles.IndexBuffer = geometry.IndexBuffer->GPUVirtualAddress() + geometry.IndexOffset * geometry.IndexStride;
         d3dGeometry.Triangles.IndexCount = geometry.IndexCount;
-        d3dGeometry.Triangles.IndexFormat = ResourceFormat::D3DFormat(geometry.IndexFormat);
+        d3dGeometry.Triangles.IndexFormat = D3DFormat(geometry.IndexFormat);
 
         d3dGeometry.Triangles.Transform3x4 = 0;
 

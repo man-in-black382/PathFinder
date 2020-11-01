@@ -1,5 +1,6 @@
 #include "Device.hpp"
 #include "Utils.h"
+#include "DisplayAdapter.hpp"
 
 #include <aftermath/GFSDK_Aftermath.h>
 

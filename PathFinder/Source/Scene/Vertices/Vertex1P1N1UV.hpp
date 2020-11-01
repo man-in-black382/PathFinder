@@ -4,6 +4,9 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
+#include <bitsery/bitsery.h>
+#include <Utility/SerializationAdapters.hpp>
+
 namespace PathFinder
 {
 
@@ -25,6 +28,14 @@ namespace PathFinder
             const glm::vec3& normal,
             const glm::vec2& UV
         );
+
+        template <typename S>
+        void serialize(S& s)
+        {
+            s.object(Position);
+            s.object(Normal);
+            s.object(UV);
+        }
     };
 
 }

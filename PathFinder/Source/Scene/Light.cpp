@@ -31,6 +31,11 @@ namespace PathFinder
         mEntityID = id;
     }
 
+    void Light::SetVertexStorageLocation(const VertexStorageLocation& location)
+    {
+        mVertexStorageLocation = location;
+    }
+
     void Light::SetIndexInGPUTable(uint32_t index)
     {
         mIndexInGPUTable = index;

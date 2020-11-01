@@ -23,7 +23,10 @@ namespace PathFinder
             mAftermathCrashTracker->Initialize();
         }
 
-        mDevice = std::make_unique<HAL::Device>(mAdapterFetcher.HardwareAdapters().front(), commandLineParser.ShouldEnableAftermath());
+        HAL::DisplayAdapter* hwAdapter = &mAdapterFetcher.GetHardwareAdapter(0);
+        mSelectedAdapter = hwAdapter;
+
+        mDevice = std::make_unique<HAL::Device>(*hwAdapter, commandLineParser.ShouldEnableAftermath());
 
         if (commandLineParser.ShouldEnableAftermath())
         {
@@ -86,10 +89,11 @@ namespace PathFinder
             mRenderSurfaceDescription);
 
         mSwapChain = std::make_unique<HAL::SwapChain>(
+            &hwAdapter->Displays().front(),
             mRenderDevice->GraphicsCommandQueue(),
             windowHandle,
+            true,
             HAL::BackBufferingStrategy::Double, 
-            HAL::ColorFormat::RGBA8_Usigned_Norm, 
             mRenderSurfaceDescription.Dimensions());
 
         mRenderPassContainer = std::make_unique<RenderPassContainer<ContentMediator>>(
@@ -106,11 +110,6 @@ namespace PathFinder
             mPassUtilityProvider.get());
 
         mFrameFence = std::make_unique<HAL::Fence>(*mDevice);
-
-        for (auto& backBufferPtr : mSwapChain->BackBuffers())
-        {
-            mBackBuffers.emplace_back(mResourceProducer->NewTexture(backBufferPtr.get()));
-        }
 
         // Start first frame here to prepare engine for external data transfer requests
         mFrameFence->IncrementExpectedValue();
@@ -160,11 +159,15 @@ namespace PathFinder
         // Compile new states and signatures, if any
         mPipelineStateManager->CompileUncompiledSignaturesAndStates();
 
-        // Update render device with current frame back buffer
-        mRenderDevice->SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
-
         // Notify external listeners
         mPreRenderEvent.Raise();
+
+        // External listeners might've caused back buffer reallocation
+        if (mSwapChain->AreBackBuffersUpdated())
+            UpdateBackBuffers();
+
+        // Update render device with current frame back buffer
+        mRenderDevice->SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
 
         UploadAssets();
         BuildAccelerationStructures();
@@ -360,6 +363,20 @@ namespace PathFinder
         // Finish graph and allocate memory 
         mRenderPassGraph.Build();
         mPipelineResourceStorage->AllocateScheduledResources();
+    }
+
+    template <class ContentMediator>
+    void RenderEngine<ContentMediator>::UpdateBackBuffers()
+    {
+        // Because this function is called before rendering, but after new frame fence increase,
+        // we pass 2 instead of 1 to stall CPU thread
+        mFrameFence->StallCurrentThreadUntilCompletion(2);
+        mBackBuffers.clear();
+
+        for (auto& backBufferPtr : mSwapChain->BackBuffers())
+        {
+            mBackBuffers.emplace_back(mResourceProducer->NewTexture(backBufferPtr.get()));
+        }
     }
 
     template <class ContentMediator> 

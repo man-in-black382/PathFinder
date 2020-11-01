@@ -28,7 +28,7 @@ namespace HAL
         std::visit(Foundation::MakeVisitor(
             [&](const TextureProperties& props)
             {
-                d3dClearValue = D3DClearValue(props.OptimizedClearValue, ResourceFormat::D3DFormat(props.Format));
+                d3dClearValue = D3DClearValue(props.OptimizedClearValue, D3DFormat(props.Format));
                 mInitialStates = props.InitialStateMask;
                 mExpectedStates = props.ExpectedStateMask;
 
@@ -106,7 +106,7 @@ namespace HAL
             std::visit(Foundation::MakeVisitor(
                 [&](const TextureProperties& props)
                 {
-                    d3dClearValue = D3DClearValue(props.OptimizedClearValue, ResourceFormat::D3DFormat(props.Format));
+                    d3dClearValue = D3DClearValue(props.OptimizedClearValue, D3DFormat(props.Format));
                     mInitialStates = props.InitialStateMask;
                     mExpectedStates = props.ExpectedStateMask;
 

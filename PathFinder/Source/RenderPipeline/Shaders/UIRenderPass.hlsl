@@ -11,6 +11,7 @@ struct PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 #include "Packing.hlsl"
+#include "ColorConversion.hlsl"
 
 struct ImGuiVertex
 {
@@ -58,7 +59,8 @@ PS_INPUT VSMain(uint indexId : SV_VertexID)
 float4 PSMain(PS_INPUT input) : SV_TARGET
 {
     Texture2D uiTexture = Textures2D[PassDataCB.UITextureSRVIndex];
-    return uiTexture.Sample(AnisotropicClampSampler(), input.uv).aaaa * input.col;
+    float4 color = uiTexture.Sample(AnisotropicClampSampler(), input.uv).aaaa * input.col;
+    return color;
 };
 
 #endif

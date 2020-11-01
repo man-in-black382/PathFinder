@@ -1,7 +1,11 @@
 #pragma once
 
 #include "Vertex1P1N1UV.hpp"
+
 #include <Geometry/Transformation.hpp>
+#include <bitsery/bitsery.h>
+#include <bitsery/ext/inheritance.h>
+#include <Utility/SerializationAdapters.hpp>
 
 namespace PathFinder
 {
@@ -33,6 +37,14 @@ namespace PathFinder
         Vertex1P1N1UV1T1BT(const glm::vec4 &position);
 
         Vertex1P1N1UV1T1BT TransformedBy(const Geometry::Transformation &t);
+
+        template <typename S>
+        void serialize(S& s)
+        {
+            s.ext(*this, bitsery::ext::BaseClass<Vertex1P1N1UV>{});
+            s.object(Tangent);
+            s.object(Bitangent);
+        }
     };
 
 }

@@ -15,6 +15,8 @@ struct RootConstants
 
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Light> LightTable : register(t0);
+StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t1);
+StructuredBuffer<IndexU32> UnifiedIndexBuffer : register(t2);
 
 //------------------------  Vertex  ------------------------------//
 
@@ -27,50 +29,17 @@ struct VertexOut
     float2 LightSize : LIGHT_SIZE;
 };
 
-void GetLightVertexWS(Light light, uint vertexId, out float3 worldSpaceCoord, out float2 localSpaceCoord)
-{
-    float halfWidth = light.Width * 0.5;
-    float halfHeight = light.Height * 0.5;
-
-    float3 position = light.Position.xyz;
-    float3 orientation = light.Orientation.xyz;
-
-    // Get billboard points at the origin
-    float dx = (vertexId == 0 || vertexId == 1) ? halfWidth : -halfWidth;
-    float dy = (vertexId == 0 || vertexId == 3) ? -halfHeight : halfHeight;
-
-    localSpaceCoord = float2(dx, dy);
-    float3 lightPoint = float3(dx, dy, 0.0f);
-
-    float3x3 diskRotation = RotationMatrix3x3(orientation);
-
-    // Rotate around origin
-    lightPoint = mul(diskRotation, lightPoint);
-
-    // Move points to light's location
-    worldSpaceCoord = lightPoint + light.Position.xyz;
-}
-
 VertexOut VSMain(uint vertexId : SV_VertexID)
 {
-    uint lightVertexIndex = vertexId;
-    lightVertexIndex = lightVertexIndex == 3 ? 2 : lightVertexIndex;
-    lightVertexIndex = lightVertexIndex == 4 ? 3 : lightVertexIndex;
-    lightVertexIndex = lightVertexIndex == 5 ? 0 : lightVertexIndex;
-
     Light light = LightTable[RootConstantBuffer.LightTableIndex];
 
-    // Sphere light is a disk always oriented towards the camera
-    if (light.LightType == LightTypeSphere)
-    {
-        light.Orientation = float4(normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - light.Position.xyz), 0);
-    }
+    // Load index and vertex
+    IndexU32 index = UnifiedIndexBuffer[light.UnifiedIndexBufferOffset + vertexId];
+    Vertex1P1N1UV1T1BT vertex = UnifiedVertexBuffer[light.UnifiedVertexBufferOffset + index.Index];
 
-    float2 localSpacePosition;
-    float3 worldSpacePosition;
-    GetLightVertexWS(light, lightVertexIndex, worldSpacePosition, localSpacePosition);
+    float2 localSpacePosition = vertex.Position.xy;
 
-    float4 WSPosition = float4(worldSpacePosition, 1.0);
+    float4 WSPosition = mul(light.ModelMatrix, vertex.Position);
     float4 CSPosition = mul(FrameDataCB.CurrentFrameCamera.View, WSPosition);
     float4 ClipSPosition = mul(FrameDataCB.CurrentFrameCamera.Projection, CSPosition);
 

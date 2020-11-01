@@ -14,8 +14,8 @@ namespace PathFinder
     {
         uint32_t InputTexIdx;
         uint32_t OutputTexIdx;   
-        uint32_t _Pad0;
-        uint32_t _Pad1;
+        uint32_t IsHDREnabled;
+        float DisplayMaximumLuminance;
         // 16 byte boundary
         GTTonemappingParameterss TonemappingParams;
     };

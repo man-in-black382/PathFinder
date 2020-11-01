@@ -17,8 +17,8 @@ namespace PathFinder
         }
 
         auto invocationInputs = GenerateDownsamplingShaderInvocationInputs(
-            ResourceNames::CombinedShadingOverexposed,
-            scheduler->GetTextureProperties(ResourceNames::CombinedShadingOverexposed),
+            ResourceNames::CombinedShadingOversaturated,
+            scheduler->GetTextureProperties(ResourceNames::CombinedShadingOversaturated),
             DownsamplingCBContent::Filter::Average,
             DownsamplingStrategy::WriteAllLevels);
 
@@ -30,9 +30,9 @@ namespace PathFinder
     {
         auto fullMipRange = ResourceScheduler::MipSet::Range(0, std::nullopt);
 
-        scheduler->ReadTexture(ResourceNames::CombinedShadingOverexposed, fullMipRange);
-        scheduler->NewTexture(ResourceNames::BloomBlurIntermediate, fullMipRange, ResourceScheduler::NewTextureProperties{ ResourceNames::CombinedShadingOverexposed });
-        scheduler->NewTexture(ResourceNames::BloomBlurOutput, fullMipRange, ResourceScheduler::NewTextureProperties{ ResourceNames::CombinedShadingOverexposed });
+        scheduler->ReadTexture(ResourceNames::CombinedShadingOversaturated, fullMipRange);
+        scheduler->NewTexture(ResourceNames::BloomBlurIntermediate, fullMipRange, ResourceScheduler::NewTextureProperties{ ResourceNames::CombinedShadingOversaturated });
+        scheduler->NewTexture(ResourceNames::BloomBlurOutput, fullMipRange, ResourceScheduler::NewTextureProperties{ ResourceNames::CombinedShadingOversaturated });
     }
      
     void BloomBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -51,7 +51,7 @@ namespace PathFinder
         const auto& defaultRenderSurfaceDesc = context->GetDefaultRenderSurfaceDesc();
         
         auto resourceProvider = context->GetResourceProvider();
-        auto dimensions = resourceProvider->GetTextureProperties(ResourceNames::CombinedShadingOverexposed).MipSize(mipLevel);
+        auto dimensions = resourceProvider->GetTextureProperties(ResourceNames::CombinedShadingOversaturated).MipSize(mipLevel);
 
         SeparableBlurCBContent blurInputs{};
 
@@ -62,7 +62,7 @@ namespace PathFinder
         blurInputs.IsHorizontal = true;
         blurInputs.BlurRadius = radius;
         blurInputs.ImageSize = { dimensions.Width, dimensions.Height };
-        blurInputs.InputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::CombinedShadingOverexposed, mipLevel);
+        blurInputs.InputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::CombinedShadingOversaturated, mipLevel);
         blurInputs.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::BloomBlurIntermediate, mipLevel);
         blurInputs.MipLevel = mipLevel;
 

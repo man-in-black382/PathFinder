@@ -19,6 +19,9 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::CombinedShading);
         scheduler->ReadTexture(ResourceNames::BloomBlurOutput);
         scheduler->NewTexture(ResourceNames::BloomCompositionOutput);
+
+        ResourceScheduler::NewTextureProperties histogramProps{ HAL::ColorFormat::R32_Unsigned, HAL::TextureKind::Texture1D, Geometry::Dimensions{256} };
+        scheduler->NewTexture(ResourceNames::LuminanceHistogram, histogramProps);
     }
      
     void BloomCompositionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

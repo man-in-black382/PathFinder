@@ -25,8 +25,17 @@ namespace PathFinder
 
         for (int64_t mipLevel = 0, localIndex = 0; mipLevel < mipCount - 1; ++mipLevel)
         {
-            DownsamplingInvocationInputs* inputs = localIndex == 0 ?
-                &inputsArray.emplace_back() : &inputsArray.back();
+            DownsamplingInvocationInputs* inputs = nullptr;
+            
+            if (localIndex == 0)
+            {
+                inputs = &inputsArray.emplace_back();
+                inputs->CBContent.InvocationIdx = inputsArray.size() - 1;
+            }
+            else
+            {
+                inputs = &inputsArray.back();
+            }
 
             inputs->ResourceName = textureName;
             Geometry::Dimensions mipDimensions = textureProperties.MipSize(mipLevel);
@@ -34,7 +43,10 @@ namespace PathFinder
             if (localIndex == 0)
             {
                 inputs->DispatchDimensions = textureDimensions.XYMultiplied(1.0 / pow(2.0, mipLevel + 1));
+                inputs->CBContent.DispatchDimensions = { inputs->DispatchDimensions.Width, inputs->DispatchDimensions.Height };
                 inputs->CBContent.DispatchDimensionsInv = { 1.0 / inputs->DispatchDimensions.Width, 1.0 / inputs->DispatchDimensions.Height };
+                inputs->CBContent.SourceDimensions = { mipDimensions.Width, mipDimensions.Height };
+                inputs->CBContent.SourceDimensionsInv = { 1.0 / mipDimensions.Width, 1.0 / mipDimensions.Height };
                 inputs->CBContent.FilterType = filter;
                 inputs->CBContent.SourceMipIdx = mipLevel;
                 inputs->SourceMip = mipLevel;

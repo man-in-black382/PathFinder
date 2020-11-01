@@ -1,9 +1,10 @@
 #pragma once
 
 #include <Geometry/Ray3D.hpp>
-
+#include <bitsery/bitsery.h>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
+#include <Utility/SerializationAdapters.hpp>
 
 namespace PathFinder
 {
@@ -66,6 +67,28 @@ namespace PathFinder
         float mShutterTime;
 
         void UpdateVectors();
+
+        friend bitsery::Access;
+
+        template <typename S>
+        void serialize(S& s)
+        {
+            s.object(mFront);
+            s.object(mRight);
+            s.object(mUp);
+            s.object(mWorldUp);
+            s.object(mPosition);
+            s.value4b(mMaximumPitch);
+            s.value4b(mPitch);
+            s.value4b(mYaw);
+            s.value4b(mFieldOfView);
+            s.value4b(mNearClipPlane);
+            s.value4b(mFarClipPlane);
+            s.value4b(mViewportAspectRatio);
+            s.value4b(mLenseAperture);
+            s.value4b(mFilmSpeed);
+            s.value4b(mShutterTime);
+        }
 
     public:
         inline const glm::vec3& Position() const { return mPosition; }

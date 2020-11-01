@@ -3,11 +3,12 @@
 #include <d3d12.h>
 #include <wrl.h>
 
-#include "DisplayAdapter.hpp"
 #include "GraphicAPIObject.hpp"
 
 namespace HAL
 {
+    class DisplayAdapter;
+
     class Device : public GraphicAPIObject
     {
     public:

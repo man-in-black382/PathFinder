@@ -77,6 +77,7 @@ namespace PathFinder
         void BuildAccelerationStructures();
         void RecordCommandLists();
         void ScheduleFrame();
+        void UpdateBackBuffers();
 
         RenderPassGraph mRenderPassGraph;
 
@@ -115,6 +116,7 @@ namespace PathFinder
         std::unique_ptr<HAL::SwapChain> mSwapChain;
         std::unique_ptr<HAL::Fence> mFrameFence;
 
+        HAL::DisplayAdapter* mSelectedAdapter = nullptr;
         ContentMediator* mContentMediator = nullptr;
 
         Event mPreRenderEvent;
@@ -130,6 +132,8 @@ namespace PathFinder
         inline const RenderSurfaceDescription& RenderSurface() const { return mRenderSurfaceDescription; }
         inline Memory::GPUResourceProducer* ResourceProducer() { return mResourceProducer.get(); }
         inline HAL::Device* Device() { return mDevice.get(); }
+        inline HAL::SwapChain* SwapChain() { return mSwapChain.get(); }
+        inline HAL::DisplayAdapter* SelectedAdapter() { return mSelectedAdapter; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }
         inline uint64_t FrameDurationMicroseconds() const { return mFrameDuration.count(); }

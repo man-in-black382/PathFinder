@@ -1,4 +1,5 @@
 #include "DenoiserPostBlurRenderPass.hpp"
+#include "DownsamplingHelper.hpp"
 
 #include <Foundation/Gaussian.hpp>
 
@@ -22,11 +23,14 @@ namespace PathFinder
 
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingPostBlurred);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingPostBlurred);
-        scheduler->NewTexture(ResourceNames::CombinedShading);
+
+        ResourceScheduler::NewTextureProperties combinedShadingProps{};
+        combinedShadingProps.MipCount = ResourceScheduler::FullMipChain;
+        scheduler->NewTexture(ResourceNames::CombinedShading, combinedShadingProps);
 
         ResourceScheduler::NewTextureProperties oversaturatedProps{};
         oversaturatedProps.MipCount = 3;
-        scheduler->NewTexture(ResourceNames::CombinedShadingOverexposed, oversaturatedProps);
+        scheduler->NewTexture(ResourceNames::CombinedShadingOversaturated, oversaturatedProps);
 
         scheduler->ReadTexture(ResourceNames::ShadingAnalyticOutput);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[frameIndex]);
@@ -57,10 +61,31 @@ namespace PathFinder
         cbContent.ShadowedShadingBlurredOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingPostBlurred);
         cbContent.UnshadowedShadingBlurredOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingPostBlurred);
         cbContent.CombinedShadingTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::CombinedShading);
-        cbContent.CombinedShadingOversaturatedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::CombinedShadingOverexposed);
+        cbContent.CombinedShadingOversaturatedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::CombinedShadingOversaturated);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Dispatch(groupCount.Width, groupCount.Height);
+    }
+
+    void DenoiserPostBlurRenderPass::ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler)
+    {
+        std::vector<DownsamplingInvocationInputs> invocationInputs = GenerateDownsamplingShaderInvocationInputs(
+            ResourceNames::CombinedShading,
+            scheduler->GetTextureProperties(ResourceNames::CombinedShading),
+            DownsamplingCBContent::Filter::MinMaxLuminance,
+            DownsamplingStrategy::WriteOnlyLastLevel);
+
+        for (auto invocation = 0; invocation < invocationInputs.size(); ++invocation)
+        {
+            if (mMinMaxLuminanceSubPasses.size() <= invocation)
+            {
+                mMinMaxLuminanceSubPasses.emplace_back(std::make_unique<DownsamplingRenderSubPass>("MinMaxLuminanceComputation", invocation));
+            }
+
+            DownsamplingRenderSubPass* subPass = mMinMaxLuminanceSubPasses[invocation].get();
+            subPass->SetInvocationInputs({ invocationInputs[invocation] });
+            scheduler->AddRenderSubPass(subPass);
+        }
     }
 
 }

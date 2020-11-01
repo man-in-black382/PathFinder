@@ -6,7 +6,7 @@ namespace PathFinder
     template <class Constants>
     void PipelineResourceStorage::UpdateFrameRootConstants(const Constants& constants)
     {
-        constexpr uint64_t Alignment = 32;
+        constexpr uint64_t Alignment = 256;
 
         if (!mPerFrameRootConstantsBuffer || mPerFrameRootConstantsBuffer->Capacity<Constants>(Alignment) < 1)
         {
@@ -22,7 +22,7 @@ namespace PathFinder
     template <class Constants>
     void PipelineResourceStorage::UpdateGlobalRootConstants(const Constants& constants)
     {
-        constexpr uint64_t Alignment = 32;
+        constexpr uint64_t Alignment = 256;
 
         if (!mGlobalRootConstantsBuffer || mGlobalRootConstantsBuffer->Capacity<Constants>(Alignment) < 1)
         {
@@ -38,7 +38,7 @@ namespace PathFinder
     template <class Constants>
     void PipelineResourceStorage::UpdatePassRootConstants(const Constants& constants, const RenderPassGraph::Node& passNode)
     {
-        constexpr uint64_t Alignment = 32;
+        constexpr uint64_t Alignment = 256;
         constexpr uint64_t GrowAlignment = 4096;
 
         PipelineResourceStoragePass* passData = GetPerPassData(passNode.PassMetadata().Name);

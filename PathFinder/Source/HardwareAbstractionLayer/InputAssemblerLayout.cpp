@@ -6,7 +6,7 @@ namespace HAL
     void InputAssemblerLayout::AddPerVertexLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ColorFormat format, uint32_t inputSlot, uint32_t alighnedByteOffset)
     {
         D3D12_INPUT_ELEMENT_DESC desc{};
-        desc.Format = ResourceFormat::D3DFormat(format);
+        desc.Format = D3DFormat(format);
         desc.AlignedByteOffset = alighnedByteOffset;
         desc.InputSlot = inputSlot;
         desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
@@ -24,7 +24,7 @@ namespace HAL
     void InputAssemblerLayout::AddPerInstanceLayoutElement(const std::string& semanticName, uint32_t semanticIndex, ColorFormat format, uint32_t inputSlot, uint32_t alighnedByteOffset, uint32_t stepRate)
     {
         D3D12_INPUT_ELEMENT_DESC desc{};
-        desc.Format = ResourceFormat::D3DFormat(format);
+        desc.Format = D3DFormat(format);
         desc.AlignedByteOffset = alighnedByteOffset;
         desc.InputSlot = inputSlot;
         desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
