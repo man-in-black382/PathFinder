@@ -308,11 +308,6 @@ namespace PathFinder
                 recordCommandList(passHelpers, *passNode);
             }
         }
-
-        // TODO: When multi threading is implemented, insert a sync here
-        // because render passes request transitions in the state tracker
-        // and we treat those as prerender transitions alongside external resource 
-        // upload transitions
     }
 
     template <class ContentMediator>

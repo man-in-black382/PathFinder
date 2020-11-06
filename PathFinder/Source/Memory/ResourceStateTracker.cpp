@@ -172,7 +172,7 @@ namespace Memory
     const ResourceStateTracker::SubresourceStateList& ResourceStateTracker::ResourceCurrentStates(const HAL::Resource* resource) const
     {
         auto it = mCurrentResourceStates.find(resource);
-        assert_format(it != mCurrentResourceStates.end(), "Resource is not registered / not being tracked");
+        assert_format(it != mCurrentResourceStates.end(), "Resource is not registered / not being tracked. It may have been deallocated before transitions were applied.");
         return it->second;
     }
 

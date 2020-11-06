@@ -136,7 +136,7 @@ namespace PathFinder
         inline HAL::DisplayAdapter* SelectedAdapter() { return mSelectedAdapter; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }
-        inline uint64_t FrameDurationMicroseconds() const { return mFrameDuration.count(); }
+        inline uint64_t FrameDurationUS() const { return mFrameDuration.count(); }
     };
 
 }

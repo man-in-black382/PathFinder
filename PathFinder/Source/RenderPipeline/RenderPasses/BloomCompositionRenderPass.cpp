@@ -18,10 +18,14 @@ namespace PathFinder
     {
         scheduler->ReadTexture(ResourceNames::CombinedShading);
         scheduler->ReadTexture(ResourceNames::BloomBlurOutput);
+
+        // Read min/max luminances
+        scheduler->ReadTexture(ResourceNames::CombinedShading, ResourceScheduler::MipSet::LastMip());
+
         scheduler->NewTexture(ResourceNames::BloomCompositionOutput);
 
-        ResourceScheduler::NewTextureProperties histogramProps{ HAL::ColorFormat::R32_Unsigned, HAL::TextureKind::Texture1D, Geometry::Dimensions{256} };
-        scheduler->NewTexture(ResourceNames::LuminanceHistogram, histogramProps);
+        scheduler->NewBuffer(ResourceNames::LuminanceHistogram, ResourceScheduler::NewBufferProperties<uint32_t>{130}); // 128 + 2 slots for min/max luminance
+        scheduler->Export(ResourceNames::LuminanceHistogram);
     }
      
     void BloomCompositionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

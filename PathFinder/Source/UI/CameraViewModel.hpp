@@ -10,7 +10,6 @@ namespace PathFinder
     class CameraViewModel : public ViewModel
     {
     public:
-        void SetCamera(Camera* camera);
         void Import() override;
         void Export() override;
 

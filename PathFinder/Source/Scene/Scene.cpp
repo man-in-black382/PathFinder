@@ -9,8 +9,8 @@
 namespace PathFinder 
 {
 
-    Scene::Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer)
-        : mResourceLoader{ executableFolder, resourceProducer }, mMeshLoader{ executableFolder }
+    Scene::Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer)
+        : mResourceLoader{ executableFolder, resourceProducer }, mMeshLoader{ executableFolder }, mLuminanceMeter{ &mCamera }, mGPUStorage{ this, device, resourceProducer }
     {
         LoadUtilityResources();
     }

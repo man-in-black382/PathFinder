@@ -10,15 +10,21 @@
 namespace PathFinder
 {
 
+    void SceneManipulatorViewController::OnCreated()
+    {
+        CameraVM = GetViewModel<CameraViewModel>();
+        EntityVM = GetViewModel<PickedEntityViewModel>();
+    }
+
     void SceneManipulatorViewController::DrawCameraControls()
     {
         ImGuiIO& io = ImGui::GetIO();
 
         ImGui::Text("Camera");
-        ImGui::SliderFloat("FoV", &CameraVM.FOVH, 60.f, 120.f);
-        ImGui::SliderFloat("Aperture", &CameraVM.LenseAperture, 1.f, 16.f);
-        ImGui::SliderFloat("Film Speed (ISO)", &CameraVM.FilmSpeed, 100.f, 2000.f);
-        ImGui::SliderFloat("Shutter Speed", &CameraVM.ShutterTime, 30.f, 240.f);
+        ImGui::SliderFloat("FoV", &CameraVM->FOVH, 60.f, 120.f);
+        ImGui::SliderFloat("Aperture", &CameraVM->LenseAperture, 1.f, 16.f);
+        ImGui::SliderFloat("Film Speed (ISO)", &CameraVM->FilmSpeed, 100.f, 2000.f);
+        ImGui::SliderFloat("Shutter Speed", &CameraVM->ShutterTime, 30.f, 240.f);
 
         ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
         ImGui::Separator();
@@ -29,29 +35,29 @@ namespace PathFinder
         ImGuiIO& io = ImGui::GetIO();
         ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
-        glm::mat4 modelMatrix = EntityVM.ModelMatrix();
+        glm::mat4 modelMatrix = EntityVM->ModelMatrix();
         glm::mat4 deltaMatrix{ 1.0f };
 
-        if (EntityVM.ShouldDisplay())
+        if (EntityVM->ShouldDisplay())
         {
             ImGuizmo::SetID(0);
             mIsInteracting = EditTransform(
-                glm::value_ptr(CameraVM.View),
-                glm::value_ptr(CameraVM.Projection),
+                glm::value_ptr(CameraVM->View),
+                glm::value_ptr(CameraVM->Projection),
                 glm::value_ptr(modelMatrix),
                 glm::value_ptr(deltaMatrix),
-                EntityVM.ShouldDisplay(),
-                EntityVM.AreRotationsAllowed());
+                EntityVM->ShouldDisplay(),
+                EntityVM->AreRotationsAllowed());
 
             if (mIsInteracting)
             {
-                EntityVM.SetModifiedModelMatrix(modelMatrix, deltaMatrix);
+                EntityVM->SetModifiedModelMatrix(modelMatrix, deltaMatrix);
             }
 
             ImGui::Checkbox("Draw Cube", &mDrawCube);
             if (mDrawCube)
             {
-                ImGuizmo::DrawCubes(glm::value_ptr(CameraVM.View), glm::value_ptr(CameraVM.Projection), glm::value_ptr(modelMatrix), 1);
+                ImGuizmo::DrawCubes(glm::value_ptr(CameraVM->View), glm::value_ptr(CameraVM->Projection), glm::value_ptr(modelMatrix), 1);
             }
         }
     }
@@ -141,31 +147,31 @@ namespace PathFinder
 
     void SceneManipulatorViewController::Draw()
     {
-        if (mInput->CurrentClickCount() == 1 && !mUIManager->IsInteracting() && !mUIManager->IsMouseOverUI())
+        if (GetInput()->CurrentClickCount() == 1 /*&& !mUIManager->IsInteracting() && !mUIManager->IsMouseOverUI()*/)
         {
-            EntityVM.HandleClick();
+            EntityVM->HandleClick();
         }
 
-        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::T)) 
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::T))
             mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
 
-        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::R))
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::R))
             mCurrentGizmoOperation = ImGuizmo::ROTATE;
 
-        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::S)) 
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::S))
             mCurrentGizmoOperation = ImGuizmo::SCALE;
 
-        if (mCurrentGizmoOperation == ImGuizmo::ROTATE && !EntityVM.AreRotationsAllowed())
+        if (mCurrentGizmoOperation == ImGuizmo::ROTATE && !EntityVM->AreRotationsAllowed())
             mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
         
-        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::B))
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::B))
             mBoundSizing = !mBoundSizing;
 
-        if (mInput->WasKeyboardKeyUnpressed(KeyboardKey::W) && mCurrentGizmoOperation != ImGuizmo::SCALE)
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::W) && mCurrentGizmoOperation != ImGuizmo::SCALE)
             mCurrentGizmoMode = mCurrentGizmoMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
 
-        CameraVM.Import();
-        EntityVM.Import();
+        CameraVM->Import();
+        EntityVM->Import();
 
         ImGuiIO& io = ImGui::GetIO();
 
@@ -179,12 +185,12 @@ namespace PathFinder
         DrawCameraControls();
         DrawImGuizmoControls();
 
-        mIsInteracting = EntityVM.ShouldDisplay() || ImGuizmo::IsUsing();
+        mIsInteracting = EntityVM->ShouldDisplay() || ImGuizmo::IsUsing();
 
         ImGui::End();
 
-        CameraVM.Export();
-        EntityVM.Export();
+        CameraVM->Export();
+        EntityVM->Export();
     }
 
     bool SceneManipulatorViewController::IsInteracting() const

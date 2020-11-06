@@ -2,19 +2,10 @@
 
 #include <Foundation/STDHelpers.hpp>
 #include <fplus/fplus.hpp>
+#include <RenderPipeline/RenderPasses/PipelineNames.hpp>
 
 namespace PathFinder
 {
-
-    void PickedEntityViewModel::SetScene(Scene* scene)
-    {
-        mScene = scene;
-    }
-
-    void PickedEntityViewModel::SetGeometryIntersectionInfo(uint32_t info)
-    {
-        mHoveredEntityID = EntityID{ info };
-    }
 
     void PickedEntityViewModel::HandleClick()
     {
@@ -40,6 +31,8 @@ namespace PathFinder
 
     void PickedEntityViewModel::Import()
     {
+        mScene = Dependencies->ScenePtr;
+
         mShouldDisplay = mMeshInstance != nullptr || mSphericalLight != nullptr || mFlatLight != nullptr;
         mAreRotationsAllowed = mSphericalLight == nullptr;
        
@@ -85,6 +78,19 @@ namespace PathFinder
             mFlatLight->SetPosition(mModifiedModelMatrix[3]);
             mFlatLight->SetNormal(glm::normalize(glm::vec3{ mModifiedModelMatrix[2] }));
         }
+    }
+
+    void PickedEntityViewModel::OnCreated()
+    {
+        (*Dependencies->PostRenderEvent) += { "PickedEntityViewModel.Post.Render", [this]()
+        {
+            const Memory::Buffer* pickedGeometryInfo = Dependencies->ResourceStorage->GetPerResourceData(PathFinder::ResourceNames::PickedGeometryInfo)->Buffer.get();
+
+            pickedGeometryInfo->Read<uint32_t>([this](const uint32_t* info)
+            {
+                if (info) mHoveredEntityID = EntityID{ *info };
+            });
+        }};
     }
 
 }

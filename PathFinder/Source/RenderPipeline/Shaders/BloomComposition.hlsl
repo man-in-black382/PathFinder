@@ -11,12 +11,20 @@ struct PassData
     uint SmallBloomWeight;
     uint MediumBloomWeight;
     uint LargeBloomWeight;
+    uint CombinedShadingLastMipIdx;
 };
 
 #define PassDataType PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 #include "ColorConversion.hlsl"
+
+struct HistogramValue
+{
+    uint Counter;
+};
+
+RWStructuredBuffer<HistogramValue> Histogram : register(u0);
 
 [numthreads(32, 32, 1)]
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)

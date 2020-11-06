@@ -203,6 +203,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\Foundation\Color.cpp" />
     <ClCompile Include="Source\Foundation\Gaussian.cpp" />
     <ClCompile Include="Source\Foundation\Halton.cpp" />
@@ -335,6 +336,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Scene\CameraInteractor.cpp" />
     <ClCompile Include="Source\Scene\FlatLight.cpp" />
     <ClCompile Include="Source\Scene\Light.cpp" />
+    <ClCompile Include="Source\Scene\LuminanceMeter.cpp" />
     <ClCompile Include="Source\Scene\Material.cpp" />
     <ClCompile Include="Source\Scene\MaterialLoader.cpp" />
     <ClCompile Include="Source\Scene\Mesh.cpp" />
@@ -356,9 +358,16 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\ThirdParty\imguizmo\ImGuizmo.cpp" />
     <ClCompile Include="Source\ThirdParty\imguizmo\ImSequencer.cpp" />
     <ClCompile Include="Source\UI\CameraViewModel.cpp" />
+    <ClCompile Include="Source\UI\LuminanceMeterViewController.cpp" />
+    <ClCompile Include="Source\UI\LuminanceMeterViewModel.cpp" />
+    <ClCompile Include="Source\UI\MainMenuViewController.cpp" />
+    <ClCompile Include="Source\UI\MainMenuViewModel.cpp" />
     <ClCompile Include="Source\UI\PickedEntityViewModel.cpp" />
+    <ClCompile Include="Source\UI\RenderGraphViewController.cpp" />
+    <ClCompile Include="Source\UI\RenderGraphViewModel.cpp" />
     <ClCompile Include="Source\UI\SceneManipulatorViewController.cpp" />
     <ClCompile Include="Source\UI\SequencerViewController.cpp" />
+    <ClCompile Include="Source\UI\UIEntryPoint.cpp" />
     <ClCompile Include="Source\UI\UIGPUStorage.cpp" />
     <ClCompile Include="Source\UI\UIManager.cpp" />
     <ClCompile Include="Source\Utility\AftermathCrashTracker.cpp" />
@@ -384,6 +393,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Source\Application.hpp" />
     <ClInclude Include="Source\Foundation\Assert.hpp" />
     <ClInclude Include="Source\Foundation\BitwiseEnum.hpp" />
     <ClInclude Include="Source\Foundation\Color.hpp" />
@@ -561,6 +571,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Scene\FlatLight.hpp" />
     <ClInclude Include="Source\Scene\GTTonemappingParameters.hpp" />
     <ClInclude Include="Source\Scene\Light.hpp" />
+    <ClInclude Include="Source\Scene\LuminanceMeter.hpp" />
     <ClInclude Include="Source\Scene\Material.hpp" />
     <ClInclude Include="Source\Scene\MaterialLoader.hpp" />
     <ClInclude Include="Source\Scene\Mesh.hpp" />
@@ -1181,9 +1192,17 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
     <ClInclude Include="Source\ThirdParty\robinhood\robin_hood.h" />
     <ClInclude Include="Source\UI\CameraViewModel.hpp" />
+    <ClInclude Include="Source\UI\LuminanceMeterViewController.hpp" />
+    <ClInclude Include="Source\UI\LuminanceMeterViewModel.hpp" />
+    <ClInclude Include="Source\UI\MainMenuViewController.hpp" />
+    <ClInclude Include="Source\UI\MainMenuViewModel.hpp" />
     <ClInclude Include="Source\UI\PickedEntityViewModel.hpp" />
+    <ClInclude Include="Source\UI\RenderGraphViewController.hpp" />
+    <ClInclude Include="Source\UI\RenderGraphViewModel.hpp" />
     <ClInclude Include="Source\UI\SceneManipulatorViewController.hpp" />
     <ClInclude Include="Source\UI\SequencerViewController.hpp" />
+    <ClInclude Include="Source\UI\UIDependencies.hpp" />
+    <ClInclude Include="Source\UI\UIEntryPoint.hpp" />
     <ClInclude Include="Source\UI\UIGPUStorage.hpp" />
     <ClInclude Include="Source\UI\UIManager.hpp" />
     <ClInclude Include="Source\UI\ViewController.hpp" />
@@ -1406,6 +1425,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <None Include="Source\ThirdParty\glm\gtx\vector_angle.inl" />
     <None Include="Source\ThirdParty\glm\gtx\vector_query.inl" />
     <None Include="Source\ThirdParty\glm\gtx\wrap.inl" />
+    <None Include="Source\UI\UIManager.inl" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Source\RenderPipeline\Shaders\BoxBlur.hlsl">

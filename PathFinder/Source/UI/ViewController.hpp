@@ -1,27 +1,49 @@
 #pragma once
 
+#include "UIManager.hpp"
+#include "ViewModel.hpp"
+
 #include <IO/Input.hpp>
 #include <RenderPipeline/PipelineResourceStorage.hpp>
 
 namespace PathFinder
 {
-   
-    class UIManager;
 
     class ViewController
     {
     public:
         virtual void Draw() = 0;
         virtual bool IsInteracting() const { return false; }
+        virtual void OnCreated() {}
 
-        void SetUIManager(const UIManager* uiManager) { mUIManager = uiManager; }
         void SetInput(const Input* input) { mInput = input; }
-        void SetResourceStorage(const PipelineResourceStorage* storage) { mResourceStorage = storage; }
+        void SetUIManager(UIManager* manager) { mUIManager = manager; }
 
     protected:
-        const UIManager* mUIManager = nullptr;
+        template <class ViewModelT>
+        ViewModelT* GetViewModel();
+
+        template <class ViewControllerT>
+        std::shared_ptr<ViewControllerT> CreateViewController();
+
+        inline const Input* GetInput() const { return mInput; }
+        inline const UIManager* GetUIManager() const { return mUIManager; }
+
+    private:
+        UIManager* mUIManager = nullptr;
         const Input* mInput = nullptr;
-        const PipelineResourceStorage* mResourceStorage = nullptr;
     };
+
+    template <class ViewModelT>
+    ViewModelT* ViewController::GetViewModel()
+    {
+        return mUIManager->GetViewModel<ViewModelT>();
+    }
+
+    template <class ViewControllerT>
+    std::shared_ptr<ViewControllerT> ViewController::CreateViewController()
+    {
+        return mUIManager->CreateViewController<ViewControllerT>();
+    }
 
 }

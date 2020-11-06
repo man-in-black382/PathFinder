@@ -10,6 +10,8 @@
 #include "MeshLoader.hpp"
 #include "FlatLight.hpp"
 #include "SphericalLight.hpp"
+#include "LuminanceMeter.hpp"
+#include "SceneGPUStorage.hpp"
 
 #include <Memory/GPUResourceProducer.hpp>
 #include <robinhood/robin_hood.h>
@@ -30,7 +32,7 @@ namespace PathFinder
 
         using EntityVariant = std::variant<MeshInstance*, FlatLight*, SphericalLight*>;
 
-        Scene(const std::filesystem::path& executableFolder, Memory::GPUResourceProducer* resourceProducer);
+        Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer);
 
         Mesh& AddMesh(Mesh&& mesh);
         MeshInstance& AddMeshInstance(MeshInstance&& instance);
@@ -59,6 +61,7 @@ namespace PathFinder
         robin_hood::unordered_flat_map<EntityID, EntityVariant> mMappedEntities;
 
         Camera mCamera;
+        LuminanceMeter mLuminanceMeter;
         GTTonemappingParameterss mTonemappingParams;
         BloomParameters mBloomParameters;
 
@@ -70,10 +73,13 @@ namespace PathFinder
 
         ResourceLoader mResourceLoader;
         MeshLoader mMeshLoader;
+        SceneGPUStorage mGPUStorage;
 
     public:
         inline Camera& MainCamera() { return mCamera; }
         inline const Camera& MainCamera() const { return mCamera; }
+        inline LuminanceMeter& LumMeter() { return mLuminanceMeter; }
+        inline const LuminanceMeter& LumMeter() const { return mLuminanceMeter; }
         inline const auto& Meshes() const { return mMeshes; }
         inline const auto& MeshInstances() const { return mMeshInstances; }
         inline const auto& Materials() const { return mMaterials; }
@@ -99,6 +105,8 @@ namespace PathFinder
         inline const auto SMAAAreaTexture() const { return mSMAAAreaTexture.get(); }
         inline const Mesh& UnitCube() const { return mUnitCube; }
         inline const Mesh& UnitSphere() const { return mUnitSphere; }
+
+        inline SceneGPUStorage& GPUStorage() { return mGPUStorage; }
     };
 
 }

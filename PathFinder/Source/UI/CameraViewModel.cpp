@@ -3,13 +3,10 @@
 namespace PathFinder
 {
 
-    void CameraViewModel::SetCamera(Camera* camera)
-    {
-        mCamera = camera;
-    }
-
     void CameraViewModel::Import()
     {
+        mCamera = &Dependencies->ScenePtr->MainCamera();
+
         FOVH = mCamera->FOVH();
         LenseAperture = mCamera->Aperture();
         FilmSpeed = mCamera->FilmSpeed();

@@ -7,7 +7,6 @@
 
 #include <Memory/GPUResourceProducer.hpp>
 
-#include "Scene.hpp"
 #include "Mesh.hpp"
 #include "MeshInstance.hpp"
 #include "Vertices/Vertex1P1N1UV1T1BT.hpp"
@@ -131,6 +130,8 @@ namespace PathFinder
     };
 
     using GPUInstanceIndex = uint64_t;
+
+    class Scene;
 
     class SceneGPUStorage
     {

@@ -1,5 +1,6 @@
 #include "SceneGPUStorage.hpp"
 #include "EntityID.hpp"
+#include "Scene.hpp"
 
 #include <algorithm>
 #include <iterator>

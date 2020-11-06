@@ -3,21 +3,25 @@
 #include <IO/Input.hpp>
 #include <Geometry/Dimensions.hpp>
 #include <Memory/GPUResourceProducer.hpp>
-#include <RenderPipeline/PipelineResourceStorage.hpp>
+#include <robinhood/robin_hood.h>
 
 #include "UIGPUStorage.hpp"
-#include "ViewController.hpp"
+
+#include "ViewModel.hpp"
 
 #include <windef.h>
 #include <vector>
+#include <typeindex>
 
 namespace PathFinder
 {
 
+    class ViewController;
+
     class UIManager 
     {
     public:
-        UIManager(HWND windowHandle, Input* input, PipelineResourceStorage* resourceStorage, Memory::GPUResourceProducer* resourceProducer);
+        UIManager(Input* input, UIDependencies* dependencies, Memory::GPUResourceProducer* resourceProducer);
         ~UIManager();
 
         void Draw();
@@ -27,40 +31,31 @@ namespace PathFinder
         bool IsMouseOverUI() const;
 
         template <class ViewControllerT> 
-        ViewControllerT* CreateViewController();
+        std::shared_ptr<ViewControllerT> CreateViewController();
+
+        template <class ViewModelT>
+        ViewModelT* GetViewModel();
 
     private:
+        using ViewModelTypeIndex = std::type_index;
+
         void HandleKeyUp(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input);
         void HandleKeyDown(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input);
         void UpdateCursor();
 
-        std::vector<std::unique_ptr<ViewController>> mViewControllers;
+        std::vector<std::weak_ptr<ViewController>> mViewControllers;
+        robin_hood::unordered_flat_map<ViewModelTypeIndex, std::unique_ptr<ViewModel>> mViewModels;
+
         bool mIsInteracting = false;
         bool mIsMouseOverUI = false;
-        HWND mWindowHandle;
         UIGPUStorage mGPUStorage;
         Input* mInput;
-        PipelineResourceStorage* mResourceStorage;
+        UIDependencies* mUIDependencies;
 
     public:
         inline const UIGPUStorage& GPUStorage() const { return mGPUStorage; }
     };
 
-    template <class ViewControllerT>
-    ViewControllerT* UIManager::CreateViewController()
-    {
-        static_assert(std::is_base_of<ViewController, ViewControllerT>::value, "ViewControllerT must derive from ViewController");
-
-        auto vcUniquePtr = std::make_unique<ViewControllerT>();
-
-        vcUniquePtr->SetInput(mInput);
-        vcUniquePtr->SetResourceStorage(mResourceStorage);
-        vcUniquePtr->SetUIManager(this);
-
-        auto vc = vcUniquePtr.get();
-        mViewControllers.emplace_back(std::move(vcUniquePtr));
-        
-        return vc;
-    }
-
 }
+
+#include "UIManager.inl"

@@ -15,9 +15,10 @@ namespace PathFinder
     public:
         void Draw() override;
         bool IsInteracting() const override;
+        void OnCreated() override;
 
-        CameraViewModel CameraVM;
-        PickedEntityViewModel EntityVM;
+        CameraViewModel* CameraVM;
+        PickedEntityViewModel* EntityVM;
 
     private:
         void DrawCameraControls();

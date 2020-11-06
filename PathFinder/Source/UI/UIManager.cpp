@@ -1,4 +1,6 @@
 #include "UIManager.hpp"
+#include "ViewController.hpp"
+#include "ViewModel.hpp"
 
 #include <imgui/imgui.h>
 #include <windows.h>
@@ -8,8 +10,8 @@
 namespace PathFinder
 {
 
-    UIManager::UIManager(HWND windowHandle, Input* input, PipelineResourceStorage* resourceStorage, Memory::GPUResourceProducer* resourceProducer)
-        : mWindowHandle{ windowHandle }, mInput{ input }, mGPUStorage{ resourceProducer }, mResourceStorage{ resourceStorage }
+    UIManager::UIManager(Input* input, UIDependencies* dependencies, Memory::GPUResourceProducer* resourceProducer)
+        : mInput{ input }, mGPUStorage{ resourceProducer }, mUIDependencies{ dependencies }
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -94,9 +96,26 @@ namespace PathFinder
 
         mGPUStorage.StartNewFrame();
 
-        for (auto& vc : mViewControllers)
+        std::vector<uint32_t> deallocatedVCIndices;
+
+        for (auto vcIdx = 0u; vcIdx < mViewControllers.size(); ++vcIdx)
         {
-            vc->Draw();
+            std::weak_ptr<ViewController>& vc = mViewControllers[vcIdx];
+
+            if (auto strongPtr = vc.lock())
+            {
+                strongPtr->Draw();
+            }
+            else
+            {
+                deallocatedVCIndices.push_back(vcIdx);
+            }
+        }
+
+        // Remove deallocated controllers
+        for (auto it = deallocatedVCIndices.rbegin(); it != deallocatedVCIndices.rend(); ++it)
+        {
+            mViewControllers.erase(mViewControllers.begin() + *it);
         }
 
         mGPUStorage.UploadUI();

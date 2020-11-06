@@ -11,14 +11,12 @@ namespace PathFinder
     class PickedEntityViewModel : public ViewModel
     {
     public:
-        void SetScene(Scene* scene);
-        void SetGeometryIntersectionInfo(uint32_t info);
-
         void HandleClick();
         void SetModifiedModelMatrix(const glm::mat4& mat, const glm::mat4& delta);
 
         void Import() override;
         void Export() override;
+        void OnCreated() override;
 
     private:
         bool mShouldDisplay = false;
