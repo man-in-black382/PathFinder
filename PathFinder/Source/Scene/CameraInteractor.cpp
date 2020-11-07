@@ -23,9 +23,14 @@ namespace PathFinder
         mIsEnabled = enabled;
     }
 
-    void CameraInteractor::SetWASDControlsEnabled(bool enabled)
+    void CameraInteractor::SetKeyboardControlsEnabled(bool enabled)
     {
-        mIsWASDControlsEnabled = enabled;
+        mIsKeyboardControlsEnabled = enabled;
+    }
+
+    void CameraInteractor::SetMouseControlsEnabled(bool enabled)
+    {
+        mIsMouseControlsEnabled = enabled;
     }
 
     void CameraInteractor::SetViewportSize(const Geometry::Dimensions& viewportSize)
@@ -35,7 +40,7 @@ namespace PathFinder
 
     void CameraInteractor::HandleKeyDown()
     {
-        if (!mIsWASDControlsEnabled)
+        if (!mIsKeyboardControlsEnabled)
             return;
 
         glm::vec3 direction = glm::zero<glm::vec3>();
@@ -57,6 +62,9 @@ namespace PathFinder
 
     void CameraInteractor::HandleMouseDrag()
     {
+        if (!mIsMouseControlsEnabled)
+            return;
+
         glm::vec2 mouseDirection = mUserInput->MouseDelta() * mInputScaleTimeAdjusted.MouseMovementScale;
 
         if (mUserInput->IsMouseButtonPressed(0) && mUserInput->IsMouseButtonPressed(1)) 
@@ -89,6 +97,9 @@ namespace PathFinder
 
     void CameraInteractor::HandleMouseScroll()
     {
+        if (!mIsMouseControlsEnabled)
+            return;
+
         glm::vec2 scrollDelta = mUserInput->ScrollDelta();
         glm::vec3 front = mCamera->Front() * scrollDelta.y * -mInputScaleTimeAdjusted.MouseMovementScale;
         glm::vec3 right = mCamera->Right() * scrollDelta.x * mInputScaleTimeAdjusted.MouseMovementScale;

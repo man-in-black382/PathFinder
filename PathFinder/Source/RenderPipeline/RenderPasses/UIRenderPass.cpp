@@ -63,6 +63,7 @@ namespace PathFinder
             offsets.IndexBufferOffset = drawCommand.IndexBufferOffset;
 
             context->GetCommandRecorder()->SetRootConstants(offsets, 0, 0);
+            context->GetCommandRecorder()->SetScissor(drawCommand.ScissorRect);
             context->GetCommandRecorder()->Draw(drawCommand.IndexCount);
         }
     }

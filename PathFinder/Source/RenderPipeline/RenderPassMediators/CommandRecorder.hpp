@@ -34,6 +34,7 @@ namespace PathFinder
         void ClearDepth(Foundation::Name rtName);
         void ApplyPipelineState(Foundation::Name psoName);
         void SetViewport(const HAL::Viewport& viewport);
+        void SetScissor(const Geometry::Rect2D& scissor);
 
         void Draw(uint32_t vertexCount, uint32_t instanceCount = 1);
         void Draw(const DrawablePrimitive& primitive);

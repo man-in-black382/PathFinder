@@ -67,6 +67,7 @@ namespace PathFinder
             // Helpers for correct bindings and sanity checks
             const HAL::RayDispatchInfo* LastAppliedRTStateDispatchInfo = nullptr;
             std::optional<HAL::Viewport> LastAppliedViewport;
+            std::optional<Geometry::Rect2D> LastAppliedScissor;
             uint64_t ExecutedRenderCommandsCount = 0;
             const HAL::RootSignature* LastSetRootSignature = nullptr;
             HAL::GPUAddress LastBoundRootConstantBufferAddress = 0;

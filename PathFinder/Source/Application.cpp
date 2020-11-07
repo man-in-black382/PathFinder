@@ -139,9 +139,10 @@ namespace PathFinder
         mCameraInteractor->SetViewportSize(viewportSize);
         mUIManager->Draw();
 
-        bool interactingWithUI = mUIManager->IsInteracting();// || sceneManipulatorVC->IsInteracting();
+        bool interactingWithUI = mUIManager->IsInteracting();
 
-        mCameraInteractor->SetWASDControlsEnabled(!interactingWithUI);
+        mCameraInteractor->SetKeyboardControlsEnabled(!interactingWithUI);
+        mCameraInteractor->SetMouseControlsEnabled(!mUIManager->IsMouseOverUI());
         mCameraInteractor->PollInputs(mRenderEngine->FrameDurationUS());
 
         mSettingsController->SetEnabled(!interactingWithUI);

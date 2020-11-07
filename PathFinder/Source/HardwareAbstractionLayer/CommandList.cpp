@@ -198,8 +198,12 @@ namespace HAL
     {
         auto d3dViewport = viewport.D3DViewport();
         mList->RSSetViewports(1, &d3dViewport);
-        D3D12_RECT scissorRect{ viewport.X, viewport.Y, viewport.Width, viewport.Height };
-        mList->RSSetScissorRects(1, &scissorRect);
+    }
+
+    void GraphicsCommandListBase::SetScissor(const Geometry::Rect2D& scissorRect)
+    {
+        D3D12_RECT d3dRect{ scissorRect.Origin.x, scissorRect.Origin.y, scissorRect.Size.Width, scissorRect.Size.Height };
+        mList->RSSetScissorRects(1, &d3dRect);
     }
 
     void GraphicsCommandListBase::SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor)

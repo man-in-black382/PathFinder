@@ -23,7 +23,8 @@ namespace PathFinder
 
         bool IsEnabled() const;
         void SetIsEnabled(bool enabled);
-        void SetWASDControlsEnabled(bool enabled);
+        void SetKeyboardControlsEnabled(bool enabled);
+        void SetMouseControlsEnabled(bool enabled);
         void SetViewportSize(const Geometry::Dimensions& viewportSize);
         void PollInputs(uint64_t frameDeltaTime);
 
@@ -46,7 +47,8 @@ namespace PathFinder
         InputScale mInputScaleTimeAdjusted;
 
         bool mIsEnabled = true;
-        bool mIsWASDControlsEnabled = true;
+        bool mIsKeyboardControlsEnabled = true;
+        bool mIsMouseControlsEnabled = true;
     };
 
 }

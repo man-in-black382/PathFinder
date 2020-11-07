@@ -3,6 +3,7 @@
 #include "ViewModel.hpp"
 
 #include <imgui/imgui.h>
+#include <implot/implot.h>
 #include <windows.h>
 
 #include <Foundation/StringUtils.hpp>
@@ -15,6 +16,7 @@ namespace PathFinder
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
+        ImPlot::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
@@ -63,6 +65,9 @@ namespace PathFinder
     {
         mInput->KeyUpEvent() -= "UIManager.Key.Up";
         mInput->KeyDownEvent() -= "UIManager.Key.Down";
+
+        ImPlot::DestroyContext();
+        ImGui::DestroyContext();
     }
 
     void UIManager::Draw()
@@ -78,8 +83,10 @@ namespace PathFinder
         io.KeyCtrl = mInput->IsKeyboardKeyPressed(KeyboardKey::Ctrl);
         io.KeyShift = mInput->IsKeyboardKeyPressed(KeyboardKey::Shift);
         io.KeyAlt = mInput->IsKeyboardKeyPressed(KeyboardKey::Alt);
+        io.MouseWheel = mInput->ScrollDelta().y;
 
-        io.KeySuper = mInput->IsKeyboardKeyPressed(KeyboardKey::SuperLeft) ||
+        io.KeySuper =
+            mInput->IsKeyboardKeyPressed(KeyboardKey::SuperLeft) ||
             mInput->IsKeyboardKeyPressed(KeyboardKey::SuperRight);
 
         for (auto i = 0; i < std::size(io.MouseDown); ++i)
@@ -89,8 +96,8 @@ namespace PathFinder
 
         io.MousePos = { mInput->MousePosition().x, mInput->MousePosition().y };
 
-        mIsInteracting = (ImGui::IsAnyWindowHovered() && ImGui::IsAnyMouseDown()) || ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused();
-        mIsMouseOverUI = ImGui::IsAnyItemHovered();
+        mIsInteracting = ImGui::IsAnyItemActive() || ImGui::IsAnyItemActive() || ImGui::IsAnyItemFocused();
+        mIsMouseOverUI = ImGui::IsAnyWindowHovered();
 
         UpdateCursor();
 
@@ -105,6 +112,7 @@ namespace PathFinder
             if (auto strongPtr = vc.lock())
             {
                 strongPtr->Draw();
+                mIsInteracting = mIsInteracting || strongPtr->IsInteracting();
             }
             else
             {

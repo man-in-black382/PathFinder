@@ -8,6 +8,7 @@ namespace PathFinder
 
     void UIEntryPoint::CreateMandatoryViewControllers()
     {
+        mMainMenuVC = mUIManager->CreateViewController<MainMenuViewController>();
         mSceneManipulatorVC = mUIManager->CreateViewController<SceneManipulatorViewController>();
     }
 

@@ -29,12 +29,12 @@ namespace Geometry
 
     float Rect2D::MaxX() const 
     {
-        return Origin.x + Size.width;
+        return Origin.x + Size.Width;
     }
 
     float Rect2D::MaxY() const 
     {
-        return Origin.y + Size.height;
+        return Origin.y + Size.Height;
     }
 
     bool Rect2D::Intersects(const Rect2D& otherRect, float& intersectionArea) const

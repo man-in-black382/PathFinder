@@ -25,29 +25,31 @@ namespace PathFinder
         ImGui::SliderFloat("Aperture", &CameraVM->LenseAperture, 1.f, 16.f);
         ImGui::SliderFloat("Film Speed (ISO)", &CameraVM->FilmSpeed, 100.f, 2000.f);
         ImGui::SliderFloat("Shutter Speed", &CameraVM->ShutterTime, 30.f, 240.f);
-
-        ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
-        ImGui::Separator();
     }
 
     void SceneManipulatorViewController::DrawImGuizmoControls()
     {
         ImGuiIO& io = ImGui::GetIO();
-        ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 
         glm::mat4 modelMatrix = EntityVM->ModelMatrix();
         glm::mat4 deltaMatrix{ 1.0f };
 
         if (EntityVM->ShouldDisplay())
         {
+            ImGuizmo::BeginFrame();
+            ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+            ImGui::Separator();
+
             ImGuizmo::SetID(0);
-            mIsInteracting = EditTransform(
+            EditTransform(
                 glm::value_ptr(CameraVM->View),
                 glm::value_ptr(CameraVM->Projection),
                 glm::value_ptr(modelMatrix),
                 glm::value_ptr(deltaMatrix),
                 EntityVM->ShouldDisplay(),
                 EntityVM->AreRotationsAllowed());
+
+            mIsInteracting = ImGuizmo::IsUsing();
 
             if (mIsInteracting)
             {
@@ -147,7 +149,7 @@ namespace PathFinder
 
     void SceneManipulatorViewController::Draw()
     {
-        if (GetInput()->CurrentClickCount() == 1 /*&& !mUIManager->IsInteracting() && !mUIManager->IsMouseOverUI()*/)
+        if (GetInput()->CurrentClickCount() == 1 && !GetUIManager()->IsInteracting() && !GetUIManager()->IsMouseOverUI())
         {
             EntityVM->HandleClick();
         }
@@ -175,11 +177,8 @@ namespace PathFinder
 
         ImGuiIO& io = ImGui::GetIO();
 
-        ImGuizmo::BeginFrame();
-
         // create a window and insert the inspector
-        ImGui::SetNextWindowPos(ImVec2(10, 10));
-        //ImGui::SetNextWindowSize(ImVec2(320, 340));
+        //ImGui::SetNextWindowPos(ImVec2(10, 30));
         ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
         DrawCameraControls();

@@ -81,9 +81,20 @@ namespace PathFinder
             "Viewport Set command is unsupported on asynchronous compute queue");
 
         RenderDevice::PassHelpers& passHelpers = GetPassHelpers();
-
         passHelpers.LastAppliedViewport = viewport;
+
         GetGraphicsCommandList()->SetViewport(viewport);
+    }
+
+    void CommandRecorder::SetScissor(const Geometry::Rect2D& scissor)
+    {
+        assert_format(RenderPassExecutionQueue{ GetPassNode().ExecutionQueueIndex } != RenderPassExecutionQueue::AsyncCompute,
+            "Viewport Rect Set command is unsupported on asynchronous compute queue");
+
+        RenderDevice::PassHelpers& passHelpers = GetPassHelpers();
+        passHelpers.LastAppliedScissor = scissor;
+
+        GetGraphicsCommandList()->SetScissor(scissor);
     }
 
     void CommandRecorder::Draw(uint32_t vertexCount, uint32_t instanceCount)
@@ -103,6 +114,19 @@ namespace PathFinder
             );
 
             cmdList->SetViewport(*passHelpers.LastAppliedViewport);
+        }
+
+        // Apply default scissor if none were provided by the render pass yet
+        if (!passHelpers.LastAppliedScissor)
+        {
+            passHelpers.LastAppliedScissor = Geometry::Rect2D{
+                {0, 0},
+                Geometry::Size2D(
+                    mRenderDevice->DefaultRenderSurfaceDesc().Dimensions().Width,
+                    mRenderDevice->DefaultRenderSurfaceDesc().Dimensions().Height)
+            };
+
+            cmdList->SetScissor(*passHelpers.LastAppliedScissor);
         }
 
         // Inset UAV barriers between draws

@@ -112,6 +112,7 @@ namespace HAL
         using ComputeCommandListBase::SetPipelineState;
 
         void SetViewport(const Viewport& viewport);
+        void SetScissor(const Geometry::Rect2D& scissorRect);
         void SetRenderTarget(const RTDescriptor& rtDescriptor, const DSDescriptor* depthStencilDescriptor = nullptr);
         void ClearRenderTarget(const RTDescriptor& rtDescriptor, const glm::vec4& color);
         void CleadDepthStencil(const DSDescriptor& dsDescriptor, float depthValue);

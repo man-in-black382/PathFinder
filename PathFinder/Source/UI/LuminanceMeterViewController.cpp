@@ -1,15 +1,13 @@
 #include "LuminanceMeterViewController.hpp"
-#include "UIManager.hpp"
+
+#include <implot/implot.h>
 
 namespace PathFinder
 {
 
     void LuminanceMeterViewController::Draw()
     {
-       
-
-        /* CameraVM.Export();
-         EntityVM.Export();*/
+        ImPlot::ShowDemoWindow();
     }
 
 }

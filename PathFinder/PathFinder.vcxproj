@@ -357,6 +357,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\ThirdParty\imguizmo\ImGradient.cpp" />
     <ClCompile Include="Source\ThirdParty\imguizmo\ImGuizmo.cpp" />
     <ClCompile Include="Source\ThirdParty\imguizmo\ImSequencer.cpp" />
+    <ClCompile Include="Source\ThirdParty\implot\implot.cpp" />
+    <ClCompile Include="Source\ThirdParty\implot\implot_demo.cpp" />
+    <ClCompile Include="Source\ThirdParty\implot\implot_items.cpp" />
     <ClCompile Include="Source\UI\CameraViewModel.cpp" />
     <ClCompile Include="Source\UI\LuminanceMeterViewController.cpp" />
     <ClCompile Include="Source\UI\LuminanceMeterViewModel.cpp" />
@@ -1188,6 +1191,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\ThirdParty\imgui\imstb_truetype.h" />
     <ClInclude Include="Source\ThirdParty\imgui\misc\cpp\imgui_stdlib.h" />
     <ClInclude Include="Source\ThirdParty\imgui\misc\freetype\imgui_freetype.h" />
+    <ClInclude Include="Source\ThirdParty\implot\implot.h" />
+    <ClInclude Include="Source\ThirdParty\implot\implot_internal.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.config.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
     <ClInclude Include="Source\ThirdParty\robinhood\robin_hood.h" />
