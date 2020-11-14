@@ -48,8 +48,8 @@ namespace PathFinder
         auto currentFrameIndex = context->FrameNumber() % 2;
         auto previousFrameIndex = (context->FrameNumber() - 1) % 2;
 
-        ClearUAVFloat(context, ResourceNames::DenoiserPrimaryGradientInputs, glm::vec4{ -1.0f });
-        ClearUAVUInt(context, ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex], glm::uvec4{ 0 });
+        ClearUAVTextureFloat(context, ResourceNames::DenoiserPrimaryGradientInputs, glm::vec4{ -1.0f });
+        ClearUAVTextureUInt(context, ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex], glm::uvec4{ 0 });
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserForwardProjection);
 

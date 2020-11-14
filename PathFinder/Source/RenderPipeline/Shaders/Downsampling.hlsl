@@ -33,6 +33,7 @@ struct PassData
 
 static const int GroupDimensionSize = 8;
 static const int GSArraySize = GroupDimensionSize * GroupDimensionSize;
+static bool IsFilteredOnce = false;
 
 groupshared float4 gTile[GSArraySize];
 
@@ -49,7 +50,7 @@ float4 Filter(float4 v0, float4 v1, float4 v2, float4 v3)
     case FilterTypeMinMaxLuminance:
     {
         // On first invocation compute luminances from RGB data
-        if (PassDataCB.InvocationIdx == 0)
+        if (PassDataCB.InvocationIdx == 0 && !IsFilteredOnce)
         {
             v0.xy = CIELuminance(v0.rgb).xx;
             v1.xy = CIELuminance(v1.rgb).xx;
@@ -83,7 +84,7 @@ float4 Filter(float4 v0, float4 v1)
     case FilterTypeMinMaxLuminance:
     {
         // On first invocation compute luminances from RGB data
-        if (PassDataCB.InvocationIdx == 0)
+        if (PassDataCB.InvocationIdx == 0 && !IsFilteredOnce)
         {
             v0.xy = CIELuminance(v0.rgb).xx;
             v1.xy = CIELuminance(v1.rgb).xx;
@@ -170,6 +171,8 @@ void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
     // will force this shader to be slower and more complicated as it will
     // have to take more source texture samples.
 
+    IsFilteredOnce = false;
+
     if (!PassDataCB.IsInputSizeOddVertically && !PassDataCB.IsInputSizeOddHorizontally)
     {
         float2 UV = texelSize * (DTid.xy + 0.5);
@@ -207,6 +210,8 @@ void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
 
         filteredPixel = Filter(SampleSource(source, UV1), SampleSource(source, UV1 + Off));
     }
+
+    IsFilteredOnce = true;
 
     gTile[GI] = filteredPixel;
 

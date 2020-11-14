@@ -7,7 +7,6 @@ struct PassData
     uint CombinedShadingTexIdx;
     uint BloomBlurOutputTexIdx;
     uint OutputTexIdx;
-    uint HistogramTexIdx;
     uint SmallBloomWeight;
     uint MediumBloomWeight;
     uint LargeBloomWeight;
@@ -19,23 +18,32 @@ struct PassData
 #include "MandatoryEntryPointInclude.hlsl"
 #include "ColorConversion.hlsl"
 
-struct HistogramValue
+static const int GroupDimensionSize = 16;
+static const int HistogramBinCount = 128;
+
+RWStructuredBuffer<uint> Histogram : register(u0);
+
+uint GetHistogramBin(float luminance, float minLuminance, float maxLuminance)
 {
-    uint Counter;
-};
+    float range = maxLuminance - minLuminance;
+    if (range < 0.0001)
+        return 0;
 
-RWStructuredBuffer<HistogramValue> Histogram : register(u0);
+    return ((luminance - minLuminance) / range) * (HistogramBinCount - 1);
+}
 
-[numthreads(32, 32, 1)]
-void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
+groupshared uint gHistogram[HistogramBinCount];
+
+[numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
+void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, int groupIndex : SV_GroupIndex)
 {
     Texture2D combinedShading = Textures2D[PassDataCB.CombinedShadingTexIdx];
     Texture2D bloomBlurOutput = Textures2D[PassDataCB.BloomBlurOutputTexIdx];
     RWTexture2D<float4> compositionOutput = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
 
-    float2 centerUV = (float2(dispatchThreadID.xy) + 0.5f) * PassDataCB.InverseTextureDimensions;
+    float2 centerUV = (float2(dispatchThreadID.xy) + 0.5f) * PassDataCB.InverseTextureDimensions; 
 
-    float3 color0 = combinedShading.SampleLevel(LinearClampSampler(), centerUV, 0.0).rgb;
+    float3 color0 = combinedShading.mips[0][dispatchThreadID.xy].rgb;
     float3 color1 = bloomBlurOutput.SampleLevel(LinearClampSampler(), centerUV, 0.0).rgb;
     float3 color2 = bloomBlurOutput.SampleLevel(LinearClampSampler(), centerUV, 1.0).rgb;
     float3 color3 = bloomBlurOutput.SampleLevel(LinearClampSampler(), centerUV, 2.0).rgb;
@@ -47,6 +55,32 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID)
     float3 compositedColor = color0 + bloom * bloomScale;
 
     compositionOutput[dispatchThreadID.xy] = float4(compositedColor, 1.0);
+
+    // Histogram computation
+    if (groupIndex < HistogramBinCount)
+    {
+        gHistogram[groupIndex] = 0;
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+
+    float2 minMaxLum = Textures2D[PassDataCB.CombinedShadingTexIdx].mips[PassDataCB.CombinedShadingLastMipIdx][0.xx].rg;
+    uint bin = GetHistogramBin(CIELuminance(color0), minMaxLum.x, minMaxLum.y);
+    uint prevValue;
+    InterlockedAdd(gHistogram[bin], 1, prevValue);
+    GroupMemoryBarrierWithGroupSync();
+
+    if (groupIndex < HistogramBinCount)
+    {
+        InterlockedAdd(Histogram[groupIndex], gHistogram[groupIndex], prevValue);
+    }
+    
+    // First thread outputs min/max luminances
+    if (groupIndex == 0)
+    {
+        Histogram[HistogramBinCount] = asuint(minMaxLum.x);
+        Histogram[HistogramBinCount + 1] = asuint(minMaxLum.y);
+    }
 }
 
 #endif

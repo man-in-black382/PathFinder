@@ -41,14 +41,15 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     if (PassDataCB.IsHDREnabled)
     {
-        const float st2084max = 10000.0;
-        const float hdrScalar = PassDataCB.DisplayMaxLuminance / st2084max;
+        // Remap tone mapped 1.0 value to correspond to maximum luminance of the display
+        const float ST2084Max = 10000.0;
+        const float HDRScalar = PassDataCB.DisplayMaxLuminance / ST2084Max;
 
         // The HDR scene is in Rec.709, but the display is Rec.2020
         color = Rec709ToRec2020(color);
 
         // Apply the ST.2084 curve to the scene.
-        color = LinearToST2084(color * hdrScalar);
+        color = LinearToST2084(color * HDRScalar);
     }
     else
     {

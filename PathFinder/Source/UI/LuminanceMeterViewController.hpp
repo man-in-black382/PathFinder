@@ -9,11 +9,10 @@ namespace PathFinder
     class LuminanceMeterViewController : public ViewController
     {
     public:
+        void OnCreated() override;
         void Draw() override;
 
-        //CameraViewModel CameraVM;
-
-    private:
+        LuminanceMeterViewModel* LuminanceMeterVM;
     };
 
 }

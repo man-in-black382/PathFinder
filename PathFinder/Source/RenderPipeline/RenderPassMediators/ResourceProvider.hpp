@@ -19,6 +19,7 @@ namespace PathFinder
         uint32_t GetSRTextureIndex(Foundation::Name textureName, uint8_t mipLevel = 0) const;
         uint32_t GetSamplerIndex(Foundation::Name samplerName) const;
         const HAL::TextureProperties& GetTextureProperties(Foundation::Name resourceName) const;
+        const HAL::BufferProperties& GetBufferProperties(Foundation::Name resourceName) const;
 
     private:
         const PipelineResourceStorage* mResourceStorage;

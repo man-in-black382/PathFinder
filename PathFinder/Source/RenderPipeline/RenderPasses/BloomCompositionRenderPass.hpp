@@ -16,7 +16,6 @@ namespace PathFinder
         uint32_t CombinedShadingTexIdx;
         uint32_t BloomBlurOutputTexIdx;
         uint32_t CompositionOutputTexIdx;
-        uint32_t HistogramTexIdx;
         uint32_t SmallBloomWeight;
         uint32_t MediumBloomWeight;
         uint32_t LargeBloomWeight;

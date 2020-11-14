@@ -13,7 +13,8 @@ namespace Memory
         CopyRequestManager* copyRequestManager)
         :
         GPUResource(uploadStrategy, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
-        mRequstedStride{ properties.Stride }
+        mRequstedStride{ properties.Stride },
+        mProperties{ properties }
     {
         if (uploadStrategy == GPUResource::UploadStrategy::Automatic)
         {
@@ -37,7 +38,8 @@ namespace Memory
         uint64_t explicitHeapOffset)
         :
         GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
-        mRequstedStride{ properties.Stride }
+        mRequstedStride{ properties.Stride },
+        mProperties{ properties }
     {
         mBufferPtr = SegregatedPoolsResourceAllocator::BufferPtr{
             new HAL::Buffer{ device, properties, mainResourceExplicitHeap, explicitHeapOffset },

@@ -14,18 +14,21 @@ namespace PathFinder
 
     struct UAVClearCBContent
     {
-        enum class TextureType : uint32_t
+        enum class ClearOp : uint32_t
         {
-            Float = 0, UInt = 1
+            TextureFloat = 0, TextureUInt = 1, BufferFloat = 2, BufferUInt = 3
         };
 
         glm::vec4 FloatValues;
         glm::uvec4 UIntValues;
-        TextureType Type;
+        ClearOp Operation;
         uint32_t OutputTexIdx;
+        uint32_t BufferSize;
     };
 
-    void ClearUAVFloat(RenderContext<RenderPassContentMediator>* context, Foundation::Name resourceName, const glm::vec4& clearValues);
-    void ClearUAVUInt(RenderContext<RenderPassContentMediator>* context, Foundation::Name resourceName, const glm::uvec4& clearValues);
+    void ClearUAVTextureFloat(RenderContext<RenderPassContentMediator>* context, Foundation::Name resourceName, const glm::vec4& clearValues);
+    void ClearUAVTextureUInt(RenderContext<RenderPassContentMediator>* context, Foundation::Name resourceName, const glm::uvec4& clearValues);
+    void ClearUAVBufferFloat(RenderContext<RenderPassContentMediator>* context, Foundation::Name resourceName, float clearValue);
+    void ClearUAVBufferUInt(RenderContext<RenderPassContentMediator>* context, Foundation::Name resourceName, uint32_t clearValue);
 
 }

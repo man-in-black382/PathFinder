@@ -1,5 +1,7 @@
 #include "LuminanceMeter.hpp"
 
+#include <fplus/fplus.hpp>
+
 namespace PathFinder 
 {
 
@@ -8,10 +10,11 @@ namespace PathFinder
   
     void LuminanceMeter::SetHistogramData(const uint32_t* data)
     {
-        mHistogram.resize(mHistogramBinCount);
-        std::copy(data, data + mHistogramBinCount, mHistogram.begin());
+        mLuminanceBins.resize(mHistogramBinCount);
+        std::copy(data, data + mHistogramBinCount, mLuminanceBins.begin());
         mMinLumianance = *((float*)(data + mHistogramBinCount));
         mMaxLuminance = *((float*)(data + mHistogramBinCount + 1));
+        mMaxLuminanceBinSize = fplus::reduce([](uint32_t a, uint32_t b) -> uint32_t { return std::max(a, b); }, 0u, mLuminanceBins);
     }
 
 }

@@ -50,6 +50,7 @@ namespace Memory
 
     private:
         uint64_t mRequstedStride = 1;
+        HAL::BufferProperties mProperties;
 
         SegregatedPoolsResourceAllocator::BufferPtr mBufferPtr;
 
@@ -59,6 +60,9 @@ namespace Memory
         mutable PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;
         mutable PoolDescriptorAllocator::UADescriptorPtr mUADescriptor;
         mutable PoolDescriptorAllocator::CBDescriptorPtr mCBDescriptor;
+
+    public:
+        inline const auto& Properties() const { return mProperties; }
     };
 
 }

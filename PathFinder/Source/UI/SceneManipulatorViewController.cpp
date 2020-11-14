@@ -175,10 +175,6 @@ namespace PathFinder
         CameraVM->Import();
         EntityVM->Import();
 
-        ImGuiIO& io = ImGui::GetIO();
-
-        // create a window and insert the inspector
-        //ImGui::SetNextWindowPos(ImVec2(10, 30));
         ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
         DrawCameraControls();

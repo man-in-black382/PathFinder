@@ -80,8 +80,15 @@ namespace PathFinder
     const HAL::TextureProperties& ResourceProvider::GetTextureProperties(Foundation::Name resourceName) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(resourceName);
-        assert_format(resourceObjects && resourceObjects->Texture, "Resource ", resourceName.ToString(), " does not exist");
+        assert_format(resourceObjects && resourceObjects->Texture, "Texture ", resourceName.ToString(), " does not exist");
         return resourceObjects->Texture->Properties();
+    }
+
+    const HAL::BufferProperties& ResourceProvider::GetBufferProperties(Foundation::Name resourceName) const
+    {
+        const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(resourceName);
+        assert_format(resourceObjects && resourceObjects->Buffer, "Buffer ", resourceName.ToString(), " does not exist");
+        return resourceObjects->Buffer->Properties();
     }
 
 }

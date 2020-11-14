@@ -10,6 +10,12 @@ namespace PathFinder
 
     void CommonSetupRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
     {
+        rootSignatureCreator->CreateRootSignature(RootSignatureNames::UAVClear, [](RootSignatureProxy& signatureProxy)
+        {
+            signatureProxy.AddUnorderedAccessBufferParameter(0, 0); // Float buffer | u0 - s0
+            signatureProxy.AddUnorderedAccessBufferParameter(1, 0); // UInt buffer | u0 - s0
+        });
+
         stateCreator->CreateComputeState(PSONames::Downsampling, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "Downsampling.hlsl";
@@ -23,6 +29,7 @@ namespace PathFinder
         stateCreator->CreateComputeState(PSONames::UAVClear, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "UAVClear.hlsl";
+            state.RootSignatureName = RootSignatureNames::UAVClear;
         });
 
         stateCreator->CreateComputeState(PSONames::BoxBlur, [](ComputeStateProxy& state)
