@@ -17,7 +17,7 @@ namespace PathFinder
         mUp(glm::vec3(0, 1, 0)),
         mPitch(0),
         mYaw(-90.f),
-        mMaximumPitch(85.f) 
+        mMaximumPitch(90) 
     {
         UpdateVectors();
     }

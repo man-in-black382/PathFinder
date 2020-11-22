@@ -60,6 +60,7 @@ float4 PSMain(PS_INPUT input) : SV_TARGET
 {
     Texture2D uiTexture = Textures2D[PassDataCB.UITextureSRVIndex];
     float4 color = uiTexture.Sample(AnisotropicClampSampler(), input.uv).aaaa * input.col;
+
     return color;
 };
 

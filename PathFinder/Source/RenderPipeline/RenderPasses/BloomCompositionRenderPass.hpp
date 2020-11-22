@@ -19,7 +19,6 @@ namespace PathFinder
         uint32_t SmallBloomWeight;
         uint32_t MediumBloomWeight;
         uint32_t LargeBloomWeight;
-        uint32_t CombinedShadingLastMipIdx;
     };
 
     class BloomCompositionRenderPass : public RenderPass<RenderPassContentMediator>

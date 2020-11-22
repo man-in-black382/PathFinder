@@ -10,29 +10,13 @@ struct PassData
     uint SmallBloomWeight;
     uint MediumBloomWeight;
     uint LargeBloomWeight;
-    uint CombinedShadingLastMipIdx;
 };
 
 #define PassDataType PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
-#include "ColorConversion.hlsl"
 
 static const int GroupDimensionSize = 16;
-static const int HistogramBinCount = 128;
-
-RWStructuredBuffer<uint> Histogram : register(u0);
-
-uint GetHistogramBin(float luminance, float minLuminance, float maxLuminance)
-{
-    float range = maxLuminance - minLuminance;
-    if (range < 0.0001)
-        return 0;
-
-    return ((luminance - minLuminance) / range) * (HistogramBinCount - 1);
-}
-
-groupshared uint gHistogram[HistogramBinCount];
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, int groupIndex : SV_GroupIndex)
@@ -55,32 +39,6 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, int groupIndex : SV_Gr
     float3 compositedColor = color0 + bloom * bloomScale;
 
     compositionOutput[dispatchThreadID.xy] = float4(compositedColor, 1.0);
-
-    // Histogram computation
-    if (groupIndex < HistogramBinCount)
-    {
-        gHistogram[groupIndex] = 0;
-    }
-
-    GroupMemoryBarrierWithGroupSync();
-
-    float2 minMaxLum = Textures2D[PassDataCB.CombinedShadingTexIdx].mips[PassDataCB.CombinedShadingLastMipIdx][0.xx].rg;
-    uint bin = GetHistogramBin(CIELuminance(color0), minMaxLum.x, minMaxLum.y);
-    uint prevValue;
-    InterlockedAdd(gHistogram[bin], 1, prevValue);
-    GroupMemoryBarrierWithGroupSync();
-
-    if (groupIndex < HistogramBinCount)
-    {
-        InterlockedAdd(Histogram[groupIndex], gHistogram[groupIndex], prevValue);
-    }
-    
-    // First thread outputs min/max luminances
-    if (groupIndex == 0)
-    {
-        Histogram[HistogramBinCount] = asuint(minMaxLum.x);
-        Histogram[HistogramBinCount + 1] = asuint(minMaxLum.y);
-    }
 }
 
 #endif

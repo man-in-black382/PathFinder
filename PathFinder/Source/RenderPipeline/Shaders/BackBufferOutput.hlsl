@@ -15,7 +15,7 @@ struct PassData
 float4 PSMain(VertexOut pin) : SV_Target
 {
     Texture2D source = Textures2D[PassDataCB.SourceTexIdx];
-    float3 color = source.Sample(AnisotropicClampSampler(), pin.UV).rgb;
+    float3 color = source.Sample(PointClampSampler(), pin.UV).rgb;
     return float4(color, 1.0);
 }
 

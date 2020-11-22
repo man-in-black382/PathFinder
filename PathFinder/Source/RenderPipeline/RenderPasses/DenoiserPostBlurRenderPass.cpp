@@ -67,25 +67,4 @@ namespace PathFinder
         context->GetCommandRecorder()->Dispatch(groupCount.Width, groupCount.Height);
     }
 
-    void DenoiserPostBlurRenderPass::ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler)
-    {
-        std::vector<DownsamplingInvocationInputs> invocationInputs = GenerateDownsamplingShaderInvocationInputs(
-            ResourceNames::CombinedShading,
-            scheduler->GetTextureProperties(ResourceNames::CombinedShading),
-            DownsamplingCBContent::Filter::MinMaxLuminance,
-            DownsamplingStrategy::WriteOnlyLastLevel);
-
-        for (auto invocation = 0; invocation < invocationInputs.size(); ++invocation)
-        {
-            if (mMinMaxLuminanceSubPasses.size() <= invocation)
-            {
-                mMinMaxLuminanceSubPasses.emplace_back(std::make_unique<DownsamplingRenderSubPass>("MinMaxLuminanceComputation", invocation));
-            }
-
-            DownsamplingRenderSubPass* subPass = mMinMaxLuminanceSubPasses[invocation].get();
-            subPass->SetInvocationInputs({ invocationInputs[invocation] });
-            scheduler->AddRenderSubPass(subPass);
-        }
-    }
-
 }

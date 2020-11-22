@@ -20,8 +20,23 @@ struct PassData
 #include "MandatoryEntryPointInclude.hlsl"
 #include "ColorConversion.hlsl"
 
+RWStructuredBuffer<uint> Histogram : register(u0);
+
+static const int HistogramBinCount = 128;
+
+uint GetHistogramBin(float luminance, float minLuminance, float maxLuminance)
+{
+    float range = maxLuminance - minLuminance;
+    if (range < 0.0001)
+        return 0;
+
+    return ((luminance - minLuminance) / range) * (HistogramBinCount - 1);
+}
+
+groupshared uint gHistogram[HistogramBinCount];
+
 [numthreads(16, 16, 1)]
-void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
+void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int groupIndex : SV_GroupIndex)
 {
     Texture2D inputImage = Textures2D[PassDataCB.InputTexIdx];
     RWTexture2D<float4> outputImage = RW_Float4_Textures2D[PassDataCB.OutputTexIdx];
@@ -39,6 +54,26 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         GTToneMap(color.g, params),
         GTToneMap(color.b, params));
 
+    // Histogram computation
+    if (groupIndex < HistogramBinCount)
+    {
+        gHistogram[groupIndex] = 0;
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+
+    float2 minMaxLum = float2(0.0, 1.0);
+    uint bin = GetHistogramBin(CIELuminance(color), minMaxLum.x, minMaxLum.y);
+    uint prevValue;
+    InterlockedAdd(gHistogram[bin], 1, prevValue);
+    GroupMemoryBarrierWithGroupSync();
+
+    if (groupIndex < HistogramBinCount)
+    {
+        InterlockedAdd(Histogram[groupIndex], gHistogram[groupIndex], prevValue);
+    }
+
+    // Color gamut and quantizer conversions
     if (PassDataCB.IsHDREnabled)
     {
         // Remap tone mapped 1.0 value to correspond to maximum luminance of the display
