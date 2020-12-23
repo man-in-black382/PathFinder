@@ -245,6 +245,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PipelineState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\PrimitiveTopology.cpp" />
+    <ClCompile Include="Source\HardwareAbstractionLayer\QueryHeap.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RasterizerState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RayDispatchInfo.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.cpp" />
@@ -283,6 +284,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Memory\Texture.cpp" />
     <ClCompile Include="Source\RenderPipeline\BottomRTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\CopyRequestHandling.cpp" />
+    <ClCompile Include="Source\RenderPipeline\GPUProfiler.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
@@ -448,6 +450,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\HardwareAbstractionLayer\InputAssemblerLayout.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PipelineState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\PrimitiveTopology.hpp" />
+    <ClInclude Include="Source\HardwareAbstractionLayer\QueryHeap.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RasterizerState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RayDispatchInfo.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\RayTracingAccelerationStructure.hpp" />
@@ -494,6 +497,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\CopyRequestHandling.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
+    <ClInclude Include="Source\RenderPipeline\GPUProfiler.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IGraphicsDevice.hpp" />
     <ClInclude Include="Source\RenderPipeline\IPipelineStateManager.hpp" />
@@ -2512,6 +2516,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</AllResourcesBound>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.3</ShaderModel>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\SphericalHarmonics.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\ThreadGroupTilingX.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>

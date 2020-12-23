@@ -12,7 +12,7 @@ namespace HAL
         desc.Type = commandListType;
         desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
         desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        desc.NodeMask = 1;
+        desc.NodeMask = device.NodeMask();
         ThrowIfFailed(device.D3DDevice()->CreateCommandQueue(&desc, IID_PPV_ARGS(&mQueue)));
     }
 
@@ -20,17 +20,24 @@ namespace HAL
 
     void CommandQueue::SignalFence(const Fence& fence, std::optional<uint64_t> explicitFenceValue)
     {
-        mQueue->Signal(fence.D3DFence(), explicitFenceValue.value_or(fence.ExpectedValue()));
+        ThrowIfFailed(mQueue->Signal(fence.D3DFence(), explicitFenceValue.value_or(fence.ExpectedValue())));
     }
 
     void CommandQueue::WaitFence(const Fence& fence, std::optional<uint64_t> explicitFenceValue)
     {
-        mQueue->Wait(fence.D3DFence(), explicitFenceValue.value_or(fence.ExpectedValue()));
+        ThrowIfFailed(mQueue->Wait(fence.D3DFence(), explicitFenceValue.value_or(fence.ExpectedValue())));
     }
 
     void CommandQueue::SetDebugName(const std::string& name)
     {
         mQueue->SetName(StringToWString(name).c_str());
+    }
+
+    uint64_t CommandQueue::GetTimestampFrequency() const
+    {
+        UINT64 frequency = 0;
+        ThrowIfFailed(mQueue->GetTimestampFrequency(&frequency));
+        return frequency;
     }
 
 

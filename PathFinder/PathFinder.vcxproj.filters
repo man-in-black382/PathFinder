@@ -570,6 +570,12 @@
     <ClCompile Include="Source\ThirdParty\implot\implot_items.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\HardwareAbstractionLayer\QueryHeap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\GPUProfiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -3053,6 +3059,12 @@
     <ClInclude Include="Source\ThirdParty\implot\implot_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\HardwareAbstractionLayer\QueryHeap.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\GPUProfiler.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -3636,6 +3648,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\SMAAEdgeDetection.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SMAACommon.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GeometryPicking.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\SphericalHarmonics.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

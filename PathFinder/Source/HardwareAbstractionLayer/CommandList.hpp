@@ -14,6 +14,7 @@
 #include "DescriptorHeap.hpp"
 #include "Fence.hpp"
 #include "Buffer.hpp"
+#include "QueryHeap.hpp"
 #include "RayTracingAccelerationStructure.hpp"
 #include "ResourceFootprint.hpp"
 #include "ShaderRegister.hpp"
@@ -42,6 +43,8 @@ namespace HAL
 
         void Reset();
         void Close();
+
+        virtual void ExtractQueryData(const QueryHeap& heap, uint64_t startIndex, uint64_t queryCount, const Buffer& readbackBuffer);
 
         void SetDebugName(const std::string& name) override;
 

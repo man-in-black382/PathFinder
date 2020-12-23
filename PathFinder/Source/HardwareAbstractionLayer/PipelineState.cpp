@@ -48,6 +48,7 @@ namespace HAL
         desc.SampleDesc.Count = 1;
         desc.SampleDesc.Quality = 0;
         desc.SampleMask = 0xFFFFFFFF;
+        desc.NodeMask = mDevice->NodeMask();
         
         for (auto& keyValue : mRenderTargetFormats)
         {
@@ -60,8 +61,7 @@ namespace HAL
         //desc.IBStripCutValue;
         //desc.SampleMask;
         //desc.StreamOutput;
-        /*desc.NodeMask;
-        desc.CachedPSO;*/
+        //desc.CachedPSO;
 
 #if defined(DEBUG) || defined(_DEBUG) 
         //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;
@@ -96,7 +96,7 @@ namespace HAL
 
         desc.pRootSignature = mRootSignature->D3DSignature();
         desc.CS = mComputeShader->D3DBytecode();
-        desc.NodeMask = 0;
+        desc.NodeMask = mDevice->NodeMask();
         
 #if defined(DEBUG) || defined(_DEBUG) 
         //desc.Flags = D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG;

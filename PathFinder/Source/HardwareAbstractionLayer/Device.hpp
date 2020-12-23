@@ -21,6 +21,7 @@ namespace HAL
         bool mAftermathEnabled = false;
         uint64_t mMinimumHeapSize = 1;
         uint64_t mHeapAlignment = 1;
+        uint64_t mNodeMask = 0;
 
     public:
         inline ID3D12Device5* D3DDevice() const { return mDevice.Get(); }
@@ -29,5 +30,6 @@ namespace HAL
         inline auto MinimumHeapSize() const { return mMinimumHeapSize; }
         inline auto MandatoryHeapAlignment() const { return mHeapAlignment; }
         inline auto AftermathEnabled() const { return mAftermathEnabled; }
+        inline auto NodeMask() const { return mNodeMask; }
     };
 }

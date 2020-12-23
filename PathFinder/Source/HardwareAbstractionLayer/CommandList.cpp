@@ -41,6 +41,11 @@ namespace HAL
         }
     }
 
+    void CommandList::ExtractQueryData(const QueryHeap& heap, uint64_t startIndex, uint64_t queryCount, const Buffer& readbackBuffer)
+    {
+        mList->ResolveQueryData(heap.D3DQueryHeap(), heap.D3DQueryType(), startIndex, queryCount, readbackBuffer.D3DResource(), 0);
+    }
+
     void CommandList::SetDebugName(const std::string& name)
     {
         mList->SetName(StringToWString(name).c_str());

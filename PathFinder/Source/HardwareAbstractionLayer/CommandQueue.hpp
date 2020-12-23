@@ -20,6 +20,7 @@ namespace HAL
         void SignalFence(const Fence& fence, std::optional<uint64_t> explicitFenceValue = std::nullopt);
         void WaitFence(const Fence& fence, std::optional<uint64_t> explicitFenceValue = std::nullopt);
         void SetDebugName(const std::string& name) override;
+        uint64_t GetTimestampFrequency() const;
 
     protected:
         template <class CommandListT>

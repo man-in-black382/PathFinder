@@ -6,6 +6,7 @@
 #include "GBuffer.hlsl"
 #include "ShadingPacking.hlsl"
 #include "Random.hlsl"
+#include "SphericalHarmonics.hlsl"
 
 struct ShadingResult
 {

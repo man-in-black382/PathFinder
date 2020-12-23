@@ -11,7 +11,7 @@ namespace HAL
         D3D12_DESCRIPTOR_HEAP_DESC desc{};
         desc.NumDescriptors = std::accumulate(rangeCapacities.begin(), rangeCapacities.end(), 0);
         desc.Type = heapType;
-        desc.NodeMask = 0;
+        desc.NodeMask = device->NodeMask();
 
         bool shaderVisible = heapType == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV || heapType == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
 

@@ -14,8 +14,8 @@ namespace HAL
         desc.Alignment = device.MandatoryHeapAlignment();
         desc.SizeInBytes = mAlighnedSize;
 
-        desc.Properties.CreationNodeMask = 0;
-        desc.Properties.VisibleNodeMask = 0;
+        desc.Properties.CreationNodeMask = device.NodeMask();
+        desc.Properties.VisibleNodeMask = device.NodeMask();
 
         switch (aliasingGroup)
         {
