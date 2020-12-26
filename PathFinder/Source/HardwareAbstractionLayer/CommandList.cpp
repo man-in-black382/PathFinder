@@ -46,6 +46,11 @@ namespace HAL
         mList->ResolveQueryData(heap.D3DQueryHeap(), heap.D3DQueryType(), startIndex, queryCount, readbackBuffer.D3DResource(), 0);
     }
 
+    void CommandList::EndQuery(const QueryHeap& heap, uint64_t queryIndex)
+    {
+        mList->EndQuery(heap.D3DQueryHeap(), heap.D3DQueryType(), queryIndex);
+    }
+
     void CommandList::SetDebugName(const std::string& name)
     {
         mList->SetName(StringToWString(name).c_str());

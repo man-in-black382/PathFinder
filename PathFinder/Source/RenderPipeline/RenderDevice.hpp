@@ -4,6 +4,7 @@
 #include "PipelineResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
 #include "RenderPassMetadata.hpp"
+#include "GPUProfiler.hpp"
 
 #include <Foundation/Name.hpp>
 #include <Utility/EventTracker.hpp>
@@ -37,6 +38,13 @@ namespace PathFinder
         using CommandListPtrVariant = std::variant<GraphicsCommandListPtr, ComputeCommandListPtr>;
         using HALCommandListPtrVariant = std::variant<HAL::GraphicsCommandList*, HAL::ComputeCommandList*>;
         using FenceAndValue = std::pair<const HAL::Fence*, uint64_t>;
+        
+        struct PipelineMeasurement
+        {
+            std::string Name;
+            float DurationSeconds;
+            GPUProfiler::EventID ProfilerEventID;
+        };
 
         struct PassCommandLists
         {
@@ -82,6 +90,7 @@ namespace PathFinder
             Memory::CopyRequestManager* copyRequestManager,
             PipelineResourceStorage* resourceStorage,
             PipelineStateManager* pipelineStateManager,
+            GPUProfiler* gpuProfiler,
             const RenderPassGraph* renderPassGraph,
             const RenderSurfaceDescription& defaultRenderSurface
         );
@@ -101,6 +110,7 @@ namespace PathFinder
         void AllocateWorkerCommandLists();
 
         void ExecuteRenderGraph();
+        void GatherMeasurements();
 
         template <class Lambda>
         void RecordWorkerCommandList(const RenderPassGraph::Node& passNode, const Lambda& action);
@@ -170,6 +180,7 @@ namespace PathFinder
         Memory::CopyRequestManager* mCopyRequestManager;
         PipelineResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
+        GPUProfiler* mGPUProfiler;
         const RenderPassGraph* mRenderPassGraph;
         RenderSurfaceDescription mDefaultRenderSurface;
         EventTracker mEventTracker;
@@ -211,12 +222,16 @@ namespace PathFinder
         // Collect readback requests to be executed after passes that require them
         std::vector<ResourceReadbackInfo> mPerNodeReadbackInfo;
 
+        // An hierarchy of various measured GPU events
+        std::vector<PipelineMeasurement> mMeasurements;
+
     public:
         inline HAL::GraphicsCommandQueue& GraphicsCommandQueue() { return mGraphicsQueue; }
         inline HAL::ComputeCommandQueue& ComputeCommandQueue() { return mComputeQueue; }
         inline HAL::GraphicsCommandList* PreRenderUploadsCommandList() { return mPreRenderUploadsCommandList.get(); }
         inline HAL::ComputeCommandList* RTASBuildsCommandList() { return mRTASBuildsCommandList.get(); }
         inline const RenderSurfaceDescription& DefaultRenderSurfaceDesc() { return mDefaultRenderSurface; }
+        inline const auto& Measurements() const { return mMeasurements; }
     };
 
 }

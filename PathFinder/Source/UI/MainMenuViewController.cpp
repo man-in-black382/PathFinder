@@ -54,6 +54,11 @@ namespace PathFinder
                 mRenderGraphVC = CreateViewController<RenderGraphViewController>();
             }
 
+            if (ImGui::MenuItem("Render Pass GPU Profiler", nullptr, false, mProfilerVC == nullptr))
+            {
+                mProfilerVC = CreateViewController<ProfilerViewController>();
+            }
+
             ImGui::EndMenu();
         }
     }

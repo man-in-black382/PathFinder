@@ -12,7 +12,7 @@ namespace Memory
     public:
         Buffer(
             const HAL::BufferProperties& properties,
-            GPUResource::UploadStrategy uploadStrategy,
+            GPUResource::AccessStrategy accessStrategy,
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator, 
             PoolDescriptorAllocator* descriptorAllocator,
@@ -42,6 +42,8 @@ namespace Memory
         const HAL::Buffer* HALBuffer() const;
         const HAL::Resource* HALResource() const override;
 
+        void BeginFrame(uint64_t frameNumber) override;
+
     protected:
         uint64_t ResourceSizeInBytes() const override;
         void ApplyDebugName() override;
@@ -53,6 +55,7 @@ namespace Memory
         HAL::BufferProperties mProperties;
 
         SegregatedPoolsResourceAllocator::BufferPtr mBufferPtr;
+        HAL::Buffer* mGetterBufferPtr = nullptr;
 
         // Cached values, to be mutated from getters
         mutable uint64_t mCBDescriptorRequestFrameNumber = 0;

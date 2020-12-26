@@ -16,11 +16,10 @@ namespace HAL
 
         uint64_t IncrementExpectedValue();
         bool IsCompleted() const;
-        void StallCurrentThreadUntilCompletion(uint8_t allowedSimultaneousFramesCount = 1);
+        void SetCompletionEvent(uint64_t valueToWaitFor, HANDLE eventHandle);
+        void ValidateCompletedValue(uint64_t value) const;
     
     private:
-        void SetCompletionEventHandle(HANDLE handle);
-
         Microsoft::WRL::ComPtr<ID3D12Fence> mFence;
         uint64_t mExpectedValue = 0;
     

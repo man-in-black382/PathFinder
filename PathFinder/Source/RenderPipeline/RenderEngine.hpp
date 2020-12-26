@@ -39,6 +39,8 @@
 #include "RenderPassGraph.hpp"
 #include "BottomRTAS.hpp"
 #include "TopRTAS.hpp"
+#include "GPUProfiler.hpp"
+#include "FrameFence.hpp"
 
 namespace PathFinder
 {
@@ -112,9 +114,10 @@ namespace PathFinder
         std::unique_ptr<RootSignatureCreator> mRootSignatureCreator;
         std::unique_ptr<RenderDevice> mRenderDevice;
         std::unique_ptr<RenderPassContainer<ContentMediator>> mRenderPassContainer;
+        std::unique_ptr<GPUProfiler> mGPUProfiler;
 
         std::unique_ptr<HAL::SwapChain> mSwapChain;
-        std::unique_ptr<HAL::Fence> mFrameFence;
+        std::unique_ptr<FrameFence> mFrameFence;
 
         HAL::DisplayAdapter* mSelectedAdapter = nullptr;
         ContentMediator* mContentMediator = nullptr;
@@ -131,6 +134,7 @@ namespace PathFinder
         inline PipelineResourceStorage* ResourceStorage() { return mPipelineResourceStorage.get(); }
         inline const RenderSurfaceDescription& RenderSurface() const { return mRenderSurfaceDescription; }
         inline Memory::GPUResourceProducer* ResourceProducer() { return mResourceProducer.get(); }
+        inline RenderDevice* RendererDevice() { return mRenderDevice.get(); }
         inline HAL::Device* Device() { return mDevice.get(); }
         inline HAL::SwapChain* SwapChain() { return mSwapChain.get(); }
         inline HAL::DisplayAdapter* SelectedAdapter() { return mSelectedAdapter; }

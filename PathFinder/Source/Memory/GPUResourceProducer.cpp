@@ -18,8 +18,11 @@ namespace Memory
 
     GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::TextureProperties& properties)
     {
+        CheckFrameValidity();
+
         Texture* texture = new Texture{ properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, mCopyRequestManager };
         auto [iter, success] = mAllocatedResources.insert(texture);
+        texture->BeginFrame(mFrameNumber);
 
         auto deallocationCallback = [this, iter](Texture* texture)
         {
@@ -32,12 +35,15 @@ namespace Memory
 
     GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(const HAL::TextureProperties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset)
     {
+        CheckFrameValidity();
+
         Texture* texture = new Texture{
             properties, mStateTracker, mResourceAllocator, mDescriptorAllocator, 
             mCopyRequestManager, *mDevice, explicitHeap, heapOffset
         };
 
         auto [iter, success] = mAllocatedResources.insert(texture);
+        texture->BeginFrame(mFrameNumber);
 
         auto deallocationCallback = [this, iter](Texture* texture)
         {
@@ -50,8 +56,11 @@ namespace Memory
 
     GPUResourceProducer::TexturePtr GPUResourceProducer::NewTexture(HAL::Texture* existingTexture)
     {
+        CheckFrameValidity();
+
         Texture* texture = new Texture{ mStateTracker, mResourceAllocator, mDescriptorAllocator, mCopyRequestManager, existingTexture };
         auto [iter, success] = mAllocatedResources.insert(texture);
+        texture->BeginFrame(mFrameNumber);
 
         auto deallocationCallback = [this, iter](Texture* texture)
         {
@@ -62,10 +71,13 @@ namespace Memory
         return TexturePtr{ texture, deallocationCallback };
     }
 
-    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::BufferProperties& properties, GPUResource::UploadStrategy uploadStrategy)
+    GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::BufferProperties& properties, GPUResource::AccessStrategy accessStrategy)
     {
-        Buffer* buffer = new Buffer{ properties, uploadStrategy, mStateTracker, mResourceAllocator, mDescriptorAllocator, mCopyRequestManager };
+        CheckFrameValidity();
+
+        Buffer* buffer = new Buffer{ properties, accessStrategy, mStateTracker, mResourceAllocator, mDescriptorAllocator, mCopyRequestManager };
         auto [iter, success] = mAllocatedResources.insert(buffer);
+        buffer->BeginFrame(mFrameNumber);
 
         auto deallocationCallback = [this, iter](Buffer* buffer)
         {
@@ -78,12 +90,15 @@ namespace Memory
 
     GPUResourceProducer::BufferPtr GPUResourceProducer::NewBuffer(const HAL::BufferProperties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset)
     {
+        CheckFrameValidity();
+
         Buffer* buffer = new Buffer{
             properties, mStateTracker, mResourceAllocator,
             mDescriptorAllocator, mCopyRequestManager, *mDevice, explicitHeap, heapOffset
         };
 
         auto [iter, success] = mAllocatedResources.insert(buffer);
+        buffer->BeginFrame(mFrameNumber);
 
         auto deallocationCallback = [this, iter](Buffer* buffer)
         {
@@ -110,6 +125,11 @@ namespace Memory
         {
             resource->EndFrame(frameNumber);
         }
+    }
+
+    void GPUResourceProducer::CheckFrameValidity()
+    {
+        assert_format(mFrameNumber > 0, "Allocations cannot happen before first frame start");
     }
 
 }

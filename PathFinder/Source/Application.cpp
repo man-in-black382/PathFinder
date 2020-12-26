@@ -21,7 +21,7 @@ namespace PathFinder
         mWindowsInputHandler = std::make_unique<InputHandlerWindows>(mInput.get(), mWindowHandle);
         mCameraInteractor = std::make_unique<CameraInteractor>(&mScene->MainCamera(), mInput.get());
         mDisplaySettingsController = std::make_unique<DisplaySettingsController>(mRenderEngine->SelectedAdapter(), mRenderEngine->SwapChain(), mWindowHandle);
-        mUIDependencies = std::make_unique<UIDependencies>(mRenderEngine->ResourceStorage(), &mRenderEngine->PreRenderEvent(), &mRenderEngine->PostRenderEvent(), mScene.get());
+        mUIDependencies = std::make_unique<UIDependencies>(mRenderEngine->ResourceStorage(), &mRenderEngine->PreRenderEvent(), &mRenderEngine->PostRenderEvent(), mRenderEngine->RendererDevice(), mScene.get());
         mUIManager = std::make_unique<UIManager>(mInput.get(), mUIDependencies.get(), mRenderEngine->ResourceProducer());
         mUIEntryPoint = std::make_unique<UIEntryPoint>(mUIManager.get());
         mContentMediator = std::make_unique<RenderPassContentMediator>(&mUIManager->GPUStorage(), &mScene->GPUStorage(), mScene.get(), mInput.get(), mDisplaySettingsController.get(), mSettingsController.get());

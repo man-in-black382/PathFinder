@@ -28,16 +28,7 @@ namespace PathFinder
         mDefaultRenderSurface{ defaultRenderSurface },
         mResourceProducer{ resourceProducer },
         mDescriptorAllocator{ descriptorAllocator },
-        mPassExecutionGraph{ passExecutionGraph } 
-    {
-        // Preallocate 
-        mGlobalRootConstantsBuffer = mResourceProducer->NewBuffer(
-            HAL::BufferProperties::Create<uint8_t>(1024, 1, HAL::ResourceState::ConstantBuffer));
-
-        mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(
-            HAL::BufferProperties::Create<uint8_t>(1024, 1, HAL::ResourceState::ConstantBuffer),
-            Memory::GPUResource::UploadStrategy::DirectAccess);
-    }
+        mPassExecutionGraph{ passExecutionGraph } {}
 
     const HAL::RTDescriptor* PipelineResourceStorage::GetRenderTargetDescriptor(Foundation::Name resourceName, Foundation::Name passName, uint64_t mipIndex) const
     {
@@ -75,6 +66,20 @@ namespace PathFinder
 
     void PipelineResourceStorage::BeginFrame()
     {
+        // Preallocate 
+        if (!mGlobalRootConstantsBuffer)
+        {
+            mGlobalRootConstantsBuffer = mResourceProducer->NewBuffer(
+                HAL::BufferProperties::Create<uint8_t>(1024, 1, HAL::ResourceState::ConstantBuffer));
+        }
+        
+        if (!mPerFrameRootConstantsBuffer)
+        {
+            mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(
+                HAL::BufferProperties::Create<uint8_t>(1024, 1, HAL::ResourceState::ConstantBuffer),
+                Memory::GPUResource::AccessStrategy::DirectUpload);
+        }
+            
         mPreviousFrameResources->clear();
         mPreviousFrameResourceMap->clear();
         mPreviousFrameDiffEntries->clear();

@@ -11,8 +11,8 @@ namespace PathFinder
     class ViewModel
     {
     public:
-        virtual void Import() = 0;
-        virtual void Export() = 0;
+        virtual void Import() {};
+        virtual void Export() {};
         virtual void OnCreated() {};
 
         UIDependencies* Dependencies;

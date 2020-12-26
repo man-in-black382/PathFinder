@@ -26,7 +26,7 @@ namespace Memory
             CopyRequestManager* copyRequestManager
         );
 
-        BufferPtr NewBuffer(const HAL::BufferProperties& properties, GPUResource::UploadStrategy uploadStrategy = GPUResource::UploadStrategy::Automatic);
+        BufferPtr NewBuffer(const HAL::BufferProperties& properties, GPUResource::AccessStrategy accessStrategy = GPUResource::AccessStrategy::Automatic);
         TexturePtr NewTexture(const HAL::TextureProperties& properties);
 
         BufferPtr NewBuffer(const HAL::BufferProperties& properties, const HAL::Heap& explicitHeap, uint64_t heapOffset);
@@ -39,6 +39,8 @@ namespace Memory
 
     private:
         using ResourceSetIterator = std::unordered_set<GPUResource*>::iterator;
+
+        void CheckFrameValidity();
 
         uint64_t mFrameNumber = 0;
         const HAL::Device* mDevice = nullptr;

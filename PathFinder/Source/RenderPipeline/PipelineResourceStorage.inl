@@ -11,7 +11,7 @@ namespace PathFinder
         if (!mPerFrameRootConstantsBuffer || mPerFrameRootConstantsBuffer->Capacity<Constants>(Alignment) < 1)
         {
             auto properties = HAL::BufferProperties::Create<Constants>(1, Alignment, HAL::ResourceState::ConstantBuffer);
-            mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::AccessStrategy::DirectUpload);
             mPerFrameRootConstantsBuffer->SetDebugName("Frame Constant Buffer");
         }
 
@@ -62,7 +62,7 @@ namespace PathFinder
             uint64_t grownBufferSize = Foundation::MemoryUtils::Align(newBufferSize, GrowAlignment);
             auto properties = HAL::BufferProperties::Create<uint8_t>(grownBufferSize, 1, HAL::ResourceState::ConstantBuffer);
 
-            passData->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            passData->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::AccessStrategy::DirectUpload);
             passData->PassConstantBuffer->SetDebugName(passNode.PassMetadata().Name.ToString() + " Constant Buffer");
             passData->PassConstantData.resize(grownBufferSize);
         }

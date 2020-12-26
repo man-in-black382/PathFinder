@@ -16,14 +16,15 @@ namespace Memory
     class GPUResource
     {
     public:
-        enum class UploadStrategy
+        enum class AccessStrategy
         {
-            DirectAccess,
+            DirectUpload,
+            DirectReadback,
             Automatic
         };
 
         GPUResource(
-            UploadStrategy uploadStrategy,
+            AccessStrategy accessStrategy,
             ResourceStateTracker* stateTracker,
             SegregatedPoolsResourceAllocator* resourceAllocator,
             PoolDescriptorAllocator* descriptorAllocator,
@@ -52,10 +53,10 @@ namespace Memory
         void RequestRead();
         void RequestNewState(HAL::ResourceState newState);
         void RequestNewSubresourceStates(const ResourceStateTracker::SubresourceStateList& newStates);
-        void BeginFrame(uint64_t frameNumber);
-        void EndFrame(uint64_t frameNumber);
         void SetDebugName(const std::string& name);
 
+        virtual void BeginFrame(uint64_t frameNumber);
+        virtual void EndFrame(uint64_t frameNumber);
         virtual const HAL::Resource* HALResource() const;
 
     protected:
@@ -71,7 +72,7 @@ namespace Memory
         virtual CopyRequestManager::CopyCommand GetUploadCommands() = 0;
         virtual CopyRequestManager::CopyCommand GetReadbackCommands() = 0;
 
-        UploadStrategy mUploadStrategy = UploadStrategy::Automatic;
+        AccessStrategy mAccessStrategy = AccessStrategy::Automatic;
         ResourceStateTracker* mStateTracker;
         SegregatedPoolsResourceAllocator* mResourceAllocator;
         PoolDescriptorAllocator* mDescriptorAllocator;
@@ -81,7 +82,7 @@ namespace Memory
         std::queue<BufferFrameNumberPair> mReadbackBuffers;
 
         std::string mDebugName;
-        uint64_t mFrameNumber = 0;
+        uint64_t mFrameNumber = 0; 
 
     private:
         void AllocateNewUploadBuffer();

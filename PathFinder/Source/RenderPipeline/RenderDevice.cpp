@@ -13,6 +13,7 @@ namespace PathFinder
         Memory::CopyRequestManager* copyRequestManager,
         PipelineResourceStorage* resourceStorage,
         PipelineStateManager* pipelineStateManager,
+        GPUProfiler* gpuProfiler,
         const RenderPassGraph* renderPassGraph,
         const RenderSurfaceDescription& defaultRenderSurface)
         :
@@ -24,6 +25,7 @@ namespace PathFinder
         mCopyRequestManager{ copyRequestManager },
         mResourceStorage{ resourceStorage },
         mPipelineStateManager{ pipelineStateManager },
+        mGPUProfiler{ gpuProfiler },
         mRenderPassGraph{ renderPassGraph },
         mDefaultRenderSurface{ defaultRenderSurface },
         mGraphicsQueueFence{ device },
@@ -88,6 +90,9 @@ namespace PathFinder
         mPassCommandLists.clear();
         mPassCommandLists.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
 
+        mMeasurements.clear();
+        mMeasurements.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
+
         // If memory layout did not change we reuse aliasing barriers from previous frame.
         // Otherwise we start from scratch.
         if (mResourceStorage->HasMemoryLayoutChange())
@@ -139,6 +144,15 @@ namespace PathFinder
         BatchCommandLists();
         UploadPassConstants();
         ExetuteCommandLists();
+    }
+
+    void RenderDevice::GatherMeasurements()
+    {
+        for (PipelineMeasurement& measurement : mMeasurements)
+        {
+            const GPUProfiler::Event& event = mGPUProfiler->GetCompletedEvent(measurement.ProfilerEventID);
+            measurement.DurationSeconds = event.DurationSeconds;
+        }
     }
 
     void RenderDevice::BatchCommandLists()
@@ -575,6 +589,7 @@ namespace PathFinder
                 barriers.AddBarriers(beginBarriers);
             }
 
+            // Transition back buffer after last graphic render pass
             if (lastGraphicNode)
             {
                 barriers.AddBarriers(mResourceStateTracker->TransitionToStateImmediately(mBackBuffer->HALResource(), HAL::ResourceState::Present));
@@ -596,6 +611,12 @@ namespace PathFinder
                 {
                     command(*cmdList);
                 }
+            }
+
+            // Handle timestamp query readback
+            if (lastGraphicNode)
+            {
+                mGPUProfiler->ReadbackEvents(*cmdList);
             }
 
             // Then apply begin and back buffer barriers

@@ -4,14 +4,14 @@ namespace Memory
 {
 
     GPUResource::GPUResource(
-        UploadStrategy uploadStrategy,
+        AccessStrategy accessStrategy,
         ResourceStateTracker* stateTracker,
         SegregatedPoolsResourceAllocator* resourceAllocator,
         PoolDescriptorAllocator* descriptorAllocator,
         CopyRequestManager* copyRequestManager)
         :
-        mUploadStrategy{ uploadStrategy },
-        mStateTracker{ uploadStrategy == UploadStrategy::DirectAccess ? nullptr : stateTracker },
+        mAccessStrategy{ accessStrategy },
+        mStateTracker{ accessStrategy == AccessStrategy::Automatic ? stateTracker : nullptr },
         mResourceAllocator{ resourceAllocator },
         mDescriptorAllocator{ descriptorAllocator },
         mCopyRequestManager{ copyRequestManager } {}
@@ -20,6 +20,8 @@ namespace Memory
 
     void GPUResource::RequestWrite()
     {
+        assert_format(mAccessStrategy != AccessStrategy::DirectReadback, "DirectReadback resource does not support CPU writes");
+
         // Upload is already requested in current frame
         if (!mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber)
         {
@@ -28,7 +30,7 @@ namespace Memory
 
         AllocateNewUploadBuffer();
 
-        if (mUploadStrategy != UploadStrategy::DirectAccess)
+        if (mAccessStrategy != AccessStrategy::DirectUpload)
         {
             mCopyRequestManager->RequestUpload(HALResource(), GetUploadCommands());
         }
@@ -36,7 +38,7 @@ namespace Memory
 
     void GPUResource::RequestRead()
     {
-        assert_format(mUploadStrategy != UploadStrategy::DirectAccess, "DirectAccess upload resource does not support reads");
+        assert_format(mAccessStrategy != AccessStrategy::DirectUpload, "DirectUpload resource does not support CPU reads");
 
         // Readback is already requested in current frame
         if (!mReadbackBuffers.empty() && mReadbackBuffers.back().second == mFrameNumber)
@@ -46,24 +48,29 @@ namespace Memory
 
         AllocateNewReadbackBuffer();
 
-        mCopyRequestManager->RequestReadback(HALResource(), GetReadbackCommands());
+        if (mAccessStrategy != AccessStrategy::DirectReadback)
+        {
+            mCopyRequestManager->RequestReadback(HALResource(), GetReadbackCommands());
+        }
     }
 
     void GPUResource::RequestNewState(HAL::ResourceState newState)
     {
-        if (mStateTracker) mStateTracker->RequestTransition(HALResource(), newState);
+        if (mStateTracker) 
+            mStateTracker->RequestTransition(HALResource(), newState);
     }
 
     void GPUResource::RequestNewSubresourceStates(const ResourceStateTracker::SubresourceStateList& newStates)
     {
-        if (mStateTracker) mStateTracker->RequestTransitions(HALResource(), newStates);
+        if (mStateTracker) 
+            mStateTracker->RequestTransitions(HALResource(), newStates);
     }
 
     void GPUResource::BeginFrame(uint64_t frameNumber)
     {
         mFrameNumber = frameNumber;
 
-        if (mUploadStrategy == UploadStrategy::DirectAccess)
+        if (mAccessStrategy == AccessStrategy::DirectUpload)
         {
             // Direct upload resources must have at least one upload buffer at all times
             if (mCompletedUploadBuffer)
@@ -72,21 +79,34 @@ namespace Memory
                 mCompletedUploadBuffer->SetDebugName(StringFormat("%s Upload Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
                 mUploadBuffers.emplace(std::move(mCompletedUploadBuffer), mFrameNumber);
             }
-            else if (!mUploadBuffers.empty() && mUploadBuffers.back().second == mFrameNumber)
+            else
             {
                 // Or allocate a new one if none are completed yet
                 AllocateNewUploadBuffer();
             }  
         }
+        else if (mAccessStrategy == AccessStrategy::DirectReadback)
+        {
+            // Direct readback resources must have at least one readback buffer at all times
+            if (mCompletedReadbackBuffer)
+            {
+                // Either reuse a completed readback buffer
+                mCompletedReadbackBuffer->SetDebugName(StringFormat("%s Readback Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
+                mReadbackBuffers.emplace(std::move(mCompletedReadbackBuffer), mFrameNumber);
+            }
+            else
+            {
+                // Or allocate a new one if none are completed yet
+                AllocateNewReadbackBuffer();
+            }
+        }
         else
         {
-            // For other upload strategies we can get rid of the memory until a write operation is requested
+            // For automatic access strategy we can get rid of the memory until a read or write operation is requested.
+            // A window to read back the data is after frame end but before new frame start.
             mCompletedUploadBuffer = nullptr;
+            mCompletedReadbackBuffer = nullptr;
         }
-        
-        // Readback memory we just free unconditionally since reading upload only resources is not permitted in the first place.
-        // A window to read back the data is after frame end but before new frame start.
-        mCompletedReadbackBuffer = nullptr;
     }
 
     void GPUResource::EndFrame(uint64_t frameNumber)

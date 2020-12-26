@@ -76,6 +76,7 @@ namespace PathFinder
         mPipelineStateCreator = std::make_unique<PipelineStateCreator>(mPipelineStateManager.get());
         mRootSignatureCreator = std::make_unique<RootSignatureCreator>(mPipelineStateManager.get());
         mSamplerCreator = std::make_unique<SamplerCreator>(mPipelineResourceStorage.get());
+        mGPUProfiler = std::make_unique<GPUProfiler>(*mDevice, 1024, mSimultaneousFramesInFlight, mResourceProducer.get());
 
         mRenderDevice = std::make_unique<RenderDevice>(
             *mDevice,
@@ -85,6 +86,7 @@ namespace PathFinder
             mCopyRequestManager.get(),
             mPipelineResourceStorage.get(), 
             mPipelineStateManager.get(), 
+            mGPUProfiler.get(),
             &mRenderPassGraph, 
             mRenderSurfaceDescription);
 
@@ -109,11 +111,11 @@ namespace PathFinder
             mPipelineResourceStorage.get(),
             mPassUtilityProvider.get());
 
-        mFrameFence = std::make_unique<HAL::Fence>(*mDevice);
+        mFrameFence = std::make_unique<FrameFence>(*mDevice);
 
         // Start first frame here to prepare engine for external data transfer requests
-        mFrameFence->IncrementExpectedValue();
-        NotifyStartFrame(mFrameFence->ExpectedValue());
+        mFrameFence->HALFence().IncrementExpectedValue();
+        NotifyStartFrame(mFrameFence->HALFence().ExpectedValue());
     }
 
     template <class ContentMediator>
@@ -148,9 +150,9 @@ namespace PathFinder
         // First frame statrts in constructor
         if (mFrameNumber > 0)
         {
-            mFrameFence->IncrementExpectedValue();
+            mFrameFence->HALFence().IncrementExpectedValue();
             // Notify internal listeners
-            NotifyStartFrame(mFrameFence->ExpectedValue());
+            NotifyStartFrame(mFrameFence->HALFence().ExpectedValue());
         }
 
         // Scheduler resources, build graph
@@ -181,11 +183,14 @@ namespace PathFinder
         mSwapChain->Present();
 
         // Issue a CPU wait if necessary
-        mRenderDevice->GraphicsCommandQueue().SignalFence(*mFrameFence);
+        mRenderDevice->GraphicsCommandQueue().SignalFence(mFrameFence->HALFence());
         mFrameFence->StallCurrentThreadUntilCompletion(mSimultaneousFramesInFlight);
 
         // Notify internal listeners
-        NotifyEndFrame(mFrameFence->CompletedValue());
+        NotifyEndFrame(mFrameFence->HALFence().CompletedValue());
+
+        // Gather extracted measurement
+        mRenderDevice->GatherMeasurements();
 
         // Notify external listeners
         mPostRenderEvent.Raise();
@@ -203,11 +208,12 @@ namespace PathFinder
     void RenderEngine<ContentMediator>::NotifyStartFrame(uint64_t newFrameNumber)
     {
         mShaderManager->BeginFrame();
-        mPipelineResourceStorage->BeginFrame();
         mResourceAllocator->BeginFrame(newFrameNumber);
         mDescriptorAllocator->BeginFrame(newFrameNumber);
         mCommandListAllocator->BeginFrame(newFrameNumber);
         mResourceProducer->BeginFrame(newFrameNumber);
+        mPipelineResourceStorage->BeginFrame();
+        mGPUProfiler->BeginFrame(newFrameNumber);
 
         mFrameStartTimestamp = std::chrono::steady_clock::now();
     }
@@ -216,11 +222,12 @@ namespace PathFinder
     void RenderEngine<ContentMediator>::NotifyEndFrame(uint64_t completedFrameNumber)
     {
         mShaderManager->EndFrame();
-        mPipelineResourceStorage->EndFrame();
         mResourceProducer->EndFrame(completedFrameNumber);
         mResourceAllocator->EndFrame(completedFrameNumber);
         mDescriptorAllocator->EndFrame(completedFrameNumber);
         mCommandListAllocator->EndFrame(completedFrameNumber);
+        mPipelineResourceStorage->EndFrame();
+        mGPUProfiler->EndFrame(completedFrameNumber);
 
         using namespace std::chrono;
         mFrameDuration = duration_cast<microseconds>(steady_clock::now() - mFrameStartTimestamp);

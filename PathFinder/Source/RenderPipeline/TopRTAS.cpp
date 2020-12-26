@@ -55,7 +55,7 @@ namespace PathFinder
         if (!mInstanceBuffer || mInstanceBuffer->Capacity() < bufferSize)
         {
             HAL::BufferProperties properties{ bufferSize };
-            mInstanceBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mInstanceBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::AccessStrategy::DirectUpload);
         }
 
         ApplyDebugName();

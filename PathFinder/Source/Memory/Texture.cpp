@@ -11,7 +11,7 @@ namespace Memory
         PoolDescriptorAllocator* descriptorAllocator,
         CopyRequestManager* copyRequestManager)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
+        GPUResource(AccessStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
         mTexturePtr{ resourceAllocator->AllocateTexture(properties) },
         mProperties{ properties }
     {
@@ -29,7 +29,7 @@ namespace Memory
         const HAL::Heap& mainResourceExplicitHeap, 
         uint64_t explicitHeapOffset)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
+        GPUResource(AccessStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
         mProperties{ properties }
     {
         mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{
@@ -48,7 +48,7 @@ namespace Memory
         CopyRequestManager* copyRequestManager,
         HAL::Texture* existingTexture)
         :
-        GPUResource(UploadStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
+        GPUResource(AccessStrategy::Automatic, stateTracker, resourceAllocator, descriptorAllocator, copyRequestManager),
         mProperties{
             existingTexture->Format(), existingTexture->Kind(),
             existingTexture->Dimensions(), existingTexture->OptimizedClearValue(),

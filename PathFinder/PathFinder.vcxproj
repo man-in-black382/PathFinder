@@ -205,6 +205,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
   <ItemGroup>
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\Foundation\Color.cpp" />
+    <ClCompile Include="Source\Foundation\Cooldown.cpp" />
     <ClCompile Include="Source\Foundation\Gaussian.cpp" />
     <ClCompile Include="Source\Foundation\Halton.cpp" />
     <ClCompile Include="Source\Foundation\Name.cpp" />
@@ -284,6 +285,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Memory\Texture.cpp" />
     <ClCompile Include="Source\RenderPipeline\BottomRTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\CopyRequestHandling.cpp" />
+    <ClCompile Include="Source\RenderPipeline\FrameFence.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUProfiler.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
@@ -368,6 +370,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\UI\MainMenuViewController.cpp" />
     <ClCompile Include="Source\UI\MainMenuViewModel.cpp" />
     <ClCompile Include="Source\UI\PickedEntityViewModel.cpp" />
+    <ClCompile Include="Source\UI\ProfilerViewController.cpp" />
+    <ClCompile Include="Source\UI\ProfilerViewModel.cpp" />
     <ClCompile Include="Source\UI\RenderGraphViewController.cpp" />
     <ClCompile Include="Source\UI\RenderGraphViewModel.cpp" />
     <ClCompile Include="Source\UI\SceneManipulatorViewController.cpp" />
@@ -402,6 +406,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Foundation\Assert.hpp" />
     <ClInclude Include="Source\Foundation\BitwiseEnum.hpp" />
     <ClInclude Include="Source\Foundation\Color.hpp" />
+    <ClInclude Include="Source\Foundation\Cooldown.hpp" />
     <ClInclude Include="Source\Foundation\Event.hpp" />
     <ClInclude Include="Source\Foundation\FileWatcher.hpp" />
     <ClInclude Include="Source\Foundation\Gaussian.hpp" />
@@ -496,6 +501,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\CommonBlendStates.hpp" />
     <ClInclude Include="Source\RenderPipeline\CopyRequestHandling.hpp" />
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
+    <ClInclude Include="Source\RenderPipeline\FrameFence.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
     <ClInclude Include="Source\RenderPipeline\GPUProfiler.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderDevice.hpp" />
@@ -1206,6 +1212,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\UI\MainMenuViewController.hpp" />
     <ClInclude Include="Source\UI\MainMenuViewModel.hpp" />
     <ClInclude Include="Source\UI\PickedEntityViewModel.hpp" />
+    <ClInclude Include="Source\UI\ProfilerViewController.hpp" />
+    <ClInclude Include="Source\UI\ProfilerViewModel.hpp" />
     <ClInclude Include="Source\UI\RenderGraphViewController.hpp" />
     <ClInclude Include="Source\UI\RenderGraphViewModel.hpp" />
     <ClInclude Include="Source\UI\SceneManipulatorViewController.hpp" />

@@ -120,7 +120,7 @@ namespace PathFinder
         if (!mMeshInstanceTable || mMeshInstanceTable->Capacity<GPUMeshInstanceTableEntry>() < requiredBufferSize)
         {
             auto properties = HAL::BufferProperties::Create<GPUMeshInstanceTableEntry>(requiredBufferSize);
-            mMeshInstanceTable = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mMeshInstanceTable = mResourceProducer->NewBuffer(properties, Memory::GPUResource::AccessStrategy::DirectUpload);
             mMeshInstanceTable->SetDebugName("Mesh Instance Table");
         }
 
@@ -171,7 +171,7 @@ namespace PathFinder
         if (!mLightTable || mLightTable->Capacity<GPULightTableEntry>() < requiredBufferSize)
         {
             auto properties = HAL::BufferProperties::Create<GPULightTableEntry>(requiredBufferSize);
-            mLightTable = mResourceProducer->NewBuffer(properties, Memory::GPUResource::UploadStrategy::DirectAccess);
+            mLightTable = mResourceProducer->NewBuffer(properties, Memory::GPUResource::AccessStrategy::DirectUpload);
             mLightTable->SetDebugName("Lights Instance Table");
         }
 
