@@ -588,6 +588,12 @@
     <ClCompile Include="Source\Foundation\Cooldown.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Scene\GIManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIUpdateRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\ThirdParty\imgui\imgui.h">
@@ -3087,6 +3093,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Foundation\Cooldown.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\GIManager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIUpdateRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

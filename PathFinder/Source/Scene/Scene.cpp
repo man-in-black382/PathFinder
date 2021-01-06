@@ -118,8 +118,6 @@ namespace PathFinder
         mSMAASearchTexture = mResourceLoader.LoadTexture("/Precompiled/SMAASearchTex.dds");
         mUnitCube = mMeshLoader.Load("Precompiled/UnitCube.obj").back();
         mUnitSphere = mMeshLoader.Load("Precompiled/UnitSphere.obj").back();
-        //mBlueNoiseTexture = mResourceLoader.LoadTexture("/Precompiled/BlueNoise3D16.dds");
-        //mBlueNoiseTexture = mResourceLoader.LoadTexture("/Precompiled/Blue_Noise_RGBA_0.dds");
     }
 
 }

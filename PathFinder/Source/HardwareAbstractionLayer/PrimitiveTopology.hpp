@@ -12,7 +12,6 @@ namespace HAL
     };
 
     D3D12_PRIMITIVE_TOPOLOGY_TYPE D3DPrimitiveTopologyType(PrimitiveTopology topology);
-
     D3D12_PRIMITIVE_TOPOLOGY D3DPrimitiveTopology(PrimitiveTopology topology);
 
 }

@@ -9,7 +9,7 @@ namespace Foundation
         mLastTimestamp = std::chrono::steady_clock::now();
     }
 
-    bool Cooldown::CheckThenUpdate()
+    bool Cooldown::Check()
     {
         auto newTimestamp = std::chrono::steady_clock::now();
         auto elapsedTime = std::chrono::duration_cast<std::chrono::microseconds>(newTimestamp - mLastTimestamp);

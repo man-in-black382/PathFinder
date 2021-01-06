@@ -301,7 +301,7 @@ namespace PathFinder
         sphereType3Instance2.SetTransformation(t);
 
         t.Scale = glm::vec3{ 0.1 };
-        t.Translation = glm::vec3{ -13.2, 1.5, -18.6 };
+        t.Translation = glm::vec3{ -13.2, 1.5, -18.6 }; 
         sphereType3Instance3.SetTransformation(t);
 
         t.Scale = glm::vec3{ 0.09 };
@@ -317,17 +317,19 @@ namespace PathFinder
         Foundation::Color light2Color{ 255.0 / 255, 147.0 / 255, 41.0 / 255 };
         Foundation::Color light3Color{ 250.0 / 255, 110.0 / 255, 100.0 / 255 };
 
-        auto sphereLight0 = mScene->EmplaceSphericalLight();
-        sphereLight0->SetRadius(7);
-        sphereLight0->SetPosition({ 10.65, 12.0, -4.6 });
-        sphereLight0->SetColor(light0Color);
-        sphereLight0->SetLuminousPower(100000);
+        auto light0 = mScene->EmplaceRectangularLight();
+        light0->SetWidth(7);
+        light0->SetHeight(4);
+        light0->SetNormal(glm::vec3{ 0.0, -1.0, 0.0 });
+        light0->SetPosition({ 10.65, 15.0, -4.6 });
+        light0->SetColor(light0Color);
+        light0->SetLuminousPower(40000);
 
-        auto sphereLight1 = mScene->EmplaceSphericalLight();
+       /* auto sphereLight1 = mScene->EmplaceSphericalLight();
         sphereLight1->SetRadius(7.5);
         sphereLight1->SetPosition({ -10.65, 12.0, -4.6 });
         sphereLight1->SetColor(light1Color);
-        sphereLight1->SetLuminousPower(100000);
+        sphereLight1->SetLuminousPower(100000);*/
 
         //auto sphereLight2 = mScene->EmplaceSphericalLight();
         //sphereLight2->SetRadius(6);

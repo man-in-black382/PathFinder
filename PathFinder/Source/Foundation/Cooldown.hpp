@@ -10,7 +10,7 @@ namespace Foundation
     public:
         Cooldown(float cooldownSeconds);
         
-        bool CheckThenUpdate();
+        bool Check();
 
     private:
         uint32_t mCooldownTimeUS;

@@ -72,7 +72,7 @@ float GeometrySmithGGXCorrelated(float NdotL, float NdotV, float alphaG)
     // G_SmithGGXCorrelated = 1 / (1 + lambda_v + lambda_l); 
     // V_SmithGGXCorrelated = G_SmithGGXCorrelated / (4.0f * NdotL * NdotV); 
 
-      // This is the optimized version 
+    // This is the optimized version 
     float alphaG2 = alphaG * alphaG;
     // Caution: the "NdotL *" and "NdotV *" are explicitely inversed , this is not a mistake. 
     float Lambda_GGXV = NdotL * sqrt((-NdotV * alphaG2 + NdotV) * NdotV + alphaG2);
@@ -94,7 +94,7 @@ float DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness
     float lightScatter = FresnelSchlick(f0, fd90, NdotL).r;
     float viewScatter = FresnelSchlick(f0, fd90, NdotV).r;
 
-    return lightScatter * viewScatter * energyFactor;
+    return lightScatter * viewScatter * energyFactor / Pi;
 }
 
 float3 BRDF(float3 N, float3 V, float3 H, float3 L, float roughness, float3 albedo, float metalness, float3 radiance)
@@ -114,7 +114,7 @@ float3 BRDF(float3 N, float3 V, float3 H, float3 L, float roughness, float3 albe
     const float BaseDielectricReflectivity = 0.04;
 
     float3 f0 = lerp(BaseDielectricReflectivity.xxx, albedo, metalness);
-    float3 F = FresnelSchlick(albedo, 1.0, NdotH);
+    float3 F = FresnelSchlick(f0, 1.0, NdotH);
 
     float3 specular = (NDF * G * F) / (4.0 * NdotL * NdotV + 0.001); // Add 0.001 to prevent division by 0
     float3 diffuse = DisneyDiffuse(NdotV, NdotL, NdotH, roughness) * (1.0 - metalness) * albedo; 

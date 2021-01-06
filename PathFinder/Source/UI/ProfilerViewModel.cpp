@@ -5,7 +5,7 @@ namespace PathFinder
 
     void ProfilerViewModel::Import()
     {
-        if (mUpdateCooldown.CheckThenUpdate())
+        if (mUpdateCooldown.Check())
         {
             mMeasurements = Dependencies->Device->Measurements();
         }

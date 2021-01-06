@@ -1,6 +1,8 @@
 #ifndef _Random__
 #define _Random__
 
+#include "Constants.hlsl"
+
 // https://stackoverflow.com/a/17479300
 // A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm.
 uint Hash(uint x) 
@@ -72,6 +74,22 @@ float RadicalInverse_VdC(uint bits)
 float2 Hammersley2D(uint i, uint N)
 {
     return float2(float(i) / float(N), RadicalInverse_VdC(i));
+}
+
+// Generate a spherical Fibonacci point.
+// The points go from z = +1 down to z = -1 in a spiral. To generate samples on the +z hemisphere,
+// just stop before i > N/2.
+float3 SphericalFibonacci(float i, float n)
+{
+    const float PHI = sqrt(5) * 0.5 + 0.5;
+#   define madfrac(A, B) ((A)*(B)-floor((A)*(B)))
+    float phi = 2.0 * Pi * madfrac(i, PHI - 1);
+    float cosTheta = 1.0 - (2.0 * i + 1.0) * (1.0 / n);
+    float sinTheta = sqrt(saturate(1.0 - cosTheta * cosTheta));
+
+    return float3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+
+#   undef madfrac
 }
 
 #endif

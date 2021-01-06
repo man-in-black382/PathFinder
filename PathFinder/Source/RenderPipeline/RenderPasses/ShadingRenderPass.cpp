@@ -93,10 +93,9 @@ namespace PathFinder
     uint32_t ShadingRenderPass::CompressLightPartitionInfo(const GPULightTablePartitionInfo& info) const
     {
         uint32_t compressed = 0;
-        compressed |= (info.SphericalLightsOffset & 0xFF) << 24;
-        compressed |= (info.RectangularLightsOffset & 0xFF) << 16;
-        compressed |= (info.EllipticalLightsOffset & 0xFF) << 8;
-        compressed |= (info.TotalLightsCount & 0xFF);
+        compressed |= (info.SphericalLightsCount & 0xFF) << 24;
+        compressed |= (info.RectangularLightsCount & 0xFF) << 16;
+        compressed |= (info.EllipticalLightsCount & 0xFF) << 8;
         return compressed;
     }
 

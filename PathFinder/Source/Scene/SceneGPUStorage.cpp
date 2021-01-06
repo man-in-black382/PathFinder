@@ -209,8 +209,8 @@ namespace PathFinder
         };
 
         uploadLights(mScene->SphericalLights(), mLightTablePartitionInfo.SphericalLightsOffset, mLightTablePartitionInfo.SphericalLightsCount, mUnitSphereVertexLocation);
-        uploadLights(mScene->DiskLights(), mLightTablePartitionInfo.EllipticalLightsOffset, mLightTablePartitionInfo.EllipticalLightsCount, mUnitQuadVertexLocation);
         uploadLights(mScene->RectangularLights(), mLightTablePartitionInfo.RectangularLightsOffset, mLightTablePartitionInfo.RectangularLightsCount, mUnitQuadVertexLocation);
+        uploadLights(mScene->DiskLights(), mLightTablePartitionInfo.EllipticalLightsOffset, mLightTablePartitionInfo.EllipticalLightsCount, mUnitQuadVertexLocation);
     }
 
     EntityID SceneGPUStorage::GetNextEntityID()

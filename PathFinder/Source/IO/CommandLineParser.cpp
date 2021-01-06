@@ -44,6 +44,11 @@ namespace PathFinder
         {
             mUseWARPDevice = true;
         }
+
+        if (strcmp(argv, "-no_memory_aliasing") == 0)
+        {
+            mDisableMemoryAliasing = true;
+        }
     }
 
 }

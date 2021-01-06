@@ -310,6 +310,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DownsamplingHelper.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DownsamplingRenderSubPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIUpdateRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\SMAABlendingWeightCalculationRenderPass.cpp" />
@@ -339,6 +340,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Scene\CameraInteractor.cpp" />
     <ClCompile Include="Source\Scene\FlatLight.cpp" />
+    <ClCompile Include="Source\Scene\GIManager.cpp" />
     <ClCompile Include="Source\Scene\Light.cpp" />
     <ClCompile Include="Source\Scene\LuminanceMeter.cpp" />
     <ClCompile Include="Source\Scene\Material.cpp" />
@@ -536,6 +538,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DownsamplingRenderSubPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferTextureIndices.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIUpdateRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\SMAABlendingWeightCalculationRenderPass.hpp" />
@@ -582,6 +585,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Scene\CameraInteractor.hpp" />
     <ClInclude Include="Source\Scene\EntityID.hpp" />
     <ClInclude Include="Source\Scene\FlatLight.hpp" />
+    <ClInclude Include="Source\Scene\GIManager.hpp" />
     <ClInclude Include="Source\Scene\GTTonemappingParameters.hpp" />
     <ClInclude Include="Source\Scene\Light.hpp" />
     <ClInclude Include="Source\Scene\LuminanceMeter.hpp" />

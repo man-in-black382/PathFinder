@@ -98,6 +98,11 @@ namespace PathFinder
         return mMemoryLayoutChanged;
     }
 
+    bool PipelineResourceStorage::IsMemoryAliasingEnabled() const
+    {
+        return mIsMemoryAliasingEnabled;
+    }
+
     void PipelineResourceStorage::StartResourceScheduling()
     {
         mSchedulingCreationRequests.clear();
@@ -262,7 +267,7 @@ namespace PathFinder
                 std::visit(Foundation::MakeVisitor(
                     [&resourceData, heap, this](const HAL::TextureProperties& textureProps)
                     {
-                        resourceData.Texture = resourceData.SchedulingInfo.CanBeAliased  ?
+                        resourceData.Texture = resourceData.SchedulingInfo.CanBeAliased ?
                             mResourceProducer->NewTexture(textureProps, *heap, resourceData.SchedulingInfo.HeapOffset) :
                             mResourceProducer->NewTexture(textureProps);
 
@@ -459,6 +464,11 @@ namespace PathFinder
                 func(resourceName, debugData);
             });
         }*/
+    }
+
+    void PipelineResourceStorage::SetMemoryAliasingEnabled(bool enabled)
+    {
+        mIsMemoryAliasingEnabled = enabled;
     }
 
 }

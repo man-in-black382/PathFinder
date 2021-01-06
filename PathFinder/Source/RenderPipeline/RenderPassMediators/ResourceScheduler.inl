@@ -22,7 +22,7 @@ namespace PathFinder
                     PipelineResourceSchedulingInfo::SubresourceInfo::AccessFlag::BufferUA,
                     std::nullopt);
 
-                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
+                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mResourceStorage->IsMemoryAliasingEnabled();
             }
         );
     }

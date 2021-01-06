@@ -80,9 +80,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         uint index = uint(abs(i));
         uint vectorIndex = index / 4;
         uint elementIndex = index % 4;
-        float4 weightVector = PassDataCB.Weights[vectorIndex];
-        float weight = weightVector[elementIndex];
-        color += gCache[i + radius + groupThreadID.x] * weight;
+        color += gCache[i + radius + groupThreadID.x] * PassDataCB.Weights[vectorIndex][elementIndex];
     }
 
     destination[texelIndex] = float4(color, 1.0);

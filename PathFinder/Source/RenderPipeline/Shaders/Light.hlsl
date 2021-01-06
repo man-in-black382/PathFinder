@@ -161,7 +161,7 @@ float LTCSampleVectorPDF(float3x3 MInv, float MDet, float3 L)
     float l2 = dot(LCosine, LCosine);
     float Jacobian = MDet * l2 * l2;
 
-    return max(LCosine.z, 0.0f) / (Pi * Jacobian);
+    return max(LCosine.z, 0.0f) / max(Pi * Jacobian, 0.0001);
 }
 
 float3 LTCSampleVector(float3x3 M, float u1, float u2) 
@@ -178,7 +178,7 @@ float3 LTCSampleVector(float3x3 M, float u1, float u2)
     return w_i;
 }
 
-LTCSample SampleLTC(Light light, LTCTerms ltcTerms, float3 sampleVector, float diffuseProbability) 
+LTCSample SampleLTC(LTCTerms ltcTerms, float3 sampleVector, float diffuseProbability) 
 {
     float specularPDF = LTCSampleVectorPDF(ltcTerms.MInvSpecular, ltcTerms.MDetSpecular, sampleVector);
     float diffusePDF = LTCSampleVectorPDF(ltcTerms.MInvDiffuse, ltcTerms.MDetDiffuse, sampleVector);
@@ -470,7 +470,7 @@ ShereLightSolidAngleSamplingInputs ComputeSphericalLightSamplingInputs(Light lig
     float distanceToCenter = length(w);
     w /= distanceToCenter;
 
-    float radius = light.Width * 0.5;
+    float radius = light.Height * 0.5;
     float radiusOverDist = radius / distanceToCenter;
 
     samplingInputs.Q = sqrt(1.0f - radiusOverDist * radiusOverDist);

@@ -19,6 +19,7 @@ namespace PathFinder
         bool mDebugLayerEnabled = false;
         bool mAftermathEnabled = false;
         bool mUseWARPDevice = false;
+        bool mDisableMemoryAliasing = false;
 
     public:
         inline auto ShouldEnableDebugLayer() const { return mDebugLayerEnabled; }
@@ -26,6 +27,7 @@ namespace PathFinder
         inline auto ShouldUseShadersFromProjectFolder() const { return mUseShadersInProjectFolder; }
         inline auto ShouldEnableAftermath() const { return mAftermathEnabled; }
         inline auto ShouldUseWARPDevice() const { return mUseWARPDevice; }
+        inline auto DisableMemoryAliasing() const { return mDisableMemoryAliasing; }
         inline const auto& ExecutableFolderPath() const { return mExecutableFolder; }
     };
 

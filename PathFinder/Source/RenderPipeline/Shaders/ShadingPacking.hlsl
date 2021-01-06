@@ -6,19 +6,10 @@
 #include "Packing.hlsl"
 #include "Utils.hlsl"
 
-static const uint YBitCount = 16;
-static const uint CoBitCount = 8;
-static const uint CgBitCount = 8;
-
-static const uint AllBits1 = U32Max;
-static const uint YMask = AllBits1 >> (32 - YBitCount);
-static const uint CoMask = AllBits1 >> (32 - CoBitCount);
-static const uint CgMask = AllBits1 >> (32 - CgBitCount);
-
 struct RTData
 {
     // 4 components for 4 ray-light pairs
-    uint4 BRDFResponses;
+    float4x3 BRDFResponses;
     uint4 RayLightIntersectionData;
     float4 ShadowFactors;
 };
@@ -26,7 +17,7 @@ struct RTData
 RTData ZeroRTData()
 {
     RTData data;
-    data.BRDFResponses = 0.xxxx;
+    data.BRDFResponses = 0.0;
     data.RayLightIntersectionData = 0.xxxx;
     data.ShadowFactors = 1.xxxx;
     return data;
@@ -39,39 +30,17 @@ RTData ZeroRTData()
 //--------------------------------------------------------------------------------------------------
 void SetStochasticBRDFMagnitude(inout RTData rtData, float3 brdf, uint rayLightPairIndex)
 {
-    // Leverage YCoCg compressibility
-    float3 ycocg = RGBToYCoCg(brdf);
-    float magnitude = 1.0;
-
-    uint y = PackSnorm(ycocg.x, magnitude, YBitCount);
-    uint co = PackSnorm(ycocg.y, magnitude, CoBitCount);
-    uint cg = PackSnorm(ycocg.z, magnitude, CgBitCount);
-
-    uint packed = 0;
-    packed |= y;
-    packed |= (co << YBitCount);
-    packed |= (cg << (YBitCount + CoBitCount));
-
-    rtData.BRDFResponses[rayLightPairIndex] = packed;
+    rtData.BRDFResponses[rayLightPairIndex].rgb = brdf;
 }
 
 float3 GetStochasticBRDFMagnitude(RTData rtData, uint rayLightPairIndex)
 {
-    uint packed = rtData.BRDFResponses[rayLightPairIndex];
-    float magnitude = 1.0;
+    return rtData.BRDFResponses[rayLightPairIndex].rgb;
+}
 
-    uint yPacked = packed & YMask;
-    uint coPacked = (packed >> YBitCount) & CoMask;
-    uint cgPacked = (packed >> (YBitCount + CoBitCount)) & CgMask;
-
-    float3 ycocg = float3(
-        UnpackSnorm(yPacked, magnitude, YBitCount),
-        UnpackSnorm(coPacked, magnitude, CoBitCount),
-        UnpackSnorm(cgPacked, magnitude, CgBitCount));
-
-    float3 rgb = YCoCgToRGB(ycocg);
-
-    return rgb;
+bool IsStochasticBRDFMagnitudeNonZero(RTData rtData, uint rayLightPairIndex)
+{
+    return any(rtData.BRDFResponses[rayLightPairIndex]) > 0.0;
 }
 
 void SetRaySphericalLightIntersectionPoint(inout RTData rtData, Light light, float3 interectionPoint, uint rayLightPairIndex)
@@ -79,12 +48,12 @@ void SetRaySphericalLightIntersectionPoint(inout RTData rtData, Light light, flo
     // For spherical lights we encode a normalized direction from light's center to intersection point
     float3 lightToIntersection = normalize(interectionPoint - light.Position.xyz);
 
-    rtData.RayLightIntersectionData[rayLightPairIndex] = EncodeNormalSignedOct(lightToIntersection);
+    rtData.RayLightIntersectionData[rayLightPairIndex] = OctEncodePack(lightToIntersection);
 }
 
 float3 GetRaySphericalLightIntersectionPoint(RTData rtData, Light light, uint rayLightPairIndex)
 {
-    float3 lightToIntersection = DecodeNormalSignedOct(rtData.RayLightIntersectionData[rayLightPairIndex]);
+    float3 lightToIntersection = OctUnpackDecode(rtData.RayLightIntersectionData[rayLightPairIndex]);
     return lightToIntersection * light.Width * 0.5 + light.Position.xyz;
 }
 

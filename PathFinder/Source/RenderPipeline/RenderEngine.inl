@@ -55,6 +55,8 @@ namespace PathFinder
             mRenderSurfaceDescription, 
             &mRenderPassGraph);
 
+        mPipelineResourceStorage->SetMemoryAliasingEnabled(!commandLineParser.DisableMemoryAliasing());
+
         mResourceScheduler = std::make_unique<ResourceScheduler>(
             mPipelineResourceStorage.get(),
             mPassUtilityProvider.get(),

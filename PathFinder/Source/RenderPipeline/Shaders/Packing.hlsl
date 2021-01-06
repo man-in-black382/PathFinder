@@ -151,51 +151,38 @@ uint Encode8888(float4 vec)
     return rgba;
 }
 
-// Signed Octahedron Normal Encoding
-// http://johnwhite3d.blogspot.com/2017/10/signed-octahedron-normal-encoding.html
-//
-uint EncodeNormalSignedOct(float3 n)
+// v is a unit vector. The result is an octahedral vector on the [-1, +1] square.
+float2 OctEncode(float3 v)
 {
-    float3 outN;
-
-    n /= (abs(n.x) + abs(n.y) + abs(n.z));
-
-    outN.y = n.y * 0.5 + 0.5;
-    outN.x = n.x * 0.5 + outN.y;
-    outN.y = n.x * -0.5 + outN.y;
-
-    outN.z = saturate(n.z * FloatMax);
-
-    uint signBit = outN.z > 0.0 ? 1u : 0u;
-    uint encoded = PackUnorm2x16(outN.x, outN.y, 1.0);
-
-    // Sacrifice LS bit of one of the encoded 
-    // values to store normal z sign
-
-    // 1) Make sure lowest bit is zero
-    encoded &= (~1u);
-    // 2) Set sign bit to lowest bit
-    encoded |= signBit;
-
-    return encoded;
+    float l1norm = abs(v.x) + abs(v.y) + abs(v.z);
+    float2 result = v.xy * (1.0 / l1norm);
+    if (v.z < 0.0)
+    {
+        result = (1.0 - abs(result.yx)) * Sign(result.xy);
+    }
+    return result;
 }
 
-float3 DecodeNormalSignedOct(uint encoded)
+// Returns a unit vector. Argument o is an octahedral vector on the [-1, +1] square
+float3 OctDecode(float2 o) 
 {
-    float3 n;
-    // Extract sign and convert it to float
-    n.z = float(encoded & 1u);
-    n.xy = UnpackUnorm2x16(encoded, 1.0);
+    float3 v = float3(o.x, o.y, 1.0 - abs(o.x) - abs(o.y));
+    if (v.z < 0.0) 
+    {
+        v.xy = (1.0 - abs(v.yx)) * Sign(v.xy);
+    }
+    return normalize(v);
+}
 
-    float3 outN;
+uint OctEncodePack(float3 v)
+{
+    float2 oct = OctEncode(v);
+    return PackSnorm2x16(oct.x, oct.y, 1.0);
+}
 
-    outN.x = (n.x - n.y);
-    outN.y = (n.x + n.y) - 1.0;
-    outN.z = n.z * 2.0 - 1.0;
-    outN.z = outN.z * (1.0 - abs(outN.x) - abs(outN.y));
-
-    outN = normalize(outN);
-    return outN;
+float3 OctUnpackDecode(uint packed)
+{
+    return OctDecode(UnpackSnorm2x16(packed, 1.0));
 }
 
 #endif

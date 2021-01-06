@@ -60,26 +60,24 @@ StructuredBuffer<Material> MaterialTable : register(t2, space0);
 
 LightTablePartitionInfo DecompressLightPartitionInfo()
 {
-    // Light table offsets are supplied through root constants to speed up access
     // Lights are expected to be placed in order: spherical -> rectangular -> disk
-    // Offsets are encoded in 8 bits each which means there can be no more than 256 lights total
     uint compressed = RootConstantBuffer.CompressedLightPartitionInfo;
-    static const uint sphericalLightsOffset = (compressed >> 24) & 0xFF;
-    static const uint rectangularLightsOffset = (compressed >> 16) & 0xFF;
-    static const uint ellipticalLightsOffset = (compressed >> 8) & 0xFF;
-    static const uint totalLightsCount = compressed & 0xFF;
-
-    static const uint sphericalLightsCount = rectangularLightsOffset - sphericalLightsOffset;
-    static const uint rectangularLightsCount = ellipticalLightsOffset - rectangularLightsOffset;
-    static const uint ellipticalLightsCount = totalLightsCount - rectangularLightsCount - sphericalLightsCount;
+    static const uint sphericalLightsCount = (compressed >> 24) & 0xFF;
+    static const uint rectangularLightsCount = (compressed >> 16) & 0xFF;
+    static const uint ellipticalLightsCount = (compressed >> 8) & 0xFF;
+    static const uint totalLightsCount = sphericalLightsCount + rectangularLightsCount + ellipticalLightsCount;
 
     LightTablePartitionInfo info;
-    info.EllipticalLightsCount = ellipticalLightsCount;
-    info.EllipticalLightsOffset = ellipticalLightsOffset;
-    info.RectangularLightsCount = rectangularLightsCount;
-    info.RectangularLightsOffset = rectangularLightsOffset;
+
     info.SphericalLightsCount = sphericalLightsCount;
-    info.SphericalLightsOffset = sphericalLightsOffset;
+    info.SphericalLightsOffset = 0;
+
+    info.RectangularLightsCount = rectangularLightsCount;
+    info.RectangularLightsOffset = sphericalLightsCount;
+
+    info.EllipticalLightsCount = ellipticalLightsCount;
+    info.EllipticalLightsOffset = sphericalLightsCount + rectangularLightsCount;
+
     info.TotalLightsCount = totalLightsCount;
 
     return info;
@@ -204,30 +202,25 @@ LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDi
     return terms;
 }
 
-float3 SampleBRDF(Light light, LTCTerms ltcTerms, LTCAnalyticEvaluationResult directLightingEvaluationResult, LightSample lightSample, float3 surfacePosition)
+float3 SampleBRDF(LTCTerms ltcTerms, LTCAnalyticEvaluationResult directLightingEvaluationResult, LightSample lightSample, float3 surfacePosition)
 {
     // PDF is expected to be negative when the sample vector missed the light
     if (lightSample.PDF < 0.0)
     {
-        return 0.xxx;
+        return 0.0;
     }
 
     float3 surfaceToLightDir = normalize(lightSample.IntersectionPoint.xyz - surfacePosition);
-    LTCSample brdfRayLightingEvaluationResult = SampleLTC(light, ltcTerms, surfaceToLightDir, directLightingEvaluationResult.DiffuseProbability);
+    LTCSample brdfRayLightingEvaluationResult = SampleLTC(ltcTerms, surfaceToLightDir, directLightingEvaluationResult.DiffuseProbability);
     float misPDF = lerp(lightSample.PDF, brdfRayLightingEvaluationResult.PDF, directLightingEvaluationResult.BRDFProbability);
 
     // This test should almost never fail because we just importance sampled from the BRDF.
     // Only an all black BRDF or a precision issue could trigger this.
-    float3 brdf = directLightingEvaluationResult.BRDFProbability > 0.0f ?
-        // Stochastic estimate of incident light, without shadow
-        // Note: projection cosine dot(w_i, n) is baked into the LTC-based BRDF
-        brdfRayLightingEvaluationResult.BRDFMagnitude / misPDF:
-        0.xxx; 
-
-    // This is a sad hack due to ray-traced lighting samples having lower magnitude than analytic ones.
-    // In low lighting environment dim unshadowed/shadowed images produce artifacts where values approach 0.
-    // We increase luminance by a constant factor to move problematic areas out of the visible range.
-    brdf *= 10.0; // Looks like the hack is not even universal and depends on the situation. Oh well, need to figure out something smarter.
+    //
+    // Stochastic estimate of incident light, without shadow
+    // Note: projection cosine dot(w_i, n) is baked into the LTC-based BRDF
+    float3 brdf = directLightingEvaluationResult.BRDFProbability > 0.0f ? 
+        brdfRayLightingEvaluationResult.BRDFMagnitude / max(misPDF, 0.0001) : 0.0; 
 
     return brdf;
 }
@@ -273,7 +266,7 @@ void ShadeWithSphericalLights(
 
             LightSample lightSample = SampleSphericalLight(light, samplingInputs, sampleVector);
 
-            float3 brdf = SampleBRDF(light, ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
+            float3 brdf = SampleBRDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
 
             uint rayLightPairIndex = lightTableOffset * raysPerLight + rayIdx;
             SetStochasticBRDFMagnitude(rtData, brdf, rayLightPairIndex);
@@ -319,7 +312,7 @@ void ShadeWithRectangularLights(
                 RectangularLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
             LightSample lightSample = SampleRectangularLight(light, samplingInputs, lightPoints, sampleVector);
-            float3 brdf = SampleBRDF(light, ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
+            float3 brdf = SampleBRDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
 
             uint rayLightPairIndex = lightTableOffset * raysPerLight + rayIdx;
             SetStochasticBRDFMagnitude(rtData, brdf, rayLightPairIndex);
@@ -369,7 +362,7 @@ void ShadeWithEllipticalLights(
                 RectangularLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
             LightSample lightSample = SampleEllipticalLight(light, samplingInputs, lightPoints, sampleVector);
-            float3 brdf = SampleBRDF(light, ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
+            float3 brdf = SampleBRDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
 
             uint rayLightPairIndex = lightTableOffset * raysPerLight + rayIdx;
             SetStochasticBRDFMagnitude(rtData, brdf, rayLightPairIndex);
@@ -389,7 +382,7 @@ float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, f
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
     {
-        if (rtData.BRDFResponses[i] == 0)
+        if (!IsStochasticBRDFMagnitudeNonZero(rtData, i))
         {
             continue;
         }
@@ -431,7 +424,7 @@ float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, f
             | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
             | RAY_FLAG_FORCE_OPAQUE             // Skip any hit shaders
             | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, // Skip closest hit shaders,
-            EntityMaskMeshInstance, // Instance mask
+            EntityMaskMeshInstance, // Instance mask 
             0, // Contribution to hit group index
             0, // BLAS geometry multiplier for hit group index
             0, // Miss shader index
@@ -450,7 +443,7 @@ void CombineStochasticLightingAndShadows(RTData rtData, LightTablePartitionInfo 
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
     {
-        if (rtData.BRDFResponses[i] == 0)
+        if (!IsStochasticBRDFMagnitudeNonZero(rtData, i))
         {
             continue;
         }
@@ -504,8 +497,6 @@ ShadingResult EvaluateEmissiveGBufferLighting(GBufferTexturePack gBufferTextures
 
     ShadingResult result = ZeroShadingResult();
     result.AnalyticUnshadowedOutgoingLuminance = light.Luminance * light.Color.rgb;
-    result.StochasticShadowedOutgoingLuminance = 0;
-    result.StochasticUnshadowedOutgoingLuminance = 0;
     return result;
 }
 

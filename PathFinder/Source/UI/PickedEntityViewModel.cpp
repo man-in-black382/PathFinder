@@ -72,11 +72,11 @@ namespace PathFinder
         else if (mFlatLight)
         {
             glm::vec3 lightScale{ mModifiedModelMatrix[0][0], mModifiedModelMatrix[1][1], mModifiedModelMatrix[2][2] };
-            
-            mFlatLight->SetWidth(lightScale.x);
-            mFlatLight->SetHeight(lightScale.y);
+
+            /*    mFlatLight->SetWidth(lightScale.x);
+                mFlatLight->SetHeight(lightScale.y);*/
             mFlatLight->SetPosition(mModifiedModelMatrix[3]);
-            mFlatLight->SetNormal(glm::normalize(glm::vec3{ mModifiedModelMatrix[2] }));
+            //mFlatLight->SetNormal(glm::normalize(glm::vec3{ mModifiedModelMatrix[2] }));
         }
     }
 

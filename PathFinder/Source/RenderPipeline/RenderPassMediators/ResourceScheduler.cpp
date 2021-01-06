@@ -36,7 +36,7 @@ namespace PathFinder
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
-                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
+                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mResourceStorage->IsMemoryAliasingEnabled();
                 RegisterGraphDependency(*passNode, writtenMips, resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
@@ -66,7 +66,7 @@ namespace PathFinder
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
-                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
+                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mResourceStorage->IsMemoryAliasingEnabled();
                 RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
@@ -106,7 +106,7 @@ namespace PathFinder
             this]
             (PipelineResourceSchedulingInfo& schedulingInfo)
             {
-                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames;
+                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mResourceStorage->IsMemoryAliasingEnabled();
                 RegisterGraphDependency(*passNode, writtenMips, resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,

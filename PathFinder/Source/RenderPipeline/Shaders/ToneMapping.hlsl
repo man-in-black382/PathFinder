@@ -49,6 +49,14 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int groupIndex : SV_Gro
     // hence the 1.0 for maximum luminance
     params.MaximumLuminance = 1.0;
 
+    // NaN detection for convenience
+    if (any(isnan(color)))
+    {
+        color = float3(10, 0, 0);
+        outputImage[dispatchThreadID.xy] = float4(color, 1.0);
+        return;
+    }
+
     color = float3(
         GTToneMap(color.r, params),
         GTToneMap(color.g, params),
