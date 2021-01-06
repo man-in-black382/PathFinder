@@ -40,6 +40,8 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::DenoiserGradientSamplePositions[previousFrameIndex]);
 
         scheduler->AliasAndWriteTexture(ResourceNames::RngSeeds[currentFrameIndex], ResourceNames::RngSeedsCorrelated);
+
+        scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     }
      
     void DenoiserForwardProjectionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

@@ -302,14 +302,25 @@ namespace PathFinder
         }
     }
 
-    void RenderDevice::CollectNodeTransitions(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection)
+    void RenderDevice::AllocateAndRecordPreWorkCommandList(const RenderPassGraph::Node* node, const HAL::ResourceBarrierCollection& barriers, const std::string& cmdListName)
+    {
+        if (barriers.BarrierCount() == 0)
+            return;
+
+        mPassCommandLists[node->GlobalExecutionIndex()].PreWorkCommandList = AllocateCommandListForQueue(node->ExecutionQueueIndex);
+        CommandListPtrVariant& cmdListVariant = mPassCommandLists[node->GlobalExecutionIndex()].PreWorkCommandList;
+        HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(cmdListVariant);
+        transitionsCommandList->SetDebugName(node->PassMetadata().Name.ToString() + " " + cmdListName + " Cmd List");
+        transitionsCommandList->Reset();
+        mEventTracker.StartGPUEvent(node->PassMetadata().Name.ToString() + " " + cmdListName, *transitionsCommandList);
+        transitionsCommandList->InsertBarriers(barriers);
+        mEventTracker.EndGPUEvent(*transitionsCommandList);
+        transitionsCommandList->Close();
+    }
+
+    void RenderDevice::CollectNodeTransitionBarriers(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection)
     {
         const std::vector<SubresourceTransitionInfo>& nodeTransitionBarriers = mDependencyLevelTransitionBarriers[node->LocalToDependencyLevelExecutionIndex()];
-        const HAL::ResourceBarrierCollection& nodeInterpassUAVBarriers = mDependencyLevelInterpassUAVBarriers[node->LocalToDependencyLevelExecutionIndex()];
-        const HAL::ResourceBarrierCollection& nodeAliasingBarriers = mPerNodeAliasingBarriers[node->GlobalExecutionIndex()];
-
-        collection.AddBarriers(nodeAliasingBarriers);
-        collection.AddBarriers(nodeInterpassUAVBarriers);
 
         for (const SubresourceTransitionInfo& transitionInfo : nodeTransitionBarriers)
         {
@@ -370,6 +381,15 @@ namespace PathFinder
 
             mSubresourcesPreviousUsageInfo[transitionInfo.SubresourceName] = { node, currentCommandListBatchIndex };
         }
+    }
+
+    void RenderDevice::CollectNodeUAVAndAliasingBarriers(const RenderPassGraph::Node* node, HAL::ResourceBarrierCollection& collection)
+    {
+        const HAL::ResourceBarrierCollection& nodeInterpassUAVBarriers = mDependencyLevelInterpassUAVBarriers[node->LocalToDependencyLevelExecutionIndex()];
+        const HAL::ResourceBarrierCollection& nodeAliasingBarriers = mPerNodeAliasingBarriers[node->GlobalExecutionIndex()];
+
+        collection.AddBarriers(nodeAliasingBarriers);
+        collection.AddBarriers(nodeInterpassUAVBarriers);
     }
 
     void RenderDevice::CreateBatchesWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel)
@@ -438,14 +458,19 @@ namespace PathFinder
                 }
 
                 // Make command lists in a batch wait for rerouted transitions
-                latestBatchAfterRerouting->CommandListNames.emplace_back(node->PassMetadata().Name.ToString());
                 latestBatchAfterRerouting->IsEmpty = false;
 
                 // Associate batch index with pass command lists so we could insert them later when all split barriers are collected
                 uint64_t currentCommandListBatchIndex = mCommandListBatches[queueIndex].size() - 1;
                 mPassCommandLists[node->GlobalExecutionIndex()].CommandListBatchIndex = currentCommandListBatchIndex;
 
-                CollectNodeTransitions(node, currentCommandListBatchIndex, reroutedTransitionBarrires);
+                // Gather transition barriers and reroute them
+                CollectNodeTransitionBarriers(node, currentCommandListBatchIndex, reroutedTransitionBarrires);
+
+                // UAV and Aliasing barriers are still attached to a specific render passes
+                HAL::ResourceBarrierCollection nodeBarriers{};
+                CollectNodeUAVAndAliasingBarriers(node, nodeBarriers);
+                AllocateAndRecordPreWorkCommandList(node, nodeBarriers, "Pre Work (UAV | Aliasing)");
 
                 if (node->IsSyncSignalRequired())
                 {
@@ -523,27 +548,11 @@ namespace PathFinder
                 uint64_t currentCommandListBatchIndex = mCommandListBatches[queueIdx].size() - 1;
                 mPassCommandLists[node->GlobalExecutionIndex()].CommandListBatchIndex = currentCommandListBatchIndex;
 
-                CollectNodeTransitions(node, currentCommandListBatchIndex, nodeBarriers);
+                CollectNodeTransitionBarriers(node, currentCommandListBatchIndex, nodeBarriers);
+                CollectNodeUAVAndAliasingBarriers(node, nodeBarriers);
+                AllocateAndRecordPreWorkCommandList(node, nodeBarriers, "Pre Work (Transitions | UAV | Aliasing)");
 
-                // Mark first command list of render pass with it's debug name
-                currentBatch->CommandListNames.emplace_back(node->PassMetadata().Name.ToString());
                 currentBatch->IsEmpty = false;
-
-                if (nodeBarriers.BarrierCount() > 0)
-                {
-                    mPassCommandLists[node->GlobalExecutionIndex()].TransitionsCommandList = AllocateCommandListForQueue(queueIdx);
-                    CommandListPtrVariant& cmdListVariant = mPassCommandLists[node->GlobalExecutionIndex()].TransitionsCommandList;
-                    HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(cmdListVariant);
-                    transitionsCommandList->SetDebugName(node->PassMetadata().Name.ToString() + " Transitions Cmd List");
-                    transitionsCommandList->Reset();
-                    mEventTracker.StartGPUEvent(node->PassMetadata().Name.ToString() + " Pre Work (Transitions)", *transitionsCommandList);
-                    transitionsCommandList->InsertBarriers(nodeBarriers);
-                    mEventTracker.EndGPUEvent(*transitionsCommandList);
-                    transitionsCommandList->Close();
-
-                    // Do not mark second cmd list 
-                    currentBatch->CommandListNames.emplace_back(std::nullopt);
-                }
 
                 if (node->IsSyncSignalRequired())
                 {
@@ -634,7 +643,7 @@ namespace PathFinder
             auto batchIndex = mPassCommandLists[node->GlobalExecutionIndex()].CommandListBatchIndex;
             CommandListBatch& batch = mCommandListBatches[node->ExecutionQueueIndex][batchIndex];
 
-            HALCommandListPtrVariant transitionsCommandList = GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].TransitionsCommandList);
+            HALCommandListPtrVariant transitionsCommandList = GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].PreWorkCommandList);
             HALCommandListPtrVariant workCommandList = GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].WorkCommandList);
             HALCommandListPtrVariant postWorkCommandList = GetHALCommandListVariant(mPassCommandLists[node->GlobalExecutionIndex()].PostWorkCommandList);
 

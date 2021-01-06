@@ -50,7 +50,7 @@ namespace PathFinder
         {
             // A command list to execute transition barriers before render pass work.
             // Separated from work so we could perform transitions in separate thread.
-            CommandListPtrVariant TransitionsCommandList = GraphicsCommandListPtr{ nullptr };
+            CommandListPtrVariant PreWorkCommandList = GraphicsCommandListPtr{ nullptr };
 
             // A command list render commands are recorded into
             CommandListPtrVariant WorkCommandList = GraphicsCommandListPtr{ nullptr };
@@ -124,7 +124,6 @@ namespace PathFinder
             FenceAndValue FenceToSignal;
 
             // Debug info
-            std::vector<std::optional<std::string>> CommandListNames;
             std::vector<std::string> EventNamesToWait;
             std::string SignalName;
         };
@@ -154,7 +153,9 @@ namespace PathFinder
         void UploadPassConstants();
 
         void GatherResourceTransitionKnowledge(const RenderPassGraph::DependencyLevel& dependencyLevel);
-        void CollectNodeTransitions(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection);
+        void AllocateAndRecordPreWorkCommandList(const RenderPassGraph::Node* node, const HAL::ResourceBarrierCollection& barriers, const std::string& cmdListName);
+        void CollectNodeTransitionBarriers(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection);
+        void CollectNodeUAVAndAliasingBarriers(const RenderPassGraph::Node* node, HAL::ResourceBarrierCollection& collection);
         void CreateBatchesWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void CreateBatchesWithoutTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void RecordPostWorkCommandLists();

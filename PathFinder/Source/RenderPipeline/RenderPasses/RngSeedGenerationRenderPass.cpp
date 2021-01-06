@@ -27,7 +27,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::RngSeeds[currentFrameIndex], rngSeedsProperties);
         scheduler->NewTexture(ResourceNames::RngSeeds[previousFrameIndex], MipSet::Empty(), rngSeedsProperties);
 
-        //scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
+        scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     }
      
     void RngSeedGenerationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
