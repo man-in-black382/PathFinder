@@ -19,7 +19,7 @@ namespace PathFinder
 
         virtual ~RenderSubPass() = 0;
 
-        virtual void ScheduleResources(ResourceScheduler* scheduler) {};
+        virtual void ScheduleResources(ResourceScheduler<ContentMediator>* scheduler) {};
         virtual void Render(RenderContext<ContentMediator>* context) {};
 
     private:

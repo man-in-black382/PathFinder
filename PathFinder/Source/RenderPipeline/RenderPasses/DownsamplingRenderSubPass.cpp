@@ -9,17 +9,17 @@ namespace PathFinder
     DownsamplingRenderSubPass::DownsamplingRenderSubPass(const std::string& name)
         : RenderSubPass(name) {}
 
-    void DownsamplingRenderSubPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DownsamplingRenderSubPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         for (const DownsamplingInvocationInputs& inputs : mInvocationInputs)
         {
-            scheduler->ReadTexture(inputs.ResourceName, ResourceScheduler::MipSet::IndexFromStart(inputs.SourceMip));
+            scheduler->ReadTexture(inputs.ResourceName, MipSet::IndexFromStart(inputs.SourceMip));
             
             for (uint8_t outputIdx = 0; outputIdx < DownsamplingInvocationInputs::MaxMipsProcessedByInvocation; ++outputIdx)
             {
                 if (inputs.CBContent.OutputsToWrite[outputIdx])
                 {
-                    scheduler->WriteTexture(inputs.ResourceName, ResourceScheduler::MipSet::IndexFromStart(inputs.SourceMip + outputIdx + 1));
+                    scheduler->WriteTexture(inputs.ResourceName, MipSet::IndexFromStart(inputs.SourceMip + outputIdx + 1));
                 }
             }
         }

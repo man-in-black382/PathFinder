@@ -16,17 +16,17 @@ namespace PathFinder
         });
     }
 
-    void DenoiserReprojectionRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserReprojectionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
         auto frameIndex = scheduler->FrameNumber() % 2;
 
-        ResourceScheduler::NewTextureProperties frameCountProperties{};
+        NewTextureProperties frameCountProperties{};
         frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R16_Float;
-        frameCountProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
+        frameCountProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
         scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount[frameIndex], frameCountProperties);
-        scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount[previousFrameIndex], ResourceScheduler::MipSet::Empty(), frameCountProperties);
+        scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount[previousFrameIndex], MipSet::Empty(), frameCountProperties);
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingReprojected);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
 

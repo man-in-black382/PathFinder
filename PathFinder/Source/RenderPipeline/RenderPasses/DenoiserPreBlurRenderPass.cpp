@@ -13,9 +13,9 @@ namespace PathFinder
     {
     }
 
-    void DenoiserPreBlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserPreBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        ResourceScheduler::NewTextureProperties outputProperties{};
+        NewTextureProperties outputProperties{};
         outputProperties.MipCount = 5;
 
         scheduler->NewTexture(ResourceNames::DenoisedPreBlurIntermediate);

@@ -105,7 +105,7 @@ namespace PathFinder
         std::unique_ptr<RenderPassUtilityProvider> mPassUtilityProvider;
         std::unique_ptr<PipelineResourceStorage> mPipelineResourceStorage;
         std::unique_ptr<PreprocessableAssetStorage> mAssetStorage;
-        std::unique_ptr<ResourceScheduler> mResourceScheduler;
+        std::unique_ptr<ResourceScheduler<ContentMediator>> mResourceScheduler;
         std::unique_ptr<SamplerCreator> mSamplerCreator;
         std::unique_ptr<SubPassScheduler<ContentMediator>> mSubPassScheduler;
         std::unique_ptr<ShaderManager> mShaderManager;

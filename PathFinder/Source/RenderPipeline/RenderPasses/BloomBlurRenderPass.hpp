@@ -19,7 +19,7 @@ namespace PathFinder
         BloomBlurRenderPass();
         ~BloomBlurRenderPass() = default;
 
-        virtual void ScheduleResources(ResourceScheduler* scheduler) override;
+        virtual void ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler) override;
         virtual void ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler) override;
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
 

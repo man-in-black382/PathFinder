@@ -26,9 +26,9 @@ namespace PathFinder
         });
     }
      
-    void GeometryPickingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void GeometryPickingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        scheduler->NewBuffer(ResourceNames::PickedGeometryInfo, ResourceScheduler::NewBufferProperties<uint32_t>{ 1 });
+        scheduler->NewBuffer(ResourceNames::PickedGeometryInfo, NewBufferProperties<uint32_t>{ 1 });
         scheduler->Export(ResourceNames::PickedGeometryInfo);
         scheduler->UseRayTracing();
     } 

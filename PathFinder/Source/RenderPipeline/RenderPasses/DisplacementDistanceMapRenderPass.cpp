@@ -34,9 +34,9 @@ namespace PathFinder
         //});
     }
      
-    void DisplacementDistanceMapRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DisplacementDistanceMapRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        ResourceScheduler::NewBufferProperties<JFACones> JFAConesBufferProps{
+        NewBufferProperties<JFACones> JFAConesBufferProps{
             MaterialLoader::DistanceFieldTextureSize.Width * 
             MaterialLoader::DistanceFieldTextureSize.Height *
             MaterialLoader::DistanceFieldTextureSize.Depth,

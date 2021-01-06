@@ -29,7 +29,7 @@ namespace PathFinder
         stateCreator->CreateGraphicsState(PSONames::HDRBackBufferOutput, configurator);
     }
      
-    void BackBufferOutputPass::ScheduleResources(ResourceScheduler* scheduler)
+    void BackBufferOutputPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
         scheduler->ReadTexture(ResourceNames::UIOutput);
         scheduler->WriteToBackBuffer();

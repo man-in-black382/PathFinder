@@ -17,7 +17,7 @@ namespace PathFinder
         });
     }
 
-    void DenoiserGradientConstructionRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserGradientConstructionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         auto currentFrameIndex = scheduler->FrameNumber() % 2;
 
@@ -26,7 +26,7 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
         scheduler->ReadTexture(ResourceNames::DenoiserPrimaryGradientInputs);
 
-        scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradient, ResourceScheduler::NewTextureProperties{ ResourceNames::DenoiserPrimaryGradientInputs });
+        scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradient, NewTextureProperties{ ResourceNames::DenoiserPrimaryGradientInputs });
     }
      
     void DenoiserGradientConstructionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

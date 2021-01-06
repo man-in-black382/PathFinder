@@ -30,7 +30,7 @@ namespace PathFinder
         });
     }
       
-    void UIRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void UIRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
         scheduler->AliasAndUseRenderTarget(ResourceNames::SMAAAntialiased, ResourceNames::UIOutput);
     }  

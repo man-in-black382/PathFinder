@@ -15,7 +15,7 @@ namespace PathFinder
         });
     }
 
-    void BloomCompositionRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void BloomCompositionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         scheduler->ReadTexture(ResourceNames::CombinedShading);
         scheduler->ReadTexture(ResourceNames::BloomBlurOutput);

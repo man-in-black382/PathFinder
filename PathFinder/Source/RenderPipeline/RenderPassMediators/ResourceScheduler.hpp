@@ -12,106 +12,110 @@
 namespace PathFinder
 {
 
+    enum class BufferReadContext
+    {
+        Constant, ShaderResource
+    };
+
+    enum class ResourceSchedulingFlags : uint32_t
+    {
+        None = 0,
+        CrossFrameRead = 1 << 0 // Resource will be read across frames so it cannot participate in memory aliasing
+    };
+
+    using MipList = std::vector<uint32_t>;
+    using MipRange = std::pair<uint32_t, std::optional<uint32_t>>;
+
+    struct MipSet
+    {
+        static MipSet Empty();
+        static MipSet Explicit(const MipList& mips);
+        static MipSet IndexFromStart(uint32_t index);
+        static MipSet IndexFromEnd(uint32_t index);
+        static MipSet FirstMip();
+        static MipSet LastMip();
+        static MipSet Range(uint32_t firstMip, std::optional<uint32_t> lastMip);
+
+        using MipVariant = std::variant<MipList, MipRange, uint32_t, uint32_t>;
+
+        std::optional<MipVariant> Combination = std::nullopt;
+    };
+
+    struct NewTextureProperties
+    {
+        inline static constexpr uint32_t FullMipChain = 0;
+
+        NewTextureProperties(
+            std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt,
+            std::optional<HAL::TextureKind> kind = std::nullopt,
+            std::optional<Geometry::Dimensions> dimensions = std::nullopt,
+            std::optional<HAL::TypelessColorFormat> typelessFormat = std::nullopt,
+            std::optional<HAL::ColorClearValue> clearValues = std::nullopt,
+            std::optional<uint32_t> mipCount = std::nullopt,
+            ResourceSchedulingFlags readFlags = ResourceSchedulingFlags::None)
+            :
+            TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat },
+            Kind{ kind }, Dimensions{ dimensions }, ClearValues{ clearValues }, MipCount{ mipCount }, Flags{ readFlags } {}
+
+        NewTextureProperties(Foundation::Name textureNameToCopyPropertiesFrom)
+            : TextureToCopyPropertiesFrom{ textureNameToCopyPropertiesFrom } {}
+
+        std::optional<HAL::TypelessColorFormat> TypelessFormat;
+        std::optional<HAL::ColorFormat> ShaderVisibleFormat;
+        std::optional<HAL::TextureKind> Kind;
+        std::optional<Geometry::Dimensions> Dimensions;
+        std::optional<HAL::ColorClearValue> ClearValues;
+        std::optional<uint32_t> MipCount;
+        ResourceSchedulingFlags Flags;
+
+        std::optional<Foundation::Name> TextureToCopyPropertiesFrom;
+    };
+
+    struct NewDepthStencilProperties
+    {
+        inline static constexpr uint32_t FullMipChain = 0;
+
+        NewDepthStencilProperties(
+            std::optional<HAL::DepthStencilFormat> format = std::nullopt,
+            std::optional<Geometry::Dimensions> dimensions = std::nullopt,
+            std::optional<uint32_t> mipCount = std::nullopt,
+            ResourceSchedulingFlags readFlags = ResourceSchedulingFlags::None)
+            :
+            Format{ format }, Dimensions{ dimensions }, MipCount{ mipCount }, Flags{ readFlags } {}
+
+        NewDepthStencilProperties(Foundation::Name textureNameToCopyPropertiesFrom)
+            : TextureToCopyPropertiesFrom{ textureNameToCopyPropertiesFrom } {}
+
+        std::optional<HAL::DepthStencilFormat> Format;
+        std::optional<Geometry::Dimensions> Dimensions;
+        std::optional<uint32_t> MipCount;
+        ResourceSchedulingFlags Flags;
+
+        std::optional<Foundation::Name> TextureToCopyPropertiesFrom;
+    };
+
+    template <class T>
+    struct NewBufferProperties
+    {
+        NewBufferProperties(uint64_t capacity = 1, uint64_t perElementAlignment = 1, ResourceSchedulingFlags readFlags = ResourceSchedulingFlags::None)
+            : Capacity{ capacity }, PerElementAlignment{ perElementAlignment }, Flags{ readFlags } {}
+
+        NewBufferProperties(Foundation::Name bufferNameToCopyPropertiesFrom)
+            : BufferToCopyPropertiesFrom{ bufferNameToCopyPropertiesFrom } {}
+
+        uint64_t Capacity;
+        uint64_t PerElementAlignment;
+        ResourceSchedulingFlags Flags;
+
+        std::optional<Foundation::Name> BufferToCopyPropertiesFrom;
+    };
+
+    struct NewByteBufferProperties : public NewBufferProperties<uint32_t> {};
+
+    template <class ContentMediator>
     class ResourceScheduler
     {
     public:
-        using MipList = std::vector<uint32_t>;
-        using MipRange = std::pair<uint32_t, std::optional<uint32_t>>;
-        static constexpr uint32_t FullMipChain = 0;
-
-        enum class BufferReadContext
-        {
-            Constant, ShaderResource
-        };
-
-        enum class Flags : uint32_t
-        {
-            None = 0,
-            CrossFrameRead = 1 << 0 // Resource will be read across frames so it cannot participate in memory aliasing
-        };
-
-        struct MipSet
-        {
-            static MipSet Empty();
-            static MipSet Explicit(const MipList& mips);
-            static MipSet IndexFromStart(uint32_t index);
-            static MipSet IndexFromEnd(uint32_t index);
-            static MipSet FirstMip();
-            static MipSet LastMip();
-            static MipSet Range(uint32_t firstMip, std::optional<uint32_t> lastMip);
-
-            using MipVariant = std::variant<MipList, MipRange, uint32_t, uint32_t>;
-
-            std::optional<MipVariant> Combination = std::nullopt;
-        };
-
-        struct NewTextureProperties
-        {
-            NewTextureProperties(
-                std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt,
-                std::optional<HAL::TextureKind> kind = std::nullopt,
-                std::optional<Geometry::Dimensions> dimensions = std::nullopt,
-                std::optional<HAL::TypelessColorFormat> typelessFormat = std::nullopt,
-                std::optional<HAL::ColorClearValue> clearValues = std::nullopt,
-                std::optional<uint32_t> mipCount = std::nullopt,
-                Flags readFlags = Flags::None)
-                : 
-                TypelessFormat{ typelessFormat }, ShaderVisibleFormat{ shaderVisibleFormat }, 
-                Kind{ kind }, Dimensions{ dimensions }, ClearValues{ clearValues }, MipCount{ mipCount }, Flags{ readFlags } {}
-
-            NewTextureProperties(Foundation::Name textureNameToCopyPropertiesFrom)
-                : TextureToCopyPropertiesFrom{ textureNameToCopyPropertiesFrom } {}
-
-            std::optional<HAL::TypelessColorFormat> TypelessFormat;
-            std::optional<HAL::ColorFormat> ShaderVisibleFormat;
-            std::optional<HAL::TextureKind> Kind;
-            std::optional<Geometry::Dimensions> Dimensions;
-            std::optional<HAL::ColorClearValue> ClearValues;
-            std::optional<uint32_t> MipCount;
-            Flags Flags;
-
-            std::optional<Foundation::Name> TextureToCopyPropertiesFrom;
-        };
-
-        struct NewDepthStencilProperties
-        {
-            NewDepthStencilProperties(
-                std::optional<HAL::DepthStencilFormat> format = std::nullopt,
-                std::optional<Geometry::Dimensions> dimensions = std::nullopt,
-                std::optional<uint32_t> mipCount = std::nullopt,
-                Flags readFlags = Flags::None)
-                : 
-                Format{ format }, Dimensions{ dimensions }, MipCount{ mipCount }, Flags{ readFlags } {}
-
-            NewDepthStencilProperties(Foundation::Name textureNameToCopyPropertiesFrom)
-                : TextureToCopyPropertiesFrom{ textureNameToCopyPropertiesFrom } {}
-
-            std::optional<HAL::DepthStencilFormat> Format;
-            std::optional<Geometry::Dimensions> Dimensions;
-            std::optional<uint32_t> MipCount;
-            Flags Flags;
-
-            std::optional<Foundation::Name> TextureToCopyPropertiesFrom;
-        };
-
-        template <class T>
-        struct NewBufferProperties
-        {
-            NewBufferProperties(uint64_t capacity = 1, uint64_t perElementAlignment = 1, Flags readFlags = Flags::None)
-                : Capacity{ capacity }, PerElementAlignment{ perElementAlignment }, Flags{ readFlags } {}
-
-            NewBufferProperties(Foundation::Name bufferNameToCopyPropertiesFrom)
-                : BufferToCopyPropertiesFrom{ bufferNameToCopyPropertiesFrom } {}
-
-            uint64_t Capacity;
-            uint64_t PerElementAlignment;
-            Flags Flags;
-
-            std::optional<Foundation::Name> BufferToCopyPropertiesFrom;
-        };
-
-        struct NewByteBufferProperties : public NewBufferProperties<uint32_t> {};
-
         ResourceScheduler(PipelineResourceStorage* manager, RenderPassUtilityProvider* utilityProvider, RenderPassGraph* passGraph);
 
         // Allocates new render target texture (Write Only)
@@ -209,6 +213,7 @@ namespace PathFinder
 
         // To be called by the engine, not render passes
         void SetCurrentlySchedulingPassNode(RenderPassGraph::Node* node);
+        void SetContent(ContentMediator* content);
 
     private:
         NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties) const;
@@ -238,14 +243,16 @@ namespace PathFinder
         PipelineResourceStorage* mResourceStorage = nullptr;
         RenderPassUtilityProvider* mUtilityProvider = nullptr;
         RenderPassGraph* mRenderPassGraph = nullptr;
+        ContentMediator* mContent = nullptr;
 
     public:
         inline const RenderSurfaceDescription& DefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }
         inline auto FrameNumber() const { return mUtilityProvider->FrameNumber; }
+        inline const ContentMediator* Content() const { return mContent; }
     };
 
 }
 
-ENABLE_BITMASK_OPERATORS(PathFinder::ResourceScheduler::Flags);
+ENABLE_BITMASK_OPERATORS(PathFinder::ResourceSchedulingFlags);
 
 #include "ResourceScheduler.inl"

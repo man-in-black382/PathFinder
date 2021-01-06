@@ -17,10 +17,10 @@ namespace PathFinder
         });
     }
 
-    void DenoiserGradientFilteringRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserGradientFilteringRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         scheduler->AliasAndWriteTexture(ResourceNames::DenoiserPrimaryGradient, ResourceNames::DenoiserPrimaryGradientFilteredIntermediate);
-        scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradientFiltered, ResourceScheduler::NewTextureProperties{ ResourceNames::DenoiserPrimaryGradientInputs });
+        scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradientFiltered, NewTextureProperties{ ResourceNames::DenoiserPrimaryGradientInputs });
     }
      
     void DenoiserGradientFilteringRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

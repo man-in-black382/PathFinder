@@ -17,7 +17,7 @@ namespace PathFinder
         });
     }
 
-    void SMAANeighborhoodBlendingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void SMAANeighborhoodBlendingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
         scheduler->ReadTexture(ResourceNames::SMAABlendingWeights);

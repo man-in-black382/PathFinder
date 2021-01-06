@@ -17,18 +17,18 @@ namespace PathFinder
         });
     }
 
-    void DenoiserPostBlurRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserPostBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         auto frameIndex = scheduler->FrameNumber() % 2;
 
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingPostBlurred);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingPostBlurred);
 
-        ResourceScheduler::NewTextureProperties combinedShadingProps{};
-        combinedShadingProps.MipCount = ResourceScheduler::FullMipChain;
+        NewTextureProperties combinedShadingProps{};
+        combinedShadingProps.MipCount = NewTextureProperties::FullMipChain;
         scheduler->NewTexture(ResourceNames::CombinedShading, combinedShadingProps);
 
-        ResourceScheduler::NewTextureProperties oversaturatedProps{};
+        NewTextureProperties oversaturatedProps{};
         oversaturatedProps.MipCount = 3;
         scheduler->NewTexture(ResourceNames::CombinedShadingOversaturated, oversaturatedProps);
 

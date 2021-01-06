@@ -435,9 +435,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassMediators\ResourceProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPassMediators\ResourceScheduler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPassMediators\RootConstantsUpdater.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -592,6 +589,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIUpdateRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPassMediators\ResourceScheduler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -23,11 +23,11 @@ namespace PathFinder
         });
     }
 
-    void ToneMappingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void ToneMappingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         scheduler->ReadTexture(ResourceNames::BloomCompositionOutput);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
-        scheduler->NewBuffer(ResourceNames::LuminanceHistogram, ResourceScheduler::NewBufferProperties<uint32_t>{128});
+        scheduler->NewBuffer(ResourceNames::LuminanceHistogram, NewBufferProperties<uint32_t>{128});
         scheduler->Export(ResourceNames::LuminanceHistogram);
     }
      

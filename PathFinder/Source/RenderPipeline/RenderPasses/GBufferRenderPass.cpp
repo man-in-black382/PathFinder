@@ -58,18 +58,18 @@ namespace PathFinder
         });
     }
       
-    void GBufferRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void GBufferRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        ResourceScheduler::NewTextureProperties albedoMetalnessProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm };
-        ResourceScheduler::NewTextureProperties normalRoughnessProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm };
-        ResourceScheduler::NewTextureProperties motionVectorProperties{ HAL::ColorFormat::RG32_Unsigned };
-        ResourceScheduler::NewTextureProperties typeAndMaterialIndexProperties{ HAL::ColorFormat::R8_Unsigned };
+        NewTextureProperties albedoMetalnessProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm };
+        NewTextureProperties normalRoughnessProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm };
+        NewTextureProperties motionVectorProperties{ HAL::ColorFormat::RG32_Unsigned };
+        NewTextureProperties typeAndMaterialIndexProperties{ HAL::ColorFormat::R8_Unsigned };
 
-        ResourceScheduler::NewTextureProperties viewDepthProperties{};
+        NewTextureProperties viewDepthProperties{};
         viewDepthProperties.ShaderVisibleFormat = HAL::ColorFormat::R32_Float;
         viewDepthProperties.MipCount = 5; 
         viewDepthProperties.ClearValues = HAL::ColorClearValue{ std::numeric_limits<float>::max() };
-        viewDepthProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
+        viewDepthProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
         scheduler->NewRenderTarget(ResourceNames::GBufferAlbedoMetalness, albedoMetalnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness, normalRoughnessProperties);

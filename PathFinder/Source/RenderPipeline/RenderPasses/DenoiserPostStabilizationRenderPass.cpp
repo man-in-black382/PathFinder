@@ -16,7 +16,7 @@ namespace PathFinder
         });
     }
 
-    void DenoiserPostStabilizationRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserPostStabilizationRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         return; // Disable 
 

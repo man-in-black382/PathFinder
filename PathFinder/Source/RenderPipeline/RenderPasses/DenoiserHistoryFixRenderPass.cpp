@@ -16,7 +16,7 @@ namespace PathFinder
         });
     }
 
-    void DenoiserHistoryFixRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void DenoiserHistoryFixRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         auto frameIndex = scheduler->FrameNumber() % 2;
 
@@ -29,8 +29,8 @@ namespace PathFinder
         scheduler->AliasAndWriteTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceNames::StochasticUnshadowedShadingFixed);
 
         // Read tail mips
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceScheduler::MipSet::Range(1, std::nullopt));
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceScheduler::MipSet::Range(1, std::nullopt));
+        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, MipSet::Range(1, std::nullopt));
+        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, MipSet::Range(1, std::nullopt));
     }
      
     void DenoiserHistoryFixRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

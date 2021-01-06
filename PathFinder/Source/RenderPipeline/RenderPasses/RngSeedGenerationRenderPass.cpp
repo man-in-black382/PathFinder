@@ -16,16 +16,16 @@ namespace PathFinder
         });
     }
 
-    void RngSeedGenerationRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void RngSeedGenerationRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         auto currentFrameIndex = scheduler->FrameNumber() % 2;
         auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
 
-        ResourceScheduler::NewTextureProperties rngSeedsProperties{ HAL::ColorFormat::RGBA8_Unsigned };
-        rngSeedsProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
+        NewTextureProperties rngSeedsProperties{ HAL::ColorFormat::RGBA8_Unsigned };
+        rngSeedsProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
         scheduler->NewTexture(ResourceNames::RngSeeds[currentFrameIndex], rngSeedsProperties);
-        scheduler->NewTexture(ResourceNames::RngSeeds[previousFrameIndex], ResourceScheduler::MipSet::Empty(), rngSeedsProperties);
+        scheduler->NewTexture(ResourceNames::RngSeeds[previousFrameIndex], MipSet::Empty(), rngSeedsProperties);
 
         //scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     }

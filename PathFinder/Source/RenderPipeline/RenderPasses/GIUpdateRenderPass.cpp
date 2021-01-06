@@ -28,7 +28,7 @@ namespace PathFinder
         });
     }
      
-    void GIUpdateRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void GIUpdateRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
        /* scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput);

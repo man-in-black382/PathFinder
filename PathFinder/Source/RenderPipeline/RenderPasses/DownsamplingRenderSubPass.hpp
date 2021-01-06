@@ -18,7 +18,7 @@ namespace PathFinder
         DownsamplingRenderSubPass(const std::string& name);
         ~DownsamplingRenderSubPass() = default;
 
-        virtual void ScheduleResources(ResourceScheduler* scheduler) override;
+        virtual void ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler) override;
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
 
         void SetInvocationInputs(const std::vector<DownsamplingInvocationInputs>& inputs);

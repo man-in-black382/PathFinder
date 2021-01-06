@@ -18,10 +18,10 @@ namespace PathFinder
         });
     }
 
-    void SMAABlendingWeightCalculationRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void SMAABlendingWeightCalculationRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         scheduler->ReadTexture(ResourceNames::SMAADetectedEdges);
-        scheduler->NewRenderTarget(ResourceNames::SMAABlendingWeights, ResourceScheduler::NewTextureProperties{ HAL::ColorFormat::RGBA16_Float });
+        scheduler->NewRenderTarget(ResourceNames::SMAABlendingWeights, NewTextureProperties{ HAL::ColorFormat::RGBA16_Float });
     }
 
     void SMAABlendingWeightCalculationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

@@ -16,7 +16,7 @@ namespace PathFinder
         });
     }
 
-    void SpecularDenoiserRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void SpecularDenoiserRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
         auto currentFrameIndex = scheduler->FrameNumber() % 2;
@@ -32,14 +32,14 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingFixed);
         scheduler->ReadTexture(ResourceNames::DenoiserPrimaryGradientFiltered);
 
-        ResourceScheduler::NewTextureProperties outputProperties{};
-        outputProperties.Flags = ResourceScheduler::Flags::CrossFrameRead;
+        NewTextureProperties outputProperties{};
+        outputProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoised[currentFrameIndex], outputProperties);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoised[currentFrameIndex], outputProperties);
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex], ResourceScheduler::MipSet::Empty(), outputProperties);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex], ResourceScheduler::MipSet::Empty(), outputProperties);
-        scheduler->NewTexture(ResourceNames::DenoiserSecondaryGradient, ResourceScheduler::NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });
+        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex], MipSet::Empty(), outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex], MipSet::Empty(), outputProperties);
+        scheduler->NewTexture(ResourceNames::DenoiserSecondaryGradient, NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });
     }
      
     void SpecularDenoiserRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

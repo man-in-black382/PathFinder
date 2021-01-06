@@ -18,10 +18,10 @@ namespace PathFinder
         });
     }
       
-    void SMAAEdgeDetectionRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void SMAAEdgeDetectionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
         scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
-        scheduler->NewRenderTarget(ResourceNames::SMAADetectedEdges, ResourceScheduler::NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });
+        scheduler->NewRenderTarget(ResourceNames::SMAADetectedEdges, NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });
     }  
 
     void SMAAEdgeDetectionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

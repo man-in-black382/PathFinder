@@ -57,7 +57,7 @@ namespace PathFinder
 
         mPipelineResourceStorage->SetMemoryAliasingEnabled(!commandLineParser.DisableMemoryAliasing());
 
-        mResourceScheduler = std::make_unique<ResourceScheduler>(
+        mResourceScheduler = std::make_unique<ResourceScheduler<ContentMediator>>(
             mPipelineResourceStorage.get(),
             mPassUtilityProvider.get(),
             &mRenderPassGraph);
@@ -326,6 +326,7 @@ namespace PathFinder
 
         // Run scheduling for standard render passes
         mPipelineResourceStorage->StartResourceScheduling();
+        mResourceScheduler->SetContent(mContentMediator);
 
         for (auto& [passName, passHelpers] : mRenderPassContainer->RenderPasses())
         {

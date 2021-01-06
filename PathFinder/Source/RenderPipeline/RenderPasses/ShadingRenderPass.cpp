@@ -28,7 +28,7 @@ namespace PathFinder
         });
     }
      
-    void ShadingRenderPass::ScheduleResources(ResourceScheduler* scheduler)
+    void ShadingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
         scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput);
