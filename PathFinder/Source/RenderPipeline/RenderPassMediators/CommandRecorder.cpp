@@ -434,17 +434,17 @@ namespace PathFinder
 
     HAL::GraphicsCommandList* CommandRecorder::GetGraphicsCommandList() const
     {
-        return std::get<RenderDevice::GraphicsCommandListPtr>(mRenderDevice->CommandListsForNode(GetPassNode()).WorkCommandList).get();
+        return std::get<RenderDevice::GraphicsCommandListPtr>(mRenderDevice->CommandListsForPass(GetPassNode()).WorkCommandList).get();
     }
 
     HAL::ComputeCommandListBase* CommandRecorder::GetComputeCommandListBase() const
     {
-        return mRenderDevice->GetComputeCommandListBase(mRenderDevice->CommandListsForNode(GetPassNode()).WorkCommandList);
+        return mRenderDevice->GetComputeCommandListBase(mRenderDevice->CommandListsForPass(GetPassNode()).WorkCommandList);
     }
 
     RenderDevice::PassHelpers& CommandRecorder::GetPassHelpers() const
     {
-        return mRenderDevice->PassHelpersForNode(GetPassNode());
+        return mRenderDevice->PassHelpersForPass(GetPassNode());
     }
 
 }

@@ -6,7 +6,7 @@ namespace PathFinder
     template <class Lambda>
     void RenderDevice::RecordWorkerCommandList(const RenderPassGraph::Node& passNode, const Lambda& action)
     {
-        HAL::ComputeCommandListBase* worker = GetComputeCommandListBase(mPassCommandLists[passNode.GlobalExecutionIndex()].WorkCommandList);
+        HAL::ComputeCommandListBase* worker = GetComputeCommandListBase(mFrameBlueprint.GetRenderPassEvent(passNode).CommandLists.WorkCommandList);
         worker->Reset();
 
         const std::string& passName = passNode.PassMetadata().Name.ToString();
@@ -31,15 +31,15 @@ namespace PathFinder
     }
 
     template <class CommandQueueT, class CommandListT>
-    void RenderDevice::ExecuteCommandListBatch(CommandListBatch& batch, HAL::CommandQueue& queue)
+    void RenderDevice::ExecuteCommandListBatch(std::vector<CommandListPtrVariant>& batch, HAL::CommandQueue& queue)
     {
         std::vector<CommandListT*> commandLists;
         CommandQueueT* concreteQueue = static_cast<CommandQueueT*>(&queue);
 
-        for (auto cmdListIdx = 0; cmdListIdx < batch.CommandLists.size(); ++cmdListIdx)
+        for (CommandListPtrVariant& ptr : batch)
         {
-            HALCommandListPtrVariant& cmdListVariant = batch.CommandLists[cmdListIdx];
-            commandLists.push_back(std::get<CommandListT*>(cmdListVariant));
+            CommandListT* cmdList = static_cast<CommandListT*>(GetComputeCommandListBase(ptr));
+            commandLists.push_back(cmdList);
         }
 
         concreteQueue->ExecuteCommandLists(commandLists.data(), commandLists.size());

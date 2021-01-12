@@ -177,7 +177,7 @@ namespace PathFinder
         BuildAccelerationStructures();
 
         // Render
-        mRenderDevice->AllocateWorkerCommandLists();
+        mRenderDevice->PrepareForGraphExecution();
         RecordCommandLists();
         mRenderDevice->ExecuteRenderGraph();
 

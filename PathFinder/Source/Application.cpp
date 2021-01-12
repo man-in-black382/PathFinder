@@ -325,23 +325,23 @@ namespace PathFinder
         light0->SetColor(light0Color);
         light0->SetLuminousPower(40000);
 
-       /* auto sphereLight1 = mScene->EmplaceSphericalLight();
+        auto sphereLight1 = mScene->EmplaceSphericalLight();
         sphereLight1->SetRadius(7.5);
         sphereLight1->SetPosition({ -10.65, 12.0, -4.6 });
         sphereLight1->SetColor(light1Color);
-        sphereLight1->SetLuminousPower(100000);*/
+        sphereLight1->SetLuminousPower(100000);
 
-        //auto sphereLight2 = mScene->EmplaceSphericalLight();
-        //sphereLight2->SetRadius(6);
-        //sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
-        //sphereLight2->SetColor(light2Color);
-        //sphereLight2->SetLuminousPower(300000);
+        auto sphereLight2 = mScene->EmplaceSphericalLight();
+        sphereLight2->SetRadius(6);
+        sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
+        sphereLight2->SetColor(light2Color);
+        sphereLight2->SetLuminousPower(300000);
 
-        //auto sphereLight3 = mScene->EmplaceSphericalLight();
-        //sphereLight3->SetRadius(8);
-        //sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
-        //sphereLight3->SetColor(light3Color);
-        //sphereLight3->SetLuminousPower(300000);
+        auto sphereLight3 = mScene->EmplaceSphericalLight();
+        sphereLight3->SetRadius(8);
+        sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
+        sphereLight3->SetColor(light3Color);
+        sphereLight3->SetLuminousPower(300000);
 
         PathFinder::Camera& camera = mScene->MainCamera();
         camera.SetFarPlane(500);

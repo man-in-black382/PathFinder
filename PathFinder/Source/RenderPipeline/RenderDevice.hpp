@@ -24,6 +24,7 @@
 #include <Memory/CopyRequestManager.hpp>
 
 #include <robinhood/robin_hood.h>
+#include <forward_list>
 
 #include "DrawablePrimitive.hpp"
 
@@ -36,7 +37,6 @@ namespace PathFinder
         using GraphicsCommandListPtr = Memory::PoolCommandListAllocator::GraphicsCommandListPtr;
         using ComputeCommandListPtr = Memory::PoolCommandListAllocator::ComputeCommandListPtr;
         using CommandListPtrVariant = std::variant<GraphicsCommandListPtr, ComputeCommandListPtr>;
-        using HALCommandListPtrVariant = std::variant<HAL::GraphicsCommandList*, HAL::ComputeCommandList*>;
         using FenceAndValue = std::pair<const HAL::Fence*, uint64_t>;
         
         struct PipelineMeasurement
@@ -58,9 +58,6 @@ namespace PathFinder
             // An optional command list that may be required to execute Begin barriers 
             // or back buffer transition at the end of the frame
             CommandListPtrVariant PostWorkCommandList = GraphicsCommandListPtr{ nullptr };
-
-            // Index of a batch these command lists belong to.
-            uint64_t CommandListBatchIndex = 0;
         };
 
         struct PassHelpers
@@ -95,19 +92,17 @@ namespace PathFinder
             const RenderSurfaceDescription& defaultRenderSurface
         );
 
-        PassCommandLists& CommandListsForNode(const RenderPassGraph::Node& node);
-        PassHelpers& PassHelpersForNode(const RenderPassGraph::Node& node);
+        PassCommandLists& CommandListsForPass(const RenderPassGraph::Node& node);
+        PassHelpers& PassHelpersForPass(const RenderPassGraph::Node& node);
 
         HAL::ComputeCommandListBase* GetComputeCommandListBase(CommandListPtrVariant& variant) const;
-        HAL::ComputeCommandListBase* GetComputeCommandListBase(HALCommandListPtrVariant& variant) const;
-        HALCommandListPtrVariant GetHALCommandListVariant(CommandListPtrVariant& variant) const;
 
         void SetBackBuffer(Memory::Texture* backBuffer);
         const Memory::Texture* BackBuffer() const;
 
         void AllocateUploadCommandList();
         void AllocateRTASBuildsCommandList();
-        void AllocateWorkerCommandLists();
+        void PrepareForGraphExecution();
 
         void ExecuteRenderGraph();
         void GatherMeasurements();
@@ -116,16 +111,71 @@ namespace PathFinder
         void RecordWorkerCommandList(const RenderPassGraph::Node& passNode, const Lambda& action);
 
     private:
-        struct CommandListBatch
+        // Helper data structure that manages fences and holds command lists. 
+        // Converted into API calls after render pass work and rerouted transitions are determined and placed.
+        class FrameBlueprint
         {
-            bool IsEmpty = true;
-            std::vector<HALCommandListPtrVariant> CommandLists;
-            std::vector<FenceAndValue> FencesToWait;
-            FenceAndValue FenceToSignal;
+        public:
+            struct Signal
+            {
+                HAL::Fence* Fence = nullptr;
+                uint64_t FenceValue = 0;
+                std::string SignalName;
+            };
 
-            // Debug info
-            std::vector<std::string> EventNamesToWait;
-            std::string SignalName;
+            struct Wait
+            {
+                std::vector<const Signal*> SignalsToWait;
+                std::vector<std::string> EventNamesToWait;
+            };
+
+            struct RenderPassEvent
+            {
+                PassCommandLists CommandLists;
+                std::optional<Wait> WaitEvent;
+                std::optional<Signal> SignalEvent;
+                uint64_t EstimatedBatchIndex = 0;
+            };
+
+            struct ReroutedTransitionsEvent
+            {
+                CommandListPtrVariant CommandList;
+                Signal SignalEvent;
+                Wait WaitEvent;
+            };
+
+            using Event = std::variant<RenderPassEvent, ReroutedTransitionsEvent>;
+            using EventList = std::list<Event>;
+            using EventIt = EventList::iterator;
+            using BlueprintTraverser = std::function<void(uint64_t queueIndex, Event& frameEvent)>;
+
+            FrameBlueprint(const RenderPassGraph* graph, uint64_t bvhBuildQueueIndex, HAL::Fence* bvhFence, const std::vector<HAL::Fence*>& queueFences);
+
+            void Build();
+            void PropagateFenceUpdates();
+
+            ReroutedTransitionsEvent& InsertReroutedTransitionsEvent(
+                std::optional<uint64_t> afterDependencyLevel,
+                uint64_t waitingDependencyLevel, 
+                uint64_t queueIndex, 
+                const std::vector<uint64_t>& queuesToSyncWith);
+
+            void Traverse(const BlueprintTraverser& traverser);
+
+            const RenderPassEvent& GetRenderPassEvent(const RenderPassGraph::Node& node) const;
+            RenderPassEvent& GetRenderPassEvent(const RenderPassGraph::Node& node);
+
+        private:
+            // Unique ptr to circumvent std::vector chosing copy ctor of std::list instead of the move one.
+            std::vector<std::unique_ptr<EventList>> mEventsPerQueue;
+            std::vector<uint64_t> mCurrentBatchIndices;
+            std::vector<std::vector<EventIt>> mRenderPassEventRefs;
+            std::vector<std::vector<EventIt>> mReroutedTransitionEventRefs;
+
+            const RenderPassGraph* mPassGraph = nullptr;
+            uint64_t mBVHBuildQueueIndex;
+            Signal mBVHBuildSignal;
+            std::vector<HAL::Fence*> mQueueFences;
         };
 
         struct SubresourceTransitionInfo
@@ -148,18 +198,18 @@ namespace PathFinder
             HAL::ResourceBarrierCollection ToCopyStateTransitions;
         };
 
-        void BatchCommandLists();
-        void ExetuteCommandLists();
+        void RecordNonWorkerCommandLists();
+        void TraverseAndExecuteFrameBlueprint();
         void UploadPassConstants();
 
         void GatherResourceTransitionKnowledge(const RenderPassGraph::DependencyLevel& dependencyLevel);
-        void AllocateAndRecordPreWorkCommandList(const RenderPassGraph::Node* node, const HAL::ResourceBarrierCollection& barriers, const std::string& cmdListName);
-        void CollectNodeTransitionBarriers(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection);
-        void CollectNodeUAVAndAliasingBarriers(const RenderPassGraph::Node* node, HAL::ResourceBarrierCollection& collection);
-        void CreateBatchesWithTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
-        void CreateBatchesWithoutTransitionRerouting(const RenderPassGraph::DependencyLevel& dependencyLevel);
+        void AllocateAndRecordPreWorkCommandList(const RenderPassGraph::Node& node, const HAL::ResourceBarrierCollection& barriers, const std::string& cmdListName);
+        void AllocateAndRecordReroutedTransitionsCommandList(std::optional<uint64_t> reroutingDependencyLevelIndex, uint64_t currentDependencyLevelIndex, const HAL::ResourceBarrierCollection& barriers);
+        void CollectNodeStandardTransitions(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection);
+        void CollectNodeTransitionsToReroute(std::optional<uint64_t>& reroutingDependencyLevelIndex, HAL::ResourceBarrierCollection& collection);
+        void CollectNodeUAVAndAliasingBarriers(const RenderPassGraph::Node& node, HAL::ResourceBarrierCollection& collection);
+        void RecordResourceTransitions(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void RecordPostWorkCommandLists();
-        void InsertCommandListsIntoCorrespondingBatches();
         void ExecuteUploadCommands();
         void ExecuteBVHBuildCommands();
 
@@ -169,11 +219,11 @@ namespace PathFinder
         uint64_t FindMostCompetentQueueIndex(const robin_hood::unordered_flat_set<RenderPassGraph::Node::QueueIndex>& queueIndices) const;
         uint64_t FindQueueSupportingTransition(HAL::ResourceState beforeStates, HAL::ResourceState afterStates) const;
         CommandListPtrVariant AllocateCommandListForQueue(uint64_t queueIndex) const;
-        bool IsNullCommandList(HALCommandListPtrVariant& variant) const;
+        bool IsNullCommandList(CommandListPtrVariant& variant) const;
         HAL::Fence& FenceForQueueIndex(uint64_t index);
 
         template <class CommandQueueT, class CommandListT>
-        void ExecuteCommandListBatch(CommandListBatch& batch, HAL::CommandQueue& queue);
+        void ExecuteCommandListBatch(std::vector<CommandListPtrVariant>& batch, HAL::CommandQueue& queue);
 
         Memory::PoolDescriptorAllocator* mDescriptorAllocator;
         Memory::PoolCommandListAllocator* mCommandListAllocator;
@@ -189,9 +239,6 @@ namespace PathFinder
         Memory::Texture* mBackBuffer = nullptr;
         Memory::PoolCommandListAllocator::GraphicsCommandListPtr mPreRenderUploadsCommandList;
         Memory::PoolCommandListAllocator::ComputeCommandListPtr mRTASBuildsCommandList;
-        std::vector<PassCommandLists> mPassCommandLists;
-        std::vector<CommandListPtrVariant> mReroutedTransitionsCommandLists;
-        std::vector<std::vector<CommandListBatch>> mCommandListBatches;
         std::vector<PassHelpers> mPassHelpers;
         HAL::GraphicsCommandQueue mGraphicsQueue;
         HAL::ComputeCommandQueue mComputeQueue;
@@ -199,17 +246,23 @@ namespace PathFinder
         HAL::Fence mGraphicsQueueFence;
         HAL::Fence mComputeQueueFence;
         HAL::Fence mBVHFence;
+
         uint64_t mQueueCount = 2;
         uint64_t mBVHBuildsQueueIndex = 1;
+
+        FrameBlueprint mFrameBlueprint;
 
         // Keep track of nodes where transitions previously occurred (where resource was used last) to insert Begin part of split barriers there
         robin_hood::unordered_flat_map<RenderPassGraph::SubresourceName, SubresourcePreviousUsageInfo> mSubresourcesPreviousUsageInfo;
 
         // Keep list of separate barriers gathered for dependency level so we could cull them, if conditions are met, when command list batches are determined
-        std::vector<std::vector<SubresourceTransitionInfo>> mDependencyLevelTransitionBarriers;
+        std::vector<std::vector<SubresourceTransitionInfo>> mDependencyLevelStandardTransitions;
+
+        // Keep list of transitions in the current dependency level that need to be rerouted 
+        std::vector<SubresourceTransitionInfo> mDependencyLevelTransitionsToReroute;
 
         // UAV barriers to be applied between passes (not between draw/dispatch calls) when UAV->UAV usage is detected
-        std::vector<HAL::ResourceBarrierCollection> mDependencyLevelInterpassUAVBarriers;
+        std::vector<HAL::ResourceBarrierCollection> mDependencyLevelInterpassUAVBarriers;        
 
         // Keep track of queues inside a graph dependency layer that require transition rerouting
         robin_hood::unordered_flat_set<RenderPassGraph::Node::QueueIndex> mDependencyLevelQueuesThatRequireTransitionRerouting;

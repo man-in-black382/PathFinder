@@ -125,9 +125,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;GFSDK_Aftermath_Lib.x64.lib;GFSDK_Aftermath_Lib_UWP.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
-xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
-xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
+      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r /b /d
+xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r /b /d
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r /b /d
 cd $(TargetDir)
 del *.cso
 RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
@@ -194,9 +194,9 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;GFSDK_Aftermath_Lib.x64.lib;GFSDK_Aftermath_Lib_UWP.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r
-xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r
-xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r
+      <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r /b /d
+xcopy "$(ProjectDir)Source/Scene/Precompiled" "$(TargetDir)Precompiled" /e /y /i /r /b /d
+xcopy "$(ProjectDir)MediaResources" "$(TargetDir)MediaResources" /e /y /i /r /b /d
 cd $(TargetDir)
 del *.cso
 RD /S /Q "$(TargetDir)CompiledShaders\" </Command>

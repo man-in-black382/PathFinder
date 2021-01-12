@@ -77,7 +77,9 @@ namespace PathFinder
     RenderPassContainer<ContentMediator>::PassHelpers<RenderPass>* RenderPassContainer<ContentMediator>::GetRenderPass(Foundation::Name passName)
     {
         auto it = mRenderPasses.find(passName);
-        if (it == mRenderPasses.end()) return nullptr;
+        if (it == mRenderPasses.end())
+            return nullptr;
+
         return &(it->second);
     }
 
@@ -85,7 +87,9 @@ namespace PathFinder
     RenderPassContainer<ContentMediator>::PassHelpers<RenderSubPass>* RenderPassContainer<ContentMediator>::GetRenderSubPass(Foundation::Name passName)
     {
         auto it = mRenderSubPasses.find(passName);
-        if (it == mRenderSubPasses.end()) return nullptr;
+        if (it == mRenderSubPasses.end())
+            return nullptr;
+
         return &(it->second);
     }
 

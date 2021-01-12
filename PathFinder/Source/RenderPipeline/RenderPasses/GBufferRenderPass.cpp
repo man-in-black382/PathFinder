@@ -71,12 +71,15 @@ namespace PathFinder
         viewDepthProperties.ClearValues = HAL::ColorClearValue{ std::numeric_limits<float>::max() };
         viewDepthProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
+        auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
+        auto frameIndex = scheduler->FrameNumber() % 2;
+
         scheduler->NewRenderTarget(ResourceNames::GBufferAlbedoMetalness, albedoMetalnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness, normalRoughnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferMotionVector, motionVectorProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferTypeAndMaterialIndex, typeAndMaterialIndexProperties);
-        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[0], viewDepthProperties);
-        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[1], viewDepthProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[frameIndex], viewDepthProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[previousFrameIndex], MipSet::Empty(), viewDepthProperties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
     }  
 

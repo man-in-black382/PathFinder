@@ -31,6 +31,7 @@ namespace PathFinder
         scheduler->NewBuffer(ResourceNames::PickedGeometryInfo, NewBufferProperties<uint32_t>{ 1 });
         scheduler->Export(ResourceNames::PickedGeometryInfo);
         scheduler->UseRayTracing();
+        scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     } 
 
     void GeometryPickingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
