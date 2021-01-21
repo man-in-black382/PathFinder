@@ -13,14 +13,14 @@ namespace PathFinder
         mSphericalLight = nullptr;
         mFlatLight = nullptr;
 
-        if (auto entity = mScene->GetEntityByID(mHoveredEntityID))
+        /*if (auto entity = mScene->GetEntityByID(mHoveredEntityID))
         {
             std::visit(Foundation::MakeVisitor(
                 [this](MeshInstance* instance) { mMeshInstance = instance; },
                 [this](SphericalLight* light) { mSphericalLight = light; },
                 [this](FlatLight* light) { mFlatLight = light; }),
                 *entity);
-        }
+        }*/
     }
 
     void PickedEntityViewModel::SetModifiedModelMatrix(const glm::mat4& mat, const glm::mat4& delta)
@@ -82,7 +82,7 @@ namespace PathFinder
 
     void PickedEntityViewModel::OnCreated()
     {
-        (*Dependencies->PostRenderEvent) += { "PickedEntityViewModel.Post.Render", [this]()
+        /*(*Dependencies->PostRenderEvent) += { "PickedEntityViewModel.Post.Render", [this]()
         {
             const Memory::Buffer* pickedGeometryInfo = Dependencies->ResourceStorage->GetPerResourceData(PathFinder::ResourceNames::PickedGeometryInfo)->Buffer.get();
 
@@ -90,7 +90,7 @@ namespace PathFinder
             {
                 if (info) mHoveredEntityID = EntityID{ *info };
             });
-        }};
+        }};*/
     }
 
 }

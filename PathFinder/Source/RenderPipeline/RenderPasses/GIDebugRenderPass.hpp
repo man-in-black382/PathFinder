@@ -8,18 +8,18 @@
 namespace PathFinder
 {
 
-    struct GIUpdateCBContent
+    struct GIDebugCBContent
     {
-        
+        GPUIrradianceField ProbeField;
     };
 
-    class GIUpdateRenderPass : public RenderPass<RenderPassContentMediator>
+    class GIDebugRenderPass : public RenderPass<RenderPassContentMediator>
     {
     public:
-        GIUpdateRenderPass();
-        ~GIUpdateRenderPass() = default;
+        GIDebugRenderPass();
+        ~GIDebugRenderPass() = default;
 
-        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
+        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler) override; 
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
     };

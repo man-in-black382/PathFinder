@@ -106,11 +106,18 @@ namespace HAL
     public:
         struct InstanceInfo
         {
-            InstanceInfo(uint32_t id) : InstanceID{ id }, InstanceMask{ 0xFF } {}
-            InstanceInfo(uint32_t id, uint32_t mask) : InstanceID{ id }, InstanceMask{ mask } {}
+            InstanceInfo(uint32_t id) 
+                : InstanceID{ id }, InstanceMask{ 0xFF } {}
+
+            InstanceInfo(uint32_t id, uint32_t mask) 
+                : InstanceID{ id }, InstanceMask{ mask } {}
+
+            InstanceInfo(uint32_t id, uint32_t mask, uint32_t hitGroupContribution)
+                : InstanceID{ id }, InstanceMask{ mask }, HitGroupContribution{ hitGroupContribution } {}
 
             uint32_t InstanceID : 24;
             uint32_t InstanceMask : 8;
+            uint32_t HitGroupContribution = 0;
         };
 
         struct MemoryRequirements

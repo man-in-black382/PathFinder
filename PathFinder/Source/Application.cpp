@@ -17,7 +17,7 @@ namespace PathFinder
         mRenderEngine = std::make_unique<RenderEngine<RenderPassContentMediator>>(mWindowHandle, *mCmdLineParser);
         mScene = std::make_unique<Scene>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->Device(), mRenderEngine->ResourceProducer());
         mInput = std::make_unique<Input>();
-        mSettingsController = std::make_unique<RenderSettingsController>(mInput.get());
+        mSettingsController = std::make_unique<RenderSettingsController>(mInput.get(), mScene.get());
         mWindowsInputHandler = std::make_unique<InputHandlerWindows>(mInput.get(), mWindowHandle);
         mCameraInteractor = std::make_unique<CameraInteractor>(&mScene->MainCamera(), mInput.get());
         mDisplaySettingsController = std::make_unique<DisplaySettingsController>(mRenderEngine->SelectedAdapter(), mRenderEngine->SwapChain(), mWindowHandle);
@@ -128,6 +128,9 @@ namespace PathFinder
         mRenderEngine->AddRenderPass(&mBackBufferOutputPass);
         mRenderEngine->AddRenderPass(&mUIPass);
         mRenderEngine->AddRenderPass(&mGeometryPickingPass);
+        mRenderEngine->AddRenderPass(&mGIRayTracingPass);
+        mRenderEngine->AddRenderPass(&mGIProbeUpdatePass);
+        mRenderEngine->AddRenderPass(&mGIDebugPass);
     }
 
     void Application::PerformPreRenderActions()
@@ -149,7 +152,6 @@ namespace PathFinder
         mSettingsController->ApplyVolatileSettings();
 
         mScene->GPUStorage().UploadInstances();
-        mScene->RemapEntityIDs();
 
         // Top RT needs to be rebuilt every frame
         mRenderEngine->AddTopRayTracingAccelerationStructure(&mScene->GPUStorage().TopAccelerationStructure());

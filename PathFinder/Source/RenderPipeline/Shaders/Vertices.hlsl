@@ -17,9 +17,4 @@ struct Vertex1P1N1UV1T1BT
     float3 Bitangent;
 };
 
-struct IndexU32
-{
-    uint Index;
-};
-
 #endif

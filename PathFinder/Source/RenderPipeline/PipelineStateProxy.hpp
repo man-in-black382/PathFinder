@@ -28,6 +28,7 @@ namespace PathFinder
     {
     public:
         std::string ComputeShaderFileName;
+        std::optional<std::string> EntryPoint;
         std::optional<Foundation::Name> RootSignatureName;
     };
 
@@ -39,6 +40,10 @@ namespace PathFinder
             std::optional<std::string> ClosestHitShaderFileName;
             std::optional<std::string> AnyHitShaderFileName;
             std::optional<std::string> IntersectionShaderFileName;
+
+            std::optional<std::string> ClosestHitShaderEntryPoint;
+            std::optional<std::string> AnyHitShaderEntryPoint;
+            std::optional<std::string> IntersectionShaderEntryPoint;
         };
 
         struct HitGroup

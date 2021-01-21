@@ -136,8 +136,9 @@ namespace PathFinder
         assert_format(!proxy.ComputeShaderFileName.empty(), "Compute shader is missing");
 
         HAL::ComputePipelineState newState{ mDevice };
+        std::string entryPoint = proxy.EntryPoint.value_or(mDefaultComputeEntryPointName);
 
-        HAL::Shader* computeShader = mShaderManager->LoadShader(HAL::Shader::Stage::Compute, mDefaultComputeEntryPointName, proxy.ComputeShaderFileName);
+        HAL::Shader* computeShader = mShaderManager->LoadShader(HAL::Shader::Stage::Compute, entryPoint, proxy.ComputeShaderFileName);
 
         newState.SetRootSignature(GetNamedRootSignatureOrDefault(proxy.RootSignatureName));
         newState.SetComputeShader(computeShader);
@@ -193,21 +194,21 @@ namespace PathFinder
             if (auto fileName = hitGroupInfo.ShaderFileNames.AnyHitShaderFileName)
             {
                 shaders.AnyHitLibrary = mShaderManager->LoadLibrary(*fileName);
-                shaders.AnyHitEntryPoint = mDefaultRayAnyHitEntryPointName;
+                shaders.AnyHitEntryPoint = hitGroupInfo.ShaderFileNames.AnyHitShaderEntryPoint.value_or(mDefaultRayAnyHitEntryPointName);
                 AssociateStateWithLibrary(&iter->second, shaders.AnyHitLibrary);
             }
 
             if (auto fileName = hitGroupInfo.ShaderFileNames.ClosestHitShaderFileName)
             {
                 shaders.ClosestHitLibrary = mShaderManager->LoadLibrary(*fileName);
-                shaders.ClosestHitEntryPoint = mDefaultRayClosestHitEntryPointName;
+                shaders.ClosestHitEntryPoint = hitGroupInfo.ShaderFileNames.ClosestHitShaderEntryPoint.value_or(mDefaultRayClosestHitEntryPointName); 
                 AssociateStateWithLibrary(&iter->second, shaders.ClosestHitLibrary);
             }
 
             if (auto fileName = hitGroupInfo.ShaderFileNames.IntersectionShaderFileName)
             {
                 shaders.IntersectionLibrary = mShaderManager->LoadLibrary(*fileName);
-                shaders.IntersectionEntryPoint = mDefaultRayIntersectionEntryPointName;
+                shaders.IntersectionEntryPoint = hitGroupInfo.ShaderFileNames.IntersectionShaderEntryPoint.value_or(mDefaultRayIntersectionEntryPointName);
                 AssociateStateWithLibrary(&iter->second, shaders.IntersectionLibrary);
             }
 

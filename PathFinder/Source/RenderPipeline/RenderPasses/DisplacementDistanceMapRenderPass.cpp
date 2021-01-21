@@ -7,7 +7,7 @@ namespace PathFinder
     DisplacementDistanceMapRenderPass::DisplacementDistanceMapRenderPass()
         : RenderPass("DistanceMapGeneration", RenderPassPurpose::AssetProcessing) {}
 
-    void DisplacementDistanceMapRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DisplacementDistanceMapRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         //HAL::RootSignature signature = stateCreator->CloneBaseRootSignature();
         //signature.AddDescriptorParameter(HAL::RootUnorderedAccessParameter{ 0, 0 }); // Read Only Cones Buffer | u0 - s0

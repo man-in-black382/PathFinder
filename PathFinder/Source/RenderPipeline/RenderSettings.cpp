@@ -3,8 +3,8 @@
 namespace PathFinder
 {
 
-    RenderSettingsController::RenderSettingsController(Input* input)
-        : mInput{ input }
+    RenderSettingsController::RenderSettingsController(Input* input, Scene* scene)
+        : mInput{ input }, mScene{ scene }
     {
         mInput->KeyUpEvent() += { "RenderSettingsController.Key.Up", this, &RenderSettingsController::HandleKeyUp };
     }
@@ -21,6 +21,9 @@ namespace PathFinder
 
     void RenderSettingsController::ApplyVolatileSettings()
     {
+        // Gather settings from around the engine in here
+        VolatileSettings.GlobalIlluminationSettings = mScene->GlobalIlluminationManager().ProbeField;
+
         mAppliedSettings = VolatileSettings;
     }
 

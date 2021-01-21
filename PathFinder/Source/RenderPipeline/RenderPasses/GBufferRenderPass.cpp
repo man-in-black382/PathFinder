@@ -6,7 +6,7 @@ namespace PathFinder
     GBufferRenderPass::GBufferRenderPass()
         : RenderPass("GBuffer") {}
 
-    void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void GBufferRenderPass::SetupRootSignatures(RootSignatureCreator* rootSignatureCreator)
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::GBufferMeshes, [](RootSignatureProxy& signatureProxy)
         {
@@ -24,7 +24,10 @@ namespace PathFinder
             signatureProxy.AddShaderResourceBufferParameter(1, 0); // Unified vertex buffer
             signatureProxy.AddShaderResourceBufferParameter(2, 0); // Unified index buffer
         });
+    }
 
+    void GBufferRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    {
         stateCreator->CreateGraphicsState(PSONames::GBufferMeshes, [](GraphicsStateProxy& state) 
         {
             state.VertexShaderFileName = "GBufferMeshes.hlsl";

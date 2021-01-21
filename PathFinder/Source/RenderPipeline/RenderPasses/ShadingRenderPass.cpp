@@ -8,7 +8,7 @@ namespace PathFinder
     ShadingRenderPass::ShadingRenderPass()
         : RenderPass("Shading") {} 
 
-    void ShadingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void ShadingRenderPass::SetupRootSignatures(RootSignatureCreator* rootSignatureCreator)
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::Shading, [](RootSignatureProxy& signatureProxy)
         {
@@ -16,8 +16,14 @@ namespace PathFinder
             signatureProxy.AddShaderResourceBufferParameter(0, 0); // Scene BVH | t0 - s0
             signatureProxy.AddShaderResourceBufferParameter(1, 0); // Light Table | t1 - s0
             signatureProxy.AddShaderResourceBufferParameter(2, 0); // Material Table | t2 - s0
+            signatureProxy.AddShaderResourceBufferParameter(3, 0); // Vertex Buffer | t3 - s0
+            signatureProxy.AddShaderResourceBufferParameter(4, 0); // Index Buffer | t4 - s0
+            signatureProxy.AddShaderResourceBufferParameter(5, 0); // Mesh Instance Table | t5 - s0
         });
+    }
 
+    void ShadingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    {
         stateCreator->CreateRayTracingState(PSONames::Shading, [this](RayTracingStateProxy& state)
         {
             state.RayGenerationShaderFileName = "Shading.hlsl";
@@ -77,7 +83,7 @@ namespace PathFinder
         }
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->SetRootConstants(CompressLightPartitionInfo(sceneStorage->LightTablePartitionInfo()), 0, 0);
+        context->GetCommandRecorder()->SetRootConstants(sceneStorage->CompressedLightPartitionInfo(), 0, 0);
 
         const Memory::Buffer* bvh = sceneStorage->TopAccelerationStructure().AccelerationStructureBuffer();
         const Memory::Buffer* lights = sceneStorage->LightTable();
@@ -88,15 +94,6 @@ namespace PathFinder
         if (materials) context->GetCommandRecorder()->BindExternalBuffer(*materials, 2, 0, HAL::ShaderRegister::ShaderResource);
         
         context->GetCommandRecorder()->DispatchRays(context->GetDefaultRenderSurfaceDesc().Dimensions());
-    }
-
-    uint32_t ShadingRenderPass::CompressLightPartitionInfo(const GPULightTablePartitionInfo& info) const
-    {
-        uint32_t compressed = 0;
-        compressed |= (info.SphericalLightsCount & 0xFF) << 24;
-        compressed |= (info.RectangularLightsCount & 0xFF) << 16;
-        compressed |= (info.EllipticalLightsCount & 0xFF) << 8;
-        return compressed;
     }
 
 }

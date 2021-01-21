@@ -26,11 +26,6 @@ namespace PathFinder
         // is equal to its total luminous power Phi divided by the emitter area A and the projected solid angle (Pi)
     }
 
-    void Light::SetEntityID(EntityID id)
-    {
-        mEntityID = id;
-    }
-
     void Light::SetVertexStorageLocation(const VertexStorageLocation& location)
     {
         mVertexStorageLocation = location;

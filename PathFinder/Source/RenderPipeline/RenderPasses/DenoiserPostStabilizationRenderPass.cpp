@@ -8,7 +8,7 @@ namespace PathFinder
     DenoiserPostStabilizationRenderPass::DenoiserPostStabilizationRenderPass()
         : RenderPass("DenoiserPostStabilization") {}
 
-    void DenoiserPostStabilizationRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DenoiserPostStabilizationRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::DenoiserPostStabilization, [](ComputeStateProxy& state)
         {

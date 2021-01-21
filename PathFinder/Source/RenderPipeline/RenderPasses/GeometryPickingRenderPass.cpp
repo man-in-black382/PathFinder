@@ -8,19 +8,34 @@ namespace PathFinder
     GeometryPickingRenderPass::GeometryPickingRenderPass()
         : RenderPass("GeometryPicking") {} 
 
-    void GeometryPickingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void GeometryPickingRenderPass::SetupRootSignatures(RootSignatureCreator* rootSignatureCreator)
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::GeometryPicking, [](RootSignatureProxy& signatureProxy)
         {
             signatureProxy.AddShaderResourceBufferParameter(0, 0); // Scene BVH | t0 - s0
             signatureProxy.AddUnorderedAccessBufferParameter(0, 0); // Intersection Info Buffer | u0 - s0
         });
+    }
 
+    void GeometryPickingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    {
         stateCreator->CreateRayTracingState(PSONames::GeometryPicking, [this](RayTracingStateProxy& state)
         {
+            RayTracingStateProxy::HitGroupShaderFileNames meshHitGroup{};
+            meshHitGroup.ClosestHitShaderFileName = "GeometryPicking.hlsl";
+            meshHitGroup.ClosestHitShaderEntryPoint = "MeshRayClosestHit";
+
+            RayTracingStateProxy::HitGroupShaderFileNames lightHitGroup{};
+            lightHitGroup.ClosestHitShaderFileName = "GeometryPicking.hlsl";
+            lightHitGroup.ClosestHitShaderEntryPoint = "LightRayClosestHit";
+
+            // Order of hit group shaders must match hit group contribution of entities
+            state.AddHitGroupShaders(meshHitGroup);
+            state.AddHitGroupShaders(lightHitGroup);
+
             state.RayGenerationShaderFileName = "GeometryPicking.hlsl";
-            state.AddHitGroupShaders(RayTracingStateProxy::HitGroupShaderFileNames{ "GeometryPicking.hlsl" });
-            state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
+            
+            state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float) * 2, sizeof(float) * 2 };
             state.GlobalRootSignatureName = RootSignatureNames::GeometryPicking;
             state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
         });

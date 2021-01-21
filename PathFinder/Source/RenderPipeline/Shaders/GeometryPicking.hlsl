@@ -13,17 +13,25 @@ struct PassData
 
 struct IntersectionInfo
 {
-    // ID that will help us get intersected geometry on CPU
     uint InstanceID;
+    uint EntityType;
 };
 
 RaytracingAccelerationStructure SceneBVH : register(t0, space0);
 RWStructuredBuffer<IntersectionInfo> IntersectionInfoBuffer : register(u0, space0);
 
 [shader("closesthit")]
-void RayClosestHit(inout IntersectionInfo payload, in BuiltInTriangleIntersectionAttributes attributes)
+void MeshRayClosestHit(inout IntersectionInfo payload, in BuiltInTriangleIntersectionAttributes attributes)
 {
     payload.InstanceID = InstanceID();
+    payload.EntityType = EntityTypeMesh;
+}
+
+[shader("closesthit")]
+void LightRayClosestHit(inout IntersectionInfo payload, in BuiltInTriangleIntersectionAttributes attributes)
+{
+    payload.InstanceID = InstanceID();
+    payload.EntityType = EntityTypeLight;
 }
 
 [shader("raygeneration")]
@@ -40,7 +48,7 @@ void RayGeneration()
     dxrRay.TMin = FrameDataCB.CurrentFrameCamera.NearPlane;
     dxrRay.TMax = FrameDataCB.CurrentFrameCamera.FarPlane;
 
-    IntersectionInfo payload = { U32Max };
+    IntersectionInfo payload = { U32Max, U32Max };
 
     TraceRay(SceneBVH,
         RAY_FLAG_CULL_BACK_FACING_TRIANGLES

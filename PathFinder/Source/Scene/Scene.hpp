@@ -11,6 +11,7 @@
 #include "FlatLight.hpp"
 #include "SphericalLight.hpp"
 #include "LuminanceMeter.hpp"
+#include "GIManager.hpp"
 #include "SceneGPUStorage.hpp"
 
 #include <Memory/GPUResourceProducer.hpp>
@@ -41,10 +42,6 @@ namespace PathFinder
         FlatLightIt EmplaceRectangularLight();
         SphericalLightIt EmplaceSphericalLight();
 
-        std::optional<EntityVariant> GetEntityByID(const EntityID& id) const;
-
-        void RemapEntityIDs();
-
         void Serialize(const std::filesystem::path& destination) const;
         void Deserialize(const std::filesystem::path& source);
 
@@ -58,12 +55,11 @@ namespace PathFinder
         std::list<FlatLight> mDiskLights;
         std::list<SphericalLight> mSphericalLights;
 
-        robin_hood::unordered_flat_map<EntityID, EntityVariant> mMappedEntities;
-
         Camera mCamera;
         LuminanceMeter mLuminanceMeter;
         GTTonemappingParameterss mTonemappingParams;
         BloomParameters mBloomParameters;
+        GIManager mGIManager;
 
         Memory::GPUResourceProducer::TexturePtr mBlueNoiseTexture;
         Memory::GPUResourceProducer::TexturePtr mSMAAAreaTexture;
@@ -80,6 +76,8 @@ namespace PathFinder
         inline const Camera& MainCamera() const { return mCamera; }
         inline LuminanceMeter& LumMeter() { return mLuminanceMeter; }
         inline const LuminanceMeter& LumMeter() const { return mLuminanceMeter; }
+        inline GIManager& GlobalIlluminationManager() { return mGIManager; }
+        inline const GIManager& GlobalIlluminationManager() const { return mGIManager; }
         inline const auto& Meshes() const { return mMeshes; }
         inline const auto& MeshInstances() const { return mMeshInstances; }
         inline const auto& Materials() const { return mMaterials; }

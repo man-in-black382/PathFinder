@@ -6,7 +6,7 @@ namespace PathFinder
     SMAAEdgeDetectionRenderPass::SMAAEdgeDetectionRenderPass()
         : RenderPass("SMAAEdgeDetection") {}
 
-    void SMAAEdgeDetectionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void SMAAEdgeDetectionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateGraphicsState(PSONames::SMAAEdgeDetection, [](GraphicsStateProxy& state)
         {

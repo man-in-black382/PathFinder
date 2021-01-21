@@ -6,7 +6,7 @@ namespace PathFinder
     SMAANeighborhoodBlendingRenderPass::SMAANeighborhoodBlendingRenderPass()
         : RenderPass("SMAANeighborhoodBlending") {}
 
-    void SMAANeighborhoodBlendingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void SMAANeighborhoodBlendingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateGraphicsState(PSONames::SMAANeighborhoodBlending, [](GraphicsStateProxy& state)
         {

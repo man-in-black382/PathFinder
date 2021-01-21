@@ -6,7 +6,7 @@ namespace PathFinder
     BackBufferOutputPass::BackBufferOutputPass()
         : RenderPass("BackBufferOutput") {}
 
-    void BackBufferOutputPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void BackBufferOutputPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         bool isHDR = false;
 

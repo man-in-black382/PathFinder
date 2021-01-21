@@ -52,6 +52,7 @@ namespace PathFinder
             RenderPassUtilityProvider* UtilityProvider;
             uint64_t GraphNodeIndex;
 
+            bool AreRootSignaturesScheduled = false;
             bool ArePipelineStatesScheduled = false;
             bool AreSamplersScheduled = false;
 

@@ -103,7 +103,7 @@ namespace PathFinder
         uint32_t EllipticalLightsCount = 0;
         uint32_t RectangularLightsCount = 0;
         uint32_t TotalLightsCount = 0;
-        uint32_t Pad1__;
+        uint32_t Pad0__;
     };
 
     struct GPUCamera
@@ -129,7 +129,44 @@ namespace PathFinder
         // 16 byte boundary
     };
 
+    struct GPUIrradianceField
+    {
+        glm::uvec3 GridSize;
+        float CellSize;
+        // 16 byte boundary
+        glm::vec3 GridCornerPosition;
+        uint32_t RaysPerProbe;
+        // 16 byte boundary
+        uint32_t TotalProbeCount;
+        glm::uvec2 RayHitInfoTextureSize;
+        uint32_t RayHitInfoTextureIdx;
+        // 16 byte boundary
+        glm::mat4 ProbeRotation;
+        // 16 byte boundary
+        glm::uvec2 IrradianceProbeAtlasSize;
+        glm::uvec2 DepthProbeAtlasSize;
+        // 16 byte boundary
+        glm::uvec2 IrradianceProbeAtlasProbesPerDimension;
+        glm::uvec2 DepthProbeAtlasProbesPerDimension;
+        // 16 byte boundary
+        uint32_t IrradianceProbeSize;
+        uint32_t DepthProbeSize;
+        uint32_t IrradianceProbeAtlasTexIdx;
+        uint32_t DepthProbeAtlasTexIdx;
+        // 16 byte boundary
+    };
+
     using GPUInstanceIndex = uint64_t;
+    
+    enum class GPUInstanceHitGroupContribution : uint32_t
+    {
+        Mesh = 0, Light = 1
+    };
+
+    enum class GPUInstanceMask : uint32_t
+    {
+        Mesh = 1 << 0, Light = 1 << 1
+    };
 
     class Scene;
 
@@ -143,6 +180,8 @@ namespace PathFinder
         void UploadInstances();
 
         GPUCamera CameraGPURepresentation() const;
+        GPUIrradianceField IrradianceFieldGPURepresentation() const;
+        uint32_t CompressedLightPartitionInfo() const;
 
     private:
         template <class Vertex>
@@ -165,8 +204,6 @@ namespace PathFinder
 
         void UploadMeshInstances();
         void UploadLights();
-
-        EntityID GetNextEntityID();
 
         GPULightTableEntry CreateLightGPUTableEntry(const FlatLight& light) const;
         GPULightTableEntry CreateLightGPUTableEntry(const SphericalLight& light) const;
@@ -192,8 +229,6 @@ namespace PathFinder
         Scene* mScene;
         const HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;
-
-        EntityID mUniqueEntityID = 0;
 
     public:
         inline const auto UnifiedVertexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get(); }

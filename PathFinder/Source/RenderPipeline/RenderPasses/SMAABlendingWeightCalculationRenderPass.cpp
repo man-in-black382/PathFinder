@@ -6,7 +6,7 @@ namespace PathFinder
     SMAABlendingWeightCalculationRenderPass::SMAABlendingWeightCalculationRenderPass()
         : RenderPass("SMAABlendingWeightCalculation") {}
 
-    void SMAABlendingWeightCalculationRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void SMAABlendingWeightCalculationRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateGraphicsState(PSONames::SMAABlendingWeightCalculation, [](GraphicsStateProxy& state)
         {

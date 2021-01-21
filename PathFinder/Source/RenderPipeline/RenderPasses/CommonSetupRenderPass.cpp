@@ -8,14 +8,17 @@ namespace PathFinder
     CommonSetupRenderPass::CommonSetupRenderPass()
         : RenderPass("CommonSetup", RenderPassPurpose::Setup) {}
 
-    void CommonSetupRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void CommonSetupRenderPass::SetupRootSignatures(RootSignatureCreator* rootSignatureCreator)
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::UAVClear, [](RootSignatureProxy& signatureProxy)
         {
             signatureProxy.AddUnorderedAccessBufferParameter(0, 0); // Float buffer | u0 - s0
             signatureProxy.AddUnorderedAccessBufferParameter(1, 0); // UInt buffer | u0 - s0
         });
+    }
 
+    void CommonSetupRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    {
         stateCreator->CreateComputeState(PSONames::Downsampling, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "Downsampling.hlsl";

@@ -9,7 +9,7 @@ namespace PathFinder
     DenoiserGradientFilteringRenderPass::DenoiserGradientFilteringRenderPass()
         : RenderPass("DenoiserGradientFiltering") {}
 
-    void DenoiserGradientFilteringRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DenoiserGradientFilteringRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::DenoiserGradientFiltering, [](ComputeStateProxy& state)
         {

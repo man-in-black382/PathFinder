@@ -1,5 +1,6 @@
 #include "ToneMappingRenderPass.hpp"
 #include "UAVClearHelper.hpp"
+#include "ResourceNameResolving.hpp"
 
 #include <Foundation/Gaussian.hpp>
 
@@ -9,13 +10,16 @@ namespace PathFinder
     ToneMappingRenderPass::ToneMappingRenderPass()
         : RenderPass("ToneMapping") {}
 
-    void ToneMappingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void ToneMappingRenderPass::SetupRootSignatures(RootSignatureCreator* rootSignatureCreator)
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::ToneMapping, [](RootSignatureProxy& signatureProxy)
         {
             signatureProxy.AddUnorderedAccessBufferParameter(0, 0); // Histogram | u0 - s0
         });
+    }
 
+    void ToneMappingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    {
         stateCreator->CreateComputeState(PSONames::ToneMapping, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "ToneMapping.hlsl";
@@ -25,7 +29,7 @@ namespace PathFinder
 
     void ToneMappingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        scheduler->ReadTexture(ResourceNames::BloomCompositionOutput);
+        scheduler->ReadTexture(ToneMappingPassInputSRName(false));
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
         scheduler->NewBuffer(ResourceNames::LuminanceHistogram, NewBufferProperties<uint32_t>{128});
         scheduler->Export(ResourceNames::LuminanceHistogram);

@@ -8,7 +8,7 @@ namespace PathFinder
     SpecularDenoiserRenderPass::SpecularDenoiserRenderPass()
         : RenderPass("SpecularDenoiser") {}
 
-    void SpecularDenoiserRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void SpecularDenoiserRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::SpecularDenoiser, [](ComputeStateProxy& state)
         {

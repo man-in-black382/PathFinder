@@ -263,6 +263,7 @@ namespace HAL
         case ColorFormat::RGBA32_Unsigned:   return DXGI_FORMAT_R32G32B32A32_UINT;
 
         case ColorFormat::RGB10A2_Unorm:     return DXGI_FORMAT_R10G10B10A2_UNORM;
+        case ColorFormat::R11G11B10_Float:   return DXGI_FORMAT_R11G11B10_FLOAT;
 
         case ColorFormat::BC1_Unsigned_Norm: return DXGI_FORMAT_BC1_UNORM;
         case ColorFormat::BC2_Unsigned_Norm: return DXGI_FORMAT_BC2_UNORM;
@@ -374,6 +375,7 @@ namespace HAL
         case DXGI_FORMAT_D32_FLOAT: return DepthStencilFormat::Depth32_Float;
 
         case DXGI_FORMAT_R10G10B10A2_UNORM: return ColorFormat::RGB10A2_Unorm;
+        case DXGI_FORMAT_R11G11B10_FLOAT: return ColorFormat::R11G11B10_Float;
 
             // Compressed formats
         case DXGI_FORMAT_BC1_UNORM: return ColorFormat::BC1_Unsigned_Norm;

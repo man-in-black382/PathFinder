@@ -588,10 +588,19 @@
     <ClCompile Include="Source\Scene\GIManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIUpdateRenderPass.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPassMediators\ResourceScheduler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPassMediators\ResourceScheduler.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2852,9 +2861,6 @@
     <ClInclude Include="Source\ThirdParty\fplus\variant.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Scene\EntityID.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\UI\PickedEntityViewModel.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3098,7 +3104,16 @@
     <ClInclude Include="Source\Scene\GIManager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIUpdateRenderPass.hpp">
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -3653,7 +3668,6 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Constants.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMapping.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\ShadingPacking.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Shading.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Random.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Gaussian.hlsl" />
@@ -3685,6 +3699,12 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\SMAACommon.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GeometryPicking.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SphericalHarmonics.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeRayTracing.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeHelpers.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\ShadingCommon.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeBorderUpdate.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeUpdate.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIDebug.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

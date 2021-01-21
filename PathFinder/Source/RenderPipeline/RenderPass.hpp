@@ -25,7 +25,8 @@ namespace PathFinder
 
         virtual ~RenderPass() = 0;
 
-        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) {};
+        virtual void SetupRootSignatures(RootSignatureCreator* rootSignatureCreator) {};
+        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) {};
         virtual void ScheduleResources(ResourceScheduler<ContentMediator>* scheduler) {};
         virtual void ScheduleSubPasses(SubPassScheduler<ContentMediator>* scheduler) {};
         virtual void ScheduleSamplers(SamplerCreator* samplerCreator) {};

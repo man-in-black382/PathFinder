@@ -29,7 +29,7 @@ namespace PathFinder
         DisplacementDistanceMapRenderPass();
         ~DisplacementDistanceMapRenderPass() = default;
 
-        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator) override;
+        virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler) override; 
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
 

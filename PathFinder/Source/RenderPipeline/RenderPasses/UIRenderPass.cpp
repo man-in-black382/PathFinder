@@ -8,7 +8,7 @@ namespace PathFinder
     UIRenderPass::UIRenderPass()
         : RenderPass("UI") {}
 
-    void UIRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void UIRenderPass::SetupRootSignatures(RootSignatureCreator* rootSignatureCreator)
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::UI, [](RootSignatureProxy& signatureProxy)
         {
@@ -16,7 +16,10 @@ namespace PathFinder
             signatureProxy.AddShaderResourceBufferParameter(0, 0); // UI Vertex Buffer
             signatureProxy.AddShaderResourceBufferParameter(1, 0); // UI Index Buffer
         });
+    }
 
+    void UIRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    {
         stateCreator->CreateGraphicsState(PSONames::UI, [](GraphicsStateProxy& state)
         {
             state.VertexShaderFileName = "UIRenderPass.hlsl";

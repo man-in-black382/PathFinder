@@ -1,5 +1,4 @@
 #include "SceneGPUStorage.hpp"
-#include "EntityID.hpp"
 #include "Scene.hpp"
 
 #include <algorithm>
@@ -98,7 +97,6 @@ namespace PathFinder
 
     void SceneGPUStorage::UploadInstances()
     {
-        mUniqueEntityID = 0;
         mTopAccelerationStructure.Clear();
         UploadMeshInstances();
         UploadLights();
@@ -128,15 +126,17 @@ namespace PathFinder
 
         uint32_t instanceIdx = 0;
 
-        auto uploadInstance = [&](const GPUMeshInstanceTableEntry& gpuInstance, const VertexStorageLocation& vertexLocations, EntityMask mask, auto&& sceneObject)
+        auto uploadInstance = [&](const GPUMeshInstanceTableEntry& gpuInstance, const VertexStorageLocation& vertexLocations, auto&& sceneObject)
         {
-            EntityID entityId = GetNextEntityID();
-
             sceneObject.SetIndexInGPUTable(instanceIdx);
-            sceneObject.SetEntityID(entityId);
 
             BottomRTAS& blas = mBottomAccelerationStructures[vertexLocations.BottomAccelerationStructureIndex];
-            mTopAccelerationStructure.AddInstance(blas, RTASInstanceInfoForEntity(entityId, mask), gpuInstance.InstanceWorldMatrix);
+
+            HAL::RayTracingTopAccelerationStructure::InstanceInfo instanceInfo{
+                instanceIdx, std::underlying_type_t<GPUInstanceMask>(GPUInstanceMask::Mesh), std::underlying_type_t<GPUInstanceHitGroupContribution>(GPUInstanceHitGroupContribution::Mesh)
+            };
+
+            mTopAccelerationStructure.AddInstance(blas, instanceInfo, gpuInstance.InstanceWorldMatrix);
             mMeshInstanceTable->Write(&gpuInstance, instanceIdx, 1);
 
             ++instanceIdx;
@@ -155,7 +155,7 @@ namespace PathFinder
                 instance.AssociatedMesh()->HasTangentSpace()
             };
 
-            uploadInstance(instanceEntry, instance.AssociatedMesh()->LocationInVertexStorage(), EntityMask::MeshInstance, instance);
+            uploadInstance(instanceEntry, instance.AssociatedMesh()->LocationInVertexStorage(), instance);
             instance.UpdatePreviousTransform();
         }
     }
@@ -193,14 +193,15 @@ namespace PathFinder
                 GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
                 mLightTable->Write(&lightEntry, index, 1);
 
-                EntityID entityId = GetNextEntityID();
-
-                light.SetEntityID(entityId);
                 light.SetIndexInGPUTable(index);
                 light.SetVertexStorageLocation(vertexLocation);
 
+                HAL::RayTracingTopAccelerationStructure::InstanceInfo instanceInfo{
+                    index, std::underlying_type_t<GPUInstanceMask>(GPUInstanceMask::Light), std::underlying_type_t<GPUInstanceHitGroupContribution>(GPUInstanceHitGroupContribution::Light)
+                };
+
                 BottomRTAS& blas = mBottomAccelerationStructures[vertexLocation.BottomAccelerationStructureIndex];
-                mTopAccelerationStructure.AddInstance(blas, RTASInstanceInfoForEntity(entityId, EntityMask::Light), light.ModelMatrix());
+                mTopAccelerationStructure.AddInstance(blas, instanceInfo, light.ModelMatrix());
 
                 ++index;
                 ++lightCount;
@@ -211,11 +212,6 @@ namespace PathFinder
         uploadLights(mScene->SphericalLights(), mLightTablePartitionInfo.SphericalLightsOffset, mLightTablePartitionInfo.SphericalLightsCount, mUnitSphereVertexLocation);
         uploadLights(mScene->RectangularLights(), mLightTablePartitionInfo.RectangularLightsOffset, mLightTablePartitionInfo.RectangularLightsCount, mUnitQuadVertexLocation);
         uploadLights(mScene->DiskLights(), mLightTablePartitionInfo.EllipticalLightsOffset, mLightTablePartitionInfo.EllipticalLightsCount, mUnitQuadVertexLocation);
-    }
-
-    EntityID SceneGPUStorage::GetNextEntityID()
-    {
-        return ++mUniqueEntityID;
     }
 
     GPUCamera SceneGPUStorage::CameraGPURepresentation() const
@@ -241,6 +237,39 @@ namespace PathFinder
         gpuCamera.AspectRatio = camera.AspectRatio();
 
         return gpuCamera;
+    }
+
+    GPUIrradianceField SceneGPUStorage::IrradianceFieldGPURepresentation() const
+    {
+        const IrradianceField& L = mScene->GlobalIlluminationManager().ProbeField;
+
+        GPUIrradianceField field{};
+        field.GridSize = L.GridSize();
+        field.CellSize = L.CellSize();
+        field.GridCornerPosition = L.CornerPosition();
+        field.RaysPerProbe = L.RaysPerProbe();
+        field.TotalProbeCount = L.GetTotalProbeCount();
+        field.RayHitInfoTextureSize = { L.GetRayHitInfoTextureSize().Width, L.GetRayHitInfoTextureSize().Height };
+        field.RayHitInfoTextureIdx = 0; // Determined in render pass
+        field.ProbeRotation = L.ProbeRotation();
+        field.IrradianceProbeAtlasSize = { L.GetIrradianceProbeAtlasSize().Width, L.GetIrradianceProbeAtlasSize().Height };
+        field.DepthProbeAtlasSize = { L.GetDepthProbeAtlasSize().Width, L.GetDepthProbeAtlasSize().Height };
+        field.IrradianceProbeAtlasProbesPerDimension = L.GetIrradianceProbeAtlasProbesPerDimension();
+        field.DepthProbeAtlasProbesPerDimension = L.GetDepthProbeAtlasProbesPerDimension();
+        field.IrradianceProbeSize = L.GetIrradianceProbeSize().Width;
+        field.DepthProbeSize = L.GetDepthProbeSize().Width;
+        field.IrradianceProbeAtlasTexIdx = 0; // Determined in render pass
+        field.DepthProbeAtlasTexIdx = 0; // Determined in render pass
+        return field;
+    }
+
+    uint32_t SceneGPUStorage::CompressedLightPartitionInfo() const
+    {
+        uint32_t compressed = 0;
+        compressed |= (mLightTablePartitionInfo.SphericalLightsCount & 0xFF) << 24;
+        compressed |= (mLightTablePartitionInfo.RectangularLightsCount & 0xFF) << 16;
+        compressed |= (mLightTablePartitionInfo.EllipticalLightsCount & 0xFF) << 8;
+        return compressed;
     }
 
     GPULightTableEntry SceneGPUStorage::CreateLightGPUTableEntry(const FlatLight& light) const

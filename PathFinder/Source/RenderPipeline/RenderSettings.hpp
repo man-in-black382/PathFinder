@@ -1,6 +1,8 @@
 #pragma once
 
 #include <IO/Input.hpp>
+#include <glm/vec2.hpp>
+#include <Scene/Scene.hpp>
 
 namespace PathFinder
 {
@@ -12,12 +14,14 @@ namespace PathFinder
         bool IsDenoiserGradientDebugRenderingEnabled = false;
         bool IsDenoiserMotionDebugRenderingEnabled = false;
         bool IsDenoiserAntilagEnabled = true;
+
+        IrradianceField GlobalIlluminationSettings;
     };
 
     class RenderSettingsController
     {
     public:
-        RenderSettingsController(Input* input);
+        RenderSettingsController(Input* input, Scene* scene);
         ~RenderSettingsController();
 
         void SetEnabled(bool enabled);
@@ -30,6 +34,7 @@ namespace PathFinder
 
         RenderSettings mAppliedSettings;
         Input* mInput;
+        Scene* mScene;
 
         bool mIsEnabled = true;
 

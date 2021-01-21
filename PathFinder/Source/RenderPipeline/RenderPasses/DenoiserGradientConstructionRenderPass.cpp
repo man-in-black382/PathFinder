@@ -9,7 +9,7 @@ namespace PathFinder
     DenoiserGradientConstructionRenderPass::DenoiserGradientConstructionRenderPass()
         : RenderPass("DenoiserGradientConstruction") {}
 
-    void DenoiserGradientConstructionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DenoiserGradientConstructionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::DenoiserGradientConstruction, [](ComputeStateProxy& state)
         {

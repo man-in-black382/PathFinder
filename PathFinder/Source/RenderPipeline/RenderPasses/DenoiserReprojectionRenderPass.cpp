@@ -8,7 +8,7 @@ namespace PathFinder
     DenoiserReprojectionRenderPass::DenoiserReprojectionRenderPass()
         : RenderPass("DenoiserReprojection") {}
 
-    void DenoiserReprojectionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DenoiserReprojectionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::DenoiserReprojection, [](ComputeStateProxy& state)
         {

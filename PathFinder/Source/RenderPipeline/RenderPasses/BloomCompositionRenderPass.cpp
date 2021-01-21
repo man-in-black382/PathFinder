@@ -7,7 +7,7 @@ namespace PathFinder
     BloomCompositionRenderPass::BloomCompositionRenderPass()
         : RenderPass("BloomComposition") {}
 
-    void BloomCompositionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void BloomCompositionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::BloomComposition, [this](ComputeStateProxy& state)
         {

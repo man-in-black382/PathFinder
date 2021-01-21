@@ -65,7 +65,7 @@ namespace PathFinder
         mShaderManager = std::make_unique<ShaderManager>(
             commandLineParser.ExecutableFolderPath(),
             commandLineParser.ShouldUseShadersFromProjectFolder(),
-            commandLineParser.ShouldBuildDebugShaders(),
+            commandLineParser.ShouldBuildDebugShaders() || commandLineParser.ShouldEnableAftermath(),
             commandLineParser.ShouldEnableAftermath(),
             &mAftermathCrashTracker->ShaderDatabase());
 
@@ -328,6 +328,16 @@ namespace PathFinder
         mPipelineResourceStorage->StartResourceScheduling();
         mResourceScheduler->SetContent(mContentMediator);
 
+        // Schedule root signatures first, because PSOs rely on them
+        for (auto& [passName, passHelpers] : mRenderPassContainer->RenderPasses())
+        {
+            if (!passHelpers.AreRootSignaturesScheduled)
+            {
+                passHelpers.Pass->SetupRootSignatures(mRootSignatureCreator.get());
+                passHelpers.AreRootSignaturesScheduled = true;
+            }
+        }
+
         for (auto& [passName, passHelpers] : mRenderPassContainer->RenderPasses())
         {
             mResourceScheduler->SetCurrentlySchedulingPassNode(&mRenderPassGraph.Nodes()[passHelpers.GraphNodeIndex]);
@@ -335,7 +345,7 @@ namespace PathFinder
 
             if (!passHelpers.ArePipelineStatesScheduled)
             {
-                passHelpers.Pass->SetupPipelineStates(mPipelineStateCreator.get(), mRootSignatureCreator.get());
+                passHelpers.Pass->SetupPipelineStates(mPipelineStateCreator.get());
                 passHelpers.ArePipelineStatesScheduled = true;
             }
 

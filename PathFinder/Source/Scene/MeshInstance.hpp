@@ -8,7 +8,6 @@
 
 #include "Mesh.hpp"
 #include "Material.hpp"
-#include "EntityID.hpp"
 
 #include <unordered_map>
 #include <glm/mat4x4.hpp>
@@ -45,7 +44,6 @@ namespace PathFinder
         bool mIsHighlighted = false;
         Geometry::Transformation mTransformation;
         Geometry::Transformation mPrevTransformation;
-        EntityID mEntityID = 0;
         uint32_t mIndexInGPUTable = 0;
 
     public:
@@ -56,14 +54,12 @@ namespace PathFinder
         inline Geometry::AxisAlignedBox3D BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
         inline const Mesh* AssociatedMesh() const { return mMesh; }
         inline const Material* AssociatedMaterial() const { return mMaterial; }
-        inline const EntityID& ID() const { return mEntityID; }
         inline auto IndexInGPUTable () const { return mIndexInGPUTable; }
 
         inline void SetIsSelected(bool selected) { mIsSelected = selected; }
         inline void SetIsHighlighted(bool highlighted) { mIsHighlighted = highlighted; }
         inline void SetTransformation(const Geometry::Transformation& transform) { mTransformation = transform; }
         inline void SetIndexInGPUTable(uint32_t index) { mIndexInGPUTable = index; }
-        inline void SetEntityID(EntityID id) { mEntityID = id; }
     };
 
 }

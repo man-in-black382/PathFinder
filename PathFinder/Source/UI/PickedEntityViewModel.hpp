@@ -28,7 +28,6 @@ namespace PathFinder
         SphericalLight* mSphericalLight = nullptr;
         FlatLight* mFlatLight = nullptr;
         Scene* mScene = nullptr;
-        EntityID mHoveredEntityID = NoEntityID;
 
     public:
         inline const glm::mat4& ModelMatrix() const { return mModelMatrix; }

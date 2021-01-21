@@ -24,6 +24,29 @@ float4 Max(float4 v0, float4 v1) { return max(v0, v1); }
 float4 Max(float4 v0, float4 v1, float4 v2) { return Max(v0, Max(v1, v2)); }
 float4 Max(float4 v0, float4 v1, float4 v2, float4 v3) { return Max(v0, Max(v1, v2, v3)); }
 
+float ApplyBarycentrics(float a, float b, float c, float2 barycentrics)     { return a + barycentrics.x * (b - a) + barycentrics.y * (c - a); }
+float2 ApplyBarycentrics(float2 a, float2 b, float2 c, float2 barycentrics) { return a + barycentrics.x * (b - a) + barycentrics.y * (c - a); }
+float3 ApplyBarycentrics(float3 a, float3 b, float3 c, float2 barycentrics) { return a + barycentrics.x * (b - a) + barycentrics.y * (c - a); }
+float4 ApplyBarycentrics(float4 a, float4 b, float4 c, float2 barycentrics) { return a + barycentrics.x * (b - a) + barycentrics.y * (c - a); }
+
+// https://developer.download.nvidia.com/cg/findMSB.html
+int FindMSB(int x)
+{
+    int i;
+    int mask;
+    int res = -1;
+    if (x < 0) 
+        x = ~x;
+    for (i = 0; i < 32; i++) {
+        mask = 0x80000000 >> i;
+        if (x & mask) {
+            res = 31 - i;
+            break;
+        }
+    }
+    return res;
+}
+
 float Flatten3DIndexFloat(float3 index3D, float3 dimensions)
 {
     return (index3D.x) + (index3D.y * dimensions.x) + (index3D.z * dimensions.x * dimensions.y);
@@ -32,6 +55,11 @@ float Flatten3DIndexFloat(float3 index3D, float3 dimensions)
 int Flatten3DIndexInt(int3 index3D, int3 dimensions)
 {
     return (index3D.x) + (index3D.y * dimensions.x) + (index3D.z * dimensions.x * dimensions.y);
+}
+
+uint2 Index2DFrom1D(uint index, uint2 size2D)
+{
+    return uint2(index % size2D.x, index / size2D.x);
 }
 
 uint VectorOctant(float3 normalizedVector)

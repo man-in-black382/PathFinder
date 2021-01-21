@@ -50,7 +50,6 @@ namespace PathFinder
         inline Foundation::Name DenoiserPrimaryGradientFilteredIntermediate{ "Denoiser_Primary_Gradient_Filtered_Intermediate" };
         inline NameArray<2> RngSeeds{ "Resource_Stochastic_Rng_Seeds[0]", "Resource_Stochastic_Rng_Seeds[1]" };
         inline Foundation::Name RngSeedsCorrelated{ "Resource_Stochastic_Rng_Seeds_Correlated" };
-
         inline NameArray<2> DenoiserGradientSamplePositions{ "Resource_Denoiser_Gradient_Sample_Positions[0]", "Resource_Denoiser_Gradient_Sample_Positions[1]" };
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
         inline NameArray<2> DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count[0]", "Resource_Denoiser_Reprojected_Frames_Count[1]" };
@@ -61,6 +60,12 @@ namespace PathFinder
         inline Foundation::Name LuminanceHistogram{ "Resource_Luminance_Histogram" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
         inline Foundation::Name UIOutput{ "Resource_UI_Output" };
+
+        inline Foundation::Name GIRayHitInfo{ "Resource_GI_Ray_Hit_Info" };
+        inline Foundation::Name GIIrradianceProbeAtlas{ "Resource_GI_Irradiance_Probe_Atlas" };
+        inline Foundation::Name GIDepthProbeAtlas{ "Resource_GI_Depth_Probe_Atlas" };
+        inline Foundation::Name GIDebugDepthStencil{ "Resource_GI_Debug_Depth_Stencil" };
+        inline Foundation::Name GIDebugOutput{ "Resource_GI_Debug_Output" };
 
         inline Foundation::Name SMAADetectedEdges{ "Resource_SMAA_Detected_Edges" };
         inline Foundation::Name SMAABlendingWeights{ "Resource_SMAA_Blending_Weights" };
@@ -79,7 +84,13 @@ namespace PathFinder
         inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
         inline Foundation::Name Shading{ "PSO_Shading" };
-        inline Foundation::Name GIUpdate{ "PSO_GI_Update" };
+        inline Foundation::Name GIRayTracing{ "PSO_GI_Ray_Tracing" };
+        inline Foundation::Name GIProbeUpdate{ "PSO_GI_Probe_Update" };
+        inline Foundation::Name GIIrradianceProbeCornerUpdate{ "PSO_GI_Irradiance_Probe_Corner_Update" };
+        inline Foundation::Name GIDepthProbeCornerUpdate{ "PSO_GI_Depth_Probe_Corner_Update" };
+        inline Foundation::Name GIIrradianceProbeBorderUpdate{ "PSO_GI_Irradiance_Probe_Border_Update" };
+        inline Foundation::Name GIDepthProbeBorderUpdate{ "PSO_GI_Depth_Probe_Border_Update" };
+        inline Foundation::Name GIDebug{ "PSO_GI_Debug" };
         inline Foundation::Name GeometryPicking{ "PSO_GeometryPicking" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name SeparableBlur{ "PSO_SeparableBlur" };
@@ -112,7 +123,7 @@ namespace PathFinder
         inline Foundation::Name GBufferLights{ "GBuffer_Lights_Root_Sig" };
         inline Foundation::Name DeferredLighting{ "Deferred_Lighting_Root_Sig" };
         inline Foundation::Name Shading{ "Shading_Root_Sig" };
-        inline Foundation::Name GIUpdate{ "GI_Update_Root_Sig" };
+        inline Foundation::Name GIRayTracing{ "GI_Ray_Tracing_Root_Sig" };
         inline Foundation::Name ToneMapping{ "Tone_Mapping_Root_Sig" };
         inline Foundation::Name GeometryPicking{ "Geometry_Picking_Root_Sig" };
         inline Foundation::Name UI{ "UI_Root_Sig" };

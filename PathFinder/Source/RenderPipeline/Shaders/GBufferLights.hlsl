@@ -16,7 +16,7 @@ struct RootConstants
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Light> LightTable : register(t0);
 StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t1);
-StructuredBuffer<IndexU32> UnifiedIndexBuffer : register(t2);
+StructuredBuffer<uint> UnifiedIndexBuffer : register(t2);
 
 //------------------------  Vertex  ------------------------------//
 
@@ -34,8 +34,8 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
     Light light = LightTable[RootConstantBuffer.LightTableIndex];
 
     // Load index and vertex
-    IndexU32 index = UnifiedIndexBuffer[light.UnifiedIndexBufferOffset + vertexId];
-    Vertex1P1N1UV1T1BT vertex = UnifiedVertexBuffer[light.UnifiedVertexBufferOffset + index.Index];
+    uint index = UnifiedIndexBuffer[light.UnifiedIndexBufferOffset + vertexId];
+    Vertex1P1N1UV1T1BT vertex = UnifiedVertexBuffer[light.UnifiedVertexBufferOffset + index];
 
     float2 localSpacePosition = vertex.Position.xy;
 

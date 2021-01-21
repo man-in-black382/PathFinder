@@ -8,7 +8,7 @@ namespace PathFinder
     RngSeedGenerationRenderPass::RngSeedGenerationRenderPass()
         : RenderPass("RngSeedGeneration") {}
 
-    void RngSeedGenerationRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void RngSeedGenerationRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::RngSeedGeneration, [](ComputeStateProxy& state)
         {

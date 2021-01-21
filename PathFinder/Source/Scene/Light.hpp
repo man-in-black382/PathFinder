@@ -3,7 +3,6 @@
 #include <Foundation/Color.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "EntityID.hpp"
 #include "VertexStorageLocation.hpp"
 
 namespace PathFinder 
@@ -26,14 +25,12 @@ namespace PathFinder
         void SetLuminousPower(Lumen luminousPower);
 
         void SetIndexInGPUTable(uint32_t index);
-        void SetEntityID(EntityID id);
         void SetVertexStorageLocation(const VertexStorageLocation& location);
 
     protected:
         void SetArea(float area);
 
         glm::mat4 mModelMatrix;
-        EntityID mEntityID = 0;
         uint32_t mIndexInGPUTable = 0;
 
     private:
@@ -48,7 +45,6 @@ namespace PathFinder
         inline Nit Luminance() const { return mLuminance; }
         inline const Foundation::Color& Color() const { return mColor; }
         inline const glm::mat4& ModelMatrix() const { return mModelMatrix; }
-        inline const EntityID& ID() const { return mEntityID; }
         inline auto IndexInGPUTable() const { return mIndexInGPUTable; }
         inline const VertexStorageLocation& LocationInVertexStorage() const { return mVertexStorageLocation; }
     };

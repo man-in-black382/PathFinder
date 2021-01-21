@@ -9,7 +9,7 @@ namespace PathFinder
     DenoiserForwardProjectionRenderPass::DenoiserForwardProjectionRenderPass()
         : RenderPass("DenoiserForwardProjection") {}
 
-    void DenoiserForwardProjectionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DenoiserForwardProjectionRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::DenoiserForwardProjection, [](ComputeStateProxy& state)
         {

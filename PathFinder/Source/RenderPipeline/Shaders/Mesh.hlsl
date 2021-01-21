@@ -1,6 +1,8 @@
 #ifndef _Mesh__
 #define _Mesh__
 
+#include "Vertices.hlsl"
+
 struct MeshInstance
 {
     float4x4 ModelMatrix;

@@ -9,7 +9,7 @@ namespace PathFinder
     DenoiserPreBlurRenderPass::DenoiserPreBlurRenderPass()
         : RenderPass("DenoiserPreBlur") {}
 
-    void DenoiserPreBlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DenoiserPreBlurRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
     }
 

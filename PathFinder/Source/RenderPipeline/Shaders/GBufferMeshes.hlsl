@@ -16,7 +16,7 @@ struct RootConstants
 
 ConstantBuffer<RootConstants> RootConstantBuffer : register(b0);
 StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t0);
-StructuredBuffer<IndexU32> UnifiedIndexBuffer : register(t1);
+StructuredBuffer<uint> UnifiedIndexBuffer : register(t1);
 StructuredBuffer<MeshInstance> InstanceTable : register(t2);
 StructuredBuffer<Material> MaterialTable : register(t3);
 
@@ -48,8 +48,8 @@ VertexOut VSMain(uint indexId : SV_VertexID)
     MeshInstance instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
 
     // Load index and vertex
-    IndexU32 index = UnifiedIndexBuffer[instanceData.UnifiedIndexBufferOffset + indexId];
-    Vertex1P1N1UV1T1BT vertex = UnifiedVertexBuffer[instanceData.UnifiedVertexBufferOffset + index.Index];
+    uint index = UnifiedIndexBuffer[instanceData.UnifiedIndexBufferOffset + indexId];
+    Vertex1P1N1UV1T1BT vertex = UnifiedVertexBuffer[instanceData.UnifiedVertexBufferOffset + index];
 
     float3x3 TBN = BuildTBNMatrix(vertex, instanceData);
     float3x3 TBNInverse = transpose(TBN);

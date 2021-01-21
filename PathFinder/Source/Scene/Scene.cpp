@@ -51,30 +51,6 @@ namespace PathFinder
         return std::prev(mSphericalLights.end());
     }
 
-    std::optional<Scene::EntityVariant> Scene::GetEntityByID(const EntityID& id) const
-    {
-        auto it = mMappedEntities.find(id);
-        return it == mMappedEntities.end() ? std::nullopt : std::optional(it->second);
-    }
-
-    void Scene::RemapEntityIDs()
-    {
-        mMappedEntities.clear();
-
-        auto remap = [this](auto&& entities)
-        {
-            for (auto& entity : entities)
-            {
-                mMappedEntities[entity.ID()] = &entity;
-            }
-        };
-
-        remap(mMeshInstances);
-        remap(mSphericalLights);
-        remap(mDiskLights);
-        remap(mRectangularLights);
-    }
-
     void Scene::Serialize(const std::filesystem::path& destination) const
     {
         using Buffer = std::vector<uint8_t>;

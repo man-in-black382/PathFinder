@@ -8,7 +8,7 @@ namespace PathFinder
     DenoiserHistoryFixRenderPass::DenoiserHistoryFixRenderPass()
         : RenderPass("DenoiserHistoryFix") {}
 
-    void DenoiserHistoryFixRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator, RootSignatureCreator* rootSignatureCreator)
+    void DenoiserHistoryFixRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::DenoiserHistoryFix, [](ComputeStateProxy& state)
         {
