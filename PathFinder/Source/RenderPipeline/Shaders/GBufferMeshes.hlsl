@@ -34,9 +34,9 @@ struct VertexOut
 
 float3x3 BuildTBNMatrix(Vertex1P1N1UV1T1BT vertex, MeshInstance instanceData)
 {
-    float3 N = mul(instanceData.NormalMatrix, float4(normalize(vertex.Normal), 0.0)).xyz;
-    float3 T = mul(instanceData.NormalMatrix, float4(normalize(vertex.Tangent), 0.0)).xyz;
-    float3 B = normalize(cross(N, T));
+    float3 N = normalize(mul(instanceData.NormalMatrix, float4(normalize(vertex.Normal), 0.0)).xyz);
+    float3 T = normalize(mul(instanceData.NormalMatrix, float4(normalize(vertex.Tangent), 0.0)).xyz);
+    float3 B = cross(N, T);
 
     return Matrix3x3ColumnMajor(T, B, N);
 }

@@ -29,7 +29,9 @@ namespace PathFinder
 
     void ToneMappingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        scheduler->ReadTexture(ToneMappingPassInputSRName(false));
+        bool isGIDebugEnabled = scheduler->Content()->GetScene()->GlobalIlluminationManager().GIDebugEnabled;
+
+        scheduler->ReadTexture(ToneMappingPassInputSRName(isGIDebugEnabled));
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
         scheduler->NewBuffer(ResourceNames::LuminanceHistogram, NewBufferProperties<uint32_t>{128});
         scheduler->Export(ResourceNames::LuminanceHistogram);

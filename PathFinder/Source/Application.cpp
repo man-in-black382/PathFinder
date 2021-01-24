@@ -151,6 +151,7 @@ namespace PathFinder
         mSettingsController->SetEnabled(!interactingWithUI);
         mSettingsController->ApplyVolatileSettings();
 
+        mScene->GlobalIlluminationManager().Update();
         mScene->GPUStorage().UploadInstances();
 
         // Top RT needs to be rebuilt every frame

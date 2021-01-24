@@ -11,6 +11,7 @@ namespace PathFinder
     struct GIDebugCBContent
     {
         GPUIrradianceField ProbeField;
+        int32_t ExplicitProbeIndex = -1;
     };
 
     class GIDebugRenderPass : public RenderPass<RenderPassContentMediator>

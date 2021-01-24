@@ -105,9 +105,9 @@ namespace PathFinder
             proxy.RenderTargetFormats.size() > 7 ? std::optional(proxy.RenderTargetFormats[7]) : std::nullopt
         );
 
-        HAL::Shader* vertexShader = mShaderManager->LoadShader(HAL::Shader::Stage::Vertex, mDefaultVertexEntryPointName, proxy.VertexShaderFileName);
-        HAL::Shader* pixelShader = mShaderManager->LoadShader(HAL::Shader::Stage::Pixel, mDefaultPixelEntryPointName, proxy.PixelShaderFileName);
-        HAL::Shader* geometryShader = proxy.GeometryShaderFileName ? mShaderManager->LoadShader(HAL::Shader::Stage::Geometry, mDefaultGeometryEntryPointName, *proxy.GeometryShaderFileName) : nullptr;
+        HAL::Shader* vertexShader = mShaderManager->LoadShader(HAL::Shader::Stage::Vertex, proxy.VertexShaderEntryPoint.value_or(mDefaultVertexEntryPointName), proxy.VertexShaderFileName);
+        HAL::Shader* pixelShader = mShaderManager->LoadShader(HAL::Shader::Stage::Pixel, proxy.PixelShaderEntryPoint.value_or(mDefaultPixelEntryPointName), proxy.PixelShaderFileName);
+        HAL::Shader* geometryShader = proxy.GeometryShaderFileName ? mShaderManager->LoadShader(HAL::Shader::Stage::Geometry, proxy.GeometryShaderEntryPoint.value_or(mDefaultGeometryEntryPointName), *proxy.GeometryShaderFileName) : nullptr;
         
         newState.SetVertexShader(vertexShader);
         newState.SetPixelShader(pixelShader);
@@ -176,7 +176,7 @@ namespace PathFinder
         for (const RayTracingStateProxy::MissShader& missShaderInfo : proxy.MissShaders())
         {
             HAL::Library* missLibrary = mShaderManager->LoadLibrary(missShaderInfo.MissShaderFileName);
-            newStateWrapper.State.AddMissShader({ missLibrary, mDefaultRayMissEntryPointName, GetNamedRootSignatureOrNull(missShaderInfo.LocalRootSignatureName) });
+            newStateWrapper.State.AddMissShader({ missLibrary, missShaderInfo.EntryPoint.value_or(mDefaultRayMissEntryPointName), GetNamedRootSignatureOrNull(missShaderInfo.LocalRootSignatureName) });
             AssociateStateWithLibrary(&iter->second, missLibrary);
         }
 

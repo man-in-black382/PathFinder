@@ -225,6 +225,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Geometry\Transformation.cpp" />
     <ClCompile Include="Source\Geometry\Triangle2D.cpp" />
     <ClCompile Include="Source\Geometry\Triangle3D.cpp" />
+    <ClCompile Include="Source\Geometry\Utils.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\BlendState.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\Buffer.cpp" />
     <ClCompile Include="Source\HardwareAbstractionLayer\CommandAllocator.cpp" />
@@ -439,6 +440,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Geometry\Triangle.hpp" />
     <ClInclude Include="Source\Geometry\Triangle2D.hpp" />
     <ClInclude Include="Source\Geometry\Triangle3D.hpp" />
+    <ClInclude Include="Source\Geometry\Utils.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\BlendState.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\Buffer.hpp" />
     <ClInclude Include="Source\HardwareAbstractionLayer\CommandAllocator.hpp" />
@@ -1949,9 +1951,15 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <FxCompile Include="Source\RenderPipeline\Shaders\GeometryPicking.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\GIDebug.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeUpdate.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeBorderUpdate.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIDebug.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeUpdate.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeBorderUpdate.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeHelpers.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

@@ -3,6 +3,10 @@
 
 #include "Random.hlsl"
 #include "Utils.hlsl"
+#include "Packing.hlsl"
+#include "Geometry.hlsl"
+
+static const float GITRayMiss = -1.0;
 
 struct IrradianceField
 {
@@ -29,6 +33,7 @@ struct IrradianceField
     uint IrradianceProbeAtlasTexIdx;
     uint DepthProbeAtlasTexIdx;
     // 16 byte boundary
+    float DebugProbeRadius;
 };
 
 uint3 Probe3DIndexFrom1D(uint index, IrradianceField field)
@@ -99,6 +104,28 @@ uint2 IrradianceProbeAtlasTexelIndex(uint probeIndex, uint2 probeLocalTexelIndex
 uint2 DepthProbeAtlasTexelIndex(uint probeIndex, uint2 probeLocalTexelIndex, IrradianceField field)
 {
     return ProbeAtlasTexelIndex(probeIndex, probeLocalTexelIndex, field.DepthProbeSize, field.DepthProbeAtlasProbesPerDimension);
+}
+
+float2 ProbeAtlasUV(uint probeIndex, float3 samplingDir, uint probeSize, uint2 probesPerDimension, uint2 atlasTexSize)
+{
+    float2 localUV = (OctEncode(samplingDir) + 1.0) * 0.5;
+    uint probeSizeWithBorders = probeSize + 2;
+    uint2 indexInAtlas = Index2DFrom1D(probeIndex, probesPerDimension);
+    uint2 cornerTexel = indexInAtlas * probeSizeWithBorders;
+    float2 probeStartUVInAtlas = float2(cornerTexel + 1.0) / atlasTexSize;
+    float2 probeUVSizeInAtlasNoBorders = float(probeSize) / atlasTexSize; 
+
+    return probeStartUVInAtlas + localUV * probeUVSizeInAtlasNoBorders;
+}
+
+float2 IrradianceProbeAtlasUV(uint probeIndex, float3 samplingDir, IrradianceField field)
+{
+    return ProbeAtlasUV(probeIndex, samplingDir, field.IrradianceProbeSize, field.IrradianceProbeAtlasProbesPerDimension, field.IrradianceProbeAtlasSize);
+}
+
+float2 DepthProbeAtlasUV(uint probeIndex, float3 samplingDir, IrradianceField field)
+{
+    return ProbeAtlasUV(probeIndex, samplingDir, field.DepthProbeSize, field.DepthProbeAtlasProbesPerDimension, field.DepthProbeAtlasSize);
 }
 
 // Compute normalized oct coord, mapping top left of top left pixel to (-1,-1)

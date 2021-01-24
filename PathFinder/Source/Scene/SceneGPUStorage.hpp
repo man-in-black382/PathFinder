@@ -154,18 +154,21 @@ namespace PathFinder
         uint32_t IrradianceProbeAtlasTexIdx;
         uint32_t DepthProbeAtlasTexIdx;
         // 16 byte boundary
+        float DebugProbeRadius;
     };
 
     using GPUInstanceIndex = uint64_t;
     
     enum class GPUInstanceHitGroupContribution : uint32_t
     {
-        Mesh = 0, Light = 1
+        Mesh = 0, Light = 1, DebugGIProbe = 2
     };
 
     enum class GPUInstanceMask : uint32_t
     {
-        Mesh = 1 << 0, Light = 1 << 1
+        Mesh = 1 << 0,
+        Light = 1 << 1,
+        DebugGIProbe = 1 << 2
     };
 
     class Scene;
@@ -204,6 +207,7 @@ namespace PathFinder
 
         void UploadMeshInstances();
         void UploadLights();
+        void UploadDebugGIProbes();
 
         GPULightTableEntry CreateLightGPUTableEntry(const FlatLight& light) const;
         GPULightTableEntry CreateLightGPUTableEntry(const SphericalLight& light) const;

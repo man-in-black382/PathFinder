@@ -100,7 +100,9 @@ namespace PathFinder
         mTopAccelerationStructure.Clear();
         UploadMeshInstances();
         UploadLights();
+        UploadDebugGIProbes();
         mTopAccelerationStructure.Build();
+        mScene->MapEntitiesToGPUIndices();
     }
 
     void SceneGPUStorage::UploadMeshInstances()
@@ -214,6 +216,31 @@ namespace PathFinder
         uploadLights(mScene->DiskLights(), mLightTablePartitionInfo.EllipticalLightsOffset, mLightTablePartitionInfo.EllipticalLightsCount, mUnitQuadVertexLocation);
     }
 
+    void SceneGPUStorage::UploadDebugGIProbes()
+    {
+        if (!mScene->GlobalIlluminationManager().GIDebugEnabled)
+            return;
+
+        // We upload probe spheres for debug probe mouse picking 
+        const IrradianceField& L = mScene->GlobalIlluminationManager().ProbeField;
+
+        for (uint32_t probeIdx = 0; probeIdx < L.GetTotalProbeCount(); ++probeIdx)
+        {
+            glm::vec3 probePosition = L.GetProbePosition(probeIdx);
+
+            HAL::RayTracingTopAccelerationStructure::InstanceInfo instanceInfo{
+                probeIdx,
+                std::underlying_type_t<GPUInstanceMask>(GPUInstanceMask::DebugGIProbe),
+                std::underlying_type_t<GPUInstanceHitGroupContribution>(GPUInstanceHitGroupContribution::DebugGIProbe)
+            };
+
+            Geometry::Transformation probeTransform{ glm::vec3{L.DebugProbeRadius() * 2}, probePosition, glm::quat{} };
+
+            BottomRTAS& blas = mBottomAccelerationStructures[mUnitSphereVertexLocation.BottomAccelerationStructureIndex];
+            mTopAccelerationStructure.AddInstance(blas, instanceInfo, probeTransform.ModelMatrix());
+        }
+    }
+
     GPUCamera SceneGPUStorage::CameraGPURepresentation() const
     {
         const PathFinder::Camera& camera = mScene->MainCamera();
@@ -260,6 +287,7 @@ namespace PathFinder
         field.DepthProbeSize = L.GetDepthProbeSize().Width;
         field.IrradianceProbeAtlasTexIdx = 0; // Determined in render pass
         field.DepthProbeAtlasTexIdx = 0; // Determined in render pass
+        field.DebugProbeRadius = L.DebugProbeRadius();
         return field;
     }
 

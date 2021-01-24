@@ -494,8 +494,8 @@ float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, f
 
         float3 lightToSurface = surfacePosition - lightIntersectionPoint;
         float vectorLength = length(lightToSurface);
-        float tmax = vectorLength - 1e-02;
-        float tmin = 1e-02;
+        float tmax = vectorLength - 1e-03;
+        float tmin = 1e-03;
 
         RayDesc dxrRay;
         dxrRay.Origin = lightIntersectionPoint;

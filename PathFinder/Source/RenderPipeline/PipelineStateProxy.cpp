@@ -12,9 +12,9 @@ namespace PathFinder
         return mCallableShaders.size() - 1;
     }
 
-    void RayTracingStateProxy::AddMissShader(const std::string& missShaderFileName, std::optional<Foundation::Name> localRootSignatureName)
+    void RayTracingStateProxy::AddMissShader(const MissShader& info)
     {
-        mMissShaders.emplace_back(MissShader{ missShaderFileName, localRootSignatureName });
+        mMissShaders.emplace_back(info);
     }
 
     void RayTracingStateProxy::AddHitGroupShaders(const HitGroupShaderFileNames& fileNames, std::optional<Foundation::Name> localRootSignatureName)

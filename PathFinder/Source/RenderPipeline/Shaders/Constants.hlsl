@@ -20,5 +20,6 @@ static const uint EntityMaskAll = 0xFFFFFFFF;
 
 static const uint EntityTypeMesh = 0;
 static const uint EntityTypeLight = 1;
+static const uint EntityTypeDebugGIProbe = 2;
 
 #endif

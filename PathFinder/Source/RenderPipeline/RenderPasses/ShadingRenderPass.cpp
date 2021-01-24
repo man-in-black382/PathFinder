@@ -27,7 +27,7 @@ namespace PathFinder
         stateCreator->CreateRayTracingState(PSONames::Shading, [this](RayTracingStateProxy& state)
         {
             state.RayGenerationShaderFileName = "Shading.hlsl";
-            state.AddMissShader("Shading.hlsl");
+            state.AddMissShader({ "Shading.hlsl" });
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
             state.GlobalRootSignatureName = RootSignatureNames::Shading;
             state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };

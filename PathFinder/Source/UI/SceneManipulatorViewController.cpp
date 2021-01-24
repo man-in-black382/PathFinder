@@ -18,13 +18,25 @@ namespace PathFinder
 
     void SceneManipulatorViewController::DrawCameraControls()
     {
-        ImGuiIO& io = ImGui::GetIO();
-
         ImGui::Text("Camera");
         ImGui::SliderFloat("FoV", &CameraVM->FOVH, 60.f, 120.f);
         ImGui::SliderFloat("Aperture", &CameraVM->LenseAperture, 1.f, 16.f);
         ImGui::SliderFloat("Film Speed (ISO)", &CameraVM->FilmSpeed, 100.f, 2000.f);
         ImGui::SliderFloat("Shutter Speed", &CameraVM->ShutterTime, 30.f, 240.f);
+    }
+
+    void SceneManipulatorViewController::DrawGIControls()
+    {
+        ImGui::Separator();
+        ImGui::Spacing();
+        
+        ImGui::Text("Global Illumination");
+
+        if (ImGui::Checkbox("Draw GI Probes", &mGIDebugEnabled))
+            EntityVM->SetEnableGIDebug(mGIDebugEnabled);
+
+        if (ImGui::Checkbox("Rotate Probe Rays Each Frame", &mRotateProbeRaysEachFrame))
+            EntityVM->SetRotateProbeRaysEachFrame(mRotateProbeRaysEachFrame);
     }
 
     void SceneManipulatorViewController::DrawImGuizmoControls()
@@ -175,9 +187,12 @@ namespace PathFinder
         CameraVM->Import();
         EntityVM->Import();
 
+        mRotateProbeRaysEachFrame = EntityVM->RotateProbeRaysEachFrame();
+
         ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
         DrawCameraControls();
+        DrawGIControls();
         DrawImGuizmoControls();
 
         mIsInteracting = EntityVM->ShouldDisplay() || ImGuizmo::IsUsing();

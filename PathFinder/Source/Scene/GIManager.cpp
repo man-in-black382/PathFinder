@@ -1,5 +1,8 @@
 #include "GIManager.hpp"
+
 #include <Foundation/Pi.hpp>
+#include <Geometry/Utils.hpp>
+#include <random>
 
 namespace PathFinder 
 {
@@ -7,6 +10,27 @@ namespace PathFinder
     void GIManager::SetCamera(const Camera* camera)
     {
         mCamera = camera;
+    }
+
+    void GIManager::Update()
+    {
+        glm::vec3 gridSizeWS = glm::vec3{ ProbeField.GridSize() } * ProbeField.CellSize();
+        glm::vec3 gridCorner = Geometry::Snap(mCamera->Position(), glm::vec3{ ProbeField.CellSize() }) - gridSizeWS / 2.f;
+
+        ProbeField.SetCornerPosition(gridCorner);
+
+        if (!DoNotRotateProbeRays)
+        {
+            std::random_device rd;  //Will be used to obtain a seed for the random number engine
+            std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+
+            ProbeField.GenerateProbeRotation(glm::vec2{ dis(gen), dis(gen) });
+        }
+        else
+        {
+            ProbeField.GenerateProbeRotation(glm::vec2{ 0.0 });
+        }
     }
 
     void IrradianceField::GenerateProbeRotation(const glm::vec2& random0to1)
@@ -24,6 +48,11 @@ namespace PathFinder
     void IrradianceField::SetCornerPosition(const glm::vec3& position)
     {
         mCornerPosition = position;
+    }
+
+    void IrradianceField::SetDebugProbeRadius(float radius)
+    {
+        mDebugProbeRadius = radius;
     }
 
     Geometry::Dimensions IrradianceField::GetRayHitInfoTextureSize() const
@@ -77,6 +106,15 @@ namespace PathFinder
         auto probeSize = GetDepthProbeSizeWithBorder();
         
         return { uint64_t(probeSize.Width * probesPerRow), uint64_t(probeSize.Height * rowCount) };
+    }
+
+    glm::vec3 IrradianceField::GetProbePosition(uint64_t probeIndex) const
+    {
+        auto x = probeIndex % mProbeGridSize.x;
+        auto y = (probeIndex % (mProbeGridSize.x * mProbeGridSize.y)) / mProbeGridSize.x;
+        auto z = probeIndex / (mProbeGridSize.x * mProbeGridSize.y);
+
+        return glm::vec3{ float(x * mCellSize), float(y * mCellSize), float(z * mCellSize) } + mCornerPosition;
     }
 
     glm::uvec2 IrradianceField::GetIrradianceProbeAtlasProbesPerDimension() const

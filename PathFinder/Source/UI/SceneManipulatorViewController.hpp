@@ -22,6 +22,7 @@ namespace PathFinder
 
     private:
         void DrawCameraControls();
+        void DrawGIControls();
         void DrawImGuizmoControls();
 
         bool EditTransform(
@@ -34,6 +35,8 @@ namespace PathFinder
 
         bool mIsInteracting = false;
         bool mDrawCube = false;
+        bool mGIDebugEnabled = false;
+        bool mRotateProbeRaysEachFrame = false;
         ImGuizmo::OPERATION mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
         ImGuizmo::MODE mCurrentGizmoMode = ImGuizmo::LOCAL;
         bool mUseSnap = false;

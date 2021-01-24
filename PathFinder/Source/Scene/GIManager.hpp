@@ -14,6 +14,7 @@ namespace PathFinder
     public:
         void GenerateProbeRotation(const glm::vec2& random0to1);
         void SetCornerPosition(const glm::vec3& position);
+        void SetDebugProbeRadius(float radius);
 
     private:
         inline static const uint64_t IrradianceProbeSize = 8;
@@ -21,8 +22,9 @@ namespace PathFinder
 
         // Should be power of 2
         glm::uvec3 mProbeGridSize = glm::uvec3{ 16 };
-        float mCellSize = 1.0f;
-        uint64_t mRaysPerProbe = 64;
+        float mCellSize = 4.0f;
+        float mDebugProbeRadius = 0.3f;
+        uint64_t mRaysPerProbe = 144;
         glm::mat4 mProbeRotation{ 1.0f };
         glm::vec3 mCornerPosition{ 0.0f };
 
@@ -34,6 +36,7 @@ namespace PathFinder
         Geometry::Dimensions GetDepthProbeSize() const;
         Geometry::Dimensions GetDepthProbeSizeWithBorder() const;
         Geometry::Dimensions GetDepthProbeAtlasSize() const;
+        glm::vec3 GetProbePosition(uint64_t probeIndex) const;
         glm::uvec2 GetIrradianceProbeAtlasProbesPerDimension() const;
         glm::uvec2 GetDepthProbeAtlasProbesPerDimension() const;
         uint64_t GetTotalRayCount() const;
@@ -43,6 +46,7 @@ namespace PathFinder
         const glm::vec3& CornerPosition() const { return mCornerPosition; }
         const auto RaysPerProbe() const { return mRaysPerProbe; }
         const auto CellSize() const { return mCellSize; }
+        const auto DebugProbeRadius() const { return mDebugProbeRadius; }
         const glm::mat4& ProbeRotation() const { return mProbeRotation; }
     };
 
@@ -50,13 +54,15 @@ namespace PathFinder
     {
     public:
         void SetCamera(const Camera* camera);
+        void Update();
 
         IrradianceField ProbeField;
+        std::optional<uint64_t> PickedDebugProbeIndex;
+        bool GIDebugEnabled = false;
+        bool DoNotRotateProbeRays = false;
 
     private:
         const Camera* mCamera = nullptr;
-        
-    public:
     };
 
 }

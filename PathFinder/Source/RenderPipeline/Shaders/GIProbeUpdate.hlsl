@@ -18,7 +18,7 @@ static const uint IrradianceProbeSize = 8;
 static const uint IrradianceProbeTexelCount = IrradianceProbeSize * IrradianceProbeSize;
 static const uint DepthProbeSize = 16;
 static const uint DepthProbeTexelCount = DepthProbeSize * DepthProbeSize;
-static const uint RaysPerProbe = 64;
+static const uint RaysPerProbe = 144;
 static const float EnergyConservation = 0.95;
 static const float DepthSharpness = 1.0;
 
@@ -62,7 +62,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
         // instead of storing it in texture in ray tracing pass, to save bandwidth.
         float3 rayDirection = ProbeSamplingVector(rayIdx, PassDataCB.ProbeField);
         float4 rayHitInfo = RayHitInfo[rayIdx];
-        float3 rayHitRadiance = rayHitInfo.rgb * EnergyConservation;
+        float3 rayHitRadiance = rayHitInfo.rgb;// *EnergyConservation;
 
         //float3 rayHitLocation = rayHitInfo.w * rayDirection + probePosition;
 
@@ -93,7 +93,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
 
     if (all(probeLocal2DTexelIndex < IrradianceProbeSize))
     {
-        //if (irradianceResult.w > Epsilon)
+        if (irradianceResult.w > Epsilon)
         {
             irradianceResult.rgb *= FourPi / RaysPerProbe; // PDF is 1 / (4 * Pi)
 
@@ -110,7 +110,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
         }
     }
 
-    //if (depthResult.w > Epsilon)
+    if (depthResult.w > Epsilon)
     {
         depthResult.xy /= depthResult.w;
        

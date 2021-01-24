@@ -6,7 +6,7 @@
 #include "Mesh.hlsl"
 #include "GIProbeHelpers.hlsl"
 
-struct HitPayload
+struct ProbeRayPayload
 {
     float Stub; 
 };
@@ -24,8 +24,19 @@ struct PassData
 
 #include "ShadingCommon.hlsl"
 
+void OutputResult(float4 value)
+{
+    uint rayIndex = DispatchRaysIndex().x;
+    uint probeIndex = Probe1DIndexFromRayIndex(rayIndex, PassDataCB.ProbeField);
+
+    RWTexture2D<float4> rayHitInfoOutputTexture = RW_Float4_Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx];
+    uint2 outputTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
+
+    rayHitInfoOutputTexture[outputTexelIdx] = value;
+}
+
 [shader("closesthit")]
-void MeshRayClosestHit(inout HitPayload payload, BuiltInTriangleIntersectionAttributes attributes)
+void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectionAttributes attributes)
 {
     uint instanceIdx = InstanceID();
     uint triangleIdx = PrimitiveIndex();
@@ -43,14 +54,21 @@ void MeshRayClosestHit(inout HitPayload payload, BuiltInTriangleIntersectionAttr
     Vertex1P1N1UV1T1BT vertex1 = UnifiedVertexBuffer[instanceData.UnifiedVertexBufferOffset + index1];
     Vertex1P1N1UV1T1BT vertex2 = UnifiedVertexBuffer[instanceData.UnifiedVertexBufferOffset + index2];
 
+    float3 debugPosition = ApplyBarycentrics(vertex0.Position.xyz, vertex1.Position.xyz, vertex2.Position.xyz, attributes.barycentrics);
+    debugPosition = mul(instanceData.ModelMatrix, float4(debugPosition, 1.0)).xyz;
+
     float2 uv = ApplyBarycentrics(vertex0.UV, vertex1.UV, vertex2.UV, attributes.barycentrics);
     float3 N = ApplyBarycentrics(vertex0.Normal, vertex1.Normal, vertex2.Normal, attributes.barycentrics);
     float3 T = ApplyBarycentrics(vertex0.Tangent, vertex1.Tangent, vertex2.Tangent, attributes.barycentrics);
 
     N = mul(instanceData.NormalMatrix, float4(normalize(N), 0.0)).xyz;
     T = mul(instanceData.NormalMatrix, float4(normalize(T), 0.0)).xyz;
-    float3 B = normalize(cross(N, T));
 
+    // If model is scaled, vectors will be scaled too, so renormalization is mandatory
+    N = normalize(N);
+    T = normalize(T);
+
+    float3 B = normalize(cross(N, T));
     float3x3 TBN = Matrix3x3ColumnMajor(T, B, N);
 
     Texture2D albedoTexture = Textures2D[material.AlbedoMapIndex];
@@ -63,6 +81,9 @@ void MeshRayClosestHit(inout HitPayload payload, BuiltInTriangleIntersectionAttr
     gBuffer.Normal = mul(TBN, ExpandGBufferNormal(normalTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).rgb));
     gBuffer.Roughness = roughnessTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).r;
     gBuffer.Metalness = metalnessTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).r;
+
+    if (!instanceData.HasTangentSpace)
+        gBuffer.Normal = N;
 
     uint rayIndex = DispatchRaysIndex().x;
     uint wrappedRayIndex = rayIndex % (PassDataCB.BlueNoiseTexSize.x * PassDataCB.BlueNoiseTexSize.y);
@@ -80,13 +101,22 @@ void MeshRayClosestHit(inout HitPayload payload, BuiltInTriangleIntersectionAttr
 
     RWTexture2D<float4> rayHitInfoOutputTexture = RW_Float4_Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx];
     uint2 outputTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
+
     rayHitInfoOutputTexture[outputTexelIdx] = float4(shadingResult.StochasticShadowedOutgoingLuminance, RayTCurrent());
 }
 
 [shader("closesthit")]
-void LightRayClosestHit(inout HitPayload payload, BuiltInTriangleIntersectionAttributes attributes)
+void LightRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectionAttributes attributes)
 {
+    uint instanceIdx = InstanceID();
+    Light light = LightTable[instanceIdx];
+    OutputResult(float4(light.Luminance * light.Color.rgb, RayTCurrent()));
+}
 
+[shader("miss")]
+void ProbeRayMiss(inout ProbeRayPayload payload)
+{
+    OutputResult(float4(0.0, 0.0, 0.0, GITRayMiss));
 }
 
 [shader("raygeneration")]
@@ -102,17 +132,20 @@ void RayGeneration()
     dxrRay.TMin = 1e-03;
     dxrRay.TMax = FloatMax;
 
-    HitPayload payload = { 0 };
+    ProbeRayPayload payload = { 0 };
+
+    const int MissShaderIndex = 1;
 
     TraceRay(SceneBVH,
         RAY_FLAG_CULL_BACK_FACING_TRIANGLES
-        | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
         | RAY_FLAG_FORCE_OPAQUE, // Skip any hit shaders
-        EntityMaskAll, // Instance mask 
+        EntityMaskMeshInstance, // Instance mask 
         0, // Contribution to hit group index
         0, // BLAS geometry multiplier for hit group index
-        0, // Miss shader index
+        MissShaderIndex, // Miss shader index
         dxrRay, payload);
+
+    //OutputResult(float4(rayDir.x > 0 ? rayDir.x * 10 : 0, 0, 0, 10.0));
 }
 
 #endif

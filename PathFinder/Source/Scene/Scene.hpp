@@ -31,7 +31,7 @@ namespace PathFinder
         using FlatLightIt = std::list<FlatLight>::iterator;
         using SphericalLightIt = std::list<SphericalLight>::iterator;
 
-        using EntityVariant = std::variant<MeshInstance*, FlatLight*, SphericalLight*>;
+        using LightVariant = std::variant<FlatLight*, SphericalLight*>;
 
         Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer);
 
@@ -41,6 +41,8 @@ namespace PathFinder
         FlatLightIt EmplaceDiskLight();
         FlatLightIt EmplaceRectangularLight();
         SphericalLightIt EmplaceSphericalLight();
+
+        void MapEntitiesToGPUIndices();
 
         void Serialize(const std::filesystem::path& destination) const;
         void Deserialize(const std::filesystem::path& source);
@@ -70,6 +72,9 @@ namespace PathFinder
         ResourceLoader mResourceLoader;
         MeshLoader mMeshLoader;
         SceneGPUStorage mGPUStorage;
+
+        std::vector<MeshInstance*> mMeshInstanceGPUIndexMappings;
+        std::vector<LightVariant> mLightGPUIndexMappings;
 
     public:
         inline Camera& MainCamera() { return mCamera; }
@@ -103,6 +108,9 @@ namespace PathFinder
         inline const auto SMAAAreaTexture() const { return mSMAAAreaTexture.get(); }
         inline const Mesh& UnitCube() const { return mUnitCube; }
         inline const Mesh& UnitSphere() const { return mUnitSphere; }
+
+        inline MeshInstance* MeshInstanceForGPUIndex(uint64_t index) const { return mMeshInstanceGPUIndexMappings[index]; }
+        inline LightVariant LightForGPUIndex(uint64_t index) const { return mLightGPUIndexMappings[index]; }
 
         inline SceneGPUStorage& GPUStorage() { return mGPUStorage; }
     };

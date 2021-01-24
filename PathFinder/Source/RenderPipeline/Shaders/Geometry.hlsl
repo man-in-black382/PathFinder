@@ -274,7 +274,7 @@ float3 SphericalToCartesian_ZUp(float theta, float phi)
     return float3(sinTheta * sinPhi, sinTheta * cosPhi, cosTheta);
 }
 
-float3 UniformSphereSample(float u, float v)
+float3 UniformHemisphereSample(float u, float v)
 {
     float phi = v * 2.0 * Pi;
     float cosTheta = 1.0 - u;
@@ -282,7 +282,7 @@ float3 UniformSphereSample(float u, float v)
     return float3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 }
 
-float3 CosineSphereSample(float u, float v)
+float3 CosineHemisphereSample(float u, float v)
 {
     float phi = v * 2.0 * Pi;
     float cosTheta = sqrt(1.0 - u);

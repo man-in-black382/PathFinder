@@ -11,10 +11,14 @@ namespace PathFinder
     class DrawablePrimitive
     {
     public:
+        static const uint64_t UnitCubeIndexCount = 36;
+        static const uint64_t UnitQuadIndexCount = 6;
+
         inline static const std::array<glm::vec3, 4> UnitQuadVertices{ 
             glm::vec3{-0.5f, -0.5f, 0.0f}, glm::vec3{-0.5f, 0.5f, 0.0f}, glm::vec3{0.5f, 0.5f, 0.0f}, glm::vec3{0.5f, -0.5f, 0.0f} 
         };
 
+        // Clockwise
         inline static const std::array<uint32_t, 6> UnitQuadIndices{ 0, 1, 3, 3, 1, 2 };
 
         inline static const DrawablePrimitive& Quad()

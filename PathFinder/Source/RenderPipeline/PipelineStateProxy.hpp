@@ -15,6 +15,9 @@ namespace PathFinder
         std::string VertexShaderFileName;
         std::string PixelShaderFileName;
         std::optional<std::string> GeometryShaderFileName;
+        std::optional<std::string> VertexShaderEntryPoint;
+        std::optional<std::string> PixelShaderEntryPoint;
+        std::optional<std::string> GeometryShaderEntryPoint;
         HAL::BlendState BlendState;
         HAL::RasterizerState RasterizerState;
         HAL::DepthStencilState DepthStencilState;
@@ -55,6 +58,7 @@ namespace PathFinder
         struct MissShader
         {
             std::string MissShaderFileName;
+            std::optional<std::string> EntryPoint;
             std::optional<Foundation::Name> LocalRootSignatureName;
         };
 
@@ -66,7 +70,7 @@ namespace PathFinder
         };
 
         HAL::ShaderTableIndex AddCallableShader(const std::string& fileName, const std::string& entryPoint, std::optional<Foundation::Name> localRootSignatureName = std::nullopt);
-        void AddMissShader(const std::string& missShaderFileName, std::optional<Foundation::Name> localRootSignatureName = std::nullopt);
+        void AddMissShader(const MissShader& info);
         void AddHitGroupShaders(const HitGroupShaderFileNames& fileNames, std::optional<Foundation::Name> localRootSignatureName = std::nullopt);
 
         HAL::RayTracingPipelineConfig PipelineConfig{ 0 };

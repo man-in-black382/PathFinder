@@ -25,7 +25,8 @@ namespace PathFinder
             state.AddHitGroupShaders(lightHitGroup);
 
             state.RayGenerationShaderFileName = "GIProbeRayTracing.hlsl";
-            state.AddMissShader("GIProbeRayTracing.hlsl");
+            state.AddMissShader({ "GIProbeRayTracing.hlsl" });
+            state.AddMissShader({ "GIProbeRayTracing.hlsl", "ProbeRayMiss" });
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
             state.GlobalRootSignatureName = RootSignatureNames::Shading; // Reuse root sig from shading pass
             state.PipelineConfig = HAL::RayTracingPipelineConfig{ 2 };

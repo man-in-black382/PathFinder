@@ -45,7 +45,7 @@ namespace Geometry {
 
     glm::mat4 Transformation::NormalMatrix() const
     {
-        return glm::transpose(glm::inverse(ModelMatrix()));
+        return glm::transpose(glm::inverse(RotationMatrix() * ScaleMatrix()));
     }
 
     glm::mat4 Transformation::InverseScaleMatrix() const 

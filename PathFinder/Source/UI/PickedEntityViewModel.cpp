@@ -13,20 +13,47 @@ namespace PathFinder
         mSphericalLight = nullptr;
         mFlatLight = nullptr;
 
-        /*if (auto entity = mScene->GetEntityByID(mHoveredEntityID))
+        if (mPickedEntityInfo.GPUIndex != PickedGPUEntityInfo::NoEntity)
         {
-            std::visit(Foundation::MakeVisitor(
-                [this](MeshInstance* instance) { mMeshInstance = instance; },
-                [this](SphericalLight* light) { mSphericalLight = light; },
-                [this](FlatLight* light) { mFlatLight = light; }),
-                *entity);
-        }*/
+            switch (PickedGPUEntityInfo::GPUEntityType{ mPickedEntityInfo.EntityType })
+            {
+            case PickedGPUEntityInfo::GPUEntityType::MeshInstance:
+                mMeshInstance = mScene->MeshInstanceForGPUIndex(mPickedEntityInfo.GPUIndex);
+                break;
+
+            case PickedGPUEntityInfo::GPUEntityType::Light:
+                std::visit(Foundation::MakeVisitor(
+                    [this](SphericalLight* light) { mSphericalLight = light; },
+                    [this](FlatLight* light) { mFlatLight = light; }),
+                    mScene->LightForGPUIndex(mPickedEntityInfo.GPUIndex));
+                break;
+
+            case PickedGPUEntityInfo::GPUEntityType::DebugGIProbe:
+                Dependencies->ScenePtr->GlobalIlluminationManager().PickedDebugProbeIndex = mPickedEntityInfo.GPUIndex;
+                break;
+            }
+        }
+        else
+        {
+            // Clear probe selection only when pressed on empty space to allow simultaneously picking meshes
+            Dependencies->ScenePtr->GlobalIlluminationManager().PickedDebugProbeIndex = std::nullopt;
+        }
     }
 
     void PickedEntityViewModel::SetModifiedModelMatrix(const glm::mat4& mat, const glm::mat4& delta)
     {
         mModifiedModelMatrix = mat;
         mDeltaMatrix = delta;
+    }
+
+    void PickedEntityViewModel::SetEnableGIDebug(bool enable)
+    {
+        Dependencies->ScenePtr->GlobalIlluminationManager().GIDebugEnabled = enable;
+    }
+
+    void PickedEntityViewModel::SetRotateProbeRaysEachFrame(bool enable)
+    {
+        Dependencies->ScenePtr->GlobalIlluminationManager().DoNotRotateProbeRays = !enable;
     }
 
     void PickedEntityViewModel::Import()
@@ -82,15 +109,18 @@ namespace PathFinder
 
     void PickedEntityViewModel::OnCreated()
     {
-        /*(*Dependencies->PostRenderEvent) += { "PickedEntityViewModel.Post.Render", [this]()
+        (*Dependencies->PostRenderEvent) += { "PickedEntityViewModel.Post.Render", [this]()
         {
             const Memory::Buffer* pickedGeometryInfo = Dependencies->ResourceStorage->GetPerResourceData(PathFinder::ResourceNames::PickedGeometryInfo)->Buffer.get();
 
-            pickedGeometryInfo->Read<uint32_t>([this](const uint32_t* info)
+            pickedGeometryInfo->Read<PickedGPUEntityInfo>([this](const PickedGPUEntityInfo* info)
             {
-                if (info) mHoveredEntityID = EntityID{ *info };
+                if (info)
+                {
+                    mPickedEntityInfo = *info;
+                }
             });
-        }};*/
+        }};
     }
 
 }

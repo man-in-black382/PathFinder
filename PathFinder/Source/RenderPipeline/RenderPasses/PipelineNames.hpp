@@ -90,7 +90,8 @@ namespace PathFinder
         inline Foundation::Name GIDepthProbeCornerUpdate{ "PSO_GI_Depth_Probe_Corner_Update" };
         inline Foundation::Name GIIrradianceProbeBorderUpdate{ "PSO_GI_Irradiance_Probe_Border_Update" };
         inline Foundation::Name GIDepthProbeBorderUpdate{ "PSO_GI_Depth_Probe_Border_Update" };
-        inline Foundation::Name GIDebug{ "PSO_GI_Debug" };
+        inline Foundation::Name GIProbeDebug{ "PSO_GI_Probe_Debug" };
+        inline Foundation::Name GIRaysDebug{ "PSO_GI_Rays_Debug" };
         inline Foundation::Name GeometryPicking{ "PSO_GeometryPicking" };
         inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name SeparableBlur{ "PSO_SeparableBlur" };

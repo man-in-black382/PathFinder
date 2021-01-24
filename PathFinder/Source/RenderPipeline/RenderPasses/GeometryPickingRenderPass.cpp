@@ -29,9 +29,14 @@ namespace PathFinder
             lightHitGroup.ClosestHitShaderFileName = "GeometryPicking.hlsl";
             lightHitGroup.ClosestHitShaderEntryPoint = "LightRayClosestHit";
 
+            RayTracingStateProxy::HitGroupShaderFileNames giProbeHitGroup{};
+            giProbeHitGroup.ClosestHitShaderFileName = "GeometryPicking.hlsl";
+            giProbeHitGroup.ClosestHitShaderEntryPoint = "GIProbeRayClosestHit";
+
             // Order of hit group shaders must match hit group contribution of entities
             state.AddHitGroupShaders(meshHitGroup);
             state.AddHitGroupShaders(lightHitGroup);
+            state.AddHitGroupShaders(giProbeHitGroup);
 
             state.RayGenerationShaderFileName = "GeometryPicking.hlsl";
             
@@ -43,7 +48,7 @@ namespace PathFinder
      
     void GeometryPickingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        scheduler->NewBuffer(ResourceNames::PickedGeometryInfo, NewBufferProperties<uint32_t>{ 1 });
+        scheduler->NewBuffer(ResourceNames::PickedGeometryInfo, NewBufferProperties<uint32_t>{ 2 });
         scheduler->Export(ResourceNames::PickedGeometryInfo);
         scheduler->UseRayTracing();
         scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);

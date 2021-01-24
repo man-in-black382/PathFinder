@@ -13,6 +13,7 @@ namespace PathFinder
         : mResourceLoader{ executableFolder, resourceProducer }, mMeshLoader{ executableFolder }, mLuminanceMeter{ &mCamera }, mGPUStorage{ this, device, resourceProducer }
     {
         LoadUtilityResources();
+        mGIManager.SetCamera(&mCamera);
     }
 
     Mesh& Scene::AddMesh(Mesh&& mesh)
@@ -49,6 +50,24 @@ namespace PathFinder
     {
         mSphericalLights.emplace_back();
         return std::prev(mSphericalLights.end());
+    }
+
+    void Scene::MapEntitiesToGPUIndices()
+    {
+        mMeshInstanceGPUIndexMappings.resize(mMeshInstances.size());
+        mLightGPUIndexMappings.resize(mRectangularLights.size() + mDiskLights.size() + mSphericalLights.size());
+
+        for (MeshInstance& instance : mMeshInstances)
+            mMeshInstanceGPUIndexMappings[instance.IndexInGPUTable()] = &instance;
+
+        for (FlatLight& light : mRectangularLights)
+            mLightGPUIndexMappings[light.IndexInGPUTable()] = &light;
+
+        for (FlatLight& light : mDiskLights)
+            mLightGPUIndexMappings[light.IndexInGPUTable()] = &light;
+
+        for (SphericalLight& light : mSphericalLights)
+            mLightGPUIndexMappings[light.IndexInGPUTable()] = &light;
     }
 
     void Scene::Serialize(const std::filesystem::path& destination) const
