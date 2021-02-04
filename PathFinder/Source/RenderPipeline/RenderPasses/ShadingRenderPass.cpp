@@ -24,14 +24,24 @@ namespace PathFinder
 
     void ShadingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-        stateCreator->CreateRayTracingState(PSONames::Shading, [this](RayTracingStateProxy& state)
-        {
-            state.RayGenerationShaderFileName = "Shading.hlsl";
-            state.AddMissShader({ "Shading.hlsl" });
-            state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
-            state.GlobalRootSignatureName = RootSignatureNames::Shading;
-            state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
-        });
+        // We either use RayGeneration shader or compute with Ray Queries.
+        // Right now Ray queries in compute run much faster than a dedicated ray gen shader, 
+        // so we'll stick to queries until (if ever) we need to return to rey gen approach.
+
+        /*  stateCreator->CreateRayTracingState(PSONames::Shading, [this](RayTracingStateProxy& state)
+          {
+              state.RayGenerationShaderFileName = "Shading.hlsl";
+              state.AddMissShader({ "Shading.hlsl" });
+              state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
+              state.GlobalRootSignatureName = RootSignatureNames::Shading;
+              state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
+          });*/
+
+          stateCreator->CreateComputeState(PSONames::Shading, [this](ComputeStateProxy& state)
+          {
+              state.ComputeShaderFileName = "Shading.hlsl";
+              state.RootSignatureName = RootSignatureNames::Shading;
+          });
     }
      
     void ShadingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
@@ -93,7 +103,8 @@ namespace PathFinder
         if (lights) context->GetCommandRecorder()->BindExternalBuffer(*lights, 1, 0, HAL::ShaderRegister::ShaderResource);
         if (materials) context->GetCommandRecorder()->BindExternalBuffer(*materials, 2, 0, HAL::ShaderRegister::ShaderResource);
         
-        context->GetCommandRecorder()->DispatchRays(context->GetDefaultRenderSurfaceDesc().Dimensions());
+        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 8, 8 });
+        //context->GetCommandRecorder()->DispatchRays(context->GetDefaultRenderSurfaceDesc().Dimensions());
     }
 
 }

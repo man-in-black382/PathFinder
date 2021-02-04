@@ -435,9 +435,7 @@ namespace HAL
     void RayTracingPipelineState::AssociateRootSignatureWithExport(const RootSignature* signature, const LibraryExport& shaderExport)
     {
         if (!signature)
-        {
             return;
-        }
 
         mExportNamePointerHolder.emplace_back(shaderExport.ExportName().c_str());
 
@@ -460,7 +458,8 @@ namespace HAL
 
     void RayTracingPipelineState::AddGlobalRootSignatureSubobject()
     {
-        if (!mGlobalRootSignature) return;
+        if (!mGlobalRootSignature)
+            return;
 
         mD3DGlobalRootSignanture.pGlobalRootSignature = mGlobalRootSignature->D3DSignature();
 

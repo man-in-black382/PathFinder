@@ -93,6 +93,7 @@ float4 ProbePSMain(ProbeVertexOut pin) : SV_Target0
     float2 atlasUV = IrradianceProbeAtlasUV(pin.ProbeIndex, normal, PassDataCB.ProbeField);
     Texture2D atlas = Textures2D[PassDataCB.ProbeField.IrradianceProbeAtlasTexIdx];
     float3 irradiance = atlas.SampleLevel(LinearClampSampler(), atlasUV, 0).rgb;
+    irradiance = DecodeProbeIrradiance(irradiance);
 
     return float4(irradiance, 1.0);
 }

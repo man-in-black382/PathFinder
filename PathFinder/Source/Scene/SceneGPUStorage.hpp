@@ -155,6 +155,9 @@ namespace PathFinder
         uint32_t DepthProbeAtlasTexIdx;
         // 16 byte boundary
         float DebugProbeRadius;
+        uint32_t Pad0__ = 0;
+        uint32_t Pad1__ = 0;
+        uint32_t Pad2__ = 0;
     };
 
     using GPUInstanceIndex = uint64_t;

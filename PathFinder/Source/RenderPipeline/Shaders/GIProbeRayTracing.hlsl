@@ -15,8 +15,8 @@ struct PassData
 {
     IrradianceField ProbeField;
     float4 Halton;
-    uint BlueNoiseTexIdx;
     uint2 BlueNoiseTexSize;
+    uint BlueNoiseTexIdx;
 };
 
 #define PassDataType PassData
@@ -134,7 +134,7 @@ void RayGeneration()
 
     ProbeRayPayload payload = { 0 };
 
-    const int MissShaderIndex = 1;
+    const int MissShaderIndex = 0; 
 
     TraceRay(SceneBVH,
         RAY_FLAG_CULL_BACK_FACING_TRIANGLES

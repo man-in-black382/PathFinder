@@ -1,24 +1,6 @@
 namespace Memory
 {
 
-    template <>
-    PoolCommandListAllocator::CopyCommandListPtr PoolCommandListAllocator::AllocateCommandList(uint64_t threadIndex)
-    {
-        return AllocateCopyCommandList();
-    }
-
-    template <>
-    PoolCommandListAllocator::ComputeCommandListPtr PoolCommandListAllocator::AllocateCommandList(uint64_t threadIndex)
-    {
-        return AllocateComputeCommandList();
-    }
-
-    template <>
-    PoolCommandListAllocator::GraphicsCommandListPtr PoolCommandListAllocator::AllocateCommandList(uint64_t threadIndex)
-    {
-        return AllocateGraphicsCommandList();
-    }
-
     template <class CommandListT, class CommandAllocatorT, class DeleterT>
     std::unique_ptr<CommandListT, DeleterT>
         PoolCommandListAllocator::AllocateCommandList(

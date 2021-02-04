@@ -25,7 +25,7 @@ namespace PathFinder
             state.AddHitGroupShaders(lightHitGroup);
 
             state.RayGenerationShaderFileName = "GIProbeRayTracing.hlsl";
-            state.AddMissShader({ "GIProbeRayTracing.hlsl" });
+            //state.AddMissShader({ "GIProbeRayTracing.hlsl" }); // At the moment shadows are done through ray queries
             state.AddMissShader({ "GIProbeRayTracing.hlsl", "ProbeRayMiss" });
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
             state.GlobalRootSignatureName = RootSignatureNames::Shading; // Reuse root sig from shading pass
@@ -62,7 +62,9 @@ namespace PathFinder
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.BlueNoiseTexSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
 
-        auto haltonSequence = Foundation::Halton::Sequence(0, 3);
+        auto start = context->FrameNumber() * 3;
+        auto end = start + 3;
+        auto haltonSequence = Foundation::Halton::Sequence(start, end);
 
         for (auto i = 0; i < 4; ++i)
         {

@@ -43,11 +43,6 @@ struct ShadingResult
     float3 StochasticShadowedOutgoingLuminance;
 };
 
-struct ShadowRayPayload
-{
-    float ShadowFactor;
-};
-
 struct RandomSequences
 {
     float4 BlueNoise;
@@ -465,6 +460,14 @@ float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, f
     float4 shadowValues = 0.0;
     uint raysPerLight = RaysPerLight(lightPartitionInfo);
 
+    const uint RayFlags = 
+        RAY_FLAG_CULL_BACK_FACING_TRIANGLES |
+        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
+        RAY_FLAG_FORCE_OPAQUE |            // Skip any hit shaders
+        RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
+
+    RayQuery<RayFlags> rayQuery;
+
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
     {
@@ -503,20 +506,10 @@ float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, f
         dxrRay.TMin = tmin;
         dxrRay.TMax = tmax;
 
-        ShadowRayPayload shadowPayload = { 0.0 };
+        rayQuery.TraceRayInline(SceneBVH, RayFlags, EntityMaskMeshInstance, dxrRay);
+        rayQuery.Proceed();
 
-        TraceRay(SceneBVH,
-            RAY_FLAG_CULL_BACK_FACING_TRIANGLES
-            | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
-            | RAY_FLAG_FORCE_OPAQUE             // Skip any hit shaders
-            | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, // Skip closest hit shaders,
-            EntityMaskMeshInstance, // Instance mask 
-            0, // Contribution to hit group index
-            0, // BLAS geometry multiplier for hit group index
-            0, // Miss shader index
-            dxrRay, shadowPayload);
-
-        shadowValues[i] = shadowPayload.ShadowFactor;
+        shadowValues[i] = rayQuery.CommittedStatus() != COMMITTED_TRIANGLE_HIT ? 1.0 : 0.0;
     }
 
     return shadowValues;
@@ -545,12 +538,6 @@ void CombineStochasticLightingAndShadows(RTData rtData, LightTablePartitionInfo 
         shadingResult.StochasticUnshadowedOutgoingLuminance += unshadowed;
 #endif
     }
-}
-
-[shader("miss")]
-void RayMiss(inout ShadowRayPayload payload)
-{
-    payload.ShadowFactor = 1.0;
 }
 
 ShadingResult EvaluateStandardGBufferLighting(GBufferStandard gBuffer, Material material, float3 surfacePosition, float3 viewerPosition, RandomSequences randomSequences)

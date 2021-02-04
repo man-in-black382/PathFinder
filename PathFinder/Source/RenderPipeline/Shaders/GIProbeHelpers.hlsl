@@ -34,6 +34,9 @@ struct IrradianceField
     uint DepthProbeAtlasTexIdx;
     // 16 byte boundary
     float DebugProbeRadius;
+    uint Pad0__;
+    uint Pad1__;
+    uint Pad2__;
 };
 
 uint3 Probe3DIndexFrom1D(uint index, IrradianceField field)
@@ -143,6 +146,21 @@ float2 NormalizedIrradianceProbeOctCoord(uint2 probeTexelIndex, IrradianceField 
 float2 NormalizedDepthProbeOctCoord(uint2 probeTexelIndex, IrradianceField field)
 {
     return NormalizedOctCoord(probeTexelIndex, field.DepthProbeSize);
+}
+
+float3 EncodeProbeIrradiance(float3 irradiance)
+{
+    // Perceptual encoding
+    const float GammaInv = 1.0 / 5.0;
+
+    return pow(irradiance, GammaInv);
+}
+
+float3 DecodeProbeIrradiance(float3 encoded)
+{
+    const float Gamma = 5.0;
+
+    return pow(encoded, Gamma);
 }
 
 #endif

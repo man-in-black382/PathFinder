@@ -161,7 +161,7 @@ void CSMain(uint GI : SV_GroupIndex, uint3 DTid : SV_DispatchThreadID)
     uint parity = DTid.x | DTid.y;
 
     // Downsample and store the 8x8 block
-    float4 filteredPixel;
+    float4 filteredPixel = 0;
     Texture2D source = Textures2D[PassDataCB.SourceTexIdx];
 
     // One bilinear sample is insufficient when scaling down by more than 2x.

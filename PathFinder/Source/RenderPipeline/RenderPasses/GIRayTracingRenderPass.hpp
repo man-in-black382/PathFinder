@@ -12,8 +12,8 @@ namespace PathFinder
     {
         GPUIrradianceField ProbeField;
         glm::vec4 Halton;
-        uint32_t BlueNoiseTexIdx;
         glm::uvec2 BlueNoiseTexSize;
+        uint32_t BlueNoiseTexIdx;
     };
 
     class GIRayTracingRenderPass : public RenderPass<RenderPassContentMediator>

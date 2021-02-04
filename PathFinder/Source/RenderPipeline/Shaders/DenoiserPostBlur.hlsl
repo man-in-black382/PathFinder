@@ -95,6 +95,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
     float maxLuminance = ConvertEV100ToMaxHsbsLuminance(FrameDataCB.CurrentFrameCamera.ExposureValue100);
 
+    //combinedShadingTargetTexture[pixelIndex].rgb = stochasticUnshadowed;
     combinedShadingTargetTexture[pixelIndex].rgb = combinedShading;
     combinedOversaturatedShadingTargetTexture[pixelIndex].rgb = CIELuminance(combinedShading) > maxLuminance ? combinedShading : 0.0;
 }

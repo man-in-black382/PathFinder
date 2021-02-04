@@ -3,6 +3,7 @@
 
 #include "GIProbeHelpers.hlsl"
 #include "Packing.hlsl"
+#include "ColorConversion.hlsl"
 
 struct PassData
 {
@@ -21,12 +22,14 @@ static const uint DepthProbeTexelCount = DepthProbeSize * DepthProbeSize;
 static const uint RaysPerProbe = 144;
 static const float EnergyConservation = 0.95;
 static const float DepthSharpness = 1.0;
+static const float SignificantChangeThreshold = 0.25;
+static const float NewDistributionChangeThreshold = 0.8;
 
 groupshared float4 RayHitInfo[RaysPerProbe];
 
 // We use largest probe dimension to accommodate both probe types
 [numthreads(DepthProbeTexelCount, 1, 1)]
-void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
+void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)  
 {
     // We work with depth texel counts because it's the larger probe of the two 
     uint probeIndex = dtID.x / DepthProbeTexelCount;
@@ -96,17 +99,26 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
         if (irradianceResult.w > Epsilon)
         {
             irradianceResult.rgb *= FourPi / RaysPerProbe; // PDF is 1 / (4 * Pi)
+            irradianceResult.rgb = EncodeProbeIrradiance(irradianceResult.rgb);
 
             RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.IrradianceProbeAtlasTexIdx];
-
-            float hysteresis = 0.0; // Replace by configurable parameter
-            float alpha = 1.0 - hysteresis;
-
             uint2 texelIndex = IrradianceProbeAtlasTexelIndex(probeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
-            float3 previousIrradiance = atlas[texelIndex].rgb;
-            float3 newIrradiance = lerp(previousIrradiance, irradianceResult.rgb, alpha);
 
-            atlas[texelIndex].rgb = newIrradiance;
+            float3 previousIrradiance = atlas[texelIndex].rgb;
+            float hysteresis = 0.97; 
+
+          /*  float2 lums = float2(CIELuminance(previousIrradiance.rgb), CIELuminance(irradianceResult.rgb));
+            float changeMagnitude = abs(lums.x - lums.y) / Max(lums);*/
+            float changeMagnitude = Max(abs(previousIrradiance.rgb - irradianceResult.rgb));
+
+            // Lower the hysteresis when a large change is detected
+            if (changeMagnitude > SignificantChangeThreshold)
+                hysteresis = max(0, hysteresis - 0.15);
+
+            if (changeMagnitude > NewDistributionChangeThreshold)
+                hysteresis = 0.0f;
+
+            atlas[texelIndex].rgb = lerp(irradianceResult.rgb, previousIrradiance, hysteresis); ;
         }
     }
 
@@ -116,13 +128,11 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
        
         RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.DepthProbeAtlasTexIdx];
 
-        float hysteresis = 0.0; // Replace by configurable parameter
-        float alpha = 1.0 - hysteresis;
+        float hysteresis = 1.0;
         uint2 texelIndex = DepthProbeAtlasTexelIndex(probeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
         float2 previousDepth = atlas[texelIndex].rg;
-        float2 newDepth = lerp(previousDepth, depthResult.xy, alpha);
 
-        atlas[texelIndex].rg = newDepth;
+        atlas[texelIndex].rg = lerp(depthResult.xy, previousDepth, hysteresis);;
     }
 }
 

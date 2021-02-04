@@ -56,6 +56,26 @@ struct GBufferEmissive
     float3 Motion;
 };
 
+GBufferStandard ZeroGBufferStandard()
+{
+    GBufferStandard gb;
+    gb.Albedo = 0;
+    gb.Normal = 0;
+    gb.Motion = 0;
+    gb.Roughness = 0;
+    gb.Metalness = 0;
+    gb.MaterialIndex = 0;
+    return gb;
+}
+
+GBufferEmissive ZeroGBufferEmissive()
+{
+    GBufferEmissive gb;
+    gb.LightIndex = 0;
+    gb.Motion = 0;
+    return gb;
+}
+
 GBufferPixelOut GetStandardGBufferPixelOutput(float3 albedo, float metalness, float roughness, float3 normal, float3 motion, uint materialIndex, float viewDepth)
 {
     float motionMagnitude = length(motion);

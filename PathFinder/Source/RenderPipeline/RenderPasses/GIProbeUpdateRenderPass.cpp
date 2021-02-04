@@ -43,7 +43,7 @@ namespace PathFinder
     void GIProbeUpdateRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
         NewTextureProperties irradianceTextureProperties{
-            HAL::ColorFormat::R11G11B10_Float,
+            HAL::ColorFormat::RGBA16_Float,
             HAL::TextureKind::Texture2D,
             scheduler->Content()->GetSettings()->GlobalIlluminationSettings.GetIrradianceProbeAtlasSize()
         };

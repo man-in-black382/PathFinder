@@ -6,7 +6,7 @@
 [numthreads(8, 8, 8)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
 {
-    Texture2D displacementMap = Textures2D[PassDataCB.DisplacementMapSRVIndex];
+  /*  Texture2D displacementMap = Textures2D[PassDataCB.DisplacementMapSRVIndex];
 
     VoxelIntersectionInfo intersectionInfo = VoxelIntersectsDisplacementMap(displacementMap, dispatchThreadID);
 
@@ -35,7 +35,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID)
     }
 
     ReadOnlyConesBuffer[bufferIndex] = cones;
-    WriteOnlyConesBuffer[bufferIndex] = cones;
+    WriteOnlyConesBuffer[bufferIndex] = cones;*/
 }
 
 #endif

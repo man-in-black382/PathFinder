@@ -29,7 +29,7 @@ ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, 
     Texture3D blueNoiseTexture = Textures3D[PassDataCB.BlueNoiseTexIdx];
     Texture2D<uint4> rngSeeds = UInt4_Textures2D[PassDataCB.RngSeedsTexIdx];
 
-    GBufferStandard gBuffer;
+    GBufferStandard gBuffer = ZeroGBufferStandard();
     LoadStandardGBuffer(gBuffer, gBufferTextures, pixelIndex);
 
     Material material = MaterialTable[gBuffer.MaterialIndex];
@@ -45,7 +45,7 @@ ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, 
 
 ShadingResult HandleEmissiveGBufferLighting(GBufferTexturePack gBufferTextures, uint2 pixelIndex)
 {
-    GBufferEmissive gBuffer;
+    GBufferEmissive gBuffer = ZeroGBufferEmissive();
     LoadEmissiveGBuffer(gBuffer, gBufferTextures, pixelIndex);
 
     Light light = LightTable[gBuffer.LightIndex];
@@ -66,8 +66,11 @@ void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
     stochasticUnshadowedOutput[pixelIndex] = float4(shadingResult.StochasticUnshadowedOutgoingLuminance, 1.0);
 }
 
-[shader("raygeneration")]
-void RayGeneration()
+//[shader("raygeneration")]
+//void RayGeneration()
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_GroupID)
 {
     GBufferTexturePack gBufferTextures;
     gBufferTextures.AlbedoMetalness = Textures2D[PassDataCB.GBufferIndices.AlbedoMetalnessTexIdx];
@@ -77,9 +80,12 @@ void RayGeneration()
     gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
     gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTexIdx];
 
-    uint2 pixelIndex = DispatchRaysIndex().xy;
-    float2 currenPixelLocation = pixelIndex + float2(0.5f, 0.5f);
-    float2 pixelCenterUV = currenPixelLocation / DispatchRaysDimensions().xy;
+    //uint2 pixelIndex = DispatchRaysIndex().xy;
+    //float2 currenPixelLocation = pixelIndex + float2(0.5f, 0.5f);
+    //float2 pixelCenterUV = currenPixelLocation / DispatchRaysDimensions().xy;
+
+    uint2 pixelIndex = dispatchThreadID.xy;
+    float2 pixelCenterUV = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
 
     float depth = gBufferTextures.DepthStencil.Load(uint3(pixelIndex, 0)).r;
 
