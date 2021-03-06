@@ -27,14 +27,14 @@ namespace HAL
 
     using ClearValue = std::variant<ColorClearValue, DepthStencilClearValue>;
 
-    enum class TypelessColorFormat
+    enum class TypelessColorFormat : uint32_t
     {
         R8, RG8, RGBA8,
         R16, RG16, RGBA16,
         R32, RG32, RGB32, RGBA32
     };
 
-    enum class ColorFormat
+    enum class ColorFormat : uint32_t
     {
         R8_Unsigned_Norm, RG8_Usigned_Norm, RGBA8_Usigned_Norm, RGBA16_Unsigned_Norm,
 
@@ -58,17 +58,20 @@ namespace HAL
         BC5_Unsigned_Norm, BC5_Signed_Norm, BC7_Unsigned_Norm
     };
 
-    enum class ColorSpace
-    {
-        Rec709, Rec2020
-    };
-
-    enum class DepthStencilFormat
+    enum class DepthStencilFormat : uint32_t
     {
         Depth24_Float_Stencil8_Unsigned, Depth32_Float
     };
 
-    enum class TextureKind { Texture1D, Texture2D, Texture3D };
+    enum class ColorSpace : uint8_t
+    {
+        Rec709, Rec2020
+    };
+
+    enum class TextureKind : uint8_t
+    {
+        Texture1D, Texture2D, Texture3D 
+    };
 
     using FormatVariant = std::variant<TypelessColorFormat, ColorFormat, DepthStencilFormat>;
 

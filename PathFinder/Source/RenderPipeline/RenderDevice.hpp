@@ -188,8 +188,13 @@ namespace PathFinder
 
         struct SubresourcePreviousUsageInfo
         {
-            const RenderPassGraph::Node* Node = nullptr;
-            uint64_t CommandListBatchIndex = 0;
+            using DependencyLevelIndex = uint64_t;
+            using ResourceUser = std::variant<const RenderPassGraph::Node*, DependencyLevelIndex>;
+            
+            // Previous usage can indicate usage in a single render pass in a dependency level
+            // or a whole dependency level when we're dealing with rerouted transitions
+            ResourceUser User;
+            uint64_t EstimatedCommandListBatchIndex = 0;
         };
 
         struct ResourceReadbackInfo
@@ -206,7 +211,7 @@ namespace PathFinder
         void AllocateAndRecordPreWorkCommandList(const RenderPassGraph::Node& node, const HAL::ResourceBarrierCollection& barriers, const std::string& cmdListName);
         void AllocateAndRecordReroutedTransitionsCommandList(std::optional<uint64_t> reroutingDependencyLevelIndex, uint64_t currentDependencyLevelIndex, const HAL::ResourceBarrierCollection& barriers);
         void CollectNodeStandardTransitions(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection);
-        void CollectNodeTransitionsToReroute(std::optional<uint64_t>& reroutingDependencyLevelIndex, HAL::ResourceBarrierCollection& collection);
+        void CollectNodeTransitionsToReroute(std::optional<uint64_t>& reroutingDependencyLevelIndex, HAL::ResourceBarrierCollection& collection, const RenderPassGraph::DependencyLevel& currentDL);
         void CollectNodeUAVAndAliasingBarriers(const RenderPassGraph::Node& node, HAL::ResourceBarrierCollection& collection);
         void RecordResourceTransitions(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void RecordPostWorkCommandLists();

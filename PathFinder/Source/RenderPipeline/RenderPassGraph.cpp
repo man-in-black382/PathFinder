@@ -142,7 +142,8 @@ namespace PathFinder
 
     void RenderPassGraph::DepthFirstSearch(uint64_t nodeIndex, std::vector<bool>& visited, std::vector<bool>& onStack, bool& isCyclic)
     {
-        if (isCyclic) return;
+        if (isCyclic) 
+            return;
 
         visited[nodeIndex] = true;
         onStack[nodeIndex] = true;
@@ -348,21 +349,34 @@ namespace PathFinder
                 // Get rid of nodes to sync that may have had redundancies
                 node->mNodesToSyncWith.clear();
 
-                for (const Node* closestNode : closestNodesToSyncWith)
+                // Compute initial SSIS
+                for (auto queueIdx = 0; queueIdx < mDetectedQueueCount; ++queueIdx)
                 {
+                    const Node* closestNode = closestNodesToSyncWith[queueIdx];
+
                     if (!closestNode)
                     {
-                        continue;
-                    }
+                        // If we do not have a closest node to sync with on another queue (queueIdx),
+                        // we need to use SSIS value for that queue from the previous node on this node's queue (closestNodesToSyncWith[node->ExecutionQueueIndex])
+                        // to correctly propagate SSIS values for all queues through the graph and do not lose them
+                        const Node* previousNodeOnNodesQueue = closestNodesToSyncWith[node->ExecutionQueueIndex];
 
-                    // Update SSIS using closest nodes' indices
-                    if (closestNode->ExecutionQueueIndex != node->ExecutionQueueIndex)
+                        // Previous node can be null if we're dealing with first node in the queue
+                        if (previousNodeOnNodesQueue)
+                        {
+                            uint64_t syncIndexForOtherQueueFromPreviousNode = previousNodeOnNodesQueue->mSynchronizationIndexSet[queueIdx];
+                            node->mSynchronizationIndexSet[queueIdx] = syncIndexForOtherQueueFromPreviousNode;
+                        }
+                    }
+                    else
                     {
-                        node->mSynchronizationIndexSet[closestNode->ExecutionQueueIndex] = closestNode->LocalToQueueExecutionIndex();
-                    }
+                        // Update SSIS using closest nodes' indices
+                        if (closestNode->ExecutionQueueIndex != node->ExecutionQueueIndex)
+                            node->mSynchronizationIndexSet[closestNode->ExecutionQueueIndex] = closestNode->LocalToQueueExecutionIndex();
 
-                    // Store only closest nodes to sync with
-                    node->mNodesToSyncWith.push_back(closestNode);
+                        // Store only closest nodes to sync with
+                        node->mNodesToSyncWith.push_back(closestNode);
+                    }
                 }
 
                 // Use node's execution index as synchronization index on its own queue

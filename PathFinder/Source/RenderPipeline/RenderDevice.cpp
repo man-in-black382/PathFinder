@@ -113,9 +113,7 @@ namespace PathFinder
             {
                 // Special case of back buffer
                 if (resourceName == RenderPassGraph::Node::BackBufferName)
-                {
                     continue;
-                }
 
                 const PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceName);
                 const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceData->SchedulingInfo.GetInfoForPass(node->PassMetadata().Name);
@@ -363,7 +361,7 @@ namespace PathFinder
             // to correctly place split barriers later, if needed, graphic API transition for this pass is not required
             if (!transitionInfo.TransitionBarrier)
             {
-                mSubresourcesPreviousUsageInfo[transitionInfo.SubresourceName] = { node, currentCommandListBatchIndex };
+                mSubresourcesPreviousUsageInfo[transitionInfo.SubresourceName] = { SubresourcePreviousUsageInfo::ResourceUser{node}, currentCommandListBatchIndex };
                 continue;
             }
 
@@ -371,7 +369,7 @@ namespace PathFinder
             // implicit due to automatic promotion/decay.
             auto previousTransitionInfoIt = mSubresourcesPreviousUsageInfo.find(transitionInfo.SubresourceName);
             bool foundPreviousTransition = previousTransitionInfoIt != mSubresourcesPreviousUsageInfo.end();
-            bool subresourceTransitionedAtLeastOnce = foundPreviousTransition && previousTransitionInfoIt->second.CommandListBatchIndex == currentCommandListBatchIndex;
+            bool subresourceTransitionedAtLeastOnce = foundPreviousTransition && previousTransitionInfoIt->second.EstimatedCommandListBatchIndex == currentCommandListBatchIndex;
 
             if (!subresourceTransitionedAtLeastOnce)
             {
@@ -379,30 +377,28 @@ namespace PathFinder
                     *transitionInfo.Resource, transitionInfo.TransitionBarrier->BeforeStates(), transitionInfo.TransitionBarrier->AfterStates());
 
                 if (implicitTransitionPossible)
-                {
                     continue;
-                }
             }
 
-            // When previous transition is found we can try to split the barrier
-            if (foundPreviousTransition)
+            // When previous transition is found and(!) previous usage was on render pass and not in rerouted transitions, we can try to split the barrier
+            if (foundPreviousTransition && std::holds_alternative<const RenderPassGraph::Node*>(previousTransitionInfoIt->second.User))
             {
-                const SubresourcePreviousUsageInfo& previousTransitionInfo = previousTransitionInfoIt->second;
+                const RenderPassGraph::Node* previousTransitionNode = std::get<const RenderPassGraph::Node*>(previousTransitionInfoIt->second.User);
 
                 // Split barrier is only possible when transmitting queue supports transitions for both before and after states
                 bool isSplitBarrierPossible = IsStateTransitionSupportedOnQueue(
-                    previousTransitionInfo.Node->ExecutionQueueIndex, transitionInfo.TransitionBarrier->BeforeStates(), transitionInfo.TransitionBarrier->AfterStates()
+                    previousTransitionNode->ExecutionQueueIndex, transitionInfo.TransitionBarrier->BeforeStates(), transitionInfo.TransitionBarrier->AfterStates()
                 );
 
                 // There is no sense in splitting barriers between two adjacent render passes. 
                 // That will only double the amount of barriers without any performance gain.
-                bool currentNodeIsNextToPrevious = node->LocalToQueueExecutionIndex() - previousTransitionInfo.Node->LocalToQueueExecutionIndex() <= 1;
+                bool currentNodeIsNextToPrevious = node->LocalToQueueExecutionIndex() - previousTransitionNode->LocalToQueueExecutionIndex() <= 1;
 
                 if (isSplitBarrierPossible && !currentNodeIsNextToPrevious)
                 {
                     auto [beginBarrier, endBarrier] = transitionInfo.TransitionBarrier->Split();
                     collection.AddBarrier(endBarrier);
-                    mPerNodeBeginBarriers[previousTransitionInfo.Node->GlobalExecutionIndex()].AddBarrier(beginBarrier);
+                    mPerNodeBeginBarriers[previousTransitionNode->GlobalExecutionIndex()].AddBarrier(beginBarrier);
                 }
                 else
                 {
@@ -414,11 +410,11 @@ namespace PathFinder
                 collection.AddBarrier(*transitionInfo.TransitionBarrier);
             }
 
-            mSubresourcesPreviousUsageInfo[transitionInfo.SubresourceName] = { node, currentCommandListBatchIndex };
+            mSubresourcesPreviousUsageInfo[transitionInfo.SubresourceName] = { SubresourcePreviousUsageInfo::ResourceUser{node}, currentCommandListBatchIndex };
         }
     }
 
-    void RenderDevice::CollectNodeTransitionsToReroute(std::optional<uint64_t>& reroutingDependencyLevelIndex, HAL::ResourceBarrierCollection& collection)
+    void RenderDevice::CollectNodeTransitionsToReroute(std::optional<uint64_t>& reroutingDependencyLevelIndex, HAL::ResourceBarrierCollection& collection, const RenderPassGraph::DependencyLevel& currentDL)
     {
         // We want to execute rerouted transitions as early in the frame as we can, 
         // but only after closest dependency level that uses any of the resources,
@@ -428,21 +424,25 @@ namespace PathFinder
         {
             collection.AddBarrier(*transitionInfo.TransitionBarrier);
 
-            auto previousTransitionInfoIt = mSubresourcesPreviousUsageInfo.find(transitionInfo.SubresourceName);
-            bool previousTransitionExists = previousTransitionInfoIt != mSubresourcesPreviousUsageInfo.end();
-            
-            if (previousTransitionExists)
+            auto previousUsageInfoIt = mSubresourcesPreviousUsageInfo.find(transitionInfo.SubresourceName);
+            bool previousUsageExists = previousUsageInfoIt != mSubresourcesPreviousUsageInfo.end();
+
+            if (previousUsageExists)
             {
-                uint64_t dlIndex = previousTransitionInfoIt->second.Node->DependencyLevelIndex();
+                uint64_t dlIndex = 0;
+                
+                // Previous usage was either on a render pass OR on a rerouted transitions event
+                std::visit(Foundation::MakeVisitor(
+                    [&dlIndex](const RenderPassGraph::Node* previousUsageNode) { dlIndex = previousUsageNode->DependencyLevelIndex(); },
+                    [&dlIndex](SubresourcePreviousUsageInfo::DependencyLevelIndex previousUsageDLIndex) { dlIndex = previousUsageDLIndex; }),
+                    previousUsageInfoIt->second.User);
 
                 if (!reroutingDependencyLevelIndex || dlIndex > (*reroutingDependencyLevelIndex))
                     reroutingDependencyLevelIndex = dlIndex;
-
-                // Erase transition's history when dealing with rerouted transitions.
-                // We may miss out on some split barriers (potentially), 
-                // but we will make our life much easier by doing so.
-                mSubresourcesPreviousUsageInfo.erase(transitionInfo.SubresourceName);
             }
+
+            // We update index of dependency level the resource was last used in
+            mSubresourcesPreviousUsageInfo[transitionInfo.SubresourceName] = { SubresourcePreviousUsageInfo::ResourceUser{ currentDL.LevelIndex() } };
         }
     }
 
@@ -475,7 +475,7 @@ namespace PathFinder
         if (willRerouteTransitions)
         {
             HAL::ResourceBarrierCollection transitionsToReroute{};
-            CollectNodeTransitionsToReroute(reroutingDependencyLevelIndex, transitionsToReroute);
+            CollectNodeTransitionsToReroute(reroutingDependencyLevelIndex, transitionsToReroute, dependencyLevel);
             AllocateAndRecordReroutedTransitionsCommandList(reroutingDependencyLevelIndex, dependencyLevel.LevelIndex(), transitionsToReroute);
         }
     }

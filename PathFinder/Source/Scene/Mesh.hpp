@@ -2,13 +2,15 @@
 
 #include <vector>
 #include <string>
+#include <filesystem>
+#include <optional>
 
 #include "VertexStorageLocation.hpp"
 #include "Vertices/Vertex1P1N1UV1T1BT.hpp"
 
 #include <bitsery/bitsery.h>
+#include <bitsery/traits/string.h>
 #include <Geometry/AxisAlignedBox3D.hpp>
-
 
 namespace PathFinder
 {
@@ -31,19 +33,20 @@ namespace PathFinder
         void AddVertex(const Vertex1P1N1UV1T1BT& vertex);
         void AddIndex(uint32_t index);
 
+        void SerializeVertexData(const std::filesystem::path& path);
+        void DeserializeVertexData(const std::filesystem::path& path);
+
     private:
         friend bitsery::Access;
 
         template <typename S>
         void serialize(S& s)
         {
-            s.text(mName);
-            s.container(mVertices);
-            s.container(mIndices);
+            s.container1b(mName, 1000);
             s.object(mBoundingBox.Min);
             s.object(mBoundingBox.Max);
-            s.value(mArea);
-            s.value(mHasTangentSpace);
+            s.value4b(mArea);
+            s.boolValue(mHasTangentSpace);
         }
 
         std::string mName;

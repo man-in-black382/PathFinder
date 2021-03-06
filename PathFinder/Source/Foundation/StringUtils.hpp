@@ -5,6 +5,7 @@
 #include <string>
 #include <cstdio>
 #include <codecvt>
+#include <random>
 
 // https://stackoverflow.com/a/26221725/4308277
 //
@@ -17,6 +18,23 @@ std::string StringFormat(const std::string &format, Args ... args)
     return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
+inline std::string RandomAlphanumericString(uint64_t len)
+{
+    static constexpr auto chars =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution dis{ {}, std::strlen(chars) - 1 };
+
+    auto result = std::string(len, '\0');
+
+    std::generate_n(begin(result), len, [&]() { return chars[dis(gen)]; });
+
+    return result;
+}
 
 // https://stackoverflow.com/a/27296/4308277
 //

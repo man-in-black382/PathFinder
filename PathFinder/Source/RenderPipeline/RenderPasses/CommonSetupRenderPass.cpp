@@ -44,6 +44,8 @@ namespace PathFinder
     void CommonSetupRenderPass::ScheduleSamplers(SamplerCreator* samplerCreator)
     {
         samplerCreator->CreateSampler(SamplerNames::AnisotropicClamp, HAL::Sampler{ HAL::Sampler::UnifiedAlgorithm::Anisotropic, HAL::Sampler::AddressMode::Clamp });
+        samplerCreator->CreateSampler(SamplerNames::AnisotropicWrap, HAL::Sampler{ HAL::Sampler::UnifiedAlgorithm::Anisotropic, HAL::Sampler::AddressMode::Wrap });
+        samplerCreator->CreateSampler(SamplerNames::AnisotropicMirror, HAL::Sampler{ HAL::Sampler::UnifiedAlgorithm::Anisotropic, HAL::Sampler::AddressMode::Mirror });
         samplerCreator->CreateSampler(SamplerNames::LinearClamp, HAL::Sampler{ HAL::Sampler::UnifiedAlgorithm::Linear, HAL::Sampler::AddressMode::Clamp });
         samplerCreator->CreateSampler(SamplerNames::PointClamp, HAL::Sampler{ HAL::Sampler::UnifiedAlgorithm::Point, HAL::Sampler::AddressMode::Clamp });
         samplerCreator->CreateSampler(SamplerNames::Minimim, HAL::Sampler{ HAL::Sampler::MinMaxFilter::Minimum, HAL::Sampler::AddressMode::Clamp });

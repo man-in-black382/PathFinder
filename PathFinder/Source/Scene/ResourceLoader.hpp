@@ -13,18 +13,21 @@ namespace PathFinder
     class ResourceLoader
     {
     public:
-        ResourceLoader(const std::filesystem::path& rootPath, Memory::GPUResourceProducer* resourceProducer);
+        ResourceLoader(Memory::GPUResourceProducer* resourceProducer);
 
-        Memory::GPUResourceProducer::TexturePtr LoadTexture(const std::string& relativeFilePath) const;
-        void StoreResource(const Memory::GPUResource& resource, const std::string& relativeFilePath) const;
+        Memory::GPUResourceProducer::TexturePtr LoadTexture(const std::filesystem::path& path, bool saveRowMajorBlob = false);
+        void StoreResource(const Memory::GPUResource& resource, const std::filesystem::path& path) const;
 
     private:
         HAL::TextureKind ToKind(const ddsktx_texture_info& textureInfo) const;
         HAL::FormatVariant ToResourceFormat(const ddsktx_format& parserFormat) const;
         Memory::GPUResourceProducer::TexturePtr AllocateTexture(const ddsktx_texture_info& textureInfo) const;
 
-        std::filesystem::path mRootPath;
+        std::vector<uint8_t> mRowMajorBlob;
         Memory::GPUResourceProducer* mResourceProducer;
+
+    public:
+        inline auto& RowMajorBlob() { return mRowMajorBlob; }
     };
 
 }

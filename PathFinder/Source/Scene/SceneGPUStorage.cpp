@@ -5,13 +5,23 @@
 #include <iterator>
 
 #include <RenderPipeline/DrawablePrimitive.hpp>
+#include <RenderPipeline/RenderPasses/PipelineNames.hpp>
 #include <fplus/fplus.hpp>
 
 namespace PathFinder
 {
 
-    SceneGPUStorage::SceneGPUStorage(Scene* scene, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer)
-        : mScene{ scene }, mDevice{ device }, mResourceProducer{ resourceProducer }, mTopAccelerationStructure{ device, resourceProducer }
+    SceneGPUStorage::SceneGPUStorage(
+        Scene* scene, 
+        const HAL::Device* device,
+        Memory::GPUResourceProducer* resourceProducer, 
+        const PipelineResourceStorage* pipelineResourceStorage)
+        : 
+        mScene{ scene }, 
+        mDevice{ device }, 
+        mResourceProducer{ resourceProducer },
+        mTopAccelerationStructure{ device, resourceProducer }, 
+        mPipelineResourceStorage{ pipelineResourceStorage }
     {
         mTopAccelerationStructure.SetDebugName("All Meshes Top RT AS");
     }        
@@ -22,11 +32,15 @@ namespace PathFinder
 
         mBottomAccelerationStructures.clear();
 
+        auto& package1P1N1UV1T1BT = std::get<UploadBufferPackage<Vertex1P1N1UV1T1BT>>(mUploadBuffers);
+        package1P1N1UV1T1BT.Vertices.reserve(mScene->TotalVertexCount());
+        package1P1N1UV1T1BT.Indices.reserve(mScene->TotalIndexCount());
+
         for (Mesh& mesh : meshes)
         {
             assert_format(!mesh.Vertices().empty(), "Empty meshes are not allowed");
 
-            VertexStorageLocation locationInStorage = WriteToTemporaryBuffers(
+            VertexStorageLocation locationInStorage = WriteToTemporaryBuffers<Vertex1P1N1UV1T1BT>(
                 mesh.Vertices().data(), mesh.Vertices().size(), mesh.Indices().data(), mesh.Indices().size());
 
             mesh.SetVertexStorageLocation(locationInStorage);
@@ -34,15 +48,15 @@ namespace PathFinder
 
         auto quadVertices = fplus::transform([](const glm::vec3& p) { return Vertex1P1N1UV1T1BT{ glm::vec4{p, 1.0f} }; }, DrawablePrimitive::UnitQuadVertices);
 
-        mUnitQuadVertexLocation = WriteToTemporaryBuffers(
+        mUnitQuadVertexLocation = WriteToTemporaryBuffers<Vertex1P1N1UV1T1BT>(
             quadVertices.data(), quadVertices.size(),
             DrawablePrimitive::UnitQuadIndices.data(), DrawablePrimitive::UnitQuadIndices.size());
 
-        mUnitCubeVertexLocation = WriteToTemporaryBuffers(
+        mUnitCubeVertexLocation = WriteToTemporaryBuffers<Vertex1P1N1UV1T1BT>(
             mScene->UnitCube().Vertices().data(), mScene->UnitCube().Vertices().size(), 
             mScene->UnitCube().Indices().data(), mScene->UnitCube().Indices().size());
 
-        mUnitSphereVertexLocation = WriteToTemporaryBuffers(
+        mUnitSphereVertexLocation = WriteToTemporaryBuffers<Vertex1P1N1UV1T1BT>(
             mScene->UnitSphere().Vertices().data(), mScene->UnitSphere().Vertices().size(),
             mScene->UnitSphere().Indices().data(), mScene->UnitSphere().Indices().size());
 
@@ -66,26 +80,39 @@ namespace PathFinder
 
         uint64_t materialIndex = 0;
 
+        auto getSamplerIndex = [this](Material::WrapMode wrapMode) -> uint32_t
+        {
+            switch (wrapMode)
+            {
+            case Material::WrapMode::Clamp: return mPipelineResourceStorage->GetSamplerDescriptor(SamplerNames::AnisotropicClamp)->IndexInHeapRange();
+            case Material::WrapMode::Mirror: return mPipelineResourceStorage->GetSamplerDescriptor(SamplerNames::AnisotropicMirror)->IndexInHeapRange();
+            case Material::WrapMode::Repeat: return mPipelineResourceStorage->GetSamplerDescriptor(SamplerNames::AnisotropicWrap)->IndexInHeapRange();
+            default: return mPipelineResourceStorage->GetSamplerDescriptor(SamplerNames::AnisotropicClamp)->IndexInHeapRange();
+            }
+        };
+
         for (Material& material : materials)
         {
             // All ltc look-up tables are expected to be of the same size
             auto lut0SpecularSize = material.LTC_LUT_MatrixInverse_Specular->HALTexture()->Dimensions();
 
             GPUMaterialTableEntry materialEntry{
-                material.AlbedoMap->GetSRDescriptor()->IndexInHeapRange(),
-                material.NormalMap->GetSRDescriptor()->IndexInHeapRange(),
-                material.RoughnessMap->GetSRDescriptor()->IndexInHeapRange(),
-                material.MetalnessMap->GetSRDescriptor()->IndexInHeapRange(),
-                material.AOMap->GetSRDescriptor()->IndexInHeapRange(),
-                material.DisplacementMap->GetSRDescriptor()->IndexInHeapRange(),
-                material.DistanceField->GetSRDescriptor()->IndexInHeapRange(),
+                material.DiffuseAlbedoMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
+                material.NormalMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
+                material.RoughnessMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
+                material.MetalnessMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
+                material.AOMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
+                material.DisplacementMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
+                material.DistanceField.Texture->GetSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_MatrixInverse_Specular->GetSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_Matrix_Specular->GetSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_Terms_Specular->GetSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_MatrixInverse_Diffuse->GetSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_Matrix_Diffuse->GetSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_Terms_Diffuse->GetSRDescriptor()->IndexInHeapRange(),
-                lut0SpecularSize.Width
+                lut0SpecularSize.Width,
+                // Right now we use wrap mode from diffuse albedo and apply it for all textures in material, which should be sufficient.
+                getSamplerIndex(material.DiffuseAlbedoMap.Wrapping) 
             };
 
             material.GPUMaterialTableIndex = materialIndex;
@@ -147,9 +174,12 @@ namespace PathFinder
         for (MeshInstance& instance : meshInstances)
         {
             GPUMeshInstanceTableEntry instanceEntry{
-                instance.Transformation().ModelMatrix(),
+                glm::mat4{1.0f},
+                glm::mat4{1.0f},
+                glm::mat4{1.0f},
+        /*        instance.Transformation().ModelMatrix(),
                 instance.PrevTransformation().ModelMatrix(),
-                instance.Transformation().NormalMatrix(),
+                instance.Transformation().NormalMatrix(),*/
                 instance.AssociatedMaterial()->GPUMaterialTableIndex,
                 instance.AssociatedMesh()->LocationInVertexStorage().VertexBufferOffset,
                 instance.AssociatedMesh()->LocationInVertexStorage().IndexBufferOffset,

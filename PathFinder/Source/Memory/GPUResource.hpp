@@ -68,7 +68,7 @@ namespace Memory
         const HAL::Buffer* CurrentFrameReadbackBuffer() const;
 
         virtual void ApplyDebugName();
-        virtual uint64_t ResourceSizeInBytes() const = 0;
+        virtual uint64_t UploadAndReadbackResourceSize() const = 0;
         virtual CopyRequestManager::CopyCommand GetUploadCommands() = 0;
         virtual CopyRequestManager::CopyCommand GetReadbackCommands() = 0;
 

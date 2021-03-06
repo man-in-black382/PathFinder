@@ -2,8 +2,6 @@
 
 #include "ResourceLoader.hpp"
 
-
-
 #include <fstream>
 #include <iterator>
 #include <vector>
@@ -11,22 +9,19 @@
 namespace PathFinder
 {
 
-    ResourceLoader::ResourceLoader(const std::filesystem::path& rootPath, Memory::GPUResourceProducer* resourceProducer)
-        : mRootPath{ rootPath }, mResourceProducer{ resourceProducer } {}
+    ResourceLoader::ResourceLoader(Memory::GPUResourceProducer* resourceProducer)
+        : mResourceProducer{ resourceProducer } {}
 
-    Memory::GPUResourceProducer::TexturePtr ResourceLoader::LoadTexture(const std::string& relativeFilePath) const
+    Memory::GPUResourceProducer::TexturePtr ResourceLoader::LoadTexture(const std::filesystem::path& path, bool saveRowMajorBlob) 
     {
-        std::filesystem::path fullPath = mRootPath;
-        fullPath += relativeFilePath;
-
-        std::ifstream input{ fullPath.string(), std::ios::binary };
-
+        std::ifstream input{ path, std::ios::binary };
+        
         if (!input.is_open())
         {
             return nullptr;
         }
         
-        std::uintmax_t fileSize = std::filesystem::file_size(fullPath);
+        std::uintmax_t fileSize = std::filesystem::file_size(path);
 
         std::vector<uint8_t> bytes;
         bytes.resize(fileSize);
@@ -43,16 +38,22 @@ namespace PathFinder
 
         assert_format(textureInfo.num_layers == 1, "Texture arrays are not supported yet");
 
+        bool isCompressedFormat = ddsktx_format_compressed(textureInfo.format);
         auto texture = AllocateTexture(textureInfo);
-        HAL::ResourceFootprint textureFootprint{ *texture->HALTexture() };
 
         texture->RequestWrite();
+
+        if (saveRowMajorBlob)
+        {
+            mRowMajorBlob.clear();
+            mRowMajorBlob.resize(texture->Footprint().TotalSizeInBytes());
+        }
 
         uint64_t uploadMemoryOffset = 0;
 
         for (int mip = 0; mip < textureInfo.num_mips; ++mip)
         {
-            const HAL::SubresourceFootprint& mipFootprint = textureFootprint.GetSubresourceFootprint(mip);
+            const HAL::SubresourceFootprint& mipFootprint = texture->Footprint().GetSubresourceFootprint(mip);
             uploadMemoryOffset = mipFootprint.Offset();
 
             for (int depthLayer = 0; depthLayer < textureInfo.depth; ++depthLayer)
@@ -60,6 +61,8 @@ namespace PathFinder
                 ddsktx_sub_data subData;
                 ddsktx_get_sub(&textureInfo, &subData, bytes.data(), (int)bytes.size(), 0, depthLayer, mip);
 
+                // row_pitch_bytes is number of bytes per row in the image file
+                // mipFootprint.RowPitch() is row size with possible wasted space in it due to HW alignment requirements
                 bool imageDataSatisfiesTextureRowAlignment =
                     mipFootprint.RowPitch() == subData.row_pitch_bytes &&
                     mipFootprint.RowSizeInBytes() == subData.row_pitch_bytes;
@@ -68,6 +71,14 @@ namespace PathFinder
                 {
                     // Copy whole subresource
                     texture->Write((uint8_t*)subData.buff, uploadMemoryOffset, subData.size_bytes);
+
+                    if (saveRowMajorBlob)
+                    {
+                        auto start = (uint8_t*)subData.buff;
+                        auto end = start + subData.size_bytes;
+                        std::copy(start, end, mRowMajorBlob.begin() + uploadMemoryOffset);
+                    }
+
                     uploadMemoryOffset += subData.size_bytes;
                 }
                 else {
@@ -76,10 +87,21 @@ namespace PathFinder
                     uint64_t rowReadCountAtOnce = mipFootprint.RowSizeInBytes() / subData.row_pitch_bytes;
                     uint64_t readMemoryOffset = 0;
 
-                    for (auto row = 0; row < subData.height; row += rowReadCountAtOnce)
+                    // Loader library does not divide row cout by 4 for compressed formats (a bug?) so we do it manually
+                    uint64_t actualRowCount = isCompressedFormat ? subData.height / 4 : subData.height;
+
+                    for (auto row = 0; row < actualRowCount; row += rowReadCountAtOnce)
                     {
                         uint64_t bytesToRead = subData.row_pitch_bytes * rowReadCountAtOnce;
                         texture->Write((uint8_t*)subData.buff + readMemoryOffset, uploadMemoryOffset, bytesToRead);
+
+                        if (saveRowMajorBlob)
+                        {
+                            auto start = (uint8_t*)subData.buff + readMemoryOffset;
+                            auto end = start + bytesToRead;
+                            std::copy(start, end, mRowMajorBlob.begin() + uploadMemoryOffset);
+                        }
+
                         uploadMemoryOffset += mipFootprint.RowPitch();
                         readMemoryOffset += bytesToRead;
                     }
@@ -87,13 +109,13 @@ namespace PathFinder
             }
         }
 
-        texture->SetDebugName(fullPath.filename().string());
+        texture->SetDebugName(path.filename().string());
         input.close();
         
         return std::move(texture);
     }
 
-    void ResourceLoader::StoreResource(const Memory::GPUResource& resource, const std::string& relativeFilePath) const
+    void ResourceLoader::StoreResource(const Memory::GPUResource& resource, const std::filesystem::path& path) const
     {
 
     }
@@ -173,7 +195,7 @@ namespace PathFinder
         Geometry::Dimensions dimensions(textureInfo.width, textureInfo.height, textureInfo.depth);
         HAL::TextureKind kind = ToKind(textureInfo);
 
-        HAL::TextureProperties properties{ format, kind, dimensions, HAL::ResourceState::AnyShaderAccess, (uint16_t)textureInfo.num_mips };
+        HAL::TextureProperties properties{ format, kind, dimensions, HAL::ResourceState::AnyShaderAccess, HAL::ResourceState::CopyDestination, (uint16_t)textureInfo.num_mips };
 
         return mResourceProducer->NewTexture(properties);
     }

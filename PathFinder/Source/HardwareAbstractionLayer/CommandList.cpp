@@ -65,7 +65,8 @@ namespace HAL
 
     void CopyCommandListBase::InsertBarriers(const ResourceBarrierCollection& collection)
     {
-        if (collection.BarrierCount() == 0) return;
+        if (collection.BarrierCount() == 0) 
+            return;
 
         mList->ResourceBarrier((UINT)collection.BarrierCount(), collection.D3DBarriers());
     }

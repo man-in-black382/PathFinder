@@ -36,15 +36,15 @@ namespace PathFinder
      
     void DisplacementDistanceMapRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        NewBufferProperties<JFACones> JFAConesBufferProps{
-            MaterialLoader::DistanceFieldTextureSize.Width * 
-            MaterialLoader::DistanceFieldTextureSize.Height *
-            MaterialLoader::DistanceFieldTextureSize.Depth,
-            1
-        };
+        /*  NewBufferProperties<JFACones> JFAConesBufferProps{
+              MaterialLoader::DistanceFieldTextureSize.Width *
+              MaterialLoader::DistanceFieldTextureSize.Height *
+              MaterialLoader::DistanceFieldTextureSize.Depth,
+              1
+          };
 
-        scheduler->NewBuffer(ResourceNames::JumpFloodingCones0, JFAConesBufferProps);
-        scheduler->NewBuffer(ResourceNames::JumpFloodingCones1, JFAConesBufferProps);
+          scheduler->NewBuffer(ResourceNames::JumpFloodingCones0, JFAConesBufferProps);
+          scheduler->NewBuffer(ResourceNames::JumpFloodingCones1, JFAConesBufferProps);*/
     } 
 
     void DisplacementDistanceMapRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

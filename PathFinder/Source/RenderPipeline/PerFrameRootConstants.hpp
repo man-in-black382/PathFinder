@@ -3,7 +3,7 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec4.hpp>
 
-#include <Scene/SceneGPUStorage.hpp>
+#include <Scene/SceneGPUTypes.hpp>
 
 namespace PathFinder
 {

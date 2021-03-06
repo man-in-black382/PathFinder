@@ -43,11 +43,13 @@ namespace Memory
         const HAL::SRDescriptor* GetSRDescriptor() const;
         const HAL::UADescriptor* GetUADescriptor(uint8_t mipLevel = 0) const;
 
+        const HAL::ResourceFootprint& Footprint() const;
+
         const HAL::Texture* HALTexture() const;
         const HAL::Resource* HALResource() const override;
 
     protected:
-        uint64_t ResourceSizeInBytes() const override;
+        uint64_t UploadAndReadbackResourceSize() const override;
         void ApplyDebugName() override;
         CopyRequestManager::CopyCommand GetUploadCommands() override;
         CopyRequestManager::CopyCommand GetReadbackCommands() override;
@@ -56,6 +58,8 @@ namespace Memory
     private:
         SegregatedPoolsResourceAllocator::TexturePtr mTexturePtr;
         HAL::TextureProperties mProperties;
+        
+        mutable std::optional<HAL::ResourceFootprint> mFootprint;
 
         mutable PoolDescriptorAllocator::DSDescriptorPtr mDSDescriptor;
         mutable PoolDescriptorAllocator::SRDescriptorPtr mSRDescriptor;

@@ -5,58 +5,65 @@
 namespace PathFinder
 {
 
-    MaterialLoader::MaterialLoader(const std::filesystem::path& executableFolder, PreprocessableAssetStorage* assetStorage, Memory::GPUResourceProducer* resourceProducer)
-        : mAssetStorage{ assetStorage }, mResourceLoader{ executableFolder, resourceProducer }, mResourceProducer{ resourceProducer }
+    MaterialLoader::MaterialLoader(const std::filesystem::path& executableFolderPath, Memory::GPUResourceProducer* resourceProducer)
+        : mResourceLoader{ resourceProducer }, mResourceProducer{ resourceProducer }
     {
         CreateDefaultTextures();
-        LoadLTCLookupTables();
+        LoadLTCLookupTables(executableFolderPath);
     }
 
-    Material MaterialLoader::LoadMaterial(
-        const std::string& albedoMapRelativePath,
-        const std::string& normalMapRelativePath,
-        std::optional<std::string> roughnessMapRelativePath,
-        std::optional<std::string> metalnessMapRelativePath,
-        std::optional<std::string> displacementMapRelativePath,
-        std::optional<std::string> distanceFieldRelativePath,
-        std::optional<std::string> AOMapRelativePath)
+    void MaterialLoader::LoadMaterial(Material& material)
     {
-        Material material{};
-
-        material.AlbedoMap = GetOrAllocateTexture(albedoMapRelativePath);
-        material.NormalMap = GetOrAllocateTexture(normalMapRelativePath);
-
-        if (roughnessMapRelativePath) material.RoughnessMap = GetOrAllocateTexture(*roughnessMapRelativePath);
-        if (metalnessMapRelativePath) material.MetalnessMap = GetOrAllocateTexture(*metalnessMapRelativePath);
-        if (displacementMapRelativePath) material.DisplacementMap = GetOrAllocateTexture(*displacementMapRelativePath);
-        if (AOMapRelativePath) material.AOMap = GetOrAllocateTexture(*AOMapRelativePath);
-
-        if (material.DisplacementMap && distanceFieldRelativePath)
+        auto loadTexture = [this](Material::TextureData& textureData)
         {
-            material.DistanceField = GetOrAllocateTexture(*distanceFieldRelativePath);
+            if (!std::filesystem::exists(textureData.FilePath))
+                return;
 
-            if (!material.DistanceField)
-            {
-                HAL::TextureProperties distFieldProperties{
-                    HAL::ColorFormat::RGBA32_Unsigned, HAL::TextureKind::Texture3D,
-                    DistanceFieldTextureSize, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::AnyShaderAccess };
+            textureData.Texture = mResourceLoader.LoadTexture(textureData.FilePath, true);
+            textureData.RowMajorBlob = std::move(mResourceLoader.RowMajorBlob());
+        };
 
-                material.DistanceField = AllocateAndStoreTexture(distFieldProperties, *distanceFieldRelativePath);
+        loadTexture(material.DiffuseAlbedoMap);
+        loadTexture(material.SpecularAlbedoMap);
+        loadTexture(material.NormalMap);
+        loadTexture(material.RoughnessMap);
+        loadTexture(material.MetalnessMap);
+        loadTexture(material.TranslucencyMap);
+        loadTexture(material.DisplacementMap);
+        loadTexture(material.AOMap);
+        loadTexture(material.DistanceField);
 
-                mAssetStorage->PreprocessAsset(material.DistanceField, [this, distanceFieldRelativePath](Memory::GPUResource* distanceField)
-                {
-                    mResourceLoader.StoreResource(*distanceField, *distanceFieldRelativePath);
-                });
-            }
-        }
+        SetCommonMaterialTextures(material);
+    }
 
-        if (!material.AlbedoMap) material.AlbedoMap = m1x1White2DTexture.get();
-        if (!material.NormalMap) material.NormalMap = m1x1White2DTexture.get();
-        if (!material.RoughnessMap) material.RoughnessMap = m1x1White2DTexture.get();
-        if (!material.MetalnessMap) material.MetalnessMap = m1x1Black2DTexture.get();
-        if (!material.DisplacementMap) material.DisplacementMap = m1x1Black2DTexture.get();
-        if (!material.AOMap) material.AOMap = m1x1White2DTexture.get();
-        if (!material.DistanceField) material.DistanceField = m1x1Black3DTexture.get();
+    void MaterialLoader::SetCommonMaterialTextures(Material& material)
+    {
+        if (!material.DiffuseAlbedoMap.Texture)
+            material.DiffuseAlbedoMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1White2DTexture.get(), [](Memory::Texture* texture) {} };
+
+        if (!material.SpecularAlbedoMap.Texture)
+            material.SpecularAlbedoMap.Texture = Memory::GPUResourceProducer::TexturePtr{ material.DiffuseAlbedoMap.Texture.get(), [](Memory::Texture* texture) {} };
+
+        if (!material.NormalMap.Texture)
+            material.NormalMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1White2DTexture.get(), [](Memory::Texture* texture) {} };
+
+        if (!material.RoughnessMap.Texture)
+            material.RoughnessMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1White2DTexture.get(), [](Memory::Texture* texture) {} };
+
+        if (!material.MetalnessMap.Texture)
+            material.MetalnessMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1Black2DTexture.get(), [](Memory::Texture* texture) {} };
+
+        if (!material.TranslucencyMap.Texture)
+            material.TranslucencyMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1Black2DTexture.get(), [](Memory::Texture* texture) {} };
+
+        if (!material.DisplacementMap.Texture)
+            material.DisplacementMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1Black2DTexture.get(), [](Memory::Texture* texture) {} };
+
+        if (!material.AOMap.Texture)
+            material.AOMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1White2DTexture.get(), [](Memory::Texture* texture) {} };
+        
+        if (!material.DistanceField.Texture)
+            material.DistanceField.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1Black3DTexture.get(), [](Memory::Texture* texture) {} };
 
         material.LTC_LUT_MatrixInverse_Specular = mLTC_LUT_MatrixInverse_GGXHeightCorrelated.get();
         material.LTC_LUT_Matrix_Specular = mLTC_LUT_Matrix_GGXHeightCorrelated.get();
@@ -65,29 +72,6 @@ namespace PathFinder
         material.LTC_LUT_MatrixInverse_Diffuse = mLTC_LUT_MatrixInverse_DisneyDiffuseNormalized.get();
         material.LTC_LUT_Matrix_Diffuse = mLTC_LUT_Matrix_DisneyDiffuseNormalized.get();
         material.LTC_LUT_Terms_Diffuse = mLTC_LUT_Terms_DisneyDiffuseNormalized.get();
-
-        return material;
-    }
-
-    Memory::Texture* MaterialLoader::GetOrAllocateTexture(const std::string& relativePath)
-    {
-        auto textureIt = mMaterialTextures.find(relativePath);
-
-        if (textureIt != mMaterialTextures.end())
-        {
-            return textureIt->second.get();
-        }
-        else
-        {
-            auto [iter, success] = mMaterialTextures.emplace(relativePath, mResourceLoader.LoadTexture(relativePath));
-            return iter->second.get();
-        }
-    }
-
-    Memory::Texture* MaterialLoader::AllocateAndStoreTexture(const HAL::TextureProperties& properties, const std::string& relativePath)
-    {
-        auto [iter, success] = mMaterialTextures.emplace(relativePath, mResourceProducer->NewTexture(properties));
-        return iter->second.get();
     }
 
     void MaterialLoader::CreateDefaultTextures()
@@ -109,22 +93,22 @@ namespace PathFinder
         m1x1Black3DTexture->RequestWrite();
 
         glm::u8vec4 black{ 0, 0, 0, 0 };
-        glm::u8vec4 white{ 1, 1, 1, 1 };
+        glm::u8vec4 white{ 255, 255, 255, 255 };
 
         m1x1Black2DTexture->Write(&black, 0, 1);
         m1x1White2DTexture->Write(&white, 0, 1);
         m1x1Black3DTexture->Write(&black, 0, 1);
     }
 
-    void MaterialLoader::LoadLTCLookupTables()
+    void MaterialLoader::LoadLTCLookupTables(const std::filesystem::path& executableFolderPath)
     {
-        mLTC_LUT_MatrixInverse_GGXHeightCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGXHeightCorrelated_Matrix_Inverse.dds");
-        mLTC_LUT_Matrix_GGXHeightCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGXHeightCorrelated_Matrix.dds");
-        mLTC_LUT_Terms_GGXHeightCorrelated = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_GGXHeightCorrelated_Terms.dds");
+        mLTC_LUT_MatrixInverse_GGXHeightCorrelated = mResourceLoader.LoadTexture(executableFolderPath / "Precompiled" / "LTC_LUT_GGXHeightCorrelated_Matrix_Inverse.dds");
+        mLTC_LUT_Matrix_GGXHeightCorrelated = mResourceLoader.LoadTexture(executableFolderPath / "Precompiled" / "LTC_LUT_GGXHeightCorrelated_Matrix.dds");
+        mLTC_LUT_Terms_GGXHeightCorrelated = mResourceLoader.LoadTexture(executableFolderPath / "Precompiled" / "LTC_LUT_GGXHeightCorrelated_Terms.dds");
 
-        mLTC_LUT_MatrixInverse_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_Matrix_Inverse.dds");
-        mLTC_LUT_Matrix_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_Matrix.dds");
-        mLTC_LUT_Terms_DisneyDiffuseNormalized = mResourceLoader.LoadTexture("/Precompiled/LTC_LUT_Disney_Diffuse_Normalized_Terms.dds");
+        mLTC_LUT_MatrixInverse_DisneyDiffuseNormalized = mResourceLoader.LoadTexture(executableFolderPath / "Precompiled" / "LTC_LUT_Disney_Diffuse_Normalized_Matrix_Inverse.dds");
+        mLTC_LUT_Matrix_DisneyDiffuseNormalized = mResourceLoader.LoadTexture(executableFolderPath / "Precompiled" / "LTC_LUT_Disney_Diffuse_Normalized_Matrix.dds");
+        mLTC_LUT_Terms_DisneyDiffuseNormalized = mResourceLoader.LoadTexture(executableFolderPath / "Precompiled" / "LTC_LUT_Disney_Diffuse_Normalized_Terms.dds");
     }
 
 }

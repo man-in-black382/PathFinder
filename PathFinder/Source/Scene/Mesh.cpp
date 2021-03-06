@@ -1,6 +1,9 @@
 #include "Mesh.hpp"
 
 #include <Geometry/Triangle3D.hpp>
+#include <bitsery/adapter/stream.h>
+#include <bitsery/traits/vector.h>
+#include <fstream>
 
 namespace PathFinder
 {
@@ -85,6 +88,33 @@ namespace PathFinder
     void Mesh::AddIndex(uint32_t index)
     {
         mIndices.push_back(index);
+    }
+
+    void Mesh::SerializeVertexData(const std::filesystem::path& path)
+    {
+        std::fstream stream{ path, std::ios::binary | std::ios::trunc | std::ios::out };
+
+        assert_format(stream.is_open(), "File (", path.string(), ") couldn't be opened for writing");
+
+        bitsery::Serializer<bitsery::OutputBufferedStreamAdapter> ser{ stream };
+        ser.container4b(mIndices, std::numeric_limits<uint64_t>::max());
+        ser.container(mVertices, std::numeric_limits<uint64_t>::max());
+        ser.adapter().flush();
+
+        stream.close();
+    }
+
+    void Mesh::DeserializeVertexData(const std::filesystem::path& path)
+    {
+        std::fstream stream{ path, std::ios::binary | std::ios::in };
+
+        assert_format(stream.is_open(), "File (", path.string(), ") couldn't be opened for reading");
+
+        bitsery::Deserializer<bitsery::InputStreamAdapter> ser{ stream };
+        ser.container4b(mIndices, std::numeric_limits<uint64_t>::max());
+        ser.container(mVertices, std::numeric_limits<uint64_t>::max());
+
+        stream.close();
     }
 
 }

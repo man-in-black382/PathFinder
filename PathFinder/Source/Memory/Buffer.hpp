@@ -45,7 +45,7 @@ namespace Memory
         void BeginFrame(uint64_t frameNumber) override;
 
     protected:
-        uint64_t ResourceSizeInBytes() const override;
+        uint64_t UploadAndReadbackResourceSize() const override;
         void ApplyDebugName() override;
         CopyRequestManager::CopyCommand GetUploadCommands() override;
         CopyRequestManager::CopyCommand GetReadbackCommands() override;

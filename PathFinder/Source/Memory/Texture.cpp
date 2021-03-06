@@ -15,7 +15,9 @@ namespace Memory
         mTexturePtr{ resourceAllocator->AllocateTexture(properties) },
         mProperties{ properties }
     {
-        if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
+        if (mStateTracker) 
+            mStateTracker->StartTrakingResource(mTexturePtr.get());
+
         ReserveDiscriptorArrays(properties.MipCount);
     }
 
@@ -37,7 +39,9 @@ namespace Memory
            [](HAL::Texture* texture) { delete texture; }
         };
 
-        if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
+        if (mStateTracker)
+            mStateTracker->StartTrakingResource(mTexturePtr.get());
+
         ReserveDiscriptorArrays(properties.MipCount);
     }
 
@@ -56,13 +60,17 @@ namespace Memory
         }
     {
         mTexturePtr = SegregatedPoolsResourceAllocator::TexturePtr{ existingTexture, [](HAL::Texture* texture) {} };
-        if (mStateTracker) mStateTracker->StartTrakingResource(mTexturePtr.get());
+
+        if (mStateTracker) 
+            mStateTracker->StartTrakingResource(mTexturePtr.get());
+
         ReserveDiscriptorArrays(1);
     }
 
     Texture::~Texture()
     {
-        if (mStateTracker) mStateTracker->StopTrakingResource(mTexturePtr.get());
+        if (mStateTracker) 
+            mStateTracker->StopTrakingResource(mTexturePtr.get());
     }
 
     const HAL::RTDescriptor* Texture::GetRTDescriptor(uint8_t mipLevel) const
@@ -70,25 +78,23 @@ namespace Memory
         assert_format(mipLevel < mRTDescriptors.size(), "Requested RT descriptor mip exceeds texture's amount of mip levels");
 
         if (!mRTDescriptors[mipLevel])
-        {
             mRTDescriptors[mipLevel] = mDescriptorAllocator->AllocateRTDescriptor(*HALTexture(), mipLevel);
-        }
             
         return mRTDescriptors[mipLevel].get();
     }
 
     const HAL::DSDescriptor* Texture::GetDSDescriptor() const
     {
-        if (!mDSDescriptor) mDSDescriptor = mDescriptorAllocator->AllocateDSDescriptor(*HALTexture());
+        if (!mDSDescriptor) 
+            mDSDescriptor = mDescriptorAllocator->AllocateDSDescriptor(*HALTexture());
+
         return mDSDescriptor.get();
     }
 
     const HAL::SRDescriptor* Texture::GetSRDescriptor() const
     {
         if (!mSRDescriptor)
-        {
             mSRDescriptor = mDescriptorAllocator->AllocateSRDescriptor(*HALTexture());
-        }
 
         return mSRDescriptor.get();
     }
@@ -98,11 +104,17 @@ namespace Memory
         assert_format(mipLevel < mUADescriptors.size(), "Requested UA descriptor mip exceeds texture's amount of mip levels");
 
         if (!mUADescriptors[mipLevel])
-        {
             mUADescriptors[mipLevel] = mDescriptorAllocator->AllocateUADescriptor(*HALTexture(), mipLevel);
-        }
 
         return mUADescriptors[mipLevel].get();
+    }
+
+    const HAL::ResourceFootprint& Texture::Footprint() const
+    {
+        if (!mFootprint)
+            mFootprint = HAL::ResourceFootprint{ *HALTexture() };
+
+        return *mFootprint;
     }
 
     const HAL::Texture* Texture::HALTexture() const
@@ -115,9 +127,9 @@ namespace Memory
         return mTexturePtr.get();
     }
 
-    uint64_t Texture::ResourceSizeInBytes() const
+    uint64_t Texture::UploadAndReadbackResourceSize() const
     {
-        return mTexturePtr->TotalMemory();
+        return Footprint().TotalSizeInBytes();
     }
 
     void Texture::ApplyDebugName()

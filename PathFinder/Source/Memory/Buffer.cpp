@@ -125,7 +125,7 @@ namespace Memory
             mGetterBufferPtr = newCurrentBuffer;
     }
 
-    uint64_t Buffer::ResourceSizeInBytes() const
+    uint64_t Buffer::UploadAndReadbackResourceSize() const
     {
         return mProperties.Size;
     }

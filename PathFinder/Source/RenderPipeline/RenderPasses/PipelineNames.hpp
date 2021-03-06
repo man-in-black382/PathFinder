@@ -134,6 +134,8 @@ namespace PathFinder
     namespace SamplerNames
     {
         inline Foundation::Name AnisotropicClamp{ "Sampler_Anisotropic_Clamp" };
+        inline Foundation::Name AnisotropicWrap{ "Sampler_Anisotropic_Wrap" };
+        inline Foundation::Name AnisotropicMirror{ "Sampler_Anisotropic_Mirror" };
         inline Foundation::Name LinearClamp{ "Sampler_Linear_Clamp" };
         inline Foundation::Name PointClamp{ "Sampler_Point_Clamp" };
         inline Foundation::Name Minimim{ "Sampler_Minimum" };

@@ -1,7 +1,7 @@
 #include "Application.hpp"
 
 #include "../resource.h"
-
+#include <Foundation/Filesystem.hpp>
 #include <choreograph/Choreograph.h>
 #include <windows.h>
 #include <tchar.h>
@@ -15,7 +15,7 @@ namespace PathFinder
 
         mCmdLineParser = std::make_unique<CommandLineParser>(argc, argv);
         mRenderEngine = std::make_unique<RenderEngine<RenderPassContentMediator>>(mWindowHandle, *mCmdLineParser);
-        mScene = std::make_unique<Scene>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->Device(), mRenderEngine->ResourceProducer());
+        mScene = std::make_unique<Scene>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->Device(), mRenderEngine->ResourceProducer(), mRenderEngine->ResourceStorage());
         mInput = std::make_unique<Input>();
         mSettingsController = std::make_unique<RenderSettingsController>(mInput.get(), mScene.get());
         mWindowsInputHandler = std::make_unique<InputHandlerWindows>(mInput.get(), mWindowHandle);
@@ -38,9 +38,57 @@ namespace PathFinder
         mUIEntryPoint->CreateMandatoryViewControllers();
 
         // Temporary to load demo Scene until proper UI is implemented
-        mMeshLoader = std::make_unique<MeshLoader>(mCmdLineParser->ExecutableFolderPath() / "MediaResources/Models/");
-        mMaterialLoader = std::make_unique<MaterialLoader>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->AssetStorage(), mRenderEngine->ResourceProducer());
-        LoadDemoScene();
+        //mThirdPartySceneLoader = std::make_unique<ThirdPartySceneLoader>(mCmdLineParser->ExecutableFolderPath() / "MediaResources/Models/");
+        //mMaterialLoader = std::make_unique<MaterialLoader>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->ResourceProducer());
+       
+        //LoadDemoScene();
+        /*mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "SanMiguel" / "san-miguel.obj");*/
+        mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "sibenik" / "sibenik.obj");
+        //mScene->Deserialize(mCmdLineParser->ExecutableFolderPath() / "DebugSceneSerialization" / "Scene.pfscene");
+
+        Foundation::Color light0Color{ 255.0 / 255, 241.0 / 255, 224.1 / 255 };
+        Foundation::Color light1Color{ 64.0 / 255, 156.0 / 255, 255.0 / 255 };
+        Foundation::Color light2Color{ 255.0 / 255, 147.0 / 255, 41.0 / 255 };
+        Foundation::Color light3Color{ 250.0 / 255, 110.0 / 255, 100.0 / 255 };
+
+        auto light0 = mScene->EmplaceRectangularLight();
+        light0->SetWidth(7);
+        light0->SetHeight(4);
+        light0->SetNormal(glm::vec3{ 0.0, -1.0, 0.0 });
+        light0->SetPosition({ 10.65, 15.0, -4.6 });
+        light0->SetColor(light0Color);
+        light0->SetLuminousPower(40000);
+
+        auto sphereLight1 = mScene->EmplaceSphericalLight();
+        sphereLight1->SetRadius(7.5);
+        sphereLight1->SetPosition({ -10.65, 12.0, -4.6 });
+        sphereLight1->SetColor(light1Color);
+        sphereLight1->SetLuminousPower(100000);
+
+        auto sphereLight2 = mScene->EmplaceSphericalLight();
+        sphereLight2->SetRadius(6);
+        sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
+        sphereLight2->SetColor(light2Color);
+        sphereLight2->SetLuminousPower(300000);
+
+        auto sphereLight3 = mScene->EmplaceSphericalLight();
+        sphereLight3->SetRadius(8);
+        sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
+        sphereLight3->SetColor(light3Color);
+        sphereLight3->SetLuminousPower(300000);
+
+        PathFinder::Camera& camera = mScene->MainCamera();
+        camera.SetFarPlane(500);
+        camera.SetNearPlane(1);
+        camera.MoveTo({ 63.65, 6.41, -32.7 });
+        camera.LookAt({ 0.f, 0.0f, 0.f });
+        camera.SetViewportAspectRatio(16.0f / 9.0f);
+        camera.SetAperture(1.2);
+        camera.SetFilmSpeed(800);
+        camera.SetShutterTime(1.0 / 125.0);
+        camera.SetFieldOfView(90);
+
+        //mScene->Serialize(mCmdLineParser->ExecutableFolderPath() / "DebugSceneSerialization" / "Scene.pfscene");
     }
 
     void Application::RunMessageLoop()
@@ -135,6 +183,8 @@ namespace PathFinder
 
     void Application::PerformPreRenderActions()
     {
+        static bool IsInitialSceneUploaded = false; // Dirty hack until dynamic mesh and material buffers are implemented
+
         const Geometry::Dimensions& viewportSize = mRenderEngine->RenderSurface().Dimensions();
 
         // 'Top' is screen bottom
@@ -152,9 +202,20 @@ namespace PathFinder
         mSettingsController->ApplyVolatileSettings();
 
         mScene->GlobalIlluminationManager().Update();
+
+        if (!IsInitialSceneUploaded)
+        {
+            mScene->GPUStorage().UploadMeshes();
+            mScene->GPUStorage().UploadMaterials();
+
+            for (const PathFinder::BottomRTAS& bottomRTAS : mScene->GPUStorage().BottomAccelerationStructures())
+                mRenderEngine->AddBottomRayTracingAccelerationStructure(&bottomRTAS);
+
+            IsInitialSceneUploaded = true;
+        }
+        
         mScene->GPUStorage().UploadInstances();
 
-        // Top RT needs to be rebuilt every frame
         mRenderEngine->AddTopRayTracingAccelerationStructure(&mScene->GPUStorage().TopAccelerationStructure());
 
         mGlobalConstants.PipelineRTResolution = {
@@ -194,171 +255,171 @@ namespace PathFinder
         //
         
 
-        PathFinder::Material& metalMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/Metal07/Metal07_col.dds",
-            "/MediaResources/Textures/Metal07/Metal07_nrm.dds",
-            "/MediaResources/Textures/Metal07/Metal07_rgh.dds",
-            "/MediaResources/Textures/Metal07/Metal07_met.dds"));
+        //PathFinder::Material& metalMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/Metal07/Metal07_col.dds",
+        //    "/MediaResources/Textures/Metal07/Metal07_nrm.dds",
+        //    "/MediaResources/Textures/Metal07/Metal07_rgh.dds",
+        //    "/MediaResources/Textures/Metal07/Metal07_met.dds"));
 
-        PathFinder::Material& concrete19Material = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/Concrete19/Concrete19_col.dds",
-            "/MediaResources/Textures/Concrete19/Concrete19_nrm.dds",
-            "/MediaResources/Textures/Concrete19/Concrete19_rgh.dds"));
+        //PathFinder::Material& concrete19Material = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/Concrete19/Concrete19_col.dds",
+        //    "/MediaResources/Textures/Concrete19/Concrete19_nrm.dds",
+        //    "/MediaResources/Textures/Concrete19/Concrete19_rgh.dds"));
 
-        PathFinder::Material& charcoalMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/Charcoal/charcoal-albedo2.dds",
-            "/MediaResources/Textures/Charcoal/charcoal-normal.dds",
-            "/MediaResources/Textures/Charcoal/charcoal-roughness.dds"));
+        //PathFinder::Material& charcoalMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/Charcoal/charcoal-albedo2.dds",
+        //    "/MediaResources/Textures/Charcoal/charcoal-normal.dds",
+        //    "/MediaResources/Textures/Charcoal/charcoal-roughness.dds"));
 
-        PathFinder::Material& grimyMetalMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/GrimyMetal/grimy-metal-albedo.dds",
-            "/MediaResources/Textures/GrimyMetal/grimy-metal-normal-dx.dds",
-            "/MediaResources/Textures/GrimyMetal/grimy-metal-roughness.dds",
-            "/MediaResources/Textures/GrimyMetal/grimy-metal-metalness.dds"));
+        //PathFinder::Material& grimyMetalMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/GrimyMetal/grimy-metal-albedo.dds",
+        //    "/MediaResources/Textures/GrimyMetal/grimy-metal-normal-dx.dds",
+        //    "/MediaResources/Textures/GrimyMetal/grimy-metal-roughness.dds",
+        //    "/MediaResources/Textures/GrimyMetal/grimy-metal-metalness.dds"));
 
-        PathFinder::Material& marble006Material = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/Marble006/Marble006_4K_Color.dds",
-            "/MediaResources/Textures/Marble006/Marble006_4K_Normal.dds",
-            "/MediaResources/Textures/Marble006/Marble006_4K_Roughness.dds"));
+        //PathFinder::Material& marble006Material = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/Marble006/Marble006_4K_Color.dds",
+        //    "/MediaResources/Textures/Marble006/Marble006_4K_Normal.dds",
+        //    "/MediaResources/Textures/Marble006/Marble006_4K_Roughness.dds"));
 
-        PathFinder::Material& marbleTilesMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Base_Color.dds",
-            "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Normal.dds",
-            "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Roughness.dds"));
+        //PathFinder::Material& marbleTilesMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Base_Color.dds",
+        //    "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Normal.dds",
+        //    "/MediaResources/Textures/MarbleTiles/Marble_tiles_02_4K_Roughness.dds"));
 
-        PathFinder::Material& redPlasticMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/RedPlastic/plasticpattern1-albedo.dds",
-            "/MediaResources/Textures/RedPlastic/plasticpattern1-normal2b.dds",
-            "/MediaResources/Textures/RedPlastic/plasticpattern1-roughness2.dds"));
+        //PathFinder::Material& redPlasticMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/RedPlastic/plasticpattern1-albedo.dds",
+        //    "/MediaResources/Textures/RedPlastic/plasticpattern1-normal2b.dds",
+        //    "/MediaResources/Textures/RedPlastic/plasticpattern1-roughness2.dds"));
 
-        PathFinder::Material& rustedIronMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/RustedIron/rustediron2_basecolor.dds",
-            "/MediaResources/Textures/RustedIron/rustediron2_normal.dds",
-            "/MediaResources/Textures/RustedIron/rustediron2_roughness.dds",
-            "/MediaResources/Textures/RustedIron/rustediron2_metallic.dds"));
+        //PathFinder::Material& rustedIronMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/RustedIron/rustediron2_basecolor.dds",
+        //    "/MediaResources/Textures/RustedIron/rustediron2_normal.dds",
+        //    "/MediaResources/Textures/RustedIron/rustediron2_roughness.dds",
+        //    "/MediaResources/Textures/RustedIron/rustediron2_metallic.dds"));
 
-        PathFinder::Material& scuffedTitamiumMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
-            "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_basecolor.dds",
-            "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_normal.dds",
-            "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_roughness.dds",
-            "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_metallic.dds"));
+        //PathFinder::Material& scuffedTitamiumMaterial = mScene->AddMaterial(mMaterialLoader->LoadMaterial(
+        //    "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_basecolor.dds",
+        //    "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_normal.dds",
+        //    "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_roughness.dds",
+        //    "/MediaResources/Textures/ScuffedTitanium/Titanium-Scuffed_metallic.dds"));
 
-        PathFinder::Mesh& plane = mScene->AddMesh(std::move(mMeshLoader->Load("plane.obj").back()));
+        //PathFinder::Mesh& plane = mScene->AddMesh(std::move(mThirdPartySceneLoader->Load("plane.obj").back()));
 
-        for (float x = -100; x < 100; x += 20)
-        {
-            for (float z = -100; z < 100; z += 20)
-            {
-                PathFinder::MeshInstance& planeInstance = mScene->AddMeshInstance({ &plane, &concrete19Material });
-                Geometry::Transformation t;
-                t.Translation = glm::vec3{ x, -3.50207, z };
-                planeInstance.SetTransformation(t);
-            }
-        }
+        //for (float x = -100; x < 100; x += 20)
+        //{
+        //    for (float z = -100; z < 100; z += 20)
+        //    {
+        //        PathFinder::MeshInstance& planeInstance = mScene->AddMeshInstance({ &plane, &concrete19Material });
+        //        Geometry::Transformation t;
+        //        t.Translation = glm::vec3{ x, -3.50207, z };
+        //        planeInstance.SetTransformation(t);
+        //    }
+        //}
 
-        PathFinder::Mesh& cube = mScene->AddMesh(std::move(mMeshLoader->Load("cube.obj").back()));
-        PathFinder::MeshInstance& cubeInstance = mScene->AddMeshInstance({ &cube, &metalMaterial });
+        //PathFinder::Mesh& cube = mScene->AddMesh(std::move(mThirdPartySceneLoader->Load("cube.obj").back()));
+        //PathFinder::MeshInstance& cubeInstance = mScene->AddMeshInstance({ &cube, &metalMaterial });
 
-        PathFinder::Mesh& sphereType1 = mScene->AddMesh(std::move(mMeshLoader->Load("sphere1.obj").back()));
-        PathFinder::MeshInstance& sphereType1Instance0 = mScene->AddMeshInstance({ &sphereType1, &marbleTilesMaterial });
+        //PathFinder::Mesh& sphereType1 = mScene->AddMesh(std::move(mThirdPartySceneLoader->Load("sphere1.obj").back()));
+        //PathFinder::MeshInstance& sphereType1Instance0 = mScene->AddMeshInstance({ &sphereType1, &marbleTilesMaterial });
 
-        PathFinder::Mesh& sphereType2 = mScene->AddMesh(std::move(mMeshLoader->Load("sphere2.obj").back()));
-        PathFinder::MeshInstance& sphereType2Instance0 = mScene->AddMeshInstance({ &sphereType2, &marbleTilesMaterial });
+        //PathFinder::Mesh& sphereType2 = mScene->AddMesh(std::move(mThirdPartySceneLoader->Load("sphere2.obj").back()));
+        //PathFinder::MeshInstance& sphereType2Instance0 = mScene->AddMeshInstance({ &sphereType2, &marbleTilesMaterial });
 
-        PathFinder::Mesh& sphereType3 = mScene->AddMesh(std::move(mMeshLoader->Load("sphere3.obj").back()));
-        PathFinder::MeshInstance& sphereType3Instance0 = mScene->AddMeshInstance({ &sphereType3, &grimyMetalMaterial });
-        PathFinder::MeshInstance& sphereType3Instance1 = mScene->AddMeshInstance({ &sphereType3, &redPlasticMaterial });
-        PathFinder::MeshInstance& sphereType3Instance2 = mScene->AddMeshInstance({ &sphereType3, &marble006Material });
-        PathFinder::MeshInstance& sphereType3Instance3 = mScene->AddMeshInstance({ &sphereType3, &charcoalMaterial });
-        PathFinder::MeshInstance& sphereType3Instance4 = mScene->AddMeshInstance({ &sphereType3, &concrete19Material });
-        PathFinder::MeshInstance& sphereType3Instance5 = mScene->AddMeshInstance({ &sphereType3, &metalMaterial });
+        //PathFinder::Mesh& sphereType3 = mScene->AddMesh(std::move(mThirdPartySceneLoader->Load("sphere3.obj").back()));
+        //PathFinder::MeshInstance& sphereType3Instance0 = mScene->AddMeshInstance({ &sphereType3, &grimyMetalMaterial });
+        //PathFinder::MeshInstance& sphereType3Instance1 = mScene->AddMeshInstance({ &sphereType3, &redPlasticMaterial });
+        //PathFinder::MeshInstance& sphereType3Instance2 = mScene->AddMeshInstance({ &sphereType3, &marble006Material });
+        //PathFinder::MeshInstance& sphereType3Instance3 = mScene->AddMeshInstance({ &sphereType3, &charcoalMaterial });
+        //PathFinder::MeshInstance& sphereType3Instance4 = mScene->AddMeshInstance({ &sphereType3, &concrete19Material });
+        //PathFinder::MeshInstance& sphereType3Instance5 = mScene->AddMeshInstance({ &sphereType3, &metalMaterial });
 
-        Geometry::Transformation t = cubeInstance.Transformation();
-        t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
-        t.Translation = glm::vec3{ -4.88, 3.25, -3.42 };
-        t.Scale = glm::vec3{ 0/*2.0f*/ };
-        cubeInstance.SetTransformation(t);
+        //Geometry::Transformation t = cubeInstance.Transformation();
+        //t.Rotation = glm::angleAxis(glm::radians(45.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+        //t.Translation = glm::vec3{ -4.88, 3.25, -3.42 };
+        //t.Scale = glm::vec3{ 0/*2.0f*/ };
+        //cubeInstance.SetTransformation(t);
 
-        //t.Scale = glm::vec3{ 0.1f }; // Large version
-        //t.Translation = glm::vec3{ 0.0, -2, -4.0 }; // Large version
-        t.Scale = glm::vec3{ 0.11f };
-        t.Translation = glm::vec3{ -6.0, 8.0, -4.0 };
-        sphereType1Instance0.SetTransformation(t);
+        ////t.Scale = glm::vec3{ 0.1f }; // Large version
+        ////t.Translation = glm::vec3{ 0.0, -2, -4.0 }; // Large version
+        //t.Scale = glm::vec3{ 0.11f };
+        //t.Translation = glm::vec3{ -6.0, 8.0, -4.0 };
+        //sphereType1Instance0.SetTransformation(t);
 
-        // Small sphere
-        t.Scale = glm::vec3{ 0/*0.21f*/ };
-        t.Translation = glm::vec3{ 6.0, -14.0, -9.0 };
-        sphereType2Instance0.SetTransformation(t);
+        //// Small sphere
+        //t.Scale = glm::vec3{ 0/*0.21f*/ };
+        //t.Translation = glm::vec3{ 6.0, -14.0, -9.0 };
+        //sphereType2Instance0.SetTransformation(t);
 
-        // Normal spheres
-        t.Scale = glm::vec3{ 0.12 };
-        t.Translation = glm::vec3{ 9.0, 2.0, -17.5 };
-        sphereType3Instance0.SetTransformation(t);
+        //// Normal spheres
+        //t.Scale = glm::vec3{ 0.12 };
+        //t.Translation = glm::vec3{ 9.0, 2.0, -17.5 };
+        //sphereType3Instance0.SetTransformation(t);
 
-        t.Scale = glm::vec3{ 0.085 };
-        t.Translation = glm::vec3{ 8.88, 1.2, 0.1 };
-        sphereType3Instance1.SetTransformation(t);
+        //t.Scale = glm::vec3{ 0.085 };
+        //t.Translation = glm::vec3{ 8.88, 1.2, 0.1 };
+        //sphereType3Instance1.SetTransformation(t);
 
-        t.Scale = glm::vec3{ 0.15 };
-        t.Translation = glm::vec3{ 3.88, 3, -23.77 };
-        sphereType3Instance2.SetTransformation(t);
+        //t.Scale = glm::vec3{ 0.15 };
+        //t.Translation = glm::vec3{ 3.88, 3, -23.77 };
+        //sphereType3Instance2.SetTransformation(t);
 
-        t.Scale = glm::vec3{ 0.1 };
-        t.Translation = glm::vec3{ -13.2, 1.5, -18.6 }; 
-        sphereType3Instance3.SetTransformation(t);
+        //t.Scale = glm::vec3{ 0.1 };
+        //t.Translation = glm::vec3{ -13.2, 1.5, -18.6 }; 
+        //sphereType3Instance3.SetTransformation(t);
 
-        t.Scale = glm::vec3{ 0.09 };
-        t.Translation = glm::vec3{ -4.07, 1.25, -19.25 };
-        sphereType3Instance4.SetTransformation(t);
+        //t.Scale = glm::vec3{ 0.09 };
+        //t.Translation = glm::vec3{ -4.07, 1.25, -19.25 };
+        //sphereType3Instance4.SetTransformation(t);
 
-        t.Scale = glm::vec3{ 0.1 };
-        t.Translation = glm::vec3{ 12.47, 1.7, -9.26 };
-        sphereType3Instance5.SetTransformation(t);
+        //t.Scale = glm::vec3{ 0.1 };
+        //t.Translation = glm::vec3{ 12.47, 1.7, -9.26 };
+        //sphereType3Instance5.SetTransformation(t);
 
-        Foundation::Color light0Color{ 255.0 / 255, 241.0 / 255, 224.1 / 255 };
-        Foundation::Color light1Color{ 64.0 / 255, 156.0 / 255, 255.0 / 255 };
-        Foundation::Color light2Color{ 255.0 / 255, 147.0 / 255, 41.0 / 255 };
-        Foundation::Color light3Color{ 250.0 / 255, 110.0 / 255, 100.0 / 255 };
+        //Foundation::Color light0Color{ 255.0 / 255, 241.0 / 255, 224.1 / 255 };
+        //Foundation::Color light1Color{ 64.0 / 255, 156.0 / 255, 255.0 / 255 };
+        //Foundation::Color light2Color{ 255.0 / 255, 147.0 / 255, 41.0 / 255 };
+        //Foundation::Color light3Color{ 250.0 / 255, 110.0 / 255, 100.0 / 255 };
 
-        auto light0 = mScene->EmplaceRectangularLight();
-        light0->SetWidth(7);
-        light0->SetHeight(4);
-        light0->SetNormal(glm::vec3{ 0.0, -1.0, 0.0 });
-        light0->SetPosition({ 10.65, 15.0, -4.6 });
-        light0->SetColor(light0Color);
-        light0->SetLuminousPower(40000);
+        //auto light0 = mScene->EmplaceRectangularLight();
+        //light0->SetWidth(7);
+        //light0->SetHeight(4);
+        //light0->SetNormal(glm::vec3{ 0.0, -1.0, 0.0 });
+        //light0->SetPosition({ 10.65, 15.0, -4.6 });
+        //light0->SetColor(light0Color);
+        //light0->SetLuminousPower(40000);
 
-        auto sphereLight1 = mScene->EmplaceSphericalLight();
-        sphereLight1->SetRadius(7.5);
-        sphereLight1->SetPosition({ -10.65, 12.0, -4.6 });
-        sphereLight1->SetColor(light1Color);
-        sphereLight1->SetLuminousPower(100000);
+        //auto sphereLight1 = mScene->EmplaceSphericalLight();
+        //sphereLight1->SetRadius(7.5);
+        //sphereLight1->SetPosition({ -10.65, 12.0, -4.6 });
+        //sphereLight1->SetColor(light1Color);
+        //sphereLight1->SetLuminousPower(100000);
 
-        auto sphereLight2 = mScene->EmplaceSphericalLight();
-        sphereLight2->SetRadius(6);
-        sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
-        sphereLight2->SetColor(light2Color);
-        sphereLight2->SetLuminousPower(300000);
+        //auto sphereLight2 = mScene->EmplaceSphericalLight();
+        //sphereLight2->SetRadius(6);
+        //sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
+        //sphereLight2->SetColor(light2Color);
+        //sphereLight2->SetLuminousPower(300000);
 
-        auto sphereLight3 = mScene->EmplaceSphericalLight();
-        sphereLight3->SetRadius(8);
-        sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
-        sphereLight3->SetColor(light3Color);
-        sphereLight3->SetLuminousPower(300000);
+        //auto sphereLight3 = mScene->EmplaceSphericalLight();
+        //sphereLight3->SetRadius(8);
+        //sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
+        //sphereLight3->SetColor(light3Color);
+        //sphereLight3->SetLuminousPower(300000);
 
-        PathFinder::Camera& camera = mScene->MainCamera();
-        camera.SetFarPlane(500);
-        camera.SetNearPlane(1);
-        camera.MoveTo({ 63.65, 6.41, -32.7 });
-        camera.LookAt({ 0.f, 0.0f, 0.f });
-        camera.SetViewportAspectRatio(16.0f / 9.0f);
-        camera.SetAperture(1.2);
-        camera.SetFilmSpeed(800);
-        camera.SetShutterTime(1.0 / 125.0);
-        camera.SetFieldOfView(90);
+        //PathFinder::Camera& camera = mScene->MainCamera();
+        //camera.SetFarPlane(500);
+        //camera.SetNearPlane(1);
+        //camera.MoveTo({ 63.65, 6.41, -32.7 });
+        //camera.LookAt({ 0.f, 0.0f, 0.f });
+        //camera.SetViewportAspectRatio(16.0f / 9.0f);
+        //camera.SetAperture(1.2);
+        //camera.SetFilmSpeed(800);
+        //camera.SetShutterTime(1.0 / 125.0);
+        //camera.SetFieldOfView(90);
 
-        //sceneManipulatorVC->CameraVM.SetCamera(&mScene->MainCamera());
-        //sceneManipulatorVC->EntityVM.SetScene(&scene);
+        ////sceneManipulatorVC->CameraVM.SetCamera(&mScene->MainCamera());
+        ////sceneManipulatorVC->EntityVM.SetScene(&scene);
 
         mScene->GPUStorage().UploadMeshes();
         mScene->GPUStorage().UploadMaterials();

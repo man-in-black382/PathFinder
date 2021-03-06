@@ -3,7 +3,7 @@
 namespace PathFinder
 {
 
-    MeshInstance::MeshInstance(const Mesh* mesh, const Material* material)
+    MeshInstance::MeshInstance(Mesh* mesh, Material* material)
         : mMesh{ mesh }, mMaterial{ material } {}
 
     void MeshInstance::UpdatePreviousTransform()

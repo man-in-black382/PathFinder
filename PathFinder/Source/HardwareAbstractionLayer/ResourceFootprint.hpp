@@ -20,6 +20,8 @@ namespace HAL
         uint64_t mOffset;
         uint16_t mSubresourceIndex;
 
+        uint64_t mTotalSizeInBytes;
+
         // Actual number of 'useful' bytes in each row. 
         // It tells us how much data is relevant.
         uint64_t mRowSizeInBytes;
@@ -39,6 +41,7 @@ namespace HAL
         inline auto RowPitch() const { return mRowPitch; }
         inline auto Offset() const { return mOffset; }
         inline auto IndexInResource() const { return mSubresourceIndex; }
+        inline auto TotalSizeInBytes() const { return mTotalSizeInBytes; }
     };
 
     class ResourceFootprint

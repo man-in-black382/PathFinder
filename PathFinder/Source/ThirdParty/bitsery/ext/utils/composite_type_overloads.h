@@ -27,7 +27,7 @@
 #include <functional>
 
 #if __cplusplus < 201703L
-#error these utils requires c++17
+//#error these utils requires c++17
 // in theory, it could be implemented using C++11
 // but without class template argument deduction guides that would be very inconvenient to use
 // these are very helpul for sum types (e.g. std::variant),

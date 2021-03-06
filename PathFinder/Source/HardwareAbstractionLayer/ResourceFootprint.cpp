@@ -4,9 +4,14 @@ namespace HAL
 {
    
     SubresourceFootprint::SubresourceFootprint(const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& d3dFootprint, uint32_t rowCount, uint64_t rowSize, uint16_t index)
-        : mD3DFootprint{ d3dFootprint }, mRowCount{ rowCount },
-        mRowSizeInBytes{ rowSize }, mOffset{ d3dFootprint.Offset }, 
-        mRowPitch{ d3dFootprint.Footprint.RowPitch }, mSubresourceIndex{ index } {}
+        : mD3DFootprint{ d3dFootprint }, 
+        mRowCount{ rowCount },
+        mRowSizeInBytes{ rowSize },
+        mOffset{ d3dFootprint.Offset }, 
+        mRowPitch{ d3dFootprint.Footprint.RowPitch }, 
+        mSubresourceIndex{ index },
+        mTotalSizeInBytes{ rowCount * d3dFootprint.Footprint.RowPitch }
+    {}
 
     ResourceFootprint::ResourceFootprint(const Resource& resource, uint64_t initialByteOffset)
     {

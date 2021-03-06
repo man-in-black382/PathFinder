@@ -31,7 +31,6 @@
 #include "RenderPassMediators/RenderPassUtilityProvider.hpp"
 
 #include "PipelineResourceStorage.hpp"
-#include "PreprocessableAssetStorage.hpp"
 #include "RenderDevice.hpp"
 #include "ShaderManager.hpp"
 #include "PipelineStateManager.hpp"
@@ -104,7 +103,6 @@ namespace PathFinder
         std::unique_ptr<AftermathCrashTracker> mAftermathCrashTracker;
         std::unique_ptr<RenderPassUtilityProvider> mPassUtilityProvider;
         std::unique_ptr<PipelineResourceStorage> mPipelineResourceStorage;
-        std::unique_ptr<PreprocessableAssetStorage> mAssetStorage;
         std::unique_ptr<ResourceScheduler<ContentMediator>> mResourceScheduler;
         std::unique_ptr<SamplerCreator> mSamplerCreator;
         std::unique_ptr<SubPassScheduler<ContentMediator>> mSubPassScheduler;
@@ -130,7 +128,6 @@ namespace PathFinder
         std::vector<Memory::GPUResourceProducer::TexturePtr> mBackBuffers;
 
     public:
-        inline PreprocessableAssetStorage* AssetStorage() { return mAssetStorage.get(); }
         inline PipelineResourceStorage* ResourceStorage() { return mPipelineResourceStorage.get(); }
         inline const RenderSurfaceDescription& RenderSurface() const { return mRenderSurfaceDescription; }
         inline Memory::GPUResourceProducer* ResourceProducer() { return mResourceProducer.get(); }

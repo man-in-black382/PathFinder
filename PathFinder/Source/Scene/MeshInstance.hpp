@@ -20,26 +20,28 @@ namespace PathFinder
     class MeshInstance
     {
     public:
-        MeshInstance(const Mesh* mesh, const Material* material);
+        MeshInstance(Mesh* mesh, Material* material);
 
         void UpdatePreviousTransform();
 
     private:
         friend bitsery::Access;
 
+        MeshInstance() = default;
+
         template <typename S>
         void serialize(S& s)
         {
             s.ext(mMesh, bitsery::ext::PointerObserver{});
             s.ext(mMaterial, bitsery::ext::PointerObserver{});
-            s.value(mIsSelected);
-            s.value(mIsHighlighted);
+            s.boolValue(mIsSelected);
+            s.boolValue(mIsHighlighted);
             s.object(mPrevTransformation);
             s.object(mTransformation);
         }
 
-        const Mesh* mMesh;
-        const Material* mMaterial;
+        Mesh* mMesh = nullptr;
+        Material* mMaterial = nullptr;
         bool mIsSelected = false;
         bool mIsHighlighted = false;
         Geometry::Transformation mTransformation;

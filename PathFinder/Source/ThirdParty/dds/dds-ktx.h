@@ -8,7 +8,7 @@
 // Copyright 2011-2019 Branimir Karadzic. All rights reserved.
 // License: https://github.com/bkaradzic/bimg#license-bsd-2-clause
 //
-// dds-ktx.h - v1.0.0 - Reader/Writer for DDS/KTX formats
+// dds-ktx.h - v1.1.0 - Reader/Writer for DDS/KTX formats
 //      Parses DDS and KTX files from a memory blob, written in C99
 //      
 //      Supported formats:
@@ -70,15 +70,14 @@
 //      1.0.0       Api change: ddsktx_sub_data
 //                  Added KTX support
 //      1.0.1       Fixed major bugs in KTX parsing
+//      1.1.0       Fixed bugs in get_sub routine, refactored some parts, image-viewer example
 //
 // TODO
 //      Write KTX/DDS
 //      Read KTX metadata. currently it just stores the offset/size to the metadata block
 //
-// NOTES
-//      Some portions of this code are taken from 'bimg' library: https://github.com/bkaradzic/bimg
-//
-#pragma once
+
+ #pragma once
 
 #include <stddef.h>
 #include <stdint.h>
@@ -151,21 +150,21 @@ typedef enum ddsktx_format
     _DDSKTX_FORMAT_COUNT
 } ddsktx_format;
 
-typedef enum stc_texture_flags
+typedef enum ddsktx_texture_flags
 {
     DDSKTX_TEXTURE_FLAG_CUBEMAP = 0x01,       
     DDSKTX_TEXTURE_FLAG_SRGB    = 0x02,        
     DDSKTX_TEXTURE_FLAG_ALPHA   = 0x04,       // Has alpha channel
     DDSKTX_TEXTURE_FLAG_DDS     = 0x08,       // container was DDS file
     DDSKTX_TEXTURE_FLAG_KTX     = 0x10        // container was KTX file
-} stc_texture_flags;
+} ddsktx_texture_flags;
 
 typedef struct ddsktx_texture_info
 {
     int                 data_offset;   // start offset of pixel data
     int                 size_bytes;
     ddsktx_format       format;
-    unsigned int        flags;         // stc_texture_flags
+    unsigned int        flags;         // ddsktx_texture_flags
     int                 width;
     int                 height;
     int                 depth;
@@ -176,7 +175,7 @@ typedef struct ddsktx_texture_info
     int                 metadata_size;   // ktx only
 } ddsktx_texture_info;
 
-typedef enum stc_cube_face
+typedef enum ddsktx_cube_face
 {
     DDSKTX_CUBE_FACE_X_POSITIVE = 0,
     DDSKTX_CUBE_FACE_X_NEGATIVE,
@@ -185,7 +184,7 @@ typedef enum stc_cube_face
     DDSKTX_CUBE_FACE_Z_POSITIVE,
     DDSKTX_CUBE_FACE_Z_NEGATIVE,
     DDSKTX_CUBE_FACE_COUNT
-} stc_cube_face;
+} ddsktx_cube_face;
 
 typedef struct ddsktx_error
 {
@@ -907,10 +906,10 @@ static bool ddsktx__parse_ktx(ddsktx_texture_info* tc, const void* file_data, in
     if (ddsktx__read(&r, &header, sizeof(header)) != DDSKTX__KTX_HEADER_SIZE) {
         ddsktx__err(err, "ktx; header size does not match");
     }
-    
-    /*if (ddsktx_memcmp(header.id, sizeof(header.id)) == 0) {
+
+    if (ddsktx_memcmp(header.id, ktx__id, sizeof(header.id)) != 0) {
         ddsktx__err(err, "ktx: invalid file header");
-    }*/
+    }
 
     // TODO: support big endian
     if (header.endianess != 0x04030201) {
@@ -977,7 +976,7 @@ static bool ddsktx__parse_dds(ddsktx_texture_info* tc, const void* file_data, in
         ddsktx__err(err, "dds: header size does not match");
     }
 
-    uint32_t required_flags = (DDSKTX__DDSD_CAPS|DDSKTX__DDSD_HEIGHT|DDSKTX__DDSD_WIDTH|DDSKTX__DDSD_PIXELFORMAT);
+    uint32_t required_flags = (DDSKTX__DDSD_HEIGHT|DDSKTX__DDSD_WIDTH);
     if ((header.flags & required_flags) != required_flags) {
         ddsktx__err(err, "dds: have invalid flags");
     }
@@ -1060,7 +1059,7 @@ static bool ddsktx__parse_dds(ddsktx_texture_info* tc, const void* file_data, in
     tc->num_layers = ddsktx__max(1, (int)array_size);
     tc->num_mips = (header.caps1 & DDSKTX__DDSCAPS_MIPMAP) ? (int)header.mip_count : 1;
     tc->bpp = k__block_info[format].bpp;
-    if (has_alpha)
+    if (has_alpha || k__formats_info[format].has_alpha)
         tc->flags |= DDSKTX_TEXTURE_FLAG_ALPHA;
     if (cubemap)
         tc->flags |= DDSKTX_TEXTURE_FLAG_CUBEMAP;
@@ -1091,14 +1090,10 @@ void ddsktx_get_sub(const ddsktx_texture_info* tc, ddsktx_sub_data* sub_data,
     const ddsktx__block_info* binfo = &k__block_info[format];
     const int bpp          = binfo->bpp;
     const int block_size   = binfo->block_size;
-    const int block_width  = binfo->block_width;
-    const int block_height = binfo->block_height;
     const int min_block_x  = binfo->min_block_x;
     const int min_block_y  = binfo->min_block_y;
 
     int num_faces;
-    const int min_width = min_block_x*block_width;
-    const int min_height = min_block_y*block_height;
 
     ddsktx_assert(!((tc->flags & DDSKTX_TEXTURE_FLAG_CUBEMAP) && tc->depth > 1) && "textures must be either Cube or 3D");
     int slice_idx, face_idx, num_slices;
@@ -1121,13 +1116,22 @@ void ddsktx_get_sub(const ddsktx_texture_info* tc, ddsktx_sub_data* sub_data,
                 int height = tc->height;
 
                 for (int mip = 0, mip_count = tc->num_mips; mip < mip_count; mip++) {
-                    width = ((width + block_width - 1)/block_width)*block_width;
-                    height = ((height + block_height - 1)/block_height)*block_height;
-                    width = ddsktx__max(min_width, width);
-                    height = ddsktx__max(min_height, height);
-                    int mip_size = width/block_width * height/block_height * block_size;
-                    ddsktx_assert(width*height*bpp/8 == mip_size);
+                    int row_bytes, mip_size;
+                    
+                    if (format < _DDSKTX_FORMAT_COMPRESSED) {
+                        int num_blocks_wide = width > 0 ? ddsktx__max(1, (width + 3)/4) : 0;
+                        num_blocks_wide = ddsktx__max(min_block_x, num_blocks_wide);
 
+                        int num_blocks_high = height > 0 ? ddsktx__max(1, (height + 3)/4) : 0;
+                        num_blocks_high = ddsktx__max(min_block_y, num_blocks_high);
+
+                        row_bytes = num_blocks_wide * block_size;
+                        mip_size = row_bytes * num_blocks_high;
+                    } else {
+                        row_bytes = (width*bpp + 7)/8;  // round to nearest byte
+                        mip_size = row_bytes * height;
+                    }
+                   
                     for (int slice = 0; slice < num_slices; slice++) {
                         if (layer == array_idx && mip == mip_idx && 
                             slice == slice_idx && face_idx == face) 
@@ -1136,7 +1140,7 @@ void ddsktx_get_sub(const ddsktx_texture_info* tc, ddsktx_sub_data* sub_data,
                             sub_data->width = width;
                             sub_data->height = height;
                             sub_data->size_bytes = mip_size;
-                            sub_data->row_pitch_bytes = width*bpp/8;
+                            sub_data->row_pitch_bytes = row_bytes;
                             return;
                         }
 
@@ -1146,6 +1150,13 @@ void ddsktx_get_sub(const ddsktx_texture_info* tc, ddsktx_sub_data* sub_data,
 
                     width >>= 1;
                     height >>= 1;
+
+                    if (width == 0) {
+                        width = 1;
+                    }
+                    if (height == 0) {
+                        height = 1;
+                    }
                 }   // foreach mip
             }   // foreach face
         } // foreach array-item
@@ -1154,12 +1165,22 @@ void ddsktx_get_sub(const ddsktx_texture_info* tc, ddsktx_sub_data* sub_data,
         int height = tc->height;
 
         for (int mip = 0, c = tc->num_mips; mip < c; mip++) {
-            width = ((width  + block_width  - 1) / block_width)*block_width;
-            height = ((height + block_height - 1) / block_height)*block_height;
-            width  = ddsktx__max(min_width, width);
-            height = ddsktx__max(min_height, height);
-            int mip_size = width/block_width * height/block_height * block_size;
-            ddsktx_assert(width*height*bpp/8 == mip_size);
+            int row_bytes, mip_size;
+
+            if (format < _DDSKTX_FORMAT_COMPRESSED) {
+                int num_blocks_wide = width > 0 ? ddsktx__max(1, (width + 3)/4) : 0;
+                num_blocks_wide = ddsktx__max(min_block_x, num_blocks_wide);
+
+                int num_blocks_high = height > 0 ? ddsktx__max(1, (height + 3)/4) : 0;
+                num_blocks_high = ddsktx__max(min_block_y, num_blocks_high);
+
+                row_bytes = num_blocks_wide * block_size;
+                mip_size = row_bytes * num_blocks_high;
+            }
+            else {
+                row_bytes = (width*bpp + 7)/8;  // round to nearest byte
+                mip_size = row_bytes * height;
+            }
 
             int image_size;
             ddsktx__read(&r, &image_size, sizeof(image_size)); 
@@ -1175,7 +1196,7 @@ void ddsktx_get_sub(const ddsktx_texture_info* tc, ddsktx_sub_data* sub_data,
                             sub_data->width = width;
                             sub_data->height = height;
                             sub_data->size_bytes = mip_size;
-                            sub_data->row_pitch_bytes = width*bpp/8;
+                            sub_data->row_pitch_bytes = row_bytes;
                             return;
                         }
 
@@ -1190,6 +1211,13 @@ void ddsktx_get_sub(const ddsktx_texture_info* tc, ddsktx_sub_data* sub_data,
 
             width >>= 1;
             height >>= 1;
+
+            if (width == 0) {
+                width = 1;
+            }
+            if (height == 0) {
+                height = 1;
+            }
             
             r.offset = ddsktx__align_mask(r.offset, 3); // mip-padding
         }   // foreach mip     

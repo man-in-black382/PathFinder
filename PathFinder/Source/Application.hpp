@@ -43,7 +43,7 @@
 #include "RenderPipeline/PerFrameRootConstants.hpp"
 #include "RenderPipeline/RenderPassContentMediator.hpp"
 
-#include <Scene/MeshLoader.hpp>
+#include <Scene/ThirdPartySceneLoader.hpp>
 #include <Scene/MaterialLoader.hpp>
 
 namespace PathFinder
@@ -111,7 +111,6 @@ namespace PathFinder
         PerFrameRootConstants mPerFrameConstants;
 
         // Temporary to load demo scene
-        std::unique_ptr<MeshLoader> mMeshLoader;
         std::unique_ptr<MaterialLoader> mMaterialLoader;
     };
 

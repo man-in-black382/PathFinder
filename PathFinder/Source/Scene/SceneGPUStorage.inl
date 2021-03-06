@@ -12,8 +12,6 @@ namespace PathFinder
 
         VertexStorageLocation location{ vertexStartIndex, vertexCount, indexStartIndex, indexCount, blasIndex };
 
-        package.Vertices.reserve(package.Vertices.size() + vertexCount);
-        package.Indices.reserve(package.Indices.size() + indexCount);
         package.Locations.push_back(location);
 
         std::copy(vertices, vertices + vertexCount, std::back_inserter(package.Vertices));

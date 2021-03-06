@@ -2,17 +2,27 @@
 
 #include <bitsery/bitsery.h>
 #include <bitsery/adapter/buffer.h>
+#include <bitsery/traits/list.h>
 #include <bitsery/traits/vector.h>
+#include <bitsery/adapter/buffer.h>
+#include <bitsery/adapter/stream.h>
+#include <bitsery/ext/pointer.h>
 
 #include <fstream>
+
+#include <Foundation/Filesystem.hpp>
+#include <Foundation/StringUtils.hpp>
 
 namespace PathFinder 
 {
 
-    Scene::Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer)
-        : mResourceLoader{ executableFolder, resourceProducer }, mMeshLoader{ executableFolder }, mLuminanceMeter{ &mCamera }, mGPUStorage{ this, device, resourceProducer }
+    Scene::Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer, const PipelineResourceStorage* pipelineResourceStorage)
+        : mResourceProducer{ resourceProducer },
+        mLuminanceMeter{ &mCamera },
+        mGPUStorage{ this, device, resourceProducer, pipelineResourceStorage },
+        mMaterialLoader{ executableFolder, resourceProducer }
     {
-        LoadUtilityResources();
+        LoadUtilityResources(executableFolder);
         mGIManager.SetCamera(&mCamera);
     }
 
@@ -70,49 +80,195 @@ namespace PathFinder
             mLightGPUIndexMappings[light.IndexInGPUTable()] = &light;
     }
 
-    void Scene::Serialize(const std::filesystem::path& destination) const
+    void Scene::LoadThirdPartyScene(const std::filesystem::path& path)
     {
-        using Buffer = std::vector<uint8_t>;
-        using Writer = bitsery::OutputBufferAdapter<Buffer>;
-        using Reader = bitsery::InputBufferAdapter<Buffer>;
+        std::vector<ThirdPartySceneLoader::LoadedMesh>& loadedMeshes = mThirdPartySceneLoader.Load(path);
+        std::vector<Material*> insertedMaterials;
 
-        Buffer buffer{};
-        size_t writtenSize{};
-
-        bitsery::ext::PointerLinkingContext ctx{};
-        writtenSize = bitsery::quickSerialization(ctx, Writer{ buffer }, mCamera);
-
-        //make sure that pointer linking context is valid
-        //this ensures that all non-owning pointers points to data that has been serialized,
-        //so we can successfully reconstruct pointers after deserialization
-        assert(ctx.isValid());
-
-        std::filesystem::path directory = destination;
-        directory.remove_filename();
-
-        std::filesystem::create_directories(directory);
-
-        std::ofstream sceneFile{ destination, std::ios::out | std::ios::binary };
-
-        if (sceneFile)
+        for (Material& material : mThirdPartySceneLoader.LoadedMaterials())
         {
-            sceneFile.write((const char*)buffer.data(), writtenSize);
-            sceneFile.close();
+            Material* insertedMaterial = &mMaterials.emplace_back(std::move(material));
+            insertedMaterial->Name = EnsureMaterialNameUniqueness(insertedMaterial->Name);
+            insertedMaterials.push_back(insertedMaterial);
+
+            mMaterialLoader.LoadMaterial(*insertedMaterial);
         }
+            
+        for (ThirdPartySceneLoader::LoadedMesh& loadedMesh : loadedMeshes)
+        {
+            Mesh* insertedMesh = &mMeshes.emplace_back(std::move(loadedMesh.MeshObject));
+            Material* material = insertedMaterials[loadedMesh.MaterialIndex];
+            insertedMesh->SetName(EnsureMeshNameUniqueness(insertedMesh->Name()));
+            mMeshInstances.emplace_back(insertedMesh, material);
+
+            mTotalVertexCount += insertedMesh->Vertices().size();
+            mTotalIndexCount += insertedMesh->Indices().size();
+        }
+    }
+
+    void Scene::Serialize(const std::filesystem::path& destination)
+    {
+        FileStructure sceneFiles{ destination };
+        sceneFiles.CreateDirectories();
+
+        for (Mesh& mesh : mMeshes)
+            SerializeMeshDataIfNeeded(mesh, sceneFiles);
+
+        for (Material& material : mMaterials)
+            SerializeMaterialDataIfNeeded(material, sceneFiles);
+
+        std::ofstream stream{ destination, std::ios::out | std::ios::trunc | std::ios::binary };
+        assert_format(stream.is_open(), "File (", destination.string(), ") couldn't be opened for writing");
+
+        using Serializer = bitsery::Serializer<bitsery::OutputBufferedStreamAdapter, bitsery::ext::PointerLinkingContext>;
+
+        bitsery::ext::PointerLinkingContext context{};
+        Serializer serializer{ context, stream };
+
+        serializer.object(mCamera);
+        serializer.container(mMeshes, std::numeric_limits<uint64_t>::max(), [](Serializer& s, Mesh& m) { s.ext(m, bitsery::ext::ReferencedByPointer{}); });
+        serializer.container(mMaterials, std::numeric_limits<uint64_t>::max(), [](Serializer& s, Material& m) { s.ext(m, bitsery::ext::ReferencedByPointer{}); });
+        serializer.container(mMeshInstances, std::numeric_limits<uint64_t>::max());
+
+        serializer.adapter().flush();
+        stream.close();
+
+        assert_format(context.isValid(), "Scene serialization failed");
     }
 
     void Scene::Deserialize(const std::filesystem::path& source)
     {
+        FileStructure sceneFiles{ source };
 
+        std::fstream stream{ source, std::ios::binary | std::ios::in };
+        assert_format(stream.is_open(), "File (", source.string(), ") couldn't be opened for reading");
+
+        using Deserializer = bitsery::Deserializer<bitsery::InputStreamAdapter, bitsery::ext::PointerLinkingContext>;
+
+        bitsery::ext::PointerLinkingContext context{};
+        Deserializer deserializer{ context, stream };
+
+        deserializer.object(mCamera);
+        deserializer.container(mMeshes, std::numeric_limits<uint64_t>::max(), [](Deserializer& s, Mesh& m) { s.ext(m, bitsery::ext::ReferencedByPointer{}); });
+        deserializer.container(mMaterials, std::numeric_limits<uint64_t>::max(), [](Deserializer& s, Material& m) { s.ext(m, bitsery::ext::ReferencedByPointer{}); });
+        deserializer.container(mMeshInstances, std::numeric_limits<uint64_t>::max());
+
+        stream.close();
+
+        assert_format(context.isValid(), "Scene deserialization failed");
+
+        for (Mesh& mesh : mMeshes)
+        {
+            mesh.DeserializeVertexData(sceneFiles.MeshFolderPath / (mesh.Name() + ".pfmeshdat"));
+            mesh.SetName(EnsureMeshNameUniqueness(mesh.Name()));
+        }
+
+        for (Material& material : mMaterials)
+        {
+            material.DeserializeTextures(sceneFiles.MaterialFolderPath / (material.Name + ".pfmatdat"), mResourceProducer);
+            material.Name = EnsureMaterialNameUniqueness(material.Name);
+            mMaterialLoader.SetCommonMaterialTextures(material);
+        }
     }
 
-    void Scene::LoadUtilityResources()
+    void Scene::LoadUtilityResources(const std::filesystem::path& executableFolder)
     {
-        mBlueNoiseTexture = mResourceLoader.LoadTexture("/Precompiled/BlueNoise3DIndependent.dds");
-        mSMAAAreaTexture = mResourceLoader.LoadTexture("/Precompiled/SMAAAreaTex.dds");
-        mSMAASearchTexture = mResourceLoader.LoadTexture("/Precompiled/SMAASearchTex.dds");
-        mUnitCube = mMeshLoader.Load("Precompiled/UnitCube.obj").back();
-        mUnitSphere = mMeshLoader.Load("Precompiled/UnitSphere.obj").back();
+        ResourceLoader resourceLoader{ mResourceProducer };
+
+        mBlueNoiseTexture = resourceLoader.LoadTexture(executableFolder / "Precompiled" / "BlueNoise3DIndependent.dds");
+        mSMAAAreaTexture = resourceLoader.LoadTexture(executableFolder / "Precompiled" / "SMAAAreaTex.dds");
+        mSMAASearchTexture = resourceLoader.LoadTexture(executableFolder / "Precompiled" / "SMAASearchTex.dds");
+        mUnitCube = std::move(mThirdPartySceneLoader.Load(executableFolder / "Precompiled" / "UnitCube.obj").back().MeshObject);
+        mUnitSphere = std::move(mThirdPartySceneLoader.Load(executableFolder / "Precompiled" / "UnitSphere.obj").back().MeshObject);
+    }
+
+    void Scene::SerializeMeshDataIfNeeded(Mesh& mesh, const FileStructure& fileStructure)
+    {
+        std::filesystem::path meshAbsolutePath;
+
+        if (mesh.Name().empty())
+        {
+            std::string meshName = RandomAlphanumericString(8);
+            meshAbsolutePath = fileStructure.MeshFolderPath / (meshName + ".pfmeshdat");
+            meshAbsolutePath = Foundation::AppendUniquePostfixIfPathExists(meshAbsolutePath);
+            mesh.SetName(meshAbsolutePath.filename().replace_extension("").string());
+        }
+        else
+        {
+            meshAbsolutePath = fileStructure.MeshFolderPath / (mesh.Name() + ".pfmeshdat");
+        }
+
+        if (!std::filesystem::exists(meshAbsolutePath))
+            mesh.SerializeVertexData(meshAbsolutePath);
+    }
+
+    void Scene::SerializeMaterialDataIfNeeded(Material& material, const FileStructure& fileStructure)
+    {
+        std::filesystem::path materialAbsolutePath;
+
+        if (material.Name.empty())
+        {
+            std::string materialName = RandomAlphanumericString(8);
+            materialAbsolutePath = fileStructure.MaterialFolderPath / (materialName + ".pfmatdat");
+            materialAbsolutePath = Foundation::AppendUniquePostfixIfPathExists(materialAbsolutePath);
+            material.Name = materialAbsolutePath.filename().replace_extension("").string();
+        }
+        else
+        {
+            materialAbsolutePath = fileStructure.MaterialFolderPath / (material.Name + ".pfmatdat");
+        }
+
+        if (!std::filesystem::exists(materialAbsolutePath))
+            material.SerializeTextures(materialAbsolutePath);
+    }
+
+    std::string Scene::EnsureMeshNameUniqueness(const std::string& meshName)
+    {
+        return EnsureNameUniqueness(meshName.empty() ? "Mesh" : meshName, mMeshNames);
+    }
+
+    std::string Scene::EnsureMaterialNameUniqueness(const std::string& materialName)
+    {
+        return EnsureNameUniqueness(materialName.empty() ? "Material" : materialName, mMaterialNames);
+    }
+
+    std::string Scene::EnsureNameUniqueness(const std::string& name, robin_hood::unordered_flat_set<std::string>& set)
+    {
+        std::string candidate = name;
+        uint64_t counter = 1;
+
+        while (set.contains(candidate))
+        {
+            candidate = name + "_" + std::to_string(counter);
+            ++counter;
+        }
+
+        set.insert(candidate);
+
+        return candidate;
+    }
+
+    Scene::FileStructure::FileStructure(const std::filesystem::path& sceneFilePath)
+    {
+        std::filesystem::path sceneFileName = sceneFilePath.filename().replace_extension("");
+
+        std::filesystem::path folder = sceneFilePath;
+        folder.remove_filename();
+
+        SceneFilePath = folder / (sceneFileName.string() + ".pfscene");
+        MeshFolderPath = folder / (sceneFileName.string() + "_Meshes");
+        MaterialFolderPath = folder / (sceneFileName.string() + "_Materials");
+    }
+
+    void Scene::FileStructure::CreateDirectories() const
+    {
+        std::filesystem::create_directories(MeshFolderPath);
+        std::filesystem::create_directories(MaterialFolderPath);
+    }
+
+    std::filesystem::path Scene::FileStructure::GenerateFullMaterialTexturePath(const Material& material, const std::filesystem::path& matetrialTexturePath) const
+    {
+        return MaterialFolderPath / material.Name / matetrialTexturePath.filename();
     }
 
 }

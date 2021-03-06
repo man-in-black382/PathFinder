@@ -167,14 +167,14 @@ namespace Memory
 
     void GPUResource::AllocateNewUploadBuffer()
     {
-        auto properties = HAL::BufferProperties::Create<uint8_t>(ResourceSizeInBytes());
+        auto properties = HAL::BufferProperties::Create<uint8_t>(UploadAndReadbackResourceSize());
         mUploadBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Upload), mFrameNumber);
         mUploadBuffers.back().first->SetDebugName(StringFormat("%s Upload Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
     }
 
     void GPUResource::AllocateNewReadbackBuffer()
     {
-        auto properties = HAL::BufferProperties::Create<uint8_t>(ResourceSizeInBytes());
+        auto properties = HAL::BufferProperties::Create<uint8_t>(UploadAndReadbackResourceSize());
         mReadbackBuffers.emplace(mResourceAllocator->AllocateBuffer(properties, HAL::CPUAccessibleHeapType::Readback), mFrameNumber);
         mReadbackBuffers.back().first->SetDebugName(StringFormat("%s Readback Buffer [Frame %d]", mDebugName.c_str(), mFrameNumber));
     }

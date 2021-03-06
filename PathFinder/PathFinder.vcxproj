@@ -293,7 +293,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\PipelineResourceSchedulingInfo.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceStorageResource.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineStateProxy.cpp" />
-    <ClCompile Include="Source\RenderPipeline\PreprocessableAssetStorage.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BackBufferOutputPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.cpp" />
@@ -351,7 +350,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Scene\MaterialLoader.cpp" />
     <ClCompile Include="Source\Scene\Mesh.cpp" />
     <ClCompile Include="Source\Scene\MeshInstance.cpp" />
-    <ClCompile Include="Source\Scene\MeshLoader.cpp" />
+    <ClCompile Include="Source\Scene\ThirdPartySceneLoader.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
     <ClCompile Include="Source\Scene\ResourceLoader.cpp" />
     <ClCompile Include="Source\Scene\SceneGPUStorage.cpp" />
@@ -414,6 +413,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Foundation\Color.hpp" />
     <ClInclude Include="Source\Foundation\Cooldown.hpp" />
     <ClInclude Include="Source\Foundation\Event.hpp" />
+    <ClInclude Include="Source\Foundation\Filesystem.hpp" />
     <ClInclude Include="Source\Foundation\FileWatcher.hpp" />
     <ClInclude Include="Source\Foundation\Gaussian.hpp" />
     <ClInclude Include="Source\Foundation\Halton.hpp" />
@@ -519,7 +519,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStoragePass.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineResourceStorageResource.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineStateProxy.hpp" />
-    <ClInclude Include="Source\RenderPipeline\PreprocessableAssetStorage.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassConfiguration.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassConfigurator.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPassContainer.hpp" />
@@ -600,7 +599,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Scene\MaterialLoader.hpp" />
     <ClInclude Include="Source\Scene\Mesh.hpp" />
     <ClInclude Include="Source\Scene\MeshInstance.hpp" />
-    <ClInclude Include="Source\Scene\MeshLoader.hpp" />
+    <ClInclude Include="Source\Scene\SceneGPUTypes.hpp" />
+    <ClInclude Include="Source\Scene\ThirdPartySceneLoader.hpp" />
     <ClInclude Include="Source\Scene\Scene.hpp" />
     <ClInclude Include="Source\Scene\ResourceLoader.hpp" />
     <ClInclude Include="Source\Scene\SceneGPUStorage.hpp" />

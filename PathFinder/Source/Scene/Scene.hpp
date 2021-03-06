@@ -7,14 +7,16 @@
 #include "GTTonemappingParameters.hpp"
 #include "BloomParameters.hpp"
 #include "ResourceLoader.hpp"
-#include "MeshLoader.hpp"
 #include "FlatLight.hpp"
 #include "SphericalLight.hpp"
 #include "LuminanceMeter.hpp"
 #include "GIManager.hpp"
 #include "SceneGPUStorage.hpp"
+#include "ThirdPartySceneLoader.hpp"
+#include "MaterialLoader.hpp"
 
 #include <Memory/GPUResourceProducer.hpp>
+#include <RenderPipeline/PipelineResourceStorage.hpp>
 #include <robinhood/robin_hood.h>
 
 #include <functional>
@@ -33,7 +35,7 @@ namespace PathFinder
 
         using LightVariant = std::variant<FlatLight*, SphericalLight*>;
 
-        Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer);
+        Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer, const PipelineResourceStorage* pipelineResourceStorage);
 
         Mesh& AddMesh(Mesh&& mesh);
         MeshInstance& AddMeshInstance(MeshInstance&& instance);
@@ -44,11 +46,29 @@ namespace PathFinder
 
         void MapEntitiesToGPUIndices();
 
-        void Serialize(const std::filesystem::path& destination) const;
+        void LoadThirdPartyScene(const std::filesystem::path& path);
+        void Serialize(const std::filesystem::path& destination);
         void Deserialize(const std::filesystem::path& source);
 
     private:
-        void LoadUtilityResources();
+        struct FileStructure
+        {
+            FileStructure(const std::filesystem::path& sceneFilePath);
+
+            void CreateDirectories() const;
+            std::filesystem::path GenerateFullMaterialTexturePath(const Material& material, const std::filesystem::path& matetrialTexturePath) const;
+
+            std::filesystem::path SceneFilePath;
+            std::filesystem::path MeshFolderPath;
+            std::filesystem::path MaterialFolderPath;
+        };
+
+        void LoadUtilityResources(const std::filesystem::path& executableFolder);
+        void SerializeMeshDataIfNeeded(Mesh& mesh, const FileStructure& fileStructure);
+        void SerializeMaterialDataIfNeeded(Material& material, const FileStructure& fileStructure);
+        std::string EnsureMeshNameUniqueness(const std::string& meshName);
+        std::string EnsureMaterialNameUniqueness(const std::string& materialName);
+        std::string EnsureNameUniqueness(const std::string& name, robin_hood::unordered_flat_set<std::string>& set);
 
         std::list<Mesh> mMeshes;
         std::list<MeshInstance> mMeshInstances;
@@ -56,6 +76,9 @@ namespace PathFinder
         std::list<FlatLight> mRectangularLights;
         std::list<FlatLight> mDiskLights;
         std::list<SphericalLight> mSphericalLights;
+
+        robin_hood::unordered_flat_set<std::string> mMeshNames;
+        robin_hood::unordered_flat_set<std::string> mMaterialNames;
 
         Camera mCamera;
         LuminanceMeter mLuminanceMeter;
@@ -68,13 +91,17 @@ namespace PathFinder
         Memory::GPUResourceProducer::TexturePtr mSMAASearchTexture;
         Mesh mUnitCube;
         Mesh mUnitSphere;
+        ThirdPartySceneLoader mThirdPartySceneLoader;
+        MaterialLoader mMaterialLoader;
 
-        ResourceLoader mResourceLoader;
-        MeshLoader mMeshLoader;
+        Memory::GPUResourceProducer* mResourceProducer;
         SceneGPUStorage mGPUStorage;
 
         std::vector<MeshInstance*> mMeshInstanceGPUIndexMappings;
         std::vector<LightVariant> mLightGPUIndexMappings;
+
+        uint64_t mTotalVertexCount = 0;
+        uint64_t mTotalIndexCount = 0;
 
     public:
         inline Camera& MainCamera() { return mCamera; }
@@ -113,6 +140,9 @@ namespace PathFinder
         inline LightVariant LightForGPUIndex(uint64_t index) const { return mLightGPUIndexMappings[index]; }
 
         inline SceneGPUStorage& GPUStorage() { return mGPUStorage; }
+
+        inline const auto TotalVertexCount() const { return mTotalVertexCount; }
+        inline const auto TotalIndexCount() const { return mTotalIndexCount; }
     };
 
 }
