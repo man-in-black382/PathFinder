@@ -102,7 +102,7 @@ namespace HAL
 
     void SwapChain::Present()
     {
-        ThrowIfFailed(mSwapChain->Present(1, 0));
+        ThrowIfFailed(mSwapChain->Present(/*1*/0, 0));
         mAreBackBuffersUpdated = false;
     }
 

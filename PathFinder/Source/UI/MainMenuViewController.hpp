@@ -4,6 +4,7 @@
 #include "LuminanceMeterViewController.hpp"
 #include "RenderGraphViewController.hpp"
 #include "ProfilerViewController.hpp"
+#include "RenderPipelineViewController.hpp"
 
 namespace PathFinder
 {
@@ -20,6 +21,7 @@ namespace PathFinder
         std::shared_ptr<LuminanceMeterViewController> mLuminanceMeterVC;
         std::shared_ptr<RenderGraphViewController> mRenderGraphVC;
         std::shared_ptr<ProfilerViewController> mProfilerVC;
+        std::shared_ptr<RenderPipelineViewController> mRenderPipelineVC;
     };
 
 }

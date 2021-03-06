@@ -55,7 +55,6 @@ namespace PathFinder
         void EndFrame();
 
         bool HasMemoryLayoutChange() const;
-        bool IsMemoryAliasingEnabled() const;
         
         PipelineResourceStoragePass& CreatePerPassData(PassName name);
 
@@ -81,7 +80,6 @@ namespace PathFinder
         const PipelineResourceStorageResource* GetPerResourceData(ResourceName name) const;
 
         void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
-        void SetMemoryAliasingEnabled(bool enabled);
 
         void QueueResourceAllocationIfNeeded(
             ResourceName resourceName, 
@@ -170,7 +168,6 @@ namespace PathFinder
         HAL::ResourceBarrierCollection mReadbackBarriers;
 
         bool mMemoryLayoutChanged = false;
-        bool mIsMemoryAliasingEnabled = true;
     };
 
 }

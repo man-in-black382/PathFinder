@@ -15,7 +15,8 @@ namespace PathFinder
         PipelineStateManager* pipelineStateManager,
         GPUProfiler* gpuProfiler,
         const RenderPassGraph* renderPassGraph,
-        const RenderSurfaceDescription& defaultRenderSurface)
+        const RenderSurfaceDescription& defaultRenderSurface,
+        const PipelineSettings* settings)
         :
         mGraphicsQueue{ device },
         mComputeQueue{ device },
@@ -31,8 +32,10 @@ namespace PathFinder
         mGraphicsQueueFence{ device },
         mComputeQueueFence{ device },
         mBVHFence{ device },
-        mFrameBlueprint{ renderPassGraph, mBVHBuildsQueueIndex, &mBVHFence, {&mGraphicsQueueFence, &mComputeQueueFence} }
+        mFrameBlueprint{ renderPassGraph, mBVHBuildsQueueIndex, &mBVHFence, {&mGraphicsQueueFence, &mComputeQueueFence} },
+        mPipelinesSettings{ settings }
     {
+        mFrameMeasurement.Name = "Total Frame Time";
         mGraphicsQueue.SetDebugName("Graphics Queue");
         mComputeQueue.SetDebugName("Async Compute Queue");
     }
@@ -90,8 +93,8 @@ namespace PathFinder
             helpers.ResourceStoragePassData->IsAllowedToAdvanceConstantBufferOffset = false;
         }
 
-        mMeasurements.clear();
-        mMeasurements.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
+        mPassMeasurements.clear();
+        mPassMeasurements.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
 
         // If memory layout did not change we reuse aliasing barriers from previous frame.
         // Otherwise we start from scratch.
@@ -146,11 +149,13 @@ namespace PathFinder
 
     void RenderDevice::GatherMeasurements()
     {
-        for (PipelineMeasurement& measurement : mMeasurements)
+        for (PipelineMeasurement& measurement : mPassMeasurements)
         {
             const GPUProfiler::Event& event = mGPUProfiler->GetCompletedEvent(measurement.ProfilerEventID);
             measurement.DurationSeconds = event.DurationSeconds;
         }
+
+        mFrameMeasurement.DurationSeconds = mGPUProfiler->GetCompletedEvent(mFrameMeasurement.ProfilerEventID).DurationSeconds;
     }
 
     void RenderDevice::RecordNonWorkerCommandLists()
@@ -390,6 +395,9 @@ namespace PathFinder
                     previousTransitionNode->ExecutionQueueIndex, transitionInfo.TransitionBarrier->BeforeStates(), transitionInfo.TransitionBarrier->AfterStates()
                 );
 
+                // Respect settings
+                isSplitBarrierPossible = isSplitBarrierPossible && mPipelinesSettings->IsSplitBarriersEnabled;
+
                 // There is no sense in splitting barriers between two adjacent render passes. 
                 // That will only double the amount of barriers without any performance gain.
                 bool currentNodeIsNextToPrevious = node->LocalToQueueExecutionIndex() - previousTransitionNode->LocalToQueueExecutionIndex() <= 1;
@@ -533,12 +541,6 @@ namespace PathFinder
                 }
             }
 
-            // Handle timestamp query readback
-            if (lastGraphicNode)
-            {
-                mGPUProfiler->ReadbackEvents(*cmdList);
-            }
-
             // Then apply begin and back buffer barriers
             cmdList->InsertBarriers(barriers);
 
@@ -584,6 +586,14 @@ namespace PathFinder
 
         std::vector<std::vector<CommandListPtrVariant>> commandLists;
         commandLists.resize(mRenderPassGraph->DetectedQueueCount());
+
+        // Measure start of the frame
+        Memory::PoolCommandListAllocator::GraphicsCommandListPtr frameMeasurementsStartCmdList = mCommandListAllocator->AllocateGraphicsCommandList();
+        auto graphicQueueIndex = std::underlying_type_t<RenderPassExecutionQueue>(RenderPassExecutionQueue::Graphics);
+        frameMeasurementsStartCmdList->Reset();
+        mFrameMeasurement.ProfilerEventID = mGPUProfiler->RecordEventStart(*frameMeasurementsStartCmdList, GetCommandQueue(graphicQueueIndex).GetTimestampFrequency());
+        frameMeasurementsStartCmdList->Close();
+        commandLists[graphicQueueIndex].push_back(std::move(frameMeasurementsStartCmdList));
 
         auto flushBatch = [this, &commandLists](HAL::CommandQueue& queue, uint64_t queueIndex)
         {
@@ -660,6 +670,14 @@ namespace PathFinder
             }),
             event);
         });
+
+        // Measure frame end
+        Memory::PoolCommandListAllocator::GraphicsCommandListPtr frameMeasurementsEndCmdList = mCommandListAllocator->AllocateGraphicsCommandList();
+        frameMeasurementsEndCmdList->Reset();
+        mGPUProfiler->RecordEventEnd(*frameMeasurementsEndCmdList, mFrameMeasurement.ProfilerEventID);
+        mGPUProfiler->ReadbackEvents(*frameMeasurementsEndCmdList);
+        frameMeasurementsEndCmdList->Close();
+        commandLists[graphicQueueIndex].push_back(std::move(frameMeasurementsEndCmdList));
 
         // Flush last batches on each queue
         for (auto queueIdx = 0; queueIdx < mRenderPassGraph->DetectedQueueCount(); ++queueIdx)

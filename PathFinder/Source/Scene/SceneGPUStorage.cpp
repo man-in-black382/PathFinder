@@ -174,12 +174,9 @@ namespace PathFinder
         for (MeshInstance& instance : meshInstances)
         {
             GPUMeshInstanceTableEntry instanceEntry{
-                glm::mat4{1.0f},
-                glm::mat4{1.0f},
-                glm::mat4{1.0f},
-        /*        instance.Transformation().ModelMatrix(),
+                instance.Transformation().ModelMatrix(),
                 instance.PrevTransformation().ModelMatrix(),
-                instance.Transformation().NormalMatrix(),*/
+                instance.Transformation().NormalMatrix(),
                 instance.AssociatedMaterial()->GPUMaterialTableIndex,
                 instance.AssociatedMesh()->LocationInVertexStorage().VertexBufferOffset,
                 instance.AssociatedMesh()->LocationInVertexStorage().IndexBufferOffset,

@@ -59,6 +59,11 @@ namespace PathFinder
                 mProfilerVC = CreateViewController<ProfilerViewController>();
             }
 
+            if (ImGui::MenuItem("Render Pipeline", nullptr, false, mRenderPipelineVC == nullptr))
+            {
+                mRenderPipelineVC = CreateViewController<RenderPipelineViewController>();
+            }
+
             ImGui::EndMenu();
         }
     }

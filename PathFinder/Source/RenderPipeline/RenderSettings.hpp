@@ -4,6 +4,8 @@
 #include <glm/vec2.hpp>
 #include <Scene/Scene.hpp>
 
+#include "PipelineSettings.hpp"
+
 namespace PathFinder
 {
 
@@ -16,13 +18,13 @@ namespace PathFinder
         bool IsDenoiserAntilagEnabled = true;
 
         IrradianceField GlobalIlluminationSettings;
+        PipelineSettings RenderPipelineSettings;
     };
 
     class RenderSettingsController
     {
     public:
-        RenderSettingsController(Input* input, Scene* scene);
-        ~RenderSettingsController();
+        RenderSettingsController(Scene* scene);
 
         void SetEnabled(bool enabled);
         void ApplyVolatileSettings();
@@ -30,10 +32,7 @@ namespace PathFinder
         RenderSettings VolatileSettings;
 
     private:
-        void HandleKeyUp(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input);
-
         RenderSettings mAppliedSettings;
-        Input* mInput;
         Scene* mScene;
 
         bool mIsEnabled = true;

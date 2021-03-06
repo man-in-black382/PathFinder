@@ -40,6 +40,7 @@
 #include "TopRTAS.hpp"
 #include "GPUProfiler.hpp"
 #include "FrameFence.hpp"
+#include "PipelineSettings.hpp"
 
 namespace PathFinder
 {
@@ -119,6 +120,7 @@ namespace PathFinder
 
         HAL::DisplayAdapter* mSelectedAdapter = nullptr;
         ContentMediator* mContentMediator = nullptr;
+        PipelineSettings mPipelineSettings;
 
         Event mPreRenderEvent;
         Event mPostRenderEvent;
@@ -138,6 +140,7 @@ namespace PathFinder
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }
         inline uint64_t FrameDurationUS() const { return mFrameDuration.count(); }
+        inline PipelineSettings& Settings() { return mPipelineSettings; }
     };
 
 }

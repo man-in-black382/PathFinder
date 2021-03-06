@@ -7,7 +7,8 @@ namespace PathFinder
     {
         if (mUpdateCooldown.Check())
         {
-            mMeasurements = Dependencies->Device->Measurements();
+            mMeasurements = Dependencies->Device->RenderPassMeasurements();
+            mFrameMeasurement = Dependencies->Device->FrameMeasurement();
         }
     }
 

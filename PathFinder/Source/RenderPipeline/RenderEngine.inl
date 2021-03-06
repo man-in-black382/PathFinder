@@ -55,12 +55,11 @@ namespace PathFinder
             mRenderSurfaceDescription, 
             &mRenderPassGraph);
 
-        mPipelineResourceStorage->SetMemoryAliasingEnabled(!commandLineParser.DisableMemoryAliasing());
-
         mResourceScheduler = std::make_unique<ResourceScheduler<ContentMediator>>(
             mPipelineResourceStorage.get(),
             mPassUtilityProvider.get(),
-            &mRenderPassGraph);
+            &mRenderPassGraph,
+            &mPipelineSettings);
 
         mShaderManager = std::make_unique<ShaderManager>(
             commandLineParser.ExecutableFolderPath(),
@@ -90,7 +89,8 @@ namespace PathFinder
             mPipelineStateManager.get(), 
             mGPUProfiler.get(),
             &mRenderPassGraph, 
-            mRenderSurfaceDescription);
+            mRenderSurfaceDescription,
+            &mPipelineSettings);
 
         mSwapChain = std::make_unique<HAL::SwapChain>(
             &hwAdapter->Displays().front(),
@@ -118,6 +118,8 @@ namespace PathFinder
         // Start first frame here to prepare engine for external data transfer requests
         mFrameFence->HALFence().IncrementExpectedValue();
         NotifyStartFrame(mFrameFence->HALFence().ExpectedValue());
+
+        mPipelineSettings.IsMemoryAliasingEnabled = !commandLineParser.DisableMemoryAliasing();
     }
 
     template <class ContentMediator>

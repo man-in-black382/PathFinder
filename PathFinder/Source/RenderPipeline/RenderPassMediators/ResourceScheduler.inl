@@ -2,8 +2,17 @@ namespace PathFinder
 {
 
     template <class ContentMediator>
-    ResourceScheduler<ContentMediator>::ResourceScheduler(PipelineResourceStorage* manager, RenderPassUtilityProvider* utilityProvider, RenderPassGraph* passGraph)
-        : mResourceStorage{ manager }, mUtilityProvider{ utilityProvider }, mRenderPassGraph{ passGraph } {}
+    ResourceScheduler<ContentMediator>::ResourceScheduler(
+        PipelineResourceStorage* manager, 
+        RenderPassUtilityProvider* utilityProvider, 
+        RenderPassGraph* passGraph, 
+        const PipelineSettings* settings)
+        :
+        mResourceStorage{ manager },
+        mUtilityProvider{ utilityProvider },
+        mRenderPassGraph{ passGraph },
+        mPipelineSettings{ settings }
+    {}
 
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::NewRenderTarget(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
@@ -35,7 +44,7 @@ namespace PathFinder
             this]
         (PipelineResourceSchedulingInfo& schedulingInfo)
         {
-            schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mResourceStorage->IsMemoryAliasingEnabled();
+            schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mPipelineSettings->IsMemoryAliasingEnabled;
             RegisterGraphDependency(*passNode, writtenMips, resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
             UpdateSubresourceInfos(
                 schedulingInfo,
@@ -66,7 +75,7 @@ namespace PathFinder
             this]
         (PipelineResourceSchedulingInfo& schedulingInfo)
             {
-                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mResourceStorage->IsMemoryAliasingEnabled();
+                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mPipelineSettings->IsMemoryAliasingEnabled;
                 RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
@@ -108,7 +117,7 @@ namespace PathFinder
             this]
         (PipelineResourceSchedulingInfo& schedulingInfo)
         {
-            schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mResourceStorage->IsMemoryAliasingEnabled();
+            schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mPipelineSettings->IsMemoryAliasingEnabled;
             RegisterGraphDependency(*passNode, writtenMips, resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
             UpdateSubresourceInfos(
                 schedulingInfo,
@@ -280,7 +289,11 @@ namespace PathFinder
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::ExecuteOnQueue(RenderPassExecutionQueue queue)
     {
-        mCurrentlySchedulingPassNode->ExecutionQueueIndex = std::underlying_type_t<RenderPassExecutionQueue>(queue);
+        // Ignore render pass queue preference if async is disabled
+        mCurrentlySchedulingPassNode->ExecutionQueueIndex =
+            mPipelineSettings->IsAsyncComputeEnabled ? 
+            std::underlying_type_t<RenderPassExecutionQueue>(queue) : 
+            std::underlying_type_t<RenderPassExecutionQueue>(RenderPassExecutionQueue::Graphics);
     }
 
     template <class ContentMediator>
@@ -497,7 +510,7 @@ namespace PathFinder
                     PipelineResourceSchedulingInfo::SubresourceInfo::AccessFlag::BufferUA,
                     std::nullopt);
 
-                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mResourceStorage->IsMemoryAliasingEnabled();
+                schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mPipelineSettings->IsMemoryAliasingEnabled;
             }
         );
     }

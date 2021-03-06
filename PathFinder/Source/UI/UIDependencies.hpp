@@ -16,6 +16,7 @@ namespace PathFinder
             const PipelineResourceStorage* resourceStorage, 
             RenderEngine<RenderPassContentMediator>::Event* preRenderEvent,
             RenderEngine<RenderPassContentMediator>::Event* postRenderEvent,
+            PipelineSettings* pipelineSettings,
             const RenderDevice* renderDevice,
             Scene* scene)
             :
@@ -23,13 +24,16 @@ namespace PathFinder
             PreRenderEvent{ preRenderEvent },
             PostRenderEvent{ postRenderEvent },
             Device{ renderDevice },
-            ScenePtr{ scene } {}
+            ScenePtr{ scene },
+            RenderPipelineSettings{ pipelineSettings }
+        {}
 
         const PipelineResourceStorage* const ResourceStorage;
         RenderEngine<RenderPassContentMediator>::Event* const PreRenderEvent;
         RenderEngine<RenderPassContentMediator>::Event* const PostRenderEvent;
         Scene* const ScenePtr;
         const RenderDevice* const Device;
+        PipelineSettings* RenderPipelineSettings;
     };
 
 }

@@ -1,12 +1,11 @@
 #pragma once
 
 #include "../PipelineResourceStorage.hpp"
+#include "../PipelineSettings.hpp"
 #include "../RenderPassGraph.hpp"
 
 #include "RenderPassUtilityProvider.hpp"
-
 #include <Foundation/BitwiseEnum.hpp>
-
 #include <vector>
 
 namespace PathFinder
@@ -116,7 +115,7 @@ namespace PathFinder
     class ResourceScheduler
     {
     public:
-        ResourceScheduler(PipelineResourceStorage* manager, RenderPassUtilityProvider* utilityProvider, RenderPassGraph* passGraph);
+        ResourceScheduler(PipelineResourceStorage* manager, RenderPassUtilityProvider* utilityProvider, RenderPassGraph* passGraph, const PipelineSettings* settings);
 
         // Allocates new render target texture (Write Only)
         void NewRenderTarget(
@@ -244,6 +243,7 @@ namespace PathFinder
         RenderPassUtilityProvider* mUtilityProvider = nullptr;
         RenderPassGraph* mRenderPassGraph = nullptr;
         ContentMediator* mContent = nullptr;
+        const PipelineSettings* mPipelineSettings = nullptr;
 
     public:
         inline const RenderSurfaceDescription& DefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }

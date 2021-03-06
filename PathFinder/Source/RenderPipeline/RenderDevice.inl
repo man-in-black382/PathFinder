@@ -14,7 +14,7 @@ namespace PathFinder
 
         uint64_t tickFrequency = GetCommandQueue(passNode.ExecutionQueueIndex).GetTimestampFrequency();
         GPUProfiler::EventID profilerEventID = mGPUProfiler->RecordEventStart(*worker, tickFrequency);
-        PipelineMeasurement& measurement = mMeasurements[passNode.GlobalExecutionIndex()];
+        PipelineMeasurement& measurement = mPassMeasurements[passNode.GlobalExecutionIndex()];
         measurement.Name = passName;
         measurement.ProfilerEventID = profilerEventID;
 

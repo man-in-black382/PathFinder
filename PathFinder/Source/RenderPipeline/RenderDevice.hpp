@@ -5,6 +5,7 @@
 #include "PipelineStateManager.hpp"
 #include "RenderPassMetadata.hpp"
 #include "GPUProfiler.hpp"
+#include "PipelineSettings.hpp"
 
 #include <Foundation/Name.hpp>
 #include <Utility/EventTracker.hpp>
@@ -89,7 +90,8 @@ namespace PathFinder
             PipelineStateManager* pipelineStateManager,
             GPUProfiler* gpuProfiler,
             const RenderPassGraph* renderPassGraph,
-            const RenderSurfaceDescription& defaultRenderSurface
+            const RenderSurfaceDescription& defaultRenderSurface,
+            const PipelineSettings* settings
         );
 
         PassCommandLists& CommandListsForPass(const RenderPassGraph::Node& node);
@@ -240,6 +242,7 @@ namespace PathFinder
         const RenderPassGraph* mRenderPassGraph;
         RenderSurfaceDescription mDefaultRenderSurface;
         EventTracker mEventTracker;
+        const PipelineSettings* mPipelinesSettings;
 
         Memory::Texture* mBackBuffer = nullptr;
         Memory::PoolCommandListAllocator::GraphicsCommandListPtr mPreRenderUploadsCommandList;
@@ -282,7 +285,8 @@ namespace PathFinder
         std::vector<ResourceReadbackInfo> mPerNodeReadbackInfo;
 
         // An hierarchy of various measured GPU events
-        std::vector<PipelineMeasurement> mMeasurements;
+        std::vector<PipelineMeasurement> mPassMeasurements;
+        PipelineMeasurement mFrameMeasurement;
 
     public:
         inline HAL::GraphicsCommandQueue& GraphicsCommandQueue() { return mGraphicsQueue; }
@@ -290,7 +294,8 @@ namespace PathFinder
         inline HAL::GraphicsCommandList* PreRenderUploadsCommandList() { return mPreRenderUploadsCommandList.get(); }
         inline HAL::ComputeCommandList* RTASBuildsCommandList() { return mRTASBuildsCommandList.get(); }
         inline const RenderSurfaceDescription& DefaultRenderSurfaceDesc() { return mDefaultRenderSurface; }
-        inline const auto& Measurements() const { return mMeasurements; }
+        inline const auto& RenderPassMeasurements() const { return mPassMeasurements; }
+        inline const PipelineMeasurement& FrameMeasurement() const { return mFrameMeasurement; }
     };
 
 }

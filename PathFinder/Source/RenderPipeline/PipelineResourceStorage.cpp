@@ -98,11 +98,6 @@ namespace PathFinder
         return mMemoryLayoutChanged;
     }
 
-    bool PipelineResourceStorage::IsMemoryAliasingEnabled() const
-    {
-        return mIsMemoryAliasingEnabled;
-    }
-
     void PipelineResourceStorage::StartResourceScheduling()
     {
         mSchedulingCreationRequests.clear();
@@ -464,11 +459,6 @@ namespace PathFinder
                 func(resourceName, debugData);
             });
         }*/
-    }
-
-    void PipelineResourceStorage::SetMemoryAliasingEnabled(bool enabled)
-    {
-        mIsMemoryAliasingEnabled = enabled;
     }
 
 }
