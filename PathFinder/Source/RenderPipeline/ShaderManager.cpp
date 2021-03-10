@@ -213,16 +213,13 @@ namespace PathFinder
         std::string libraryName = relativePath.replace_extension().filename().string();
 
         if (!entryPointName.empty())
-        {
             libraryName += "_" + entryPointName;
-        }
+
+        libraryName += ".bin";
 
         // Could've attached a meaningful name here to unreadable PDB name,
         // but NSight doesn't recognize it.
-        std::string pdbName = debugPath.replace_extension().string();
-
-        libraryName += ".bin";
-        pdbName += ".lld";
+        std::string pdbName = debugPath.string();
 
         std::filesystem::path binaryPath = mShaderBinariesPath / libraryName;
         std::ofstream binaryStream(binaryPath, std::ios::out | std::ios::binary);

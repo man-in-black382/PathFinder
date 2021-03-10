@@ -57,8 +57,8 @@ float MaxAllowedAccumulatedFrames(float roughness, float NdotV, float parallax)
 float MaxAllowedAccumulatedFrames(float gradient, float roughness)
 {
     // Tweak to find balance of lag and noise. 
-    float Antilag = 5;    
-    float Power = lerp(1.0, 5.0, roughness);
+    float Antilag = 1;    
+    float Power = lerp(1.0, 3.0, roughness);
 
     return MaxAccumulatedFrames * pow(1.0 - saturate(Antilag * gradient), Power) + 1.0;
 }

@@ -213,7 +213,7 @@ namespace PathFinder
         std::filesystem::create_directories(mDumpPath);
 
         // Create a unique file name.
-        const std::string fileName = std::to_string(identifier) + ".nvdbg";
+        const std::string fileName = "shader-" + std::to_string(identifier) + ".nvdbg";
         auto filePath = mDumpPath;
         filePath.append(fileName);
         

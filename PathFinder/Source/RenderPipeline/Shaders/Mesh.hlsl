@@ -38,7 +38,7 @@ struct Material
     uint LTC_LUT_Terms_Diffuse_Index;
     uint LTC_LUT_TextureSize;
     uint SamplerIndex;
-    uint _Pad0;
+    uint HasNormalMap;
 };
 
 #endif

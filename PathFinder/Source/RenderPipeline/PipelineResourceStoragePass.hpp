@@ -15,8 +15,6 @@ namespace PathFinder
         // Constant buffers for each pass that require it.
         Memory::GPUResourceProducer::BufferPtr PassConstantBuffer;
 
-        std::vector<uint8_t> PassConstantData;
-
         // Memory offset for pass constant buffer in current frame.
         // Used to place pass data in different memory locations
         // as a versioning mechanism for multiple draws/dispatches in one render pass.

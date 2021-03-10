@@ -207,7 +207,6 @@ namespace PathFinder
 
         void RecordNonWorkerCommandLists();
         void TraverseAndExecuteFrameBlueprint();
-        void UploadPassConstants();
 
         void GatherResourceTransitionKnowledge(const RenderPassGraph::DependencyLevel& dependencyLevel);
         void AllocateAndRecordPreWorkCommandList(const RenderPassGraph::Node& node, const HAL::ResourceBarrierCollection& barriers, const std::string& cmdListName);

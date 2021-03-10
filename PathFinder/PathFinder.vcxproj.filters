@@ -357,9 +357,6 @@
     <ClCompile Include="Source\Foundation\Gaussian.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\HardwareAbstractionLayer\LibraryExportsCollection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -607,6 +604,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\UI\RenderPipelineViewModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredShadowsRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2417,9 +2420,6 @@
     <ClInclude Include="Source\Foundation\Gaussian.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ThirdParty\optick\optick.config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3137,6 +3137,12 @@
     <ClInclude Include="Source\UI\RenderPipelineViewController.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredShadowsRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -3689,7 +3695,6 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\BloomComposition.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Constants.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ToneMapping.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\Shading.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Random.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Gaussian.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BaseEngineLayout.hlsl" />
@@ -3726,6 +3731,8 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeBorderUpdate.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeUpdate.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GIDebug.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLighting.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DeferredShadows.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

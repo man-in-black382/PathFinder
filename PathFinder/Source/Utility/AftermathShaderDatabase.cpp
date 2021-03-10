@@ -5,12 +5,12 @@ namespace PathFinder
 
     void AftermathShaderDatabase::AddShader(const HAL::Shader& shader)
     {
-
+        AddCompiledObject({ shader.Binary().Data, shader.Binary().Size }, { shader.PDBBinary().Data, shader.PDBBinary().Size }, shader.DebugName());
     }
 
-    void AftermathShaderDatabase::AddLibrary(const HAL::Library& shader)
+    void AftermathShaderDatabase::AddLibrary(const HAL::Library& library)
     {
-
+        AddCompiledObject({ library.Binary().Data, library.Binary().Size }, { library.PDBBinary().Data, library.PDBBinary().Size }, library.DebugName());
     }
 
     void AftermathShaderDatabase::AddCompiledObject(const Binary& binary, const Binary& pdb, const std::string& debugName)
@@ -35,14 +35,12 @@ namespace PathFinder
         // must maintain a mapping between the shader DebugName (queried from the shader
         // binary with GFSDK_Aftermath_GetShaderDebugName()) and the name of the file
         // containing the corresponding debug data.
-         //Please see the documentation of GFSDK_Aftermath_GpuCrashDump_GenerateJSON() for
+        // Please see the documentation of GFSDK_Aftermath_GpuCrashDump_GenerateJSON() for
         // additional information.
         GFSDK_Aftermath_ShaderDebugName aftermathDebugName;
         strncpy_s(aftermathDebugName.name, debugName.c_str(), debugName.length());
 
-        // Store the data for shader instruction address mapping when decoding GPU crash dumps.
-        // cf. FindSourceShaderDebugData()
-        //mSourceShaderDebugData[aftermathDebugName] = { pdb.Bytecode, pdb.Length };
+        mSourceShaderDebugData[aftermathDebugName] = { pdb.Bytecode, pdb.Length };
     }
 
     // Find a shader bytecode binary by shader hash.

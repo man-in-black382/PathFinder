@@ -27,6 +27,8 @@ namespace PathFinder
 
         inline Foundation::Name ShadingAnalyticOutput{ "Resource_Shading_Analytic_Output" };
 
+        inline Foundation::Name DeferredLightingRayPDFs{ "Resource_Deferred_Lighting_Ray_PDFs" };
+        inline Foundation::Name DeferredLightingRayLightIntersectionPoints{ "Resource_Deferred_Lighting_Ray_Light_Intersection_Points" };
         inline Foundation::Name StochasticUnshadowedShadingOutput{ "Resource_Shading_Stochastic_Unshadowed_Output" };
         inline Foundation::Name StochasticShadowedShadingOutput{ "Resource_Shading_Stochastic_Shadowed_Output" };
         inline Foundation::Name StochasticUnshadowedShadingPreBlurred{ "Resource_Shading_Stochastic_Unshadowed_Pre_Blurred" };
@@ -83,7 +85,8 @@ namespace PathFinder
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
         inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
-        inline Foundation::Name Shading{ "PSO_Shading" };
+        inline Foundation::Name DeferredLighting{ "PSO_Deferred_Lighting" };
+        inline Foundation::Name DeferredShadows{ "PSO_Deferred_Shadows" };
         inline Foundation::Name GIRayTracing{ "PSO_GI_Ray_Tracing" };
         inline Foundation::Name GIProbeUpdate{ "PSO_GI_Probe_Update" };
         inline Foundation::Name GIIrradianceProbeCornerUpdate{ "PSO_GI_Irradiance_Probe_Corner_Update" };
@@ -93,7 +96,6 @@ namespace PathFinder
         inline Foundation::Name GIProbeDebug{ "PSO_GI_Probe_Debug" };
         inline Foundation::Name GIRaysDebug{ "PSO_GI_Rays_Debug" };
         inline Foundation::Name GeometryPicking{ "PSO_GeometryPicking" };
-        inline Foundation::Name DeferredLighting{ "PSO_DeferredLighting" };
         inline Foundation::Name SeparableBlur{ "PSO_SeparableBlur" };
         inline Foundation::Name BloomBlur{ "PSO_BloomBlur" };
         inline Foundation::Name BloomComposition{ "PSO_BloomComposition" };
@@ -122,8 +124,7 @@ namespace PathFinder
         inline Foundation::Name UAVClear{ "UAVClear_Root_Sig" };
         inline Foundation::Name GBufferMeshes{ "GBuffer_Meshes_Root_Sig" };
         inline Foundation::Name GBufferLights{ "GBuffer_Lights_Root_Sig" };
-        inline Foundation::Name DeferredLighting{ "Deferred_Lighting_Root_Sig" };
-        inline Foundation::Name Shading{ "Shading_Root_Sig" };
+        inline Foundation::Name ShadingCommon{ "Shading_Common_Root_Sig" };
         inline Foundation::Name GIRayTracing{ "GI_Ray_Tracing_Root_Sig" };
         inline Foundation::Name ToneMapping{ "Tone_Mapping_Root_Sig" };
         inline Foundation::Name GeometryPicking{ "Geometry_Picking_Root_Sig" };

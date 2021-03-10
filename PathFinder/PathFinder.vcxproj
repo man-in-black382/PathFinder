@@ -315,7 +315,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredShadowsRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\SMAABlendingWeightCalculationRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\SMAAEdgeDetectionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\SMAANeighborhoodBlendingRenderPass.cpp" />
@@ -550,7 +551,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\ShadingRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredShadowsRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\SMAABlendingWeightCalculationRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\SMAAEdgeDetectionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\SMAANeighborhoodBlendingRenderPass.hpp" />
@@ -1469,6 +1471,12 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\DeferredShadows.hlsl">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.5</ShaderModel>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserForwardProjection.hlsl">
       <FileType>Document</FileType>
@@ -2521,7 +2529,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">/Vd %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\Shading.hlsl">
+    <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLighting.hlsl">
       <FileType>Document</FileType>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </EntryPointName>

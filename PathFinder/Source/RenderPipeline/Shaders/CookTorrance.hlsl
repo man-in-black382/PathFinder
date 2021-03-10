@@ -72,6 +72,10 @@ float GeometrySmithGGXCorrelated(float NdotL, float NdotV, float alphaG)
     // G_SmithGGXCorrelated = 1 / (1 + lambda_v + lambda_l); 
     // V_SmithGGXCorrelated = G_SmithGGXCorrelated / (4.0f * NdotL * NdotV); 
 
+    // Prevent NaNs
+    NdotL += 0.001;
+    NdotV += 0.001;
+
     // This is the optimized version 
     float alphaG2 = alphaG * alphaG;
     // Caution: the "NdotL *" and "NdotV *" are explicitely inversed , this is not a mistake. 
@@ -97,14 +101,14 @@ float DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness
     return lightScatter * viewScatter * energyFactor / Pi;
 }
 
-float3 BRDF(float3 N, float3 V, float3 H, float3 L, float roughness, float3 albedo, float metalness, float3 radiance)
+float3 CookTorranceBRDF(float3 N, float3 V, float3 H, float3 L, float roughness, float3 albedo, float metalness, float3 radiance)
 {
     // Based on observations by Disney and adopted by Epic Games
     // the lighting looks more correct squaring the roughness
     // in both the geometry and normal distribution function.
     float roughness2 = roughness * roughness;
 
-    float NdotL = saturate(dot(N, L)); 
+    float NdotL = saturate(dot(N, L));
     float NdotV = saturate(dot(N, V));
     float NdotH = saturate(dot(N, H));
 

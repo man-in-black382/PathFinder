@@ -1,16 +1,16 @@
-#include "ShadingRenderPass.hpp"
+#include "DeferredLightingRenderPass.hpp"
 
 #include <Foundation/Halton.hpp>
 
 namespace PathFinder
 {
 
-    ShadingRenderPass::ShadingRenderPass()
-        : RenderPass("Shading") {} 
+    DeferredLightingRenderPass::DeferredLightingRenderPass()
+        : RenderPass("DeferredLighting") {} 
 
-    void ShadingRenderPass::SetupRootSignatures(RootSignatureCreator* rootSignatureCreator)
+    void DeferredLightingRenderPass::SetupRootSignatures(RootSignatureCreator* rootSignatureCreator)
     {
-        rootSignatureCreator->CreateRootSignature(RootSignatureNames::Shading, [](RootSignatureProxy& signatureProxy)
+        rootSignatureCreator->CreateRootSignature(RootSignatureNames::ShadingCommon, [](RootSignatureProxy& signatureProxy)
         {
             signatureProxy.AddRootConstantsParameter<uint32_t>(0, 0);
             signatureProxy.AddShaderResourceBufferParameter(0, 0); // Scene BVH | t0 - s0
@@ -22,33 +22,20 @@ namespace PathFinder
         });
     }
 
-    void ShadingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void DeferredLightingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-        // We either use RayGeneration shader or compute with Ray Queries.
-        // Right now Ray queries in compute run much faster than a dedicated ray gen shader, 
-        // so we'll stick to queries until (if ever) we need to return to rey gen approach.
-
-        /*  stateCreator->CreateRayTracingState(PSONames::Shading, [this](RayTracingStateProxy& state)
-          {
-              state.RayGenerationShaderFileName = "Shading.hlsl";
-              state.AddMissShader({ "Shading.hlsl" });
-              state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
-              state.GlobalRootSignatureName = RootSignatureNames::Shading;
-              state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
-          });*/
-
-          stateCreator->CreateComputeState(PSONames::Shading, [this](ComputeStateProxy& state)
-          {
-              state.ComputeShaderFileName = "Shading.hlsl";
-              state.RootSignatureName = RootSignatureNames::Shading;
-          });
+        stateCreator->CreateComputeState(PSONames::DeferredLighting, [this](ComputeStateProxy& state)
+        {
+            state.ComputeShaderFileName = "DeferredLighting.hlsl";
+            state.RootSignatureName = RootSignatureNames::ShadingCommon;
+        });
     }
      
-    void ShadingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
+    void DeferredLightingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
         scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingOutput);
+        scheduler->NewTexture(ResourceNames::DeferredLightingRayPDFs, NewTextureProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm });
+        scheduler->NewTexture(ResourceNames::DeferredLightingRayLightIntersectionPoints, NewTextureProperties{ HAL::ColorFormat::RGBA32_Unsigned });
         
         scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
@@ -56,13 +43,11 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
         scheduler->ReadTexture(ResourceNames::RngSeedsCorrelated);
-
-        scheduler->UseRayTracing();
     } 
 
-    void ShadingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
+    void DeferredLightingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::Shading);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::DeferredLighting);
 
         const Scene* scene = context->GetContent()->GetScene();
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
@@ -79,8 +64,8 @@ namespace PathFinder
         cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.AnalyticOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingAnalyticOutput);
-        cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingOutput);
-        cbContent.StochasticUnshadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingOutput);
+        cbContent.ShadowRayPDFsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingRayPDFs);
+        cbContent.ShadowRayIntersectionPointsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingRayLightIntersectionPoints);
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
         cbContent.RngSeedsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::RngSeedsCorrelated);
         cbContent.FrameNumber = context->FrameNumber();
@@ -104,7 +89,6 @@ namespace PathFinder
         if (materials) context->GetCommandRecorder()->BindExternalBuffer(*materials, 2, 0, HAL::ShaderRegister::ShaderResource);
         
         context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 8, 8 });
-        //context->GetCommandRecorder()->DispatchRays(context->GetDefaultRenderSurfaceDesc().Dimensions());
     }
 
 }

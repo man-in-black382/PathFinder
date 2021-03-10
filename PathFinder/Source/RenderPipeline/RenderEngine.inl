@@ -175,12 +175,14 @@ namespace PathFinder
         // Update render device with current frame back buffer
         mRenderDevice->SetBackBuffer(mBackBuffers[mCurrentBackBufferIndex].get());
 
-        UploadAssets();
-        BuildAccelerationStructures();
-
         // Render
         mRenderDevice->PrepareForGraphExecution();
         RecordCommandLists();
+        // Record uploads after constant buffers for passes has been modified by render passes
+        PerformPreRenderUploads();
+        // BVH build must be recorded after uploads
+        BuildAccelerationStructures();
+        // Finally, execute command lists
         mRenderDevice->ExecuteRenderGraph();
 
         // Put the picture on the screen
@@ -249,7 +251,7 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
-    void RenderEngine<ContentMediator>::UploadAssets()
+    void RenderEngine<ContentMediator>::PerformPreRenderUploads()
     {
         mRenderDevice->AllocateUploadCommandList();
         RecordUploadRequests(*mRenderDevice->PreRenderUploadsCommandList(), *mResourceStateTracker, *mCopyRequestManager, true);

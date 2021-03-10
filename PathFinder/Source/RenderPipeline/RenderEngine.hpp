@@ -75,7 +75,7 @@ namespace PathFinder
         void NotifyStartFrame(uint64_t newFrameNumber);
         void NotifyEndFrame(uint64_t completedFrameNumber);
         void MoveToNextFrame();
-        void UploadAssets();
+        void PerformPreRenderUploads();
         void BuildAccelerationStructures();
         void RecordCommandLists();
         void ScheduleFrame();

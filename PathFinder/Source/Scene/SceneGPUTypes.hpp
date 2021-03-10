@@ -42,7 +42,7 @@ namespace PathFinder
         uint32_t LTC_LUT_Terms_Diffuse_Index;
         uint32_t LTC_LUT_TextureSize;
         uint32_t SamplerIndex;
-        uint32_t _Pad0;
+        uint32_t HasNormalMap;
     };
 
     struct GPULightTableEntry

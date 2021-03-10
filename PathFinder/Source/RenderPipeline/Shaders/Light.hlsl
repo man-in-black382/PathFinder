@@ -141,7 +141,7 @@ struct ShereLightSolidAngleSamplingInputs
 LightSample ZeroLightSample()
 {
     LightSample lightSample;
-    lightSample.IntersectionPoint = 0.xxx;
+    lightSample.IntersectionPoint = 0.0;
     lightSample.PDF = -1.0;
     return lightSample;
 }

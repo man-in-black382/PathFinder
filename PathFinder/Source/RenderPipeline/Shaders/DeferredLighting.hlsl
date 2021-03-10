@@ -1,7 +1,6 @@
-#ifndef _Shading__
-#define _Shading__
+#ifndef _DeferredLighting__
+#define _DeferredLighting__
 
-#include "Exposure.hlsl"
 #include "Mesh.hlsl"
 #include "GBuffer.hlsl"
 
@@ -12,8 +11,8 @@ struct PassData
     // 16 byte boundary
     uint BlueNoiseTexIdx;
     uint AnalyticOutputTexIdx;
-    uint StochasticShadowedOutputTexIdx;
-    uint StochasticUnshadowedOutputTexIdx;
+    uint ShadowRayPDFsTexIdx;
+    uint ShadowRayIntersectionPointsTexIdx;
     // 16 byte boundary
     uint2 BlueNoiseTextureSize;
     uint RngSeedsTexIdx;
@@ -39,8 +38,16 @@ ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, 
     randomSequences.Halton = PassDataCB.Halton;
 
     float3 surfacePosition = NDCDepthToWorldPosition(depth, uv, FrameDataCB.CurrentFrameCamera);
+    LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
+    float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
+    LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
+    ShadingResult shadingResult = ZeroShadingResult();
 
-    return EvaluateStandardGBufferLighting(gBuffer, material, surfacePosition, FrameDataCB.CurrentFrameCamera.Position.xyz, randomSequences);
+    ShadeWithSphericalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
+    ShadeWithRectangularLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
+    ShadeWithEllipticalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
+
+    return shadingResult;
 }
 
 ShadingResult HandleEmissiveGBufferLighting(GBufferTexturePack gBufferTextures, uint2 pixelIndex)
@@ -50,24 +57,18 @@ ShadingResult HandleEmissiveGBufferLighting(GBufferTexturePack gBufferTextures, 
 
     Light light = LightTable[gBuffer.LightIndex];
 
-    ShadingResult result = ZeroShadingResult();
-    result.AnalyticUnshadowedOutgoingLuminance = light.Luminance * light.Color.rgb;
-    return result;
+    ShadingResult shadingResult = ZeroShadingResult();
+    shadingResult.AnalyticUnshadowedOutgoingLuminance = light.Luminance * light.Color.rgb;
+
+    return shadingResult;
 }
 
 void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
 {
-    RWTexture2D<float4> analyticOutput = RW_Float4_Textures2D[PassDataCB.AnalyticOutputTexIdx];
-    RWTexture2D<float4> stochasticUnshadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTexIdx];
-    RWTexture2D<float4> stochasticShadowedOutput = RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTexIdx];
-
-    analyticOutput[pixelIndex] = float4(shadingResult.AnalyticUnshadowedOutgoingLuminance, 1.0);
-    stochasticShadowedOutput[pixelIndex] = float4(shadingResult.StochasticShadowedOutgoingLuminance, 1.0);
-    stochasticUnshadowedOutput[pixelIndex] = float4(shadingResult.StochasticUnshadowedOutgoingLuminance, 1.0);
+    RW_Float4_Textures2D[PassDataCB.AnalyticOutputTexIdx][pixelIndex].rgb = shadingResult.AnalyticUnshadowedOutgoingLuminance;
+    RW_Float4_Textures2D[PassDataCB.ShadowRayPDFsTexIdx][pixelIndex] = shadingResult.RayPDFs;
+    RW_UInt4_Textures2D[PassDataCB.ShadowRayIntersectionPointsTexIdx][pixelIndex] = shadingResult.RayLightIntersectionData;
 }
-
-//[shader("raygeneration")]
-//void RayGeneration()
 
 [numthreads(8, 8, 1)]
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_GroupID)
@@ -80,21 +81,14 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_Gro
     gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
     gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTexIdx];
 
-    //uint2 pixelIndex = DispatchRaysIndex().xy;
-    //float2 currenPixelLocation = pixelIndex + float2(0.5f, 0.5f);
-    //float2 pixelCenterUV = currenPixelLocation / DispatchRaysDimensions().xy;
-
     uint2 pixelIndex = dispatchThreadID.xy;
     float2 pixelCenterUV = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
-
     float depth = gBufferTextures.DepthStencil.Load(uint3(pixelIndex, 0)).r;
 
-    ShadingResult shadingResult = ZeroShadingResult();
-
-    // Skip empty and emissive areas
+    // Skip empty areas
     if (depth >= 1.0)
     {
-        OutputShadingResult(shadingResult, pixelIndex);
+        OutputShadingResult(ZeroShadingResult(), pixelIndex);
         return;
     }
 
@@ -102,16 +96,9 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_Gro
 
     switch (gBufferType)
     {
-    case GBufferTypeStandard:
-        shadingResult = HandleStandardGBufferLighting(gBufferTextures, pixelCenterUV, pixelIndex, depth);
-        break;
-
-    case GBufferTypeEmissive:
-        shadingResult = HandleEmissiveGBufferLighting(gBufferTextures, pixelIndex);
-        break;
+    case GBufferTypeStandard: OutputShadingResult(HandleStandardGBufferLighting(gBufferTextures, pixelCenterUV, pixelIndex, depth), pixelIndex); break;
+    case GBufferTypeEmissive: OutputShadingResult(HandleEmissiveGBufferLighting(gBufferTextures, pixelIndex), pixelIndex); break;
     }
-
-    OutputShadingResult(shadingResult, pixelIndex);
 }
 
 #endif

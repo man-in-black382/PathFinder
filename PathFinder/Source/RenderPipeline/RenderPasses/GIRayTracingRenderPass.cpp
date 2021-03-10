@@ -28,7 +28,8 @@ namespace PathFinder
             //state.AddMissShader({ "GIProbeRayTracing.hlsl" }); // At the moment shadows are done through ray queries
             state.AddMissShader({ "GIProbeRayTracing.hlsl", "ProbeRayMiss" });
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
-            state.GlobalRootSignatureName = RootSignatureNames::Shading; // Reuse root sig from shading pass
+            state.GlobalRootSignatureName = RootSignatureNames::ShadingCommon
+                ; // Reuse root sig from shading pass
             state.PipelineConfig = HAL::RayTracingPipelineConfig{ 2 };
         });
     }
@@ -48,7 +49,7 @@ namespace PathFinder
 
     void GIRayTracingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIRayTracing);
+       /* context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIRayTracing);
 
         const Scene* scene = context->GetContent()->GetScene();
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
@@ -88,7 +89,7 @@ namespace PathFinder
         if (indices) context->GetCommandRecorder()->BindExternalBuffer(*indices, 4, 0, HAL::ShaderRegister::ShaderResource);
         if (meshInstances) context->GetCommandRecorder()->BindExternalBuffer(*meshInstances, 5, 0, HAL::ShaderRegister::ShaderResource);
 
-        context->GetCommandRecorder()->DispatchRays(context->GetContent()->GetSettings()->GlobalIlluminationSettings.GetTotalRayCount());
+        context->GetCommandRecorder()->DispatchRays(context->GetContent()->GetSettings()->GlobalIlluminationSettings.GetTotalRayCount());*/
     }
 
 }

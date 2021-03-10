@@ -15,7 +15,8 @@
 #include "RenderPipeline/RenderPasses/GBufferRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BackBufferOutputPass.hpp"
 #include "RenderPipeline/RenderPasses/RngSeedGenerationRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/ShadingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DeferredLightingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DeferredShadowsRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserPreBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserMipGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
@@ -83,7 +84,8 @@ namespace PathFinder
         CommonSetupRenderPass mCommonSetupPass;
         GBufferRenderPass mGBufferPass;
         RngSeedGenerationRenderPass mRgnSeedGenerationPass;
-        ShadingRenderPass mShadingPass;
+        DeferredLightingRenderPass mDeferredLightingPass;
+        DeferredShadowsRenderPass mDeferredShadowsPass;
         DenoiserPreBlurRenderPass mDenoiserPreBlurPass;
         DenoiserMipGenerationRenderPass mDenoiserMipGenerationPass;
         DenoiserReprojectionRenderPass mDenoiserReprojectionPass;

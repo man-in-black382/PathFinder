@@ -143,7 +143,6 @@ namespace PathFinder
         ExecuteBVHBuildCommands();
 
         RecordNonWorkerCommandLists();
-        UploadPassConstants();
         TraverseAndExecuteFrameBlueprint();
     }
 
@@ -683,18 +682,6 @@ namespace PathFinder
         for (auto queueIdx = 0; queueIdx < mRenderPassGraph->DetectedQueueCount(); ++queueIdx)
         {
             flushBatch(GetCommandQueue(queueIdx), queueIdx);
-        }
-    }
-
-    void RenderDevice::UploadPassConstants()
-    {
-        for (PassHelpers& passHelpers : mPassHelpers)
-        {
-            if (Memory::Buffer* passConstantBuffer = passHelpers.ResourceStoragePassData->PassConstantBuffer.get())
-            {
-                const auto& bytes = passHelpers.ResourceStoragePassData->PassConstantData;
-                passConstantBuffer->Write(bytes.data(), 0, bytes.size());
-            }
         }
     }
 

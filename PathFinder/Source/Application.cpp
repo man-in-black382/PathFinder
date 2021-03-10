@@ -156,7 +156,8 @@ namespace PathFinder
         mRenderEngine->AddRenderPass(&mCommonSetupPass);
         mRenderEngine->AddRenderPass(&mGBufferPass);
         mRenderEngine->AddRenderPass(&mRgnSeedGenerationPass);
-        mRenderEngine->AddRenderPass(&mShadingPass);
+        mRenderEngine->AddRenderPass(&mDeferredLightingPass);
+        mRenderEngine->AddRenderPass(&mDeferredShadowsPass);
         mRenderEngine->AddRenderPass(&mDenoiserPreBlurPass);
         mRenderEngine->AddRenderPass(&mDenoiserMipGenerationPass);
         mRenderEngine->AddRenderPass(&mDenoiserReprojectionPass);

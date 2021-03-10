@@ -97,12 +97,12 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     float3 probePosition = ProbePositionFrom3DIndex(probe3DIndex, PassDataCB.ProbeField);
     float3 surfacePosition = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 
-    ShadingResult shadingResult = EvaluateStandardGBufferLighting(gBuffer, material, surfacePosition, probePosition, randomSequences);
+    //ShadingResult shadingResult = EvaluateStandardGBufferLighting(gBuffer, material, surfacePosition, probePosition, randomSequences);
 
-    RWTexture2D<float4> rayHitInfoOutputTexture = RW_Float4_Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx];
-    uint2 outputTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
+    //RWTexture2D<float4> rayHitInfoOutputTexture = RW_Float4_Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx];
+    //uint2 outputTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
 
-    rayHitInfoOutputTexture[outputTexelIdx] = float4(shadingResult.StochasticShadowedOutgoingLuminance, RayTCurrent());
+    //rayHitInfoOutputTexture[outputTexelIdx] = float4(shadingResult.StochasticShadowedOutgoingLuminance, RayTCurrent());
 }
 
 [shader("closesthit")]

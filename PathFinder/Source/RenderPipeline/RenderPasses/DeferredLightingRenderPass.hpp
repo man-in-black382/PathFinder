@@ -18,19 +18,19 @@ namespace PathFinder
         // 16 byte boundary
         uint32_t BlueNoiseTexIdx;
         uint32_t AnalyticOutputTexIdx;
-        uint32_t StochasticShadowedOutputTexIdx;
-        uint32_t StochasticUnshadowedOutputTexIdx;
+        uint32_t ShadowRayPDFsTexIdx;
+        uint32_t ShadowRayIntersectionPointsTexIdx;
         // 16 byte boundary
         glm::uvec2 BlueNoiseTextureSize;
         uint32_t RngSeedsTexIdx;
         uint32_t FrameNumber;
     };
 
-    class ShadingRenderPass : public RenderPass<RenderPassContentMediator>
+    class DeferredLightingRenderPass : public RenderPass<RenderPassContentMediator>
     {
     public:
-        ShadingRenderPass();
-        ~ShadingRenderPass() = default;
+        DeferredLightingRenderPass();
+        ~DeferredLightingRenderPass() = default;
 
         virtual void SetupRootSignatures(RootSignatureCreator* rootSignatureCreator) override;
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;

@@ -11,7 +11,7 @@ namespace PathFinder
         if (!mPerFrameRootConstantsBuffer || mPerFrameRootConstantsBuffer->Capacity<Constants>(Alignment) < 1)
         {
             auto properties = HAL::BufferProperties::Create<Constants>(1, Alignment, HAL::ResourceState::ConstantBuffer);
-            mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::AccessStrategy::DirectUpload);
+            mPerFrameRootConstantsBuffer = mResourceProducer->NewBuffer(properties);
             mPerFrameRootConstantsBuffer->SetDebugName("Frame Constant Buffer");
         }
 
@@ -62,16 +62,14 @@ namespace PathFinder
             uint64_t grownBufferSize = Foundation::MemoryUtils::Align(newBufferSize, GrowAlignment);
             auto properties = HAL::BufferProperties::Create<uint8_t>(grownBufferSize, 1, HAL::ResourceState::ConstantBuffer);
 
-            passData->PassConstantBuffer = mResourceProducer->NewBuffer(properties, Memory::GPUResource::AccessStrategy::DirectUpload);
+            passData->PassConstantBuffer = mResourceProducer->NewBuffer(properties);
             passData->PassConstantBuffer->SetDebugName(passNode.PassMetadata().Name.ToString() + " Constant Buffer");
-            passData->PassConstantData.resize(grownBufferSize);
         }
 
-        passData->PassConstantBuffer->RequestWrite();
-
-        // Store data in CPU storage 
         const uint8_t* data = reinterpret_cast<const uint8_t*>(&constants);
-        std::copy(data, data + sizeof(Constants), passData->PassConstantData.begin() + passData->PassConstantBufferMemoryOffset);
+
+        passData->PassConstantBuffer->RequestWrite();
+        passData->PassConstantBuffer->Write(data, passData->PassConstantBufferMemoryOffset, sizeof(Constants));
     }
 
 }

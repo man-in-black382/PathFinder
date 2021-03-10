@@ -112,7 +112,8 @@ namespace PathFinder
                 material.LTC_LUT_Terms_Diffuse->GetSRDescriptor()->IndexInHeapRange(),
                 lut0SpecularSize.Width,
                 // Right now we use wrap mode from diffuse albedo and apply it for all textures in material, which should be sufficient.
-                getSamplerIndex(material.DiffuseAlbedoMap.Wrapping) 
+                getSamplerIndex(material.DiffuseAlbedoMap.Wrapping),
+                material.NormalMap.Texture->Properties().Dimensions.Width > 1
             };
 
             material.GPUMaterialTableIndex = materialIndex;

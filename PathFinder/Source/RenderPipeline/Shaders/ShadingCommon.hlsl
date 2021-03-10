@@ -25,22 +25,11 @@ StructuredBuffer<Vertex1P1N1UV1T1BT> UnifiedVertexBuffer : register(t3);
 StructuredBuffer<uint> UnifiedIndexBuffer : register(t4);
 StructuredBuffer<MeshInstance> MeshInstanceTable : register(t5);
 
-struct RTData
-{
-    // 4 components for 4 ray-light pairs
-    float4x3 BRDFResponses;
-    uint4 RayLightIntersectionData;
-    float4 ShadowFactors;
-};
-
 struct ShadingResult
 {
-#ifndef SHADING_STOCHASTIC_ONLY
     float3 AnalyticUnshadowedOutgoingLuminance;
-    float3 StochasticUnshadowedOutgoingLuminance;
-#endif // !SHADING_STOCHASTIC_ONLY
-
-    float3 StochasticShadowedOutgoingLuminance;
+    uint4 RayLightIntersectionData;
+    float4 RayPDFs;
 };
 
 struct RandomSequences
@@ -53,50 +42,25 @@ struct RandomSequences
 // We should not bother with more to make space for other rendering workloads.
 static const uint TotalMaxRayCount = 4;
 
-RTData ZeroRTData()
-{
-    RTData data;
-    data.BRDFResponses = 0.0;
-    data.RayLightIntersectionData = 0.0;
-    data.ShadowFactors = 1.0;
-    return data;
-}
-
 //--------------------------------------------------------------------------------------------------
 // Functions to pack and unpack data necessary for shadows ray tracing pass.
 // Avoids using arrays and allows us to pack everything into single 4-component registers to avoid 
 // register spilling.
 //--------------------------------------------------------------------------------------------------
-void SetStochasticBRDFMagnitude(inout RTData rtData, float3 brdf, uint rayLightPairIndex)
-{
-    rtData.BRDFResponses[rayLightPairIndex].rgb = brdf;
-}
-
-float3 GetStochasticBRDFMagnitude(RTData rtData, uint rayLightPairIndex)
-{
-    return rtData.BRDFResponses[rayLightPairIndex].rgb;
-}
-
-bool IsStochasticBRDFMagnitudeNonZero(RTData rtData, uint rayLightPairIndex)
-{
-    return any(rtData.BRDFResponses[rayLightPairIndex]) > 0.0;
-}
-
-void SetRaySphericalLightIntersectionPoint(inout RTData rtData, Light light, float3 interectionPoint, uint rayLightPairIndex)
+uint PackRaySphericalLightIntersectionPoint(Light light, float3 interectionPoint)
 {
     // For spherical lights we encode a normalized direction from light's center to intersection point
     float3 lightToIntersection = normalize(interectionPoint - light.Position.xyz);
-
-    rtData.RayLightIntersectionData[rayLightPairIndex] = OctEncodePack(lightToIntersection);
+    return OctEncodePack(lightToIntersection);
 }
 
-float3 GetRaySphericalLightIntersectionPoint(RTData rtData, Light light, uint rayLightPairIndex)
+float3 UnpackRaySphericalLightIntersectionPoint(uint packed, Light light)
 {
-    float3 lightToIntersection = OctUnpackDecode(rtData.RayLightIntersectionData[rayLightPairIndex]);
+    float3 lightToIntersection = OctUnpackDecode(packed);
     return lightToIntersection * light.Width * 0.5 + light.Position.xyz;
 }
 
-void SetRayRectangularLightIntersectionPoint(inout RTData rtData, Light light, float3x3 lightRotation, float3 interectionPoint, uint rayLightPairIndex)
+uint PackRayRectangularLightIntersectionPoint(Light light, float3x3 lightRotation, float3 interectionPoint)
 {
     // Translate point to light's local coordinate system
     float3 localPoint = interectionPoint - light.Position.xyz;
@@ -105,12 +69,12 @@ void SetRayRectangularLightIntersectionPoint(inout RTData rtData, Light light, f
     // Normalize xy to get uv of the intersection point
     float2 uv = zAlighnedPoint.xy / float2(light.Width, light.Height) + 0.5;
 
-    rtData.RayLightIntersectionData[rayLightPairIndex] = PackUnorm2x16(uv.x, uv.y, 1.0);
+    return PackUnorm2x16(uv.x, uv.y, 1.0);
 }
 
-float3 GetRayRectangularLightIntersectionPoint(RTData rtData, Light light, float3x3 lightRotation, uint rayLightPairIndex)
+float3 UnpackRayRectangularLightIntersectionPoint(uint packed, Light light, float3x3 lightRotation)
 {
-    float2 uv = UnpackUnorm2x16(rtData.RayLightIntersectionData[rayLightPairIndex], 1.0);
+    float2 uv = UnpackUnorm2x16(packed, 1.0);
     float2 localXY = (uv - 0.5) * float2(light.Width, light.Height);
     float3 localRotated = mul(lightRotation, float3(localXY, 0.0));
     float3 worldPoint = localRotated + light.Position.xyz;
@@ -118,15 +82,15 @@ float3 GetRayRectangularLightIntersectionPoint(RTData rtData, Light light, float
     return worldPoint;
 }
 
-void SetRayDiskLightIntersectionPoint(inout RTData rtData, Light light, float3x3 lightRotation, float3 interectionPoint, uint rayLightPairIndex)
+uint PackRayDiskLightIntersectionPoint(Light light, float3x3 lightRotation, float3 interectionPoint)
 {
     // Code for rect light can be reused here
-    SetRayRectangularLightIntersectionPoint(rtData, light, lightRotation, interectionPoint, rayLightPairIndex);
+    return PackRayRectangularLightIntersectionPoint(light, lightRotation, interectionPoint);
 }
 
-float3 GetRayDiskLightIntersectionPoint(RTData rtData, Light light, float3x3 lightRotation, uint rayLightPairIndex)
+float3 UnpackRayDiskLightIntersectionPoint(uint packed, Light light, float3x3 lightRotation)
 {
-    return GetRayRectangularLightIntersectionPoint(rtData, light, lightRotation, rayLightPairIndex);
+    return UnpackRayRectangularLightIntersectionPoint(packed, light, lightRotation);
 }
 
 LightTablePartitionInfo DecompressLightPartitionInfo()
@@ -158,13 +122,9 @@ LightTablePartitionInfo DecompressLightPartitionInfo()
 ShadingResult ZeroShadingResult()
 {
     ShadingResult result;
-    result.StochasticShadowedOutgoingLuminance = 0;
-
-#ifndef SHADING_STOCHASTIC_ONLY
-    result.StochasticUnshadowedOutgoingLuminance = 0;
-    result.AnalyticUnshadowedOutgoingLuminance = 0;
-#endif
-
+    result.AnalyticUnshadowedOutgoingLuminance = 0.0;
+    result.RayLightIntersectionData = 0;
+    result.RayPDFs = 0.0;
     return result;
 }
 
@@ -279,6 +239,19 @@ LTCTerms FetchLTCTerms(GBufferStandard gBuffer, Material material, float3 viewDi
     return terms;
 }
 
+float MIS_PDF(LTCTerms ltcTerms, LTCAnalyticEvaluationResult directLightingEvaluationResult, LightSample lightSample, float3 surfacePosition)
+{
+    // PDF is expected to be negative when the sample vector missed the light
+    if (lightSample.PDF < 0.0)
+        return 0.0;
+
+    float3 surfaceToLightDir = normalize(lightSample.IntersectionPoint.xyz - surfacePosition);
+    LTCSample brdfRayLightingEvaluationResult = SampleLTC(ltcTerms, surfaceToLightDir, directLightingEvaluationResult.DiffuseProbability);
+    float misPDF = lerp(lightSample.PDF, brdfRayLightingEvaluationResult.PDF, directLightingEvaluationResult.BRDFProbability);
+
+    return misPDF;
+}
+
 float3 SampleBRDF(LTCTerms ltcTerms, LTCAnalyticEvaluationResult directLightingEvaluationResult, LightSample lightSample, float3 surfacePosition)
 {
     // PDF is expected to be negative when the sample vector missed the light
@@ -307,7 +280,6 @@ void ShadeWithSphericalLights(
     RandomSequences randomSequences,
     float3 viewDirection,
     float3 surfacePosition,
-    inout RTData rtData,
     inout ShadingResult shadingResult)
 {
     uint raysPerLight = RaysPerLight(lightPartitionInfo);
@@ -321,6 +293,8 @@ void ShadeWithSphericalLights(
         LightPoints lightPoints = ComputeLightPoints(light, surfacePosition);
         ShereLightSolidAngleSamplingInputs samplingInputs = ComputeSphericalLightSamplingInputs(light, surfacePosition);
         LTCAnalyticEvaluationResult directLightingEvaluationResult = EvaluateDirectSphericalLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
+
+        shadingResult.AnalyticUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance.rgb;
 
         [unroll]
         for (uint rayIdx = 0; rayIdx < raysPerLight; ++rayIdx)
@@ -340,17 +314,11 @@ void ShadeWithSphericalLights(
                 SphericalLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
             LightSample lightSample = SampleSphericalLight(light, samplingInputs, sampleVector);
-
-            float3 brdf = SampleBRDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
-
             uint rayLightPairIndex = lightTableOffset * raysPerLight + rayIdx;
-            SetStochasticBRDFMagnitude(rtData, brdf, rayLightPairIndex);
-            SetRaySphericalLightIntersectionPoint(rtData, light, lightSample.IntersectionPoint, rayLightPairIndex);
-        }
 
-#ifndef SHADING_STOCHASTIC_ONLY
-        shadingResult.AnalyticUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance;
-#endif
+            shadingResult.RayPDFs[rayLightPairIndex] = MIS_PDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
+            shadingResult.RayLightIntersectionData[rayLightPairIndex] = PackRayRectangularLightIntersectionPoint(light, lightPoints.LightRotation, lightSample.IntersectionPoint);
+        }
     }
 }
 
@@ -361,7 +329,6 @@ void ShadeWithRectangularLights(
     RandomSequences randomSequences,
     float3 viewDirection,
     float3 surfacePosition,
-    inout RTData rtData,
     inout ShadingResult shadingResult)
 {
     uint raysPerLight = RaysPerLight(lightPartitionInfo);
@@ -376,6 +343,8 @@ void ShadeWithRectangularLights(
         RectLightSolidAngleSamplingInputs samplingInputs = ComputeRectLightSolidAngleSamplingInputs(lightPoints, surfacePosition);
         LTCAnalyticEvaluationResult directLightingEvaluationResult = EvaluateDirectRectangularLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
 
+        shadingResult.AnalyticUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance.rgb;
+
         [unroll]
         for (uint rayIdx = 0; rayIdx < raysPerLight; ++rayIdx)
         {
@@ -389,16 +358,11 @@ void ShadeWithRectangularLights(
                 RectangularLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
             LightSample lightSample = SampleRectangularLight(light, samplingInputs, lightPoints, sampleVector);
-            float3 brdf = SampleBRDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
-
             uint rayLightPairIndex = lightTableOffset * raysPerLight + rayIdx;
-            SetStochasticBRDFMagnitude(rtData, brdf, rayLightPairIndex);
-            SetRayRectangularLightIntersectionPoint(rtData, light, lightPoints.LightRotation, lightSample.IntersectionPoint, rayLightPairIndex);
-        }
 
-#ifndef SHADING_STOCHASTIC_ONLY
-        shadingResult.AnalyticUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance;
-#endif
+            shadingResult.RayPDFs[rayLightPairIndex] = MIS_PDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
+            shadingResult.RayLightIntersectionData[rayLightPairIndex] = PackRayRectangularLightIntersectionPoint(light, lightPoints.LightRotation, lightSample.IntersectionPoint);
+        }
     }
 }
 
@@ -409,7 +373,6 @@ void ShadeWithEllipticalLights(
     RandomSequences randomSequences,
     float3 viewDirection,
     float3 surfacePosition,
-    inout RTData rtData,
     inout ShadingResult shadingResult)
 {
     uint raysPerLight = RaysPerLight(lightPartitionInfo);
@@ -428,6 +391,8 @@ void ShadeWithEllipticalLights(
         RectLightSolidAngleSamplingInputs samplingInputs = ComputeRectLightSolidAngleSamplingInputs(lightPoints, surfacePosition);
         LTCAnalyticEvaluationResult directLightingEvaluationResult = EvaluateDirectRectangularLighting(light, lightPoints, gBuffer, ltcTerms, viewDirection, surfacePosition);
 
+        shadingResult.AnalyticUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance.rgb;
+
         [unroll]
         for (uint rayIdx = 0; rayIdx < raysPerLight; ++rayIdx)
         {
@@ -441,124 +406,98 @@ void ShadeWithEllipticalLights(
                 RectangularLightSampleVector(samplingInputs, randomNumbers.x, randomNumbers.y);
 
             LightSample lightSample = SampleEllipticalLight(light, samplingInputs, lightPoints, sampleVector);
-            float3 brdf = SampleBRDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
-
             uint rayLightPairIndex = lightTableOffset * raysPerLight + rayIdx;
-            SetStochasticBRDFMagnitude(rtData, brdf, rayLightPairIndex);
-            SetRayRectangularLightIntersectionPoint(rtData, light, lightPoints.LightRotation, lightSample.IntersectionPoint, rayLightPairIndex);
-        }
 
-#ifndef SHADING_STOCHASTIC_ONLY
-        shadingResult.AnalyticUnshadowedOutgoingLuminance += directLightingEvaluationResult.OutgoingLuminance;
-#endif
+            shadingResult.RayPDFs[rayLightPairIndex] = MIS_PDF(ltcTerms, directLightingEvaluationResult, lightSample, surfacePosition) / raysPerLight;
+            shadingResult.RayLightIntersectionData[rayLightPairIndex] = PackRayRectangularLightIntersectionPoint(light, lightPoints.LightRotation, lightSample.IntersectionPoint);
+        }
     }
 }
 
-float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, float3 surfacePosition)
-{
-    // Shadow values for hard coded maximum of 4 lights
-    float4 shadowValues = 0.0;
-    uint raysPerLight = RaysPerLight(lightPartitionInfo);
+//float4 TraceShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, float3 surfacePosition)
+//{
+//    // Shadow values for hard coded maximum of 4 lights
+//    float4 shadowValues = 1.0;
+//    //uint raysPerLight = RaysPerLight(lightPartitionInfo);
+//
+//    //const uint RayFlags = 
+//    //    RAY_FLAG_CULL_BACK_FACING_TRIANGLES |
+//    //    RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
+//    //    RAY_FLAG_FORCE_OPAQUE |            // Skip any hit shaders
+//    //    RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
+//
+//    //RayQuery<RayFlags> rayQuery;
+//
+//    //[unroll]
+//    //for (uint i = 0; i < TotalMaxRayCount; ++i)
+//    //{
+//    //    if (!IsStochasticBRDFMagnitudeNonZero(rtData, i))
+//    //    {
+//    //        continue;
+//    //    }
+//
+//    //    uint lightIndex = i / raysPerLight;
+//    //    Light light = LightTable[lightIndex];
+//    //    float3 lightIntersectionPoint = 0.0;
+//    //    float3x3 lightRotation = RotationMatrix3x3(light.Orientation.xyz);
+//
+//    //    [branch]
+//    //    switch (light.LightType)
+//    //    {
+//    //    case LightTypeSphere:
+//    //        lightIntersectionPoint = GetRaySphericalLightIntersectionPoint(rtData, light, i);
+//    //        break;
+//    //    case LightTypeRectangle:
+//    //        lightIntersectionPoint = GetRayRectangularLightIntersectionPoint(rtData, light, lightRotation, i);
+//    //        break;
+//    //    case LightTypeEllipse:
+//    //        lightIntersectionPoint = GetRayDiskLightIntersectionPoint(rtData, light, lightRotation, i);
+//    //        break;
+//    //    }
+//
+//    //    float3 lightToSurface = surfacePosition - lightIntersectionPoint;
+//    //    float vectorLength = length(lightToSurface);
+//    //    float tmax = vectorLength - 1e-03;
+//    //    float tmin = 1e-03;
+//
+//    //    RayDesc dxrRay;
+//    //    dxrRay.Origin = lightIntersectionPoint;
+//    //    dxrRay.Direction = lightToSurface / vectorLength;
+//    //    dxrRay.TMin = tmin;
+//    //    dxrRay.TMax = tmax;
+//
+//    //    rayQuery.TraceRayInline(SceneBVH, RayFlags, EntityMaskMeshInstance, dxrRay);
+//    //    rayQuery.Proceed();
+//
+//    //    shadowValues[i] = rayQuery.CommittedStatus() != COMMITTED_TRIANGLE_HIT ? 1.0 : 0.0;
+//    //}
+//
+//    return shadowValues;
+//}
 
-    const uint RayFlags = 
-        RAY_FLAG_CULL_BACK_FACING_TRIANGLES |
-        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
-        RAY_FLAG_FORCE_OPAQUE |            // Skip any hit shaders
-        RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
-
-    RayQuery<RayFlags> rayQuery;
-
-    [unroll]
-    for (uint i = 0; i < TotalMaxRayCount; ++i)
-    {
-        if (!IsStochasticBRDFMagnitudeNonZero(rtData, i))
-        {
-            continue;
-        }
-
-        uint lightIndex = i / raysPerLight;
-        Light light = LightTable[lightIndex];
-        float3 lightIntersectionPoint = 0.0;
-        float3x3 lightRotation = RotationMatrix3x3(light.Orientation.xyz);
-
-        [branch]
-        switch (light.LightType)
-        {
-        case LightTypeSphere:
-            lightIntersectionPoint = GetRaySphericalLightIntersectionPoint(rtData, light, i);
-            break;
-        case LightTypeRectangle:
-            lightIntersectionPoint = GetRayRectangularLightIntersectionPoint(rtData, light, lightRotation, i);
-            break;
-        case LightTypeEllipse:
-            lightIntersectionPoint = GetRayDiskLightIntersectionPoint(rtData, light, lightRotation, i);
-            break;
-        }
-
-        float3 lightToSurface = surfacePosition - lightIntersectionPoint;
-        float vectorLength = length(lightToSurface);
-        float tmax = vectorLength - 1e-03;
-        float tmin = 1e-03;
-
-        RayDesc dxrRay;
-        dxrRay.Origin = lightIntersectionPoint;
-        dxrRay.Direction = lightToSurface / vectorLength;
-        dxrRay.TMin = tmin;
-        dxrRay.TMax = tmax;
-
-        rayQuery.TraceRayInline(SceneBVH, RayFlags, EntityMaskMeshInstance, dxrRay);
-        rayQuery.Proceed();
-
-        shadowValues[i] = rayQuery.CommittedStatus() != COMMITTED_TRIANGLE_HIT ? 1.0 : 0.0;
-    }
-
-    return shadowValues;
-}
-
-void CombineStochasticLightingAndShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, inout ShadingResult shadingResult)
-{
-    uint raysPerLight = RaysPerLight(lightPartitionInfo);
-
-    [unroll]
-    for (uint i = 0; i < TotalMaxRayCount; ++i)
-    {
-        if (!IsStochasticBRDFMagnitudeNonZero(rtData, i))
-        {
-            continue;
-        }
-
-        uint lightIndex = i / raysPerLight;
-        Light light = LightTable[lightIndex];
-        float3 brdf = GetStochasticBRDFMagnitude(rtData, i);
-        float3 unshadowed = brdf * light.Color.rgb * light.Luminance;
-
-        shadingResult.StochasticShadowedOutgoingLuminance += unshadowed * rtData.ShadowFactors[i];
-
-#ifndef SHADING_STOCHASTIC_ONLY
-        shadingResult.StochasticUnshadowedOutgoingLuminance += unshadowed;
-#endif
-    }
-}
-
-ShadingResult EvaluateStandardGBufferLighting(GBufferStandard gBuffer, Material material, float3 surfacePosition, float3 viewerPosition, RandomSequences randomSequences)
-{
-    LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
-
-    float3 viewDirection = normalize(viewerPosition - surfacePosition);
-
-    LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
-    ShadingResult shadingResult = ZeroShadingResult();
-    RTData rtData = ZeroRTData();
-
-    ShadeWithSphericalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, rtData, shadingResult);
-    ShadeWithRectangularLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, rtData, shadingResult);
-    ShadeWithEllipticalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, rtData, shadingResult);
-
-    rtData.ShadowFactors = TraceShadows(rtData, partitionInfo, surfacePosition);
-
-    CombineStochasticLightingAndShadows(rtData, partitionInfo, shadingResult);
-
-    return shadingResult;
-}
+//void CombineStochasticLightingAndShadows(RTData rtData, LightTablePartitionInfo lightPartitionInfo, inout ShadingResult shadingResult)
+//{
+//    uint raysPerLight = RaysPerLight(lightPartitionInfo);
+//
+//    [unroll]
+//    for (uint i = 0; i < TotalMaxRayCount; ++i)
+//    {
+//        if (!IsStochasticBRDFMagnitudeNonZero(rtData, i))
+//        {
+//            continue;
+//        }
+//
+//        uint lightIndex = i / raysPerLight;
+//        Light light = LightTable[lightIndex];
+//        float3 brdf = GetStochasticBRDFMagnitude(rtData, i);
+//        float3 unshadowed = brdf * light.Color.rgb * light.Luminance;
+//
+//        shadingResult.StochasticShadowedOutgoingLuminance += unshadowed * rtData.ShadowFactors[i];
+//
+//#ifndef SHADING_STOCHASTIC_ONLY
+//        shadingResult.StochasticUnshadowedOutgoingLuminance += unshadowed;
+//#endif
+//    }
+//}
 
 #endif

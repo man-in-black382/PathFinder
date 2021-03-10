@@ -39,6 +39,8 @@ namespace PathFinder
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
+        bool isGIDebugEnabled = context->GetContent()->GetScene()->GlobalIlluminationManager().GIDebugEnabled;
+
         ClearUAVBufferUInt(context, ResourceNames::LuminanceHistogram, 0);
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
@@ -46,7 +48,7 @@ namespace PathFinder
         const DisplaySettingsController* dsc = context->GetContent()->DisplayController();
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::BloomCompositionOutput);
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ToneMappingPassInputSRName(isGIDebugEnabled));
         cbContent.OutputTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
         cbContent.IsHDREnabled = dsc->IsHDREnabled();
