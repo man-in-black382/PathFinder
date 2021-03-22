@@ -16,7 +16,7 @@ namespace PathFinder
 
     void LuminanceMeterViewModel::OnCreated()
     {
-        (*Dependencies->PostRenderEvent) += { "LuminanceMeterViewModel.Post.Render", [this]()
+        Dependencies->RenderEngine->PostRenderEvent() += { "LuminanceMeterViewModel.Post.Render", [this]()
         {
             const Memory::Buffer* histogram = Dependencies->ResourceStorage->GetPerResourceData(ResourceNames::LuminanceHistogram)->Buffer.get();
 

@@ -109,7 +109,7 @@ namespace PathFinder
 
     void PickedEntityViewModel::OnCreated()
     {
-        (*Dependencies->PostRenderEvent) += { "PickedEntityViewModel.Post.Render", [this]()
+        Dependencies->RenderEngine->PostRenderEvent() += { "PickedEntityViewModel.Post.Render", [this]()
         {
             const Memory::Buffer* pickedGeometryInfo = Dependencies->ResourceStorage->GetPerResourceData(PathFinder::ResourceNames::PickedGeometryInfo)->Buffer.get();
 

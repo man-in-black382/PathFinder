@@ -19,6 +19,10 @@ namespace PathFinder
         ImGui::Checkbox("Enable Async Compute", &VM->RenderPipelineSettings()->IsAsyncComputeEnabled);
         ImGui::Checkbox("Enable Split Barriers", &VM->RenderPipelineSettings()->IsSplitBarriersEnabled);
 
+        bool isStatePowerStateEnabled = VM->IsStablePowerStateEnabled();
+        if (ImGui::Checkbox("Enable Stable Power State (Windows Dev. mode required)", &isStatePowerStateEnabled))
+            VM->EnableStablePowerState(isStatePowerStateEnabled);
+
         ImGui::Separator();
         ImGui::Text("Antialiasing");
 

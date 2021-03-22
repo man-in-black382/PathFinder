@@ -24,4 +24,10 @@ namespace HAL
         default: mSupportsUniversalHeaps = true; break;
         }
     }
+
+    void Device::EnableStablePowerState(bool enable)
+    {
+        mDevice->SetStablePowerState(enable);
+    }
+
 }

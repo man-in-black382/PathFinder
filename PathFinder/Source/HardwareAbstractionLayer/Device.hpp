@@ -14,6 +14,8 @@ namespace HAL
     public:
         Device(const DisplayAdapter& adapter, bool aftermathEnabled);
 
+        void EnableStablePowerState(bool enable);
+
     private:
         Microsoft::WRL::ComPtr<ID3D12Device5> mDevice;
 

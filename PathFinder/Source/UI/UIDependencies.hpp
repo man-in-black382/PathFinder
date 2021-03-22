@@ -15,28 +15,22 @@ namespace PathFinder
     {
         UIDependencies(
             const PipelineResourceStorage* resourceStorage, 
-            RenderEngine<RenderPassContentMediator>::Event* preRenderEvent,
-            RenderEngine<RenderPassContentMediator>::Event* postRenderEvent,
-            PipelineSettings* pipelineSettings,
+            RenderEngine<RenderPassContentMediator>* renderEngine,
             RenderSettings* renderSettings,
             const RenderDevice* renderDevice,
             Scene* scene)
             :
             ResourceStorage{ resourceStorage },
-            PreRenderEvent{ preRenderEvent },
-            PostRenderEvent{ postRenderEvent },
+            RenderEngine{ renderEngine },
             Device{ renderDevice },
             ScenePtr{ scene },
-            RenderPipelineSettings{ pipelineSettings },
             UserRenderSettings{ renderSettings }
         {}
 
         const PipelineResourceStorage* const ResourceStorage;
-        RenderEngine<RenderPassContentMediator>::Event* const PreRenderEvent;
-        RenderEngine<RenderPassContentMediator>::Event* const PostRenderEvent;
+        RenderEngine<RenderPassContentMediator>* RenderEngine;
         Scene* const ScenePtr;
         const RenderDevice* const Device;
-        PipelineSettings* RenderPipelineSettings;
         RenderSettings* UserRenderSettings;
     };
 

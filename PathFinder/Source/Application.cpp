@@ -24,9 +24,7 @@ namespace PathFinder
 
         mUIDependencies = std::make_unique<UIDependencies>(
             mRenderEngine->ResourceStorage(),
-            &mRenderEngine->PreRenderEvent(),
-            &mRenderEngine->PostRenderEvent(), 
-            &mRenderEngine->Settings(), 
+            mRenderEngine.get(),
             &mSettingsController->VolatileSettings,
             mRenderEngine->RendererDevice(),
             mScene.get());
