@@ -15,32 +15,18 @@ namespace PathFinder
         ProfilerVM->Import();
 
         ImGui::Begin("GPU Profiler", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        
-        auto constructMeasurementString = [](const RenderDevice::PipelineMeasurement& measurement) -> std::string
-        {
-            std::stringstream ss;
-            ss << std::setprecision(3) << std::fixed << measurement.DurationSeconds * 1000;
-            return ss.str() + " ms " + measurement.Name;
-        };
-
-        if (ImGui::TreeNodeEx(constructMeasurementString(ProfilerVM->FrameMeasurement()).c_str(), ImGuiTreeNodeFlags_Leaf))
-        {
-            ImGui::TreePop();
-        }
-
+        ImGui::Text(ProfilerVM->FrameMeasurement().c_str());
+        ImGui::Text(ProfilerVM->BarrierMeasurements().c_str());
         ImGui::Separator();
 
-        for (int i = 0; i < ProfilerVM->Measurements().size(); i++)
+        for (const std::string& workMeasurement : ProfilerVM->WorkMeasurements())
         {
-            const RenderDevice::PipelineMeasurement& measurement = ProfilerVM->Measurements()[i];
-
-            if (ImGui::TreeNodeEx(constructMeasurementString(measurement).c_str(), ImGuiTreeNodeFlags_Leaf))
-            {
-                ImGui::TreePop();
-            }
+            ImGui::Text(workMeasurement.c_str());
         }
 
         ImGui::End();
+
+        ProfilerVM->Export();
     }
 
 }

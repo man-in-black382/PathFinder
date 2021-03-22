@@ -12,7 +12,12 @@ namespace PathFinder
         mEventInfos.resize(maxEventsPerFrame);
     }
 
-    GPUProfiler::EventID GPUProfiler::RecordEventStart(HAL::CommandList& cmdList, uint64_t tickFrequency)
+    void GPUProfiler::SetPerQueueTimestampFrequencies(const std::vector<uint64_t>& frequencies)
+    {
+        mPerQueueTimestampFrequencies = frequencies;
+    }
+
+    GPUProfiler::EventID GPUProfiler::RecordEventStart(HAL::CommandList& cmdList, uint64_t queueIndex)
     {
         std::lock_guard lock{ mAccessMutex };
 
@@ -21,7 +26,7 @@ namespace PathFinder
         assert_format(index < mEventInfos.size(), "Exceeded maximum per-frame event count");
 
         mEventInfos[index].IsStarted = true;
-        mEventInfos[index].TickFrequency = tickFrequency;
+        mEventInfos[index].TickFrequency = mPerQueueTimestampFrequencies[queueIndex];
 
         auto [start, end] = GetEventIndicesInHeap(index);
         cmdList.EndQuery(mQueryHeap, start);

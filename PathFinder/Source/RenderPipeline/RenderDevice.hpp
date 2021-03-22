@@ -43,8 +43,8 @@ namespace PathFinder
         struct PipelineMeasurement
         {
             std::string Name;
-            float DurationSeconds;
             GPUProfiler::EventID ProfilerEventID;
+            float DurationSeconds;
         };
 
         struct PassCommandLists
@@ -227,6 +227,7 @@ namespace PathFinder
         CommandListPtrVariant AllocateCommandListForQueue(uint64_t queueIndex) const;
         bool IsNullCommandList(CommandListPtrVariant& variant) const;
         HAL::Fence& FenceForQueueIndex(uint64_t index);
+        std::vector<uint64_t> GetQueueTimestampFrequencies();
 
         template <class CommandQueueT, class CommandListT>
         void ExecuteCommandListBatch(std::vector<CommandListPtrVariant>& batch, HAL::CommandQueue& queue);
@@ -284,7 +285,8 @@ namespace PathFinder
         std::vector<ResourceReadbackInfo> mPerNodeReadbackInfo;
 
         // An hierarchy of various measured GPU events
-        std::vector<PipelineMeasurement> mPassMeasurements;
+        std::vector<PipelineMeasurement> mPassWorkMeasurements;
+        std::vector<PipelineMeasurement> mPassBarrierMeasurements;
         PipelineMeasurement mFrameMeasurement;
 
     public:
@@ -293,7 +295,8 @@ namespace PathFinder
         inline HAL::GraphicsCommandList* PreRenderUploadsCommandList() { return mPreRenderUploadsCommandList.get(); }
         inline HAL::ComputeCommandList* RTASBuildsCommandList() { return mRTASBuildsCommandList.get(); }
         inline const RenderSurfaceDescription& DefaultRenderSurfaceDesc() { return mDefaultRenderSurface; }
-        inline const auto& RenderPassMeasurements() const { return mPassMeasurements; }
+        inline const auto& RenderPassWorkMeasurements() const { return mPassWorkMeasurements; }
+        inline const auto& RenderPassBarrierMeasurements() const { return mPassBarrierMeasurements; }
         inline const PipelineMeasurement& FrameMeasurement() const { return mFrameMeasurement; }
     };
 

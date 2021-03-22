@@ -93,8 +93,12 @@ namespace PathFinder
             helpers.ResourceStoragePassData->IsAllowedToAdvanceConstantBufferOffset = false;
         }
 
-        mPassMeasurements.clear();
-        mPassMeasurements.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
+        mPassWorkMeasurements.clear();
+        mPassWorkMeasurements.resize(mRenderPassGraph->NodesInGlobalExecutionOrder().size());
+
+        mPassBarrierMeasurements.clear();
+
+        mGPUProfiler->SetPerQueueTimestampFrequencies(GetQueueTimestampFrequencies());
 
         // If memory layout did not change we reuse aliasing barriers from previous frame.
         // Otherwise we start from scratch.
@@ -148,7 +152,13 @@ namespace PathFinder
 
     void RenderDevice::GatherMeasurements()
     {
-        for (PipelineMeasurement& measurement : mPassMeasurements)
+        for (PipelineMeasurement& measurement : mPassWorkMeasurements)
+        {
+            const GPUProfiler::Event& event = mGPUProfiler->GetCompletedEvent(measurement.ProfilerEventID);
+            measurement.DurationSeconds = event.DurationSeconds;
+        }
+
+        for (PipelineMeasurement& measurement : mPassBarrierMeasurements)
         {
             const GPUProfiler::Event& event = mGPUProfiler->GetCompletedEvent(measurement.ProfilerEventID);
             measurement.DurationSeconds = event.DurationSeconds;
@@ -170,6 +180,7 @@ namespace PathFinder
         for (const RenderPassGraph::DependencyLevel& dependencyLevel : mRenderPassGraph->DependencyLevels())
         {
             mDependencyLevelStandardTransitions.clear();
+    
             mDependencyLevelStandardTransitions.resize(dependencyLevel.Nodes().size());
 
             mDependencyLevelTransitionsToReroute.clear();
@@ -322,9 +333,12 @@ namespace PathFinder
         HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(commandLists.PreWorkCommandList);
         transitionsCommandList->SetDebugName(node.PassMetadata().Name.ToString() + " " + cmdListName + " Cmd List");
         transitionsCommandList->Reset();
+        GPUProfiler::EventID profilerEventID = mGPUProfiler->RecordEventStart(*transitionsCommandList, node.ExecutionQueueIndex);
+        mPassBarrierMeasurements.emplace_back(PipelineMeasurement{ "", profilerEventID, 0 });
         mEventTracker.StartGPUEvent(node.PassMetadata().Name.ToString() + " " + cmdListName, *transitionsCommandList);
         transitionsCommandList->InsertBarriers(barriers);
         mEventTracker.EndGPUEvent(*transitionsCommandList);
+        mGPUProfiler->RecordEventEnd(*transitionsCommandList, profilerEventID);
         transitionsCommandList->Close();
     }
 
@@ -349,9 +363,13 @@ namespace PathFinder
         HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(transitionsEvent.CommandList);
         transitionsCommandList->SetDebugName(StringFormat("Rerouted Transitions for Dependency Level %d Cmd List", currentDependencyLevelIndex));
         transitionsCommandList->Reset();
+        GPUProfiler::EventID profilerEventID = mGPUProfiler->RecordEventStart(*transitionsCommandList, mostCompetentQueueIndex);
+        mPassBarrierMeasurements.emplace_back(PipelineMeasurement{ "", profilerEventID, 0 });
         mEventTracker.StartGPUEvent(StringFormat("Rerouting Transitions for Dependency Level %d", currentDependencyLevelIndex), *transitionsCommandList);
         transitionsCommandList->InsertBarriers(barriers);
         mEventTracker.EndGPUEvent(*transitionsCommandList);
+        mGPUProfiler->RecordEventEnd(*transitionsCommandList, profilerEventID);
+
         transitionsCommandList->Close();
     }
 
@@ -540,9 +558,13 @@ namespace PathFinder
                 }
             }
 
+            GPUProfiler::EventID profilerEventID = mGPUProfiler->RecordEventStart(*cmdList, node->ExecutionQueueIndex);
+            mPassBarrierMeasurements.emplace_back(PipelineMeasurement{ "", profilerEventID, 0 });
+
             // Then apply begin and back buffer barriers
             cmdList->InsertBarriers(barriers);
 
+            mGPUProfiler->RecordEventEnd(*cmdList, profilerEventID);
             mEventTracker.EndGPUEvent(*cmdList);
             cmdList->Close();
         }
@@ -590,7 +612,7 @@ namespace PathFinder
         Memory::PoolCommandListAllocator::GraphicsCommandListPtr frameMeasurementsStartCmdList = mCommandListAllocator->AllocateGraphicsCommandList();
         auto graphicQueueIndex = std::underlying_type_t<RenderPassExecutionQueue>(RenderPassExecutionQueue::Graphics);
         frameMeasurementsStartCmdList->Reset();
-        mFrameMeasurement.ProfilerEventID = mGPUProfiler->RecordEventStart(*frameMeasurementsStartCmdList, GetCommandQueue(graphicQueueIndex).GetTimestampFrequency());
+        mFrameMeasurement.ProfilerEventID = mGPUProfiler->RecordEventStart(*frameMeasurementsStartCmdList, graphicQueueIndex);
         frameMeasurementsStartCmdList->Close();
         commandLists[graphicQueueIndex].push_back(std::move(frameMeasurementsStartCmdList));
 
@@ -761,7 +783,17 @@ namespace PathFinder
         return index == 0 ? mGraphicsQueueFence : mComputeQueueFence;
     }
 
-    RenderDevice::FrameBlueprint::FrameBlueprint(const RenderPassGraph* graph, uint64_t bvhBuildQueueIndex, HAL::Fence* bvhFence, const std::vector<HAL::Fence*>& queueFences) 
+    std::vector<uint64_t> RenderDevice::GetQueueTimestampFrequencies()
+    {
+        std::vector<uint64_t> frequencies;
+
+        for (auto queueIdx = 0; queueIdx < mQueueCount; ++queueIdx)
+            frequencies.push_back(GetCommandQueue(queueIdx).GetTimestampFrequency());
+
+        return frequencies;
+    }
+
+    RenderDevice::FrameBlueprint::FrameBlueprint(const RenderPassGraph* graph, uint64_t bvhBuildQueueIndex, HAL::Fence* bvhFence, const std::vector<HAL::Fence*>& queueFences)
         : mPassGraph{ graph }, mBVHBuildQueueIndex{ bvhBuildQueueIndex }, mQueueFences{ queueFences }
     {
         // A special case of BVH build signal that's managed outside of the blueprint

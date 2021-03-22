@@ -21,7 +21,8 @@ namespace PathFinder
 
         GPUProfiler(const HAL::Device& device, uint64_t maxEventsPerFrame, uint64_t simultaneousFramesInFlight, Memory::GPUResourceProducer* resourceProducer);
 
-        EventID RecordEventStart(HAL::CommandList& cmdList, uint64_t tickFrequency);
+        void SetPerQueueTimestampFrequencies(const std::vector<uint64_t>& frequencies);
+        EventID RecordEventStart(HAL::CommandList& cmdList, uint64_t queueIndex);
         void RecordEventEnd(HAL::CommandList& cmdList, const GPUProfiler::EventID& eventId);
         void ReadbackEvents(HAL::CommandList& cmdList);
         void BeginFrame(uint64_t frameNumber);
@@ -43,6 +44,7 @@ namespace PathFinder
         Memory::GPUResourceProducer* mResourceProducer;
         HAL::QueryHeap mQueryHeap;
         Memory::GPUResourceProducer::BufferPtr mReadbackBuffer;
+        std::vector<uint64_t> mPerQueueTimestampFrequencies;
         std::vector<Event> mCompletedEvents;
         std::vector<EventInfo> mEventInfos;
         uint64_t mSimultaneousFramesInFlight = 1;

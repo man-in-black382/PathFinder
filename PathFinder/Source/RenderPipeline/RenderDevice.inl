@@ -12,9 +12,8 @@ namespace PathFinder
         const std::string& passName = passNode.PassMetadata().Name.ToString();
         mEventTracker.StartGPUEvent(passName, *worker);
 
-        uint64_t tickFrequency = GetCommandQueue(passNode.ExecutionQueueIndex).GetTimestampFrequency();
-        GPUProfiler::EventID profilerEventID = mGPUProfiler->RecordEventStart(*worker, tickFrequency);
-        PipelineMeasurement& measurement = mPassMeasurements[passNode.GlobalExecutionIndex()];
+        GPUProfiler::EventID profilerEventID = mGPUProfiler->RecordEventStart(*worker, passNode.ExecutionQueueIndex);
+        PipelineMeasurement& measurement = mPassWorkMeasurements[passNode.GlobalExecutionIndex()];
         measurement.Name = passName;
         measurement.ProfilerEventID = profilerEventID;
 

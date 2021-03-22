@@ -13,13 +13,15 @@ namespace PathFinder
         void Import() override;
 
     private:
-        std::vector<RenderDevice::PipelineMeasurement> mMeasurements;
-        RenderDevice::PipelineMeasurement mFrameMeasurement;
+        std::vector<std::string> mWorkMeasurementStrings;
+        std::string mBarrierMeasurementsString;
+        std::string mFrameMeasurementString;
         Foundation::Cooldown mUpdateCooldown{ 0.15 };
 
     public:
-        inline const auto& Measurements() const { return mMeasurements; }
-        inline const RenderDevice::PipelineMeasurement& FrameMeasurement() const { return mFrameMeasurement; }
+        inline const auto& WorkMeasurements() const { return mWorkMeasurementStrings; }
+        inline const std::string& BarrierMeasurements() const { return mBarrierMeasurementsString; }
+        inline const std::string& FrameMeasurement() const { return mFrameMeasurementString; }
     };
 
 }
