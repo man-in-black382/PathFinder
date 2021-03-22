@@ -27,7 +27,7 @@ namespace HAL
 
     void Device::EnableStablePowerState(bool enable)
     {
-        mDevice->SetStablePowerState(enable);
+        ThrowIfFailed(mDevice->SetStablePowerState(enable));
     }
 
 }
