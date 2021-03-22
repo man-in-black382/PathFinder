@@ -76,10 +76,10 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LibraryPath>D:\Development\PathFinder\PathFinder\Libs\Optick;D:\Development\PathFinder\PathFinder\Libs\DXC;D:\Development\PathFinder\PathFinder\Libs\Assimp;D:\Development\PathFinder\PathFinder\Libs\Aftermath;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\Libs\Aftermath\;$(ProjectDir)\Libs\Assimp\;$(ProjectDir)\Libs\DXC\;$(ProjectDir)\Libs\Optick\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>D:\Development\PathFinder\PathFinder\Libs\Optick;D:\Development\PathFinder\PathFinder\Libs\DXC;D:\Development\PathFinder\PathFinder\Libs\Assimp;D:\Development\PathFinder\PathFinder\Libs\Aftermath;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\Libs\Aftermath\;$(ProjectDir)\Libs\Assimp\;$(ProjectDir)\Libs\DXC\;$(ProjectDir)\Libs\Optick\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -1266,7 +1266,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <CopyFileToFolders Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <None Include="Libs\Aftermath\llvm_7_0_1.dll" />
+    <CopyFileToFolders Include="Libs\Aftermath\llvm_7_0_1.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <CopyFileToFolders Include="Libs\DXC\dxcompiler.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
@@ -1282,7 +1284,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <None Include="Libs\Assimp\assimp-vc142-mt.exp">
       <FileType>Document</FileType>
     </None>
-    <None Include="Libs\Optick\OptickCore.pdb" />
+    <None Include="Libs\Optick\OptickCore.pdb">
+      <FileType>Document</FileType>
+    </None>
     <None Include="packages.config" />
     <None Include="Source\Foundation\Halton.inl" />
     <None Include="Source\HardwareAbstractionLayer\Buffer.inl" />
@@ -3007,12 +3011,18 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.lib" />
-    <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.lib" />
+    <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.lib">
+      <FileType>Document</FileType>
+    </Library>
+    <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.lib">
+      <FileType>Document</FileType>
+    </Library>
     <Library Include="Libs\Assimp\assimp-vc142-mt.lib">
       <FileType>Document</FileType>
     </Library>
-    <Library Include="Libs\Optick\OptickCore.lib" />
+    <Library Include="Libs\Optick\OptickCore.lib">
+      <FileType>Document</FileType>
+    </Library>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -26,7 +26,7 @@ namespace PathFinder
         ImGui::Separator();
         ImGui::Text("Antialiasing");
 
-        ImGui::Checkbox("Enable", &VM->UserRenderSettings()->IsAntialiasingEnabled);
+        ImGui::Checkbox("Antialiasing Enabled", &VM->UserRenderSettings()->IsAntialiasingEnabled);
         ImGui::Checkbox("Enable Edge Detection", &VM->UserRenderSettings()->IsAntialiasingEdgeDetectionEnabled);
         ImGui::Checkbox("Enable Blending Weight Calculation", &VM->UserRenderSettings()->IsAntialiasingBlendingWeightCalculationEnabled);
         ImGui::Checkbox("Enable Neighborhood Blending", &VM->UserRenderSettings()->IsAntialiasingNeighborhoodBlendingEnabled);
@@ -34,7 +34,7 @@ namespace PathFinder
         ImGui::Separator();
         ImGui::Text("Denoiser");
 
-        ImGui::Checkbox("Enable", &VM->UserRenderSettings()->IsDenoiserEnabled);
+        ImGui::Checkbox("Denoiser Enabled", &VM->UserRenderSettings()->IsDenoiserEnabled);
         ImGui::Checkbox("Display History Reprojection", &VM->UserRenderSettings()->IsReprojectionHistoryDebugRenderingEnabled);
         ImGui::Checkbox("Display Gradient", &VM->UserRenderSettings()->IsDenoiserGradientDebugRenderingEnabled);
         ImGui::Checkbox("Display Motion", &VM->UserRenderSettings()->IsDenoiserMotionDebugRenderingEnabled);
