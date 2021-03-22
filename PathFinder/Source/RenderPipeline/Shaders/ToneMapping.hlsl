@@ -35,7 +35,7 @@ uint GetHistogramBin(float luminance, float minLuminance, float maxLuminance)
 
 groupshared uint gHistogram[HistogramBinCount];
 
-[numthreads(16, 16, 1)]
+[numthreads(8, 8, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int groupIndex : SV_GroupIndex)
 {
     Texture2D inputImage = Textures2D[PassDataCB.InputTexIdx];

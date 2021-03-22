@@ -25,6 +25,10 @@ struct FrameData
     bool IsGradientDebugEnabled;
     bool IsMotionDebugEnabled;
     bool IsDenoiserAntilagEnabled;
+    bool IsAntialiasingEnabled;
+    bool IsAntialiasingEdgeDetectionEnabled;
+    bool IsAntialiasingBlendingWeightCalculationEnabled;
+    bool IsAntialiasingNeighborhoodBlendingEnabled;
 }; 
 
 #define GlobalDataType GlobalData

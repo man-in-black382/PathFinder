@@ -1,7 +1,5 @@
 #include "PipelineResourceSchedulingInfo.hpp"
 
-
-
 namespace PathFinder
 {
 

@@ -29,9 +29,7 @@ namespace PathFinder
 
     void ToneMappingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        bool isGIDebugEnabled = scheduler->Content()->GetScene()->GlobalIlluminationManager().GIDebugEnabled;
-
-        scheduler->ReadTexture(ToneMappingPassInputSRName(isGIDebugEnabled));
+        scheduler->ReadTexture(ResourceNames::SMAAAntialiased);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
         scheduler->NewBuffer(ResourceNames::LuminanceHistogram, NewBufferProperties<uint32_t>{128});
         scheduler->Export(ResourceNames::LuminanceHistogram);
@@ -39,8 +37,6 @@ namespace PathFinder
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        bool isGIDebugEnabled = context->GetContent()->GetScene()->GlobalIlluminationManager().GIDebugEnabled;
-
         ClearUAVBufferUInt(context, ResourceNames::LuminanceHistogram, 0);
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
@@ -48,7 +44,7 @@ namespace PathFinder
         const DisplaySettingsController* dsc = context->GetContent()->DisplayController();
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ToneMappingPassInputSRName(isGIDebugEnabled));
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::SMAAAntialiased);
         cbContent.OutputTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
         cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
         cbContent.IsHDREnabled = dsc->IsHDREnabled();
@@ -57,7 +53,7 @@ namespace PathFinder
         context->GetCommandRecorder()->BindBuffer(ResourceNames::LuminanceHistogram, 0, 0, HAL::ShaderRegister::UnorderedAccess);
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 
-        auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(16, 16);
+        auto dimensions = context->GetDefaultRenderSurfaceDesc().DispatchDimensionsForGroupSize(8, 8);
         context->GetCommandRecorder()->Dispatch(dimensions.x, dimensions.y);
     }
 

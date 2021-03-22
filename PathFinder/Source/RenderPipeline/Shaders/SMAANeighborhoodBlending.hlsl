@@ -11,6 +11,7 @@ struct PassData
 
 #include "SMAACommon.hlsl"
 #include "SMAA.hlsl"
+#include "ColorConversion.hlsl"
 
 struct VertexOut
 {
@@ -47,7 +48,16 @@ PixelOut PSMain(VertexOut pin)
     Texture2D blendingWeights = Textures2D[PassDataCB.BlendingWeightsTexIdx];
 
     PixelOut pixelOut;
-    pixelOut.Color = SMAANeighborhoodBlendingPS(pin.UV, pin.Offset, image, blendingWeights);
+
+    if (!FrameDataCB.IsAntialiasingEnabled || !FrameDataCB.IsAntialiasingNeighborhoodBlendingEnabled)
+    {
+        pixelOut.Color = image.SampleLevel(LinearClampSampler(), pin.UV, 0);
+    }
+    else
+    {
+        pixelOut.Color = SMAANeighborhoodBlendingPS(pin.UV, pin.Offset, image, blendingWeights);
+    }
+
     return pixelOut;
 }
 

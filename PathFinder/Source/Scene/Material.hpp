@@ -32,6 +32,8 @@ namespace PathFinder
         void SerializeTextures(const std::filesystem::path& filePath);
         void DeserializeTextures(const std::filesystem::path& filePath, Memory::GPUResourceProducer* resourceProducer);
 
+        bool IsTransparent() const;
+
         TextureData DiffuseAlbedoMap;
         TextureData SpecularAlbedoMap;
         TextureData NormalMap;
@@ -55,6 +57,7 @@ namespace PathFinder
         std::optional<glm::vec3> MetalnessOverride;
         std::optional<float> TranslucencyOverride;
         std::optional<float> IOROverride; // Index of refraction
+        std::optional<glm::vec3> TransmissionFilter; // Allows the specific colors to pass through
 
         std::string Name;
         uint32_t GPUMaterialTableIndex = 0;
@@ -77,6 +80,7 @@ namespace PathFinder
             s.ext(MetalnessOverride, bitsery::ext::StdOptional{});
             s.ext4b(TranslucencyOverride, bitsery::ext::StdOptional{});
             s.ext4b(IOROverride, bitsery::ext::StdOptional{});
+            s.ext(TransmissionFilter, bitsery::ext::StdOptional{});
         }
     };
 

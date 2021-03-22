@@ -585,9 +585,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -610,6 +607,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIPrimaryRayTracingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1797,9 +1797,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\ThirdParty\assimp\color4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ThirdParty\assimp\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\ThirdParty\assimp\CreateAnimMesh.h">
@@ -3107,9 +3104,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3141,6 +3135,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\assimp\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIPrimaryRayTracingRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -3639,7 +3639,6 @@
     </None>
     <None Include="packages.config" />
     <None Include="Libs\Optick\OptickCore.pdb" />
-    <None Include="Libs\Assimp\assimp-vc140-mt.exp" />
     <None Include="Libs\Aftermath\llvm_7_0_1.dll" />
     <None Include="Source\RenderPipeline\SubPassScheduler.inl">
       <Filter>Header Files</Filter>
@@ -3662,6 +3661,7 @@
     <None Include="Source\UI\UIManager.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Libs\Assimp\assimp-vc142-mt.exp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
@@ -3672,7 +3672,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\Packing.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\ColorConversion.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\BackBufferOutput.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\BRDF.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\Vertices.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\FullScreenQuadVS.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DistanceMapHelperCompression.hlsl" />
@@ -3755,16 +3755,16 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="Libs\Optick\OptickCore.lib" />
-    <Library Include="Libs\Assimp\assimp-vc140-mt.lib" />
     <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.lib" />
     <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.lib" />
+    <Library Include="Libs\Assimp\assimp-vc142-mt.lib" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="Libs\Optick\OptickCore.dll" />
-    <CopyFileToFolders Include="Libs\Assimp\assimp-vc140-mt.dll" />
     <CopyFileToFolders Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.dll" />
     <CopyFileToFolders Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.dll" />
     <CopyFileToFolders Include="Libs\DXC\dxcompiler.dll" />
     <CopyFileToFolders Include="Libs\DXC\dxil.dll" />
+    <CopyFileToFolders Include="Libs\Assimp\assimp-vc142-mt.dll" />
   </ItemGroup>
 </Project>

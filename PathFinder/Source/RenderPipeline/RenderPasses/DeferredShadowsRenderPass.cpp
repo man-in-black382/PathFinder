@@ -22,7 +22,7 @@ namespace PathFinder
             state.AddMissShader({ "DeferredShadows.hlsl" });
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
             state.GlobalRootSignatureName = RootSignatureNames::ShadingCommon;
-            state.PipelineConfig = HAL::RayTracingPipelineConfig{ 2 };
+            state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
         });
     }
      

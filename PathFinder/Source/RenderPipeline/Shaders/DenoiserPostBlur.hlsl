@@ -82,6 +82,9 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
     float3 combinedShading = CombineShading(analyticShadingTexture[pixelIndex].rgb, stochasticShadowed, stochasticUnshadowed);
 
+    if (any(isnan(combinedShading)) || any(isinf(combinedShading)))
+        combinedShading = float3(0, 100, 0);
+
     if (FrameDataCB.IsReprojectionHistoryDebugEnabled ||
         FrameDataCB.IsGradientDebugEnabled ||
         FrameDataCB.IsMotionDebugEnabled)

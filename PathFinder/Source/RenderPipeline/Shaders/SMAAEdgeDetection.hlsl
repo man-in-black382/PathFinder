@@ -50,8 +50,15 @@ PixelOut PSMain(VertexOut pin)
     float4 offsets[3] = { pin.Offset0, pin.Offset1, pin.Offset2 };
     Texture2D image = Textures2D[PassDataCB.InputTexIdx];
 
+    if (!FrameDataCB.IsAntialiasingEnabled || !FrameDataCB.IsAntialiasingEdgeDetectionEnabled)
+    {
+        offsets[0] = 0.0;
+        offsets[1] = 0.0;
+        offsets[2] = 0.0;
+    }
+
     PixelOut pixelOut;
-    pixelOut.Edges = SMAAColorEdgeDetectionPS(pin.UV, offsets, image);
+    pixelOut.Edges = SMAAColorEdgeDetectionLinearInputsPS(pin.UV, offsets, image);
     return pixelOut;
 }
 

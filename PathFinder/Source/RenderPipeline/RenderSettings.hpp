@@ -16,6 +16,10 @@ namespace PathFinder
         bool IsDenoiserGradientDebugRenderingEnabled = false;
         bool IsDenoiserMotionDebugRenderingEnabled = false;
         bool IsDenoiserAntilagEnabled = true;
+        bool IsAntialiasingEnabled = true;
+        bool IsAntialiasingEdgeDetectionEnabled = true;
+        bool IsAntialiasingBlendingWeightCalculationEnabled = true;
+        bool IsAntialiasingNeighborhoodBlendingEnabled = true;
 
         IrradianceField GlobalIlluminationSettings;
         PipelineSettings RenderPipelineSettings;

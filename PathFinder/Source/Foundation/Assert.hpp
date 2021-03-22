@@ -11,10 +11,7 @@ inline void print_assertion(Args&&... args)
     std::stringstream ss;
     ss.precision(10);
     ss << std::endl;
-    //if constexpr (debug_mode)
-    //{
     (ss << ... << args) << std::endl;
-    //}
     OutputDebugString(ss.str().c_str()); 
     abort();
 }

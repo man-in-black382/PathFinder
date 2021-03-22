@@ -2,13 +2,15 @@
 #define _SMAACommon__
 
 #include "MandatoryEntryPointInclude.hlsl"
+#include "ColorConversion.hlsl"
 
 #define SMAA_RT_METRICS float4(GlobalDataCB.PipelineRTResolutionInv, GlobalDataCB.PipelineRTResolution)
+#define SMAA_LINEAR_TO_SRGB_FUNC LinearToSRGB
 #define SMAA_HLSL_4_1
 #define SMAA_PRESET_ULTRA
 
 #define SMAA_LINEAR_CLAMP_SAMPLER LinearClampSampler()
-#define SMAA_POINT_CLAMP_SAMPLER PointClampSampler()
+#define SMAA_POINT_CLAMP_SAMPLER PointClampSampler() 
 
 // https://rauwendaal.net/2014/06/14/rendering-a-screen-covering-triangle-in-opengl/
 // 

@@ -21,7 +21,16 @@ namespace PathFinder
         mWindowsInputHandler = std::make_unique<InputHandlerWindows>(mInput.get(), mWindowHandle);
         mCameraInteractor = std::make_unique<CameraInteractor>(&mScene->MainCamera(), mInput.get());
         mDisplaySettingsController = std::make_unique<DisplaySettingsController>(mRenderEngine->SelectedAdapter(), mRenderEngine->SwapChain(), mWindowHandle);
-        mUIDependencies = std::make_unique<UIDependencies>(mRenderEngine->ResourceStorage(), &mRenderEngine->PreRenderEvent(), &mRenderEngine->PostRenderEvent(), &mRenderEngine->Settings(), mRenderEngine->RendererDevice(), mScene.get());
+
+        mUIDependencies = std::make_unique<UIDependencies>(
+            mRenderEngine->ResourceStorage(),
+            &mRenderEngine->PreRenderEvent(),
+            &mRenderEngine->PostRenderEvent(), 
+            &mRenderEngine->Settings(), 
+            &mSettingsController->VolatileSettings,
+            mRenderEngine->RendererDevice(),
+            mScene.get());
+
         mUIManager = std::make_unique<UIManager>(mInput.get(), mUIDependencies.get(), mRenderEngine->ResourceProducer());
         mUIEntryPoint = std::make_unique<UIEntryPoint>(mUIManager.get());
         mContentMediator = std::make_unique<RenderPassContentMediator>(&mUIManager->GPUStorage(), &mScene->GPUStorage(), mScene.get(), mInput.get(), mDisplaySettingsController.get(), mSettingsController.get());
@@ -42,7 +51,7 @@ namespace PathFinder
         //mMaterialLoader = std::make_unique<MaterialLoader>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->ResourceProducer());
        
         //LoadDemoScene();
-        /*mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "SanMiguel" / "san-miguel.obj");*/
+        //mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "SanMiguel" / "san-miguel-low-poly.obj");
         mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "MediaResources" / "sibenik" / "sibenik.obj");
         //mScene->Deserialize(mCmdLineParser->ExecutableFolderPath() / "DebugSceneSerialization" / "Scene.pfscene");
 
@@ -55,32 +64,32 @@ namespace PathFinder
         light0->SetWidth(7);
         light0->SetHeight(4);
         light0->SetNormal(glm::vec3{ 0.0, -1.0, 0.0 });
-        light0->SetPosition({ 10.65, 15.0, -4.6 });
+        light0->SetPosition({ 7.66, 6.187, 0.06 });
         light0->SetColor(light0Color);
         light0->SetLuminousPower(40000);
 
-        auto sphereLight1 = mScene->EmplaceSphericalLight();
-        sphereLight1->SetRadius(7.5);
-        sphereLight1->SetPosition({ -10.65, 12.0, -4.6 });
-        sphereLight1->SetColor(light1Color);
-        sphereLight1->SetLuminousPower(100000);
+        /*  auto sphereLight1 = mScene->EmplaceSphericalLight();
+          sphereLight1->SetRadius(7.5);
+          sphereLight1->SetPosition({ -10.65, 12.0, -4.6 });
+          sphereLight1->SetColor(light1Color);
+          sphereLight1->SetLuminousPower(100000);
 
-        auto sphereLight2 = mScene->EmplaceSphericalLight();
-        sphereLight2->SetRadius(6);
-        sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
-        sphereLight2->SetColor(light2Color);
-        sphereLight2->SetLuminousPower(300000);
+          auto sphereLight2 = mScene->EmplaceSphericalLight();
+          sphereLight2->SetRadius(6);
+          sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
+          sphereLight2->SetColor(light2Color);
+          sphereLight2->SetLuminousPower(300000);
 
-        auto sphereLight3 = mScene->EmplaceSphericalLight();
-        sphereLight3->SetRadius(8);
-        sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
-        sphereLight3->SetColor(light3Color);
-        sphereLight3->SetLuminousPower(300000);
+          auto sphereLight3 = mScene->EmplaceSphericalLight();
+          sphereLight3->SetRadius(8);
+          sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
+          sphereLight3->SetColor(light3Color);
+          sphereLight3->SetLuminousPower(300000);*/
 
         PathFinder::Camera& camera = mScene->MainCamera();
         camera.SetFarPlane(500);
         camera.SetNearPlane(1);
-        camera.MoveTo({ 63.65, 6.41, -32.7 });
+        camera.MoveTo({ -15.43, -13.25, -0.2 });
         camera.LookAt({ 0.f, 0.0f, 0.f });
         camera.SetViewportAspectRatio(16.0f / 9.0f);
         camera.SetAperture(1.2);
@@ -241,6 +250,10 @@ namespace PathFinder
         mPerFrameConstants.IsGradientDebugEnabled = settings.IsDenoiserGradientDebugRenderingEnabled;
         mPerFrameConstants.IsMotionDebugEnabled = settings.IsDenoiserMotionDebugRenderingEnabled;
         mPerFrameConstants.IsDenoiserAntilagEnabled = settings.IsDenoiserAntilagEnabled;
+        mPerFrameConstants.IsAntialiasingEnabled = settings.IsAntialiasingEnabled;
+        mPerFrameConstants.IsAntialiasingEdgeDetectionEnabled = settings.IsAntialiasingEdgeDetectionEnabled;
+        mPerFrameConstants.IsAntialiasingBlendingWeightCalculationEnabled = settings.IsAntialiasingBlendingWeightCalculationEnabled;
+        mPerFrameConstants.IsAntialiasingNeighborhoodBlendingEnabled = settings.IsAntialiasingNeighborhoodBlendingEnabled;
 
         mRenderEngine->SetGlobalRootConstants(mGlobalConstants);
         mRenderEngine->SetFrameRootConstants(mPerFrameConstants);

@@ -35,7 +35,7 @@ namespace PathFinder
       
     void UIRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        scheduler->AliasAndUseRenderTarget(ResourceNames::SMAAAntialiased, ResourceNames::UIOutput);
+        scheduler->AliasAndUseRenderTarget(ResourceNames::ToneMappingOutput, ResourceNames::UIOutput);
     }  
 
     void UIRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

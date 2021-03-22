@@ -8,7 +8,7 @@
 
 struct ProbeRayPayload
 {
-    float Stub; 
+    float Value; 
 };
 
 struct PassData
@@ -97,12 +97,70 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     float3 probePosition = ProbePositionFrom3DIndex(probe3DIndex, PassDataCB.ProbeField);
     float3 surfacePosition = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 
-    //ShadingResult shadingResult = EvaluateStandardGBufferLighting(gBuffer, material, surfacePosition, probePosition, randomSequences);
+    LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
+    float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
+    LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
+    ShadingResult shadingResult = ZeroShadingResult();
 
-    //RWTexture2D<float4> rayHitInfoOutputTexture = RW_Float4_Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx];
-    //uint2 outputTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
+    /*ShadeWithSphericalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
+    ShadeWithRectangularLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
+    ShadeWithEllipticalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);*/
 
-    //rayHitInfoOutputTexture[outputTexelIdx] = float4(shadingResult.StochasticShadowedOutgoingLuminance, RayTCurrent());
+    float3 shadowed = 0.0;
+
+    const uint RayFlags =
+        RAY_FLAG_CULL_BACK_FACING_TRIANGLES |
+        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
+        RAY_FLAG_FORCE_OPAQUE |           // Skip any hit shaders
+        RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
+
+    [unroll]
+    for (uint i = 0; i < TotalMaxRayCount; ++i)
+    {
+        uint lightIndex = i / RaysPerLight(partitionInfo);
+        Light light = LightTable[lightIndex];
+        float3 lightIntersectionPoint = 0.0;
+        float3x3 lightRotation = RotationMatrix3x3(light.Orientation.xyz);
+
+        switch (light.LightType)
+        {
+        case LightTypeSphere: lightIntersectionPoint = UnpackRaySphericalLightIntersectionPoint(shadingResult.RayLightIntersectionData[i], light); break;
+        case LightTypeRectangle: lightIntersectionPoint = UnpackRayRectangularLightIntersectionPoint(shadingResult.RayLightIntersectionData[i], light, lightRotation); break;
+        case LightTypeEllipse: lightIntersectionPoint = UnpackRayDiskLightIntersectionPoint(shadingResult.RayLightIntersectionData[i], light, lightRotation); break;
+        }
+
+        float3 lightToSurface = surfacePosition - lightIntersectionPoint;
+        float vectorLength = length(lightToSurface);
+        float tmax = vectorLength - 1e-03;
+        float tmin = 1e-03;
+
+        RayDesc dxrRay;
+        dxrRay.Origin = lightIntersectionPoint;
+        dxrRay.Direction = lightToSurface / vectorLength;
+        dxrRay.TMin = tmin;
+        dxrRay.TMax = tmax;
+
+        ProbeRayPayload payload = { 0.0 };
+
+        // Select SecondaryShadowRayMiss(...)
+        const int MissShaderIndex = 1;
+
+        TraceRay(SceneBVH,
+            RayFlags,
+            EntityMaskMeshInstance, // Instance mask 
+            0, // Contribution to hit group index
+            0, // BLAS geometry multiplier for hit group index
+            MissShaderIndex, // Miss shader index
+            dxrRay,
+            payload);
+
+        shadowed += shadingResult.StochasticUnshadowedOutgoingLuminance[i] * payload.Value.x;
+    }
+
+    RWTexture2D<float4> rayHitInfoOutputTexture = RW_Float4_Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx];
+    uint2 outputTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
+
+    rayHitInfoOutputTexture[outputTexelIdx] = float4(shadowed, RayTCurrent());
 }
 
 [shader("closesthit")]
@@ -117,6 +175,12 @@ void LightRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersecti
 void ProbeRayMiss(inout ProbeRayPayload payload)
 {
     OutputResult(float4(0.0, 0.0, 0.0, GITRayMiss));
+}
+
+[shader("miss")]
+void SecondaryShadowRayMiss(inout ProbeRayPayload payload)
+{
+    payload.Value = 1.0;
 }
 
 [shader("raygeneration")]

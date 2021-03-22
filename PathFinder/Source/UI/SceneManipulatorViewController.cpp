@@ -23,6 +23,7 @@ namespace PathFinder
         ImGui::SliderFloat("Aperture", &CameraVM->LenseAperture, 1.f, 16.f);
         ImGui::SliderFloat("Film Speed (ISO)", &CameraVM->FilmSpeed, 100.f, 2000.f);
         ImGui::SliderFloat("Shutter Speed", &CameraVM->ShutterTime, 30.f, 240.f);
+        ImGui::Text("Position: %f %f %f", CameraVM->CameraPosition().x, CameraVM->CameraPosition().y, CameraVM->CameraPosition().z);
     }
 
     void SceneManipulatorViewController::DrawGIControls()

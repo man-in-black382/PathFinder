@@ -4,6 +4,7 @@
 #include <RenderPipeline/RenderEngine.hpp>
 #include <RenderPipeline/RenderPassContentMediator.hpp>
 #include <RenderPipeline/RenderDevice.hpp>
+#include <RenderPipeline/RenderSettings.hpp>
 #include <Scene/Scene.hpp>
 
 namespace PathFinder
@@ -17,6 +18,7 @@ namespace PathFinder
             RenderEngine<RenderPassContentMediator>::Event* preRenderEvent,
             RenderEngine<RenderPassContentMediator>::Event* postRenderEvent,
             PipelineSettings* pipelineSettings,
+            RenderSettings* renderSettings,
             const RenderDevice* renderDevice,
             Scene* scene)
             :
@@ -25,7 +27,8 @@ namespace PathFinder
             PostRenderEvent{ postRenderEvent },
             Device{ renderDevice },
             ScenePtr{ scene },
-            RenderPipelineSettings{ pipelineSettings }
+            RenderPipelineSettings{ pipelineSettings },
+            UserRenderSettings{ renderSettings }
         {}
 
         const PipelineResourceStorage* const ResourceStorage;
@@ -34,6 +37,7 @@ namespace PathFinder
         Scene* const ScenePtr;
         const RenderDevice* const Device;
         PipelineSettings* RenderPipelineSettings;
+        RenderSettings* UserRenderSettings;
     };
 
 }

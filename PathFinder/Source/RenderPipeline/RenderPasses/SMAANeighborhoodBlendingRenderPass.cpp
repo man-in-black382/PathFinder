@@ -19,7 +19,7 @@ namespace PathFinder
 
     void SMAANeighborhoodBlendingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
+        scheduler->ReadTexture(ResourceNames::BloomCompositionOutput);
         scheduler->ReadTexture(ResourceNames::SMAABlendingWeights);
         scheduler->NewRenderTarget(ResourceNames::SMAAAntialiased);
     }
@@ -29,7 +29,7 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::SMAANeighborhoodBlending);
 
         SMAANeighborhoodBlendingCBContent cbContent{};
-        cbContent.InputImageTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ToneMappingOutput);
+        cbContent.InputImageTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::BloomCompositionOutput);
         cbContent.BlendingWeightsTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::SMAABlendingWeights);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);

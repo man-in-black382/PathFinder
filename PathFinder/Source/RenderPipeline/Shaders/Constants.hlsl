@@ -22,4 +22,8 @@ static const uint EntityTypeMesh = 0;
 static const uint EntityTypeLight = 1;
 static const uint EntityTypeDebugGIProbe = 2;
 
+static const float3 XAxis = float3(1, 0, 0);
+static const float3 YAxis = float3(0, 1, 0);
+static const float3 ZAxis = float3(0, 0, 1);
+
 #endif

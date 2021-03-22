@@ -25,7 +25,7 @@ namespace PathFinder
     {
         NewTextureProperties props = FillMissingFields(properties);
 
-        bool canBeReadAcrossFrames = EnumMaskContains(properties->Flags, ResourceSchedulingFlags::CrossFrameRead);
+        bool canBeReadAcrossFrames = EnumMaskContains(props.Flags, ResourceSchedulingFlags::CrossFrameRead);
 
         HAL::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
@@ -61,7 +61,7 @@ namespace PathFinder
     void ResourceScheduler<ContentMediator>::NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties)
     {
         NewDepthStencilProperties props = FillMissingFields(properties);
-        bool canBeReadAcrossFrames = EnumMaskContains(properties->Flags, ResourceSchedulingFlags::CrossFrameRead);
+        bool canBeReadAcrossFrames = EnumMaskContains(props.Flags, ResourceSchedulingFlags::CrossFrameRead);
         HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
 
         mResourceStorage->QueueResourceAllocationIfNeeded(
@@ -98,7 +98,7 @@ namespace PathFinder
     void ResourceScheduler<ContentMediator>::NewTexture(Foundation::Name resourceName, const MipSet& writtenMips, std::optional<NewTextureProperties> properties)
     {
         NewTextureProperties props = FillMissingFields(properties);
-        bool canBeReadAcrossFrames = EnumMaskContains(properties->Flags, ResourceSchedulingFlags::CrossFrameRead);
+        bool canBeReadAcrossFrames = EnumMaskContains(props.Flags, ResourceSchedulingFlags::CrossFrameRead);
 
         HAL::FormatVariant format = *props.ShaderVisibleFormat;
         if (props.TypelessFormat) format = *props.TypelessFormat;
@@ -306,11 +306,11 @@ namespace PathFinder
     void ResourceScheduler<ContentMediator>::Export(Foundation::Name resourceName)
     {
         mResourceStorage->QueueResourceReadback(resourceName, [resourceName, node = mCurrentlySchedulingPassNode](PipelineResourceSchedulingInfo& schedulingInfo)
-            {
-                PipelineResourceSchedulingInfo::PassInfo* passInfo = schedulingInfo.GetInfoForPass(node->PassMetadata().Name);
-                assert_format(passInfo, "Resource ", resourceName.ToString(), " wasn't scheduled for usage in ", node->PassMetadata().Name.ToString());
-                passInfo->IsReadbackRequested = true;
-            });
+        {
+            PipelineResourceSchedulingInfo::PassInfo* passInfo = schedulingInfo.GetInfoForPass(node->PassMetadata().Name);
+            assert_format(passInfo, "Resource ", resourceName.ToString(), " wasn't scheduled for usage in ", node->PassMetadata().Name.ToString());
+            passInfo->IsReadbackRequested = true;
+        });
     }
 
     template <class ContentMediator>
@@ -335,7 +335,7 @@ namespace PathFinder
             std::nullopt,
             HAL::ColorClearValue{ 0, 0, 0, 1 },
             1,
-            properties->Flags
+            properties ? properties->Flags : ResourceSchedulingFlags::None
         };
 
         if (properties)
@@ -365,7 +365,7 @@ namespace PathFinder
             mUtilityProvider->DefaultRenderSurfaceDescription.DepthStencilFormat(),
             mUtilityProvider->DefaultRenderSurfaceDescription.Dimensions(),
             1,
-            properties->Flags
+            properties ? properties->Flags : ResourceSchedulingFlags::None
         };
 
         if (properties)

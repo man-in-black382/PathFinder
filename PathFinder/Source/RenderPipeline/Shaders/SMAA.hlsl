@@ -546,6 +546,10 @@ SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; Addres
 #define SMAA_POINT_CLAMP_SAMPLER PointSampler
 #endif
 
+#ifndef SMAA_LINEAR_TO_SRGB_FUNC
+#define SMAA_LINEAR_TO_SRGB_FUNC(color) float3(color)
+#endif
+
 #define SMAATexture2D(tex) Texture2D tex
 #define SMAATexturePass2D(tex) tex
 #define SMAASampleLevelZero(tex, coord) tex.SampleLevel(SMAA_LINEAR_CLAMP_SAMPLER, coord, 0)
@@ -553,6 +557,7 @@ SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; Addres
 #define SMAASampleLevelZeroOffset(tex, coord, offset) tex.SampleLevel(SMAA_LINEAR_CLAMP_SAMPLER, coord, 0, offset)
 #define SMAASample(tex, coord) tex.Sample(SMAA_LINEAR_CLAMP_SAMPLER, coord)
 #define SMAASamplePoint(tex, coord) tex.Sample(SMAA_POINT_CLAMP_SAMPLER, coord)
+#define SMAASamplePointAndConvertToSRGB(tex, coord) SMAA_LINEAR_TO_SRGB_FUNC(tex.Sample(SMAA_POINT_CLAMP_SAMPLER, coord).rgb)
 #define SMAASampleOffset(tex, coord, offset) tex.Sample(SMAA_LINEAR_CLAMP_SAMPLER, coord, offset)
 #define SMAA_FLATTEN [flatten]
 #define SMAA_BRANCH [branch]
@@ -720,7 +725,8 @@ float2 SMAALumaEdgeDetectionPS(float2 texcoord,
 
     // Then discard if there is no edge:
     if (dot(edges, float2(1.0, 1.0)) == 0.0)
-        return 0;
+        return 0.0; // Using return instead of discard to avoid clear operation
+        //discard;
 
     // Calculate right and bottom deltas:
     float Lright = dot(SMAASamplePoint(colorTex, offset[1].xy).rgb, weights);
@@ -782,7 +788,8 @@ float2 SMAAColorEdgeDetectionPS(float2 texcoord,
 
     // Then discard if there is no edge:
     if (dot(edges, float2(1.0, 1.0)) == 0.0)
-        discard;
+        return 0.0; // Using return instead of discard to avoid clear operation
+       //discard;
 
     // Calculate right and bottom deltas:
     float3 Cright = SMAASamplePoint(colorTex, offset[1].xy).rgb;
@@ -802,6 +809,73 @@ float2 SMAAColorEdgeDetectionPS(float2 texcoord,
     delta.z = max(max(t.r, t.g), t.b);
 
     float3 Ctoptop = SMAASamplePoint(colorTex, offset[2].zw).rgb;
+    t = abs(C - Ctoptop);
+    delta.w = max(max(t.r, t.g), t.b);
+
+    // Calculate the final maximum delta:
+    maxDelta = max(maxDelta.xy, delta.zw);
+    float finalDelta = max(maxDelta.x, maxDelta.y);
+
+    // Local contrast adaptation:
+    edges.xy *= step(finalDelta, SMAA_LOCAL_CONTRAST_ADAPTATION_FACTOR * delta.xy);
+
+    return edges;
+}
+
+// Same as above, but performs linear-to-SRGB conversion
+float2 SMAAColorEdgeDetectionLinearInputsPS(
+    float2 texcoord,
+    float4 offset[3],
+    SMAATexture2D(colorTex)
+#if SMAA_PREDICATION
+    , SMAATexture2D(predicationTex)
+#endif
+) {
+    // Calculate the threshold:
+#if SMAA_PREDICATION
+    float2 threshold = SMAACalculatePredicatedThreshold(texcoord, offset, predicationTex);
+#else
+    float2 threshold = float2(SMAA_THRESHOLD, SMAA_THRESHOLD);
+#endif
+
+    // Calculate color deltas:
+    float4 delta;
+    float3 C = SMAASamplePointAndConvertToSRGB(colorTex, texcoord).rgb;
+
+    float3 Cleft = SMAASamplePointAndConvertToSRGB(colorTex, offset[0].xy).rgb;
+    float3 t = abs(C - Cleft);
+    delta.x = max(max(t.r, t.g), t.b);
+
+    float3 Ctop = SMAASamplePointAndConvertToSRGB(colorTex, offset[0].zw).rgb;
+    t = abs(C - Ctop);
+    delta.y = max(max(t.r, t.g), t.b);
+
+    // We do the usual threshold:
+    float2 edges = step(threshold, delta.xy);
+
+    // Then discard if there is no edge:
+    if (dot(edges, float2(1.0, 1.0)) == 0.0)
+        return 0.0; // Using return instead of discard to avoid clear operation
+        //discard;
+
+    // Calculate right and bottom deltas:
+    float3 Cright = SMAASamplePointAndConvertToSRGB(colorTex, offset[1].xy).rgb;
+    t = abs(C - Cright);
+    delta.z = max(max(t.r, t.g), t.b);
+
+    float3 Cbottom = SMAASamplePointAndConvertToSRGB(colorTex, offset[1].zw).rgb;
+    t = abs(C - Cbottom);
+    delta.w = max(max(t.r, t.g), t.b);
+
+    // Calculate the maximum delta in the direct neighborhood:
+    float2 maxDelta = max(delta.xy, delta.zw);
+
+    // Calculate left-left and top-top deltas:
+    float3 Cleftleft = SMAASamplePointAndConvertToSRGB(colorTex, offset[2].xy).rgb;
+    t = abs(C - Cleftleft);
+    delta.z = max(max(t.r, t.g), t.b);
+
+    float3 Ctoptop = SMAASamplePointAndConvertToSRGB(colorTex, offset[2].zw).rgb;
     t = abs(C - Ctoptop);
     delta.w = max(max(t.r, t.g), t.b);
 

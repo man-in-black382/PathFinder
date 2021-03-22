@@ -18,6 +18,10 @@ namespace PathFinder
         uint32_t IsGradientDebugEnabled;
         uint32_t IsMotionDebugEnabled;
         uint32_t IsDenoiserAntilagEnabled;
+        uint32_t IsAntialiasingEnabled;
+        uint32_t IsAntialiasingEdgeDetectionEnabled;
+        uint32_t IsAntialiasingBlendingWeightCalculationEnabled;
+        uint32_t IsAntialiasingNeighborhoodBlendingEnabled;
     };
 
 }

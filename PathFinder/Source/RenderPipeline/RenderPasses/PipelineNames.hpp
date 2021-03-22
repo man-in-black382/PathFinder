@@ -29,6 +29,7 @@ namespace PathFinder
 
         inline Foundation::Name DeferredLightingRayPDFs{ "Resource_Deferred_Lighting_Ray_PDFs" };
         inline Foundation::Name DeferredLightingRayLightIntersectionPoints{ "Resource_Deferred_Lighting_Ray_Light_Intersection_Points" };
+        inline Foundation::Name DeferredLightingRayLuminances{ "Resource_Deferred_Lighting_Ray_Luminances" };
         inline Foundation::Name StochasticUnshadowedShadingOutput{ "Resource_Shading_Stochastic_Unshadowed_Output" };
         inline Foundation::Name StochasticShadowedShadingOutput{ "Resource_Shading_Stochastic_Shadowed_Output" };
         inline Foundation::Name StochasticUnshadowedShadingPreBlurred{ "Resource_Shading_Stochastic_Unshadowed_Pre_Blurred" };

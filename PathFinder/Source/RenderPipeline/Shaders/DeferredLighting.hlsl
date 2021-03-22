@@ -20,6 +20,7 @@ struct PassData
 };
 
 #define PassDataType PassData
+#define DIRECT_LIGHTING
 
 #include "ShadingCommon.hlsl"
 

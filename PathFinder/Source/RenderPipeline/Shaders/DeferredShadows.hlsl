@@ -3,7 +3,7 @@
 
 #include "Mesh.hlsl"
 #include "GBuffer.hlsl"
-#include "CookTorrance.hlsl"
+#include "BRDF.hlsl"
 
 struct PassData
 {
@@ -45,7 +45,6 @@ void TraceShadowsStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, 
     float3 unshadowed = 0.0;
 
     const uint RayFlags = 
-        RAY_FLAG_CULL_BACK_FACING_TRIANGLES |
         RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
         RAY_FLAG_FORCE_OPAQUE |           // Skip any hit shaders
         RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
@@ -73,16 +72,12 @@ void TraceShadowsStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, 
         float tmax = vectorLength - 1e-03;
         float tmin = 1e-03;
 
-        float3 brdf = CookTorranceBRDF(
-            gBuffer.Normal,
-            viewDirection,
-            normalize(viewDirection + gBuffer.Normal),
-            normalize(-lightToSurface),
-            gBuffer.Roughness,
-            gBuffer.Albedo,
-            gBuffer.Metalness,
-            light.Luminance * light.Color.rgb
-        );
+        float3x3 worldToTangent = transpose(RotationMatrix3x3(gBuffer.Normal));
+        float3 wo = mul(worldToTangent, viewDirection);
+        float3 wi = mul(worldToTangent, normalize(-lightToSurface));
+        float3 wm = normalize(wo + wi);
+
+        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * light.Luminance * light.Color.rgb;
 
         RayDesc dxrRay;
         dxrRay.Origin = lightIntersectionPoint;

@@ -3,7 +3,7 @@
 namespace PathFinder
 {
 
-    Foundation::Name ToneMappingPassInputSRName(bool isGIDebugEnabled)
+    Foundation::Name SMAAEdgeDetectionPassInputSRName(bool isGIDebugEnabled)
     {
         return isGIDebugEnabled ? ResourceNames::GIDebugOutput : ResourceNames::BloomCompositionOutput;
     }

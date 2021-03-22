@@ -174,10 +174,10 @@ namespace HAL
         inline const auto& GetTextureProperties() const { return std::get<TextureProperties>(mResourceProperties); }
         inline const auto& GetBufferProperties() const { return std::get<BufferProperties>(mResourceProperties); }
         inline const auto& ResourceProperties() const { return mResourceProperties; }
-        inline auto ResourceAliasingGroup() const { return mAliasingGroup; }
-        inline auto SubresourceCount() const { return mSubresourceCount; }
-        inline auto ResourceAlighnment() const { return mResourceAlignment; }
-        inline auto ResourceSizeInBytes() const { return mResourceSizeInBytes; }
+        inline HeapAliasingGroup ResourceAliasingGroup() const { return mAliasingGroup; }
+        inline uint64_t SubresourceCount() const { return mSubresourceCount; }
+        inline uint64_t ResourceAlighnment() const { return mResourceAlignment; }
+        inline uint64_t ResourceSizeInBytes() const { return mResourceSizeInBytes; }
     };
 
 }

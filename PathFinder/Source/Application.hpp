@@ -37,7 +37,7 @@
 #include "RenderPipeline/RenderPasses/BloomBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/BloomCompositionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/GeometryPickingRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/GIRayTracingRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/GIPrimaryRayTracingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/GIProbeUpdateRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/GIDebugRenderPass.hpp"
 #include "RenderPipeline/GlobalRootConstants.hpp"
@@ -105,7 +105,7 @@ namespace PathFinder
         BackBufferOutputPass mBackBufferOutputPass;
         UIRenderPass mUIPass;
         GeometryPickingRenderPass mGeometryPickingPass;
-        GIRayTracingRenderPass mGIRayTracingPass;
+        GIPrimaryRayTracingRenderPass mGIRayTracingPass;
         GIProbeUpdateRenderPass mGIProbeUpdatePass;
         GIDebugRenderPass mGIDebugPass;
 

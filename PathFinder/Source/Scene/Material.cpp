@@ -76,4 +76,15 @@ namespace PathFinder
         deserializeTextureBlob(DistanceField);
     }
 
+    bool Material::IsTransparent() const
+    {
+        if (TranslucencyMap.Texture)
+            return true;
+
+        //bool hasNonZeroTransmissionFilter = TransmissionFilter && glm::any(glm::greaterThan(*TransmissionFilter, glm::vec3{ 0.05f }));
+        bool hasNonZeroTranslucency = TranslucencyOverride && *TranslucencyOverride > 0.05f;
+
+        return hasNonZeroTranslucency;
+    }
+
 }

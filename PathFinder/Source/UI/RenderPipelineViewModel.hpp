@@ -9,6 +9,7 @@ namespace PathFinder
     {
     public:
         PipelineSettings* RenderPipelineSettings() { return Dependencies->RenderPipelineSettings; }
+        RenderSettings* UserRenderSettings() { return Dependencies->UserRenderSettings; }
     };
 
 }

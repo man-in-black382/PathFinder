@@ -122,7 +122,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;GFSDK_Aftermath_Lib.x64.lib;GFSDK_Aftermath_Lib_UWP.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc142-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;GFSDK_Aftermath_Lib.x64.lib;GFSDK_Aftermath_Lib_UWP.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r /b /d
@@ -191,7 +191,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc140-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;GFSDK_Aftermath_Lib.x64.lib;GFSDK_Aftermath_Lib_UWP.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc142-mt.lib;D3d12.lib;dxgi.lib;dxcompiler.lib;GFSDK_Aftermath_Lib.x64.lib;GFSDK_Aftermath_Lib_UWP.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)Source/RenderPipeline/Shaders" "$(TargetDir)Shaders" /e /y /i /r /b /d
@@ -312,7 +312,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIPrimaryRayTracingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp" />
@@ -548,7 +548,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIPrimaryRayTracingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp" />
@@ -1267,10 +1267,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <FileType>Document</FileType>
     </CopyFileToFolders>
     <None Include="Libs\Aftermath\llvm_7_0_1.dll" />
-    <CopyFileToFolders Include="Libs\Assimp\assimp-vc140-mt.dll">
-      <FileType>Document</FileType>
-    </CopyFileToFolders>
-    <None Include="Libs\Assimp\assimp-vc140-mt.exp" />
     <CopyFileToFolders Include="Libs\DXC\dxcompiler.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
@@ -1280,6 +1276,12 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <CopyFileToFolders Include="Libs\Optick\OptickCore.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="Libs\Assimp\assimp-vc142-mt.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <None Include="Libs\Assimp\assimp-vc142-mt.exp">
+      <FileType>Document</FileType>
+    </None>
     <None Include="Libs\Optick\OptickCore.pdb" />
     <None Include="packages.config" />
     <None Include="Source\Foundation\Halton.inl" />
@@ -2407,7 +2409,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Source\RenderPipeline\Shaders\CookTorrance.hlsl">
+    <FxCompile Include="Source\RenderPipeline\Shaders\BRDF.hlsl">
       <FileType>Document</FileType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Library</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.5</ShaderModel>
@@ -3007,7 +3009,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
   <ItemGroup>
     <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib.x64.lib" />
     <Library Include="Libs\Aftermath\GFSDK_Aftermath_Lib_UWP.x64.lib" />
-    <Library Include="Libs\Assimp\assimp-vc140-mt.lib" />
+    <Library Include="Libs\Assimp\assimp-vc142-mt.lib">
+      <FileType>Document</FileType>
+    </Library>
     <Library Include="Libs\Optick\OptickCore.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,4 +1,5 @@
 #include "SMAAEdgeDetectionRenderPass.hpp"
+#include "ResourceNameResolving.hpp"
 
 namespace PathFinder
 {
@@ -20,16 +21,20 @@ namespace PathFinder
       
     void SMAAEdgeDetectionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        scheduler->ReadTexture(ResourceNames::ToneMappingOutput);
+        bool isGIDebugEnabled = scheduler->Content()->GetScene()->GlobalIlluminationManager().GIDebugEnabled;
+
+        scheduler->ReadTexture(SMAAEdgeDetectionPassInputSRName(isGIDebugEnabled));
         scheduler->NewRenderTarget(ResourceNames::SMAADetectedEdges, NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });
     }  
 
     void SMAAEdgeDetectionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
+        bool isGIDebugEnabled = context->GetContent()->GetScene()->GlobalIlluminationManager().GIDebugEnabled;
+
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::SMAAEdgeDetection);
 
         SMAAEdgeDetectionCBContent cbContent{};
-        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::ToneMappingOutput);
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(SMAAEdgeDetectionPassInputSRName(isGIDebugEnabled));
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->SetRenderTarget(ResourceNames::SMAADetectedEdges);

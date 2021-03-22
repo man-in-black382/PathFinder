@@ -97,6 +97,11 @@ namespace PathFinder
                 material.TranslucencyOverride = 1.0 - color.r;
             }
 
+            if (aiGetMaterialColor(assimpMaterial, AI_MATKEY_COLOR_TRANSPARENT, &color) == aiReturn_SUCCESS)
+            {
+                material.TransmissionFilter = { color.r, color.g, color.b };
+            }
+
             aiWrapModeToWrapMode(material.TranslucencyMap);
 
             if (assimpMaterial->GetTextureCount(aiTextureType_NORMALS))
