@@ -25,9 +25,8 @@ namespace PathFinder
     {
     public:
         void HandleClick();
+        void HandleEsc();
         void SetModifiedModelMatrix(const glm::mat4& mat, const glm::mat4& delta);
-        void SetEnableGIDebug(bool enable);
-        void SetRotateProbeRaysEachFrame(bool enable);
 
         void Import() override;
         void Export() override;
@@ -50,7 +49,6 @@ namespace PathFinder
         inline const glm::mat4& ModelMatrix() const { return mModelMatrix; }
         inline bool ShouldDisplay() const { return mShouldDisplay; }
         inline bool AreRotationsAllowed() const { return mAreRotationsAllowed; }
-        inline bool RotateProbeRaysEachFrame() const { return !Dependencies->ScenePtr->GlobalIlluminationManager().DoNotRotateProbeRays; }
     };
 
 }

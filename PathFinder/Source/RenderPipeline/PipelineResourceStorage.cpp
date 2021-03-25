@@ -113,7 +113,7 @@ namespace PathFinder
         // Create resource data 
         for (ResourceCreationRequest& request : mPrimaryResourceCreationRequests)
         {
-            assert_format(!GetPerResourceData(request.ResourceName), "Texture ", request.ResourceName.ToString(), " allocation is already requested");
+            assert_format(!GetPerResourceData(request.ResourceName), "Resource ", request.ResourceName.ToString(), " allocation is already requested by ", request.PassName.ToString());
 
             std::visit([&](auto&& properties) 
             { 
@@ -126,7 +126,7 @@ namespace PathFinder
         for (ResourceCreationRequest& request : mSecondaryResourceCreationRequests)
         {
             PipelineResourceStorageResource* resourceData = GetPerResourceData(request.ResourceNameToCopyPropertiesFrom);
-            assert_format(resourceData, "Trying to clone properties of a resource that doesn't exist (", request.ResourceNameToCopyPropertiesFrom.ToString(), ")");
+            assert_format(resourceData, request.PassName.ToString(), " tries to clone properties of a resource that doesn't exist (", request.ResourceNameToCopyPropertiesFrom.ToString(), ")");
             CreatePerResourceData(request.ResourceName, resourceData->SchedulingInfo.ResourceFormat());
         }
 
@@ -176,7 +176,7 @@ namespace PathFinder
         for (SchedulingRequest& request : mSchedulingUsageRequests)
         {
             auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
-            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to use a resource that wasn't created: ", request.ResourceName.ToString());
+            assert_format(indexIt != mCurrentFrameResourceMap->end(), request.PassName.ToString(), " tries to use a resource that wasn't created: ", request.ResourceName.ToString());
 
             PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
             request.Configurator(resourceData.SchedulingInfo);
@@ -186,7 +186,7 @@ namespace PathFinder
         for (SchedulingRequest& request : mSchedulingReadbackRequests)
         {
             auto indexIt = mCurrentFrameResourceMap->find(request.ResourceName);
-            assert_format(indexIt != mCurrentFrameResourceMap->end(), "Trying to readback a resource that wasn't created: ", request.ResourceName.ToString());
+            assert_format(indexIt != mCurrentFrameResourceMap->end(), request.PassName.ToString(), " tries to readback a resource that wasn't created: ", request.ResourceName.ToString());
 
             PipelineResourceStorageResource& resourceData = mCurrentFrameResources->at(indexIt->second);
             request.Configurator(resourceData.SchedulingInfo);
@@ -282,37 +282,38 @@ namespace PathFinder
     }
 
     void PipelineResourceStorage::QueueResourceAllocationIfNeeded(
+        PassName passName,
         ResourceName resourceName,
         const HAL::ResourcePropertiesVariant& properties,
         std::optional<Foundation::Name> propertyCopySourceName,
         const SchedulingInfoConfigurator& siConfigurator)
     {
-        mSchedulingCreationRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName });
+        mSchedulingCreationRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName, passName });
 
         if (propertyCopySourceName)
         {
-            mSecondaryResourceCreationRequests.emplace_back(ResourceCreationRequest{ properties, resourceName, *propertyCopySourceName });
+            mSecondaryResourceCreationRequests.emplace_back(ResourceCreationRequest{ properties, resourceName, *propertyCopySourceName, passName });
         }
         else {
-            mPrimaryResourceCreationRequests.emplace_back(ResourceCreationRequest{ properties, resourceName, {} });
+            mPrimaryResourceCreationRequests.emplace_back(ResourceCreationRequest{ properties, resourceName, {}, passName });
         }
     }
 
-    void PipelineResourceStorage::QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator)
+    void PipelineResourceStorage::QueueResourceUsage(PassName passName, ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator)
     {
         if (aliasName)
         {
-            mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, *aliasName });
+            mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, *aliasName, passName });
             mAliasMap[*aliasName] = resourceName;
         }
         else {
-            mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName });
+            mSchedulingUsageRequests.emplace_back(SchedulingRequest{ siConfigurator, resourceName, passName });
         }
     }
 
-    void PipelineResourceStorage::QueueResourceReadback(ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator)
+    void PipelineResourceStorage::QueueResourceReadback(PassName passName, ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator)
     {
-        mSchedulingReadbackRequests.push_back(SchedulingRequest{ siConfigurator, resourceName });
+        mSchedulingReadbackRequests.push_back(SchedulingRequest{ siConfigurator, resourceName, passName });
     }
 
     void PipelineResourceStorage::AddSampler(Foundation::Name samplerName, const HAL::Sampler& sampler)

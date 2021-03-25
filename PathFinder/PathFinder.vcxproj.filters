@@ -609,7 +609,10 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIPrimaryRayTracingRenderPass.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeIndirectionTableUpdateRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -3140,7 +3143,10 @@
     <ClInclude Include="Source\ThirdParty\assimp\config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIPrimaryRayTracingRenderPass.hpp">
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeIndirectionTableUpdateRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

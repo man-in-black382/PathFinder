@@ -19,6 +19,9 @@ namespace PathFinder
 
     void DenoiserGradientFilteringRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+            return;
+
         scheduler->AliasAndWriteTexture(ResourceNames::DenoiserPrimaryGradient, ResourceNames::DenoiserPrimaryGradientFilteredIntermediate);
         scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradientFiltered, NewTextureProperties{ ResourceNames::DenoiserPrimaryGradientInputs });
     }

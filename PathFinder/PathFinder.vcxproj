@@ -311,8 +311,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DownsamplingRenderSubPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeIndirectionTableUpdateRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIPrimaryRayTracingRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.cpp" />
@@ -547,8 +548,9 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferTextureIndices.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeIndirectionTableUpdateRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIPrimaryRayTracingRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DeferredLightingRenderPass.hpp" />

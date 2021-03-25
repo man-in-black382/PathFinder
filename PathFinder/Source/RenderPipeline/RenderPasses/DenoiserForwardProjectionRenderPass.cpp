@@ -19,6 +19,9 @@ namespace PathFinder
 
     void DenoiserForwardProjectionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+            return;
+
         auto currentFrameIndex = scheduler->FrameNumber() % 2;
         auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
 

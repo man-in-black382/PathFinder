@@ -16,7 +16,7 @@ namespace PathFinder
         std::vector<std::string> mWorkMeasurementStrings;
         std::string mBarrierMeasurementsString;
         std::string mFrameMeasurementString;
-        Foundation::Cooldown mUpdateCooldown{ 0.15 };
+        Foundation::Cooldown mUpdateCooldown{ 0.075 };
 
     public:
         inline const auto& WorkMeasurements() const { return mWorkMeasurementStrings; }

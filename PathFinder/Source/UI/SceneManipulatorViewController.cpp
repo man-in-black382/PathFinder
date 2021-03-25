@@ -26,20 +26,6 @@ namespace PathFinder
         ImGui::Text("Position: %f %f %f", CameraVM->CameraPosition().x, CameraVM->CameraPosition().y, CameraVM->CameraPosition().z);
     }
 
-    void SceneManipulatorViewController::DrawGIControls()
-    {
-        ImGui::Separator();
-        ImGui::Spacing();
-        
-        ImGui::Text("Global Illumination");
-
-        if (ImGui::Checkbox("Draw GI Probes", &mGIDebugEnabled))
-            EntityVM->SetEnableGIDebug(mGIDebugEnabled);
-
-        if (ImGui::Checkbox("Rotate Probe Rays Each Frame", &mRotateProbeRaysEachFrame))
-            EntityVM->SetRotateProbeRaysEachFrame(mRotateProbeRaysEachFrame);
-    }
-
     void SceneManipulatorViewController::DrawImGuizmoControls()
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -185,15 +171,15 @@ namespace PathFinder
         if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::W) && mCurrentGizmoOperation != ImGuizmo::SCALE)
             mCurrentGizmoMode = mCurrentGizmoMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
 
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::Escape))
+            EntityVM->HandleEsc();
+
         CameraVM->Import();
         EntityVM->Import();
-
-        mRotateProbeRaysEachFrame = EntityVM->RotateProbeRaysEachFrame();
 
         ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
         DrawCameraControls();
-        DrawGIControls();
         DrawImGuizmoControls();
 
         mIsInteracting = EntityVM->ShouldDisplay() || ImGuizmo::IsUsing();

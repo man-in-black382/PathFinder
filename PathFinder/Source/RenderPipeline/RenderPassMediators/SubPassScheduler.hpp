@@ -21,6 +21,7 @@ namespace PathFinder
         SubPassScheduler(RenderPassContainer<ContentMediator>* passContainer, const PipelineResourceStorage* resourceStorage, const RenderPassUtilityProvider* utilityProvider);
 
         void AddRenderSubPass(RenderSubPass<ContentMediator>* pass);
+        void SetContent(const ContentMediator* content);
 
         const HAL::TextureProperties& GetTextureProperties(Foundation::Name textureName) const;
         const HAL::BufferProperties& GetBufferProperties(Foundation::Name bufferName) const;
@@ -28,11 +29,13 @@ namespace PathFinder
     private:
         const PipelineResourceStorage* mResourceStorage;
         const RenderPassUtilityProvider* mUtilityProvider;
+        const ContentMediator* mContent = nullptr;
         RenderPassContainer<ContentMediator>* mPassContainer;
 
     public:
         inline const RenderSurfaceDescription& GetDefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }
         inline auto FrameNumber() const { return mUtilityProvider->FrameNumber; }
+        inline const ContentMediator* Content() const { return mContent; }
     };
 
 }

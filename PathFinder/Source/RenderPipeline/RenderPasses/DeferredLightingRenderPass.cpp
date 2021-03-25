@@ -1,4 +1,5 @@
 #include "DeferredLightingRenderPass.hpp"
+#include "ResourceNameResolving.hpp"
 
 #include <Foundation/Halton.hpp>
 
@@ -33,6 +34,9 @@ namespace PathFinder
      
     void DeferredLightingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
+        bool isDenoiserEnabled = scheduler->Content()->GetSettings()->IsDenoiserEnabled;
+        auto currentFrameIndex = scheduler->FrameNumber() % 2;
+
         //auto defaultDimensions = scheduler->DefaultRenderSurfaceDesc().Dimensions();
         //Geometry::Dimensions luminancesTextureDimensions{ defaultDimensions.Width, defaultDimensions.Height, 4 }; // 4 lights
 
@@ -46,12 +50,15 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
-        scheduler->ReadTexture(ResourceNames::RngSeedsCorrelated);
+        scheduler->ReadTexture(DeferredLightingRngSeedTexName(isDenoiserEnabled, currentFrameIndex));
     } 
 
     void DeferredLightingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DeferredLighting);
+
+        bool isDenoiserEnabled = context->GetContent()->GetSettings()->IsDenoiserEnabled;
+        auto currentFrameIndex = context->FrameNumber() % 2;
 
         const Scene* scene = context->GetContent()->GetScene();
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
@@ -71,7 +78,7 @@ namespace PathFinder
         cbContent.ShadowRayPDFsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingRayPDFs);
         cbContent.ShadowRayIntersectionPointsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingRayLightIntersectionPoints);
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
-        cbContent.RngSeedsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::RngSeedsCorrelated);
+        cbContent.RngSeedsTexIdx = resourceProvider->GetSRTextureIndex(DeferredLightingRngSeedTexName(isDenoiserEnabled, currentFrameIndex));
         cbContent.FrameNumber = context->FrameNumber();
 
         auto haltonSequence = Foundation::Halton::Sequence(0, 3);

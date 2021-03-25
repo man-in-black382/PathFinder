@@ -15,6 +15,9 @@ namespace PathFinder
 
     void DenoiserPreBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+            return;
+
         NewTextureProperties outputProperties{};
         outputProperties.MipCount = 5;
 

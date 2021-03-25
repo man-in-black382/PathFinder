@@ -1,5 +1,6 @@
 #include "DenoiserPostBlurRenderPass.hpp"
 #include "DownsamplingHelper.hpp"
+#include "ResourceNameResolving.hpp"
 
 #include <Foundation/Gaussian.hpp>
 
@@ -19,6 +20,8 @@ namespace PathFinder
 
     void DenoiserPostBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        bool isDenoiserEnabled = scheduler->Content()->GetSettings()->IsDenoiserEnabled;
+
         auto frameIndex = scheduler->FrameNumber() % 2;
 
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingPostBlurred);
@@ -33,14 +36,20 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::CombinedShadingOversaturated, oversaturatedProps);
 
         scheduler->ReadTexture(ResourceNames::ShadingAnalyticOutput);
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[frameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingDenoised[frameIndex]);
-        scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
-        scheduler->ReadTexture(ResourceNames::DenoiserSecondaryGradient);
+        scheduler->ReadTexture(DenoiserPostBlurStochasticShadowedInputTexName(isDenoiserEnabled, frameIndex)); 
+        scheduler->ReadTexture(DenoiserPostBlurStochasticUnshadowedInputTexName(isDenoiserEnabled, frameIndex));
+
+        if (isDenoiserEnabled)
+        {
+            scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
+            scheduler->ReadTexture(ResourceNames::DenoiserSecondaryGradient);
+        }
     }
      
     void DenoiserPostBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
+        bool isDenoiserEnabled = context->GetContent()->GetSettings()->IsDenoiserEnabled;
+
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserPostBlur);
 
         auto resourceProvider = context->GetResourceProvider();
@@ -54,14 +63,18 @@ namespace PathFinder
         DenoiserPostBlurCBContent cbContent{};
         cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
         cbContent.AnalyticShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ShadingAnalyticOutput);
-        cbContent.SecondaryGradientTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserSecondaryGradient);
-        cbContent.AccumulatedFramesCountTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
-        cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[frameIndex]);
-        cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[frameIndex]);
+        cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(DenoiserPostBlurStochasticShadowedInputTexName(isDenoiserEnabled, frameIndex));
+        cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(DenoiserPostBlurStochasticUnshadowedInputTexName(isDenoiserEnabled, frameIndex));
         cbContent.ShadowedShadingBlurredOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingPostBlurred);
         cbContent.UnshadowedShadingBlurredOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingPostBlurred);
         cbContent.CombinedShadingTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::CombinedShading);
         cbContent.CombinedShadingOversaturatedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::CombinedShadingOversaturated);
+
+        if (isDenoiserEnabled)
+        {
+            cbContent.SecondaryGradientTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserSecondaryGradient);
+            cbContent.AccumulatedFramesCountTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
+        }
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Dispatch(groupCount.Width, groupCount.Height);

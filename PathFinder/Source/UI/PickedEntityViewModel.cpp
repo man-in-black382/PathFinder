@@ -40,20 +40,18 @@ namespace PathFinder
         }
     }
 
+    void PickedEntityViewModel::HandleEsc()
+    {
+        mMeshInstance = nullptr;
+        mSphericalLight = nullptr;
+        mFlatLight = nullptr;
+        Dependencies->ScenePtr->GlobalIlluminationManager().PickedDebugProbeIndex = std::nullopt;
+    }
+
     void PickedEntityViewModel::SetModifiedModelMatrix(const glm::mat4& mat, const glm::mat4& delta)
     {
         mModifiedModelMatrix = mat;
         mDeltaMatrix = delta;
-    }
-
-    void PickedEntityViewModel::SetEnableGIDebug(bool enable)
-    {
-        Dependencies->ScenePtr->GlobalIlluminationManager().GIDebugEnabled = enable;
-    }
-
-    void PickedEntityViewModel::SetRotateProbeRaysEachFrame(bool enable)
-    {
-        Dependencies->ScenePtr->GlobalIlluminationManager().DoNotRotateProbeRays = !enable;
     }
 
     void PickedEntityViewModel::Import()

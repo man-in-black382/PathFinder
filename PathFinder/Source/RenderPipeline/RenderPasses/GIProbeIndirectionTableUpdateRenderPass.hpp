@@ -8,19 +8,16 @@
 namespace PathFinder
 {
 
-    struct GIRayTracingCBContent
+    struct GIProbeIndirectionTableUpdateCBContent
     {
         GPUIrradianceField ProbeField;
-        glm::vec4 Halton;
-        glm::uvec2 BlueNoiseTexSize;
-        uint32_t BlueNoiseTexIdx;
     };
 
-    class GIPrimaryRayTracingRenderPass : public RenderPass<RenderPassContentMediator>
+    class GIProbeIndirectionTableUpdateRenderPass : public RenderPass<RenderPassContentMediator>
     {
     public:
-        GIPrimaryRayTracingRenderPass();
-        ~GIPrimaryRayTracingRenderPass() = default;
+        GIProbeIndirectionTableUpdateRenderPass();
+        ~GIProbeIndirectionTableUpdateRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler) override; 

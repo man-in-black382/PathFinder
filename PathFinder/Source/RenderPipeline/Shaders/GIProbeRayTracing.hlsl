@@ -96,20 +96,22 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     uint3 probe3DIndex = Probe3DIndexFrom1D(probeIndex, PassDataCB.ProbeField);
     float3 probePosition = ProbePositionFrom3DIndex(probe3DIndex, PassDataCB.ProbeField);
     float3 surfacePosition = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
+    float3x3 surfaceTangentToWorld = RotationMatrix3x3(gBuffer.Normal);
+    float3x3 surfaceWorldToTangent = transpose(surfaceTangentToWorld);
 
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
+    float3 wo = mul(surfaceWorldToTangent, viewDirection);
     LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
     ShadingResult shadingResult = ZeroShadingResult();
 
-    /*ShadeWithSphericalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
-    ShadeWithRectangularLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
-    ShadeWithEllipticalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);*/
+    ShadeWithSphericalLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
+    ShadeWithRectangularLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
+    ShadeWithEllipticalLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
 
     float3 shadowed = 0.0;
 
     const uint RayFlags =
-        RAY_FLAG_CULL_BACK_FACING_TRIANGLES |
         RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
         RAY_FLAG_FORCE_OPAQUE |           // Skip any hit shaders
         RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
@@ -198,6 +200,7 @@ void RayGeneration()
 
     ProbeRayPayload payload = { 0 };
 
+    // Select ProbeRayMiss(...)
     const int MissShaderIndex = 0; 
 
     TraceRay(SceneBVH,

@@ -263,13 +263,6 @@ namespace PathFinder
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::BuildAccelerationStructures()
     {
-        if (!mRenderPassGraph.FirstNodeThatUsesRayTracing())
-        {
-            // Skip building ray tracing acceleration structure
-            // if no render passes consume them
-            return;
-        }
-
         mRenderDevice->AllocateRTASBuildsCommandList();
 
         HAL::ResourceBarrierCollection bottomRTASUABarriers{};
@@ -331,6 +324,7 @@ namespace PathFinder
         // Run scheduling for standard render passes
         mPipelineResourceStorage->StartResourceScheduling();
         mResourceScheduler->SetContent(mContentMediator);
+        mSubPassScheduler->SetContent(mContentMediator);
 
         // Schedule root signatures first, because PSOs rely on them
         for (auto& [passName, passHelpers] : mRenderPassContainer->RenderPasses())

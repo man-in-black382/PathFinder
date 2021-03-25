@@ -161,7 +161,7 @@ float PointDistanceToPlane(float3 p, Plane plane)
     return distToPlane;
 }
 
-bool RayPlaneIntersection(Plane plane, Ray ray, out float3 intersectionPoint) 
+bool RayPlaneIntersection(Plane plane, Ray ray, inout float3 intersectionPoint) 
 {
     // Assuming float3s are all normalized
     float denom = dot(plane.Normal, ray.Direction) + 1e-06;
@@ -222,7 +222,7 @@ float3 VoxelWallIntersection(float3 voxelUVW, uint3 voxelGridResolution, Ray ray
     return voxelUVW + ray.Direction * (d + Epsilon); // Add e to make sure we step into neighbor voxel
 }
 
-bool RaySphereIntersection(Sphere sphere, Ray ray, out float3 intersectionPoint) 
+bool RaySphereIntersection(Sphere sphere, Ray ray, inout float3 intersectionPoint) 
 {
     float3 oc = ray.Origin - sphere.Center;
     float a = dot(ray.Direction, ray.Direction);

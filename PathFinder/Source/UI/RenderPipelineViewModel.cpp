@@ -3,7 +3,7 @@
 namespace PathFinder
 {
 
-    void RenderPipelineViewModel::EnableStablePowerState(bool enabled)
+    void RenderPipelineViewModel::SetEnableStablePowerState(bool enabled)
     {
         if (mIsStablePowerStateEnabled != enabled)
         {
@@ -11,6 +11,16 @@ namespace PathFinder
         }
 
         mIsStablePowerStateEnabled = enabled;
+    }
+
+    void RenderPipelineViewModel::SetEnableGIDebug(bool enable)
+    {
+        Dependencies->ScenePtr->GlobalIlluminationManager().GIDebugEnabled = enable;
+    }
+
+    void RenderPipelineViewModel::SetRotateProbeRaysEachFrame(bool enable)
+    {
+        Dependencies->ScenePtr->GlobalIlluminationManager().DoNotRotateProbeRays = !enable;
     }
 
 }

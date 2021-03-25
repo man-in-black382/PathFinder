@@ -138,8 +138,6 @@ float3 CookTorranceBRDF(float3 wo, float3 wi, float3 wm, GBufferStandard gBuffer
     float3 specular = (NDF * G * F) / (4.0 * NdotL * NdotV + 0.001); // avoid NaNs
     float3 diffuse = DisneyDiffuse(NdotV, NdotL, NdotH, gBuffer.Roughness) * (1.0 - gBuffer.Metalness) * gBuffer.Albedo;
 
-    return diffuse;
-    
     return (diffuse + specular) * NdotL;
 }
 

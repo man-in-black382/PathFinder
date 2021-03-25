@@ -181,16 +181,18 @@ namespace PathFinder
         OrderedNodeList mTopologicallySortedNodes;
         OrderedNodeList mNodesInGlobalExecutionOrder;
         WrittenSubresourceToPassMap mWrittenSubresourceToPassMap;
-        const Node* mFirstNodeThatUsesRayTracing = nullptr;
         uint64_t mDetectedQueueCount = 1;
+        std::vector<std::vector<const Node*>> mNodesPerQueue;
+        std::vector<const Node*> mFirstNodesThatUseRayTracing;
 
     public:
         inline const auto& NodesInGlobalExecutionOrder() const { return mNodesInGlobalExecutionOrder; }
         inline const auto& Nodes() const { return mPassNodes; }
         inline auto& Nodes() { return mPassNodes; }
         inline const auto& DependencyLevels() const { return mDependencyLevels; }
-        inline const Node* FirstNodeThatUsesRayTracing() const { return mFirstNodeThatUsesRayTracing; }
         inline auto DetectedQueueCount() const { return mDetectedQueueCount; }
+        inline const auto& NodesForQueue(Node::QueueIndex queueIndex) const { return mNodesPerQueue[queueIndex]; }
+        inline const Node* FirstNodeThatUsesRayTracingOnQueue(Node::QueueIndex queueIndex) const { return mFirstNodesThatUseRayTracing[queueIndex]; }
     };
 
 }

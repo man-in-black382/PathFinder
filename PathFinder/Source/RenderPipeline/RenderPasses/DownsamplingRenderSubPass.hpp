@@ -22,10 +22,12 @@ namespace PathFinder
         virtual void Render(RenderContext<RenderPassContentMediator>* context) override;
 
         void SetInvocationInputs(const std::vector<DownsamplingInvocationInputs>& inputs);
+        void SetEnabled(bool enabled);
 
     private:
         Foundation::Name CombineNameAndInvocation(const std::string& name, uint64_t invocationIndex) const;
 
+        bool mEnabled = true;
         std::vector<DownsamplingInvocationInputs> mInvocationInputs;
     };
 

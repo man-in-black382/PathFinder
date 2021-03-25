@@ -14,25 +14,29 @@ namespace PathFinder
     void DenoiserMipGenerationRenderPass::ScheduleSubPasses(SubPassScheduler<RenderPassContentMediator>* scheduler)
     {
         auto frameIndex = scheduler->FrameNumber() % 2;
+        bool isDenoiserEnabled = scheduler->Content()->GetSettings()->IsDenoiserEnabled;
 
-        std::array<std::vector<DownsamplingInvocationInputs>, 4> perResourceDownsamplingInvocationInputs{
-            GenerateDownsamplingShaderInvocationInputs(
-            ResourceNames::GBufferViewDepth[frameIndex],
-            scheduler->GetTextureProperties(ResourceNames::GBufferViewDepth[frameIndex]),
-            DownsamplingCBContent::Filter::Min,
-            DownsamplingStrategy::WriteAllLevels),
+        std::array<std::vector<DownsamplingInvocationInputs>, 4> perResourceDownsamplingInvocationInputs;
+        
+        if (isDenoiserEnabled)
+        {
+            perResourceDownsamplingInvocationInputs[0] = GenerateDownsamplingShaderInvocationInputs(
+                ResourceNames::GBufferViewDepth[frameIndex],
+                scheduler->GetTextureProperties(ResourceNames::GBufferViewDepth[frameIndex]),
+                DownsamplingCBContent::Filter::Min,
+                DownsamplingStrategy::WriteAllLevels);
 
-             GenerateDownsamplingShaderInvocationInputs(
-            ResourceNames::StochasticShadowedShadingPreBlurred,
-            scheduler->GetTextureProperties(ResourceNames::StochasticShadowedShadingPreBlurred),
-            DownsamplingCBContent::Filter::Average,
-            DownsamplingStrategy::WriteAllLevels),
+            perResourceDownsamplingInvocationInputs[1] = GenerateDownsamplingShaderInvocationInputs(
+                ResourceNames::StochasticShadowedShadingPreBlurred,
+                scheduler->GetTextureProperties(ResourceNames::StochasticShadowedShadingPreBlurred),
+                DownsamplingCBContent::Filter::Average,
+                DownsamplingStrategy::WriteAllLevels);
 
-             GenerateDownsamplingShaderInvocationInputs(
-            ResourceNames::StochasticUnshadowedShadingPreBlurred,
-            scheduler->GetTextureProperties(ResourceNames::StochasticUnshadowedShadingPreBlurred),
-            DownsamplingCBContent::Filter::Average,
-            DownsamplingStrategy::WriteAllLevels)
+            perResourceDownsamplingInvocationInputs[2] = GenerateDownsamplingShaderInvocationInputs(
+                ResourceNames::StochasticUnshadowedShadingPreBlurred,
+                scheduler->GetTextureProperties(ResourceNames::StochasticUnshadowedShadingPreBlurred),
+                DownsamplingCBContent::Filter::Average,
+                DownsamplingStrategy::WriteAllLevels);
         };
 
         auto longestInvocationArrayIt = std::max_element(
@@ -60,6 +64,11 @@ namespace PathFinder
             DownsamplingRenderSubPass* subPass = mDownsamplingSubPasses[invocation].get();
             subPass->SetInvocationInputs(subPassInvocationInputs);
             scheduler->AddRenderSubPass(subPass);
+        }
+
+        for (auto& subPass : mDownsamplingSubPasses)
+        {
+            subPass->SetEnabled(scheduler->Content()->GetSettings()->IsDenoiserEnabled);
         }
     }
 

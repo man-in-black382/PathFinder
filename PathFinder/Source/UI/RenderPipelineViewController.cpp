@@ -21,7 +21,7 @@ namespace PathFinder
 
         bool isStatePowerStateEnabled = VM->IsStablePowerStateEnabled();
         if (ImGui::Checkbox("Enable Stable Power State (Windows Dev. mode required)", &isStatePowerStateEnabled))
-            VM->EnableStablePowerState(isStatePowerStateEnabled);
+            VM->SetEnableStablePowerState(isStatePowerStateEnabled);
 
         ImGui::Separator();
         ImGui::Text("Antialiasing");
@@ -39,6 +39,17 @@ namespace PathFinder
         ImGui::Checkbox("Display Gradient", &VM->UserRenderSettings()->IsDenoiserGradientDebugRenderingEnabled);
         ImGui::Checkbox("Display Motion", &VM->UserRenderSettings()->IsDenoiserMotionDebugRenderingEnabled);
         ImGui::Checkbox("Enable Antilag", &VM->UserRenderSettings()->IsDenoiserAntilagEnabled);
+
+        ImGui::Separator();
+        ImGui::Text("Global Illumination");
+
+        bool giDebugEnabled = VM->IsGIDebugEnabled();
+        if (ImGui::Checkbox("Draw GI Probes", &giDebugEnabled))
+            VM->SetEnableGIDebug(giDebugEnabled);
+
+        bool probeRotationEnabled = VM->RotateProbeRaysEachFrame();
+        if (ImGui::Checkbox("Rotate Probe Rays Each Frame", &probeRotationEnabled))
+            VM->SetRotateProbeRaysEachFrame(probeRotationEnabled);
 
         ImGui::End();
 

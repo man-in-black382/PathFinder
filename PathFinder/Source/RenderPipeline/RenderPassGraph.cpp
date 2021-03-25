@@ -66,8 +66,9 @@ namespace PathFinder
         mTopologicallySortedNodes.clear();
         mNodesInGlobalExecutionOrder.clear();
         mAdjacencyLists.clear();
-        mFirstNodeThatUsesRayTracing = nullptr;
         mDetectedQueueCount = 1;
+        mNodesPerQueue.clear();
+        mFirstNodesThatUseRayTracing.clear();
 
         for (Node& node : mPassNodes)
         {
@@ -232,9 +233,10 @@ namespace PathFinder
     void RenderPassGraph::FinalizeDependencyLevels()
     {
         uint64_t globalExecutionIndex = 0;
-        bool firstRayTracingUserDetected = false;
 
         mNodesInGlobalExecutionOrder.resize(mTopologicallySortedNodes.size(), nullptr);
+        mNodesPerQueue.resize(mDetectedQueueCount);
+        mFirstNodesThatUseRayTracing.resize(mDetectedQueueCount);
         std::vector<const Node*> perQueuePreviousNodes(mDetectedQueueCount, nullptr);
         
         for (DependencyLevel& dependencyLevel : mDependencyLevels)
@@ -265,6 +267,7 @@ namespace PathFinder
                 mNodesInGlobalExecutionOrder[globalExecutionIndex] = node;
 
                 dependencyLevel.mNodesPerQueue[node->ExecutionQueueIndex].push_back(node);
+                mNodesPerQueue[node->ExecutionQueueIndex].push_back(node);
 
                 // Add previous node on that queue as a dependency for sync optimization later
                 if (perQueuePreviousNodes[node->ExecutionQueueIndex])
@@ -293,10 +296,9 @@ namespace PathFinder
                 }
 
                 // Track first RT-using node to sync BVH builds with
-                if (node->UsesRayTracing && !firstRayTracingUserDetected)
+                if (node->UsesRayTracing && !mFirstNodesThatUseRayTracing[node->ExecutionQueueIndex])
                 {
-                    mFirstNodeThatUsesRayTracing = node;
-                    firstRayTracingUserDetected = true;
+                    mFirstNodesThatUseRayTracing[node->ExecutionQueueIndex] = node;
                 }
 
                 localExecutionIndex++;

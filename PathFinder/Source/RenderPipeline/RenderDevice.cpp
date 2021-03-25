@@ -333,12 +333,16 @@ namespace PathFinder
         HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(commandLists.PreWorkCommandList);
         transitionsCommandList->SetDebugName(node.PassMetadata().Name.ToString() + " " + cmdListName + " Cmd List");
         transitionsCommandList->Reset();
+        
+        mEventTracker.StartGPUEvent(node.PassMetadata().Name.ToString() + " " + cmdListName, *transitionsCommandList);
         GPUProfiler::EventID profilerEventID = mGPUProfiler->RecordEventStart(*transitionsCommandList, node.ExecutionQueueIndex);
         mPassBarrierMeasurements.emplace_back(PipelineMeasurement{ "", profilerEventID, 0 });
-        mEventTracker.StartGPUEvent(node.PassMetadata().Name.ToString() + " " + cmdListName, *transitionsCommandList);
+
         transitionsCommandList->InsertBarriers(barriers);
-        mEventTracker.EndGPUEvent(*transitionsCommandList);
+
         mGPUProfiler->RecordEventEnd(*transitionsCommandList, profilerEventID);
+        mEventTracker.EndGPUEvent(*transitionsCommandList);
+        
         transitionsCommandList->Close();
     }
 
@@ -363,12 +367,15 @@ namespace PathFinder
         HAL::ComputeCommandListBase* transitionsCommandList = GetComputeCommandListBase(transitionsEvent.CommandList);
         transitionsCommandList->SetDebugName(StringFormat("Rerouted Transitions for Dependency Level %d Cmd List", currentDependencyLevelIndex));
         transitionsCommandList->Reset();
+        
+        mEventTracker.StartGPUEvent(StringFormat("Rerouting Transitions for Dependency Level %d", currentDependencyLevelIndex), *transitionsCommandList);
         GPUProfiler::EventID profilerEventID = mGPUProfiler->RecordEventStart(*transitionsCommandList, mostCompetentQueueIndex);
         mPassBarrierMeasurements.emplace_back(PipelineMeasurement{ "", profilerEventID, 0 });
-        mEventTracker.StartGPUEvent(StringFormat("Rerouting Transitions for Dependency Level %d", currentDependencyLevelIndex), *transitionsCommandList);
+
         transitionsCommandList->InsertBarriers(barriers);
-        mEventTracker.EndGPUEvent(*transitionsCommandList);
+
         mGPUProfiler->RecordEventEnd(*transitionsCommandList, profilerEventID);
+        mEventTracker.EndGPUEvent(*transitionsCommandList);
 
         transitionsCommandList->Close();
     }
@@ -601,6 +608,29 @@ namespace PathFinder
         mEventTracker.EndGPUEvent(mComputeQueue);
     }
 
+    void RenderDevice::SyncNonGraphicQueuesIntoGraphicQueue()
+    {
+        // For queues that are "dangling" i.e. results of which are not used by graphics queue for some reason
+        // we manually sync them with graphics so that all frame work on all queues ends before call to Present()
+        HAL::CommandQueue& graphicQueue = GetCommandQueue(0);
+
+        for (auto queueIdx = 1; queueIdx < mQueueCount; ++queueIdx)
+        {
+            if (queueIdx >= mRenderPassGraph->DetectedQueueCount())
+                break;
+
+            if (!mRenderPassGraph->NodeCountForQueue(queueIdx))
+                continue;
+
+            const RenderPassGraph::Node* lastNode = mRenderPassGraph->NodesForQueue(queueIdx).back();
+
+            HAL::Fence& fence = FenceForQueueIndex(queueIdx);
+            fence.IncrementExpectedValue();
+            GetCommandQueue(queueIdx).SignalFence(fence);
+            graphicQueue.WaitFence(fence);
+        }
+    }
+
     void RenderDevice::TraverseAndExecuteFrameBlueprint()
     {
         mFrameBlueprint.PropagateFenceUpdates();
@@ -692,6 +722,14 @@ namespace PathFinder
             event);
         });
 
+        // Flush last batches on each queue
+        for (auto queueIdx = 0; queueIdx < mRenderPassGraph->DetectedQueueCount(); ++queueIdx)
+        {
+            flushBatch(GetCommandQueue(queueIdx), queueIdx);
+        }
+
+        SyncNonGraphicQueuesIntoGraphicQueue();
+
         // Measure frame end
         Memory::PoolCommandListAllocator::GraphicsCommandListPtr frameMeasurementsEndCmdList = mCommandListAllocator->AllocateGraphicsCommandList();
         frameMeasurementsEndCmdList->Reset();
@@ -699,12 +737,7 @@ namespace PathFinder
         mGPUProfiler->ReadbackEvents(*frameMeasurementsEndCmdList);
         frameMeasurementsEndCmdList->Close();
         commandLists[graphicQueueIndex].push_back(std::move(frameMeasurementsEndCmdList));
-
-        // Flush last batches on each queue
-        for (auto queueIdx = 0; queueIdx < mRenderPassGraph->DetectedQueueCount(); ++queueIdx)
-        {
-            flushBatch(GetCommandQueue(queueIdx), queueIdx);
-        }
+        flushBatch(GetCommandQueue(graphicQueueIndex), graphicQueueIndex);
     }
 
     bool RenderDevice::IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState beforeState, HAL::ResourceState afterState) const
@@ -824,7 +857,7 @@ namespace PathFinder
 
                 uint64_t currentBatchIndex = mCurrentBatchIndices[node->ExecutionQueueIndex];
 
-                bool usesRT = mPassGraph->FirstNodeThatUsesRayTracing() == node && node->ExecutionQueueIndex != mBVHBuildQueueIndex;
+                bool usesRT = mPassGraph->FirstNodeThatUsesRayTracingOnQueue(node->ExecutionQueueIndex) == node && node->ExecutionQueueIndex != mBVHBuildQueueIndex;
 
                 if (!node->NodesToSyncWith().empty() || usesRT)
                 {

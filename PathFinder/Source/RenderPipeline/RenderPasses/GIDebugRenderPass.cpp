@@ -33,7 +33,7 @@ namespace PathFinder
      
     void GIDebugRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        if (!scheduler->Content()->GetScene()->GlobalIlluminationManager().GIDebugEnabled)
+        if (!scheduler->Content()->GetSettings()->IsGIDebugEnabled)
             return;
 
         scheduler->ReadTexture(ResourceNames::GIRayHitInfo);

@@ -64,25 +64,25 @@ namespace PathFinder
         light0->SetNormal(glm::vec3{ 0.0, -1.0, 0.0 });
         light0->SetPosition({ 7.66, 6.187, 0.06 });
         light0->SetColor(light0Color);
-        light0->SetLuminousPower(40000);
+        light0->SetLuminousPower(25000);
 
-        /*  auto sphereLight1 = mScene->EmplaceSphericalLight();
-          sphereLight1->SetRadius(7.5);
-          sphereLight1->SetPosition({ -10.65, 12.0, -4.6 });
-          sphereLight1->SetColor(light1Color);
-          sphereLight1->SetLuminousPower(100000);
+     /*   auto sphereLight1 = mScene->EmplaceSphericalLight();
+        sphereLight1->SetRadius(2);
+        sphereLight1->SetPosition({ 7.66, 3, 0.06 });
+        sphereLight1->SetColor(light1Color);
+        sphereLight1->SetLuminousPower(100000);
 
-          auto sphereLight2 = mScene->EmplaceSphericalLight();
-          sphereLight2->SetRadius(6);
-          sphereLight2->SetPosition({ -5.3, 4.43, -4.76 });
-          sphereLight2->SetColor(light2Color);
-          sphereLight2->SetLuminousPower(300000);
+        auto sphereLight2 = mScene->EmplaceSphericalLight();
+        sphereLight2->SetRadius(2);
+        sphereLight2->SetPosition({ 7.66, 0, 0.06 });
+        sphereLight2->SetColor(light2Color);
+        sphereLight2->SetLuminousPower(300000);*/
 
-          auto sphereLight3 = mScene->EmplaceSphericalLight();
-          sphereLight3->SetRadius(8);
-          sphereLight3->SetPosition({ -5.3, 4.43, -4.76 });
-          sphereLight3->SetColor(light3Color);
-          sphereLight3->SetLuminousPower(300000);*/
+        auto sphereLight3 = mScene->EmplaceSphericalLight();
+        sphereLight3->SetRadius(2);
+        sphereLight3->SetPosition({ 7.66, -3, 0.06 });
+        sphereLight3->SetColor(light3Color);
+        sphereLight3->SetLuminousPower(100000);
 
         PathFinder::Camera& camera = mScene->MainCamera();
         camera.SetFarPlane(500);
@@ -114,6 +114,7 @@ namespace PathFinder
             }
 
             mInput->FinalizeInput();
+            mSettingsController->ApplyVolatileSettings(); // Settings must be applied at the very beginning so that render passes stay coherent
             mRenderEngine->Render();
             mInput->Clear();
         }
@@ -187,6 +188,7 @@ namespace PathFinder
         mRenderEngine->AddRenderPass(&mGIRayTracingPass);
         mRenderEngine->AddRenderPass(&mGIProbeUpdatePass);
         mRenderEngine->AddRenderPass(&mGIDebugPass);
+        mRenderEngine->AddRenderPass(&mGIProbeIndirectionTableUpdatePass);
     }
 
     void Application::PerformPreRenderActions()
@@ -207,7 +209,6 @@ namespace PathFinder
         mCameraInteractor->PollInputs(mRenderEngine->FrameDurationUS());
 
         mSettingsController->SetEnabled(!interactingWithUI);
-        mSettingsController->ApplyVolatileSettings();
 
         mScene->GlobalIlluminationManager().Update();
 

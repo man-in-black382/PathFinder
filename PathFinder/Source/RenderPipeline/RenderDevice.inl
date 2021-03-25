@@ -24,8 +24,10 @@ namespace PathFinder
 
         worker->SetDescriptorHeaps(mDescriptorAllocator->CBSRUADescriptorHeap(), mDescriptorAllocator->SamplerDescriptorHeap());
         action();
-        mEventTracker.EndGPUEvent(*worker);
+
         mGPUProfiler->RecordEventEnd(*worker, profilerEventID);
+
+        mEventTracker.EndGPUEvent(*worker);
         worker->Close();
     }
 

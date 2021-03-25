@@ -12,6 +12,12 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
+    void SubPassScheduler<ContentMediator>::SetContent(const ContentMediator* content)
+    {
+        mContent = content;
+    }
+
+    template <class ContentMediator>
     const HAL::BufferProperties& SubPassScheduler<ContentMediator>::GetBufferProperties(Foundation::Name bufferName) const
     {
         const PipelineResourceStorageResource* resourceObjects = mResourceStorage->GetPerResourceData(bufferName);

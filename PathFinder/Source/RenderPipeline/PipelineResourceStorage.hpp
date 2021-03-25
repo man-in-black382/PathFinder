@@ -82,13 +82,14 @@ namespace PathFinder
         void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
         void QueueResourceAllocationIfNeeded(
+            PassName passName,
             ResourceName resourceName, 
             const HAL::ResourcePropertiesVariant& properties, 
             std::optional<Foundation::Name> propertyCopySourceName,
             const SchedulingInfoConfigurator& siConfigurator);
 
-        void QueueResourceUsage(ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator);
-        void QueueResourceReadback(ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator);
+        void QueueResourceUsage(PassName passName, ResourceName resourceName, std::optional<ResourceName> aliasName, const SchedulingInfoConfigurator& siConfigurator);
+        void QueueResourceReadback(PassName passName, ResourceName resourceName, const SchedulingInfoConfigurator& siConfigurator);
         void AddSampler(Foundation::Name samplerName, const HAL::Sampler& sampler);
 
     private:
@@ -104,12 +105,14 @@ namespace PathFinder
             HAL::ResourcePropertiesVariant ResourceProperties;
             Foundation::Name ResourceName;
             Foundation::Name ResourceNameToCopyPropertiesFrom;
+            Foundation::Name PassName;
         };
 
         struct SchedulingRequest
         {
             SchedulingInfoConfigurator Configurator;
             Foundation::Name ResourceName;
+            Foundation::Name PassName;
         };
 
         PipelineResourceStorageResource& CreatePerResourceData(ResourceName name, const HAL::ResourceFormat& resourceFormat);

@@ -11,6 +11,9 @@ namespace PathFinder
 
     void DownsamplingRenderSubPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        if (!mEnabled)
+            return;
+
         for (const DownsamplingInvocationInputs& inputs : mInvocationInputs)
         {
             scheduler->ReadTexture(inputs.ResourceName, MipSet::IndexFromStart(inputs.SourceMip));
@@ -40,6 +43,11 @@ namespace PathFinder
     void DownsamplingRenderSubPass::SetInvocationInputs(const std::vector<DownsamplingInvocationInputs>& inputs)
     {
         mInvocationInputs = inputs;
+    }
+
+    void DownsamplingRenderSubPass::SetEnabled(bool enabled)
+    {
+        mEnabled = enabled;
     }
 
     Foundation::Name DownsamplingRenderSubPass::CombineNameAndInvocation(const std::string& name, uint64_t invocationIndex) const

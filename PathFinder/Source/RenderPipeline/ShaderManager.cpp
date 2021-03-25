@@ -77,7 +77,7 @@ namespace PathFinder
         if (!shader)
         {
             shader = LoadAndCacheShader(pipelineStage, entryPoint, relativePath);
-            assert_format(shader, "Failed to compile shader");
+            assert_format(shader, "Failed to compile shader: ", relativePath.string());
         }
 
         return shader;

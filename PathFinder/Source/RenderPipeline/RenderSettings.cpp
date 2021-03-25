@@ -13,10 +13,10 @@ namespace PathFinder
 
     void RenderSettingsController::ApplyVolatileSettings()
     {
-        // Gather settings from around the engine in here
-        VolatileSettings.GlobalIlluminationSettings = mScene->GlobalIlluminationManager().ProbeField;
-
         mAppliedSettings = VolatileSettings;
+        mAppliedSettings.GlobalIlluminationSettings = mScene->GlobalIlluminationManager().ProbeField;
+        mAppliedSettings.IsGIDebugEnabled = mScene->GlobalIlluminationManager().GIDebugEnabled;
+        mAppliedSettings.DoNotRotateGIProbeRays = mScene->GlobalIlluminationManager().DoNotRotateProbeRays;
     }
 
 }

@@ -18,6 +18,9 @@ namespace PathFinder
 
     void DenoiserHistoryFixRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+            return;
+
         auto frameIndex = scheduler->FrameNumber() % 2;
 
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);

@@ -11,13 +11,17 @@ namespace PathFinder
         PipelineSettings* RenderPipelineSettings() { return &Dependencies->RenderEngine->Settings(); }
         RenderSettings* UserRenderSettings() { return Dependencies->UserRenderSettings; }
 
-        void EnableStablePowerState(bool enabled);
+        void SetEnableStablePowerState(bool enabled);
+        void SetEnableGIDebug(bool enable);
+        void SetRotateProbeRaysEachFrame(bool enable);
 
     private:
         bool mIsStablePowerStateEnabled = false;
 
     public:
         inline auto IsStablePowerStateEnabled() const { return mIsStablePowerStateEnabled; }
+        inline bool RotateProbeRaysEachFrame() const { return !Dependencies->ScenePtr->GlobalIlluminationManager().DoNotRotateProbeRays; }
+        inline bool IsGIDebugEnabled() const { return Dependencies->ScenePtr->GlobalIlluminationManager().GIDebugEnabled; }
     };
 
 }

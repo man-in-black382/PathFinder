@@ -21,20 +21,20 @@ namespace PathFinder
       
     void SMAAEdgeDetectionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        bool isGIDebugEnabled = scheduler->Content()->GetScene()->GlobalIlluminationManager().GIDebugEnabled;
+        bool isGIDebugEnabled = scheduler->Content()->GetSettings()->IsGIDebugEnabled;
 
-        scheduler->ReadTexture(SMAAEdgeDetectionPassInputSRName(isGIDebugEnabled));
+        scheduler->ReadTexture(SMAAEdgeDetectionPassInputTexName(isGIDebugEnabled));
         scheduler->NewRenderTarget(ResourceNames::SMAADetectedEdges, NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });
     }  
 
     void SMAAEdgeDetectionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        bool isGIDebugEnabled = context->GetContent()->GetScene()->GlobalIlluminationManager().GIDebugEnabled;
+        bool isGIDebugEnabled = context->GetContent()->GetSettings()->IsGIDebugEnabled;
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::SMAAEdgeDetection);
 
         SMAAEdgeDetectionCBContent cbContent{};
-        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(SMAAEdgeDetectionPassInputSRName(isGIDebugEnabled));
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(SMAAEdgeDetectionPassInputTexName(isGIDebugEnabled));
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->SetRenderTarget(ResourceNames::SMAADetectedEdges);

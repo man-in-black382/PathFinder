@@ -212,7 +212,7 @@ namespace PathFinder
 
         // To be called by the engine, not render passes
         void SetCurrentlySchedulingPassNode(RenderPassGraph::Node* node);
-        void SetContent(ContentMediator* content);
+        void SetContent(const ContentMediator* content);
 
     private:
         NewTextureProperties FillMissingFields(std::optional<NewTextureProperties> properties) const;
@@ -242,7 +242,7 @@ namespace PathFinder
         PipelineResourceStorage* mResourceStorage = nullptr;
         RenderPassUtilityProvider* mUtilityProvider = nullptr;
         RenderPassGraph* mRenderPassGraph = nullptr;
-        ContentMediator* mContent = nullptr;
+        const ContentMediator* mContent = nullptr;
         const PipelineSettings* mPipelineSettings = nullptr;
 
     public:

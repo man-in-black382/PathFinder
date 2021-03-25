@@ -85,13 +85,17 @@ namespace PathFinder
 
                 EventInfo& eventInfo = mEventInfos[eventIdx];
                 assert_format(!eventInfo.IsStarted || (eventInfo.IsStarted && eventInfo.IsCompleted), "Started event was not completed");
-                eventInfo.IsStarted = false;
-                eventInfo.IsCompleted = false;
 
                 Event& event = mCompletedEvents[eventIdx];
                 uint64_t endTick = ticks[eventEndIndexInHeap];
                 uint64_t startTick = ticks[eventStartIndexInHeap];
+
+                assert_format(endTick >= startTick, "Profiler ticks are messed up");
+
                 event.DurationSeconds = float(endTick - startTick) / eventInfo.TickFrequency;
+
+                eventInfo.IsStarted = false;
+                eventInfo.IsCompleted = false;
             }
         });
     }

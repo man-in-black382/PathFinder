@@ -39,7 +39,7 @@ float3 Blur(Texture2D image, float2 uv, uint2 pixelIdx, float2 texelSize, float 
         return blurred;
     }
 
-    float2 diskScale = texelSize * BlurSampleCount * gradient;
+    float2 diskScale = texelSize * BlurSampleCount * gradient * 0.1;
     int sampleCount = BlurSampleCount * gradient;
 
     for (int i = 0; i < sampleCount; ++i)
@@ -62,7 +62,6 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float2 uv = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
     float2 texelSize = 1.0 * GlobalDataCB.PipelineRTResolutionInv;
 
-    Texture2D accumulatedFramesCountTexture = Textures2D[PassDataCB.AccumulatedFramesCountTexIdx];
     Texture2D gradientTexture = Textures2D[PassDataCB.SecondaryGradientTexIdx];
     Texture2D analyticShadingTexture = Textures2D[PassDataCB.AnalyticShadingTexIdx];
     Texture2D shadowedShadingTexture = Textures2D[PassDataCB.ShadowedShadingTexIdx];
@@ -75,7 +74,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
     // Get a random rotation to be applied for each sample
     float vogelDiskRotation = Random(pixelIndex.xy) * TwoPi;
-    float2 gradients = gradientTexture[pixelIndex].rg;
+    float2 gradients = FrameDataCB.IsDenoiserEnabled ? gradientTexture[pixelIndex].rg : 0.0;
 
     float3 stochasticShadowed = Blur(shadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);
     float3 stochasticUnshadowed = Blur(unshadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);

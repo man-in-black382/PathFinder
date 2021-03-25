@@ -19,6 +19,9 @@ namespace PathFinder
 
     void DenoiserGradientConstructionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+            return;
+
         auto currentFrameIndex = scheduler->FrameNumber() % 2;
 
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred);

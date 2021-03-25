@@ -1,14 +1,14 @@
-#include "GIPrimaryRayTracingRenderPass.hpp"
+#include "GIRayTracingRenderPass.hpp"
 
 #include <Foundation/Halton.hpp>
 
 namespace PathFinder
 {
 
-    GIPrimaryRayTracingRenderPass::GIPrimaryRayTracingRenderPass()
-        : RenderPass("GIPrimaryRayTracing") {} 
+    GIRayTracingRenderPass::GIRayTracingRenderPass()
+        : RenderPass("GIRayTracing") {} 
 
-    void GIPrimaryRayTracingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void GIRayTracingRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateRayTracingState(PSONames::GIRayTracing, [this](RayTracingStateProxy& state)
         {
@@ -33,7 +33,7 @@ namespace PathFinder
         });
     }
      
-    void GIPrimaryRayTracingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
+    void GIRayTracingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
         NewTextureProperties rayHitInfoTextureProperties{
             HAL::ColorFormat::RGBA16_Float,
@@ -46,7 +46,7 @@ namespace PathFinder
         scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     } 
 
-    void GIPrimaryRayTracingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
+    void GIRayTracingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIRayTracing);
 

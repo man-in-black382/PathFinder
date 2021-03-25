@@ -218,6 +218,7 @@ namespace PathFinder
         void RecordPostWorkCommandLists();
         void ExecuteUploadCommands();
         void ExecuteBVHBuildCommands();
+        void SyncNonGraphicQueuesIntoGraphicQueue();
 
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState beforeState, HAL::ResourceState afterState) const;
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState afterState) const;

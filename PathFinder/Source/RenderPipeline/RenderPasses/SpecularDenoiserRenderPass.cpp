@@ -18,6 +18,9 @@ namespace PathFinder
 
     void SpecularDenoiserRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+            return;
+
         auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
         auto currentFrameIndex = scheduler->FrameNumber() % 2;
 

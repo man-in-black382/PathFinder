@@ -31,6 +31,7 @@ namespace PathFinder
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
         mResourceStorage->QueueResourceAllocationIfNeeded(
+            mCurrentlySchedulingPassNode->PassMetadata().Name,
             resourceName,
             HAL::TextureProperties{ format, *props.Kind, *props.Dimensions, *props.ClearValues, HAL::ResourceState::Common, *props.MipCount },
             props.TextureToCopyPropertiesFrom,
@@ -65,6 +66,7 @@ namespace PathFinder
         HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
 
         mResourceStorage->QueueResourceAllocationIfNeeded(
+            mCurrentlySchedulingPassNode->PassMetadata().Name,
             resourceName,
             HAL::TextureProperties{ *props.Format, HAL::TextureKind::Texture2D, *props.Dimensions, clearValue, HAL::ResourceState::Common, *props.MipCount },
             props.TextureToCopyPropertiesFrom,
@@ -104,6 +106,7 @@ namespace PathFinder
         if (props.TypelessFormat) format = *props.TypelessFormat;
 
         mResourceStorage->QueueResourceAllocationIfNeeded(
+            mCurrentlySchedulingPassNode->PassMetadata().Name,
             resourceName,
             HAL::TextureProperties{ format, *props.Kind, *props.Dimensions, *props.ClearValues, HAL::ResourceState::Common, *props.MipCount },
             props.TextureToCopyPropertiesFrom,
@@ -139,7 +142,10 @@ namespace PathFinder
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::AliasAndUseRenderTarget(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipSet& writtenMips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt,
+        mResourceStorage->QueueResourceUsage(
+            mCurrentlySchedulingPassNode->PassMetadata().Name,
+            resourceName, 
+            outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt,
 
             [passNode = mCurrentlySchedulingPassNode,
             concreteFormat,
@@ -174,7 +180,10 @@ namespace PathFinder
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::AliasAndUseDepthStencil(Foundation::Name resourceName, Foundation::Name outputAliasName)
     {
-        mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt,
+        mResourceStorage->QueueResourceUsage(
+            mCurrentlySchedulingPassNode->PassMetadata().Name,
+            resourceName, 
+            outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt,
 
             [passNode = mCurrentlySchedulingPassNode,
             resourceName,
@@ -198,7 +207,11 @@ namespace PathFinder
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::ReadTexture(Foundation::Name resourceName, const MipSet& readMips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        mResourceStorage->QueueResourceUsage(resourceName, {},
+        mResourceStorage->QueueResourceUsage(
+            mCurrentlySchedulingPassNode->PassMetadata().Name,
+            resourceName, 
+            {},
+
             [passNode = mCurrentlySchedulingPassNode,
             readMips,
             concreteFormat,
@@ -236,7 +249,10 @@ namespace PathFinder
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::AliasAndWriteTexture(Foundation::Name resourceName, Foundation::Name outputAliasName, const MipSet& writtenMips, std::optional<HAL::ColorFormat> concreteFormat)
     {
-        mResourceStorage->QueueResourceUsage(resourceName, outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt,
+        mResourceStorage->QueueResourceUsage(
+            mCurrentlySchedulingPassNode->PassMetadata().Name,
+            resourceName, 
+            outputAliasName.IsValid() ? std::optional(outputAliasName) : std::nullopt,
 
             [passNode = mCurrentlySchedulingPassNode,
             concreteFormat,
@@ -305,7 +321,8 @@ namespace PathFinder
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::Export(Foundation::Name resourceName)
     {
-        mResourceStorage->QueueResourceReadback(resourceName, [resourceName, node = mCurrentlySchedulingPassNode](PipelineResourceSchedulingInfo& schedulingInfo)
+        mResourceStorage->QueueResourceReadback(mCurrentlySchedulingPassNode->PassMetadata().Name, resourceName,
+            [resourceName, node = mCurrentlySchedulingPassNode](PipelineResourceSchedulingInfo& schedulingInfo)
         {
             PipelineResourceSchedulingInfo::PassInfo* passInfo = schedulingInfo.GetInfoForPass(node->PassMetadata().Name);
             assert_format(passInfo, "Resource ", resourceName.ToString(), " wasn't scheduled for usage in ", node->PassMetadata().Name.ToString());
@@ -320,7 +337,7 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
-    void ResourceScheduler<ContentMediator>::SetContent(ContentMediator* content)
+    void ResourceScheduler<ContentMediator>::SetContent(const ContentMediator* content)
     {
         mContent = content;
     }
@@ -495,6 +512,7 @@ namespace PathFinder
         bool canBeReadAcrossFrames = EnumMaskContains(bufferProperties.Flags, ResourceSchedulingFlags::CrossFrameRead);
 
         mResourceStorage->QueueResourceAllocationIfNeeded(
+            mCurrentlySchedulingPassNode->PassMetadata().Name,
             resourceName,
             HAL::BufferProperties::Create<T>(bufferProperties.Capacity, bufferProperties.PerElementAlignment),
             bufferProperties.BufferToCopyPropertiesFrom,
