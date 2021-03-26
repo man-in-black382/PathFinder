@@ -10,34 +10,22 @@ namespace PathFinder
 
     void GIProbeIndirectionTableUpdateRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-       /* stateCreator->CreateComputeState(PSONames::GIProbeUpdate, [](ComputeStateProxy& state)
+        stateCreator->CreateComputeState(PSONames::GIProbeIndirectionTableUpdate, [](ComputeStateProxy& state)
         {
-            state.ComputeShaderFileName = "GIProbeUpdate.hlsl";
-        });*/
-
-
+            state.ComputeShaderFileName = "GIProbeIndirectionTableUpdate.hlsl";
+        });
     }
      
     void GIProbeIndirectionTableUpdateRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-      /*  NewTextureProperties irradianceTextureProperties{
-            HAL::ColorFormat::RGBA16_Float,
-            HAL::TextureKind::Texture2D,
-            scheduler->Content()->GetSettings()->GlobalIlluminationSettings.GetIrradianceProbeAtlasSize()
+        NewTextureProperties indirectionTableProperties{
+            HAL::ColorFormat::R16_Unsigned,
+            HAL::TextureKind::Texture1D,
+            scheduler->Content()->GetSettings()->GlobalIlluminationSettings.GetTotalProbeCount()
         };
 
-        NewTextureProperties depthTextureProperties{
-            HAL::ColorFormat::RG16_Float,
-            HAL::TextureKind::Texture2D,
-            scheduler->Content()->GetSettings()->GlobalIlluminationSettings.GetDepthProbeAtlasSize()
-        };
-
-        scheduler->NewTexture(ResourceNames::GIIrradianceProbeAtlas, irradianceTextureProperties);
-        scheduler->NewTexture(ResourceNames::GIDepthProbeAtlas, depthTextureProperties);
-
-        scheduler->ReadTexture(ResourceNames::GIRayHitInfo);
-
-        scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);*/
+        scheduler->NewTexture(ResourceNames::GIIndirectionTable, indirectionTableProperties);
+        scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     } 
 
     void GIProbeIndirectionTableUpdateRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

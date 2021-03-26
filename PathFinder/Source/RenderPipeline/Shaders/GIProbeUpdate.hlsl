@@ -107,18 +107,19 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
             float3 previousIrradiance = atlas[texelIndex].rgb;
             float hysteresis = 0.98; 
 
-            float2 lums = float2(CIELuminance(previousIrradiance.rgb), CIELuminance(irradianceResult.rgb));
-            float changeMagnitude = abs(lums.x - lums.y) / Max(lums);
-            //float changeMagnitude = Max(abs(previousIrradiance.rgb - irradianceResult.rgb));
+            /*float2 lums = float2(CIELuminance(previousIrradiance.rgb), CIELuminance(irradianceResult.rgb));
+            float changeMagnitude = abs(lums.x - lums.y) / Max(lums);*/
+            float changeMagnitude = Max(abs(previousIrradiance.rgb - irradianceResult.rgb));
 
             // Lower the hysteresis when a large change is detected
-           /* if (changeMagnitude > SignificantChangeThreshold)
+            if (changeMagnitude > SignificantChangeThreshold)
                 hysteresis = max(0, hysteresis - 0.15);
 
             if (changeMagnitude > NewDistributionChangeThreshold)
-                hysteresis = 0.0f;*/
+                hysteresis = 0.0f;
 
             atlas[texelIndex].rgb = lerp(irradianceResult.rgb, previousIrradiance, hysteresis); ;
+
         }
     }
 

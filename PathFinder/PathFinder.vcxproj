@@ -1253,9 +1253,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Source\HardwareAbstractionLayer\DescriptorHeap.inl">
       <FileType>CppHeader</FileType>
     </ClInclude>
@@ -2007,6 +2004,11 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeIndirectionTableUpdate.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.5</ShaderModel>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeUpdate.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

@@ -33,6 +33,11 @@ struct IrradianceField
     uint IrradianceProbeAtlasTexIdx;
     uint DepthProbeAtlasTexIdx;
     // 16 byte boundary
+    // How many probe planes were spawned this frame on each axis.
+    // Can be negative if probes are spawned along negative axis direction.
+    int3 SpawnedProbePlanesCount; 
+    uint IndirectionTableTexIdx;
+    // 16 byte boundary
     float DebugProbeRadius;
     uint Pad0__;
     uint Pad1__;

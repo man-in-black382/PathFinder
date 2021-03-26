@@ -316,6 +316,7 @@ namespace PathFinder
         field.IrradianceProbeAtlasTexIdx = 0; // Determined in render pass
         field.DepthProbeAtlasTexIdx = 0; // Determined in render pass
         field.DebugProbeRadius = L.DebugProbeRadius();
+        field.SpawnedProbePlanesCount = L.SpawnedProbePlanesCount();
         return field;
     }
 

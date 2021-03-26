@@ -3669,7 +3669,6 @@
     <None Include="Libs\Optick\OptickCore.pdb" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Source\ThirdParty\glm\CMakeLists.txt" />
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
   </ItemGroup>
   <ItemGroup>
@@ -3738,6 +3737,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GIDebug.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLighting.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredShadows.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeIndirectionTableUpdate.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

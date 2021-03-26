@@ -27,6 +27,7 @@ namespace PathFinder
         uint64_t mRaysPerProbe = 144;
         glm::mat4 mProbeRotation{ 1.0f };
         glm::vec3 mCornerPosition{ 0.0f };
+        glm::ivec3 mSpawnedProbePlanesCount;
 
     public:
         Geometry::Dimensions GetRayHitInfoTextureSize() const;
@@ -44,6 +45,7 @@ namespace PathFinder
 
         const glm::uvec3& GridSize() const { return mProbeGridSize; }
         const glm::vec3& CornerPosition() const { return mCornerPosition; }
+        const glm::ivec3& SpawnedProbePlanesCount() const { return mSpawnedProbePlanesCount; }
         const auto RaysPerProbe() const { return mRaysPerProbe; }
         const auto CellSize() const { return mCellSize; }
         const auto DebugProbeRadius() const { return mDebugProbeRadius; }

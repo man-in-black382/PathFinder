@@ -136,6 +136,9 @@ namespace PathFinder
         uint32_t IrradianceProbeAtlasTexIdx;
         uint32_t DepthProbeAtlasTexIdx;
         // 16 byte boundary
+        glm::ivec3 SpawnedProbePlanesCount; // How many probe planes were spawned this frame on each axis
+        uint32_t IndirectionTableTexIdx;
+        // 16 byte boundary
         float DebugProbeRadius;
         uint32_t Pad0__ = 0;
         uint32_t Pad1__ = 0;

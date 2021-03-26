@@ -102,10 +102,14 @@ namespace PathFinder
     {
         MSG msg;
         ZeroMemory(&msg, sizeof(msg));
-        while (msg.message != WM_QUIT)
+        bool shouldQuit = false;
+        while (!shouldQuit)
         {
             while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
             {
+                if (msg.message == WM_QUIT)
+                    shouldQuit = true;
+
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
 
@@ -118,10 +122,13 @@ namespace PathFinder
             mRenderEngine->Render();
             mInput->Clear();
         }
+
+        mRenderEngine->FlushAllQueuedFrames();
     }
 
     LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
+        // https://docs.microsoft.com/en-us/windows/win32/learnwin32/closing-the-window
         switch (msg)
         {
         case WM_DESTROY:

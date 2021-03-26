@@ -47,6 +47,8 @@ namespace PathFinder
 
     void IrradianceField::SetCornerPosition(const glm::vec3& position)
     {
+        glm::vec3 distanceTravelled = position - mCornerPosition;
+        mSpawnedProbePlanesCount = distanceTravelled / mCellSize;
         mCornerPosition = position;
     }
 

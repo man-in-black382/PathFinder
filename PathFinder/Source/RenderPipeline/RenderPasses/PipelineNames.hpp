@@ -67,6 +67,7 @@ namespace PathFinder
         inline Foundation::Name GIRayHitInfo{ "Resource_GI_Ray_Hit_Info" };
         inline Foundation::Name GIIrradianceProbeAtlas{ "Resource_GI_Irradiance_Probe_Atlas" };
         inline Foundation::Name GIDepthProbeAtlas{ "Resource_GI_Depth_Probe_Atlas" };
+        inline Foundation::Name GIIndirectionTable{ "Resource_GI_Indirection_Table" };
         inline Foundation::Name GIDebugDepthStencil{ "Resource_GI_Debug_Depth_Stencil" };
         inline Foundation::Name GIDebugOutput{ "Resource_GI_Debug_Output" };
 
@@ -90,6 +91,7 @@ namespace PathFinder
         inline Foundation::Name DeferredShadows{ "PSO_Deferred_Shadows" };
         inline Foundation::Name GIRayTracing{ "PSO_GI_Ray_Tracing" };
         inline Foundation::Name GIProbeUpdate{ "PSO_GI_Probe_Update" };
+        inline Foundation::Name GIProbeIndirectionTableUpdate{ "PSO_GI_Probe_Indirection_Table_Update" };
         inline Foundation::Name GIIrradianceProbeCornerUpdate{ "PSO_GI_Irradiance_Probe_Corner_Update" };
         inline Foundation::Name GIDepthProbeCornerUpdate{ "PSO_GI_Depth_Probe_Corner_Update" };
         inline Foundation::Name GIIrradianceProbeBorderUpdate{ "PSO_GI_Irradiance_Probe_Border_Update" };
