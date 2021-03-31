@@ -53,23 +53,67 @@ RWTexture2DArray<float4> RW_Float4_Texture2DArrays[]  : register(u0, space15);
 
 SamplerState Samplers[] : register(s0, space10);
 
-// Debug
-struct ReadBackData
+// GPU Data Inspection
+RWStructuredBuffer<float> DebugReadbackBuffer : register(u0, space16);
+
+static uint DebugBufferWriteIndex = 0;
+static uint DebugBufferWrittenObjectCount = 0;
+static bool DebugBufferWriteCondition = false;
+
+static const uint DebugReadbackTypeFloat = 0;
+static const uint DebugReadbackTypeFloat2 = 1;
+static const uint DebugReadbackTypeFloat3 = 2;
+static const uint DebugReadbackTypeFloat4 = 3;
+
+void SetDataInspectorWriteCondition(bool condition)
 {
-    float Value;
-};
+    DebugBufferWriteCondition = condition;
+}
 
-RWStructuredBuffer<ReadBackData> DebugReadbackBuffer : register(u0, space16);
-
-static uint DebugBufferWriteIndex = 1;
-
-void DebugOut(float value, uint2 currentPixel, uint2 targetPixel)
+void OutputDataInspectorValue(float v)
 {
-    if (!all(currentPixel == targetPixel)) return;
+    if (!DebugBufferWriteCondition)
+        return;
 
-    DebugReadbackBuffer[DebugBufferWriteIndex].Value = value;
-    DebugReadbackBuffer[0].Value = DebugBufferWriteIndex;
-    DebugBufferWriteIndex += 1;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = DebugReadbackTypeFloat;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v;
+    DebugReadbackBuffer[0] = ++DebugBufferWrittenObjectCount;
+}
+
+void OutputDataInspectorValue(float2 v)
+{
+    if (!DebugBufferWriteCondition)
+        return;
+
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = DebugReadbackTypeFloat2;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.x;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.y;
+    DebugReadbackBuffer[0] = ++DebugBufferWrittenObjectCount;
+}
+
+void OutputDataInspectorValue(float3 v)
+{
+    if (!DebugBufferWriteCondition)
+        return;
+
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = DebugReadbackTypeFloat3;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.x;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.y;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.z;
+    DebugReadbackBuffer[0] = ++DebugBufferWrittenObjectCount;
+}
+
+void OutputDataInspectorValue(float4 v)
+{
+    if (!DebugBufferWriteCondition)
+        return;
+
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = DebugReadbackTypeFloat4;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.x;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.y;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.z;
+    DebugReadbackBuffer[++DebugBufferWriteIndex] = v.w;
+    DebugReadbackBuffer[0] = ++DebugBufferWrittenObjectCount;
 }
 
 #endif

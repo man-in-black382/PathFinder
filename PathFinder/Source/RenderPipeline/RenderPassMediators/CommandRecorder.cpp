@@ -8,6 +8,7 @@ namespace PathFinder
         PipelineResourceStorage* resourceStorage, 
         PipelineStateManager* pipelineStateManager,
         Memory::PoolDescriptorAllocator* descriptorAllocator,
+        GPUDataInspector* gpuDataInspector,
         const RenderPassGraph* passGraph, 
         uint64_t graphNodeIndex)
         : 
@@ -15,6 +16,7 @@ namespace PathFinder
         mResourceStorage{ resourceStorage }, 
         mPipelineStateManager{ pipelineStateManager },
         mDescriptorAllocator{ descriptorAllocator },
+        mGPUDataInspector{ gpuDataInspector },
         mPassGraph{ passGraph },
         mGraphNodeIndex{ graphNodeIndex } {}
 
@@ -231,7 +233,7 @@ namespace PathFinder
 
         cmdList->SetGraphicsRootConstantBuffer(*mResourceStorage->GlobalRootConstantsBuffer()->HALBuffer(), 0 + commonParametersIndexOffset);
         cmdList->SetGraphicsRootConstantBuffer(*mResourceStorage->PerFrameRootConstantsBuffer()->HALBuffer(), 1 + commonParametersIndexOffset);
-        cmdList->SetGraphicsRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 15 + commonParametersIndexOffset);
+        cmdList->SetGraphicsRootUnorderedAccessResource(*GetGPUInspectorBuffer(), 15 + commonParametersIndexOffset);
     }
 
     void CommandRecorder::BindComputeCommonResources(const HAL::RootSignature* rootSignature, HAL::ComputeCommandListBase* cmdList)
@@ -263,7 +265,7 @@ namespace PathFinder
 
         cmdList->SetComputeRootConstantBuffer(*mResourceStorage->GlobalRootConstantsBuffer()->HALBuffer(), 0 + commonParametersIndexOffset);
         cmdList->SetComputeRootConstantBuffer(*mResourceStorage->PerFrameRootConstantsBuffer()->HALBuffer(), 1 + commonParametersIndexOffset);
-        cmdList->SetComputeRootUnorderedAccessResource(*passHelpers.ResourceStoragePassData->PassDebugBuffer->HALBuffer(), 15 + commonParametersIndexOffset);
+        cmdList->SetComputeRootUnorderedAccessResource(*GetGPUInspectorBuffer(), 15 + commonParametersIndexOffset);
     }
 
     void CommandRecorder::BindGraphicsPassRootConstantBuffer(HAL::GraphicsCommandListBase* cmdList)
@@ -445,6 +447,11 @@ namespace PathFinder
     RenderDevice::PassHelpers& CommandRecorder::GetPassHelpers() const
     {
         return mRenderDevice->PassHelpersForPass(GetPassNode());
+    }
+
+    const HAL::Buffer* CommandRecorder::GetGPUInspectorBuffer() const
+    {
+        return mGPUDataInspector->BufferForPass(GetPassNode())->HALBuffer();
     }
 
 }

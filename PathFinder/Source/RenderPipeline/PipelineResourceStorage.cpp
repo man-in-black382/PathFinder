@@ -60,7 +60,8 @@ namespace PathFinder
     const HAL::SamplerDescriptor* PipelineResourceStorage::GetSamplerDescriptor(Foundation::Name resourceName) const
     {
         auto samplerIt = mSamplers.find(resourceName);
-        if (samplerIt == mSamplers.end()) return nullptr;
+        if (samplerIt == mSamplers.end())
+            return nullptr;
         return samplerIt->second.second.get();
     }
 
@@ -256,6 +257,15 @@ namespace PathFinder
 
             for (PipelineResourceStorageResource& resourceData : *mCurrentFrameResources)
             {
+                // A case when resource is already allocated, but did not and will not participate in aliasing
+                bool isAllocationRedundant =
+                    resourceData.GetGPUResource() &&
+                    !resourceData.SchedulingInfo.WasAliased &&
+                    !resourceData.SchedulingInfo.CanBeAliased;
+
+                if (isAllocationRedundant)
+                    continue;
+
                 const HAL::ResourceFormat& format = resourceData.SchedulingInfo.ResourceFormat();
                 HAL::Heap* heap = GetHeapForAliasingGroup(format.ResourceAliasingGroup());
 
@@ -325,16 +335,6 @@ namespace PathFinder
     PipelineResourceStoragePass& PipelineResourceStorage::CreatePerPassData(PassName name)
     {
         auto [it, success] = mPerPassData.emplace(name, PipelineResourceStoragePass{});
-
-        auto properties = HAL::BufferProperties::Create<float>(1024);
-        it->second.PassDebugBuffer = mResourceProducer->NewBuffer(properties);
-        it->second.PassDebugBuffer->SetDebugName(name.ToString() + " Debug Constant Buffer");
-        it->second.PassDebugBuffer->RequestWrite();
-
-        // Avoid garbage on first use
-        uint8_t* uploadMemory = it->second.PassDebugBuffer->WriteOnlyPtr();
-        memset(uploadMemory, 0, sizeof(float) * 1024);
-
         return it->second;
     }
 
@@ -377,15 +377,6 @@ namespace PathFinder
         dtl::Ses ses = diff.getSes();
         auto sequence = ses.getSequence();
 
-        if (ses.isChange())
-        {
-            // Any ADD or DELETE will invalidate aliased memory layout
-            // so we'll need to reallocate everything.
-            // Return because there is nothing to transfer from previous frame:
-            // whole memory is invalidated.
-            return false;
-        }
-
         for (auto& [diffEntry, elementInfo] : sequence)
         {
             dtl::edit_t diffOperation = elementInfo.type;
@@ -403,6 +394,8 @@ namespace PathFinder
                 // Transfer GPU resources from previous frame
                 resourceData.Texture = std::move(prevResourceData.Texture);
                 resourceData.Buffer = std::move(prevResourceData.Buffer);
+
+                resourceData.SchedulingInfo.WasAliased = prevResourceData.SchedulingInfo.CanBeAliased;
             }
                 
             default:
@@ -410,7 +403,9 @@ namespace PathFinder
             }
         }
 
-        return true;
+        bool memoryLayoutValid = !ses.isChange();
+
+        return memoryLayoutValid;
     }
 
     const Memory::Buffer* PipelineResourceStorage::GlobalRootConstantsBuffer() const
@@ -426,28 +421,32 @@ namespace PathFinder
     PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name)
     {
         auto it = mPerPassData.find(name);
-        if (it == mPerPassData.end()) return nullptr;
+        if (it == mPerPassData.end())
+            return nullptr;
         return &it->second;
     }
 
     PipelineResourceStorageResource* PipelineResourceStorage::GetPerResourceData(ResourceName name)
     {
         auto indexIt = mCurrentFrameResourceMap->find(name);
-        if (indexIt == mCurrentFrameResourceMap->end()) return nullptr;
+        if (indexIt == mCurrentFrameResourceMap->end()) 
+            return nullptr;
         return &mCurrentFrameResources->at(indexIt->second);
     }
 
     const PipelineResourceStoragePass* PipelineResourceStorage::GetPerPassData(PassName name) const
     {
         auto it = mPerPassData.find(name);
-        if (it == mPerPassData.end()) return nullptr;
+        if (it == mPerPassData.end())
+            return nullptr;
         return &it->second;
     }
 
     const PipelineResourceStorageResource* PipelineResourceStorage::GetPerResourceData(ResourceName name) const
     {
         auto indexIt = mCurrentFrameResourceMap->find(name);
-        if (indexIt == mCurrentFrameResourceMap->end()) return nullptr;
+        if (indexIt == mCurrentFrameResourceMap->end()) 
+            return nullptr;
         return &mCurrentFrameResources->at(indexIt->second);
     }
 

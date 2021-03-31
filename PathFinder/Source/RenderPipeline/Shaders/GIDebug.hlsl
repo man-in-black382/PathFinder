@@ -90,7 +90,8 @@ float4 ProbePSMain(ProbeVertexOut pin) : SV_Target0
     // Rotate to world space
     normal = mul(pin.NormalMatrix, normal);
 
-    float2 atlasUV = IrradianceProbeAtlasUV(pin.ProbeIndex, normal, PassDataCB.ProbeField);
+    uint adjustedProbeIndex = UInt4_Textures2D[PassDataCB.ProbeField.IndirectionTableTexIdx][uint2(pin.ProbeIndex, 0)].r;
+    float2 atlasUV = IrradianceProbeAtlasUV(adjustedProbeIndex, normal, PassDataCB.ProbeField);
     Texture2D atlas = Textures2D[PassDataCB.ProbeField.IrradianceProbeAtlasTexIdx];
     float3 irradiance = atlas.SampleLevel(LinearClampSampler(), atlasUV, 0).rgb;
     irradiance = DecodeProbeIrradiance(irradiance);

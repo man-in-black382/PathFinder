@@ -38,6 +38,8 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
     uint3 probe3DIndex = Probe3DIndexFrom1D(probeIndex, PassDataCB.ProbeField);
     float3 probePosition = ProbePositionFrom3DIndex(probe3DIndex, PassDataCB.ProbeField);
 
+    uint adjustedProbeIndex = UInt4_Textures2D[PassDataCB.ProbeField.IndirectionTableTexIdx][uint2(probeIndex, 0)].r;
+
     // Read ray hit info into shared memory.
     // It is important to have enough threads in the group 
     // to read out all of the ray hit info values (RaysPerProbe <= LargestProbeTypeTexelCount)
@@ -102,10 +104,10 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
             irradianceResult.rgb = EncodeProbeIrradiance(irradianceResult.rgb);
 
             RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.IrradianceProbeAtlasTexIdx];
-            uint2 texelIndex = IrradianceProbeAtlasTexelIndex(probeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
+            uint2 texelIndex = IrradianceProbeAtlasTexelIndex(adjustedProbeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
 
             float3 previousIrradiance = atlas[texelIndex].rgb;
-            float hysteresis = 0.98; 
+            float hysteresis = 0.98;
 
             /*float2 lums = float2(CIELuminance(previousIrradiance.rgb), CIELuminance(irradianceResult.rgb));
             float changeMagnitude = abs(lums.x - lums.y) / Max(lums);*/
@@ -118,8 +120,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
             if (changeMagnitude > NewDistributionChangeThreshold)
                 hysteresis = 0.0f;
 
-            atlas[texelIndex].rgb = lerp(irradianceResult.rgb, previousIrradiance, hysteresis); ;
-
+            atlas[texelIndex].rgb = lerp(irradianceResult.rgb, previousIrradiance, hysteresis);
         }
     }
 
@@ -129,12 +130,17 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
        
         RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.DepthProbeAtlasTexIdx];
 
-        float hysteresis = 1.0;
-        uint2 texelIndex = DepthProbeAtlasTexelIndex(probeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
+        float hysteresis = 0.98;
+        uint2 texelIndex = DepthProbeAtlasTexelIndex(adjustedProbeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
         float2 previousDepth = atlas[texelIndex].rg;
 
-        atlas[texelIndex].rg = lerp(depthResult.xy, previousDepth, hysteresis);;
+        atlas[texelIndex].rg = lerp(depthResult.xy, previousDepth, hysteresis);
     }
+
+    SetDataInspectorWriteCondition(probeIndex == 5);
+    OutputDataInspectorValue(float3(3.456, 1.0, 555.7685)); 
+    OutputDataInspectorValue(float2(3.456, 874.21));
+    OutputDataInspectorValue(0.15874);
 }
 
 #endif

@@ -287,6 +287,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\BottomRTAS.cpp" />
     <ClCompile Include="Source\RenderPipeline\CopyRequestHandling.cpp" />
     <ClCompile Include="Source\RenderPipeline\FrameFence.cpp" />
+    <ClCompile Include="Source\RenderPipeline\GPUDataInspector.cpp" />
     <ClCompile Include="Source\RenderPipeline\GPUProfiler.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderDevice.cpp" />
     <ClCompile Include="Source\RenderPipeline\PipelineResourceMemoryAliaser.cpp" />
@@ -372,6 +373,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\ThirdParty\implot\implot_demo.cpp" />
     <ClCompile Include="Source\ThirdParty\implot\implot_items.cpp" />
     <ClCompile Include="Source\UI\CameraViewModel.cpp" />
+    <ClCompile Include="Source\UI\GPUDataInspectorViewController.cpp" />
+    <ClCompile Include="Source\UI\GPUDataInspectorViewModel.cpp" />
     <ClCompile Include="Source\UI\LuminanceMeterViewController.cpp" />
     <ClCompile Include="Source\UI\LuminanceMeterViewModel.cpp" />
     <ClCompile Include="Source\UI\MainMenuViewController.cpp" />
@@ -514,6 +517,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\DrawablePrimitive.hpp" />
     <ClInclude Include="Source\RenderPipeline\FrameFence.hpp" />
     <ClInclude Include="Source\RenderPipeline\GlobalRootConstants.hpp" />
+    <ClInclude Include="Source\RenderPipeline\GPUDataInspector.hpp" />
     <ClInclude Include="Source\RenderPipeline\GPUProfiler.hpp" />
     <ClInclude Include="Source\RenderPipeline\PipelineSettings.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderDevice.hpp" />
@@ -1225,6 +1229,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
     <ClInclude Include="Source\ThirdParty\robinhood\robin_hood.h" />
     <ClInclude Include="Source\UI\CameraViewModel.hpp" />
+    <ClInclude Include="Source\UI\GPUDataInspectorViewController.hpp" />
+    <ClInclude Include="Source\UI\GPUDataInspectorViewModel.hpp" />
     <ClInclude Include="Source\UI\LuminanceMeterViewController.hpp" />
     <ClInclude Include="Source\UI\LuminanceMeterViewModel.hpp" />
     <ClInclude Include="Source\UI\MainMenuViewController.hpp" />
@@ -2009,6 +2015,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.5</ShaderModel>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeUpdate.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

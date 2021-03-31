@@ -1,7 +1,5 @@
 #include "CommandLineParser.hpp"
 
-
-
 namespace PathFinder
 {
 

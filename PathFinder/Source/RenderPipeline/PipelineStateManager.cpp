@@ -387,7 +387,7 @@ namespace PathFinder
         samplers.AddDescriptorRange(HAL::SamplerDescriptorTableRange{ 0, 10 });
         signature.AddDescriptorTableParameter(samplers);
 
-        // Debug readback buffer
+        // Debug readback buffer (GPU Data Inspector)
         HAL::RootUnorderedAccessParameter debugBuffer{ 0, 16 };
         signature.AddDescriptorParameter(debugBuffer);
     }

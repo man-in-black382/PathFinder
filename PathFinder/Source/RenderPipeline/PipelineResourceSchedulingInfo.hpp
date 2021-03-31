@@ -58,6 +58,7 @@ namespace PathFinder
 
         uint64_t HeapOffset = 0;
         bool CanBeAliased = true;
+        bool WasAliased = false;
 
         std::pair<uint64_t, uint64_t> AliasingLifetime = { 
             std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::min() 

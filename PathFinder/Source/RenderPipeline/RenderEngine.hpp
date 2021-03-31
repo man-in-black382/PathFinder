@@ -39,6 +39,7 @@
 #include "BottomRTAS.hpp"
 #include "TopRTAS.hpp"
 #include "GPUProfiler.hpp"
+#include "GPUDataInspector.hpp"
 #include "FrameFence.hpp"
 #include "PipelineSettings.hpp"
 
@@ -114,6 +115,7 @@ namespace PathFinder
         std::unique_ptr<RenderDevice> mRenderDevice;
         std::unique_ptr<RenderPassContainer<ContentMediator>> mRenderPassContainer;
         std::unique_ptr<GPUProfiler> mGPUProfiler;
+        std::unique_ptr<GPUDataInspector> mGPUDataInspector;
 
         std::unique_ptr<HAL::SwapChain> mSwapChain;
         std::unique_ptr<FrameFence> mFrameFence;
@@ -133,13 +135,16 @@ namespace PathFinder
         inline PipelineResourceStorage* ResourceStorage() { return mPipelineResourceStorage.get(); }
         inline const RenderSurfaceDescription& RenderSurface() const { return mRenderSurfaceDescription; }
         inline Memory::GPUResourceProducer* ResourceProducer() { return mResourceProducer.get(); }
-        inline RenderDevice* RendererDevice() { return mRenderDevice.get(); }
+        inline const RenderDevice* RendererDevice() const { return mRenderDevice.get(); }
+        inline const GPUDataInspector* GPUInspector() const { return mGPUDataInspector.get(); }
+        inline const RenderPassGraph* RenderGraph() const { return &mRenderPassGraph; }
         inline HAL::Device* Device() { return mDevice.get(); }
         inline HAL::SwapChain* SwapChain() { return mSwapChain.get(); }
         inline HAL::DisplayAdapter* SelectedAdapter() { return mSelectedAdapter; }
         inline Event& PreRenderEvent() { return mPreRenderEvent; }
         inline Event& PostRenderEvent() { return mPostRenderEvent; }
         inline uint64_t FrameDurationUS() const { return mFrameDuration.count(); }
+        inline uint64_t FrameNumber() const { return mFrameNumber; }
         inline PipelineSettings& Settings() { return mPipelineSettings; }
     };
 

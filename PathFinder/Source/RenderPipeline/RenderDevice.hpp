@@ -5,6 +5,7 @@
 #include "PipelineStateManager.hpp"
 #include "RenderPassMetadata.hpp"
 #include "GPUProfiler.hpp"
+#include "GPUDataInspector.hpp"
 #include "PipelineSettings.hpp"
 
 #include <Foundation/Name.hpp>
@@ -89,6 +90,7 @@ namespace PathFinder
             PipelineResourceStorage* resourceStorage,
             PipelineStateManager* pipelineStateManager,
             GPUProfiler* gpuProfiler,
+            GPUDataInspector* gpuDataInspector,
             const RenderPassGraph* renderPassGraph,
             const RenderSurfaceDescription& defaultRenderSurface,
             const PipelineSettings* settings
@@ -240,6 +242,7 @@ namespace PathFinder
         PipelineResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
         GPUProfiler* mGPUProfiler;
+        GPUDataInspector* mGPUDataInspector;
         const RenderPassGraph* mRenderPassGraph;
         RenderSurfaceDescription mDefaultRenderSurface;
         EventTracker mEventTracker;

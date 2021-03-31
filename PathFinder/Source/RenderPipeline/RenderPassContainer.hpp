@@ -7,6 +7,7 @@
 #include "PipelineResourceStorage.hpp"
 #include "PipelineStateManager.hpp"
 #include "RenderContext.hpp"
+#include "GPUDataInspector.hpp"
 
 #include <Memory/PoolDescriptorAllocator.hpp>
 
@@ -41,6 +42,7 @@ namespace PathFinder
                 RenderPassUtilityProvider* utilityProvider,
                 PipelineStateManager* pipelineStateManager,
                 Memory::PoolDescriptorAllocator* descriptorAllocator,
+                GPUDataInspector* gpuDataInspector,
                 RenderPassGraph* graph,
                 uint64_t graphNodeIndex
             );
@@ -68,6 +70,7 @@ namespace PathFinder
             RenderPassUtilityProvider* utilityProvider, 
             PipelineStateManager* pipelineStateManager,
             Memory::PoolDescriptorAllocator* descriptorAllocator,
+            GPUDataInspector* gpuDataInspector,
             RenderPassGraph* graph
         );
 
@@ -87,6 +90,7 @@ namespace PathFinder
         Memory::PoolDescriptorAllocator* mDescriptorAllocator = nullptr;
         RenderPassGraph* mRenderPassGraph = nullptr;
         RenderPassUtilityProvider* mUtilityProvider = nullptr;
+        GPUDataInspector* mGPUDataInspector = nullptr;
 
     public:
         inline const auto& RenderPasses() const { return mRenderPasses; }

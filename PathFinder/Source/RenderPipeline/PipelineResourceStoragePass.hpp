@@ -26,9 +26,6 @@ namespace PathFinder
 
         // 
         bool IsAllowedToAdvanceConstantBufferOffset = false;
-
-        // Debug buffer for each pass.
-        Memory::GPUResourceProducer::BufferPtr PassDebugBuffer;
     };
 
 }

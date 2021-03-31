@@ -10,11 +10,12 @@ namespace PathFinder
         RenderPassUtilityProvider* utilityProvider,
         PipelineStateManager* pipelineStateManager,
         Memory::PoolDescriptorAllocator* descriptorAllocator,
+        GPUDataInspector* gpuDataInspector,
         RenderPassGraph* graph,
         uint64_t graphNodeIndex)
         :
         Pass{ renderPass },
-        PassCommandRecorder{ renderDevice, resourceStorage, pipelineStateManager, descriptorAllocator, graph, graphNodeIndex },
+        PassCommandRecorder{ renderDevice, resourceStorage, pipelineStateManager, descriptorAllocator, gpuDataInspector, graph, graphNodeIndex },
         PassResourceProvider{ resourceStorage, graph, graphNodeIndex },
         PassRootConstantsUpdater{ resourceStorage, graph, graphNodeIndex },
         UtilityProvider{ utilityProvider },
@@ -34,6 +35,7 @@ namespace PathFinder
         RenderPassUtilityProvider* utilityProvider,
         PipelineStateManager* pipelineStateManager,
         Memory::PoolDescriptorAllocator* descriptorAllocator,
+        GPUDataInspector* gpuDataInspector,
         RenderPassGraph* graph)
         :
         mRenderDevice{ renderDevice },
@@ -41,6 +43,7 @@ namespace PathFinder
         mUtilityProvider{ utilityProvider },
         mPipelineStateManager{ pipelineStateManager },
         mDescriptorAllocator{ descriptorAllocator },
+        mGPUDataInspector{ gpuDataInspector },
         mRenderPassGraph{ graph } {}
 
     template <class ContentMediator>
@@ -53,7 +56,7 @@ namespace PathFinder
 
         uint64_t nodeIndex = mRenderPassGraph->AddPass(pass->Metadata());
         mRenderPasses.emplace(pass->Metadata().Name, PassHelpers<RenderPass>{ 
-            pass, mRenderDevice, mResourceStorage, mUtilityProvider, mPipelineStateManager, mDescriptorAllocator, mRenderPassGraph, nodeIndex });
+            pass, mRenderDevice, mResourceStorage, mUtilityProvider, mPipelineStateManager, mDescriptorAllocator, mGPUDataInspector, mRenderPassGraph, nodeIndex });
 
         mResourceStorage->CreatePerPassData(pass->Metadata().Name);
     }
@@ -68,7 +71,7 @@ namespace PathFinder
 
         uint64_t nodeIndex = mRenderPassGraph->AddPass(pass->Metadata());
         mRenderSubPasses.emplace(pass->Metadata().Name, PassHelpers<RenderSubPass>{ 
-            pass, mRenderDevice, mResourceStorage, mUtilityProvider, mPipelineStateManager, mDescriptorAllocator, mRenderPassGraph, nodeIndex });
+            pass, mRenderDevice, mResourceStorage, mUtilityProvider, mPipelineStateManager, mDescriptorAllocator, mGPUDataInspector, mRenderPassGraph, nodeIndex });
 
         mResourceStorage->CreatePerPassData(pass->Metadata().Name);
     }

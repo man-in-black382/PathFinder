@@ -78,16 +78,18 @@ namespace PathFinder
         mRootSignatureCreator = std::make_unique<RootSignatureCreator>(mPipelineStateManager.get());
         mSamplerCreator = std::make_unique<SamplerCreator>(mPipelineResourceStorage.get());
         mGPUProfiler = std::make_unique<GPUProfiler>(*mDevice, 1024, mSimultaneousFramesInFlight, mResourceProducer.get());
+        mGPUDataInspector = std::make_unique<GPUDataInspector>();
 
         mRenderDevice = std::make_unique<RenderDevice>(
             *mDevice,
             mDescriptorAllocator.get(),
-            mCommandListAllocator.get(), 
-            mResourceStateTracker.get(), 
+            mCommandListAllocator.get(),
+            mResourceStateTracker.get(),
             mCopyRequestManager.get(),
-            mPipelineResourceStorage.get(), 
-            mPipelineStateManager.get(), 
+            mPipelineResourceStorage.get(),
+            mPipelineStateManager.get(),
             mGPUProfiler.get(),
+            mGPUDataInspector.get(),
             &mRenderPassGraph, 
             mRenderSurfaceDescription,
             &mPipelineSettings);
@@ -106,6 +108,7 @@ namespace PathFinder
             mPassUtilityProvider.get(),
             mPipelineStateManager.get(),
             mDescriptorAllocator.get(),
+            mGPUDataInspector.get(),
             &mRenderPassGraph);
 
         mSubPassScheduler = std::make_unique<SubPassScheduler<ContentMediator>>(
@@ -149,9 +152,10 @@ namespace PathFinder
     template <class ContentMediator>
     void RenderEngine<ContentMediator>::Render()
     {
-        if (mRenderPassGraph.Nodes().empty()) return;
+        if (mRenderPassGraph.Nodes().empty()) 
+            return;
 
-        // First frame statrts in constructor
+        // First frame starts in constructor
         if (mFrameNumber > 0)
         {
             mFrameFence->HALFence().IncrementExpectedValue();
@@ -161,6 +165,8 @@ namespace PathFinder
 
         // Scheduler resources, build graph
         ScheduleFrame();
+
+        mGPUDataInspector->PreparePerPassBuffers(&mRenderPassGraph, mResourceProducer.get());
 
         // Compile new states and signatures, if any
         mPipelineStateManager->CompileUncompiledSignaturesAndStates();
@@ -197,6 +203,7 @@ namespace PathFinder
 
         // Gather extracted measurement
         mRenderDevice->GatherMeasurements();
+        mGPUDataInspector->DecodeAvailableInspectionData();
 
         // Notify external listeners
         mPostRenderEvent.Raise();

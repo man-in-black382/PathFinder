@@ -4,6 +4,7 @@
 #include "../PipelineResourceStorage.hpp"
 #include "../RenderPassGraph.hpp"
 #include "../PipelineStateManager.hpp"
+#include "../GPUDataInspector.hpp"
 
 #include <Memory/PoolDescriptorAllocator.hpp>
 
@@ -18,6 +19,7 @@ namespace PathFinder
             PipelineResourceStorage* resourceStorage,
             PipelineStateManager* pipelineStateManager,
             Memory::PoolDescriptorAllocator* descriptorAllocator,
+            GPUDataInspector* gpuDataInspector,
             const RenderPassGraph* passGraph,
             uint64_t graphNodeIndex
         );
@@ -64,11 +66,13 @@ namespace PathFinder
         HAL::GraphicsCommandList* GetGraphicsCommandList() const;
         HAL::ComputeCommandListBase* GetComputeCommandListBase() const;
         RenderDevice::PassHelpers& GetPassHelpers() const;
+        const HAL::Buffer* GetGPUInspectorBuffer() const;
 
         RenderDevice* mRenderDevice;
         PipelineResourceStorage* mResourceStorage;
         PipelineStateManager* mPipelineStateManager;
         Memory::PoolDescriptorAllocator* mDescriptorAllocator;
+        GPUDataInspector* mGPUDataInspector;
         const RenderPassGraph* mPassGraph;
         uint64_t mGraphNodeIndex;
     };

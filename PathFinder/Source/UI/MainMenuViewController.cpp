@@ -64,6 +64,11 @@ namespace PathFinder
                 mRenderPipelineVC = CreateViewController<RenderPipelineViewController>();
             }
 
+            if (ImGui::MenuItem("GPU Data Inspector", nullptr, false, mGPUDataInspectorVC == nullptr))
+            {
+                mGPUDataInspectorVC = CreateViewController<GPUDataInspectorViewController>();
+            }
+
             ImGui::EndMenu();
         }
     }

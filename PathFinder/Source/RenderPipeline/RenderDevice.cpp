@@ -14,6 +14,7 @@ namespace PathFinder
         PipelineResourceStorage* resourceStorage,
         PipelineStateManager* pipelineStateManager,
         GPUProfiler* gpuProfiler,
+        GPUDataInspector* gpuDataInspector,
         const RenderPassGraph* renderPassGraph,
         const RenderSurfaceDescription& defaultRenderSurface,
         const PipelineSettings* settings)
@@ -27,6 +28,7 @@ namespace PathFinder
         mResourceStorage{ resourceStorage },
         mPipelineStateManager{ pipelineStateManager },
         mGPUProfiler{ gpuProfiler },
+        mGPUDataInspector{ gpuDataInspector },
         mRenderPassGraph{ renderPassGraph },
         mDefaultRenderSurface{ defaultRenderSurface },
         mGraphicsQueueFence{ device },
@@ -301,6 +303,10 @@ namespace PathFinder
             {
                 requestTransition(subresourceName, false);
             }
+
+            // Readback GPU inspector buffer for pass
+            if (Memory::Buffer* buffer = mGPUDataInspector->BufferForPass(*node))
+                resourcesToReadback.insert(buffer);
 
             // Now that we know resources that need to be read back we gather 
             // and then batch transitions and copy commands
@@ -958,7 +964,7 @@ namespace PathFinder
                 if (dlIndex < 0)
                     continue;
 
-                const RenderPassGraph::Node* nodeToWait = mPassGraph->DependencyLevels()[dlIndex].NodesForQueue(queueToWait).front();
+                const RenderPassGraph::Node* nodeToWait = mPassGraph->DependencyLevels()[dlIndex].NodesForQueue(queueToWait).back();
                 RenderPassEvent& passEvent = GetRenderPassEvent(*nodeToWait);
                 
                 if (!passEvent.SignalEvent)

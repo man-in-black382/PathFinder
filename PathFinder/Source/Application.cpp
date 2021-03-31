@@ -246,7 +246,9 @@ namespace PathFinder
         mGlobalConstants.MinSamplerIdx = mRenderEngine->ResourceStorage()->GetSamplerDescriptor(PathFinder::SamplerNames::Minimim)->IndexInHeapRange();
         mGlobalConstants.MaxSamplerIdx = mRenderEngine->ResourceStorage()->GetSamplerDescriptor(PathFinder::SamplerNames::Maximum)->IndexInHeapRange();
 
-        mPerFrameConstants.PreviousFrameCamera = mPerFrameConstants.CurrentFrameCamera;
+        mPerFrameConstants.PreviousFrameCamera = mRenderEngine->FrameNumber() > 1 ? 
+            mPerFrameConstants.CurrentFrameCamera : mScene->GPUStorage().CameraGPURepresentation();
+
         mPerFrameConstants.CurrentFrameCamera = mScene->GPUStorage().CameraGPURepresentation();
 
         const PathFinder::RenderSettings& settings = mSettingsController->AppliedSettings();

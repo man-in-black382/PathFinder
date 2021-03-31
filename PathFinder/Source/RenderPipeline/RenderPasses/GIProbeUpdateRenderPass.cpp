@@ -58,6 +58,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::GIDepthProbeAtlas, depthTextureProperties);
 
         scheduler->ReadTexture(ResourceNames::GIRayHitInfo);
+        scheduler->ReadTexture(ResourceNames::GIIndirectionTable);
 
         scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     } 
@@ -75,6 +76,7 @@ namespace PathFinder
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIRayHitInfo);
         cbContent.ProbeField.IrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIIrradianceProbeAtlas);
         cbContent.ProbeField.DepthProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIDepthProbeAtlas);
+        cbContent.ProbeField.IndirectionTableTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIndirectionTable);
        
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 

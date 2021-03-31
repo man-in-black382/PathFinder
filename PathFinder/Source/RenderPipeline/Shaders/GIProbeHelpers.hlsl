@@ -54,7 +54,7 @@ uint3 Probe3DIndexFrom1D(uint index, IrradianceField field)
     */
 
     // Assumes probe counts are powers of two.
-    // Saves ~10ms compared to the divisions above
+    // Saves time compared to the divisions above
     // Precomputing the MSB actually slows this code down substantially
     uint3 index3d;
     index3d.x = index & (field.GridSize.x - 1);
@@ -62,6 +62,11 @@ uint3 Probe3DIndexFrom1D(uint index, IrradianceField field)
     index3d.z = index >> FindMSB(field.GridSize.x * field.GridSize.y);
 
     return index3d;
+}
+
+uint Probe1DIndexFrom3D(uint3 index, IrradianceField field)
+{
+    return index.x + index.y * field.GridSize.x + index.z * field.GridSize.x * field.GridSize.y;
 }
 
 uint Probe1DIndexFromRayIndex(uint rayIndex, IrradianceField field)
