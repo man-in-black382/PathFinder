@@ -141,6 +141,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
     OutputDataInspectorValue(float3(3.456, 1.0, 555.7685)); 
     OutputDataInspectorValue(float2(3.456, 874.21));
     OutputDataInspectorValue(0.15874);
+    OutputDataInspectorValue(float4(1, 2, 3,4 ));
 }
 
 #endif

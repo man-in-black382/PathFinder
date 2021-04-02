@@ -33,6 +33,7 @@ namespace PathFinder
         static MipSet IndexFromEnd(uint32_t index);
         static MipSet FirstMip();
         static MipSet LastMip();
+        static MipSet AllMips();
         static MipSet Range(uint32_t firstMip, std::optional<uint32_t> lastMip);
 
         using MipVariant = std::variant<MipList, MipRange, uint32_t, uint32_t>;
@@ -145,14 +146,14 @@ namespace PathFinder
         // Indicates that a previously created texture will be used as a render target in the scheduling pass (Write Only)
         void UseRenderTarget(
             Foundation::Name resourceName,
-            const MipSet& writtenMips = MipSet::FirstMip(), 
+            const MipSet& writtenMips = MipSet::AllMips(),
             std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Provide alias when writing to existing resource more then once is required
         void AliasAndUseRenderTarget(
             Foundation::Name resourceName, 
             Foundation::Name outputAliasName,
-            const MipSet& writtenMips = MipSet::FirstMip(),
+            const MipSet& writtenMips = MipSet::AllMips(),
             std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Indicates that a previously created texture will be used as a depth-stencil attachment in the scheduling pass (Write Only)
@@ -166,20 +167,20 @@ namespace PathFinder
         // Read any previously created texture as a Shader Resource (Read Only)
         void ReadTexture(
             Foundation::Name resourceName, 
-            const MipSet& readMips = MipSet::FirstMip(),
+            const MipSet& readMips = MipSet::AllMips(),
             std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Access a previously created texture as an Unordered Access resource (Write)
         void WriteTexture(
             Foundation::Name resourceName,
-            const MipSet& writtenMips = MipSet::FirstMip(),
+            const MipSet& writtenMips = MipSet::AllMips(),
             std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Provide alias when writing to existing resource more then once is required
         void AliasAndWriteTexture(
             Foundation::Name resourceName,
             Foundation::Name outputAliasName,
-            const MipSet& writtenMips = MipSet::FirstMip(),
+            const MipSet& writtenMips = MipSet::AllMips(),
             std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 
         // Allocates new buffer to be accessed as Unordered Access resource (Write Only)

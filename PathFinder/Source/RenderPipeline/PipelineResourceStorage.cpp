@@ -194,6 +194,55 @@ namespace PathFinder
         }
     }
 
+    void PipelineResourceStorage::OptimizeScheduledResourceStates(const RenderPassGraph& passGraph)
+    {
+        // Tracking subresource infos where read state streak started, so that we could 
+        // accumulate consecutive read states until a write state is encountered
+        robin_hood::unordered_flat_map<RenderPassGraph::SubresourceName, PipelineResourceSchedulingInfo::SubresourceInfo*> firstReadingSubresourceInfos;
+
+        for (const RenderPassGraph::DependencyLevel& dl : passGraph.DependencyLevels())
+        {
+            for (const RenderPassGraph::Node* passNode : dl.Nodes())
+            {
+                for (RenderPassGraph::SubresourceName subresourceName : passNode->ReadSubresources())
+                {
+                    auto [resourceName, subresourceIndex] = RenderPassGraph::DecodeSubresourceName(subresourceName);
+
+                    PipelineResourceStorageResource* resourceData = GetPerResourceData(resourceName);
+                    PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceData->SchedulingInfo.GetInfoForPass(passNode->PassMetadata().Name);
+                    PipelineResourceSchedulingInfo::SubresourceInfo& subresourceInfo = *passInfo->SubresourceInfos[subresourceIndex];
+                    // Track the original resource name so that history is not dropped due to name aliasing
+                    RenderPassGraph::SubresourceName originalSubresourceName = RenderPassGraph::ConstructSubresourceName(resourceData->ResourceName(), subresourceIndex);
+                    
+                    // Remove PixelShaderAccess if pass is not executed on graphics queue
+                    if (EnumMaskContains(subresourceInfo.RequestedState, HAL::ResourceState::PixelShaderAccess) && passNode->ExecutionQueueIndex > 0)
+                        subresourceInfo.RequestedState = EnumMaskRemoveBit(subresourceInfo.RequestedState, HAL::ResourceState::PixelShaderAccess);
+
+                    // Track and combine consecutive read states.
+                    // Read state collapse works by traversing dependency levels,
+                    // because that's the resource read/write granularity when multiple queues are involved.
+                    PipelineResourceSchedulingInfo::SubresourceInfo** firstReadingSubresourceInfo = &firstReadingSubresourceInfos[originalSubresourceName];
+
+                    if (!(*firstReadingSubresourceInfo) && HAL::IsResourceStateReadOnly(subresourceInfo.RequestedState))
+                    {
+                        // If no read streak exists yet and we have a read state, then start one
+                        *firstReadingSubresourceInfo = &subresourceInfo;
+                    }
+                    else if (*firstReadingSubresourceInfo && HAL::IsResourceStateReadOnly(subresourceInfo.RequestedState))
+                    {
+                        // If read streak exists and we have a new read state, combine them
+                        (*firstReadingSubresourceInfo)->RequestedState |= subresourceInfo.RequestedState;
+                    }
+                    else
+                    {
+                        // Otherwise end the streak
+                        *firstReadingSubresourceInfo = nullptr;
+                    }
+                }
+            }
+        }
+    }
+
     void PipelineResourceStorage::AllocateScheduledResources()
     {
         mRTDSMemoryAliaser = { mPassExecutionGraph };

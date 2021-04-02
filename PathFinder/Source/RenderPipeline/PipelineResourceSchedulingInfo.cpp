@@ -6,7 +6,6 @@ namespace PathFinder
     PipelineResourceSchedulingInfo::PipelineResourceSchedulingInfo(Foundation::Name resourceName, const HAL::ResourceFormat& format)
         : mResourceFormat{ format }, mResourceName{ resourceName }, mCombinedResourceNames{ resourceName.ToString() }, mSubresourceCount{ format.SubresourceCount() }
     {
-        mSubresourceCombinedReadStates.resize(mSubresourceCount);
     }
 
     void PipelineResourceSchedulingInfo::AddExpectedStates(HAL::ResourceState states)
@@ -53,22 +52,13 @@ namespace PathFinder
         passInfo.SubresourceInfos[subresourceIndex]->AccessValidationFlag = accessFlag;
         passInfo.SubresourceInfos[subresourceIndex]->RequestedState = state;
         passInfo.SubresourceInfos[subresourceIndex]->ShaderVisibleFormat = shaderVisibleFormat;
-
-        if (IsResourceStateReadOnly(state))
-        {
-            mSubresourceCombinedReadStates[subresourceIndex] |= state;
-        }
-        else if (EnumMaskContains(state, HAL::ResourceState::UnorderedAccess))
+        
+        if (EnumMaskContains(state, HAL::ResourceState::UnorderedAccess))
         {
             passInfo.NeedsUnorderedAccessBarrier = true;
         }
 
         mExpectedStates |= state;
-    }
-
-    HAL::ResourceState PipelineResourceSchedulingInfo::GetSubresourceCombinedReadStates(uint64_t subresourceIndex) const
-    {
-        return mSubresourceCombinedReadStates[subresourceIndex];
     }
 
 }

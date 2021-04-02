@@ -60,6 +60,7 @@ namespace PathFinder
 
         void StartResourceScheduling();
         void EndResourceScheduling();
+        void OptimizeScheduledResourceStates(const RenderPassGraph& passGraph);
         void AllocateScheduledResources();
         
         template <class Constants> 

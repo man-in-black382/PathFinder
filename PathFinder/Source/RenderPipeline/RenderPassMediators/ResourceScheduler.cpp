@@ -41,6 +41,11 @@ namespace PathFinder
         return IndexFromEnd(0);
     }
 
+    MipSet MipSet::AllMips()
+    {
+        return MipSet::Range(0, std::nullopt);
+    }
+
     MipSet MipSet::Range(uint32_t firstMip, std::optional<uint32_t> lastMip)
     {
         MipSet set{};

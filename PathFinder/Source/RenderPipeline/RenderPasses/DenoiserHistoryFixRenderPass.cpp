@@ -28,8 +28,8 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
         
         // Write to mip 0
-        scheduler->AliasAndWriteTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceNames::StochasticShadowedShadingFixed);
-        scheduler->AliasAndWriteTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceNames::StochasticUnshadowedShadingFixed);
+        scheduler->AliasAndWriteTexture(ResourceNames::StochasticShadowedShadingPreBlurred, ResourceNames::StochasticShadowedShadingFixed, MipSet::FirstMip());
+        scheduler->AliasAndWriteTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceNames::StochasticUnshadowedShadingFixed, MipSet::FirstMip());
 
         // Read tail mips
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, MipSet::Range(1, std::nullopt));

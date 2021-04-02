@@ -117,7 +117,7 @@ void CSMain(int3 DTid : SV_DispatchThreadID, int3 GTid : SV_GroupThreadID)
     float3 surfaceNormal;
     LoadGBufferNormalAndRoughness(normalRoughnessTexture, pixelIndex, surfaceNormal, roughness);
 
-    float baseViewDepth = viewDepthTexture.SampleLevel(PointClampSampler(), uv, 0.0).r;
+    float baseViewDepth = viewDepthTexture[pixelIndex].r;
 
     Fix(shadowedShadingPreBlurred, shadowedShadingFixedTexture, viewDepthTexture, roughness, historyWeights.x, baseViewDepth, pixelIndex, uv);
     Fix(unshadowedShadingPreBlurred, unshadowedShadingFixedTexture, viewDepthTexture, roughness, historyWeights.y, baseViewDepth, pixelIndex, uv);

@@ -81,7 +81,7 @@ namespace PathFinder
         scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness, normalRoughnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferMotionVector, motionVectorProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferTypeAndMaterialIndex, typeAndMaterialIndexProperties);
-        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[frameIndex], viewDepthProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[frameIndex], MipSet::FirstMip(), viewDepthProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[previousFrameIndex], MipSet::Empty(), viewDepthProperties);
         scheduler->NewDepthStencil(ResourceNames::GBufferDepthStencil);
     }  

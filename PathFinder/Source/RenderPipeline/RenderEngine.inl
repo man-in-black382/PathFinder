@@ -382,6 +382,7 @@ namespace PathFinder
 
         // Finish graph and allocate memory 
         mRenderPassGraph.Build();
+        mPipelineResourceStorage->OptimizeScheduledResourceStates(mRenderPassGraph);
         mPipelineResourceStorage->AllocateScheduledResources();
     }
 

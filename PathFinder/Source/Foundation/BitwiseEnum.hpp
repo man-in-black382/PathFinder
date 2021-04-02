@@ -88,6 +88,10 @@ struct EnableBitMaskOperators<x>     \
 static const bool enable = true; \
 }; \
 \
+inline x EnumMaskRemoveBit(x mask, x bit) \
+{ \
+    return mask & (~bit); \
+} \
 inline bool EnumMaskEquals(x mask, x component) \
 { \
     return (mask & component) == component; \

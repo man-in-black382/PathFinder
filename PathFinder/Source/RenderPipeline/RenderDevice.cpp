@@ -226,9 +226,7 @@ namespace PathFinder
                 
                 // When dealing with reading use combined read state to make one transition instead of 
                 // several separate consequential transitions when neighboring render passes require resource in different read states
-                HAL::ResourceState newState = isReadDependency ?
-                    resourceData->SchedulingInfo.GetSubresourceCombinedReadStates(subresourceIndex) :
-                    newState = passInfo->SubresourceInfos[subresourceIndex]->RequestedState;
+                HAL::ResourceState newState = passInfo->SubresourceInfos[subresourceIndex]->RequestedState;
 
                 std::optional<HAL::ResourceTransitionBarrier> barrier =
                     mResourceStateTracker->TransitionToStateImmediately(resourceData->GetGPUResource()->HALResource(), newState, subresourceIndex, false);

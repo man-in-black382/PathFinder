@@ -54,8 +54,6 @@ namespace PathFinder
             std::optional<HAL::ColorFormat> shaderVisibleFormat = std::nullopt
         );
 
-        HAL::ResourceState GetSubresourceCombinedReadStates(uint64_t subresourceIndex) const;
-
         uint64_t HeapOffset = 0;
         bool CanBeAliased = true;
         bool WasAliased = false;
@@ -72,8 +70,6 @@ namespace PathFinder
         std::vector<Foundation::Name> mAliases;
         uint64_t mSubresourceCount = 0;
         std::string mCombinedResourceNames;
-
-        std::vector<HAL::ResourceState> mSubresourceCombinedReadStates;
 
     public:
         inline const HAL::ResourceFormat& ResourceFormat() const { return mResourceFormat; }

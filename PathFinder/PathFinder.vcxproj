@@ -211,6 +211,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Foundation\Name.cpp" />
     <ClCompile Include="Source\Foundation\NameHolder.cpp" />
     <ClCompile Include="Source\Foundation\NameRegistry.cpp" />
+    <ClCompile Include="Source\Foundation\Timer.cpp" />
     <ClCompile Include="Source\Geometry\AxisAlignedBox3D.cpp" />
     <ClCompile Include="Source\Geometry\Collision.cpp" />
     <ClCompile Include="Source\Geometry\Dimensions.cpp" />
@@ -431,6 +432,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Foundation\Pi.hpp" />
     <ClInclude Include="Source\Foundation\STDHelpers.hpp" />
     <ClInclude Include="Source\Foundation\StringUtils.hpp" />
+    <ClInclude Include="Source\Foundation\Timer.hpp" />
     <ClInclude Include="Source\Foundation\Visitor.hpp" />
     <ClInclude Include="Source\Geometry\AxisAlignedBox3D.hpp" />
     <ClInclude Include="Source\Geometry\Collision.hpp" />

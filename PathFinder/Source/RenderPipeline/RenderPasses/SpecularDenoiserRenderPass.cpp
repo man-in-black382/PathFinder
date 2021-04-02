@@ -27,7 +27,7 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
-        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[currentFrameIndex]);
+        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[currentFrameIndex], MipSet::FirstMip());
         scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[currentFrameIndex]);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingReprojected);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
