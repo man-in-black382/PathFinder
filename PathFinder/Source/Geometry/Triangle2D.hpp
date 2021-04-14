@@ -5,16 +5,14 @@
 
 #include <glm/vec2.hpp>
 
-namespace Geometry {
+namespace Geometry 
+{
 
-    struct Triangle2D : public Triangle<glm::vec2> {
+    struct Triangle2D : public Triangle<glm::vec2> 
+    {
         using Triangle<glm::vec2>::Triangle;
 
-        float area() const override;
-
-        Rect2D boundingRect() const;
-
-        std::array<Triangle2D, 4> split() const;
+        float GetArea() const override;
     };
 
 }

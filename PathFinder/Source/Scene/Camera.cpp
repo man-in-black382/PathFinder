@@ -91,42 +91,66 @@ namespace PathFinder
 
     glm::vec3 Camera::WorldToNDC(const glm::vec3 &v) const
     {
-        glm::vec4 clipSpaceVector = ViewProjection() * glm::vec4(v, 1.0);
+        glm::vec4 clipSpaceVector = GetViewProjection() * glm::vec4(v, 1.0);
         return fabs(clipSpaceVector.w) > std::numeric_limits<float>::epsilon() ? clipSpaceVector / clipSpaceVector.w : clipSpaceVector;
     }
 
-    glm::mat4 Camera::ViewProjection() const
+    std::array<glm::vec3, 8> Camera::GetFrustumCorners() const
     {
-        return Projection() * View();
+        // Z from 0 to 1
+        constexpr std::array<glm::vec3, 8> NDCCorners = {
+            glm::vec3(-1,-1,0), glm::vec3(-1,1,0), glm::vec3(1,1,0), glm::vec3(1,-1,0),
+            glm::vec3(-1,-1,1), glm::vec3(-1,1,1), glm::vec3(1,1,1), glm::vec3(1,-1,1)
+        };
+
+        glm::mat4 inverseProjection = GetInverseProjection();
+        glm::mat4 inverseView = GetInverseView();
+
+        std::array<glm::vec3, 8> worldCorners;
+
+        for (auto corner = 0; corner < 8; ++corner)
+        {
+            glm::vec4 vertex = inverseProjection * glm::vec4{ NDCCorners[corner], 1.f };
+            vertex /= vertex.w;
+            vertex = vertex * inverseView;
+            worldCorners[corner] = vertex;
+        }
+
+        return worldCorners;
     }
 
-    glm::mat4 Camera::View() const
+    glm::mat4 Camera::GetViewProjection() const
+    {
+        return GetProjection() * GetView();
+    }
+
+    glm::mat4 Camera::GetView() const
     {
         return glm::lookAt(mPosition, mPosition + mFront, mWorldUp);
     }
 
-    glm::mat4 Camera::Projection() const
+    glm::mat4 Camera::GetProjection() const
     {
         float fovV = mFieldOfView / mViewportAspectRatio;
         return glm::perspective(glm::radians(fovV), mViewportAspectRatio, mNearClipPlane, mFarClipPlane);
     }
 
-    glm::mat4 Camera::InverseViewProjection() const
+    glm::mat4 Camera::GetInverseViewProjection() const
     {
-        return glm::inverse(ViewProjection());
+        return glm::inverse(GetViewProjection());
     }
 
-    glm::mat4 Camera::InverseView() const
+    glm::mat4 Camera::GetInverseView() const
     {
-        return glm::inverse(View());
+        return glm::inverse(GetView());
     }
 
-    glm::mat4 Camera::InverseProjection() const
+    glm::mat4 Camera::GetInverseProjection() const
     {
-        return glm::inverse(Projection());
+        return glm::inverse(GetProjection());
     }
 
-    PathFinder::EV Camera::ExposureValue100() const
+    PathFinder::EV Camera::GetExposureValue100() const
     {
         // EV number is defined as:
         // 2^ EV_s = N^2 / t and EV_s = EV_100 + log2 (S /100)

@@ -3,7 +3,7 @@
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
-#include "AxisAlignedBox3D.hpp"
+#include "AABB.hpp"
 #include "Parallelogram3D.hpp"
 #include "Transformation.hpp"
 

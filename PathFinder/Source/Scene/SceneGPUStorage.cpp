@@ -101,7 +101,7 @@ namespace PathFinder
                 material.NormalMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
                 material.RoughnessMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
                 material.MetalnessMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
-                material.AOMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
+
                 material.DisplacementMap.Texture->GetSRDescriptor()->IndexInHeapRange(),
                 material.DistanceField.Texture->GetSRDescriptor()->IndexInHeapRange(),
                 material.LTC_LUT_MatrixInverse_Specular->GetSRDescriptor()->IndexInHeapRange(),
@@ -113,7 +113,14 @@ namespace PathFinder
                 lut0SpecularSize.Width,
                 // Right now we use wrap mode from diffuse albedo and apply it for all textures in material, which should be sufficient.
                 getSamplerIndex(material.DiffuseAlbedoMap.Wrapping),
-                material.NormalMap.Texture->Properties().Dimensions.Width > 1
+                material.NormalMap.Texture->Properties().Dimensions.Width > 1,
+                material.IOROverride.value_or(-1.f),
+                material.DiffuseAlbedoOverride.value_or(glm::vec3{-1.f}),
+                material.RoughnessOverride.value_or(-1.f),
+                material.SpecularAlbedoOverride.value_or(glm::vec3{-1.f}),
+                material.MetalnessOverride.value_or(-1.f),
+                material.TransmissionFilter.value_or(glm::vec3{-1.f}),
+                material.TranslucencyOverride.value_or(-1.f),
             };
 
             material.GPUMaterialTableIndex = materialIndex;
@@ -175,9 +182,9 @@ namespace PathFinder
         for (MeshInstance& instance : meshInstances)
         {
             GPUMeshInstanceTableEntry instanceEntry{
-                instance.Transformation().ModelMatrix(),
-                instance.PrevTransformation().ModelMatrix(),
-                instance.Transformation().NormalMatrix(),
+                instance.Transformation().GetMatrix(),
+                instance.PrevTransformation().GetMatrix(),
+                instance.Transformation().GetNormalMatrix(),
                 instance.AssociatedMaterial()->GPUMaterialTableIndex,
                 instance.AssociatedMesh()->LocationInVertexStorage().VertexBufferOffset,
                 instance.AssociatedMesh()->LocationInVertexStorage().IndexBufferOffset,
@@ -265,7 +272,7 @@ namespace PathFinder
             Geometry::Transformation probeTransform{ glm::vec3{L.DebugProbeRadius() * 2}, probePosition, glm::quat{} };
 
             BottomRTAS& blas = mBottomAccelerationStructures[mUnitSphereVertexLocation.BottomAccelerationStructureIndex];
-            mTopAccelerationStructure.AddInstance(blas, instanceInfo, probeTransform.ModelMatrix());
+            mTopAccelerationStructure.AddInstance(blas, instanceInfo, probeTransform.GetMatrix());
         }
     }
 
@@ -275,21 +282,21 @@ namespace PathFinder
 
         GPUCamera gpuCamera{};
 
-        gpuCamera.Position = glm::vec4{ camera.Position(), 1.0 };
-        gpuCamera.View = camera.View();
-        gpuCamera.Projection = camera.Projection();
-        gpuCamera.ViewProjection = camera.ViewProjection();
-        gpuCamera.InverseView = camera.InverseView();
-        gpuCamera.InverseProjection = camera.InverseProjection();
-        gpuCamera.InverseViewProjection = camera.InverseViewProjection();
-        gpuCamera.ExposureValue100 = camera.ExposureValue100();
-        gpuCamera.FarPlane = camera.FarClipPlane();
-        gpuCamera.NearPlane = camera.NearClipPlane();
-        gpuCamera.FoVH = glm::radians(camera.FOVH());
-        gpuCamera.FoVV = glm::radians(camera.FOVV());
+        gpuCamera.Position = glm::vec4{ camera.GetPosition(), 1.0 };
+        gpuCamera.View = camera.GetView();
+        gpuCamera.Projection = camera.GetProjection();
+        gpuCamera.ViewProjection = camera.GetViewProjection();
+        gpuCamera.InverseView = camera.GetInverseView();
+        gpuCamera.InverseProjection = camera.GetInverseProjection();
+        gpuCamera.InverseViewProjection = camera.GetInverseViewProjection();
+        gpuCamera.ExposureValue100 = camera.GetExposureValue100();
+        gpuCamera.FarPlane = camera.GetFarClipPlane();
+        gpuCamera.NearPlane = camera.GetNearClipPlane();
+        gpuCamera.FoVH = glm::radians(camera.GetFOVH());
+        gpuCamera.FoVV = glm::radians(camera.GetFOVV());
         gpuCamera.FoVHTan = tan(gpuCamera.FoVH);
         gpuCamera.FoVVTan = tan(gpuCamera.FoVV);
-        gpuCamera.AspectRatio = camera.AspectRatio();
+        gpuCamera.AspectRatio = camera.GetAspectRatio();
 
         return gpuCamera;
     }
@@ -313,8 +320,8 @@ namespace PathFinder
         field.DepthProbeAtlasProbesPerDimension = L.GetDepthProbeAtlasProbesPerDimension();
         field.IrradianceProbeSize = L.GetIrradianceProbeSize().Width;
         field.DepthProbeSize = L.GetDepthProbeSize().Width;
-        field.IrradianceProbeAtlasTexIdx = 0; // Determined in render pass
-        field.DepthProbeAtlasTexIdx = 0; // Determined in render pass
+        field.CurrentIrradianceProbeAtlasTexIdx = 0; // Determined in render pass
+        field.CurrentDepthProbeAtlasTexIdx = 0; // Determined in render pass
         field.DebugProbeRadius = L.DebugProbeRadius();
         field.SpawnedProbePlanesCount = L.SpawnedProbePlanesCount();
         return field;

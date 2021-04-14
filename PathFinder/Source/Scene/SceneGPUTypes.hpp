@@ -29,20 +29,29 @@ namespace PathFinder
         uint32_t RoughnessMapIndex;
         uint32_t MetalnessMapIndex;
         // 16 byte boundary
-        uint32_t AOMapIndex;
         uint32_t DisplacementMapIndex;
         uint32_t DistanceFieldIndex;
         uint32_t LTC_LUT_MatrixInverse_Specular_Index;
-        // 16 byte boundary
         uint32_t LTC_LUT_Matrix_Specular_Index;
+        // 16 byte boundary
         uint32_t LTC_LUT_Terms_Specular_Index;
         uint32_t LTC_LUT_MatrixInverse_Diffuse_Index;
         uint32_t LTC_LUT_Matrix_Diffuse_Index;
-        // 16 byte boundary
         uint32_t LTC_LUT_Terms_Diffuse_Index;
+        // 16 byte boundary
         uint32_t LTC_LUT_TextureSize;
         uint32_t SamplerIndex;
         uint32_t HasNormalMap;
+        float IOROverride;
+        // 16 byte boundary
+        glm::vec3 DiffuseAlbedoOverride;
+        float RoughnessOverride;
+        // 16 byte boundary
+        glm::vec3 SpecularAlbedoOverride;
+        float MetalnessOverride;
+        // 16 byte boundary
+        glm::vec3 TransmissionFilter;
+        float TranslucencyOverride;
     };
 
     struct GPULightTableEntry
@@ -133,16 +142,16 @@ namespace PathFinder
         // 16 byte boundary
         uint32_t IrradianceProbeSize;
         uint32_t DepthProbeSize;
-        uint32_t IrradianceProbeAtlasTexIdx;
-        uint32_t DepthProbeAtlasTexIdx;
+        uint32_t CurrentIrradianceProbeAtlasTexIdx;
+        uint32_t CurrentDepthProbeAtlasTexIdx;
         // 16 byte boundary
         glm::ivec3 SpawnedProbePlanesCount; // How many probe planes were spawned this frame on each axis
-        uint32_t IndirectionTableTexIdx;
-        // 16 byte boundary
         float DebugProbeRadius;
-        uint32_t Pad0__ = 0;
-        uint32_t Pad1__ = 0;
-        uint32_t Pad2__ = 0;
+        // 16 byte boundary
+        uint32_t PreviousIrradianceProbeAtlasTexIdx;
+        uint32_t PreviousDepthProbeAtlasTexIdx;
+        uint32_t Pad0__;
+        uint32_t Pad1__;
     };
 
     using GPUInstanceIndex = uint64_t;

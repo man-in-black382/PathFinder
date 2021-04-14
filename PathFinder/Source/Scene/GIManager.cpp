@@ -14,10 +14,7 @@ namespace PathFinder
 
     void GIManager::Update()
     {
-        glm::vec3 gridSizeWS = glm::vec3{ ProbeField.GridSize() } * ProbeField.CellSize();
-        glm::vec3 gridCorner = Geometry::Snap(mCamera->Position(), glm::vec3{ ProbeField.CellSize() }) - gridSizeWS / 2.f;
-
-        ProbeField.SetCornerPosition(gridCorner);
+        ProbeField.SetCornerPosition(GenerateGridCornerPosition());
 
         if (!DoNotRotateProbeRays)
         {
@@ -31,6 +28,53 @@ namespace PathFinder
         {
             ProbeField.GenerateProbeRotation(glm::vec2{ 0.0 });
         }
+    }
+
+    glm::vec3 GIManager::GenerateGridCornerPosition() const
+    {
+        glm::vec3 gridSize = glm::vec3{ ProbeField.GridSize() } * ProbeField.CellSize();
+        glm::vec3 halfGridSize = gridSize * 0.5f;
+
+        // 4 front corners
+        constexpr std::array<glm::vec3, 4> NDCCorners = { 
+            glm::vec3(-1,-1,1), glm::vec3(-1,1,1), glm::vec3(1,1,1), glm::vec3(1,-1,1)
+        };
+
+        glm::mat4 inverseProjection = mCamera->GetInverseProjection();
+        glm::mat4 inverseView = mCamera->GetInverseView();
+
+        std::array<glm::vec3, 5> frustumPoints;
+
+        for (auto corner = 0; corner < 4; ++corner)
+        {
+            glm::vec4 vertex = inverseProjection * glm::vec4{ NDCCorners[corner], 1.f };
+            vertex /= vertex.w;
+            vertex = inverseView * vertex;
+            frustumPoints[corner] = vertex;
+        }
+
+        frustumPoints[4] = mCamera->GetPosition();
+
+        Geometry::AABB frustumAABB{ frustumPoints.begin(), frustumPoints.end() };
+
+        // Camera position is a point on camera's frustum AABB, by definition.
+        // We find normalized coordinates of that point.
+        glm::vec3 normIntersectionPoint = mCamera->GetPosition() - frustumAABB.GetMin();
+        normIntersectionPoint /= frustumAABB.GetMax() - frustumAABB.GetMin();
+
+        // Get cascades min point by centering cascade around the camera position
+        glm::vec3 cascadeMinPoint = mCamera->GetPosition() - halfGridSize;
+
+        // Compute anchor which is a point on the cascade's AABB 
+        glm::vec3 cascadeAnchor = normIntersectionPoint * gridSize + cascadeMinPoint;
+
+        // We want to move cascade so that anchor point is at the same place as camera position
+        glm::vec3 giCascadeDisplacement = mCamera->GetPosition() - cascadeAnchor;
+
+        // We move cascade to camera but then move it backwards by one cell size so that we always have a probe behind the camera, for more smooth GI
+        glm::vec3 cascadeOptimalMinPoint = cascadeMinPoint + giCascadeDisplacement - mCamera->GetFront() * ProbeField.CellSize();
+
+        return Geometry::Snap(cascadeOptimalMinPoint, glm::vec3{ ProbeField.CellSize() });
     }
 
     void IrradianceField::GenerateProbeRotation(const glm::vec2& random0to1)

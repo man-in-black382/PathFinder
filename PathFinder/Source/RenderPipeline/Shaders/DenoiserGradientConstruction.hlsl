@@ -40,7 +40,6 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         CIELuminance(unshadowedShadingTexture[gradientSamplePixelIdx].rgb));
 
     float2 gradientInputs = gradientInputsTexture[downscaledPixelIdx].rg;
-
     float2 gradients = float2(GetHFGradient(lums.x, gradientInputs.x), GetHFGradient(lums.y, gradientInputs.y));
 
     gradientOutputTexture[downscaledPixelIdx].rg = gradients;

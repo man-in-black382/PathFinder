@@ -40,7 +40,6 @@
 #include "RenderPipeline/RenderPasses/GIRayTracingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/GIProbeUpdateRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/GIDebugRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/GIProbeIndirectionTableUpdateRenderPass.hpp"
 #include "RenderPipeline/GlobalRootConstants.hpp"
 #include "RenderPipeline/PerFrameRootConstants.hpp"
 #include "RenderPipeline/RenderPassContentMediator.hpp"
@@ -109,7 +108,6 @@ namespace PathFinder
         GIRayTracingRenderPass mGIRayTracingPass;
         GIProbeUpdateRenderPass mGIProbeUpdatePass;
         GIDebugRenderPass mGIDebugPass;
-        GIProbeIndirectionTableUpdateRenderPass mGIProbeIndirectionTableUpdatePass;
 
         GlobalRootConstants mGlobalConstants;
         PerFrameRootConstants mPerFrameConstants;

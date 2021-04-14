@@ -29,6 +29,7 @@ namespace PathFinder
 
         bool IsInteracting() const;
         bool IsMouseOverUI() const;
+        glm::uvec2 MousePosition() const;
 
         template <class ViewControllerT> 
         std::shared_ptr<ViewControllerT> CreateViewController();

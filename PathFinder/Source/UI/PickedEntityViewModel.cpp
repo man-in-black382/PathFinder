@@ -61,7 +61,7 @@ namespace PathFinder
         mShouldDisplay = mMeshInstance != nullptr || mSphericalLight != nullptr || mFlatLight != nullptr;
         mAreRotationsAllowed = mSphericalLight == nullptr;
        
-        if (mMeshInstance) mModelMatrix = mMeshInstance->Transformation().ModelMatrix();
+        if (mMeshInstance) mModelMatrix = mMeshInstance->Transformation().GetMatrix();
         else if (mSphericalLight) mModelMatrix = mSphericalLight->ModelMatrix();
         else if (mFlatLight) mModelMatrix = mFlatLight->ModelMatrix();
 

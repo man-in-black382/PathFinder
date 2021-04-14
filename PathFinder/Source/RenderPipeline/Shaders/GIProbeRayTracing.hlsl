@@ -59,17 +59,6 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
 
     float2 uv = ApplyBarycentrics(vertex0.UV, vertex1.UV, vertex2.UV, attributes.barycentrics);
     float3 N = ApplyBarycentrics(vertex0.Normal, vertex1.Normal, vertex2.Normal, attributes.barycentrics);
-    float3 T = ApplyBarycentrics(vertex0.Tangent, vertex1.Tangent, vertex2.Tangent, attributes.barycentrics);
-
-    N = mul(instanceData.NormalMatrix, float4(normalize(N), 0.0)).xyz;
-    T = mul(instanceData.NormalMatrix, float4(normalize(T), 0.0)).xyz;
-
-    // If model is scaled, vectors will be scaled too, so renormalization is mandatory
-    N = normalize(N);
-    T = normalize(T);
-
-    float3 B = normalize(cross(N, T));
-    float3x3 TBN = Matrix3x3ColumnMajor(T, B, N);
 
     Texture2D albedoTexture = Textures2D[material.AlbedoMapIndex];
     Texture2D normalTexture = Textures2D[material.NormalMapIndex];
@@ -77,13 +66,20 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     Texture2D metalnessTexture = Textures2D[material.MetalnessMapIndex];
 
     GBufferStandard gBuffer;
-    gBuffer.Albedo = SRGBToLinear(albedoTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).rgb);
-    gBuffer.Normal = mul(TBN, ExpandGBufferNormal(normalTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).rgb));
-    gBuffer.Roughness = roughnessTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).r;
-    gBuffer.Metalness = metalnessTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).r;
 
-    if (!instanceData.HasTangentSpace)
-        gBuffer.Normal = N;
+    gBuffer.Albedo = all(material.DiffuseAlbedoOverride < 0.0) ?
+        SRGBToLinear(albedoTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).rgb) :
+        material.DiffuseAlbedoOverride;
+
+    gBuffer.Normal = N;
+
+    gBuffer.Roughness = material.RoughnessOverride < 0.0 ?
+        roughnessTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).r :
+        material.RoughnessOverride;
+
+    gBuffer.Metalness = material.RoughnessOverride < 0.0 ?
+        metalnessTexture.SampleLevel(AnisotropicClampSampler(), uv, 0).r :
+        material.RoughnessOverride;
 
     uint rayIndex = DispatchRaysIndex().x;
     uint wrappedRayIndex = rayIndex % (PassDataCB.BlueNoiseTexSize.x * PassDataCB.BlueNoiseTexSize.y);
@@ -102,19 +98,17 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
     float3 wo = mul(surfaceWorldToTangent, viewDirection);
-    LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
     ShadingResult shadingResult = ZeroShadingResult();
 
     ShadeWithSphericalLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
     ShadeWithRectangularLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
     ShadeWithEllipticalLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
 
-    float3 shadowed = 0.0;
+    Texture2D irradianceAtlas = Textures2D[PassDataCB.ProbeField.PreviousIrradianceProbeAtlasTexIdx];
+    Texture2D depthAtlas = Textures2D[PassDataCB.ProbeField.PreviousDepthProbeAtlasTexIdx];
+    float3 irradiance = RetrieveGIIrradiance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, true);
 
-    const uint RayFlags =
-        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
-        RAY_FLAG_FORCE_OPAQUE |           // Skip any hit shaders
-        RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
+    float3 shadowed = DiffuseBRDFForGI(viewDirection, gBuffer) * irradiance;
 
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
@@ -130,6 +124,10 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
         case LightTypeRectangle: lightIntersectionPoint = UnpackRayRectangularLightIntersectionPoint(shadingResult.RayLightIntersectionData[i], light, lightRotation); break;
         case LightTypeEllipse: lightIntersectionPoint = UnpackRayDiskLightIntersectionPoint(shadingResult.RayLightIntersectionData[i], light, lightRotation); break;
         }
+        
+        // Skipped missed or otherwise problematic rays
+        if (all(shadingResult.StochasticUnshadowedOutgoingLuminance[i]) <= 0.0)
+            continue;
 
         float3 lightToSurface = surfacePosition - lightIntersectionPoint;
         float vectorLength = length(lightToSurface);
@@ -146,6 +144,10 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
 
         // Select SecondaryShadowRayMiss(...)
         const int MissShaderIndex = 1;
+        const uint RayFlags =
+            RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
+            RAY_FLAG_FORCE_OPAQUE |           // Skip any hit shaders
+            RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
 
         TraceRay(SceneBVH,
             RayFlags,
@@ -156,13 +158,14 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
             dxrRay,
             payload);
 
-        shadowed += shadingResult.StochasticUnshadowedOutgoingLuminance[i] * payload.Value.x;
+        shadowed += shadingResult.StochasticUnshadowedOutgoingLuminance[i] * payload.Value;
     }
 
     RWTexture2D<float4> rayHitInfoOutputTexture = RW_Float4_Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx];
     uint2 outputTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
 
-    rayHitInfoOutputTexture[outputTexelIdx] = float4(shadowed, RayTCurrent());
+    bool hitBackFace = dot(gBuffer.Normal, WorldRayDirection()) >= 0.0;
+    rayHitInfoOutputTexture[outputTexelIdx] = float4(shadowed, hitBackFace ? ProbeRayBackfaceIndicator : RayTCurrent());
 }
 
 [shader("closesthit")]
@@ -176,7 +179,8 @@ void LightRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersecti
 [shader("miss")]
 void ProbeRayMiss(inout ProbeRayPayload payload)
 {
-    OutputResult(float4(0.0, 0.0, 0.0, GITRayMiss));
+    float maxRayLength = length(PassDataCB.ProbeField.CellSize.xxx);
+    OutputResult(float4(0.0, 0.0, 0.0, FloatMax));
 }
 
 [shader("miss")]
@@ -204,15 +208,12 @@ void RayGeneration()
     const int MissShaderIndex = 0; 
 
     TraceRay(SceneBVH,
-        RAY_FLAG_CULL_BACK_FACING_TRIANGLES
-        | RAY_FLAG_FORCE_OPAQUE, // Skip any hit shaders
+        RAY_FLAG_FORCE_OPAQUE, // Skip any hit shaders
         EntityMaskMeshInstance, // Instance mask 
         0, // Contribution to hit group index
         0, // BLAS geometry multiplier for hit group index
         MissShaderIndex, // Miss shader index
         dxrRay, payload);
-
-    //OutputResult(float4(rayDir.x > 0 ? rayDir.x * 10 : 0, 0, 0, 10.0));
 }
 
 #endif

@@ -25,7 +25,7 @@ namespace Geometry {
     }
 
     Plane::Plane(const Triangle3D &triangle) {
-        normal = triangle.normal();
+        normal = triangle.GetNormal();
         distance = glm::dot(triangle.a, normal);
     }
 

@@ -3,20 +3,23 @@
 #include <glm/vec3.hpp>
 #include <array>
 
-namespace Geometry {
-
-    struct AxisAlignedBox3D;
+namespace Geometry
+{
 
     template<typename Point>
-    struct Triangle {
-        union {
-            struct {
+    struct Triangle 
+    {
+        union 
+        {
+            struct
+            {
                 Point a;
                 Point b;
                 Point c;
             };
 
-            struct {
+            struct 
+            {
                 Point p1;
                 Point p2;
                 Point p3;
@@ -27,11 +30,9 @@ namespace Geometry {
         };
 
         Triangle() = default;
+        Triangle(const Point &p1, const Point &p2, const Point &p3) : a(p1), b(p2), c(p3) {}
 
-        Triangle(const Point &p1, const Point &p2, const Point &p3) : a(p1), b(p2), c(p3) {
-        }
-
-        virtual float area() const = 0;
+        virtual float GetArea() const = 0;
     };
 
 }

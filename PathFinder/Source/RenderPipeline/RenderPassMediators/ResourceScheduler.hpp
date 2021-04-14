@@ -13,7 +13,12 @@ namespace PathFinder
 
     enum class BufferReadContext
     {
-        Constant, ShaderResource
+        Constant, AnyShader, PixelShader, NonPixelShader
+    };
+
+    enum class TextureReadContext
+    {
+        AnyShader, PixelShader, NonPixelShader
     };
 
     enum class ResourceSchedulingFlags : uint32_t
@@ -166,7 +171,8 @@ namespace PathFinder
 
         // Read any previously created texture as a Shader Resource (Read Only)
         void ReadTexture(
-            Foundation::Name resourceName, 
+            Foundation::Name resourceName,
+            TextureReadContext readContext = TextureReadContext::NonPixelShader,
             const MipSet& readMips = MipSet::AllMips(),
             std::optional<HAL::ColorFormat> concreteFormat = std::nullopt);
 

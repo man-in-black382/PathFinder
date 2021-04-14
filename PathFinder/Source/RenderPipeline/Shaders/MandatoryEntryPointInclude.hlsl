@@ -20,6 +20,7 @@ struct FrameData
     Camera CurrentFrameCamera;
     Camera PreviousFrameCamera;
 
+    uint2 MousePosition;
     bool IsDenoiserEnabled;
     bool IsReprojectionHistoryDebugEnabled;
     bool IsGradientDebugEnabled;

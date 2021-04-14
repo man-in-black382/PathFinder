@@ -36,4 +36,16 @@ namespace Geometry
         return result;
     }
 
+    AABB GetCircumscribedAABBForSphere(const Sphere& sphere)
+    {
+        AABB aabb{ sphere.Center - sphere.Radius, sphere.Center + sphere.Radius };
+        return aabb;
+    }
+
+    Sphere GetCircumscribedSphereForAABB(const AABB& aabb)
+    {
+        Sphere sphere{ (aabb.GetMin() + aabb.GetMax()) * 0.5f, glm::length(aabb.GetMax() - aabb.GetMin()) * 0.5f };
+        return sphere;
+    }
+
 }

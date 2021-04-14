@@ -17,7 +17,7 @@ namespace Geometry {
     }
 
     Parallelogram3D Parallelogram3D::transformedBy(const Transformation &t) const {
-        return transformedBy(t.ModelMatrix());
+        return transformedBy(t.GetMatrix());
     }
 
     Parallelogram3D Parallelogram3D::transformedBy(const glm::mat4 &mat) const {

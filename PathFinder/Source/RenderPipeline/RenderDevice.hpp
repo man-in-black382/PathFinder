@@ -216,12 +216,11 @@ namespace PathFinder
         void CollectNodeStandardTransitions(const RenderPassGraph::Node* node, uint64_t currentCommandListBatchIndex, HAL::ResourceBarrierCollection& collection);
         void CollectNodeTransitionsToReroute(std::optional<uint64_t>& reroutingDependencyLevelIndex, HAL::ResourceBarrierCollection& collection, const RenderPassGraph::DependencyLevel& currentDL);
         void CollectNodeUAVAndAliasingBarriers(const RenderPassGraph::Node& node, HAL::ResourceBarrierCollection& collection);
-        void RecordResourceTransitions(const RenderPassGraph::DependencyLevel& dependencyLevel);
+        void RecordResourceTransitions(const RenderPassGraph::DependencyLevel& dependencyLevel); 
         void RecordPostWorkCommandLists();
         void ExecuteUploadCommands();
         void ExecuteBVHBuildCommands();
         void SyncNonGraphicQueuesIntoGraphicQueue();
-
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState beforeState, HAL::ResourceState afterState) const;
         bool IsStateTransitionSupportedOnQueue(uint64_t queueIndex, HAL::ResourceState afterState) const;
         HAL::CommandQueue& GetCommandQueue(uint64_t queueIndex);
@@ -231,6 +230,13 @@ namespace PathFinder
         bool IsNullCommandList(CommandListPtrVariant& variant) const;
         HAL::Fence& FenceForQueueIndex(uint64_t index);
         std::vector<uint64_t> GetQueueTimestampFrequencies();
+
+        HAL::ResourceState GatherSubresourceReadStatesInDependencyLevel(
+            RenderPassGraph::SubresourceName subresourceName,
+            Foundation::Name resourceName,
+            uint64_t subresourceIndex,
+            const PipelineResourceStorageResource& resourceData,
+            const RenderPassGraph::DependencyLevel& dependencyLevel);
 
         template <class CommandQueueT, class CommandListT>
         void ExecuteCommandListBatch(std::vector<CommandListPtrVariant>& batch, HAL::CommandQueue& queue);

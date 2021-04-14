@@ -65,9 +65,8 @@ namespace PathFinder
         inline Foundation::Name UIOutput{ "Resource_UI_Output" };
 
         inline Foundation::Name GIRayHitInfo{ "Resource_GI_Ray_Hit_Info" };
-        inline Foundation::Name GIIrradianceProbeAtlas{ "Resource_GI_Irradiance_Probe_Atlas" };
-        inline Foundation::Name GIDepthProbeAtlas{ "Resource_GI_Depth_Probe_Atlas" };
-        inline Foundation::Name GIIndirectionTable{ "Resource_GI_Indirection_Table" };
+        inline NameArray<2> GIIrradianceProbeAtlas{ "Resource_GI_Irradiance_Probe_Atlas[0]", "Resource_GI_Irradiance_Probe_Atlas[1]" };
+        inline NameArray<2> GIDepthProbeAtlas{ "Resource_GI_Depth_Probe_Atlas[0]", "Resource_GI_Depth_Probe_Atlas[1]" };
         inline Foundation::Name GIDebugDepthStencil{ "Resource_GI_Debug_Depth_Stencil" };
         inline Foundation::Name GIDebugOutput{ "Resource_GI_Debug_Output" };
 

@@ -31,7 +31,6 @@ namespace PathFinder
         serializeTextureBlob(RoughnessMap);
         serializeTextureBlob(MetalnessMap);
         serializeTextureBlob(TranslucencyMap);
-        serializeTextureBlob(AOMap);
         serializeTextureBlob(DisplacementMap);
         serializeTextureBlob(DistanceField);
 
@@ -71,7 +70,6 @@ namespace PathFinder
         deserializeTextureBlob(RoughnessMap);
         deserializeTextureBlob(MetalnessMap);
         deserializeTextureBlob(TranslucencyMap);
-        deserializeTextureBlob(AOMap);
         deserializeTextureBlob(DisplacementMap);
         deserializeTextureBlob(DistanceField);
     }

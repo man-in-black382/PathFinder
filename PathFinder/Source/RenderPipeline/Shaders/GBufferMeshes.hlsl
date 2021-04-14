@@ -73,8 +73,15 @@ VertexOut VSMain(uint indexId : SV_VertexID)
 
 float3 FetchAlbedoMap(VertexOut vertex, Material material, SamplerState sampler)
 {
-    Texture2D albedoMap = Textures2D[material.AlbedoMapIndex];
-    return SRGBToLinear(albedoMap.Sample(sampler, vertex.UV).rgb);
+    if (all(material.DiffuseAlbedoOverride < 0.0))
+    {
+        Texture2D albedoMap = Textures2D[material.AlbedoMapIndex];
+        return SRGBToLinear(albedoMap.Sample(sampler, vertex.UV).rgb);
+    }
+    else
+    {
+        return material.DiffuseAlbedoOverride;
+    }
 }
 
 float3 FetchNormalMap(VertexOut vertex, Material material, SamplerState sampler)
@@ -89,20 +96,28 @@ float3 FetchNormalMap(VertexOut vertex, Material material, SamplerState sampler)
 
 float FetchMetallnessMap(VertexOut vertex, Material material, SamplerState sampler)
 {
-    Texture2D metalnessMap = Textures2D[material.MetalnessMapIndex];
-    return metalnessMap.Sample(sampler, vertex.UV).r;
+    if (material.MetalnessOverride < 0.0)
+    {
+        Texture2D metalnessMap = Textures2D[material.MetalnessMapIndex];
+        return metalnessMap.Sample(sampler, vertex.UV).r;
+    }
+    else
+    {
+        return material.MetalnessOverride;
+    }
 }
 
 float FetchRoughnessMap(VertexOut vertex, Material material, SamplerState sampler)
 {
-    Texture2D roughnessMap = Textures2D[material.RoughnessMapIndex];
-    return roughnessMap.Sample(sampler, vertex.UV).r;
-}
-
-float FetchAOMap(VertexOut vertex, Material material, SamplerState sampler)
-{
-    Texture2D aoMap = Textures2D[material.AOMapIndex];
-    return aoMap.Sample(sampler, vertex.UV).r;
+    if (material.RoughnessOverride < 0.0)
+    {
+        Texture2D roughnessMap = Textures2D[material.RoughnessMapIndex];
+        return roughnessMap.Sample(sampler, vertex.UV).r;
+    }
+    else
+    {
+        return material.RoughnessOverride;
+    }
 }
 
 float FetchDisplacementMap(VertexOut vertex, Material material, SamplerState sampler)
@@ -115,6 +130,11 @@ GBufferPixelOut PSMain(VertexOut pin)
 {
     MeshInstance instanceData = InstanceTable[RootConstantBuffer.InstanceTableIndex];
     Material material = MaterialTable[instanceData.MaterialIndex];
+
+    //if (material.TranslucencyOverride > 0.0)
+    //{
+    //    discard;
+    //}
 
     SamplerState sampler = Samplers[material.SamplerIndex];
 
@@ -131,10 +151,6 @@ GBufferPixelOut PSMain(VertexOut pin)
         instanceData.MaterialIndex,
         pin.ViewDepth
     );
-
-    //DebugOut(123.0, pin.Position.xy, uint2(1000, 500));
-    //DebugOut(566.0, pin.Position.xy, uint2(1000, 500));
-    //DebugOut(2548.1234, pin.Position.xy, uint2(1000, 500));
 
     return pixelOut;
 }

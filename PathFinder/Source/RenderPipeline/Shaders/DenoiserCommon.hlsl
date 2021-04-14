@@ -79,17 +79,18 @@ float RoughnessWeight(float roughness0, float roughness)
 // path tracer outputs on the current and previous frame, for a given gradient pixel. 
 float GetHFGradient(float currLuminance, float prevLuminance)
 {
-    float maxLuminance = max(currLuminance, prevLuminance);
+    const float Gamma = 1.0 / 5.0;
+    // Construct gradient in perceptual space with a "kind of" gamma curve
+    float currPerceptLum = pow(currLuminance, Gamma);
+    float prevPerceptLum = pow(prevLuminance, Gamma);
 
     // Prev. lum. is negative when we left a hole during reprojection
-    if (maxLuminance == 0 || prevLuminance < 0.0)
+    if (currLuminance == 0 || prevLuminance < 0.0)
     {
         return 0.0;
     }
 
-    float gradient = abs(currLuminance - prevLuminance) / maxLuminance;
-    gradient *= gradient; // Make small changes less significant
-
+    float gradient = abs(currPerceptLum - prevPerceptLum) * 2;
     return gradient;
 }
 

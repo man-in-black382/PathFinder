@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Geometry/Transformation.hpp>
-#include <Geometry/AxisAlignedBox3D.hpp>
+#include <Geometry/AABB.hpp>
 #include <bitsery/bitsery.h>
 #include <bitsery/ext/pointer.h>
 #include <Utility/SerializationAdapters.hpp>
@@ -53,9 +53,11 @@ namespace PathFinder
         inline bool IsHighlighted() const { return mIsHighlighted; }
         inline const Geometry::Transformation& Transformation() const { return mTransformation; }
         inline const Geometry::Transformation& PrevTransformation() { return mPrevTransformation; }
-        inline Geometry::AxisAlignedBox3D BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
+        inline Geometry::AABB BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
         inline const Mesh* AssociatedMesh() const { return mMesh; }
         inline const Material* AssociatedMaterial() const { return mMaterial; }
+        inline Mesh* AssociatedMesh() { return mMesh; }
+        inline Material* AssociatedMaterial() { return mMaterial; }
         inline auto IndexInGPUTable () const { return mIndexInGPUTable; }
 
         inline void SetIsSelected(bool selected) { mIsSelected = selected; }

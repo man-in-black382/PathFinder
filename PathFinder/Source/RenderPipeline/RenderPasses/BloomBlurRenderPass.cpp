@@ -28,11 +28,9 @@ namespace PathFinder
 
     void BloomBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        auto fullMipRange = MipSet::Range(0, std::nullopt);
-
-        scheduler->ReadTexture(ResourceNames::CombinedShadingOversaturated, fullMipRange);
-        scheduler->NewTexture(ResourceNames::BloomBlurIntermediate, fullMipRange, NewTextureProperties{ ResourceNames::CombinedShadingOversaturated });
-        scheduler->NewTexture(ResourceNames::BloomBlurOutput, fullMipRange, NewTextureProperties{ ResourceNames::CombinedShadingOversaturated });
+        scheduler->ReadTexture(ResourceNames::CombinedShadingOversaturated);
+        scheduler->NewTexture(ResourceNames::BloomBlurIntermediate, NewTextureProperties{ ResourceNames::CombinedShadingOversaturated });
+        scheduler->NewTexture(ResourceNames::BloomBlurOutput, NewTextureProperties{ ResourceNames::CombinedShadingOversaturated });
     }
      
     void BloomBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

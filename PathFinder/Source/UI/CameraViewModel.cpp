@@ -7,12 +7,12 @@ namespace PathFinder
     {
         mCamera = &Dependencies->ScenePtr->MainCamera();
 
-        FOVH = mCamera->FOVH();
-        LenseAperture = mCamera->Aperture();
-        FilmSpeed = mCamera->FilmSpeed();
-        ShutterTime = 1.0 / mCamera->ShutterTime();
-        View = mCamera->View();
-        Projection = mCamera->Projection();
+        FOVH = mCamera->GetFOVH();
+        LenseAperture = mCamera->GetAperture();
+        FilmSpeed = mCamera->GetFilmSpeed();
+        ShutterTime = 1.0 / mCamera->GetShutterTime();
+        View = mCamera->GetView();
+        Projection = mCamera->GetProjection();
     }
 
     void CameraViewModel::Export()

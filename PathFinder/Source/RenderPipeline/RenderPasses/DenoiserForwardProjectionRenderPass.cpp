@@ -36,7 +36,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::DenoiserGradientSamplePositions[previousFrameIndex], MipSet::Empty(), gradientSamplePositionsProps);
         scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradientInputs, gradientProps);
 
-        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[previousFrameIndex], MipSet::FirstMip());
+        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[previousFrameIndex], TextureReadContext::NonPixelShader, MipSet::FirstMip());
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
         scheduler->ReadTexture(ResourceNames::RngSeeds[previousFrameIndex]);

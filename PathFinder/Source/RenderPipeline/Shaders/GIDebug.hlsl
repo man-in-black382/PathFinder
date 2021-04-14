@@ -43,7 +43,7 @@ ProbeVertexOut ProbeVSMain(uint vertexId : SV_VertexID)
     modelMat[1][1] = probeRadius;
 
     // Then rotate
-    modelMat = mul(billboardRotation, modelMat);
+    modelMat = mul(billboardRotation, modelMat); 
 
     // Then translate
     float4x4 translationMat = Matrix4x4Identity;
@@ -64,6 +64,12 @@ ProbeVertexOut ProbeVSMain(uint vertexId : SV_VertexID)
     output.NormalMatrix = (float3x3)billboardRotation;
     output.NonTransformedPosition = normVertex;
     output.ProbeIndex = probeIndex;
+
+    uint3 index3D = Probe3DIndexFrom1D(probeIndex, PassDataCB.ProbeField);
+
+    SetDataInspectorWriteCondition(PassDataCB.ExplicitProbeIndex >= 0);
+    OutputDataInspectorValue(index3D);
+    OutputDataInspectorValue(probeIndex);
 
     return output;
 }
@@ -90,13 +96,18 @@ float4 ProbePSMain(ProbeVertexOut pin) : SV_Target0
     // Rotate to world space
     normal = mul(pin.NormalMatrix, normal);
 
-    uint adjustedProbeIndex = UInt4_Textures2D[PassDataCB.ProbeField.IndirectionTableTexIdx][uint2(pin.ProbeIndex, 0)].r;
-    float2 atlasUV = IrradianceProbeAtlasUV(adjustedProbeIndex, normal, PassDataCB.ProbeField);
-    Texture2D atlas = Textures2D[PassDataCB.ProbeField.IrradianceProbeAtlasTexIdx];
+    float2 atlasUV = IrradianceProbeAtlasUV(pin.ProbeIndex, normal, PassDataCB.ProbeField);
+    Texture2D atlas = Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
     float3 irradiance = atlas.SampleLevel(LinearClampSampler(), atlasUV, 0).rgb;
     irradiance = DecodeProbeIrradiance(irradiance);
 
     return float4(irradiance, 1.0);
+
+ /*   float2 atlasUV = DepthProbeAtlasUV(adjustedProbeIndex, normal, PassDataCB.ProbeField);
+    Texture2D atlas = Textures2D[PassDataCB.ProbeField.DepthProbeAtlasTexIdx];
+    float2 depths = atlas.SampleLevel(LinearClampSampler(), atlasUV, 0).rg;
+
+    return float4(depths.xxx, 1.0);*/
 }
 
 //-------------------  Probe Rays Rendering  ---------------------//
@@ -108,7 +119,7 @@ struct RayVertexOut
     float3 Color : COLOR0;
 };
 
-RayVertexOut RaysVSMain(uint vertexId : SV_VertexID)
+RayVertexOut RaysVSMain(uint vertexId : SV_VertexID) 
 {
     uint rayIndex = vertexId / 36;
     uint vertexIndex = vertexId % 36;

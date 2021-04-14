@@ -221,12 +221,16 @@ namespace PathFinder
                     return;
                 }
 
+                bool resourceReadByMultipleQueues = isReadDependency && dependencyLevel.SubresourcesReadByMultipleQueues().contains(subresourceName);
+
                 PipelineResourceStorageResource* resourceData = mResourceStorage->GetPerResourceData(resourceName);
                 const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceData->SchedulingInfo.GetInfoForPass(node->PassMetadata().Name);
-                
-                // When dealing with reading use combined read state to make one transition instead of 
-                // several separate consequential transitions when neighboring render passes require resource in different read states
-                HAL::ResourceState newState = passInfo->SubresourceInfos[subresourceIndex]->RequestedState;
+
+                // When read by multiple queues is requested we can't just take read state from the current render pass,
+                // we need to gather read states from all render passes in dependency level that read this resource
+                HAL::ResourceState newState = resourceReadByMultipleQueues ?
+                    GatherSubresourceReadStatesInDependencyLevel(subresourceName, resourceName, subresourceIndex, *resourceData, dependencyLevel) :
+                    passInfo->SubresourceInfos[subresourceIndex]->RequestedState;
 
                 std::optional<HAL::ResourceTransitionBarrier> barrier =
                     mResourceStateTracker->TransitionToStateImmediately(resourceData->GetGPUResource()->HALResource(), newState, subresourceIndex, false);
@@ -268,9 +272,9 @@ namespace PathFinder
                     // 1) Incompatibility of resource state transitions with receiving queue.
                     // 2) Resource is read by multiple queues and explicit transition is required.
 
-                    doesTransitionNeedRerouting =
-                        !IsStateTransitionSupportedOnQueue(node->ExecutionQueueIndex, barrier->BeforeStates(), barrier->AfterStates()) ||
-                        dependencyLevel.SubresourcesReadByMultipleQueues().contains(subresourceName);
+                    bool transitionSupportedOnQueue = IsStateTransitionSupportedOnQueue(node->ExecutionQueueIndex, barrier->BeforeStates(), barrier->AfterStates());
+
+                    doesTransitionNeedRerouting = !transitionSupportedOnQueue || resourceReadByMultipleQueues;
 
                     if (doesTransitionNeedRerouting)
                     {
@@ -633,6 +637,27 @@ namespace PathFinder
             GetCommandQueue(queueIdx).SignalFence(fence);
             graphicQueue.WaitFence(fence);
         }
+    }
+
+    HAL::ResourceState RenderDevice::GatherSubresourceReadStatesInDependencyLevel(
+        RenderPassGraph::SubresourceName subresourceName,
+        Foundation::Name resourceName,
+        uint64_t subresourceIndex,
+        const PipelineResourceStorageResource& resourceData,
+        const RenderPassGraph::DependencyLevel& dependencyLevel)
+    {
+        HAL::ResourceState combinedState = HAL::ResourceState::Common;
+
+        for (const RenderPassGraph::Node* node : dependencyLevel.Nodes())
+        {
+            if (node->ReadSubresources().contains(subresourceName))
+            {
+                const PipelineResourceSchedulingInfo::PassInfo* passInfo = resourceData.SchedulingInfo.GetInfoForPass(node->PassMetadata().Name);
+                combinedState |= passInfo->SubresourceInfos[subresourceIndex]->RequestedState;
+            }
+        }
+
+        return combinedState;
     }
 
     void RenderDevice::TraverseAndExecuteFrameBlueprint()

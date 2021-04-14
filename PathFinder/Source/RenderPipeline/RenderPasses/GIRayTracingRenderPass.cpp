@@ -35,6 +35,8 @@ namespace PathFinder
      
     void GIRayTracingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
+        auto previousFrameIdx = (scheduler->FrameNumber() - 1) % 2;
+
         NewTextureProperties rayHitInfoTextureProperties{
             HAL::ColorFormat::RGBA16_Float,
             HAL::TextureKind::Texture2D,
@@ -42,12 +44,18 @@ namespace PathFinder
         };
 
         scheduler->NewTexture(ResourceNames::GIRayHitInfo, rayHitInfoTextureProperties);
+
+        scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
+        scheduler->ReadTexture(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
+
         scheduler->UseRayTracing();
         scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     } 
 
     void GIRayTracingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
+        auto previousFrameIdx = (context->FrameNumber() - 1) % 2;
+
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIRayTracing);
 
         const Scene* scene = context->GetContent()->GetScene();
@@ -58,6 +66,8 @@ namespace PathFinder
 
         GIRayTracingCBContent cbContent{};
         cbContent.ProbeField = sceneStorage->IrradianceFieldGPURepresentation();
+        cbContent.ProbeField.PreviousIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
+        cbContent.ProbeField.PreviousDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIRayHitInfo);
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.BlueNoiseTexSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };

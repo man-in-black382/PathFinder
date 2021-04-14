@@ -21,8 +21,7 @@ namespace PathFinder
     void DenoiserPostBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         bool isDenoiserEnabled = scheduler->Content()->GetSettings()->IsDenoiserEnabled;
-
-        auto frameIndex = scheduler->FrameNumber() % 2;
+        auto currentFrameIndex = scheduler->FrameNumber() % 2;
 
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingPostBlurred);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingPostBlurred);
@@ -33,15 +32,23 @@ namespace PathFinder
 
         NewTextureProperties oversaturatedProps{};
         oversaturatedProps.MipCount = 3;
-        scheduler->NewTexture(ResourceNames::CombinedShadingOversaturated, oversaturatedProps);
+        scheduler->NewTexture(ResourceNames::CombinedShadingOversaturated, MipSet::FirstMip(), oversaturatedProps);
 
         scheduler->ReadTexture(ResourceNames::ShadingAnalyticOutput);
-        scheduler->ReadTexture(DenoiserPostBlurStochasticShadowedInputTexName(isDenoiserEnabled, frameIndex)); 
-        scheduler->ReadTexture(DenoiserPostBlurStochasticUnshadowedInputTexName(isDenoiserEnabled, frameIndex));
+        scheduler->ReadTexture(DenoiserPostBlurStochasticShadowedInputTexName(isDenoiserEnabled, currentFrameIndex));
+        scheduler->ReadTexture(DenoiserPostBlurStochasticUnshadowedInputTexName(isDenoiserEnabled, currentFrameIndex));
+        scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas[currentFrameIndex]);
+        scheduler->ReadTexture(ResourceNames::GIDepthProbeAtlas[currentFrameIndex]);
+        
+        scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
+        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
+        scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
+        scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
+        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
 
         if (isDenoiserEnabled)
         {
-            scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
+            scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[currentFrameIndex]);
             scheduler->ReadTexture(ResourceNames::DenoiserSecondaryGradient);
         }
     }
@@ -59,8 +66,20 @@ namespace PathFinder
         auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
 
         const RenderSettings* settings = context->GetContent()->GetSettings();
+        const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
 
         DenoiserPostBlurCBContent cbContent{};
+
+        cbContent.ProbeField = sceneStorage->IrradianceFieldGPURepresentation();
+        cbContent.ProbeField.CurrentIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[frameIndex]);
+        cbContent.ProbeField.CurrentDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[frameIndex]);
+
+        cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalness);
+        cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
+        cbContent.GBufferIndices.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
+        cbContent.GBufferIndices.TypeAndMaterialTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferTypeAndMaterialIndex);
+        cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+
         cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
         cbContent.AnalyticShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ShadingAnalyticOutput);
         cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(DenoiserPostBlurStochasticShadowedInputTexName(isDenoiserEnabled, frameIndex));

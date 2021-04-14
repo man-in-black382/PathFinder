@@ -9,33 +9,37 @@
 namespace Geometry 
 {
 
-    struct Transformation
+    class Transformation
     {
-        glm::vec3 Scale;
-        glm::vec3 Translation;
-        glm::quat Rotation;
-
+    public:
         Transformation();
-        Transformation(const glm::mat4 &matrix);
-        Transformation(glm::vec3 scale, glm::vec3 translation, glm::quat rotation);
-        Transformation CombinedWith(const Transformation &other) const;
+        Transformation(const glm::mat4& matrix);
+        Transformation(const glm::vec3& scale, const glm::vec3& translation, const glm::quat& rotation);
+        Transformation CombinedWith(const Transformation& other) const;
 
-        glm::mat4 ModelMatrix() const;
-        glm::mat4 ScaleMatrix() const;
-        glm::mat4 RotationMatrix() const;
-        glm::mat4 TranslationMatrix() const;
-        glm::mat4 NormalMatrix() const;
-        glm::mat4 InverseScaleMatrix() const;
-        glm::mat4 InverseRotationMatrix() const;
-        glm::mat4 InverseTranslationMatrix() const;
+        void SetScale(const glm::vec3& scale);
+        void SetTranslation(const glm::vec3& translation);
+        void SetRotation(const glm::quat& rotation);
+
+        const glm::mat4& GetMatrix() const;
+        glm::mat4 GetNormalMatrix() const;
+
+    private:
+        friend bitsery::Access;
+
+        template <typename S>
+        void serialize(S& s)
+        {
+            s.object(mScale);
+            s.object(mTranslation);
+            s.object(mRotation);
+        }
+
+        mutable bool mIsDirty = true;
+        mutable glm::mat4 mMatrix;
+        glm::vec3 mScale;
+        glm::vec3 mTranslation;
+        glm::quat mRotation;
     };
-
-    template <typename S>
-    void serialize(S& s, Transformation& t)
-    {
-        s.object(t.Scale);
-        s.object(t.Translation);
-        s.object(t.Rotation);
-    }
 
 }

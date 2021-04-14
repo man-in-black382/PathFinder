@@ -19,7 +19,7 @@ namespace PathFinder
 
     Vertex1P1N1UV1T1BT Vertex1P1N1UV1T1BT::TransformedBy(const Geometry::Transformation &t)
     {
-        glm::mat4 modelMatrix = t.ModelMatrix();
+        glm::mat4 modelMatrix = t.GetMatrix();
         glm::mat4 normalMatrix = glm::transpose(glm::inverse(modelMatrix));
 
         return Vertex1P1N1UV1T1BT(

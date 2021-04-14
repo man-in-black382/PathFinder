@@ -57,10 +57,10 @@ float MaxAllowedAccumulatedFrames(float roughness, float NdotV, float parallax)
 float MaxAllowedAccumulatedFrames(float gradient, float roughness)
 {
     // Tweak to find balance of lag and noise. 
-    float Antilag = 1;    
-    float Power = lerp(1.0, 3.0, roughness);
+    float Antilag = 5;    
+    float Power = lerp(1.0, 5.0, roughness);
 
-    return MaxAccumulatedFrames * pow(1.0 - saturate(Antilag * gradient), Power) + 1.0;
+    return MaxAccumulatedFrames * (pow(1.0 - saturate(Antilag * gradient), Power));
 }
 
 float3x3 SamplingBasis(float3 Xview, float3 Nview, float roughness, float radiusScale, float normAccumFrameCount)
@@ -123,6 +123,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         return;
     }
 
+    float roughness2 = Square(roughness);
     float3 motion = LoadGBufferMotion(gBufferTextures.Motion, pixelIndex);
     float frameTime = 1.0 / 60.0; // TODO: pass from CPU
 
@@ -165,12 +166,12 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float accumFramesCountNorm = accumFramesCountAdjusted / MaxAccumulatedFrames;
     float accumulationSpeed = 1.0 / (1.0 + accumFramesCountAdjusted);
 
-    // Define blur radius range
-    const float MinBlurRadius = 0.03;
-    const float MaxBlurRadius = 0.2;
+    // Define blur radius range. Allow much wider blur radii for rough surfaces.
+    float minBlurRadius = lerp(0.01, 0.1, roughness2);
+    float maxBlurRadius = lerp(0.2, 0.4, roughness2);
     
     // Decrease blur radius as more frames are accumulated
-    float blurRadius = lerp(MinBlurRadius, MaxBlurRadius, accumulationSpeed);
+    float blurRadius = lerp(minBlurRadius, maxBlurRadius, accumulationSpeed);
 
     // Adjust radius based on distance from camera to maintain same perceptible blur radius.
     blurRadius *= viewPosition.z * 0.07;
@@ -249,9 +250,15 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         secondaryGradientTexture[pixelIndex].rg = secondaryGradients;
     }
 
-    if (FrameDataCB.IsReprojectionHistoryDebugEnabled) secondaryGradientTexture[pixelIndex].rg = accumFramesCount / MaxAccumulatedFrames;
-    if (FrameDataCB.IsGradientDebugEnabled) secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToGradient / MaxAccumulatedFrames;
-    if (FrameDataCB.IsMotionDebugEnabled) secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToMovement / MaxAccumulatedFrames;
+    // For !debugging! purposes only
+    if (FrameDataCB.IsReprojectionHistoryDebugEnabled)
+        secondaryGradientTexture[pixelIndex].rg = accumFramesCount / MaxAccumulatedFrames;
+   
+    if (FrameDataCB.IsGradientDebugEnabled)
+        secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToGradient / MaxAccumulatedFrames;
+    
+    if (FrameDataCB.IsMotionDebugEnabled) 
+        secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToMovement / MaxAccumulatedFrames;
 
     // Output final denoised value
     shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedShadowed;

@@ -14,7 +14,7 @@ namespace PathFinder
 
     void Light::SetColorTemperature(Kelvin temperature)
     {
-        // Convert to color here
+        // TODO: Convert to color here
     }
 
     void Light::SetLuminousPower(Lumen luminousPower)

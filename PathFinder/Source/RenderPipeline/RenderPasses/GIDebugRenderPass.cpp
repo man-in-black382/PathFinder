@@ -36,10 +36,11 @@ namespace PathFinder
         if (!scheduler->Content()->GetSettings()->IsGIDebugEnabled)
             return;
 
+        auto currentFrameIdx = (scheduler->FrameNumber()) % 2;
+
         scheduler->ReadTexture(ResourceNames::GIRayHitInfo);
-        scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas);
-        scheduler->ReadTexture(ResourceNames::GIDepthProbeAtlas);
-        scheduler->ReadTexture(ResourceNames::GIIndirectionTable);
+        scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas[currentFrameIdx]);
+        scheduler->ReadTexture(ResourceNames::GIDepthProbeAtlas[currentFrameIdx]);
         scheduler->AliasAndUseRenderTarget(ResourceNames::BloomCompositionOutput, ResourceNames::GIDebugOutput);
         scheduler->AliasAndUseDepthStencil(ResourceNames::GBufferDepthStencil, ResourceNames::GIDebugDepthStencil);
     } 
@@ -48,6 +49,7 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIProbeDebug);
 
+        auto currentFrameIdx = (context->FrameNumber()) % 2;
         auto resourceProvider = context->GetResourceProvider();
 
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
@@ -56,9 +58,8 @@ namespace PathFinder
         GIDebugCBContent cbContent{};
         cbContent.ProbeField = sceneStorage->IrradianceFieldGPURepresentation();
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIRayHitInfo);
-        cbContent.ProbeField.IrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas);
-        cbContent.ProbeField.DepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas);
-        cbContent.ProbeField.IndirectionTableTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIndirectionTable);
+        cbContent.ProbeField.CurrentIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[currentFrameIdx]);
+        cbContent.ProbeField.CurrentDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[currentFrameIdx]);
         cbContent.ExplicitProbeIndex = giManager.PickedDebugProbeIndex.value_or(-1);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);

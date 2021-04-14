@@ -16,7 +16,7 @@ namespace PathFinder
 
         for (const DownsamplingInvocationInputs& inputs : mInvocationInputs)
         {
-            scheduler->ReadTexture(inputs.ResourceName, MipSet::IndexFromStart(inputs.SourceMip));
+            scheduler->ReadTexture(inputs.ResourceName, TextureReadContext::NonPixelShader, MipSet::IndexFromStart(inputs.SourceMip));
             
             for (uint8_t outputIdx = 0; outputIdx < DownsamplingInvocationInputs::MaxMipsProcessedByInvocation; ++outputIdx)
             {

@@ -52,7 +52,7 @@ void TraceShadowsStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, 
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
     {
-        if (intersectionPoints[i] == 0)
+        if (intersectionPoints[i] == 0 || pdfs[i] < 0.0001)
             continue;
 
         uint lightIndex = i / raysPerLight;
@@ -77,7 +77,7 @@ void TraceShadowsStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, 
         float3 wi = mul(worldToTangent, normalize(-lightToSurface));
         float3 wm = normalize(wo + wi);
 
-        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * light.Luminance * light.Color.rgb;
+        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * light.Luminance * light.Color.rgb / pdfs[i] / raysPerLight;
 
         RayDesc dxrRay;
         dxrRay.Origin = lightIntersectionPoint;

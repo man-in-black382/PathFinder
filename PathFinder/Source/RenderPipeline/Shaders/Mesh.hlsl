@@ -25,20 +25,29 @@ struct Material
     uint RoughnessMapIndex;
     uint MetalnessMapIndex;
     // 16 byte boundary
-    uint AOMapIndex;
     uint DisplacementMapIndex;
     uint DistanceFieldIndex;
     uint LTC_LUT_MatrixInverse_Specular_Index;
-    // 16 byte boundary
     uint LTC_LUT_Matrix_Specular_Index;
+    // 16 byte boundary
     uint LTC_LUT_Terms_Specular_Index;
     uint LTC_LUT_MatrixInverse_Diffuse_Index;
     uint LTC_LUT_Matrix_Diffuse_Index;
-    // 16 byte boundary
     uint LTC_LUT_Terms_Diffuse_Index;
+    // 16 byte boundary
     uint LTC_LUT_TextureSize;
     uint SamplerIndex;
     uint HasNormalMap;
+    float IOROverride;
+    // 16 byte boundary
+    float3 DiffuseAlbedoOverride;
+    float RoughnessOverride;
+    // 16 byte boundary
+    float3 SpecularAlbedoOverride;
+    float MetalnessOverride;
+    // 16 byte boundary
+    float3 TransmissionFilter;
+    float TranslucencyOverride;
 };
 
 #endif

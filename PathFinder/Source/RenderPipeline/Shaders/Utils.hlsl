@@ -3,10 +3,12 @@
 
 #include "Constants.hlsl"
 
-float Square(float v)
-{
-    return v * v;
-}
+float Square(float v) { return v * v; }
+float2 Square(float2 v) { return float2(v.x * v.x, v.y * v.y); }
+float3 Square(float3 v) { return float3(v.x * v.x, v.y * v.y, v.z * v.z); }
+float4 Square(float4 v) { return float4(v.x * v.x, v.y * v.y, v.z * v.z, v.w * v.w); }
+
+float Cube(float v) { return v * v * v; }
 
 float Min(float2 v) { return min(v.x, v.y); }
 float Min(float3 v) { return min(v.x, min(v.y, v.z)); }
@@ -141,6 +143,43 @@ float2 NDCToUV(float3 ndcPoint)
     float2 uv = (ndcPoint.xy + 1.0) * 0.5; // [-1; 1] to [0; 1]
     uv.y = 1.0 - uv.y; // Conform DX specs
     return uv;
+}
+
+struct TriLerpWeights
+{
+    float Values[8];
+};
+
+// Computes 8 interpolation weights given 2 corner points and a point of interest
+TriLerpWeights TriLerp(float3 pMin, float3 pMax, float3 p) {
+    //
+    //        5-------6
+    //       /|      /|
+    // Y    / |     / |
+    // ^   1--|----2  |
+    // |   |  4----|--7
+    // |   | /     | /
+    // |   0-------3
+    // |
+    //  -----------> X
+    // 0 - min
+    // 6 - max
+    // Interpolation weights are in order: 0, 1, 2, 3, 4, 5, 6, 7
+
+    float3 extents = pMax - pMin;
+    float divisorInv = 1.0 / (extents.x * extents.y * extents.z);
+
+    TriLerpWeights weights;
+    weights.Values[0] = (pMax.x - p.x) * (pMax.y - p.y) * (pMax.z - p.z) * divisorInv;
+    weights.Values[1] = (pMax.x - p.x) * (p.y - pMin.y) * (pMax.z - p.z) * divisorInv;
+    weights.Values[2] = (p.x - pMin.x) * (p.y - pMin.y) * (pMax.z - p.z) * divisorInv;
+    weights.Values[3] = (p.x - pMin.x) * (pMax.y - p.y) * (pMax.z - p.z) * divisorInv;
+    weights.Values[4] = (pMax.x - p.x) * (pMax.y - p.y) * (p.z - pMin.z) * divisorInv;
+    weights.Values[5] = (pMax.x - p.x) * (p.y - pMin.y) * (p.z - pMin.z) * divisorInv;
+    weights.Values[6] = (p.x - pMin.x) * (p.y - pMin.y) * (p.z - pMin.z) * divisorInv;
+    weights.Values[7] = (p.x - pMin.x) * (pMax.y - p.y) * (p.z - pMin.z) * divisorInv;
+
+    return weights;
 }
 
 #endif

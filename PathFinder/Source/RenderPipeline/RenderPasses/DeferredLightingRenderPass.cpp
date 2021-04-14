@@ -41,7 +41,7 @@ namespace PathFinder
         //Geometry::Dimensions luminancesTextureDimensions{ defaultDimensions.Width, defaultDimensions.Height, 4 }; // 4 lights
 
         scheduler->NewTexture(ResourceNames::ShadingAnalyticOutput);
-        scheduler->NewTexture(ResourceNames::DeferredLightingRayPDFs, NewTextureProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm });
+        scheduler->NewTexture(ResourceNames::DeferredLightingRayPDFs, NewTextureProperties{ HAL::ColorFormat::RGBA16_Float });
         scheduler->NewTexture(ResourceNames::DeferredLightingRayLightIntersectionPoints, NewTextureProperties{ HAL::ColorFormat::RGBA32_Unsigned });
         //scheduler->NewTexture(ResourceNames::DeferredLightingRayLuminances, NewTextureProperties{ HAL::ColorFormat::R11G11B10_Float, HAL::TextureKind::Texture3D, luminancesTextureDimensions });
         

@@ -17,12 +17,12 @@ namespace PathFinder
         void SetDebugProbeRadius(float radius);
 
     private:
-        inline static const uint64_t IrradianceProbeSize = 8;
+        inline static const uint64_t IrradianceProbeSize = 8; // Should less or equal to depth probe size
         inline static const uint64_t DepthProbeSize = 16;
 
         // Should be power of 2
-        glm::uvec3 mProbeGridSize = glm::uvec3{ 16, 16, 8 };
-        float mCellSize = 2.0f;
+        glm::uvec3 mProbeGridSize = glm::uvec3{ 16, 12, 16 };
+        float mCellSize = 3.0f;
         float mDebugProbeRadius = 0.3f;
         uint64_t mRaysPerProbe = 144;
         glm::mat4 mProbeRotation{ 1.0f };
@@ -64,6 +64,8 @@ namespace PathFinder
         bool DoNotRotateProbeRays = false;
 
     private:
+        glm::vec3 GenerateGridCornerPosition() const;
+
         const Camera* mCamera = nullptr;
     };
 

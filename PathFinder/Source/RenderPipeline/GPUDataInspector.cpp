@@ -5,7 +5,7 @@ namespace PathFinder
 
     void GPUDataInspector::PreparePerPassBuffers(const RenderPassGraph* passGraph, Memory::GPUResourceProducer* resourceProducer)
     {
-        auto debugBufferProperties = HAL::BufferProperties::Create(512, 1, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::CopySource);
+        auto debugBufferProperties = HAL::BufferProperties::Create(4096, 1, HAL::ResourceState::UnorderedAccess, HAL::ResourceState::CopySource);
 
         int32_t buffersToAllocate = passGraph->NodesInGlobalExecutionOrder().size() - mBuffers.size();
         buffersToAllocate = std::max(0, buffersToAllocate);

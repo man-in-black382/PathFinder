@@ -18,13 +18,13 @@ namespace PathFinder
     public:
         Camera();
 
-        glm::mat4 ViewProjection() const;
-        glm::mat4 View() const;
-        glm::mat4 Projection() const;
-        glm::mat4 InverseViewProjection() const;
-        glm::mat4 InverseView() const;
-        glm::mat4 InverseProjection() const;
-        EV ExposureValue100() const;
+        glm::mat4 GetViewProjection() const;
+        glm::mat4 GetView() const;
+        glm::mat4 GetProjection() const;
+        glm::mat4 GetInverseViewProjection() const;
+        glm::mat4 GetInverseView() const;
+        glm::mat4 GetInverseProjection() const;
+        EV GetExposureValue100() const;
 
         void MoveTo(const glm::vec3 &position);
         void MoveBy(const glm::vec3 &translation);
@@ -41,6 +41,7 @@ namespace PathFinder
         void SetFieldOfView(float degrees);
 
         glm::vec3 WorldToNDC(const glm::vec3 &v) const;
+        std::array<glm::vec3, 8> GetFrustumCorners() const;
 
     private:
         glm::vec3 mFront;
@@ -91,18 +92,18 @@ namespace PathFinder
         }
 
     public:
-        inline const glm::vec3& Position() const { return mPosition; }
-        inline const glm::vec3& Front() const { return mFront; }
-        inline const glm::vec3& Right() const { return mRight; }
-        inline const glm::vec3& Up() const { return mUp; }
-        inline float NearClipPlane() const { return mNearClipPlane; }
-        inline float FarClipPlane() const { return mFarClipPlane; }
-        inline float FOVH() const { return mFieldOfView; }
-        inline float FOVV() const { return mFieldOfView / mViewportAspectRatio; }
-        inline FStop Aperture() const { return mLenseAperture; }
-        inline ISO FilmSpeed() const { return mFilmSpeed; }
-        inline float ShutterTime() const { return mShutterTime; }
-        inline float AspectRatio() const { return mViewportAspectRatio; }
+        inline const glm::vec3& GetPosition() const { return mPosition; }
+        inline const glm::vec3& GetFront() const { return mFront; }
+        inline const glm::vec3& GetRight() const { return mRight; }
+        inline const glm::vec3& GetUp() const { return mUp; }
+        inline float GetNearClipPlane() const { return mNearClipPlane; }
+        inline float GetFarClipPlane() const { return mFarClipPlane; }
+        inline float GetFOVH() const { return mFieldOfView; }
+        inline float GetFOVV() const { return mFieldOfView / mViewportAspectRatio; }
+        inline FStop GetAperture() const { return mLenseAperture; }
+        inline ISO GetFilmSpeed() const { return mFilmSpeed; }
+        inline float GetShutterTime() const { return mShutterTime; }
+        inline float GetAspectRatio() const { return mViewportAspectRatio; }
     };
 
 }

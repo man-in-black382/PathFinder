@@ -72,7 +72,7 @@
     <ClCompile Include="Source\ThirdParty\glm\detail\glm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Geometry\AxisAlignedBox3D.cpp">
+    <ClCompile Include="Source\Geometry\AABB.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Geometry\Collision.cpp">
@@ -612,9 +612,6 @@
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeIndirectionTableUpdateRenderPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RenderPipeline\GPUDataInspector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -625,6 +622,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Foundation\Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Geometry\BoundingVolume.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Geometry\OOBB.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1427,7 +1430,7 @@
     <ClInclude Include="Source\ThirdParty\glm\vector_relational.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Geometry\AxisAlignedBox3D.hpp">
+    <ClInclude Include="Source\Geometry\AABB.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Geometry\Collision.hpp">
@@ -3158,9 +3161,6 @@
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeIndirectionTableUpdateRenderPass.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RenderPipeline\GPUDataInspector.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -3171,6 +3171,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Foundation\Timer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Geometry\BoundingVolume.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Geometry\OOBB.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -3761,7 +3767,6 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GIDebug.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLighting.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredShadows.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeIndirectionTableUpdate.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">

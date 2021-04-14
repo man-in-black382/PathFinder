@@ -117,15 +117,33 @@ float DisneyDiffuse(float NdotV, float NdotL, float LdotH, float linearRoughness
     return lightScatter * viewScatter * energyFactor / Pi;
 }
 
+float3 DiffuseBRDFForGI(float3 viewDirection, GBufferStandard gBuffer)
+{
+    // Since Disney diffuse if not uniform in all directions like Lambert,
+    // ideally we would precompute irradiance with Disney diffuse term computed for each ray,
+    // but instead we do it a bit hacky and apply single term to whole irradiance
+    float3 L = gBuffer.Normal;
+    float3 H = normalize(L + viewDirection);
+    float NdotV = dot(gBuffer.Normal, viewDirection);
+    float LdotH = dot(H, L);
+    float NdotH = LdotH;
+
+    float3 f0 = lerp(0.04, gBuffer.Albedo, gBuffer.Metalness);
+    float3 F = FresnelSchlick(f0, 1.0, NdotH);
+    float3 diffuse = DisneyDiffuse(NdotV, 1.0, LdotH, gBuffer.Roughness) * (1.0 - gBuffer.Metalness) * gBuffer.Albedo * (1.0 - F);
+    
+    return diffuse;
+}
+
 float3 CookTorranceBRDF(float3 wo, float3 wi, float3 wm, GBufferStandard gBuffer)
 {
     // Based on observations by Disney and adopted by Epic Games
     // the lighting looks more correct squaring the roughness
     // in both the geometry and normal distribution function.
     float roughness2 = gBuffer.Roughness * gBuffer.Roughness;
-    float NdotL = AbsCosTheta(wi);
-    float NdotV = AbsCosTheta(wo);
-    float NdotH = AbsCosTheta(wm);
+    float NdotL = saturate(CosTheta(wi));
+    float NdotV = saturate(CosTheta(wo));
+    float NdotH = saturate(CosTheta(wm));
 
     float NDF = NormalDistributionTrowbridgeReitzGGXIsotropic(wm, roughness2);
     float G = HeightCorrelatedSmithGGXG2(wo, wi, roughness2);
@@ -135,8 +153,12 @@ float3 CookTorranceBRDF(float3 wo, float3 wi, float3 wm, GBufferStandard gBuffer
     float3 f0 = lerp(BaseDielectricReflectivity, gBuffer.Albedo, gBuffer.Metalness);
     float3 F = FresnelSchlick(f0, 1.0, NdotH);
 
-    float3 specular = (NDF * G * F) / (4.0 * NdotL * NdotV + 0.001); // avoid NaNs
-    float3 diffuse = DisneyDiffuse(NdotV, NdotL, NdotH, gBuffer.Roughness) * (1.0 - gBuffer.Metalness) * gBuffer.Albedo;
+    // Small denom will blow specular term beyond any reasonable values
+    float specularDenom = 4.0 * NdotL * NdotV;
+    float3 specular = specularDenom > 0.0001 ? ((NDF * G * F) / specularDenom) : 0.0;
+
+    float3 diffuseFactor = (1.0 - F) * (1.0 - gBuffer.Metalness) * gBuffer.Albedo;
+    float3 diffuse = DisneyDiffuse(NdotV, NdotL, NdotH, gBuffer.Roughness) * diffuseFactor;
 
     return (diffuse + specular) * NdotL;
 }

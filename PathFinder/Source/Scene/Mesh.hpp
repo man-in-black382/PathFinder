@@ -10,7 +10,7 @@
 
 #include <bitsery/bitsery.h>
 #include <bitsery/traits/string.h>
-#include <Geometry/AxisAlignedBox3D.hpp>
+#include <Geometry/AABB.hpp>
 
 namespace PathFinder
 {
@@ -22,7 +22,7 @@ namespace PathFinder
         std::vector<Vertex1P1N1UV1T1BT>& Vertices();
         const std::vector<Vertex1P1N1UV1T1BT>& Vertices() const;
         const std::vector<uint32_t>& Indices() const;
-        const Geometry::AxisAlignedBox3D& BoundingBox() const;
+        const Geometry::AABB& BoundingBox() const;
         const VertexStorageLocation& LocationInVertexStorage() const;
         float SurfaceArea() const;
         bool HasTangentSpace() const;
@@ -43,8 +43,7 @@ namespace PathFinder
         void serialize(S& s)
         {
             s.container1b(mName, 1000);
-            s.object(mBoundingBox.Min);
-            s.object(mBoundingBox.Max);
+            s.object(mBoundingBox);
             s.value4b(mArea);
             s.boolValue(mHasTangentSpace);
         }
@@ -53,7 +52,7 @@ namespace PathFinder
         std::vector<Vertex1P1N1UV1T1BT> mVertices;
         std::vector<uint32_t> mIndices;
         VertexStorageLocation mVertexStorageLocation;
-        Geometry::AxisAlignedBox3D mBoundingBox = Geometry::AxisAlignedBox3D::MaximumReversed();
+        Geometry::AABB mBoundingBox = Geometry::AABB::MaximumReversed();
         float mArea = 0.0;
         bool mHasTangentSpace = true;
     };

@@ -24,7 +24,7 @@ namespace PathFinder
         Camera* mCamera = nullptr;
 
     public:
-        const glm::vec3& CameraPosition() const { return mCamera->Position(); }
+        const glm::vec3& CameraPosition() const { return mCamera->GetPosition(); }
     };
 
 }

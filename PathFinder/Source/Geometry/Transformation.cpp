@@ -6,61 +6,58 @@
 
 namespace Geometry {
 
-    Transformation::Transformation() : Scale(glm::one<glm::vec3>()), Translation(glm::zero<glm::vec3>()), Rotation(glm::quat()) {}
+    Transformation::Transformation()
+        : mScale(glm::one<glm::vec3>()),
+        mTranslation(glm::zero<glm::vec3>()),
+        mRotation(glm::quat()) {}
 
-    Transformation::Transformation(const glm::mat4 &matrix) 
+    Transformation::Transformation(const glm::mat4& matrix)
     {
         glm::vec3 skew;
         glm::vec4 perspective;
-        glm::decompose(matrix, Scale, Rotation, Translation, skew, perspective);
+        glm::decompose(matrix, mScale, mRotation, mTranslation, skew, perspective);
     }
 
-    Transformation::Transformation(glm::vec3 scale, glm::vec3 translation, glm::quat rotation)
-            : Scale(scale), Translation(translation), Rotation(rotation) {}
+    Transformation::Transformation(const glm::vec3& scale, const glm::vec3& translation, const glm::quat& rotation)
+        : mScale(scale), mTranslation(translation), mRotation(rotation) {}
 
-    Transformation Transformation::CombinedWith(const Transformation &other) const  
-    { 
-        return Transformation(other.ModelMatrix() * ModelMatrix()); 
-    }
-
-    glm::mat4 Transformation::ModelMatrix() const 
+    Transformation Transformation::CombinedWith(const Transformation& other) const
     {
-        return glm::translate(Translation) * glm::mat4_cast(Rotation) * glm::scale(Scale);
+        return Transformation(other.GetMatrix() * GetMatrix());
     }
 
-    glm::mat4 Transformation::ScaleMatrix() const
+    void Transformation::SetScale(const glm::vec3& scale)
     {
-        return glm::scale(Scale);
+        mScale = scale;
+        mIsDirty = true;
     }
 
-    glm::mat4 Transformation::RotationMatrix() const 
+    void Transformation::SetTranslation(const glm::vec3& translation)
     {
-        return glm::mat4_cast(Rotation);
+        mTranslation = translation;
+        mIsDirty = true;
     }
 
-    glm::mat4 Transformation::TranslationMatrix() const 
+    void Transformation::SetRotation(const glm::quat& rotation)
     {
-        return glm::translate(Translation);
+        mRotation = rotation;
+        mIsDirty = true;
     }
 
-    glm::mat4 Transformation::NormalMatrix() const
+    const glm::mat4& Transformation::GetMatrix() const
     {
-        return glm::transpose(glm::inverse(RotationMatrix() * ScaleMatrix()));
+        if (mIsDirty)
+        {
+            mMatrix = glm::translate(mTranslation) * glm::mat4_cast(mRotation) * glm::scale(mScale);
+            mIsDirty = false;
+        }
+
+        return mMatrix;
     }
 
-    glm::mat4 Transformation::InverseScaleMatrix() const 
+    glm::mat4 Transformation::GetNormalMatrix() const
     {
-        return glm::inverse(glm::scale(Scale));
-    }
-
-    glm::mat4 Transformation::InverseRotationMatrix() const
-    {
-        return glm::inverse(glm::mat4_cast(Rotation));
-    }
-
-    glm::mat4 Transformation::InverseTranslationMatrix() const
-    {
-        return glm::inverse(glm::translate(Translation));
+        return glm::transpose(glm::inverse(GetMatrix()));
     }
 
 }

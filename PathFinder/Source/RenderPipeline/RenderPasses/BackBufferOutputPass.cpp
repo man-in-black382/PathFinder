@@ -31,7 +31,7 @@ namespace PathFinder
      
     void BackBufferOutputPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        scheduler->ReadTexture(ResourceNames::UIOutput);
+        scheduler->ReadTexture(ResourceNames::UIOutput, TextureReadContext::PixelShader);
         scheduler->WriteToBackBuffer();
     } 
 

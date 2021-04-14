@@ -78,10 +78,10 @@ namespace PathFinder
         (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mPipelineSettings->IsMemoryAliasingEnabled;
-                RegisterGraphDependency(*passNode, MipSet::FirstMip(), resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
+                RegisterGraphDependency(*passNode, MipSet::AllMips(), resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
-                    MipSet::FirstMip(),
+                    MipSet::AllMips(),
                     passNode->PassMetadata().Name,
                     HAL::ResourceState::DepthWrite,
                     PipelineResourceSchedulingInfo::SubresourceInfo::AccessFlag::TextureDS,
@@ -93,7 +93,7 @@ namespace PathFinder
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::NewTexture(Foundation::Name resourceName, std::optional<NewTextureProperties> properties)
     {
-        NewTexture(resourceName, MipSet::FirstMip(), properties);
+        NewTexture(resourceName, MipSet::AllMips(), properties);
     }
 
     template <class ContentMediator>
@@ -205,7 +205,7 @@ namespace PathFinder
     }
 
     template <class ContentMediator>
-    void ResourceScheduler<ContentMediator>::ReadTexture(Foundation::Name resourceName, const MipSet& readMips, std::optional<HAL::ColorFormat> concreteFormat)
+    void ResourceScheduler<ContentMediator>::ReadTexture(Foundation::Name resourceName, TextureReadContext readContext, const MipSet& readMips, std::optional<HAL::ColorFormat> concreteFormat)
     {
         mResourceStorage->QueueResourceUsage(
             mCurrentlySchedulingPassNode->PassMetadata().Name,
@@ -213,6 +213,7 @@ namespace PathFinder
             {},
 
             [passNode = mCurrentlySchedulingPassNode,
+            readContext,
             readMips,
             concreteFormat,
             resourceName,
@@ -222,7 +223,13 @@ namespace PathFinder
                 bool isTypeless = std::holds_alternative<HAL::TypelessColorFormat>(schedulingInfo.ResourceFormat().GetTextureProperties().Format);
                 assert_format(concreteFormat || !isTypeless, "Redefinition of texture format is not allowed");
 
-                HAL::ResourceState state = HAL::ResourceState::AnyShaderAccess;
+                HAL::ResourceState state = HAL::ResourceState::Common;
+                switch (readContext)
+                {
+                case TextureReadContext::AnyShader: state = HAL::ResourceState::AnyShaderAccess; break;
+                case TextureReadContext::PixelShader: state = HAL::ResourceState::PixelShaderAccess; break;
+                case TextureReadContext::NonPixelShader: state = HAL::ResourceState::NonPixelShaderAccess; break;
+                }
 
                 if (std::holds_alternative<HAL::DepthStencilFormat>(schedulingInfo.ResourceFormat().GetTextureProperties().Format))
                 {

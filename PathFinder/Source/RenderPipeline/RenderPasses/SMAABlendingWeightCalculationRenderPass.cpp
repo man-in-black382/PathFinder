@@ -20,7 +20,7 @@ namespace PathFinder
 
     void SMAABlendingWeightCalculationRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        scheduler->ReadTexture(ResourceNames::SMAADetectedEdges);
+        scheduler->ReadTexture(ResourceNames::SMAADetectedEdges, TextureReadContext::PixelShader);
         scheduler->NewRenderTarget(ResourceNames::SMAABlendingWeights, NewTextureProperties{ HAL::ColorFormat::RGBA16_Float });
     }
 

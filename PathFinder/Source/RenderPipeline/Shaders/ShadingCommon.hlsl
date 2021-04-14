@@ -43,6 +43,11 @@ struct RandomSequences
 // We should not bother with more to make space for other rendering workloads.
 static const uint TotalMaxRayCount = 4;
 
+// For rect lights we want to discard rays that hit light's back face,
+// but hitting the light orthogonally is very numerically unstable,
+// so threshold must be a bit below zero to cover both cases
+static const float RectLightOrientationToSamplingRayMaximumDotValue = -0.01;
+
 //--------------------------------------------------------------------------------------------------
 // Functions to pack and unpack data necessary for shadows ray tracing pass.
 // Avoids using arrays and allows us to pack everything into single 4-component registers to avoid 
@@ -312,15 +317,11 @@ void ShadeWithSphericalLights(
 
             float3 intersectionPoint = 0.0;
             float lightPDF = 1.0 / samplingInputs.SolidAngle;
-            float misPDF = MIS_PDF(ltcTerms, directLightingEvaluationResult, sampleVector, lightPDF) / raysPerLight;
-
-            // If LTC sampling vector is chosen, transform it to world space before testing for intersection with light
-            if (sampleBRDF)
-                sampleVector = mul(surfaceTangentToWorld, sampleVector);
+            float misPDF = MIS_PDF(ltcTerms, directLightingEvaluationResult, sampleVector, lightPDF);
 
             if (!IntersectSphericalLight(light, samplingInputs, sampleVector, intersectionPoint))
             {
-                misPDF = 0.0;
+                misPDF = 0.1;
                 intersectionPoint = 0.0;
             }
 
@@ -330,6 +331,17 @@ void ShadeWithSphericalLights(
             shadingResult.RayPDFs[rayLightPairIndex] = misPDF;
         }
     }
+}
+
+float3 GetRandomPointOnRectLight(Light light, float3x3 lightRotation, float u, float v)
+{
+    float2 pointOnLight = float2(light.Width * u, light.Height * v);
+    pointOnLight -= (light.Width / 2, light.Height / 2);
+    
+    float3 rotatedPoint = mul(lightRotation, float3(pointOnLight, 0.0));
+    rotatedPoint += light.Position.xyz;
+
+    return rotatedPoint;
 }
 
 void ShadeWithRectangularLights(
@@ -375,13 +387,17 @@ void ShadeWithRectangularLights(
 
             float3 intersectionPoint = 0.0;
             float lightPDF = 1.0 / samplingInputs.SolidAngle;
-            float misPDF = MIS_PDF(ltcTerms, directLightingEvaluationResult, sampleVector, lightPDF) / raysPerLight;
+            float misPDF = MIS_PDF(ltcTerms, directLightingEvaluationResult, sampleVector, lightPDF);
 
-            // If LTC sampling vector is chosen, transform it to world space before testing for intersection with light
-            if (sampleBRDF)
-                sampleVector = mul(surfaceTangentToWorld, sampleVector);
+            bool shouldDropResults =
+                // Clip light's backface and avoid degenerate orthogonal case
+                dot(sampleVector, light.Orientation.xyz) >= RectLightOrientationToSamplingRayMaximumDotValue ||
+                // Drop results on misses
+                !IntersectRectangularLight(light, lightPoints, samplingInputs, sampleVector, intersectionPoint) ||
+                // Sometimes NaNs can happen when geometry intersects light :(
+                any(isnan(misPDF));
 
-            if (!IntersectRectangularLight(light, lightPoints, samplingInputs, sampleVector, intersectionPoint))
+            if (shouldDropResults)
             {
                 misPDF = 0.0;
                 intersectionPoint = 0.0;
@@ -438,13 +454,17 @@ void ShadeWithEllipticalLights(
 
             float3 intersectionPoint = 0.0;
             float lightPDF = 1.0 / samplingInputs.SolidAngle;
-            float misPDF = MIS_PDF(ltcTerms, directLightingEvaluationResult, sampleVector, lightPDF) / raysPerLight;
+            float misPDF = MIS_PDF(ltcTerms, directLightingEvaluationResult, sampleVector, lightPDF);
 
-            // If LTC sampling vector is chosen, transform it to world space before testing for intersection with light
-            if (sampleBRDF)
-                sampleVector = mul(surfaceTangentToWorld, sampleVector);
+            bool shouldDropResults =
+                // Clip light's backface and avoid degenerate orthogonal case
+                dot(sampleVector, light.Orientation.xyz) >= RectLightOrientationToSamplingRayMaximumDotValue ||
+                // Drop results on misses
+                !IntersectEllipticalLight(light, lightPoints, samplingInputs, sampleVector, intersectionPoint) ||
+                // Sometimes NaNs can happen when geometry intersects light :(
+                any(isnan(misPDF));
 
-            if (!IntersectEllipticalLight(light, lightPoints, samplingInputs, sampleVector, intersectionPoint))
+            if (shouldDropResults)
             {
                 misPDF = 0.0;
                 intersectionPoint = 0.0;
@@ -462,7 +482,7 @@ void ShadeWithEllipticalLights(
 
 float DiffuseLobeProbability(GBufferStandard gBuffer)
 {
-    return gBuffer.Roughness * gBuffer.Roughness;
+    return sqrt(gBuffer.Roughness);
 }
 
 void ShadeWithSphericalLights(
@@ -572,6 +592,10 @@ void ShadeWithRectangularLights(
             float misPDF = lerp(GgxVndfPdf(wo, wm, wi, gBuffer.Roughness), lightPDF, diffuseProbability);
             float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) / misPDF / raysPerLight;
 
+            // Clip light's backface
+            if (dot(sampleVector, light.Orientation.xyz) >= RectLightOrientationToSamplingRayMaximumDotValue)
+                brdf = 0.0;
+
             if (!IntersectRectangularLight(light, lightPoints, samplingInputs, sampleVector, intersectionPoint))
             {
                 brdf = 0.0;
@@ -580,7 +604,7 @@ void ShadeWithRectangularLights(
 
             uint rayLightPairIndex = lightTableOffset * raysPerLight + rayIdx;
 
-            shadingResult.RayLightIntersectionData[rayLightPairIndex] = PackRaySphericalLightIntersectionPoint(light, intersectionPoint);
+            shadingResult.RayLightIntersectionData[rayLightPairIndex] = PackRayRectangularLightIntersectionPoint(light, lightPoints.LightRotation, intersectionPoint);
             shadingResult.StochasticUnshadowedOutgoingLuminance[rayLightPairIndex] = brdf * light.Color.rgb * light.Luminance;
         }
     }
@@ -637,6 +661,10 @@ void ShadeWithEllipticalLights(
             float misPDF = lerp(GgxVndfPdf(wo, wm, wi, gBuffer.Roughness), lightPDF, diffuseProbability);
             float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) / misPDF / raysPerLight;
 
+            // Clip light's backface
+            if (dot(sampleVector, light.Orientation.xyz) > RectLightOrientationToSamplingRayMaximumDotValue)
+                brdf = 0.0;
+
             if (!IntersectEllipticalLight(light, lightPoints, samplingInputs, sampleVector, intersectionPoint))
             {
                 brdf = 0.0;
@@ -645,7 +673,7 @@ void ShadeWithEllipticalLights(
 
             uint rayLightPairIndex = lightTableOffset * raysPerLight + rayIdx;
 
-            shadingResult.RayLightIntersectionData[rayLightPairIndex] = PackRaySphericalLightIntersectionPoint(light, intersectionPoint);
+            shadingResult.RayLightIntersectionData[rayLightPairIndex] = PackRayDiskLightIntersectionPoint(light, lightPoints.LightRotation, intersectionPoint);
             shadingResult.StochasticUnshadowedOutgoingLuminance[rayLightPairIndex] = brdf * light.Color.rgb * light.Luminance;
         }
     }

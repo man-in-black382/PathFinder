@@ -8,9 +8,13 @@
 #include "DenoiserCommon.hlsl"
 #include "ColorConversion.hlsl"
 #include "Exposure.hlsl"
+#include "GIProbeHelpers.hlsl"
+#include "GBuffer.hlsl"
 
 struct PassData
 {
+    IrradianceField ProbeField;
+    GBufferTextureIndices GBufferIndices;
     uint2 DispatchGroupCount;
     uint AccumulatedFramesCountTexIdx;
     uint AnalyticShadingTexIdx;
@@ -34,7 +38,7 @@ float3 Blur(Texture2D image, float2 uv, uint2 pixelIdx, float2 texelSize, float 
 {
     float3 blurred = image[pixelIdx].rgb;
 
-    if (FrameDataCB.IsDenoiserEnabled)
+    if (!FrameDataCB.IsDenoiserEnabled)
     {
         return blurred;
     }
@@ -53,6 +57,29 @@ float3 Blur(Texture2D image, float2 uv, uint2 pixelIdx, float2 texelSize, float 
     }
 
     return blurred / (sampleCount + 1);
+}
+
+float3 RetrieveGI(uint2 texelIndex, float2 uv)
+{
+    Texture2D irradianceAtlas = Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
+    Texture2D depthAtlas = Textures2D[PassDataCB.ProbeField.CurrentDepthProbeAtlasTexIdx];
+
+    GBufferTexturePack gBufferTextures;
+    gBufferTextures.AlbedoMetalness = Textures2D[PassDataCB.GBufferIndices.AlbedoMetalnessTexIdx];
+    gBufferTextures.NormalRoughness = Textures2D[PassDataCB.GBufferIndices.NormalRoughnessTexIdx];
+    gBufferTextures.Motion = UInt4_Textures2D[PassDataCB.GBufferIndices.MotionTexIdx];
+    gBufferTextures.TypeAndMaterialIndex = UInt4_Textures2D[PassDataCB.GBufferIndices.TypeAndMaterialTexIdx];
+    gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
+
+    GBufferStandard gBuffer = ZeroGBufferStandard();
+    LoadStandardGBuffer(gBuffer, gBufferTextures, texelIndex);
+
+    float depth = gBufferTextures.DepthStencil[texelIndex].r;
+    float3 surfacePosition = NDCDepthToWorldPosition(depth, uv, FrameDataCB.CurrentFrameCamera);
+    float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
+    float3 irradiance = RetrieveGIIrradiance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, false);
+
+    return DiffuseBRDFForGI(viewDirection, gBuffer) * irradiance;
 }
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
@@ -76,10 +103,18 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float vogelDiskRotation = Random(pixelIndex.xy) * TwoPi;
     float2 gradients = FrameDataCB.IsDenoiserEnabled ? gradientTexture[pixelIndex].rg : 0.0;
 
+    float3 analyticUnshadowed = analyticShadingTexture[pixelIndex].rgb;
     float3 stochasticShadowed = Blur(shadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);
     float3 stochasticUnshadowed = Blur(unshadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);
 
-    float3 combinedShading = CombineShading(analyticShadingTexture[pixelIndex].rgb, stochasticShadowed, stochasticUnshadowed);
+    float3 combinedShading = CombineShading(analyticUnshadowed, stochasticShadowed, stochasticUnshadowed);
+
+    //combinedShading = stochasticShadowed;
+    //combinedShading = stochasticUnshadowed;
+    //combinedShading = analyticUnshadowed;
+
+    // Apply GI
+    combinedShading += RetrieveGI(pixelIndex, uv);
 
     if (any(isnan(combinedShading)) || any(isinf(combinedShading)))
         combinedShading = float3(0, 100, 0);
@@ -89,7 +124,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         FrameDataCB.IsMotionDebugEnabled)
     {
         // Debug data is encoded in gradients texture
-        if (any(gradients < 0.7))
+        if (any(gradients < 0.2))
         {
             combinedShading = float3(1.0 - gradients, 0.0);
         }

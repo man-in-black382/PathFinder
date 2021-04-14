@@ -23,7 +23,7 @@ namespace PathFinder
     { 
         bool isGIDebugEnabled = scheduler->Content()->GetSettings()->IsGIDebugEnabled;
 
-        scheduler->ReadTexture(SMAAEdgeDetectionPassInputTexName(isGIDebugEnabled));
+        scheduler->ReadTexture(SMAAEdgeDetectionPassInputTexName(isGIDebugEnabled), TextureReadContext::PixelShader);
         scheduler->NewRenderTarget(ResourceNames::SMAADetectedEdges, NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });
     }  
 

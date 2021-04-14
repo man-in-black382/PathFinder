@@ -42,6 +42,9 @@ namespace PathFinder
      
     void GIProbeUpdateRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
+        auto previousFrameIdx = (scheduler->FrameNumber() - 1) % 2;
+        auto currentFrameIdx = (scheduler->FrameNumber()) % 2;
+
         NewTextureProperties irradianceTextureProperties{
             HAL::ColorFormat::RGBA16_Float,
             HAL::TextureKind::Texture2D,
@@ -54,11 +57,21 @@ namespace PathFinder
             scheduler->Content()->GetSettings()->GlobalIlluminationSettings.GetDepthProbeAtlasSize()
         };
 
-        scheduler->NewTexture(ResourceNames::GIIrradianceProbeAtlas, irradianceTextureProperties);
-        scheduler->NewTexture(ResourceNames::GIDepthProbeAtlas, depthTextureProperties);
+        irradianceTextureProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
+        depthTextureProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
+
+        scheduler->NewTexture(ResourceNames::GIIrradianceProbeAtlas[currentFrameIdx], irradianceTextureProperties);
+        scheduler->NewTexture(ResourceNames::GIDepthProbeAtlas[currentFrameIdx], depthTextureProperties);
+
+        // Indicate that these textures are created, but not written
+        scheduler->NewTexture(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx], MipSet::Empty(), irradianceTextureProperties);
+        scheduler->NewTexture(ResourceNames::GIDepthProbeAtlas[previousFrameIdx], MipSet::Empty(), depthTextureProperties);
+
+        // Read previous frame atlases
+        scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
+        scheduler->ReadTexture(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
 
         scheduler->ReadTexture(ResourceNames::GIRayHitInfo);
-        scheduler->ReadTexture(ResourceNames::GIIndirectionTable);
 
         scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
     } 
@@ -67,6 +80,8 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIProbeUpdate);
 
+        auto previousFrameIdx = (context->FrameNumber() - 1) % 2;
+        auto currentFrameIdx = (context->FrameNumber()) % 2;
         auto resourceProvider = context->GetResourceProvider();
 
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
@@ -74,9 +89,10 @@ namespace PathFinder
         GIProbeUpdateCBContent cbContent{};
         cbContent.ProbeField = sceneStorage->IrradianceFieldGPURepresentation();
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIRayHitInfo);
-        cbContent.ProbeField.IrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIIrradianceProbeAtlas);
-        cbContent.ProbeField.DepthProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIDepthProbeAtlas);
-        cbContent.ProbeField.IndirectionTableTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIndirectionTable);
+        cbContent.ProbeField.PreviousIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
+        cbContent.ProbeField.PreviousDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
+        cbContent.ProbeField.CurrentIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIIrradianceProbeAtlas[currentFrameIdx]);
+        cbContent.ProbeField.CurrentDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIDepthProbeAtlas[currentFrameIdx]);
        
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
 

@@ -28,7 +28,7 @@ namespace PathFinder
         return mIndices;
     }
 
-    const Geometry::AxisAlignedBox3D& Mesh::BoundingBox() const
+    const Geometry::AABB& Mesh::BoundingBox() const
     {
         return mBoundingBox;
     }
@@ -65,8 +65,8 @@ namespace PathFinder
 
     void Mesh::AddVertex(const Vertex1P1N1UV1T1BT& vertex)
     {
-        mBoundingBox.Min = glm::min(glm::vec3(vertex.Position), mBoundingBox.Min);
-        mBoundingBox.Max = glm::max(glm::vec3(vertex.Position), mBoundingBox.Max);
+        mBoundingBox.SetMin(glm::min(glm::vec3(vertex.Position), mBoundingBox.GetMin()));
+        mBoundingBox.SetMax(glm::max(glm::vec3(vertex.Position), mBoundingBox.GetMax()));
         mVertices.push_back(vertex);
 
         if ((mVertices.size() % 3) == 0) {
@@ -76,7 +76,7 @@ namespace PathFinder
             auto& v2 = mVertices[count - 1];
 
             Geometry::Triangle3D triangle(v0.Position, v1.Position, v2.Position);
-            mArea += triangle.area();
+            mArea += triangle.GetArea();
         }
 
         if (glm::length2(vertex.Tangent) <= 0.0 || glm::length2(vertex.Bitangent) <= 0)

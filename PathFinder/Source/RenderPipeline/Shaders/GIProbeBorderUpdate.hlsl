@@ -34,13 +34,11 @@ void IrradianceCornerUpdateCSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV
     if (probeIndex >= PassDataCB.ProbeField.TotalProbeCount)
         return;
 
-    uint adjustedProbeIndex = UInt4_Textures2D[PassDataCB.ProbeField.IndirectionTableTexIdx][uint2(probeIndex, 0)].r;
-
     int2 localTexelIndex, cornerOffset;
     GetLocalTexelIndexForCorner(cornerIndex, PassDataCB.ProbeField.IrradianceProbeSize, localTexelIndex, cornerOffset);
 
-    uint2 atlasTexelIndex = IrradianceProbeAtlasTexelIndex(adjustedProbeIndex, localTexelIndex, PassDataCB.ProbeField);
-    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.IrradianceProbeAtlasTexIdx];
+    uint2 atlasTexelIndex = IrradianceProbeAtlasTexelIndex(probeIndex, localTexelIndex, PassDataCB.ProbeField);
+    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
 
     atlas[atlasTexelIndex + cornerOffset] = atlas[atlasTexelIndex];
 }
@@ -54,13 +52,11 @@ void DepthCornerUpdateCSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_Disp
     if (probeIndex >= PassDataCB.ProbeField.TotalProbeCount)
         return;
 
-    uint adjustedProbeIndex = UInt4_Textures2D[PassDataCB.ProbeField.IndirectionTableTexIdx][uint2(probeIndex, 0)].r;
-
     int2 localTexelIndex, cornerOffset;
     GetLocalTexelIndexForCorner(cornerIndex, PassDataCB.ProbeField.DepthProbeSize, localTexelIndex, cornerOffset);
 
-    uint2 atlasTexelIndex = DepthProbeAtlasTexelIndex(adjustedProbeIndex, localTexelIndex, PassDataCB.ProbeField);
-    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.DepthProbeAtlasTexIdx];
+    uint2 atlasTexelIndex = DepthProbeAtlasTexelIndex(probeIndex, localTexelIndex, PassDataCB.ProbeField);
+    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentDepthProbeAtlasTexIdx];
 
     atlas[atlasTexelIndex + cornerOffset] = atlas[atlasTexelIndex];
 }
@@ -113,13 +109,11 @@ void IrradianceBorderUpdateCSMain(int3 gtID : SV_GroupThreadID, int3 dtID : SV_D
     if (probeIndex >= PassDataCB.ProbeField.TotalProbeCount)
         return;
 
-    uint adjustedProbeIndex = UInt4_Textures2D[PassDataCB.ProbeField.IndirectionTableTexIdx][uint2(probeIndex, 0)].r;
-
     int2 localTexelIndex = 0, texelOffsetToBorder = 0;
     GetLocalTexelIndexForBorder(dtID.y, gtID.x, PassDataCB.ProbeField.IrradianceProbeSize, localTexelIndex, texelOffsetToBorder);
 
-    int2 atlasTexelIndex = IrradianceProbeAtlasTexelIndex(adjustedProbeIndex, localTexelIndex, PassDataCB.ProbeField);
-    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.IrradianceProbeAtlasTexIdx];
+    int2 atlasTexelIndex = IrradianceProbeAtlasTexelIndex(probeIndex, localTexelIndex, PassDataCB.ProbeField);
+    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
 
     atlas[atlasTexelIndex + texelOffsetToBorder] = atlas[atlasTexelIndex];
 }
@@ -132,13 +126,11 @@ void DepthBorderUpdateCSMain(int3 gtID : SV_GroupThreadID, int3 dtID : SV_Dispat
     if (probeIndex >= PassDataCB.ProbeField.TotalProbeCount)
         return;
 
-    uint adjustedProbeIndex = UInt4_Textures2D[PassDataCB.ProbeField.IndirectionTableTexIdx][uint2(probeIndex, 0)].r;
-
     int2 localTexelIndex = 0, texelOffsetToBorder = 0;
     GetLocalTexelIndexForBorder(dtID.y, gtID.x, PassDataCB.ProbeField.DepthProbeSize, localTexelIndex, texelOffsetToBorder);
 
-    int2 atlasTexelIndex = DepthProbeAtlasTexelIndex(adjustedProbeIndex, localTexelIndex, PassDataCB.ProbeField);
-    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.DepthProbeAtlasTexIdx];
+    int2 atlasTexelIndex = DepthProbeAtlasTexelIndex(probeIndex, localTexelIndex, PassDataCB.ProbeField);
+    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentDepthProbeAtlasTexIdx];
 
     atlas[atlasTexelIndex + texelOffsetToBorder] = atlas[atlasTexelIndex];
 }

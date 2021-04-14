@@ -30,7 +30,6 @@ namespace PathFinder
         loadTexture(material.MetalnessMap);
         loadTexture(material.TranslucencyMap);
         loadTexture(material.DisplacementMap);
-        loadTexture(material.AOMap);
         loadTexture(material.DistanceField);
 
         SetCommonMaterialTextures(material);
@@ -59,9 +58,6 @@ namespace PathFinder
         if (!material.DisplacementMap.Texture)
             material.DisplacementMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1Black2DTexture.get(), [](Memory::Texture* texture) {} };
 
-        if (!material.AOMap.Texture)
-            material.AOMap.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1White2DTexture.get(), [](Memory::Texture* texture) {} };
-        
         if (!material.DistanceField.Texture)
             material.DistanceField.Texture = Memory::GPUResourceProducer::TexturePtr{ m1x1Black3DTexture.get(), [](Memory::Texture* texture) {} };
 

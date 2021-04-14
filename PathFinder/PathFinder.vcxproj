@@ -212,10 +212,12 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Foundation\NameHolder.cpp" />
     <ClCompile Include="Source\Foundation\NameRegistry.cpp" />
     <ClCompile Include="Source\Foundation\Timer.cpp" />
-    <ClCompile Include="Source\Geometry\AxisAlignedBox3D.cpp" />
+    <ClCompile Include="Source\Geometry\AABB.cpp" />
+    <ClCompile Include="Source\Geometry\BoundingVolume.cpp" />
     <ClCompile Include="Source\Geometry\Collision.cpp" />
     <ClCompile Include="Source\Geometry\Dimensions.cpp" />
     <ClCompile Include="Source\Geometry\Interval.cpp" />
+    <ClCompile Include="Source\Geometry\OOBB.cpp" />
     <ClCompile Include="Source\Geometry\Parallelogram3D.cpp" />
     <ClCompile Include="Source\Geometry\Plane.cpp" />
     <ClCompile Include="Source\Geometry\Ray3D.cpp" />
@@ -313,7 +315,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DownsamplingRenderSubPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeIndirectionTableUpdateRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.cpp" />
@@ -434,10 +435,12 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Foundation\StringUtils.hpp" />
     <ClInclude Include="Source\Foundation\Timer.hpp" />
     <ClInclude Include="Source\Foundation\Visitor.hpp" />
-    <ClInclude Include="Source\Geometry\AxisAlignedBox3D.hpp" />
+    <ClInclude Include="Source\Geometry\AABB.hpp" />
+    <ClInclude Include="Source\Geometry\BoundingVolume.hpp" />
     <ClInclude Include="Source\Geometry\Collision.hpp" />
     <ClInclude Include="Source\Geometry\Dimensions.hpp" />
     <ClInclude Include="Source\Geometry\Interval.hpp" />
+    <ClInclude Include="Source\Geometry\OOBB.hpp" />
     <ClInclude Include="Source\Geometry\Parallelogram3D.hpp" />
     <ClInclude Include="Source\Geometry\Plane.hpp" />
     <ClInclude Include="Source\Geometry\Ray3D.hpp" />
@@ -554,7 +557,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GBufferTextureIndices.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GeometryPickingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIDebugRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeIndirectionTableUpdateRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIProbeUpdateRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\GIRayTracingRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\ResourceNameResolving.hpp" />
@@ -2012,13 +2014,6 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
-    </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeIndirectionTableUpdate.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.5</ShaderModel>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeUpdate.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

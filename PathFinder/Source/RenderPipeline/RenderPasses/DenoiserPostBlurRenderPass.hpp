@@ -5,12 +5,15 @@
 
 #include "PipelineNames.hpp"
 #include "DownsamplingRenderSubPass.hpp"
+#include "GBufferTextureIndices.hpp"
 
 namespace PathFinder
 {
 
     struct DenoiserPostBlurCBContent
     {
+        GPUIrradianceField ProbeField;
+        GBufferTextureIndices GBufferIndices;
         glm::uvec2 DispatchGroupCount;
         uint32_t AccumulatedFramesCountTexIdx;
         uint32_t AnalyticShadingTexIdx;

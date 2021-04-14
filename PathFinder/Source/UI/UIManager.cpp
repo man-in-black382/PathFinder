@@ -145,6 +145,11 @@ namespace PathFinder
         return mIsMouseOverUI;
     }
 
+    glm::uvec2 UIManager::MousePosition() const
+    {
+        return { ImGui::GetMousePos().x, ImGui::GetMousePos().x };
+    }
+
     void UIManager::HandleKeyUp(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input)
     {
         ImGui::GetIO().KeysDown[info.VirtualKey] = false;

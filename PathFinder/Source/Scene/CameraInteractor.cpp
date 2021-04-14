@@ -45,10 +45,10 @@ namespace PathFinder
 
         glm::vec3 direction = glm::zero<glm::vec3>();
 
-        if (mUserInput->IsKeyboardKeyPressed(KeyboardKey::W)) { direction += mCamera->Front(); }
-        if (mUserInput->IsKeyboardKeyPressed(KeyboardKey::A)) { direction -= mCamera->Right(); }
-        if (mUserInput->IsKeyboardKeyPressed(KeyboardKey::S)) { direction -= mCamera->Front(); }
-        if (mUserInput->IsKeyboardKeyPressed(KeyboardKey::D)) { direction += mCamera->Right(); }
+        if (mUserInput->IsKeyboardKeyPressed(KeyboardKey::W)) { direction += mCamera->GetFront(); }
+        if (mUserInput->IsKeyboardKeyPressed(KeyboardKey::A)) { direction -= mCamera->GetRight(); }
+        if (mUserInput->IsKeyboardKeyPressed(KeyboardKey::S)) { direction -= mCamera->GetFront(); }
+        if (mUserInput->IsKeyboardKeyPressed(KeyboardKey::D)) { direction += mCamera->GetRight(); }
 
         if (glm::any(glm::epsilonNotEqual(direction, glm::zero<glm::vec3>(), glm::vec3(0.0001f))))
         {
@@ -71,11 +71,11 @@ namespace PathFinder
         {
             if (IsMouseMovingVertically(mouseDirection))
             {
-                mMouseMoveDirection = mCamera->Up() * mouseDirection.y;
+                mMouseMoveDirection = mCamera->GetUp() * mouseDirection.y;
             }
             else
             {
-                mMouseMoveDirection = mCamera->Right() * mouseDirection.x;
+                mMouseMoveDirection = mCamera->GetRight() * mouseDirection.x;
             }
         }
         else if (mUserInput->IsAnyMouseButtonPressed() && mKeyboardMoveDirection != glm::zero<glm::vec3>()) 
@@ -89,8 +89,8 @@ namespace PathFinder
         }
         else if (mUserInput->IsMouseButtonPressed(2)) 
         {
-            glm::vec3 up = mCamera->Up() * mouseDirection.y;
-            glm::vec3 right = mCamera->Right() * mouseDirection.x;
+            glm::vec3 up = mCamera->GetUp() * mouseDirection.y;
+            glm::vec3 right = mCamera->GetRight() * mouseDirection.x;
             mMouseMoveDirection = up + right;
         }
     }
@@ -101,8 +101,8 @@ namespace PathFinder
             return;
 
         glm::vec2 scrollDelta = mUserInput->ScrollDelta();
-        glm::vec3 front = mCamera->Front() * scrollDelta.y * -mInputScaleTimeAdjusted.MouseMovementScale;
-        glm::vec3 right = mCamera->Right() * scrollDelta.x * mInputScaleTimeAdjusted.MouseMovementScale;
+        glm::vec3 front = mCamera->GetFront() * scrollDelta.y * -mInputScaleTimeAdjusted.MouseMovementScale;
+        glm::vec3 right = mCamera->GetRight() * scrollDelta.x * mInputScaleTimeAdjusted.MouseMovementScale;
         mMouseMoveDirection = front + right;
     }
 

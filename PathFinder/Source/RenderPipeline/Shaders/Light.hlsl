@@ -139,7 +139,7 @@ float3 LTCSampleVector(float3x3 M, float u1, float u2)
     float st = sqrt(1.0f - u1);
     float phi = 2.0f * Pi * u2;
 
-    float3 dir = float3(st * cos(phi), st * sin(phi), ct);
+    float3 dir = float3(st * sin(phi), st * cos(phi), ct);
 
     float3 L = mul(M, dir);
     float3 w_i = normalize(L);

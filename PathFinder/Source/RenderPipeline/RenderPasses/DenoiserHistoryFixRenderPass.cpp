@@ -32,8 +32,8 @@ namespace PathFinder
         scheduler->AliasAndWriteTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, ResourceNames::StochasticUnshadowedShadingFixed, MipSet::FirstMip());
 
         // Read tail mips
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, MipSet::Range(1, std::nullopt));
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, MipSet::Range(1, std::nullopt));
+        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred, TextureReadContext::NonPixelShader, MipSet::Range(1, std::nullopt));
+        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, TextureReadContext::NonPixelShader, MipSet::Range(1, std::nullopt));
     }
      
     void DenoiserHistoryFixRenderPass::Render(RenderContext<RenderPassContentMediator>* context)

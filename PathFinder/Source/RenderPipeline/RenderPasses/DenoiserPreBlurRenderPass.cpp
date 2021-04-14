@@ -22,8 +22,8 @@ namespace PathFinder
         outputProperties.MipCount = 5;
 
         scheduler->NewTexture(ResourceNames::DenoisedPreBlurIntermediate);
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingPreBlurred, outputProperties);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingPreBlurred, MipSet::FirstMip(), outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, MipSet::FirstMip(), outputProperties);
 
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingOutput);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingOutput);
@@ -33,7 +33,7 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::SeparableBlur);
 
-        BlurTexture(context, ResourceNames::StochasticShadowedShadingOutput, ResourceNames::StochasticShadowedShadingPreBlurred);
+        BlurTexture(context, ResourceNames::StochasticShadowedShadingOutput, ResourceNames:: StochasticShadowedShadingPreBlurred);
         BlurTexture(context, ResourceNames::StochasticUnshadowedShadingOutput, ResourceNames::StochasticUnshadowedShadingPreBlurred);
     }
 

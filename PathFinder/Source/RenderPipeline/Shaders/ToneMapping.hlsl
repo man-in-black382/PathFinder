@@ -52,7 +52,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int groupIndex : SV_Gro
     // NaN detection for convenience
     if (any(isnan(color)))
     {
-        color = float3(10, 0, 0);
+        color = float3(0, 10, 0);
         outputImage[dispatchThreadID.xy] = float4(color, 1.0);
         return;
     }

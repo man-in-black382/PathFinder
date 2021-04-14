@@ -100,9 +100,6 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_Gro
     case GBufferTypeStandard: OutputShadingResult(HandleStandardGBufferLighting(gBufferTextures, pixelCenterUV, pixelIndex, depth), pixelIndex); break;
     case GBufferTypeEmissive: OutputShadingResult(HandleEmissiveGBufferLighting(gBufferTextures, pixelIndex), pixelIndex); break;
     }
-
-    SetDataInspectorWriteCondition(all(dispatchThreadID.xy == uint2(0, 0)));
-    OutputDataInspectorValue(depth);
 }
 
 #endif
