@@ -1,22 +1,22 @@
-#include "DenoiserPostStabilizationRenderPass.hpp"
+#include "TAARenderPass.hpp"
 
 #include <Foundation/Gaussian.hpp>
 
 namespace PathFinder
 {
 
-    DenoiserPostStabilizationRenderPass::DenoiserPostStabilizationRenderPass()
-        : RenderPass("DenoiserPostStabilization") {}
+    TAARenderPass::TAARenderPass()
+        : RenderPass("TAA") {}
 
-    void DenoiserPostStabilizationRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void TAARenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::DenoiserPostStabilization, [](ComputeStateProxy& state)
         {
-            state.ComputeShaderFileName = "DenoiserPostStabilization.hlsl";
+            state.ComputeShaderFileName = "TAA.hlsl";
         });
     }
 
-    void DenoiserPostStabilizationRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
+    void TAARenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         return; // Disable 
 
@@ -31,14 +31,14 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
     }
      
-    void DenoiserPostStabilizationRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
+    void TAARenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserPostStabilization);
 
         auto resourceProvider = context->GetResourceProvider();
         auto frameIndex = context->FrameNumber() % 2;
 
-        DenoiserPostStabilizationCBContent cbContent{};
+        TAACBContent cbContent{};
         cbContent.VarianceSourceTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingReprojected);
         cbContent.InputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[frameIndex]);
         cbContent.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingDenoisedStabilized);

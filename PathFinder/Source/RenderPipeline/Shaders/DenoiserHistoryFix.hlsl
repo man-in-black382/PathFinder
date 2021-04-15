@@ -77,14 +77,15 @@ void Fix(Texture2D inputTexture, RWTexture2D<float4> outputTexture, Texture2D vi
         weights[closestSampleIdx] = 1.0;
     }
 
-    GatheredRGB gatherResult = GatherRGBManually(inputTexture, bilinearFilter, mipLevel, PointClampSampler());
+    GatheredRGBA gatherResult = GatherRGBAManually(inputTexture, bilinearFilter, mipLevel, PointClampSampler());
 
-    float3 fixedValues = float3(
+    float4 fixedValues = float4(
         ApplyBilinearCustomWeights(gatherResult.Red, weights),
         ApplyBilinearCustomWeights(gatherResult.Green, weights),
-        ApplyBilinearCustomWeights(gatherResult.Blue, weights));
+        ApplyBilinearCustomWeights(gatherResult.Blue, weights),
+        ApplyBilinearCustomWeights(gatherResult.Alpha, weights));
 
-    outputTexture[pixelIndex].rgb = fixedValues;
+    outputTexture[pixelIndex] = fixedValues;
 }
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]

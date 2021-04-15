@@ -11,11 +11,12 @@ struct Bilinear
     float2 Weights; 
 };
 
-struct GatheredRGB
+struct GatheredRGBA
 {
     float4 Red;
     float4 Green;
     float4 Blue;
+    float4 Alpha;
 };
 
 Bilinear GetBilinearFilter(float2 uv, float2 texelSize, float2 textureSize)
@@ -72,18 +73,19 @@ float4 GatherRedManually(Texture2D tex, Bilinear filter, float mipLevel, sampler
     return float4(tl.r, tr.r, br.r, bl.r);
 }
 
-GatheredRGB GatherRGBManually(Texture2D tex, Bilinear filter, float mipLevel, sampler s)
+GatheredRGBA GatherRGBAManually(Texture2D tex, Bilinear filter, float mipLevel, sampler s)
 {
     // Get 4 neighbor texel values
-    float3 tl = tex.SampleLevel(s, filter.TopLeftUV, mipLevel).rgb;
-    float3 tr = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, 0.0), mipLevel).rgb;
-    float3 bl = tex.SampleLevel(s, filter.TopLeftUV + float2(0.0, filter.TexelSize.y), mipLevel).rgb;
-    float3 br = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, filter.TexelSize.y), mipLevel).rgb;
+    float4 tl = tex.SampleLevel(s, filter.TopLeftUV, mipLevel);
+    float4 tr = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, 0.0), mipLevel);
+    float4 bl = tex.SampleLevel(s, filter.TopLeftUV + float2(0.0, filter.TexelSize.y), mipLevel);
+    float4 br = tex.SampleLevel(s, filter.TopLeftUV + float2(filter.TexelSize.x, filter.TexelSize.y), mipLevel);
 
-    GatheredRGB result;
+    GatheredRGBA result;
     result.Red = float4(tl.r, tr.r, br.r, bl.r);
     result.Green = float4(tl.g, tr.g, br.g, bl.g);
     result.Blue = float4(tl.b, tr.b, br.b, bl.b);
+    result.Alpha = float4(tl.a, tr.a, br.a, bl.a);
 
     return result;
 }

@@ -1,22 +1,22 @@
-#include "SpecularDenoiserRenderPass.hpp"
+#include "DenoiserMainRenderPass.hpp"
 
 #include <Foundation/Gaussian.hpp>
 
 namespace PathFinder
 {
 
-    SpecularDenoiserRenderPass::SpecularDenoiserRenderPass()
-        : RenderPass("SpecularDenoiser") {}
+    DenoiserMainRenderPass::DenoiserMainRenderPass()
+        : RenderPass("DenoiserMainPass") {}
 
-    void SpecularDenoiserRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
+    void DenoiserMainRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
         stateCreator->CreateComputeState(PSONames::SpecularDenoiser, [](ComputeStateProxy& state)
         {
-            state.ComputeShaderFileName = "SpecularDenoiser.hlsl";
+            state.ComputeShaderFileName = "DenoiserMainPass.hlsl";
         });
     }
 
-    void SpecularDenoiserRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
+    void DenoiserMainRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
         if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
             return;
@@ -45,7 +45,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::DenoiserSecondaryGradient, NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });
     }
      
-    void SpecularDenoiserRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
+    void DenoiserMainRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::SpecularDenoiser);
 

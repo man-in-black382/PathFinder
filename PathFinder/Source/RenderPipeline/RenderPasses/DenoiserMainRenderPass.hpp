@@ -24,11 +24,11 @@ namespace PathFinder
         uint32_t SecondaryGradientTexIdx;
     };
 
-    class SpecularDenoiserRenderPass : public RenderPass<RenderPassContentMediator>
+    class DenoiserMainRenderPass : public RenderPass<RenderPassContentMediator>
     { 
     public: 
-        SpecularDenoiserRenderPass();
-        ~SpecularDenoiserRenderPass() = default;
+        DenoiserMainRenderPass();
+        ~DenoiserMainRenderPass() = default;
 
         virtual void SetupPipelineStates(PipelineStateCreator* stateCreator) override;
         virtual void ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler) override;

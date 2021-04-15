@@ -12,14 +12,9 @@ namespace PathFinder
     {
         stateCreator->CreateRayTracingState(PSONames::DeferredShadows, [this](RayTracingStateProxy& state)
         {
-            RayTracingStateProxy::HitGroupShaderFileNames meshHitGroup{};
-            meshHitGroup.ClosestHitShaderFileName = "DeferredShadows.hlsl";
-
-            // Order of hit group shaders must match hit group contribution of entities
-            state.AddHitGroupShaders(meshHitGroup);
-
             state.RayGenerationShaderFileName = "DeferredShadows.hlsl";
-            state.AddMissShader({ "DeferredShadows.hlsl" });
+            state.AddMissShader({ "DeferredShadows.hlsl", "ShadowRayMiss" });
+            state.AddMissShader({ "DeferredShadows.hlsl", "AORayMiss" });
             state.ShaderConfig = HAL::RayTracingShaderConfig{ sizeof(float), sizeof(float) * 2 };
             state.GlobalRootSignatureName = RootSignatureNames::ShadingCommon;
             state.PipelineConfig = HAL::RayTracingPipelineConfig{ 1 };
@@ -63,6 +58,10 @@ namespace PathFinder
         cbContent.ShadowRayIntersectionPointsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingRayLightIntersectionPoints);
         cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingOutput);
         cbContent.StochasticUnshadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingOutput);
+        cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
+        cbContent.BlueNoiseTexSize = blueNoiseTexture->Properties().Dimensions.Width;
+        cbContent.BlueNoiseTexDepth = blueNoiseTexture->Properties().Dimensions.Depth;
+        cbContent.FrameNumber = context->FrameNumber();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->SetRootConstants(sceneStorage->CompressedLightPartitionInfo(), 0, 0);

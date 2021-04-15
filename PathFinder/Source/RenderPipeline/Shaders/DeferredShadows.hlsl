@@ -13,6 +13,11 @@ struct PassData
     uint ShadowRayIntersectionPointsTexIdx;
     uint StochasticShadowedOutputTexIdx;
     uint StochasticUnshadowedOutputTexIdx;
+    // 16 byte boundary
+    uint BlueNoiseTexSize;
+    uint BlueNoiseTexDepth;
+    uint BlueNoiseTexIdx;
+    uint FrameNumber;
 };
 
 struct Payload
@@ -24,7 +29,7 @@ struct Payload
 
 #include "ShadingCommon.hlsl"
 
-void TraceShadowsStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float depth)
+void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float depth)
 {
     Texture2D rayPDFs = Textures2D[PassDataCB.ShadowRayPDFsTexIdx];
     Texture2D<uint4> rayLightIntersectionPoints = UInt4_Textures2D[PassDataCB.ShadowRayIntersectionPointsTexIdx];
@@ -37,17 +42,20 @@ void TraceShadowsStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, 
     float3 surfacePosition = NDCDepthToWorldPosition(depth, uv, FrameDataCB.CurrentFrameCamera);
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
+    float3x3 worldToTangent = transpose(RotationMatrix3x3(gBuffer.Normal));
 
     uint raysPerLight = RaysPerLight(partitionInfo);
     float4 pdfs = rayPDFs[pixelIndex];
     uint4 intersectionPoints = rayLightIntersectionPoints[pixelIndex];
-    float3 shadowed = 0.0;
+    float4 shadowed = 0.0; // 4th component includes AO
     float3 unshadowed = 0.0;
 
-    const uint RayFlags = 
+    const uint ShadowRayFlags = 
         RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
         RAY_FLAG_FORCE_OPAQUE |           // Skip any hit shaders
         RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
+
+    // Shadows
 
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
@@ -72,56 +80,89 @@ void TraceShadowsStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, 
         float tmax = vectorLength - 1e-03;
         float tmin = 1e-03;
 
-        float3x3 worldToTangent = transpose(RotationMatrix3x3(gBuffer.Normal));
         float3 wo = mul(worldToTangent, viewDirection);
         float3 wi = mul(worldToTangent, normalize(-lightToSurface));
         float3 wm = normalize(wo + wi);
 
-        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * light.Luminance * light.Color.rgb / pdfs[i] / raysPerLight;
+        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer)* light.Luminance* light.Color.rgb / pdfs[i] / raysPerLight;
 
-        RayDesc dxrRay;
-        dxrRay.Origin = lightIntersectionPoint;
-        dxrRay.Direction = lightToSurface / vectorLength;
-        dxrRay.TMin = tmin;
-        dxrRay.TMax = tmax;
+        RayDesc shadowRay;
+        shadowRay.Origin = lightIntersectionPoint;
+        shadowRay.Direction = lightToSurface / vectorLength;
+        shadowRay.TMin = tmin;
+        shadowRay.TMax = tmax;
 
         Payload payload = { 0.0 };
 
         const int MissShaderIndex = 0;
 
         TraceRay(SceneBVH,
-            RayFlags,
+            ShadowRayFlags,
             EntityMaskMeshInstance, // Instance mask 
             0, // Contribution to hit group index
             0, // BLAS geometry multiplier for hit group index
             MissShaderIndex, // Miss shader index
-            dxrRay, 
+            shadowRay, 
             payload);
 
-        shadowed += brdf * payload.Value;
+        shadowed.rgb += brdf * payload.Value;
         unshadowed += brdf;
     }
 
-    RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTexIdx][pixelIndex].rgb = shadowed;
+    // Ambient Occlusion
+    Texture3D blueNoiseTexture = Textures3D[PassDataCB.BlueNoiseTexIdx];
+    uint3 blueNoiseTexelIndex = uint3(pixelIndex % PassDataCB.BlueNoiseTexSize, PassDataCB.FrameNumber % PassDataCB.BlueNoiseTexDepth);
+    float4 blueNoise = blueNoiseTexture[blueNoiseTexelIndex];
+    float3x3 tangentToWorld = RotationMatrix3x3(gBuffer.Normal);
+
+    float AOMaxRayLength = 2.0;
+
+    const uint AORayFlags = 
+        RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
+        RAY_FLAG_FORCE_OPAQUE |           // Skip any hit shaders
+        RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
+
+    RayDesc aoRay;
+    aoRay.Origin = surfacePosition;
+    aoRay.Direction = mul(tangentToWorld, UniformHemisphereSample(blueNoise.x, blueNoise.y));
+    aoRay.TMin = 0.001;
+    aoRay.TMax = AOMaxRayLength;
+
+    Payload payload = { 0.0 };
+
+    const int MissShaderIndex = 1; // AORayMiss
+
+    TraceRay(SceneBVH,
+        AORayFlags,
+        EntityMaskMeshInstance, // Instance mask 
+        0, // Contribution to hit group index
+        0, // BLAS geometry multiplier for hit group index
+        MissShaderIndex, // Miss shader index
+        aoRay,
+        payload);
+
+    shadowed.w = payload.Value;
+
+    RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTexIdx][pixelIndex] = shadowed;
     RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTexIdx][pixelIndex].rgb = unshadowed;
+}
+
+[shader("miss")]
+void ShadowRayMiss(inout Payload payload)
+{
+    payload.Value = 1.0;
+}
+
+[shader("miss")]
+void AORayMiss(inout Payload payload)
+{
+    payload.Value = 1.0;
 }
 
 void OutputDefaults(uint2 pixelIndex)
 {
     RW_Float4_Textures2D[PassDataCB.StochasticShadowedOutputTexIdx][pixelIndex].rgb = 1.0;
     RW_Float4_Textures2D[PassDataCB.StochasticUnshadowedOutputTexIdx][pixelIndex].rgb = 1.0;
-}
-
-[shader("closesthit")]
-void RayClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes attributes)
-{
-  
-}
-
-[shader("miss")]
-void RayMiss(inout Payload payload)
-{
-    payload.Value = 1.0;
 }
 
 [shader("raygeneration")]
@@ -154,7 +195,7 @@ void RayGeneration()
         return;
     }
     
-    TraceShadowsStandardGBuffer(gBufferTextures, pixelCenterUV, pixelIndex, depth);
+    TraceForStandardGBuffer(gBufferTextures, pixelCenterUV, pixelIndex, depth);
 }
 
 #endif

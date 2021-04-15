@@ -17,6 +17,11 @@ namespace PathFinder
         uint32_t ShadowRayIntersectionPointsTexIdx;
         uint32_t StochasticShadowedOutputTexIdx;
         uint32_t StochasticUnshadowedOutputTexIdx;
+        // 16 byte boundary
+        uint32_t BlueNoiseTexSize;
+        uint32_t BlueNoiseTexDepth;
+        uint32_t BlueNoiseTexIdx;
+        uint32_t FrameNumber;
     };
 
     class DeferredShadowsRenderPass : public RenderPass<RenderPassContentMediator>

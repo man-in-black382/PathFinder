@@ -183,7 +183,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float vogelDiskRotation = Random(pixelIndex.xy) * TwoPi;
 
     // Get center sample
-    float3 denoisedShadowed = currentShadowedShadingTexture[pixelIndex].rgb;
+    float4 denoisedShadowed = currentShadowedShadingTexture[pixelIndex];
     float3 denoisedUnshadowed = currentUnshadowedShadingTexture[pixelIndex].rgb;
     
     float totalWeight = 1.0;
@@ -227,7 +227,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
             float sampleWeight = normalWeight * geometryWeight * roughnessWeight;
 
             // Sample neighbor value and weight accordingly
-            denoisedShadowed += currentShadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb * sampleWeight;
+            denoisedShadowed += currentShadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0) * sampleWeight;
             denoisedUnshadowed += currentUnshadowedShadingTexture.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb * sampleWeight;
 
             totalWeight += sampleWeight;
@@ -236,7 +236,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         denoisedShadowed /= totalWeight;
         denoisedUnshadowed /= totalWeight;
 
-        float3 shadowedShadingHistory = shadowedShadingHistoryTexture[pixelIndex].rgb;
+        float4 shadowedShadingHistory = shadowedShadingHistoryTexture[pixelIndex];
         float3 unshadowedShadingHistory = unshadowedShadingHistoryTexture[pixelIndex].rgb;
 
         // Combine with history
@@ -244,8 +244,8 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         denoisedUnshadowed = lerp(unshadowedShadingHistory, denoisedUnshadowed, accumulationSpeed);
 
         float2 secondaryGradients = float2(
-            GetHFGradient(CIELuminance(shadowedShadingHistory), CIELuminance(denoisedShadowed)),
-            GetHFGradient(CIELuminance(unshadowedShadingHistory), CIELuminance(denoisedUnshadowed)));
+            GetHFGradient(CIELuminance(shadowedShadingHistory.rgb), CIELuminance(denoisedShadowed.rgb)),
+            GetHFGradient(CIELuminance(unshadowedShadingHistory.rgb), CIELuminance(denoisedUnshadowed.rgb)));
 
         secondaryGradientTexture[pixelIndex].rg = secondaryGradients;
     }
@@ -261,7 +261,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToMovement / MaxAccumulatedFrames;
 
     // Output final denoised value
-    shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedShadowed;
+    shadowedShadingDenoiseTargetTexture[pixelIndex] = denoisedShadowed;
     unshadowedShadingDenoiseTargetTexture[pixelIndex].rgb = denoisedUnshadowed;
 }
 

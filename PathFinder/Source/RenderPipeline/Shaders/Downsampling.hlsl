@@ -123,7 +123,7 @@ float4 SampleSource(Texture2D source, float2 uv)
     if (PassDataCB.FilterType == FilterTypeMinMaxLuminance)
     {
         Bilinear bilinearFilter = GetBilinearFilter(uv, PassDataCB.SourceDimensionsInv, PassDataCB.SourceDimensions);
-        GatheredRGB gatherResult = GatherRGBManually(source, bilinearFilter, PassDataCB.SourceMipIdx, samplerState);
+        GatheredRGBA gatherResult = GatherRGBAManually(source, bilinearFilter, PassDataCB.SourceMipIdx, samplerState);
 
         return Filter(
             float4(gatherResult.Red.x, gatherResult.Green.x, gatherResult.Blue.x, 1.0),

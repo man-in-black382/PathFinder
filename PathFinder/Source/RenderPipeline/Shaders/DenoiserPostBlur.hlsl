@@ -34,9 +34,9 @@ struct PassData
 static const int GroupDimensionSize = 16;
 static const int BlurSampleCount = 8;
 
-float3 Blur(Texture2D image, float2 uv, uint2 pixelIdx, float2 texelSize, float gradient, float diskRotation)
+float4 Blur(Texture2D image, float2 uv, uint2 pixelIdx, float2 texelSize, float gradient, float diskRotation)
 {
-    float3 blurred = image[pixelIdx].rgb;
+    float4 blurred = image[pixelIdx];
 
     if (!FrameDataCB.IsDenoiserEnabled)
     {
@@ -53,7 +53,7 @@ float3 Blur(Texture2D image, float2 uv, uint2 pixelIdx, float2 texelSize, float 
         float2 sampleUV = uv + vdSample * diskScale;
 
         // Sample neighbor value and weight accordingly
-        blurred += image.SampleLevel(LinearClampSampler(), sampleUV, 0).rgb;
+        blurred += image.SampleLevel(LinearClampSampler(), sampleUV, 0);
     }
 
     return blurred / (sampleCount + 1);
@@ -104,17 +104,20 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float2 gradients = FrameDataCB.IsDenoiserEnabled ? gradientTexture[pixelIndex].rg : 0.0;
 
     float3 analyticUnshadowed = analyticShadingTexture[pixelIndex].rgb;
-    float3 stochasticShadowed = Blur(shadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);
-    float3 stochasticUnshadowed = Blur(unshadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);
+    float4 stochasticShadowed = Blur(shadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);
+    float4 stochasticUnshadowed = Blur(unshadowedShadingTexture, uv, pixelIndex, texelSize, gradients.x, vogelDiskRotation);
 
-    float3 combinedShading = CombineShading(analyticUnshadowed, stochasticShadowed, stochasticUnshadowed);
+    float3 combinedShading = CombineShading(analyticUnshadowed, stochasticShadowed.rgb, stochasticUnshadowed.rgb); 
+    float ao = stochasticShadowed.w;
 
-    //combinedShading = stochasticShadowed;
+    //combinedShading = stochasticShadowed.www;
     //combinedShading = stochasticUnshadowed;
     //combinedShading = analyticUnshadowed;
 
     // Apply GI
-    combinedShading += RetrieveGI(pixelIndex, uv);
+    combinedShading += RetrieveGI(pixelIndex, uv) * ao;
+
+    //combinedShading = ao;
 
     if (any(isnan(combinedShading)) || any(isinf(combinedShading)))
         combinedShading = float3(0, 100, 0);

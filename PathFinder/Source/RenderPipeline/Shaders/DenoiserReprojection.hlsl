@@ -110,20 +110,21 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         accumCountNew = 0.0; 
     }
 
-    GatheredRGB shadowedShadingGatherResult = GatherRGBManually(shadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
-    GatheredRGB unshadowedShadingGatherResult = GatherRGBManually(unshadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
+    GatheredRGBA shadowedShadingGatherResult = GatherRGBAManually(shadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
+    GatheredRGBA unshadowedShadingGatherResult = GatherRGBAManually(unshadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
 
-    float3 shadowedShadingReprojected = float3(
+    float4 shadowedShadingReprojected = float4( 
         ApplyBilinearCustomWeights(shadowedShadingGatherResult.Red, weights),
         ApplyBilinearCustomWeights(shadowedShadingGatherResult.Green, weights),
-        ApplyBilinearCustomWeights(shadowedShadingGatherResult.Blue, weights));
+        ApplyBilinearCustomWeights(shadowedShadingGatherResult.Blue, weights),
+        ApplyBilinearCustomWeights(shadowedShadingGatherResult.Alpha, weights));
 
     float3 unshadowedShadingReprojected = float3(
         ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Red, weights),
         ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Green, weights),
         ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Blue, weights));
 
-    shadowedShadingReprojectionTarget[pixelIndex].rgb = shadowedShadingReprojected;
+    shadowedShadingReprojectionTarget[pixelIndex] = shadowedShadingReprojected;
     unshadowedShadingReprojectionTarget[pixelIndex].rgb = unshadowedShadingReprojected;
 
     currentAccumulationCounterTexture[pixelIndex] = accumCountNew;

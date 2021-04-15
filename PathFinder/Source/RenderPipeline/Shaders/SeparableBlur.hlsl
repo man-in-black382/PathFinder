@@ -25,7 +25,7 @@ struct PassCBData
 
 #include "MandatoryEntryPointInclude.hlsl"
 
-groupshared float3 gCache[BlurGroupSharedBufferSize]; // Around 5KB
+groupshared float4 gCache[BlurGroupSharedBufferSize]; // Around 5KB
 
 [numthreads(BlurGroupSize, 1, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
@@ -55,25 +55,25 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         // Source texture for horizontal blur comes as SRV
         Texture2D source = Textures2D[PassDataCB.InputTexIdx];
 
-        gCache[loadStoreCoords.StoreCoord0] = source.mips[PassDataCB.MipLevel][loadStoreCoords.LoadCoord0].rgb;
+        gCache[loadStoreCoords.StoreCoord0] = source.mips[PassDataCB.MipLevel][loadStoreCoords.LoadCoord0];
 
         if (loadStoreCoords.IsLoadStore1Required)
-            gCache[loadStoreCoords.StoreCoord1] = source.mips[PassDataCB.MipLevel][loadStoreCoords.LoadCoord1].rgb;
+            gCache[loadStoreCoords.StoreCoord1] = source.mips[PassDataCB.MipLevel][loadStoreCoords.LoadCoord1];
     }
     else
     {
         // Source texture for vertical blur is a temporary texture accessed as UAV
         RWTexture2D<float4> source = RW_Float4_Textures2D[PassDataCB.InputTexIdx];
 
-        gCache[loadStoreCoords.StoreCoord0] = source[loadStoreCoords.LoadCoord0].rgb;
+        gCache[loadStoreCoords.StoreCoord0] = source[loadStoreCoords.LoadCoord0];
 
         if (loadStoreCoords.IsLoadStore1Required)
-            gCache[loadStoreCoords.StoreCoord1] = source[loadStoreCoords.LoadCoord1].rgb;
+            gCache[loadStoreCoords.StoreCoord1] = source[loadStoreCoords.LoadCoord1];
     }
    
     GroupMemoryBarrierWithGroupSync();
 
-    float3 color = float3(0.0, 0.0, 0.0);
+    float4 color = 0.0;
 
     for (int i = -radius; i <= radius; i++)
     {
@@ -83,7 +83,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         color += gCache[i + radius + groupThreadID.x] * PassDataCB.Weights[vectorIndex][elementIndex];
     }
 
-    destination[texelIndex] = float4(color, 1.0);
+    destination[texelIndex] = color;
 }
 
 #endif

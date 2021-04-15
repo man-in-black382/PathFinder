@@ -24,9 +24,9 @@
 #include "RenderPipeline/RenderPasses/DenoiserGradientConstructionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserGradientFilteringRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserHistoryFixRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/DenoiserPostStabilizationRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/TAARenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserPostBlurRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/SpecularDenoiserRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserMainRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SMAAEdgeDetectionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SMAABlendingWeightCalculationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/SMAANeighborhoodBlendingRenderPass.hpp"
@@ -93,9 +93,9 @@ namespace PathFinder
         DenoiserGradientFilteringRenderPass mDenoiserGradientFilteringPass;
         DenoiserForwardProjectionRenderPass mDenoiserForwardProjectionPass;
         DenoiserHistoryFixRenderPass mDenoiserHistoryFixPass;
-        DenoiserPostStabilizationRenderPass mDenoiserPostStabilizationPass;
+        TAARenderPass mTAARenderPass;
         DenoiserPostBlurRenderPass mDenoiserPostBlurPass;
-        SpecularDenoiserRenderPass mSpecularDenoiserPass;
+        DenoiserMainRenderPass mDenoiserMainPass;
         BloomBlurRenderPass mBloomBlurPass;
         BloomCompositionRenderPass mBloomCompositionPass;
         ToneMappingRenderPass mToneMappingPass;

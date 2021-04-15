@@ -59,12 +59,20 @@ namespace PathFinder
         Foundation::Color light3Color{ 250.0 / 255, 110.0 / 255, 100.0 / 255 };
 
         auto light0 = mScene->EmplaceRectangularLight();
-        light0->SetWidth(3);
-        light0->SetHeight(2);
-        light0->SetNormal(glm::normalize(glm::vec3{ -1.0, -1.0, 0.0 }));
+        light0->SetWidth(20);
+        light0->SetHeight(1.5);
+        light0->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, 0.0 }));
         light0->SetPosition({ 7.66, 6.187, 0.06 });
         light0->SetColor(light0Color);
         light0->SetLuminousPower(25000);
+
+        auto light1 = mScene->EmplaceRectangularLight();
+        light1->SetWidth(20);
+        light1->SetHeight(1.5);
+        light1->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, 0.0 }));
+        light1->SetPosition({ 7.66, 0, 0.06 });
+        light1->SetColor(light2Color);
+        light1->SetLuminousPower(25000);
 
      /*   auto sphereLight1 = mScene->EmplaceSphericalLight();
         sphereLight1->SetRadius(2);
@@ -180,8 +188,8 @@ namespace PathFinder
         mRenderEngine->AddRenderPass(&mDenoiserGradientFilteringPass);
         mRenderEngine->AddRenderPass(&mDenoiserForwardProjectionPass);
         mRenderEngine->AddRenderPass(&mDenoiserHistoryFixPass);
-        mRenderEngine->AddRenderPass(&mSpecularDenoiserPass);
-        mRenderEngine->AddRenderPass(&mDenoiserPostStabilizationPass);
+        mRenderEngine->AddRenderPass(&mDenoiserMainPass);
+        mRenderEngine->AddRenderPass(&mTAARenderPass);
         mRenderEngine->AddRenderPass(&mDenoiserPostBlurPass);
         mRenderEngine->AddRenderPass(&mBloomBlurPass);
         mRenderEngine->AddRenderPass(&mBloomCompositionPass);

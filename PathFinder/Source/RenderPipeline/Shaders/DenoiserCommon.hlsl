@@ -53,8 +53,9 @@ float NormalWeight(float3 n0, float3 n, float roughness, float accumulatedFrameC
     float a0 = GGXLobeHalfAngle(roughness);
 
     // Close to zero if accumulation goes well
-    // Make the angle more narrow over time
-    float accumulationFactor = 1.0 - accumulatedFrameCount * MaxAccumulatedFramesInv;
+    // Make the angle more narrow over time, BUT make it more narrow for less rough surfaces,
+    // keep the angle wide for rough surfaces (personal preference)
+    float accumulationFactor = 1.0 - accumulatedFrameCount * MaxAccumulatedFramesInv * (1.0 - roughness);
     a0 = a0 * accumulationFactor + radians(0.5);
 
     float cosa = saturate(dot(n0, n));
