@@ -35,7 +35,7 @@ namespace PathFinder
      
     void BloomBlurRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
+        const BloomParameters& parameters = context->GetContent()->GetScene()->GetBloomParams();
 
         Blur(context, 0, parameters.SmallBlurRadius, parameters.SmallBlurSigma);
         Blur(context, 1, parameters.MediumBlurRadius, parameters.MediumBlurSigma);

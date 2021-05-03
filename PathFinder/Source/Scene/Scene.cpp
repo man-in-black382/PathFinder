@@ -16,14 +16,21 @@
 namespace PathFinder 
 {
 
-    Scene::Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer, const PipelineResourceStorage* pipelineResourceStorage)
-        : mResourceProducer{ resourceProducer },
+    Scene::Scene(
+        const std::filesystem::path& executableFolder,
+        const HAL::Device* device,
+        Memory::GPUResourceProducer* resourceProducer,
+        const PipelineResourceStorage* pipelineResourceStorage,
+        const RenderSurfaceDescription* renderSurfaceDescription,
+        const RenderSettings* renderSettings)
+        : 
+        mResourceProducer{ resourceProducer },
         mLuminanceMeter{ &mCamera },
-        mGPUStorage{ this, device, resourceProducer, pipelineResourceStorage },
-        mMaterialLoader{ executableFolder, resourceProducer }
+        mGPUStorage{ this, device, resourceProducer, pipelineResourceStorage, renderSurfaceDescription, renderSettings },
+        mMaterialLoader{ executableFolder, resourceProducer },
+        mGIManager{ this }
     {
         LoadUtilityResources(executableFolder);
-        mGIManager.SetCamera(&mCamera);
     }
 
     Mesh& Scene::AddMesh(Mesh&& mesh)
@@ -68,16 +75,31 @@ namespace PathFinder
         mLightGPUIndexMappings.resize(mRectangularLights.size() + mDiskLights.size() + mSphericalLights.size());
 
         for (MeshInstance& instance : mMeshInstances)
-            mMeshInstanceGPUIndexMappings[instance.IndexInGPUTable()] = &instance;
+            mMeshInstanceGPUIndexMappings[instance.GetIndexInGPUTable()] = &instance;
 
         for (FlatLight& light : mRectangularLights)
-            mLightGPUIndexMappings[light.IndexInGPUTable()] = &light;
+            mLightGPUIndexMappings[light.GetIndexInGPUTable()] = &light;
 
         for (FlatLight& light : mDiskLights)
-            mLightGPUIndexMappings[light.IndexInGPUTable()] = &light;
+            mLightGPUIndexMappings[light.GetIndexInGPUTable()] = &light;
 
         for (SphericalLight& light : mSphericalLights)
-            mLightGPUIndexMappings[light.IndexInGPUTable()] = &light;
+            mLightGPUIndexMappings[light.GetIndexInGPUTable()] = &light;
+    }
+
+    void Scene::UpdatePreviousFrameValues()
+    {
+        for (MeshInstance& instance : mMeshInstances)
+            instance.UpdatePreviousFrameValues();
+
+        for (FlatLight& light : mRectangularLights)
+            light.UpdatePreviousFrameValues();
+
+        for (FlatLight& light : mDiskLights)
+            light.UpdatePreviousFrameValues();
+
+        for (SphericalLight& light : mSphericalLights)
+            light.UpdatePreviousFrameValues();
     }
 
     void Scene::LoadThirdPartyScene(const std::filesystem::path& path)
@@ -98,11 +120,11 @@ namespace PathFinder
         {
             Mesh* insertedMesh = &mMeshes.emplace_back(std::move(loadedMesh.MeshObject));
             Material* material = insertedMaterials[loadedMesh.MaterialIndex];
-            insertedMesh->SetName(EnsureMeshNameUniqueness(insertedMesh->Name()));
+            insertedMesh->SetName(EnsureMeshNameUniqueness(insertedMesh->GetName()));
             mMeshInstances.emplace_back(insertedMesh, material);
 
-            mTotalVertexCount += insertedMesh->Vertices().size();
-            mTotalIndexCount += insertedMesh->Indices().size();
+            mTotalVertexCount += insertedMesh->GetVertices().size();
+            mTotalIndexCount += insertedMesh->GetIndices().size();
         }
     }
 
@@ -159,8 +181,8 @@ namespace PathFinder
 
         for (Mesh& mesh : mMeshes)
         {
-            mesh.DeserializeVertexData(sceneFiles.MeshFolderPath / (mesh.Name() + ".pfmeshdat"));
-            mesh.SetName(EnsureMeshNameUniqueness(mesh.Name()));
+            mesh.DeserializeVertexData(sceneFiles.MeshFolderPath / (mesh.GetName() + ".pfmeshdat"));
+            mesh.SetName(EnsureMeshNameUniqueness(mesh.GetName()));
         }
 
         for (Material& material : mMaterials)
@@ -186,7 +208,7 @@ namespace PathFinder
     {
         std::filesystem::path meshAbsolutePath;
 
-        if (mesh.Name().empty())
+        if (mesh.GetName().empty())
         {
             std::string meshName = RandomAlphanumericString(8);
             meshAbsolutePath = fileStructure.MeshFolderPath / (meshName + ".pfmeshdat");
@@ -195,7 +217,7 @@ namespace PathFinder
         }
         else
         {
-            meshAbsolutePath = fileStructure.MeshFolderPath / (mesh.Name() + ".pfmeshdat");
+            meshAbsolutePath = fileStructure.MeshFolderPath / (mesh.GetName() + ".pfmeshdat");
         }
 
         if (!std::filesystem::exists(meshAbsolutePath))

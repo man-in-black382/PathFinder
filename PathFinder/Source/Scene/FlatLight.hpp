@@ -19,26 +19,23 @@ namespace PathFinder
         ~FlatLight() = default;
 
         void SetNormal(const glm::vec3& normal);
-        void SetPosition(const glm::vec3& position);
         void SetWidth(float width);
         void SetHeight(float height);
+        void ConstructModelMatrix() override;
 
     private:
         void UpdateArea();
-        void ConstructModelMatrix();
 
         Type mType;
         glm::vec3 mNormal;
-        glm::vec3 mPosition;
         float mWidth = 0.0f;
         float mHeight = 0.0f;
 
     public:
-        inline auto LightType() const { return mType; }
-        inline const auto& Normal() const { return mNormal; }
-        inline const auto& Position() const { return mPosition; }
-        inline const auto& Width() const { return mWidth; }
-        inline const auto& Height() const { return mHeight; }
+        inline auto GetLightType() const { return mType; }
+        inline const auto& GetNormal() const { return mNormal; }
+        inline const auto& GetWidth() const { return mWidth; }
+        inline const auto& GetHeight() const { return mHeight; }
     };
 
 }

@@ -17,6 +17,12 @@ struct Sphere
     float Radius;
 };
 
+struct AABB
+{
+    float3 Min;
+    float3 Max;
+};
+
 // q01 ----------- q10
 // |                 |
 // |                 |  
@@ -35,6 +41,14 @@ struct Plane
     float3 Normal;
     float3 PointOnPlane;
 };
+
+AABB InitAABB(float3 minp, float3 maxp)
+{
+    AABB aabb;
+    aabb.Min = min(minp, maxp);
+    aabb.Max = max(minp, maxp);
+    return aabb;
+}
 
 Sphere InitSphere(float3 center, float radius)
 {
@@ -178,14 +192,14 @@ float3 RayTriangleIntersection(float3 ro, float3 rd, float3 v0, float3 v1, float
     float3 v2v0 = v2 - v0;
     float3 rov0 = ro - v0;
 
-    float3  n = cross(v1v0, v2v0);
-    float3  q = cross(rov0, rd);
+    float3 n = cross(v1v0, v2v0);
+    float3 q = cross(rov0, rd);
     float d = 1.0 / dot(rd, n);
     float u = d * dot(-q, v2v0);
     float v = d * dot(q, v1v0);
     float t = d * dot(-n, rov0);
 
-    if (u < 0.0 || v < 0.0 || (u + v)>1.0) t = -1.0;
+    if (u < 0.0 || v < 0.0 || (u + v) > 1.0) t = -1.0;
 
     return float3(t, u, v);
 }
@@ -252,11 +266,33 @@ bool RaySphereIntersection(Sphere sphere, Ray ray, inout float3 intersectionPoin
     return intersects;
 }
 
+// A Ray-Box Intersection Algorithm and Efficient Dynamic Voxel Rendering
+// http://jcgt.org/published/0007/03/04/
+bool RayAABBIntersection(Ray ray, AABB aabb, out float tNear, out float tFar)
+{
+    float3 invDir = 1.0 / ray.Direction;
+    float3 t0 = (aabb.Min - ray.Origin) * invDir;
+    float3 t1 = (aabb.Max - ray.Origin) * invDir;
+    float3 tmin = min(t0, t1), tmax = max(t0, t1);
+
+    tNear = Max(tmin);
+    tFar = Min(tmax);
+
+    // Check for > 0.0 discards hits behind the ray. 
+    // It is optional and can be removed to get a line-box intersection.
+    return tNear <= tFar && tFar > 0.0;
+};
+
 bool IsPointInsideEllipse(float2 p, float2 ellipseCenter, float2 widthHeight)
 {
     float2 half = widthHeight * 0.5;
     float2 delta = p - ellipseCenter;
     return ((delta.x * delta.x) / (half.x * half.x) + (delta.y * delta.y) / (half.y * half.y)) <= 1.0;
+}
+
+bool IsPointInsideAABB(float3 p, AABB aabb)
+{
+    return all(p >= aabb.Min) && all(p <= aabb.Max);
 }
 
 float3 SphericalToCartesian_ZUp(float theta, float phi)

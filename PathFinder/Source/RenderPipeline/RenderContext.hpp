@@ -44,7 +44,7 @@ namespace PathFinder
         inline ResourceProvider* GetResourceProvider() const { return mResourceProvider; }
         inline const ContentMediator* GetContent() const { return mContent; }
         inline const RenderSurfaceDescription& GetDefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }
-        inline auto FrameNumber() const { return mUtilityProvider->FrameNumber; }
+        inline auto GetFrameNumber() const { return mUtilityProvider->FrameNumber; }
     };
 
 }

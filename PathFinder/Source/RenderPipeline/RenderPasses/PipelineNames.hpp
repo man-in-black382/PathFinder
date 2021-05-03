@@ -55,7 +55,7 @@ namespace PathFinder
         inline Foundation::Name RngSeedsCorrelated{ "Resource_Stochastic_Rng_Seeds_Correlated" };
         inline NameArray<2> DenoiserGradientSamplePositions{ "Resource_Denoiser_Gradient_Sample_Positions[0]", "Resource_Denoiser_Gradient_Sample_Positions[1]" };
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
-        inline NameArray<2> DenoiserReprojectedFramesCount{ "Resource_Denoiser_Reprojected_Frames_Count[0]", "Resource_Denoiser_Reprojected_Frames_Count[1]" };
+        inline NameArray<2> ReprojectedFramesCount{ "Resource_Reprojected_Frames_Count[0]", "Resource_Reprojected_Frames_Count[1]" };
         inline Foundation::Name DenoisedCombinedDirectShading{ "Resource_Denoised_Combined_Direct_Shading" };
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
@@ -63,6 +63,7 @@ namespace PathFinder
         inline Foundation::Name LuminanceHistogram{ "Resource_Luminance_Histogram" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
         inline Foundation::Name UIOutput{ "Resource_UI_Output" };
+        inline NameArray<2> TAAOutput{ "Resource_TAA_Output[0]", "Resource_TAA_Output[1]" };
 
         inline Foundation::Name GIRayHitInfo{ "Resource_GI_Ray_Hit_Info" };
         inline NameArray<2> GIIrradianceProbeAtlas{ "Resource_GI_Irradiance_Probe_Atlas[0]", "Resource_GI_Irradiance_Probe_Atlas[1]" };
@@ -106,7 +107,7 @@ namespace PathFinder
         inline Foundation::Name DenoiserForwardProjection{ "PSO_DenoiserForwardProjection" };
         inline Foundation::Name DenoiserReprojection{ "PSO_DenoiserReprojection" };
         inline Foundation::Name DenoiserHistoryFix{ "PSO_DenoiserHistoryFix" };
-        inline Foundation::Name DenoiserPostStabilization{ "PSO_DenoiserPostStabilization" };
+        inline Foundation::Name TAA{ "PSO_TAA" };
         inline Foundation::Name DenoiserPostBlur{ "PSO_DenoiserPostBlur" };
         inline Foundation::Name DenoiserGradientConstruction{ "PSO_DenoiserGradientConstruction" };
         inline Foundation::Name DenoiserGradientFiltering{ "PSO_DenoiserGradientFiltering" };

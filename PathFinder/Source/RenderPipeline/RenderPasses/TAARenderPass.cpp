@@ -10,7 +10,7 @@ namespace PathFinder
 
     void TAARenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-        stateCreator->CreateComputeState(PSONames::DenoiserPostStabilization, [](ComputeStateProxy& state)
+        stateCreator->CreateComputeState(PSONames::TAA, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "TAA.hlsl";
         });
@@ -18,38 +18,39 @@ namespace PathFinder
 
     void TAARenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        return; // Disable 
+        auto previousFrameIndex = (scheduler->GetFrameNumber() - 1) % 2;
+        auto frameIndex = scheduler->GetFrameNumber() % 2;
 
-        auto frameIndex = scheduler->FrameNumber() % 2;
+        NewTextureProperties properties{};
+        properties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoisedStabilized);
+        scheduler->NewTexture(ResourceNames::TAAOutput[frameIndex], properties);
+        scheduler->NewTexture(ResourceNames::TAAOutput[previousFrameIndex], MipSet::Empty(), properties);
 
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[frameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingDenoised[frameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingReprojected);
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
+        scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
+        scheduler->ReadTexture(ResourceNames::SMAAAntialiased);
+        scheduler->ReadTexture(ResourceNames::TAAOutput[previousFrameIndex]);
     }
      
     void TAARenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserPostStabilization);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::TAA);
 
         auto resourceProvider = context->GetResourceProvider();
-        auto frameIndex = context->FrameNumber() % 2;
+        auto previousFrameIndex = (context->GetFrameNumber() - 1) % 2;
+        auto frameIndex = context->GetFrameNumber() % 2;
+
+        auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
 
         TAACBContent cbContent{};
-        cbContent.VarianceSourceTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingReprojected);
-        cbContent.InputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[frameIndex]);
-        cbContent.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingDenoisedStabilized);
-        context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+        cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
+        cbContent.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
+        cbContent.CurrentFrameTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::SMAAAntialiased);
+        cbContent.PreviousFrameTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::TAAOutput[previousFrameIndex]);
+        cbContent.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::TAAOutput[frameIndex]);
 
-        cbContent.VarianceSourceTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingReprojected);
-        cbContent.InputTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[frameIndex]);
-        cbContent.OutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingDenoisedStabilized);
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+        context->GetCommandRecorder()->Dispatch(groupCount.Width, groupCount.Height);
     }
 
 }

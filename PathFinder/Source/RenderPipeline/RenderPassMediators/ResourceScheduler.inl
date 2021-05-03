@@ -61,6 +61,12 @@ namespace PathFinder
     template <class ContentMediator>
     void ResourceScheduler<ContentMediator>::NewDepthStencil(Foundation::Name resourceName, std::optional<NewDepthStencilProperties> properties)
     {
+        NewDepthStencil(resourceName, MipSet::AllMips(), properties);
+    }
+
+    template <class ContentMediator>
+    void ResourceScheduler<ContentMediator>::NewDepthStencil(Foundation::Name resourceName, const MipSet& writtenMips, std::optional<NewDepthStencilProperties> properties)
+    {
         NewDepthStencilProperties props = FillMissingFields(properties);
         bool canBeReadAcrossFrames = EnumMaskContains(props.Flags, ResourceSchedulingFlags::CrossFrameRead);
         HAL::DepthStencilClearValue clearValue{ 1.0, 0 };
@@ -74,14 +80,15 @@ namespace PathFinder
             [canBeReadAcrossFrames,
             passNode = mCurrentlySchedulingPassNode,
             resourceName,
+            writtenMips,
             this]
         (PipelineResourceSchedulingInfo& schedulingInfo)
             {
                 schedulingInfo.CanBeAliased = !canBeReadAcrossFrames && mPipelineSettings->IsMemoryAliasingEnabled;
-                RegisterGraphDependency(*passNode, MipSet::AllMips(), resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
+                RegisterGraphDependency(*passNode, writtenMips, resourceName, {}, schedulingInfo.ResourceFormat().GetTextureProperties().MipCount, true);
                 UpdateSubresourceInfos(
                     schedulingInfo,
-                    MipSet::AllMips(),
+                    writtenMips,
                     passNode->PassMetadata().Name,
                     HAL::ResourceState::DepthWrite,
                     PipelineResourceSchedulingInfo::SubresourceInfo::AccessFlag::TextureDS,

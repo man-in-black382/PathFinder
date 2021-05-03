@@ -35,12 +35,12 @@ namespace PathFinder
      
     void GIRayTracingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        auto previousFrameIdx = (scheduler->FrameNumber() - 1) % 2;
+        auto previousFrameIdx = (scheduler->GetFrameNumber() - 1) % 2;
 
         NewTextureProperties rayHitInfoTextureProperties{
             HAL::ColorFormat::RGBA16_Float,
             HAL::TextureKind::Texture2D,
-            scheduler->Content()->GetSettings()->GlobalIlluminationSettings.GetRayHitInfoTextureSize()
+            scheduler->GetContent()->GetSettings()->GlobalIlluminationSettings.GetRayHitInfoTextureSize()
         };
 
         scheduler->NewTexture(ResourceNames::GIRayHitInfo, rayHitInfoTextureProperties);
@@ -54,25 +54,25 @@ namespace PathFinder
 
     void GIRayTracingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        auto previousFrameIdx = (context->FrameNumber() - 1) % 2;
+        auto previousFrameIdx = (context->GetFrameNumber() - 1) % 2;
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIRayTracing);
 
         const Scene* scene = context->GetContent()->GetScene();
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
-        const Memory::Texture* blueNoiseTexture = scene->BlueNoiseTexture();
+        const Memory::Texture* blueNoiseTexture = scene->GetBlueNoiseTexture();
 
         auto resourceProvider = context->GetResourceProvider();
 
         GIRayTracingCBContent cbContent{};
-        cbContent.ProbeField = sceneStorage->IrradianceFieldGPURepresentation();
+        cbContent.ProbeField = sceneStorage->GetIrradianceFieldGPURepresentation();
         cbContent.ProbeField.PreviousIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
         cbContent.ProbeField.PreviousDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIRayHitInfo);
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.BlueNoiseTexSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
 
-        auto start = context->FrameNumber() * 3;
+        auto start = context->GetFrameNumber() * 3;
         auto end = start + 3;
         auto haltonSequence = Foundation::Halton::Sequence(start, end);
 
@@ -82,7 +82,7 @@ namespace PathFinder
         }
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->SetRootConstants(sceneStorage->CompressedLightPartitionInfo(), 0, 0);
+        context->GetCommandRecorder()->SetRootConstants(sceneStorage->GetCompressedLightPartitionInfo(), 0, 0);
 
         const Memory::Buffer* bvh = sceneStorage->TopAccelerationStructure().AccelerationStructureBuffer();
         const Memory::Buffer* lights = sceneStorage->LightTable();

@@ -20,8 +20,8 @@ namespace PathFinder
 
     void DenoiserPostBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        bool isDenoiserEnabled = scheduler->Content()->GetSettings()->IsDenoiserEnabled;
-        auto currentFrameIndex = scheduler->FrameNumber() % 2;
+        bool isDenoiserEnabled = scheduler->GetContent()->GetSettings()->IsDenoiserEnabled;
+        auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
 
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingPostBlurred);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingPostBlurred);
@@ -48,7 +48,7 @@ namespace PathFinder
 
         if (isDenoiserEnabled)
         {
-            scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[currentFrameIndex]);
+            scheduler->ReadTexture(ResourceNames::ReprojectedFramesCount[currentFrameIndex]);
             scheduler->ReadTexture(ResourceNames::DenoiserSecondaryGradient);
         }
     }
@@ -60,8 +60,8 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserPostBlur);
 
         auto resourceProvider = context->GetResourceProvider();
-        auto previousFrameIndex = (context->FrameNumber() - 1) % 2;
-        auto frameIndex = context->FrameNumber() % 2;
+        auto previousFrameIndex = (context->GetFrameNumber() - 1) % 2;
+        auto frameIndex = context->GetFrameNumber() % 2;
 
         auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
 
@@ -70,7 +70,7 @@ namespace PathFinder
 
         DenoiserPostBlurCBContent cbContent{};
 
-        cbContent.ProbeField = sceneStorage->IrradianceFieldGPURepresentation();
+        cbContent.ProbeField = sceneStorage->GetIrradianceFieldGPURepresentation();
         cbContent.ProbeField.CurrentIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[frameIndex]);
         cbContent.ProbeField.CurrentDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[frameIndex]);
 
@@ -92,7 +92,7 @@ namespace PathFinder
         if (isDenoiserEnabled)
         {
             cbContent.SecondaryGradientTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserSecondaryGradient);
-            cbContent.AccumulatedFramesCountTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
+            cbContent.AccumulatedFramesCountTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ReprojectedFramesCount[frameIndex]);
         }
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);

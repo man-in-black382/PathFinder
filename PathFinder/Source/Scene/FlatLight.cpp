@@ -14,34 +14,20 @@ namespace PathFinder
     void FlatLight::SetNormal(const glm::vec3& normal)
     {
         mNormal = glm::normalize(normal);
-        ConstructModelMatrix();
-    }
-
-    void FlatLight::SetPosition(const glm::vec3& position)
-    {
-        mPosition = position;
-        ConstructModelMatrix();
     }
 
     void FlatLight::SetWidth(float width)
     {
         mWidth = width;
         UpdateArea();
-        ConstructModelMatrix();
     }
 
     void FlatLight::SetHeight(float height)
     {
         mHeight = height;
         UpdateArea();
-        ConstructModelMatrix();
     }
 
-    void FlatLight::UpdateArea()
-    {
-        SetArea((mHeight / 2.0) * (mWidth / 2.0) * M_PI);
-    }
-    
     void FlatLight::ConstructModelMatrix()
     {
         glm::vec3 UpY{ 0.0, 1.0, 0.0 };
@@ -54,6 +40,11 @@ namespace PathFinder
         glm::mat4 scaleMat = glm::scale(glm::vec3{ mWidth, mHeight, 1.0f });
 
         mModelMatrix = translationMat * rotationMat * scaleMat;
+    }
+
+    void FlatLight::UpdateArea()
+    {
+        SetArea((mHeight / 2.0) * (mWidth / 2.0) * M_PI);
     }
 
 }

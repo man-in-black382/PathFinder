@@ -35,7 +35,14 @@ namespace PathFinder
 
         using LightVariant = std::variant<FlatLight*, SphericalLight*>;
 
-        Scene(const std::filesystem::path& executableFolder, const HAL::Device* device, Memory::GPUResourceProducer* resourceProducer, const PipelineResourceStorage* pipelineResourceStorage);
+        Scene(
+            const std::filesystem::path& executableFolder, 
+            const HAL::Device* device,
+            Memory::GPUResourceProducer* resourceProducer,
+            const PipelineResourceStorage* pipelineResourceStorage,
+            const RenderSurfaceDescription* renderSurfaceDescription,
+            const RenderSettings* renderSettings
+        );
 
         Mesh& AddMesh(Mesh&& mesh);
         MeshInstance& AddMeshInstance(MeshInstance&& instance);
@@ -45,6 +52,7 @@ namespace PathFinder
         SphericalLightIt EmplaceSphericalLight();
 
         void MapEntitiesToGPUIndices();
+        void UpdatePreviousFrameValues();
 
         void LoadThirdPartyScene(const std::filesystem::path& path);
         void Serialize(const std::filesystem::path& destination);
@@ -104,45 +112,45 @@ namespace PathFinder
         uint64_t mTotalIndexCount = 0;
 
     public:
-        inline Camera& MainCamera() { return mCamera; }
-        inline const Camera& MainCamera() const { return mCamera; }
-        inline LuminanceMeter& LumMeter() { return mLuminanceMeter; }
-        inline const LuminanceMeter& LumMeter() const { return mLuminanceMeter; }
-        inline GIManager& GlobalIlluminationManager() { return mGIManager; }
-        inline const GIManager& GlobalIlluminationManager() const { return mGIManager; }
-        inline const auto& Meshes() const { return mMeshes; }
-        inline const auto& MeshInstances() const { return mMeshInstances; }
-        inline const auto& Materials() const { return mMaterials; }
-        inline const auto& RectangularLights() const { return mRectangularLights; }
-        inline const auto& DiskLights() const { return mDiskLights; }
-        inline const auto& SphericalLights() const { return mSphericalLights; }
-        inline const auto& TonemappingParams() const { return mTonemappingParams; }
-        inline const auto& BloomParams() const { return mBloomParameters; }
+        inline Camera& GetMainCamera() { return mCamera; }
+        inline const Camera& GetMainCamera() const { return mCamera; }
+        inline LuminanceMeter& GetLuminanceMeter() { return mLuminanceMeter; }
+        inline const LuminanceMeter& GetLuminanceMeter() const { return mLuminanceMeter; }
+        inline GIManager& GetGIManager() { return mGIManager; }
+        inline const GIManager& GetGIManager() const { return mGIManager; }
+        inline const auto& GetMeshes() const { return mMeshes; }
+        inline const auto& GetMeshInstances() const { return mMeshInstances; }
+        inline const auto& GetMaterials() const { return mMaterials; }
+        inline const auto& GetRectangularLights() const { return mRectangularLights; }
+        inline const auto& GetDiskLights() const { return mDiskLights; }
+        inline const auto& GetSphericalLights() const { return mSphericalLights; }
+        inline const auto& GetTonemappingParams() const { return mTonemappingParams; }
+        inline const auto& GetBloomParams() const { return mBloomParameters; }
 
-        inline auto& Meshes() { return mMeshes; }
-        inline auto& MeshInstances() { return mMeshInstances; }
-        inline auto& Materials() { return mMaterials; }
-        inline auto& RectangularLights() { return mRectangularLights; }
-        inline auto& DiskLights() { return mDiskLights; }
-        inline auto& SphericalLights() { return mSphericalLights; }
-        inline auto& TonemappingParams() { return mTonemappingParams; }
-        inline auto& BloomParams() { return mBloomParameters; }
+        inline auto& GetMeshes() { return mMeshes; }
+        inline auto& GetMeshInstances() { return mMeshInstances; }
+        inline auto& GetMaterials() { return mMaterials; }
+        inline auto& GetRectangularLights() { return mRectangularLights; }
+        inline auto& GetDiskLights() { return mDiskLights; }
+        inline auto& GetSphericalLights() { return mSphericalLights; }
+        inline auto& GetTonemappingParams() { return mTonemappingParams; }
+        inline auto& GetBloomParams() { return mBloomParameters; }
 
-        inline auto TotalLightCount() const { return mRectangularLights.size() + mDiskLights.size() + mSphericalLights.size(); }
+        inline auto GetTotalLightCount() const { return mRectangularLights.size() + mDiskLights.size() + mSphericalLights.size(); }
 
-        inline const auto BlueNoiseTexture() const { return mBlueNoiseTexture.get(); }
-        inline const auto SMAASearchTexture() const { return mSMAASearchTexture.get(); }
-        inline const auto SMAAAreaTexture() const { return mSMAAAreaTexture.get(); }
-        inline const Mesh& UnitCube() const { return mUnitCube; }
-        inline const Mesh& UnitSphere() const { return mUnitSphere; }
+        inline const auto GetBlueNoiseTexture() const { return mBlueNoiseTexture.get(); }
+        inline const auto GetSMAASearchTexture() const { return mSMAASearchTexture.get(); }
+        inline const auto GetSMAAAreaTexture() const { return mSMAAAreaTexture.get(); }
+        inline const Mesh& GetUnitCube() const { return mUnitCube; }
+        inline const Mesh& GetUnitSphere() const { return mUnitSphere; }
 
-        inline MeshInstance* MeshInstanceForGPUIndex(uint64_t index) const { return mMeshInstanceGPUIndexMappings[index]; }
-        inline LightVariant LightForGPUIndex(uint64_t index) const { return mLightGPUIndexMappings[index]; }
+        inline MeshInstance* GetMeshInstanceForGPUIndex(uint64_t index) const { return mMeshInstanceGPUIndexMappings[index]; }
+        inline LightVariant GetLightForGPUIndex(uint64_t index) const { return mLightGPUIndexMappings[index]; }
 
-        inline SceneGPUStorage& GPUStorage() { return mGPUStorage; }
+        inline SceneGPUStorage& GetGPUStorage() { return mGPUStorage; }
 
-        inline const auto TotalVertexCount() const { return mTotalVertexCount; }
-        inline const auto TotalIndexCount() const { return mTotalIndexCount; }
+        inline const auto GetTotalVertexCount() const { return mTotalVertexCount; }
+        inline const auto GetTotalIndexCount() const { return mTotalIndexCount; }
     };
 
 }

@@ -110,7 +110,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float3 combinedShading = CombineShading(analyticUnshadowed, stochasticShadowed.rgb, stochasticUnshadowed.rgb); 
     float ao = stochasticShadowed.w;
 
-    //combinedShading = stochasticShadowed.www;
+    //combinedShading = stochasticShadowed.rgb;
     //combinedShading = stochasticUnshadowed;
     //combinedShading = analyticUnshadowed;
 
@@ -127,9 +127,9 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         FrameDataCB.IsMotionDebugEnabled)
     {
         // Debug data is encoded in gradients texture
-        if (any(gradients < 0.2))
+        if (any(gradients < 0.99))
         {
-            combinedShading = float3(1.0 - gradients, 0.0);
+            combinedShading = float3(1.0 - gradients, 0.0) * 10;
         }
     }
 

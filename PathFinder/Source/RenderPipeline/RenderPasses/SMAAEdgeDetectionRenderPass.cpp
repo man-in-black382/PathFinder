@@ -21,7 +21,7 @@ namespace PathFinder
       
     void SMAAEdgeDetectionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        bool isGIDebugEnabled = scheduler->Content()->GetSettings()->IsGIDebugEnabled;
+        bool isGIDebugEnabled = scheduler->GetContent()->GetSettings()->IsGIDebugEnabled;
 
         scheduler->ReadTexture(SMAAEdgeDetectionPassInputTexName(isGIDebugEnabled), TextureReadContext::PixelShader);
         scheduler->NewRenderTarget(ResourceNames::SMAADetectedEdges, NewTextureProperties{ HAL::ColorFormat::RG8_Usigned_Norm });

@@ -18,13 +18,13 @@ namespace PathFinder
     class Mesh
     {
     public:
-        const std::string& Name() const;
-        std::vector<Vertex1P1N1UV1T1BT>& Vertices();
-        const std::vector<Vertex1P1N1UV1T1BT>& Vertices() const;
-        const std::vector<uint32_t>& Indices() const;
-        const Geometry::AABB& BoundingBox() const;
-        const VertexStorageLocation& LocationInVertexStorage() const;
-        float SurfaceArea() const;
+        const std::string& GetName() const;
+        std::vector<Vertex1P1N1UV1T1BT>& GetVertices();
+        const std::vector<Vertex1P1N1UV1T1BT>& GetVertices() const;
+        const std::vector<uint32_t>& GetIndices() const;
+        const Geometry::AABB& GetBoundingBox() const;
+        const VertexStorageLocation& GetLocationInVertexStorage() const;
+        float GetSurfaceArea() const;
         bool HasTangentSpace() const;
 
         void SetName(const std::string& name);

@@ -42,19 +42,19 @@ namespace PathFinder
      
     void GIProbeUpdateRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        auto previousFrameIdx = (scheduler->FrameNumber() - 1) % 2;
-        auto currentFrameIdx = (scheduler->FrameNumber()) % 2;
+        auto previousFrameIdx = (scheduler->GetFrameNumber() - 1) % 2;
+        auto currentFrameIdx = (scheduler->GetFrameNumber()) % 2;
 
         NewTextureProperties irradianceTextureProperties{
             HAL::ColorFormat::RGBA16_Float,
             HAL::TextureKind::Texture2D,
-            scheduler->Content()->GetSettings()->GlobalIlluminationSettings.GetIrradianceProbeAtlasSize()
+            scheduler->GetContent()->GetSettings()->GlobalIlluminationSettings.GetIrradianceProbeAtlasSize()
         };
 
         NewTextureProperties depthTextureProperties{
             HAL::ColorFormat::RG16_Float,
             HAL::TextureKind::Texture2D,
-            scheduler->Content()->GetSettings()->GlobalIlluminationSettings.GetDepthProbeAtlasSize()
+            scheduler->GetContent()->GetSettings()->GlobalIlluminationSettings.GetDepthProbeAtlasSize()
         };
 
         irradianceTextureProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
@@ -80,14 +80,14 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIProbeUpdate);
 
-        auto previousFrameIdx = (context->FrameNumber() - 1) % 2;
-        auto currentFrameIdx = (context->FrameNumber()) % 2;
+        auto previousFrameIdx = (context->GetFrameNumber() - 1) % 2;
+        auto currentFrameIdx = (context->GetFrameNumber()) % 2;
         auto resourceProvider = context->GetResourceProvider();
 
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
 
         GIProbeUpdateCBContent cbContent{};
-        cbContent.ProbeField = sceneStorage->IrradianceFieldGPURepresentation();
+        cbContent.ProbeField = sceneStorage->GetIrradianceFieldGPURepresentation();
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIRayHitInfo);
         cbContent.ProbeField.PreviousIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
         cbContent.ProbeField.PreviousDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);

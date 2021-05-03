@@ -40,6 +40,11 @@ namespace Geometry
         glm::vec3 mScale;
         glm::vec3 mTranslation;
         glm::quat mRotation;
+
+    public:
+        inline const glm::vec3& GetScale() const { return mScale; }
+        inline const glm::vec3& GetTranslation() const { return mTranslation; }
+        inline const glm::quat& GetRotation() const { return mRotation; }
     };
 
 }

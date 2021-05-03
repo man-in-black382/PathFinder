@@ -1,20 +1,21 @@
 #include "GIManager.hpp"
+#include "Scene.hpp"
 
 #include <Foundation/Pi.hpp>
 #include <Geometry/Utils.hpp>
 #include <random>
+#include <glm/gtx/compatibility.hpp>
 
 namespace PathFinder 
 {
 
-    void GIManager::SetCamera(const Camera* camera)
-    {
-        mCamera = camera;
-    }
+    GIManager::GIManager(const Scene* scene)
+        : mScene{ scene } {}
 
     void GIManager::Update()
     {
-        ProbeField.SetCornerPosition(GenerateGridCornerPosition());
+        UpdateGridCornerPosition();
+        UpdateHysteresisDecrease();
 
         if (!DoNotRotateProbeRays)
         {
@@ -30,9 +31,9 @@ namespace PathFinder
         }
     }
 
-    glm::vec3 GIManager::GenerateGridCornerPosition() const
+    void GIManager::UpdateGridCornerPosition()
     {
-        glm::vec3 gridSize = glm::vec3{ ProbeField.GridSize() } * ProbeField.CellSize();
+        glm::vec3 gridSize = glm::vec3{ ProbeField.GetGridSize() } * ProbeField.GetCellSize();
         glm::vec3 halfGridSize = gridSize * 0.5f;
 
         // 4 front corners
@@ -40,8 +41,8 @@ namespace PathFinder
             glm::vec3(-1,-1,1), glm::vec3(-1,1,1), glm::vec3(1,1,1), glm::vec3(1,-1,1)
         };
 
-        glm::mat4 inverseProjection = mCamera->GetInverseProjection();
-        glm::mat4 inverseView = mCamera->GetInverseView();
+        glm::mat4 inverseProjection = mScene->GetMainCamera().GetInverseProjection();
+        glm::mat4 inverseView = mScene->GetMainCamera().GetInverseView();
 
         std::array<glm::vec3, 5> frustumPoints;
 
@@ -53,28 +54,130 @@ namespace PathFinder
             frustumPoints[corner] = vertex;
         }
 
-        frustumPoints[4] = mCamera->GetPosition();
+        frustumPoints[4] = mScene->GetMainCamera().GetPosition();
 
         Geometry::AABB frustumAABB{ frustumPoints.begin(), frustumPoints.end() };
 
         // Camera position is a point on camera's frustum AABB, by definition.
         // We find normalized coordinates of that point.
-        glm::vec3 normIntersectionPoint = mCamera->GetPosition() - frustumAABB.GetMin();
+        glm::vec3 normIntersectionPoint = mScene->GetMainCamera().GetPosition() - frustumAABB.GetMin();
         normIntersectionPoint /= frustumAABB.GetMax() - frustumAABB.GetMin();
 
         // Get cascades min point by centering cascade around the camera position
-        glm::vec3 cascadeMinPoint = mCamera->GetPosition() - halfGridSize;
+        glm::vec3 cascadeMinPoint = mScene->GetMainCamera().GetPosition() - halfGridSize;
 
         // Compute anchor which is a point on the cascade's AABB 
         glm::vec3 cascadeAnchor = normIntersectionPoint * gridSize + cascadeMinPoint;
 
         // We want to move cascade so that anchor point is at the same place as camera position
-        glm::vec3 giCascadeDisplacement = mCamera->GetPosition() - cascadeAnchor;
+        glm::vec3 giCascadeDisplacement = mScene->GetMainCamera().GetPosition() - cascadeAnchor;
 
         // We move cascade to camera but then move it backwards by one cell size so that we always have a probe behind the camera, for more smooth GI
-        glm::vec3 cascadeOptimalMinPoint = cascadeMinPoint + giCascadeDisplacement - mCamera->GetFront() * ProbeField.CellSize();
+        glm::vec3 cascadeOptimalMinPoint = cascadeMinPoint + giCascadeDisplacement - mScene->GetMainCamera().GetFront() * ProbeField.GetCellSize();
 
-        return Geometry::Snap(cascadeOptimalMinPoint, glm::vec3{ ProbeField.CellSize() });
+        ProbeField.SetCornerPosition(Geometry::Snap(cascadeOptimalMinPoint, glm::vec3{ ProbeField.GetCellSize() }));
+    }
+
+    void GIManager::UpdateHysteresisDecrease()
+    {
+        float irradianceHysteresisDecrease = 0.0f;
+        float depthHysteresisDecrease = 0.0f;
+
+        auto perceptuallyEncodeLuminance = [](float luminance) -> float
+        {
+            return std::pow(luminance, 1.0 / 5.0);
+        };
+
+        float maxHysteresisDecrease = 0.5f;
+        float geometricChangeSensitivity = 3.0f;
+
+        auto computeHysteresisDecreaseForLights = [&](auto&& lights)
+        {
+            for (auto& light : lights)
+            {
+                float perceptualPreviousLumianance = perceptuallyEncodeLuminance(light.GetPreviousLuminance());
+                float perceptualLumianance = perceptuallyEncodeLuminance(light.GetLuminance());
+
+                float areaChange = std::abs(light.GetPreviousArea() - light.GetArea());
+                float luminanceChange = std::abs(perceptualPreviousLumianance - perceptualLumianance);
+                float distanceTravelled = glm::distance(light.GetPosition(), light.GetPreviousPosition());
+
+                // Computing heuristics relative to probe cell sizes
+                // Light area, luminance or movement change means lighting condition change, so we need to drop history
+                float areaLerpFactor = glm::clamp(areaChange / ProbeField.GetCellSize() * geometricChangeSensitivity, 0.0f, 1.0f);
+                float hysteresisDecreaseDueToAreaChange = glm::lerp(0.0f, maxHysteresisDecrease, areaLerpFactor);
+
+                float luminanceLerpFactor = glm::clamp(
+                    std::max(perceptualPreviousLumianance, perceptualLumianance) / std::min(perceptualPreviousLumianance, perceptualLumianance), 
+                    0.0f, 1.0f);
+                float hysteresisDecreaseDueToLuminanceChange = glm::lerp(0.0f, maxHysteresisDecrease, luminanceLerpFactor);
+
+                float movementLerpFactor = glm::clamp(distanceTravelled / ProbeField.GetCellSize() * geometricChangeSensitivity, 0.0f, 1.0f);
+                float hysteresisDecreaseDueToMovement = glm::lerp(0.0f, maxHysteresisDecrease, movementLerpFactor);
+
+                float lightHysteresisDecrease = std::max(hysteresisDecreaseDueToAreaChange, std::max(hysteresisDecreaseDueToAreaChange, hysteresisDecreaseDueToMovement));
+
+                irradianceHysteresisDecrease = std::max(irradianceHysteresisDecrease, lightHysteresisDecrease);
+            }
+        };
+
+        computeHysteresisDecreaseForLights(mScene->GetSphericalLights());
+        computeHysteresisDecreaseForLights(mScene->GetRectangularLights());
+        computeHysteresisDecreaseForLights(mScene->GetDiskLights());
+
+        for (const MeshInstance& instance : mScene->GetMeshInstances())
+        {
+            const Geometry::AABB& aabb = instance.GetAssociatedMesh()->GetBoundingBox();
+            const Geometry::AABB previousAABB = aabb.TransformedBy(instance.GetPreviousTransformation());
+            const Geometry::AABB currentAABB = aabb.TransformedBy(instance.GetTransformation());
+
+            float diagonalChange = std::abs(previousAABB.Diagonal() - currentAABB.Diagonal());
+            float distanceTravelled = glm::distance(instance.GetPreviousTransformation().GetTranslation(), instance.GetTransformation().GetTranslation());
+
+            // The bigger the mesh, the more impact it has on indirect lighting
+            float importance = currentAABB.Diagonal() / ProbeField.GetCellSize() * 0.5f;
+
+            float diagonalLerpFactor = glm::clamp(diagonalChange / ProbeField.GetCellSize(), 0.0f, 1.0f);
+            // Movement weight depends on how large the object is in relation to probe grid
+            float movementLerpFactor = glm::clamp(distanceTravelled / ProbeField.GetCellSize() * importance, 0.0f, 1.0f);
+
+            float hysteresisDecreaseDueSizeChange = glm::lerp(0.0f, maxHysteresisDecrease, diagonalLerpFactor);
+            float hysteresisDecreaseDueToMovement = glm::lerp(0.0f, maxHysteresisDecrease, movementLerpFactor);
+
+            float hysteresisDecrease = std::max(hysteresisDecreaseDueSizeChange, hysteresisDecreaseDueToMovement);
+
+            irradianceHysteresisDecrease = std::max(irradianceHysteresisDecrease, hysteresisDecrease);
+            depthHysteresisDecrease = std::max(depthHysteresisDecrease, hysteresisDecrease);
+        }
+
+        // The larger the hysteresis decrease, the larger the frame count that we must keep it
+        float irradianceDecreaseFrameDuration = glm::lerp(0.0f, 10.0f, irradianceHysteresisDecrease / maxHysteresisDecrease);
+        float depthDecreaseFrameDuration = glm::lerp(0.0f, 7.0f, depthHysteresisDecrease / maxHysteresisDecrease);
+
+        mIrradianceHysteresisDecreseFrameCount = std::max(mIrradianceHysteresisDecreseFrameCount, uint64_t(irradianceDecreaseFrameDuration));
+        irradianceHysteresisDecrease = std::max(irradianceHysteresisDecrease, ProbeField.GetIrradianceHysteresisDecrease());
+
+        mDepthHysteresisDecreseFrameCount = std::max(mDepthHysteresisDecreseFrameCount, uint64_t(depthDecreaseFrameDuration));
+        depthHysteresisDecrease = std::max(depthHysteresisDecrease, ProbeField.GetDepthHysteresisDecrease());
+
+        //IC(depthHysteresisDecrease);
+
+        // We stop decreasing hysteresis if there is no decrease this frame and we have no frames left
+        if (mIrradianceHysteresisDecreseFrameCount == 0)
+            irradianceHysteresisDecrease = 0;    
+
+        if (mDepthHysteresisDecreseFrameCount == 0)
+            depthHysteresisDecrease = 0;
+
+        // Decrease frame count
+        if (mIrradianceHysteresisDecreseFrameCount > 0)
+            mIrradianceHysteresisDecreseFrameCount -= 1;
+
+        if (mDepthHysteresisDecreseFrameCount > 0)
+            mDepthHysteresisDecreseFrameCount -= 1;
+
+        ProbeField.SetIrradianceHysteresisDecrease(irradianceHysteresisDecrease);
+        ProbeField.SetDepthHysteresisDecrease(depthHysteresisDecrease);
     }
 
     void IrradianceField::GenerateProbeRotation(const glm::vec2& random0to1)
@@ -99,6 +202,16 @@ namespace PathFinder
     void IrradianceField::SetDebugProbeRadius(float radius)
     {
         mDebugProbeRadius = radius;
+    }
+
+    void IrradianceField::SetIrradianceHysteresisDecrease(float decrease)
+    {
+        mIrradianceHysteresisDecrease = decrease;
+    }
+
+    void IrradianceField::SetDepthHysteresisDecrease(float decrease)
+    {
+        mDepthHysteresisDecrease = decrease;
     }
 
     Geometry::Dimensions IrradianceField::GetRayHitInfoTextureSize() const

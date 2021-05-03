@@ -19,13 +19,13 @@ namespace PathFinder
 
     void DenoiserForwardProjectionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+        if (!scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
             return;
 
-        auto currentFrameIndex = scheduler->FrameNumber() % 2;
-        auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
+        auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
+        auto previousFrameIndex = (scheduler->GetFrameNumber() - 1) % 2;
 
-        Geometry::Dimensions gradientTexturesSize = scheduler->DefaultRenderSurfaceDesc().Dimensions().XYMultiplied(1.0 / 3.0);
+        Geometry::Dimensions gradientTexturesSize = scheduler->GetDefaultRenderSurfaceDesc().Dimensions().XYMultiplied(1.0 / 3.0);
 
         NewTextureProperties gradientSamplePositionsProps{ HAL::ColorFormat::R8_Unsigned, HAL::TextureKind::Texture2D, gradientTexturesSize };
         NewTextureProperties gradientProps{ HAL::ColorFormat::RG16_Float, HAL::TextureKind::Texture2D, gradientTexturesSize };
@@ -50,8 +50,8 @@ namespace PathFinder
     void DenoiserForwardProjectionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
         auto resourceProvider = context->GetResourceProvider();
-        auto currentFrameIndex = context->FrameNumber() % 2;
-        auto previousFrameIndex = (context->FrameNumber() - 1) % 2;
+        auto currentFrameIndex = context->GetFrameNumber() % 2;
+        auto previousFrameIndex = (context->GetFrameNumber() - 1) % 2;
 
         ClearUAVTextureFloat(context, ResourceNames::DenoiserPrimaryGradientInputs, glm::vec4{ -1.0f });
         ClearUAVTextureUInt(context, ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex], glm::uvec4{ 0 });
@@ -70,7 +70,7 @@ namespace PathFinder
         cbContent.StochasticRngSeedsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::RngSeedsCorrelated);
         cbContent.GradientSamplePositionsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
         cbContent.GradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserPrimaryGradientInputs);
-        cbContent.FrameNumber = context->FrameNumber();
+        cbContent.FrameNumber = context->GetFrameNumber();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Dispatch(groupCount.Width, groupCount.Height);

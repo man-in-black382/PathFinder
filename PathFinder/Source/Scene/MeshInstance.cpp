@@ -6,9 +6,9 @@ namespace PathFinder
     MeshInstance::MeshInstance(Mesh* mesh, Material* material)
         : mMesh{ mesh }, mMaterial{ material } {}
 
-    void MeshInstance::UpdatePreviousTransform()
+    void MeshInstance::UpdatePreviousFrameValues()
     {
-        mPrevTransformation = mTransformation;
+        mPreviousTransformation = mTransformation;
     }
 
 }

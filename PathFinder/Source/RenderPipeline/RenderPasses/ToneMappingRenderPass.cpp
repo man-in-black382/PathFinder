@@ -29,7 +29,9 @@ namespace PathFinder
 
     void ToneMappingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        scheduler->ReadTexture(ResourceNames::SMAAAntialiased);
+        auto frameIndex = scheduler->GetFrameNumber() % 2;
+
+        scheduler->ReadTexture(ResourceNames::TAAOutput[frameIndex]);
         scheduler->NewTexture(ResourceNames::ToneMappingOutput);
         scheduler->NewBuffer(ResourceNames::LuminanceHistogram, NewBufferProperties<uint32_t>{128});
         scheduler->Export(ResourceNames::LuminanceHistogram);
@@ -37,6 +39,8 @@ namespace PathFinder
      
     void ToneMappingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
+        auto frameIndex = context->GetFrameNumber() % 2;
+
         ClearUAVBufferUInt(context, ResourceNames::LuminanceHistogram, 0);
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::ToneMapping);
@@ -44,9 +48,9 @@ namespace PathFinder
         const DisplaySettingsController* dsc = context->GetContent()->DisplayController();
 
         ToneMappingCBContent cbContent{};
-        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::SMAAAntialiased);
+        cbContent.InputTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::TAAOutput[frameIndex]);
         cbContent.OutputTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::ToneMappingOutput);
-        cbContent.TonemappingParams = context->GetContent()->GetScene()->TonemappingParams();
+        cbContent.TonemappingParams = context->GetContent()->GetScene()->GetTonemappingParams();
         cbContent.IsHDREnabled = dsc->IsHDREnabled();
         cbContent.DisplayMaximumLuminance = dsc->PrimaryDisplay()->MaxLuminance();
 

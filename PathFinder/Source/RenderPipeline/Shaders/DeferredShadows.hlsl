@@ -49,6 +49,7 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
     uint4 intersectionPoints = rayLightIntersectionPoints[pixelIndex];
     float4 shadowed = 0.0; // 4th component includes AO
     float3 unshadowed = 0.0;
+    float3 selfIntersectionOffset = gBuffer.Normal * 0.04;
 
     const uint ShadowRayFlags = 
         RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
@@ -77,18 +78,18 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
 
         float3 lightToSurface = surfacePosition - lightIntersectionPoint;
         float vectorLength = length(lightToSurface);
-        float tmax = vectorLength - 1e-03;
+        float tmax = vectorLength; // Should be more smart, scene-dependent
         float tmin = 1e-03;
 
         float3 wo = mul(worldToTangent, viewDirection);
         float3 wi = mul(worldToTangent, normalize(-lightToSurface));
         float3 wm = normalize(wo + wi);
 
-        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer)* light.Luminance* light.Color.rgb / pdfs[i] / raysPerLight;
+        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * light.Luminance * light.Color.rgb / pdfs[i] / raysPerLight;
 
         RayDesc shadowRay;
         shadowRay.Origin = lightIntersectionPoint;
-        shadowRay.Direction = lightToSurface / vectorLength;
+        shadowRay.Direction = lightToSurface / vectorLength + selfIntersectionOffset;
         shadowRay.TMin = tmin;
         shadowRay.TMax = tmax;
 
@@ -115,6 +116,7 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
     float4 blueNoise = blueNoiseTexture[blueNoiseTexelIndex];
     float3x3 tangentToWorld = RotationMatrix3x3(gBuffer.Normal);
 
+    // Should be tweakable ideally
     float AOMaxRayLength = 2.0;
 
     const uint AORayFlags = 
@@ -123,9 +125,9 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
         RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
 
     RayDesc aoRay;
-    aoRay.Origin = surfacePosition;
+    aoRay.Origin = surfacePosition + selfIntersectionOffset;
     aoRay.Direction = mul(tangentToWorld, UniformHemisphereSample(blueNoise.x, blueNoise.y));
-    aoRay.TMin = 0.001;
+    aoRay.TMin = 0.0;
     aoRay.TMax = AOMaxRayLength;
 
     Payload payload = { 0.0 };

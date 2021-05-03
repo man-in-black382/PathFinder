@@ -27,7 +27,7 @@ namespace PathFinder
                 ImGui::TreePop();
             }
         }
-
+        
         if (VM->InspectionResults().empty())
             ImGui::Text("No Render Passes Provide Inspection Data");
 

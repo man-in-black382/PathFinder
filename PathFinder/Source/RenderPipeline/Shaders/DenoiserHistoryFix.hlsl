@@ -24,7 +24,7 @@ struct PassData
 
 static const int GroupDimensionSize = 16;
 static const int HistoryFixMipCount = MaxFrameCountWithHistoryFix + 1;
-static const float BilateralFilterViewZSensitivity = 0.05;
+static const float BilateralFilterViewZSensitivity = 0.25;
 
 void Fix(Texture2D inputTexture, RWTexture2D<float4> outputTexture, Texture2D viewDepthTexture, float roughness, float historyWeight, float baseViewDepth, uint2 pixelIndex, float2 uv)
 {

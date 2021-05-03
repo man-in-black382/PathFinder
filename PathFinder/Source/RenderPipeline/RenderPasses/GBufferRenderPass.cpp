@@ -74,8 +74,8 @@ namespace PathFinder
         viewDepthProperties.ClearValues = HAL::ColorClearValue{ std::numeric_limits<float>::max() };
         viewDepthProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
-        auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
-        auto frameIndex = scheduler->FrameNumber() % 2;
+        auto previousFrameIndex = (scheduler->GetFrameNumber() - 1) % 2;
+        auto frameIndex = scheduler->GetFrameNumber() % 2;
 
         scheduler->NewRenderTarget(ResourceNames::GBufferAlbedoMetalness, albedoMetalnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness, normalRoughnessProperties);
@@ -88,7 +88,7 @@ namespace PathFinder
 
     void GBufferRenderPass::Render(RenderContext<RenderPassContentMediator>* context) 
     {
-        auto currentFrameIndex = context->FrameNumber() % 2;
+        auto currentFrameIndex = context->GetFrameNumber() % 2;
 
         context->GetCommandRecorder()->SetRenderTargets(
             std::array{
@@ -115,7 +115,7 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBufferMeshes);
 
-        auto& instances = context->GetContent()->GetScene()->MeshInstances();
+        auto& instances = context->GetContent()->GetScene()->GetMeshInstances();
 
         if (instances.empty()) 
             return;
@@ -129,8 +129,8 @@ namespace PathFinder
 
         for (const MeshInstance& instance : instances)
         {
-            context->GetCommandRecorder()->SetRootConstants(instance.IndexInGPUTable(), 0, 0);
-            context->GetCommandRecorder()->Draw(instance.AssociatedMesh()->LocationInVertexStorage().IndexCount);
+            context->GetCommandRecorder()->SetRootConstants(instance.GetIndexInGPUTable(), 0, 0);
+            context->GetCommandRecorder()->Draw(instance.GetAssociatedMesh()->GetLocationInVertexStorage().IndexCount);
         }
     }
 
@@ -138,9 +138,9 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GBufferLights);
 
-        auto& rectLights = context->GetContent()->GetScene()->RectangularLights();
-        auto& diskLights = context->GetContent()->GetScene()->DiskLights();
-        auto& sphereLights = context->GetContent()->GetScene()->SphericalLights();
+        auto& rectLights = context->GetContent()->GetScene()->GetRectangularLights();
+        auto& diskLights = context->GetContent()->GetScene()->GetDiskLights();
+        auto& sphereLights = context->GetContent()->GetScene()->GetSphericalLights();
 
         if (rectLights.empty() && diskLights.empty() && sphereLights.empty())
             return;
@@ -154,20 +154,20 @@ namespace PathFinder
 
         for (const FlatLight& light : rectLights)
         {
-            context->GetCommandRecorder()->SetRootConstants(light.IndexInGPUTable(), 0, 0);
-            context->GetCommandRecorder()->Draw(light.LocationInVertexStorage().IndexCount);
+            context->GetCommandRecorder()->SetRootConstants(light.GetIndexInGPUTable(), 0, 0);
+            context->GetCommandRecorder()->Draw(light.GetLocationInVertexStorage().IndexCount);
         }
 
         for (const FlatLight& light : diskLights)
         {
-            context->GetCommandRecorder()->SetRootConstants(light.IndexInGPUTable(), 0, 0);
-            context->GetCommandRecorder()->Draw(light.LocationInVertexStorage().IndexCount); 
+            context->GetCommandRecorder()->SetRootConstants(light.GetIndexInGPUTable(), 0, 0);
+            context->GetCommandRecorder()->Draw(light.GetLocationInVertexStorage().IndexCount); 
         }
 
         for (const SphericalLight& light : sphereLights)
         {
-            context->GetCommandRecorder()->SetRootConstants(light.IndexInGPUTable() , 0, 0);
-            context->GetCommandRecorder()->Draw(light.LocationInVertexStorage().IndexCount); 
+            context->GetCommandRecorder()->SetRootConstants(light.GetIndexInGPUTable() , 0, 0);
+            context->GetCommandRecorder()->Draw(light.GetLocationInVertexStorage().IndexCount); 
         }
     }
 

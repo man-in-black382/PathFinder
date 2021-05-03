@@ -7,7 +7,7 @@ namespace PathFinder
 
     void LuminanceMeterViewModel::Import()
     {
-        mLuminanceMeter = &Dependencies->ScenePtr->LumMeter();
+        mLuminanceMeter = &Dependencies->ScenePtr->GetLuminanceMeter();
     }
 
     void LuminanceMeterViewModel::Export()

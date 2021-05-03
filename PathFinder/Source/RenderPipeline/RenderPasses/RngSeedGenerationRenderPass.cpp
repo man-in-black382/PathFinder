@@ -18,8 +18,8 @@ namespace PathFinder
 
     void RngSeedGenerationRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        auto currentFrameIndex = scheduler->FrameNumber() % 2;
-        auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
+        auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
+        auto previousFrameIndex = (scheduler->GetFrameNumber() - 1) % 2;
 
         NewTextureProperties rngSeedsProperties{ HAL::ColorFormat::RGBA8_Unsigned };
         rngSeedsProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
@@ -35,14 +35,14 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::RngSeedGeneration);
 
         auto resourceProvider = context->GetResourceProvider();
-        auto frameIndex = context->FrameNumber() % 2;
+        auto frameIndex = context->GetFrameNumber() % 2;
 
         const Scene* scene = context->GetContent()->GetScene();
-        const Memory::Texture* blueNoiseTexture = scene->BlueNoiseTexture();
+        const Memory::Texture* blueNoiseTexture = scene->GetBlueNoiseTexture();
 
         RngSeedGenerationCBContent cbContent{};
         cbContent.RngSeedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::RngSeeds[frameIndex]);
-        cbContent.FrameNumber = context->FrameNumber();
+        cbContent.FrameNumber = context->GetFrameNumber();
         cbContent.BlueNoiseTexSize = blueNoiseTexture->Properties().Dimensions.Width; // W = H
         cbContent.BlueNoiseTexDepth = blueNoiseTexture->Properties().Dimensions.Depth;
 

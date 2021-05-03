@@ -107,6 +107,8 @@ namespace PathFinder
         glm::mat4 InverseView;
         glm::mat4 InverseProjection;
         glm::mat4 InverseViewProjection;
+        glm::mat4 Jitter;
+        glm::mat4 ViewProjectionJitter;
         // 16 byte boundary
         float NearPlane = 0.0f;
         float FarPlane = 0.0f;
@@ -118,6 +120,10 @@ namespace PathFinder
         float FoVVTan = 0.0f;
         float AspectRatio = 0;
         // 16 byte boundary
+        // 16 byte boundary
+        glm::vec2 UVJitter;
+        uint32_t Pad0__;
+        uint32_t Pad1__;
     };
 
     struct GPUIrradianceField
@@ -150,8 +156,8 @@ namespace PathFinder
         // 16 byte boundary
         uint32_t PreviousIrradianceProbeAtlasTexIdx;
         uint32_t PreviousDepthProbeAtlasTexIdx;
-        uint32_t Pad0__;
-        uint32_t Pad1__;
+        float IrradianceHysteresisDecrease;
+        float DepthHysteresisDecrease;
     };
 
     using GPUInstanceIndex = uint64_t;

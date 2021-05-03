@@ -19,10 +19,10 @@ namespace PathFinder
 
     void DenoiserGradientConstructionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+        if (!scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
             return;
 
-        auto currentFrameIndex = scheduler->FrameNumber() % 2;
+        auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
 
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred);
@@ -36,7 +36,7 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserGradientConstruction);
 
-        auto currentFrameIndex = context->FrameNumber() % 2;
+        auto currentFrameIndex = context->GetFrameNumber() % 2;
         auto resourceProvider = context->GetResourceProvider();
 
         DenoiserGradientConstructionCBContent cbContent{};

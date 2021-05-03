@@ -50,7 +50,7 @@ PixelOut PSMain(VertexOut pin)
     float4 offsets[3] = { pin.Offset0, pin.Offset1, pin.Offset2 };
     Texture2D image = Textures2D[PassDataCB.InputTexIdx];
 
-    if (!FrameDataCB.IsAntialiasingEnabled || !FrameDataCB.IsAntialiasingEdgeDetectionEnabled)
+    if (!FrameDataCB.IsSMAAEnabled || !FrameDataCB.IsSMAAEdgeDetectionEnabled)
     {
         offsets[0] = 0.0;
         offsets[1] = 0.0;

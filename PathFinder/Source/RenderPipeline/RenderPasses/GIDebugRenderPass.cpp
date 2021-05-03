@@ -33,10 +33,10 @@ namespace PathFinder
      
     void GIDebugRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        if (!scheduler->Content()->GetSettings()->IsGIDebugEnabled)
+        if (!scheduler->GetContent()->GetSettings()->IsGIDebugEnabled)
             return;
 
-        auto currentFrameIdx = (scheduler->FrameNumber()) % 2;
+        auto currentFrameIdx = (scheduler->GetFrameNumber()) % 2;
 
         scheduler->ReadTexture(ResourceNames::GIRayHitInfo);
         scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas[currentFrameIdx]);
@@ -49,14 +49,14 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIProbeDebug);
 
-        auto currentFrameIdx = (context->FrameNumber()) % 2;
+        auto currentFrameIdx = (context->GetFrameNumber()) % 2;
         auto resourceProvider = context->GetResourceProvider();
 
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
-        const GIManager& giManager = context->GetContent()->GetScene()->GlobalIlluminationManager();
+        const GIManager& giManager = context->GetContent()->GetScene()->GetGIManager();
 
         GIDebugCBContent cbContent{};
-        cbContent.ProbeField = sceneStorage->IrradianceFieldGPURepresentation();
+        cbContent.ProbeField = sceneStorage->GetIrradianceFieldGPURepresentation();
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIRayHitInfo);
         cbContent.ProbeField.CurrentIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[currentFrameIdx]);
         cbContent.ProbeField.CurrentDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[currentFrameIdx]);

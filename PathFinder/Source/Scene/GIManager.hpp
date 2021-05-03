@@ -1,13 +1,12 @@
 #pragma once
 
-#include "Camera.hpp"
-
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 #include <Geometry/Dimensions.hpp>
 
 namespace PathFinder
 {
+    class Scene;
 
     class IrradianceField
     {
@@ -15,15 +14,19 @@ namespace PathFinder
         void GenerateProbeRotation(const glm::vec2& random0to1);
         void SetCornerPosition(const glm::vec3& position);
         void SetDebugProbeRadius(float radius);
+        void SetIrradianceHysteresisDecrease(float decrease);
+        void SetDepthHysteresisDecrease(float decrease);
 
     private:
         inline static const uint64_t IrradianceProbeSize = 8; // Should less or equal to depth probe size
         inline static const uint64_t DepthProbeSize = 16;
 
         // Should be power of 2
-        glm::uvec3 mProbeGridSize = glm::uvec3{ 16, 12, 16 };
+        glm::uvec3 mProbeGridSize = glm::uvec3{ 13, 12, 13 };
         float mCellSize = 3.0f;
         float mDebugProbeRadius = 0.3f;
+        float mIrradianceHysteresisDecrease = 0.5f; // Quickly update probes at application startup
+        float mDepthHysteresisDecrease = 0.5f;
         uint64_t mRaysPerProbe = 144;
         glm::mat4 mProbeRotation{ 1.0f };
         glm::vec3 mCornerPosition{ 0.0f };
@@ -43,19 +46,22 @@ namespace PathFinder
         uint64_t GetTotalRayCount() const;
         uint64_t GetTotalProbeCount() const;
 
-        const glm::uvec3& GridSize() const { return mProbeGridSize; }
-        const glm::vec3& CornerPosition() const { return mCornerPosition; }
-        const glm::ivec3& SpawnedProbePlanesCount() const { return mSpawnedProbePlanesCount; }
-        const auto RaysPerProbe() const { return mRaysPerProbe; }
-        const auto CellSize() const { return mCellSize; }
-        const auto DebugProbeRadius() const { return mDebugProbeRadius; }
-        const glm::mat4& ProbeRotation() const { return mProbeRotation; }
+        const glm::uvec3& GetGridSize() const { return mProbeGridSize; }
+        const glm::vec3& GetCornerPosition() const { return mCornerPosition; }
+        const glm::ivec3& GetSpawnedProbePlanesCount() const { return mSpawnedProbePlanesCount; }
+        const auto GetRaysPerProbe() const { return mRaysPerProbe; }
+        const auto GetCellSize() const { return mCellSize; }
+        const auto GetDebugProbeRadius() const { return mDebugProbeRadius; }
+        const auto GetIrradianceHysteresisDecrease() const { return mIrradianceHysteresisDecrease; }
+        const auto GetDepthHysteresisDecrease() const { return mDepthHysteresisDecrease; }
+        const glm::mat4& GetProbeRotation() const { return mProbeRotation; }
     };
 
     class GIManager
     {
     public:
-        void SetCamera(const Camera* camera);
+        GIManager(const Scene* scene);
+
         void Update();
 
         IrradianceField ProbeField;
@@ -64,9 +70,12 @@ namespace PathFinder
         bool DoNotRotateProbeRays = false;
 
     private:
-        glm::vec3 GenerateGridCornerPosition() const;
+        void UpdateGridCornerPosition();
+        void UpdateHysteresisDecrease();
 
-        const Camera* mCamera = nullptr;
+        const Scene* mScene = nullptr;
+        uint64_t mIrradianceHysteresisDecreseFrameCount = 10; // Quickly update probes at application startup
+        uint64_t mDepthHysteresisDecreseFrameCount = 7; // Quickly update probes at application startup
     };
 
 }

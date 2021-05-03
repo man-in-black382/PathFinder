@@ -41,8 +41,8 @@ struct IrradianceField
     // 16 byte boundary
     uint PreviousIrradianceProbeAtlasTexIdx;
     uint PreviousDepthProbeAtlasTexIdx;
-    uint Pad0__;
-    uint Pad1__;
+    float IrradianceHysteresisDecrease;
+    float DepthHysteresisDecrease;
 };
 
 uint3 Probe3DIndexFrom1D(uint index, IrradianceField field)

@@ -42,9 +42,10 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
     float4 WSPosition = mul(light.ModelMatrix, vertex.Position);
     float4 CSPosition = mul(FrameDataCB.CurrentFrameCamera.View, WSPosition);
     float4 ClipSPosition = mul(FrameDataCB.CurrentFrameCamera.Projection, CSPosition);
+    float4 jitteredClipPosition = mul(FrameDataCB.CurrentFrameCamera.Jitter, ClipSPosition);
 
     VertexOut vout;
-    vout.Position = ClipSPosition;
+    vout.Position = FrameDataCB.IsTAAEnabled ? jitteredClipPosition : ClipSPosition;
     vout.LightOrientation = light.Orientation.xyz;
     vout.ViewDepth = CSPosition.z;
     vout.LocalSpacePosition = light.LightType != LightTypeRectangle ? localSpacePosition : 0.xx;

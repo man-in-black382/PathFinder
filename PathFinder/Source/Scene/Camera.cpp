@@ -150,6 +150,28 @@ namespace PathFinder
         return glm::inverse(GetProjection());
     }
 
+    Camera::Jitter Camera::GetJitter(uint64_t frameIndex, uint64_t maxJitterFrames, const glm::uvec2& frameResolution) const
+    {
+        Jitter jitter{};
+
+        maxJitterFrames = std::max(maxJitterFrames, JitterHaltonSamples.size());
+        frameIndex = frameIndex % maxJitterFrames;
+
+        glm::vec2 texelSizeInNDC = 2.0f / glm::vec2{ frameResolution };
+        glm::mat4 jitterMatrix{ 1.0f };
+
+        // Halton sequence samples are in [-0.5, 0.5] range
+        jitterMatrix[3][0] = texelSizeInNDC.x * JitterHaltonSamples[frameIndex].x;
+        jitterMatrix[3][1] = texelSizeInNDC.y * JitterHaltonSamples[frameIndex].y;
+
+        jitter.JitterMatrix = jitterMatrix;
+        // Jitter is in NDC space, so we need to divide it by 2 to account for UV space being 2 times smaller
+        // Also Y component is inverted because NDC up and UV up are opposite
+        jitter.UVJitter = { jitterMatrix[3][0] * 0.5, jitterMatrix[3][1] * -0.5 };
+
+        return jitter;
+    }
+
     PathFinder::EV Camera::GetExposureValue100() const
     {
         // EV number is defined as:

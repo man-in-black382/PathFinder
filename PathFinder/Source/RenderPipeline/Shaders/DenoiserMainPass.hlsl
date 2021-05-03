@@ -27,7 +27,7 @@ struct PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 
-static const int GroupDimensionSize = 16;
+static const int GroupDimensionSize = 8;
 static const int DenoiseSampleCount = 8; 
 
 // https://developer.nvidia.com/gtc/2020/video/s22699
@@ -87,14 +87,13 @@ float3x3 SamplingBasis(float3 Xview, float3 Nview, float roughness, float radius
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 {
-    uint2 pixelIndex = ThreadGroupTilingX(PassDataCB.DispatchGroupCount, GroupDimensionSize.xx, 16, groupThreadID.xy, groupID.xy);
+    uint2 pixelIndex = ThreadGroupTilingX(PassDataCB.DispatchGroupCount, GroupDimensionSize.xx, 8, groupThreadID.xy, groupID.xy);
     float2 uv = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
 
     GBufferTexturePack gBufferTextures;
     gBufferTextures.NormalRoughness = Textures2D[PassDataCB.GBufferIndices.NormalRoughnessTexIdx];
     gBufferTextures.Motion = UInt4_Textures2D[PassDataCB.GBufferIndices.MotionTexIdx];
     gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
-    gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTexIdx];
 
     Texture2D accumulatedFramesCountTexture = Textures2D[PassDataCB.AccumulatedFramesCountTexIdx];
     Texture2D currentShadowedShadingTexture = Textures2D[PassDataCB.CurrentShadowedShadingTexIdx];
@@ -115,7 +114,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
     LoadGBufferNormalAndRoughness(gBufferTextures.NormalRoughness, pixelIndex, worldNormal, roughness);
 
-    if (depth >= 1.0 || roughness == 0.0)
+    if (depth >= 1.0 || roughness < 0.01)
     {
         shadowedShadingDenoiseTargetTexture[pixelIndex].rgb = 0.0;
         unshadowedShadingDenoiseTargetTexture[pixelIndex].rgb = 0.0;
@@ -132,10 +131,12 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
     // Compute algorithm inputs
     float3 viewNormal = mul(ReduceTo3x3(FrameDataCB.CurrentFrameCamera.View), worldNormal);
-    float3 prevWorldPosition = worldPosition - motion;
+    float2 previousUV = uv - motion.xy;
+    float depthInPrevFrame = depth - motion.z;
+    float3 previousWorldPosition = NDCDepthToWorldPosition(depthInPrevFrame, previousUV, FrameDataCB.PreviousFrameCamera);
     float3 cameraDelta = FrameDataCB.CurrentFrameCamera.Position.xyz - FrameDataCB.PreviousFrameCamera.Position.xyz;
-    float3 movemenDelta = worldPosition - (prevWorldPosition - cameraDelta);
-    float distanceToPoint = distance(FrameDataCB.PreviousFrameCamera.Position.xyz, prevWorldPosition);
+    float3 movemenDelta = worldPosition - (previousWorldPosition - cameraDelta);
+    float distanceToPoint = distance(FrameDataCB.PreviousFrameCamera.Position.xyz, previousWorldPosition);
     float3 viewVector = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - worldPosition);
     float NdotV = dot(worldNormal, viewVector);
 

@@ -12,18 +12,16 @@ namespace PathFinder
     public:
         ~SphericalLight() = default;
 
-        void SetPosition(const glm::vec3& position);
         void SetRadius(float radius);
+        void ConstructModelMatrix() override;
 
     private:
         void UpdateArea();
 
-        glm::vec3 mPosition;
         float mRadius = 1.0;
 
     public:
-        inline const auto& Position() const { return mPosition; }
-        inline const auto& Radius() const { return mRadius; }
+        inline const auto& GetRadius() const { return mRadius; }
     };
 
 }

@@ -5,7 +5,7 @@ namespace PathFinder
 
     void CameraViewModel::Import()
     {
-        mCamera = &Dependencies->ScenePtr->MainCamera();
+        mCamera = &Dependencies->ScenePtr->GetMainCamera();
 
         FOVH = mCamera->GetFOVH();
         LenseAperture = mCamera->GetAperture();

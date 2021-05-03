@@ -23,6 +23,8 @@ namespace PathFinder
      
     void DeferredShadowsRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
+        auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
+
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingOutput);
 
@@ -43,8 +45,9 @@ namespace PathFinder
 
         const Scene* scene = context->GetContent()->GetScene();
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
-        const Memory::Texture* blueNoiseTexture = scene->BlueNoiseTexture();
+        const Memory::Texture* blueNoiseTexture = scene->GetBlueNoiseTexture();
 
+        auto currentFrameIndex = context->GetFrameNumber() % 2;
         auto resourceProvider = context->GetResourceProvider();
 
         DeferredShadowsCBContent cbContent{};
@@ -61,10 +64,10 @@ namespace PathFinder
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.BlueNoiseTexSize = blueNoiseTexture->Properties().Dimensions.Width;
         cbContent.BlueNoiseTexDepth = blueNoiseTexture->Properties().Dimensions.Depth;
-        cbContent.FrameNumber = context->FrameNumber();
+        cbContent.FrameNumber = context->GetFrameNumber();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->SetRootConstants(sceneStorage->CompressedLightPartitionInfo(), 0, 0);
+        context->GetCommandRecorder()->SetRootConstants(sceneStorage->GetCompressedLightPartitionInfo(), 0, 0);
 
         const Memory::Buffer* bvh = sceneStorage->TopAccelerationStructure().AccelerationStructureBuffer();
         const Memory::Buffer* lights = sceneStorage->LightTable();

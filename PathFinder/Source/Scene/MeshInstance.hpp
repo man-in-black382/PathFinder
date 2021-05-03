@@ -22,7 +22,7 @@ namespace PathFinder
     public:
         MeshInstance(Mesh* mesh, Material* material);
 
-        void UpdatePreviousTransform();
+        void UpdatePreviousFrameValues();
 
     private:
         friend bitsery::Access;
@@ -36,7 +36,7 @@ namespace PathFinder
             s.ext(mMaterial, bitsery::ext::PointerObserver{});
             s.boolValue(mIsSelected);
             s.boolValue(mIsHighlighted);
-            s.object(mPrevTransformation);
+            s.object(mPreviousTransformation);
             s.object(mTransformation);
         }
 
@@ -45,20 +45,20 @@ namespace PathFinder
         bool mIsSelected = false;
         bool mIsHighlighted = false;
         Geometry::Transformation mTransformation;
-        Geometry::Transformation mPrevTransformation;
+        Geometry::Transformation mPreviousTransformation;
         uint32_t mIndexInGPUTable = 0;
 
     public:
         inline bool IsSelected() const { return mIsSelected; }
         inline bool IsHighlighted() const { return mIsHighlighted; }
-        inline const Geometry::Transformation& Transformation() const { return mTransformation; }
-        inline const Geometry::Transformation& PrevTransformation() { return mPrevTransformation; }
-        inline Geometry::AABB BoundingBox(const Mesh& mesh) const { return mesh.BoundingBox().TransformedBy(mTransformation); }
-        inline const Mesh* AssociatedMesh() const { return mMesh; }
-        inline const Material* AssociatedMaterial() const { return mMaterial; }
-        inline Mesh* AssociatedMesh() { return mMesh; }
-        inline Material* AssociatedMaterial() { return mMaterial; }
-        inline auto IndexInGPUTable () const { return mIndexInGPUTable; }
+        inline const Geometry::Transformation& GetTransformation() const { return mTransformation; }
+        inline const Geometry::Transformation& GetPreviousTransformation() const { return mPreviousTransformation; }
+        inline Geometry::AABB GetBoundingBox(const Mesh& mesh) const { return mesh.GetBoundingBox().TransformedBy(mTransformation); }
+        inline const Mesh* GetAssociatedMesh() const { return mMesh; }
+        inline const Material* GetAssociatedMaterial() const { return mMaterial; }
+        inline Mesh* GetAssociatedMesh() { return mMesh; }
+        inline Material* GetAssociatedMaterial() { return mMaterial; }
+        inline auto GetIndexInGPUTable () const { return mIndexInGPUTable; }
 
         inline void SetIsSelected(bool selected) { mIsSelected = selected; }
         inline void SetIsHighlighted(bool highlighted) { mIsHighlighted = highlighted; }

@@ -18,17 +18,17 @@ namespace PathFinder
 
     void DenoiserMainRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+        if (!scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
             return;
 
-        auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
-        auto currentFrameIndex = scheduler->FrameNumber() % 2;
+        auto previousFrameIndex = (scheduler->GetFrameNumber() - 1) % 2;
+        auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
 
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[currentFrameIndex], TextureReadContext::NonPixelShader, MipSet::FirstMip());
-        scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[currentFrameIndex]);
+        scheduler->ReadTexture(ResourceNames::ReprojectedFramesCount[currentFrameIndex]);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingReprojected);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingFixed);
@@ -50,9 +50,10 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::SpecularDenoiser);
 
         auto resourceProvider = context->GetResourceProvider();
-        auto currentFrameIndex = context->FrameNumber() % 2;
+        auto previousFrameIndex = (context->GetFrameNumber() - 1) % 2;
+        auto currentFrameIndex = context->GetFrameNumber() % 2;
 
-        auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+        auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 8, 8 });
 
         const RenderSettings* settings = context->GetContent()->GetSettings();
 
@@ -61,9 +62,8 @@ namespace PathFinder
         cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
         cbContent.GBufferIndices.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
         cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
-        cbContent.GBufferIndices.ViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[currentFrameIndex]);
         cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
-        cbContent.AccumulatedFramesCountTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserReprojectedFramesCount[currentFrameIndex]);
+        cbContent.AccumulatedFramesCountTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ReprojectedFramesCount[currentFrameIndex]);
         cbContent.CurrentShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingFixed);
         cbContent.CurrentUnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingFixed);
         cbContent.ShadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingReprojected);

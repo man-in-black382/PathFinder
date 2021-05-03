@@ -32,8 +32,8 @@ namespace PathFinder
 
         SMAABlendingWeightCalculationCBContent cbContent{};
         cbContent.EdgesTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::SMAADetectedEdges);
-        cbContent.AreaTexIdx = scene->SMAAAreaTexture()->GetSRDescriptor()->IndexInHeapRange();
-        cbContent.SearchTexIdx = scene->SMAASearchTexture()->GetSRDescriptor()->IndexInHeapRange();
+        cbContent.AreaTexIdx = scene->GetSMAAAreaTexture()->GetSRDescriptor()->IndexInHeapRange();
+        cbContent.SearchTexIdx = scene->GetSMAASearchTexture()->GetSRDescriptor()->IndexInHeapRange();
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->SetRenderTarget(ResourceNames::SMAABlendingWeights);

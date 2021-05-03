@@ -18,31 +18,32 @@ namespace PathFinder
 
     void DenoiserReprojectionRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
-            return;
-
-        auto previousFrameIndex = (scheduler->FrameNumber() - 1) % 2;
-        auto frameIndex = scheduler->FrameNumber() % 2;
+        auto previousFrameIndex = (scheduler->GetFrameNumber() - 1) % 2;
+        auto frameIndex = scheduler->GetFrameNumber() % 2;
 
         NewTextureProperties frameCountProperties{};
         frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R16_Float;
         frameCountProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
-        scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount[frameIndex], frameCountProperties);
-        scheduler->NewTexture(ResourceNames::DenoiserReprojectedFramesCount[previousFrameIndex], MipSet::Empty(), frameCountProperties);
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingReprojected);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
+        scheduler->NewTexture(ResourceNames::ReprojectedFramesCount[frameIndex], frameCountProperties);
+        scheduler->NewTexture(ResourceNames::ReprojectedFramesCount[previousFrameIndex], MipSet::Empty(), frameCountProperties);
 
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
-        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[previousFrameIndex], TextureReadContext::NonPixelShader, MipSet::FirstMip());
-        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[frameIndex], TextureReadContext::NonPixelShader, MipSet::FirstMip());
-        scheduler->ReadTexture(ResourceNames::DenoiserReprojectedFramesCount[previousFrameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred);
-        scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred);
+        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil, TextureReadContext::NonPixelShader, MipSet::FirstMip());
+        scheduler->ReadTexture(ResourceNames::ReprojectedFramesCount[previousFrameIndex]);
+
+        if (scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
+        {
+            scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
+            scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
+            scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred);
+            scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred);
+
+            scheduler->NewTexture(ResourceNames::StochasticShadowedShadingReprojected);
+            scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
+        }
     }
      
     void DenoiserReprojectionRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -50,28 +51,29 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserReprojection);
 
         auto resourceProvider = context->GetResourceProvider();
-
-        auto previousFrameIndex = (context->FrameNumber() - 1) % 2;
-        auto frameIndex = context->FrameNumber() % 2;
-
-        auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+        auto previousFrameIndex = (context->GetFrameNumber() - 1) % 2;
+        auto frameIndex = context->GetFrameNumber() % 2;
+        auto groupCount = CommandRecorder::DispatchGroupCount(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 8, 8 });
 
         DenoiserReprojectionCBContent cbContent{};
         cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
         cbContent.GBufferNormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
-        cbContent.DepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
         cbContent.PreviousViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[previousFrameIndex]);
-        cbContent.CurrentViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[frameIndex]);
-        cbContent.PreviousAccumulationCounterTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserReprojectedFramesCount[previousFrameIndex]);
-        cbContent.CurrentAccumulationCounterTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserReprojectedFramesCount[frameIndex]);
-        cbContent.ShadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
-        cbContent.UnshadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
-        cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred);
-        cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred);
-        cbContent.ShadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingReprojected);
-        cbContent.UnshadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingReprojected);
+        cbContent.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.PreviousAccumulationCounterTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ReprojectedFramesCount[previousFrameIndex]);
+        cbContent.CurrentAccumulationCounterTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ReprojectedFramesCount[frameIndex]);
         //cbContent.ShadingGradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradient);
+
+        if (context->GetContent()->GetSettings()->IsDenoiserEnabled)
+        {
+            cbContent.ShadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
+            cbContent.UnshadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
+            cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred);
+            cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred);
+            cbContent.ShadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingReprojected);
+            cbContent.UnshadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingReprojected);
+        }
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
         context->GetCommandRecorder()->Dispatch(groupCount.Width, groupCount.Height);

@@ -11,6 +11,8 @@ struct Camera
     float4x4 InverseView;
     float4x4 InverseProjection;
     float4x4 InverseViewProjection;
+    float4x4 Jitter;
+    float4x4 ViewProjectionJitter;
     // 16 byte boundary
     float NearPlane;
     float FarPlane;
@@ -21,6 +23,10 @@ struct Camera
     float FoVHTan;
     float FoVVTan;
     float AspectRatio; // W/H
+    // 16 byte boundary
+    float2 UVJitter;
+    uint32_t Pad0__;
+    uint32_t Pad1__;
 };
 
 float LinearizeDepth(float hyperbolicDepth, Camera camera)
@@ -50,8 +56,8 @@ float3 NDCDepthToViewPosition(
     float z = hyperbolicDepth;
     float2 xy = uv * 2.0 - 1.0;
 
-    float4 clipSpacePosition = float4(xy, z, 1.0);
-    float4 viewSpacePosition = mul(camera.InverseProjection, clipSpacePosition);
+    float4 ndcPosition = float4(xy, z, 1.0);
+    float4 viewSpacePosition = mul(camera.InverseProjection, ndcPosition);
 
     // Perspective division
     viewSpacePosition /= viewSpacePosition.w;

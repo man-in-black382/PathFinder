@@ -19,17 +19,25 @@ struct FrameData
 {
     Camera CurrentFrameCamera;
     Camera PreviousFrameCamera;
-
+    // Cameras are 16 byte aligned
     uint2 MousePosition;
     bool IsDenoiserEnabled;
     bool IsReprojectionHistoryDebugEnabled;
+    // 16 Byte Boundary
     bool IsGradientDebugEnabled;
     bool IsMotionDebugEnabled;
     bool IsDenoiserAntilagEnabled;
-    bool IsAntialiasingEnabled;
-    bool IsAntialiasingEdgeDetectionEnabled;
-    bool IsAntialiasingBlendingWeightCalculationEnabled;
-    bool IsAntialiasingNeighborhoodBlendingEnabled;
+    bool IsSMAAEnabled;
+    // 16 Byte Boundary
+    bool IsSMAAEdgeDetectionEnabled;
+    bool IsSMAABlendingWeightCalculationEnabled;
+    bool IsSMAANeighborhoodBlendingEnabled;
+    bool IsTAAEnabled;
+    // 16 Byte Boundary
+    bool IsTAAYCoCgSpaceEnabled;
+    uint Pad0__;
+    uint Pad1__;
+    uint Pad2__;
 }; 
 
 #define GlobalDataType GlobalData

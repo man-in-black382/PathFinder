@@ -15,7 +15,7 @@ namespace PathFinder
 
     void DenoiserPreBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
-        if (!scheduler->Content()->GetSettings()->IsDenoiserEnabled)
+        if (!scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
             return;
 
         NewTextureProperties outputProperties{};

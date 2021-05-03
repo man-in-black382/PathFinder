@@ -43,7 +43,7 @@ namespace PathFinder
         inline const Scene* GetScene() const { return mScene; };
         inline const Input* GetInput() const { return mInput; };
         inline const DisplaySettingsController* DisplayController() const { return mDisplaySettingsController; };
-        inline const RenderSettings* GetSettings() const { return &mRenderSettingsContainer->AppliedSettings(); };
+        inline const RenderSettings* GetSettings() const { return mRenderSettingsContainer->GetAppliedSettings(); };
     };
 
 }

@@ -28,6 +28,7 @@
 namespace PathFinder
 {
     class Scene;
+    struct RenderSettings;
 
     class SceneGPUStorage
     {
@@ -36,15 +37,17 @@ namespace PathFinder
             Scene* scene, 
             const HAL::Device* device,
             Memory::GPUResourceProducer* resourceProducer, 
-            const PipelineResourceStorage* pipelineResourceStorage);
+            const PipelineResourceStorage* pipelineResourceStorage,
+            const RenderSurfaceDescription* renderSurfaceDescription,
+            const RenderSettings* renderSettings);
 
         void UploadMeshes();
         void UploadMaterials();
         void UploadInstances();
 
-        GPUCamera CameraGPURepresentation() const;
-        GPUIrradianceField IrradianceFieldGPURepresentation() const;
-        uint32_t CompressedLightPartitionInfo() const;
+        GPUCamera GetCameraGPURepresentation();
+        GPUIrradianceField GetIrradianceFieldGPURepresentation() const;
+        uint32_t GetCompressedLightPartitionInfo() const;
 
     private:
         template <class Vertex>
@@ -89,11 +92,14 @@ namespace PathFinder
         VertexStorageLocation mUnitCubeVertexLocation;
         VertexStorageLocation mUnitSphereVertexLocation;
         GPULightTablePartitionInfo mLightTablePartitionInfo;
+        uint64_t mCameraJitterFrameIndex = 0;
 
         Scene* mScene;
         const HAL::Device* mDevice;
         Memory::GPUResourceProducer* mResourceProducer;
         const PipelineResourceStorage* mPipelineResourceStorage;
+        const RenderSurfaceDescription* mRenderSurfaceDescription;
+        const RenderSettings* mRenderSettings;
 
     public:
         inline const auto UnifiedVertexBuffer() const { return std::get<FinalBufferPackage<Vertex1P1N1UV1T1BT>>(mFinalBuffers).VertexBuffer.get(); }

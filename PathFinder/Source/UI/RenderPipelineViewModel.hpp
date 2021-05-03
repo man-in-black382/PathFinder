@@ -20,8 +20,8 @@ namespace PathFinder
 
     public:
         inline auto IsStablePowerStateEnabled() const { return mIsStablePowerStateEnabled; }
-        inline bool RotateProbeRaysEachFrame() const { return !Dependencies->ScenePtr->GlobalIlluminationManager().DoNotRotateProbeRays; }
-        inline bool IsGIDebugEnabled() const { return Dependencies->ScenePtr->GlobalIlluminationManager().GIDebugEnabled; }
+        inline bool RotateProbeRaysEachFrame() const { return !Dependencies->ScenePtr->GetGIManager().DoNotRotateProbeRays; }
+        inline bool IsGIDebugEnabled() const { return Dependencies->ScenePtr->GetGIManager().GIDebugEnabled; }
     };
 
 }

@@ -23,30 +23,43 @@ namespace PathFinder
         /// Sets Luminous Power a.k.a Luminous Flux.
         /// Measure of the perceived power of light.
         void SetLuminousPower(Lumen luminousPower);
+        void SetPosition(const glm::vec3& position);
 
         void SetIndexInGPUTable(uint32_t index);
         void SetVertexStorageLocation(const VertexStorageLocation& location);
 
+        void UpdatePreviousFrameValues();
+        virtual void ConstructModelMatrix() = 0;
+
     protected:
         void SetArea(float area);
 
+        glm::vec3 mPosition;
+        glm::vec3 mPreviousPosition;
         glm::mat4 mModelMatrix;
         uint32_t mIndexInGPUTable = 0;
 
     private:
         Lumen mLuminousPower = 0.0;
         Nit mLuminance = 0.0;
+        Nit mPreviousLuminance = 0.0;
         Foundation::Color mColor = Foundation::Color::White();
         float mArea = 0.0;
+        float mPreviousArea = 0.0;
         VertexStorageLocation mVertexStorageLocation;
 
     public:
-        inline Lumen LuminousPower() const { return mLuminousPower; }
-        inline Nit Luminance() const { return mLuminance; }
-        inline const Foundation::Color& Color() const { return mColor; }
-        inline const glm::mat4& ModelMatrix() const { return mModelMatrix; }
-        inline auto IndexInGPUTable() const { return mIndexInGPUTable; }
-        inline const VertexStorageLocation& LocationInVertexStorage() const { return mVertexStorageLocation; }
+        inline const glm::vec3& GetPosition() const { return mPosition; }
+        inline const glm::vec3& GetPreviousPosition() const { return mPreviousPosition; }
+        inline float GetArea() const { return mArea; }
+        inline float GetPreviousArea() const { return mPreviousArea; }
+        inline Lumen GetLuminousPower() const { return mLuminousPower; }
+        inline Nit GetLuminance() const { return mLuminance; }
+        inline Nit GetPreviousLuminance() const { return mPreviousLuminance; }
+        inline const Foundation::Color& GetColor() const { return mColor; }
+        inline const glm::mat4& GetModelMatrix() const { return mModelMatrix; }
+        inline auto GetIndexInGPUTable() const { return mIndexInGPUTable; }
+        inline const VertexStorageLocation& GetLocationInVertexStorage() const { return mVertexStorageLocation; }
     };
 
 }

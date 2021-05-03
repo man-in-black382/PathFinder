@@ -18,25 +18,25 @@ namespace PathFinder
             switch (PickedGPUEntityInfo::GPUEntityType{ mPickedEntityInfo.EntityType })
             {
             case PickedGPUEntityInfo::GPUEntityType::MeshInstance:
-                mMeshInstance = mScene->MeshInstanceForGPUIndex(mPickedEntityInfo.GPUIndex);
+                mMeshInstance = mScene->GetMeshInstanceForGPUIndex(mPickedEntityInfo.GPUIndex);
                 break;
 
             case PickedGPUEntityInfo::GPUEntityType::Light:
                 std::visit(Foundation::MakeVisitor(
                     [this](SphericalLight* light) { mSphericalLight = light; },
                     [this](FlatLight* light) { mFlatLight = light; }),
-                    mScene->LightForGPUIndex(mPickedEntityInfo.GPUIndex));
+                    mScene->GetLightForGPUIndex(mPickedEntityInfo.GPUIndex));
                 break;
 
             case PickedGPUEntityInfo::GPUEntityType::DebugGIProbe:
-                Dependencies->ScenePtr->GlobalIlluminationManager().PickedDebugProbeIndex = mPickedEntityInfo.GPUIndex;
+                Dependencies->ScenePtr->GetGIManager().PickedDebugProbeIndex = mPickedEntityInfo.GPUIndex;
                 break;
             }
         }
         else
         {
             // Clear probe selection only when pressed on empty space to allow simultaneously picking meshes
-            Dependencies->ScenePtr->GlobalIlluminationManager().PickedDebugProbeIndex = std::nullopt;
+            Dependencies->ScenePtr->GetGIManager().PickedDebugProbeIndex = std::nullopt;
         }
     }
 
@@ -45,7 +45,7 @@ namespace PathFinder
         mMeshInstance = nullptr;
         mSphericalLight = nullptr;
         mFlatLight = nullptr;
-        Dependencies->ScenePtr->GlobalIlluminationManager().PickedDebugProbeIndex = std::nullopt;
+        Dependencies->ScenePtr->GetGIManager().PickedDebugProbeIndex = std::nullopt;
     }
 
     void PickedEntityViewModel::SetModifiedModelMatrix(const glm::mat4& mat, const glm::mat4& delta)
@@ -61,9 +61,9 @@ namespace PathFinder
         mShouldDisplay = mMeshInstance != nullptr || mSphericalLight != nullptr || mFlatLight != nullptr;
         mAreRotationsAllowed = mSphericalLight == nullptr;
        
-        if (mMeshInstance) mModelMatrix = mMeshInstance->Transformation().GetMatrix();
-        else if (mSphericalLight) mModelMatrix = mSphericalLight->ModelMatrix();
-        else if (mFlatLight) mModelMatrix = mFlatLight->ModelMatrix();
+        if (mMeshInstance) mModelMatrix = mMeshInstance->GetTransformation().GetMatrix();
+        else if (mSphericalLight) mModelMatrix = mSphericalLight->GetModelMatrix();
+        else if (mFlatLight) mModelMatrix = mFlatLight->GetModelMatrix();
 
         mModifiedModelMatrix = mModelMatrix;
         mDeltaMatrix = glm::mat4{ 1.0f };

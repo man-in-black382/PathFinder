@@ -15,12 +15,12 @@ namespace PathFinder
 
     void RenderPipelineViewModel::SetEnableGIDebug(bool enable)
     {
-        Dependencies->ScenePtr->GlobalIlluminationManager().GIDebugEnabled = enable;
+        Dependencies->ScenePtr->GetGIManager().GIDebugEnabled = enable;
     }
 
     void RenderPipelineViewModel::SetRotateProbeRaysEachFrame(bool enable)
     {
-        Dependencies->ScenePtr->GlobalIlluminationManager().DoNotRotateProbeRays = !enable;
+        Dependencies->ScenePtr->GetGIManager().DoNotRotateProbeRays = !enable;
     }
 
 }

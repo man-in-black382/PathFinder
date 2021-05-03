@@ -21,6 +21,7 @@ namespace PathFinder
     {
         scheduler->ReadTexture(ResourceNames::BloomCompositionOutput, TextureReadContext::PixelShader);
         scheduler->ReadTexture(ResourceNames::SMAABlendingWeights, TextureReadContext::PixelShader);
+
         scheduler->NewRenderTarget(ResourceNames::SMAAAntialiased);
     }
 

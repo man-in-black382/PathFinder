@@ -49,7 +49,7 @@ PixelOut PSMain(VertexOut pin)
 
     PixelOut pixelOut;
 
-    if (!FrameDataCB.IsAntialiasingEnabled || !FrameDataCB.IsAntialiasingNeighborhoodBlendingEnabled)
+    if (!FrameDataCB.IsSMAAEnabled || !FrameDataCB.IsSMAANeighborhoodBlendingEnabled)
     {
         pixelOut.Color = image.SampleLevel(LinearClampSampler(), pin.UV, 0);
     }

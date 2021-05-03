@@ -88,7 +88,7 @@ namespace PathFinder
         DeferredShadowsRenderPass mDeferredShadowsPass;
         DenoiserPreBlurRenderPass mDenoiserPreBlurPass;
         DenoiserMipGenerationRenderPass mDenoiserMipGenerationPass;
-        DenoiserReprojectionRenderPass mDenoiserReprojectionPass;
+        DenoiserReprojectionRenderPass mReprojectionPass;
         DenoiserGradientConstructionRenderPass mDenoiserGradientConstructionPass;
         DenoiserGradientFilteringRenderPass mDenoiserGradientFilteringPass;
         DenoiserForwardProjectionRenderPass mDenoiserForwardProjectionPass;

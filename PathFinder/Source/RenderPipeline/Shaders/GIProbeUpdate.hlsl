@@ -21,10 +21,10 @@ static const uint DepthProbeSize = 16;
 static const uint DepthProbeTexelCount = DepthProbeSize * DepthProbeSize;
 static const uint RaysPerProbe = 144; // *Must* match values in ProbeField struct
 static const float DepthSharpness = 5.0;
-static const float SignificantChangeThreshold = 1.0;
-static const float NewDistributionChangeThreshold = 2.0;
+static const float SignificantChangeThreshold = 0.25;
+static const float NewDistributionChangeThreshold = 0.8;
 
-groupshared float4 RayHitInfo[RaysPerProbe];
+groupshared min16float4 RayHitInfo[RaysPerProbe];
 
 // We use largest probe dimension to accommodate both probe types
 [numthreads(DepthProbeTexelCount, 1, 1)]
@@ -51,7 +51,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
     if (rayIndex < RaysPerProbe)
     {
         uint2 rayTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
-        RayHitInfo[rayIndex] = Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx][rayTexelIdx];
+        RayHitInfo[rayIndex] = min16float4(Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx][rayTexelIdx]);
     }
 
     GroupMemoryBarrierWithGroupSync();
@@ -75,7 +75,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
         // instead of storing it in texture in ray tracing pass, to save bandwidth.
         float3 rayDirection = ProbeSamplingVector(rayIdx, PassDataCB.ProbeField);
         float4 rayHitInfo = RayHitInfo[rayIdx];
-        float3 rayHitRadiance = max(rayHitInfo.rgb, 0.0001)/* * EnergyConservation*/;
+        float3 rayHitRadiance = max(rayHitInfo.rgb, 0.0001);
 
         // Detect misses and force depth
         float rayProbeDistance = rayHitInfo.w == ProbeRayBackfaceIndicator ?
@@ -114,12 +114,12 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
             uint2 texelIndex = IrradianceProbeAtlasTexelIndex(probeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
             uint2 previousTexelIndex = texelIndex;
 
-            float hysteresis = 0.98;
+            float hysteresis = 0.985 - PassDataCB.ProbeField.IrradianceHysteresisDecrease;
 
             if (isNewlySpawnedProbe)
             {
                 hysteresis = 0.0;
-            }
+            } 
             else
             {
                 previousTexelIndex = IrradianceProbeAtlasTexelIndex(previousProbeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
@@ -132,7 +132,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
             float changeMagnitude = Max(abs(previousIrradiance.rgb - irradianceResult.rgb));
 
             // Lower the hysteresis when a large change is detected
-          /*  if (changeMagnitude > SignificantChangeThreshold)
+ /*           if (changeMagnitude > SignificantChangeThreshold)
                 hysteresis = max(0, hysteresis - 0.05);
 
             if (changeMagnitude > NewDistributionChangeThreshold)
@@ -159,7 +159,7 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
 
         uint2 texelIndex = DepthProbeAtlasTexelIndex(probeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
         uint2 previousTexelIndex = texelIndex;
-        float hysteresis = 0.98;
+        float hysteresis = 0.985 - PassDataCB.ProbeField.DepthHysteresisDecrease;
 
         if (isNewlySpawnedProbe) 
         {

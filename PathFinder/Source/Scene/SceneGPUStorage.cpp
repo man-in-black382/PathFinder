@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include <RenderPipeline/RenderSettings.hpp>
 #include <RenderPipeline/DrawablePrimitive.hpp>
 #include <RenderPipeline/RenderPasses/PipelineNames.hpp>
 #include <fplus/fplus.hpp>
@@ -15,33 +16,37 @@ namespace PathFinder
         Scene* scene, 
         const HAL::Device* device,
         Memory::GPUResourceProducer* resourceProducer, 
-        const PipelineResourceStorage* pipelineResourceStorage)
+        const PipelineResourceStorage* pipelineResourceStorage,
+        const RenderSurfaceDescription* renderSurfaceDescription,
+        const RenderSettings* renderSettings)
         : 
         mScene{ scene }, 
         mDevice{ device }, 
         mResourceProducer{ resourceProducer },
         mTopAccelerationStructure{ device, resourceProducer }, 
-        mPipelineResourceStorage{ pipelineResourceStorage }
+        mPipelineResourceStorage{ pipelineResourceStorage },
+        mRenderSurfaceDescription{ renderSurfaceDescription },
+        mRenderSettings{ renderSettings }
     {
         mTopAccelerationStructure.SetDebugName("All Meshes Top RT AS");
     }        
 
     void SceneGPUStorage::UploadMeshes()
     {
-        auto& meshes = mScene->Meshes();
+        auto& meshes = mScene->GetMeshes();
 
         mBottomAccelerationStructures.clear();
 
         auto& package1P1N1UV1T1BT = std::get<UploadBufferPackage<Vertex1P1N1UV1T1BT>>(mUploadBuffers);
-        package1P1N1UV1T1BT.Vertices.reserve(mScene->TotalVertexCount());
-        package1P1N1UV1T1BT.Indices.reserve(mScene->TotalIndexCount());
+        package1P1N1UV1T1BT.Vertices.reserve(mScene->GetTotalVertexCount());
+        package1P1N1UV1T1BT.Indices.reserve(mScene->GetTotalIndexCount());
 
         for (Mesh& mesh : meshes)
         {
-            assert_format(!mesh.Vertices().empty(), "Empty meshes are not allowed");
+            assert_format(!mesh.GetVertices().empty(), "Empty meshes are not allowed");
 
             VertexStorageLocation locationInStorage = WriteToTemporaryBuffers<Vertex1P1N1UV1T1BT>(
-                mesh.Vertices().data(), mesh.Vertices().size(), mesh.Indices().data(), mesh.Indices().size());
+                mesh.GetVertices().data(), mesh.GetVertices().size(), mesh.GetIndices().data(), mesh.GetIndices().size());
 
             mesh.SetVertexStorageLocation(locationInStorage);
         }
@@ -53,19 +58,19 @@ namespace PathFinder
             DrawablePrimitive::UnitQuadIndices.data(), DrawablePrimitive::UnitQuadIndices.size());
 
         mUnitCubeVertexLocation = WriteToTemporaryBuffers<Vertex1P1N1UV1T1BT>(
-            mScene->UnitCube().Vertices().data(), mScene->UnitCube().Vertices().size(), 
-            mScene->UnitCube().Indices().data(), mScene->UnitCube().Indices().size());
+            mScene->GetUnitCube().GetVertices().data(), mScene->GetUnitCube().GetVertices().size(), 
+            mScene->GetUnitCube().GetIndices().data(), mScene->GetUnitCube().GetIndices().size());
 
         mUnitSphereVertexLocation = WriteToTemporaryBuffers<Vertex1P1N1UV1T1BT>(
-            mScene->UnitSphere().Vertices().data(), mScene->UnitSphere().Vertices().size(),
-            mScene->UnitSphere().Indices().data(), mScene->UnitSphere().Indices().size());
+            mScene->GetUnitSphere().GetVertices().data(), mScene->GetUnitSphere().GetVertices().size(),
+            mScene->GetUnitSphere().GetIndices().data(), mScene->GetUnitSphere().GetIndices().size());
 
         SubmitTemporaryBuffersToGPU<Vertex1P1N1UV1T1BT>();
     }
 
     void SceneGPUStorage::UploadMaterials()
     {
-        auto& materials = mScene->Materials();
+        auto& materials = mScene->GetMaterials();
 
         if (materials.empty()) return;
 
@@ -142,12 +147,12 @@ namespace PathFinder
 
     void SceneGPUStorage::UploadMeshInstances()
     {
-        auto& meshInstances = mScene->MeshInstances();
-        auto& sphericalLights = mScene->SphericalLights();
-        auto& rectangularLights = mScene->RectangularLights();
-        auto& diskLights = mScene->DiskLights();
+        auto& meshInstances = mScene->GetMeshInstances();
+        auto& sphericalLights = mScene->GetSphericalLights();
+        auto& rectangularLights = mScene->GetRectangularLights();
+        auto& diskLights = mScene->GetDiskLights();
 
-        auto requiredBufferSize = meshInstances.size() + mScene->TotalLightCount();
+        auto requiredBufferSize = meshInstances.size() + mScene->GetTotalLightCount();
 
         if (requiredBufferSize == 0)
             return;
@@ -182,28 +187,27 @@ namespace PathFinder
         for (MeshInstance& instance : meshInstances)
         {
             GPUMeshInstanceTableEntry instanceEntry{
-                instance.Transformation().GetMatrix(),
-                instance.PrevTransformation().GetMatrix(),
-                instance.Transformation().GetNormalMatrix(),
-                instance.AssociatedMaterial()->GPUMaterialTableIndex,
-                instance.AssociatedMesh()->LocationInVertexStorage().VertexBufferOffset,
-                instance.AssociatedMesh()->LocationInVertexStorage().IndexBufferOffset,
-                instance.AssociatedMesh()->LocationInVertexStorage().IndexCount,
-                instance.AssociatedMesh()->HasTangentSpace()
+                instance.GetTransformation().GetMatrix(),
+                instance.GetPreviousTransformation().GetMatrix(),
+                instance.GetTransformation().GetNormalMatrix(),
+                instance.GetAssociatedMaterial()->GPUMaterialTableIndex,
+                instance.GetAssociatedMesh()->GetLocationInVertexStorage().VertexBufferOffset,
+                instance.GetAssociatedMesh()->GetLocationInVertexStorage().IndexBufferOffset,
+                instance.GetAssociatedMesh()->GetLocationInVertexStorage().IndexCount,
+                instance.GetAssociatedMesh()->HasTangentSpace()
             };
 
-            uploadInstance(instanceEntry, instance.AssociatedMesh()->LocationInVertexStorage(), instance);
-            instance.UpdatePreviousTransform();
+            uploadInstance(instanceEntry, instance.GetAssociatedMesh()->GetLocationInVertexStorage(), instance);
         }
     }
 
     void SceneGPUStorage::UploadLights()
     {
-        auto& sphericalLights = mScene->SphericalLights();
-        auto& rectangularLights = mScene->RectangularLights();
-        auto& diskLights = mScene->DiskLights();
+        auto& sphericalLights = mScene->GetSphericalLights();
+        auto& rectangularLights = mScene->GetRectangularLights();
+        auto& diskLights = mScene->GetDiskLights();
 
-        auto requiredBufferSize = mScene->TotalLightCount();
+        auto requiredBufferSize = mScene->GetTotalLightCount();
 
         if (!mLightTable || mLightTable->Capacity<GPULightTableEntry>() < requiredBufferSize)
         {
@@ -225,20 +229,22 @@ namespace PathFinder
 
             for (auto& light : lights)
             {
-                if (light.LuminousPower() <= 0.0) continue;
-
-                GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
-                mLightTable->Write(&lightEntry, index, 1);
+                if (light.GetLuminousPower() <= 0.0)
+                    continue;
 
                 light.SetIndexInGPUTable(index);
                 light.SetVertexStorageLocation(vertexLocation);
+                light.ConstructModelMatrix();
+
+                GPULightTableEntry lightEntry = CreateLightGPUTableEntry(light);
+                mLightTable->Write(&lightEntry, index, 1);
 
                 HAL::RayTracingTopAccelerationStructure::InstanceInfo instanceInfo{
                     index, std::underlying_type_t<GPUInstanceMask>(GPUInstanceMask::Light), std::underlying_type_t<GPUInstanceHitGroupContribution>(GPUInstanceHitGroupContribution::Light)
                 };
 
                 BottomRTAS& blas = mBottomAccelerationStructures[vertexLocation.BottomAccelerationStructureIndex];
-                mTopAccelerationStructure.AddInstance(blas, instanceInfo, light.ModelMatrix());
+                mTopAccelerationStructure.AddInstance(blas, instanceInfo, light.GetModelMatrix());
 
                 ++index;
                 ++lightCount;
@@ -246,18 +252,18 @@ namespace PathFinder
             }
         };
 
-        uploadLights(mScene->SphericalLights(), mLightTablePartitionInfo.SphericalLightsOffset, mLightTablePartitionInfo.SphericalLightsCount, mUnitSphereVertexLocation);
-        uploadLights(mScene->RectangularLights(), mLightTablePartitionInfo.RectangularLightsOffset, mLightTablePartitionInfo.RectangularLightsCount, mUnitQuadVertexLocation);
-        uploadLights(mScene->DiskLights(), mLightTablePartitionInfo.EllipticalLightsOffset, mLightTablePartitionInfo.EllipticalLightsCount, mUnitQuadVertexLocation);
+        uploadLights(mScene->GetSphericalLights(), mLightTablePartitionInfo.SphericalLightsOffset, mLightTablePartitionInfo.SphericalLightsCount, mUnitSphereVertexLocation);
+        uploadLights(mScene->GetRectangularLights(), mLightTablePartitionInfo.RectangularLightsOffset, mLightTablePartitionInfo.RectangularLightsCount, mUnitQuadVertexLocation);
+        uploadLights(mScene->GetDiskLights(), mLightTablePartitionInfo.EllipticalLightsOffset, mLightTablePartitionInfo.EllipticalLightsCount, mUnitQuadVertexLocation);
     }
 
     void SceneGPUStorage::UploadDebugGIProbes()
     {
-        if (!mScene->GlobalIlluminationManager().GIDebugEnabled)
+        if (!mScene->GetGIManager().GIDebugEnabled)
             return;
 
         // We upload probe spheres for debug probe mouse picking 
-        const IrradianceField& L = mScene->GlobalIlluminationManager().ProbeField;
+        const IrradianceField& L = mScene->GetGIManager().ProbeField;
 
         for (uint32_t probeIdx = 0; probeIdx < L.GetTotalProbeCount(); ++probeIdx)
         {
@@ -269,18 +275,24 @@ namespace PathFinder
                 std::underlying_type_t<GPUInstanceHitGroupContribution>(GPUInstanceHitGroupContribution::DebugGIProbe)
             };
 
-            Geometry::Transformation probeTransform{ glm::vec3{L.DebugProbeRadius() * 2}, probePosition, glm::quat{} };
+            Geometry::Transformation probeTransform{ glm::vec3{L.GetDebugProbeRadius() * 2}, probePosition, glm::quat{} };
 
             BottomRTAS& blas = mBottomAccelerationStructures[mUnitSphereVertexLocation.BottomAccelerationStructureIndex];
             mTopAccelerationStructure.AddInstance(blas, instanceInfo, probeTransform.GetMatrix());
         }
     }
 
-    GPUCamera SceneGPUStorage::CameraGPURepresentation() const
+    GPUCamera SceneGPUStorage::GetCameraGPURepresentation()
     {
-        const PathFinder::Camera& camera = mScene->MainCamera();
+        const PathFinder::Camera& camera = mScene->GetMainCamera();
 
         GPUCamera gpuCamera{};
+
+        Camera::Jitter jitter = camera.GetJitter(
+            mCameraJitterFrameIndex,
+            mRenderSettings->TAASampleCount,
+            glm::uvec2{ mRenderSurfaceDescription->Dimensions().Width, mRenderSurfaceDescription->Dimensions().Height }
+        );
 
         gpuCamera.Position = glm::vec4{ camera.GetPosition(), 1.0 };
         gpuCamera.View = camera.GetView();
@@ -289,6 +301,9 @@ namespace PathFinder
         gpuCamera.InverseView = camera.GetInverseView();
         gpuCamera.InverseProjection = camera.GetInverseProjection();
         gpuCamera.InverseViewProjection = camera.GetInverseViewProjection();
+        gpuCamera.Jitter = mRenderSettings->IsTAAEnabled ? jitter.JitterMatrix : glm::mat4{ 1.f };
+        gpuCamera.UVJitter = mRenderSettings->IsTAAEnabled ? jitter.UVJitter : glm::vec2{ 0.0f };
+        gpuCamera.ViewProjectionJitter = gpuCamera.Jitter * gpuCamera.ViewProjection;
         gpuCamera.ExposureValue100 = camera.GetExposureValue100();
         gpuCamera.FarPlane = camera.GetFarClipPlane();
         gpuCamera.NearPlane = camera.GetNearClipPlane();
@@ -298,22 +313,24 @@ namespace PathFinder
         gpuCamera.FoVVTan = tan(gpuCamera.FoVV);
         gpuCamera.AspectRatio = camera.GetAspectRatio();
 
+        ++mCameraJitterFrameIndex;
+
         return gpuCamera;
     }
 
-    GPUIrradianceField SceneGPUStorage::IrradianceFieldGPURepresentation() const
+    GPUIrradianceField SceneGPUStorage::GetIrradianceFieldGPURepresentation() const
     {
-        const IrradianceField& L = mScene->GlobalIlluminationManager().ProbeField;
+        const IrradianceField& L = mScene->GetGIManager().ProbeField;
 
         GPUIrradianceField field{};
-        field.GridSize = L.GridSize();
-        field.CellSize = L.CellSize();
-        field.GridCornerPosition = L.CornerPosition();
-        field.RaysPerProbe = L.RaysPerProbe();
+        field.GridSize = L.GetGridSize();
+        field.CellSize = L.GetCellSize();
+        field.GridCornerPosition = L.GetCornerPosition();
+        field.RaysPerProbe = L.GetRaysPerProbe();
         field.TotalProbeCount = L.GetTotalProbeCount();
         field.RayHitInfoTextureSize = { L.GetRayHitInfoTextureSize().Width, L.GetRayHitInfoTextureSize().Height };
         field.RayHitInfoTextureIdx = 0; // Determined in render pass
-        field.ProbeRotation = L.ProbeRotation();
+        field.ProbeRotation = L.GetProbeRotation();
         field.IrradianceProbeAtlasSize = { L.GetIrradianceProbeAtlasSize().Width, L.GetIrradianceProbeAtlasSize().Height };
         field.DepthProbeAtlasSize = { L.GetDepthProbeAtlasSize().Width, L.GetDepthProbeAtlasSize().Height };
         field.IrradianceProbeAtlasProbesPerDimension = L.GetIrradianceProbeAtlasProbesPerDimension();
@@ -322,12 +339,14 @@ namespace PathFinder
         field.DepthProbeSize = L.GetDepthProbeSize().Width;
         field.CurrentIrradianceProbeAtlasTexIdx = 0; // Determined in render pass
         field.CurrentDepthProbeAtlasTexIdx = 0; // Determined in render pass
-        field.DebugProbeRadius = L.DebugProbeRadius();
-        field.SpawnedProbePlanesCount = L.SpawnedProbePlanesCount();
+        field.DebugProbeRadius = L.GetDebugProbeRadius();
+        field.SpawnedProbePlanesCount = L.GetSpawnedProbePlanesCount();
+        field.IrradianceHysteresisDecrease = L.GetIrradianceHysteresisDecrease();
+        field.DepthHysteresisDecrease = L.GetDepthHysteresisDecrease();
         return field;
     }
 
-    uint32_t SceneGPUStorage::CompressedLightPartitionInfo() const
+    uint32_t SceneGPUStorage::GetCompressedLightPartitionInfo() const
     {
         uint32_t compressed = 0;
         compressed |= (mLightTablePartitionInfo.SphericalLightsCount & 0xFF) << 24;
@@ -340,21 +359,21 @@ namespace PathFinder
     {
         GPULightTableEntry::LightType lightType{};
 
-        switch (light.LightType())
+        switch (light.GetLightType())
         {
         case FlatLight::Type::Disk: lightType = GPULightTableEntry::LightType::Disk; break;
         case FlatLight::Type::Rectangle: lightType = GPULightTableEntry::LightType::Rectangle; break;
         }
 
         return{
-                glm::vec4(light.Normal(), 0.0f),
-                glm::vec4(light.Position(), 1.0f),
-                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f),
-                light.Luminance(),
-                light.Width(),
-                light.Height(),
+                glm::vec4(light.GetNormal(), 0.0f),
+                glm::vec4(light.GetPosition(), 1.0f),
+                glm::vec4(light.GetColor().R(), light.GetColor().G(), light.GetColor().B(), 0.0f),
+                light.GetLuminance(),
+                light.GetWidth(),
+                light.GetHeight(),
                 std::underlying_type_t<GPULightTableEntry::LightType>(lightType),
-                light.ModelMatrix(),
+                light.GetModelMatrix(),
                 mUnitQuadVertexLocation.VertexBufferOffset,
                 mUnitQuadVertexLocation.IndexBufferOffset,
                 mUnitQuadVertexLocation.IndexCount
@@ -365,13 +384,13 @@ namespace PathFinder
     {
         return{
                 glm::vec4(0.0f), // No orientation required for spherical lights
-                glm::vec4(light.Position(), 1.0f),
-                glm::vec4(light.Color().R(), light.Color().G(), light.Color().B(), 0.0f),
-                light.Luminance(),
-                light.Radius(),
-                light.Radius(),
+                glm::vec4(light.GetPosition(), 1.0f),
+                glm::vec4(light.GetColor().R(), light.GetColor().G(), light.GetColor().B(), 0.0f),
+                light.GetLuminance(),
+                light.GetRadius(),
+                light.GetRadius(),
                 std::underlying_type_t<GPULightTableEntry::LightType>(GPULightTableEntry::LightType::Sphere),
-                light.ModelMatrix(),
+                light.GetModelMatrix(),
                 mUnitSphereVertexLocation.VertexBufferOffset,
                 mUnitSphereVertexLocation.IndexBufferOffset,
                 mUnitSphereVertexLocation.IndexCount

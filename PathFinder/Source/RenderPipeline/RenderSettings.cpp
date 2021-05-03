@@ -3,20 +3,17 @@
 namespace PathFinder
 {
 
-    RenderSettingsController::RenderSettingsController(Scene* scene)
-        : mScene{ scene } {}
-
     void RenderSettingsController::SetEnabled(bool enabled)
     {
         mIsEnabled = enabled;
     }
 
-    void RenderSettingsController::ApplyVolatileSettings()
+    void RenderSettingsController::ApplyVolatileSettings(const Scene& scene)
     {
         mAppliedSettings = VolatileSettings;
-        mAppliedSettings.GlobalIlluminationSettings = mScene->GlobalIlluminationManager().ProbeField;
-        mAppliedSettings.IsGIDebugEnabled = mScene->GlobalIlluminationManager().GIDebugEnabled;
-        mAppliedSettings.DoNotRotateGIProbeRays = mScene->GlobalIlluminationManager().DoNotRotateProbeRays;
+        mAppliedSettings.GlobalIlluminationSettings = scene.GetGIManager().ProbeField;
+        mAppliedSettings.IsGIDebugEnabled = scene.GetGIManager().GIDebugEnabled;
+        mAppliedSettings.DoNotRotateGIProbeRays = scene.GetGIManager().DoNotRotateProbeRays;
     }
 
 }

@@ -26,9 +26,22 @@ namespace PathFinder
         // is equal to its total luminous power Phi divided by the emitter area A and the projected solid angle (Pi)
     }
 
+    void Light::SetPosition(const glm::vec3& position)
+    {
+        mPosition = position;
+        ConstructModelMatrix();
+    }
+
     void Light::SetVertexStorageLocation(const VertexStorageLocation& location)
     {
         mVertexStorageLocation = location;
+    }
+
+    void Light::UpdatePreviousFrameValues()
+    {
+        mPreviousArea = mArea;
+        mPreviousLuminance = mLuminance;
+        mPreviousPosition = mPosition;
     }
 
     void Light::SetIndexInGPUTable(uint32_t index)

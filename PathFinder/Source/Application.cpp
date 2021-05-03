@@ -14,12 +14,20 @@ namespace PathFinder
         CreateEngineWindow();
 
         mCmdLineParser = std::make_unique<CommandLineParser>(argc, argv);
+        mSettingsController = std::make_unique<RenderSettingsController>();
         mRenderEngine = std::make_unique<RenderEngine<RenderPassContentMediator>>(mWindowHandle, *mCmdLineParser);
-        mScene = std::make_unique<Scene>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->Device(), mRenderEngine->ResourceProducer(), mRenderEngine->ResourceStorage());
+
+        mScene = std::make_unique<Scene>(
+            mCmdLineParser->ExecutableFolderPath(),
+            mRenderEngine->Device(), 
+            mRenderEngine->ResourceProducer(),
+            mRenderEngine->ResourceStorage(),
+            &mRenderEngine->RenderSurface(),
+            mSettingsController->GetAppliedSettings());
+
         mInput = std::make_unique<Input>();
-        mSettingsController = std::make_unique<RenderSettingsController>(mScene.get());
         mWindowsInputHandler = std::make_unique<InputHandlerWindows>(mInput.get(), mWindowHandle);
-        mCameraInteractor = std::make_unique<CameraInteractor>(&mScene->MainCamera(), mInput.get());
+        mCameraInteractor = std::make_unique<CameraInteractor>(&mScene->GetMainCamera(), mInput.get());
         mDisplaySettingsController = std::make_unique<DisplaySettingsController>(mRenderEngine->SelectedAdapter(), mRenderEngine->SwapChain(), mWindowHandle);
 
         mUIDependencies = std::make_unique<UIDependencies>(
@@ -31,7 +39,7 @@ namespace PathFinder
 
         mUIManager = std::make_unique<UIManager>(mInput.get(), mUIDependencies.get(), mRenderEngine->ResourceProducer());
         mUIEntryPoint = std::make_unique<UIEntryPoint>(mUIManager.get());
-        mContentMediator = std::make_unique<RenderPassContentMediator>(&mUIManager->GPUStorage(), &mScene->GPUStorage(), mScene.get(), mInput.get(), mDisplaySettingsController.get(), mSettingsController.get());
+        mContentMediator = std::make_unique<RenderPassContentMediator>(&mUIManager->GPUStorage(), &mScene->GetGPUStorage(), mScene.get(), mInput.get(), mDisplaySettingsController.get(), mSettingsController.get());
 
         mRenderEngine->SetContentMediator(mContentMediator.get());
 
@@ -51,6 +59,7 @@ namespace PathFinder
         //LoadDemoScene();
         //mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "SanMiguel" / "san-miguel-low-poly.obj");
         mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "MediaResources" / "sibenik" / "sibenik.obj");
+        //mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "MediaResources" / "sponza" / "sponza.obj");
         //mScene->Deserialize(mCmdLineParser->ExecutableFolderPath() / "DebugSceneSerialization" / "Scene.pfscene");
 
         Foundation::Color light0Color{ 255.0 / 255, 241.0 / 255, 224.1 / 255 };
@@ -66,13 +75,13 @@ namespace PathFinder
         light0->SetColor(light0Color);
         light0->SetLuminousPower(25000);
 
-        auto light1 = mScene->EmplaceRectangularLight();
+        /*auto light1 = mScene->EmplaceRectangularLight();
         light1->SetWidth(20);
         light1->SetHeight(1.5);
         light1->SetNormal(glm::normalize(glm::vec3{ 0.0, -1.0, 0.0 }));
         light1->SetPosition({ 7.66, 0, 0.06 });
         light1->SetColor(light2Color);
-        light1->SetLuminousPower(25000);
+        light1->SetLuminousPower(25000);*/
 
      /*   auto sphereLight1 = mScene->EmplaceSphericalLight();
         sphereLight1->SetRadius(2);
@@ -92,7 +101,7 @@ namespace PathFinder
         sphereLight3->SetColor(light3Color);
         sphereLight3->SetLuminousPower(100000);*/
 
-        PathFinder::Camera& camera = mScene->MainCamera();
+        PathFinder::Camera& camera = mScene->GetMainCamera();
         camera.SetFarPlane(500);
         camera.SetNearPlane(1);
         camera.MoveTo({ -15.43, -13.25, -0.2 });
@@ -126,7 +135,7 @@ namespace PathFinder
             }
 
             mInput->FinalizeInput();
-            mSettingsController->ApplyVolatileSettings(); // Settings must be applied at the very beginning so that render passes stay coherent
+            mSettingsController->ApplyVolatileSettings(*mScene); // Settings must be applied at the very beginning so that render passes stay coherent
             mRenderEngine->Render();
             mInput->Clear();
         }
@@ -183,7 +192,7 @@ namespace PathFinder
         mRenderEngine->AddRenderPass(&mDeferredShadowsPass);
         mRenderEngine->AddRenderPass(&mDenoiserPreBlurPass);
         mRenderEngine->AddRenderPass(&mDenoiserMipGenerationPass);
-        mRenderEngine->AddRenderPass(&mDenoiserReprojectionPass);
+        mRenderEngine->AddRenderPass(&mReprojectionPass);
         mRenderEngine->AddRenderPass(&mDenoiserGradientConstructionPass);
         mRenderEngine->AddRenderPass(&mDenoiserGradientFilteringPass);
         mRenderEngine->AddRenderPass(&mDenoiserForwardProjectionPass);
@@ -211,6 +220,8 @@ namespace PathFinder
 
         const Geometry::Dimensions& viewportSize = mRenderEngine->RenderSurface().Dimensions();
 
+        mScene->UpdatePreviousFrameValues();
+
         // 'Top' is screen bottom
         mUIManager->SetViewportSize(viewportSize);
         mCameraInteractor->SetViewportSize(viewportSize);
@@ -224,22 +235,20 @@ namespace PathFinder
 
         mSettingsController->SetEnabled(!interactingWithUI);
 
-        mScene->GlobalIlluminationManager().Update();
-
         if (!IsInitialSceneUploaded)
         {
-            mScene->GPUStorage().UploadMeshes();
-            mScene->GPUStorage().UploadMaterials();
+            mScene->GetGPUStorage().UploadMeshes();
+            mScene->GetGPUStorage().UploadMaterials();
 
-            for (const PathFinder::BottomRTAS& bottomRTAS : mScene->GPUStorage().BottomAccelerationStructures())
+            for (const PathFinder::BottomRTAS& bottomRTAS : mScene->GetGPUStorage().BottomAccelerationStructures())
                 mRenderEngine->AddBottomRayTracingAccelerationStructure(&bottomRTAS);
 
             IsInitialSceneUploaded = true;
         }
-        
-        mScene->GPUStorage().UploadInstances();
+        mScene->GetGIManager().Update();
+        mScene->GetGPUStorage().UploadInstances();
 
-        mRenderEngine->AddTopRayTracingAccelerationStructure(&mScene->GPUStorage().TopAccelerationStructure());
+        mRenderEngine->AddTopRayTracingAccelerationStructure(&mScene->GetGPUStorage().TopAccelerationStructure());
 
         mGlobalConstants.PipelineRTResolution = {
             mRenderEngine->RenderSurface().Dimensions().Width,
@@ -254,11 +263,11 @@ namespace PathFinder
         mGlobalConstants.MaxSamplerIdx = mRenderEngine->ResourceStorage()->GetSamplerDescriptor(PathFinder::SamplerNames::Maximum)->IndexInHeapRange();
 
         mPerFrameConstants.PreviousFrameCamera = mRenderEngine->FrameNumber() > 1 ? 
-            mPerFrameConstants.CurrentFrameCamera : mScene->GPUStorage().CameraGPURepresentation();
+            mPerFrameConstants.CurrentFrameCamera : mScene->GetGPUStorage().GetCameraGPURepresentation();
 
-        mPerFrameConstants.CurrentFrameCamera = mScene->GPUStorage().CameraGPURepresentation();
+        mPerFrameConstants.CurrentFrameCamera = mScene->GetGPUStorage().GetCameraGPURepresentation();
 
-        const PathFinder::RenderSettings& settings = mSettingsController->AppliedSettings();
+        const PathFinder::RenderSettings& settings = *mSettingsController->GetAppliedSettings();
 
         mPerFrameConstants.MousePosition = mInput->MousePosition();
         mPerFrameConstants.IsDenoiserEnabled = settings.IsDenoiserEnabled;
@@ -266,10 +275,12 @@ namespace PathFinder
         mPerFrameConstants.IsGradientDebugEnabled = settings.IsDenoiserGradientDebugRenderingEnabled;
         mPerFrameConstants.IsMotionDebugEnabled = settings.IsDenoiserMotionDebugRenderingEnabled;
         mPerFrameConstants.IsDenoiserAntilagEnabled = settings.IsDenoiserAntilagEnabled;
-        mPerFrameConstants.IsAntialiasingEnabled = settings.IsAntialiasingEnabled;
-        mPerFrameConstants.IsAntialiasingEdgeDetectionEnabled = settings.IsAntialiasingEdgeDetectionEnabled;
-        mPerFrameConstants.IsAntialiasingBlendingWeightCalculationEnabled = settings.IsAntialiasingBlendingWeightCalculationEnabled;
-        mPerFrameConstants.IsAntialiasingNeighborhoodBlendingEnabled = settings.IsAntialiasingNeighborhoodBlendingEnabled;
+        mPerFrameConstants.IsSMAAEnabled = settings.IsAntialiasingEnabled;
+        mPerFrameConstants.IsSMAAEdgeDetectionEnabled = settings.IsAntialiasingEdgeDetectionEnabled;
+        mPerFrameConstants.IsSMAABlendingWeightCalculationEnabled = settings.IsAntialiasingBlendingWeightCalculationEnabled;
+        mPerFrameConstants.IsSMAANeighborhoodBlendingEnabled = settings.IsAntialiasingNeighborhoodBlendingEnabled;
+        mPerFrameConstants.IsTAAEnabled = settings.IsTAAEnabled;
+        mPerFrameConstants.IsTAAYCoCgSpaceEnabled = settings.IsTAAYCoCgSpaceEnabled;
 
         mRenderEngine->SetGlobalRootConstants(mGlobalConstants);
         mRenderEngine->SetFrameRootConstants(mPerFrameConstants);

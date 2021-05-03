@@ -34,8 +34,8 @@ namespace PathFinder
      
     void DeferredLightingRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        bool isDenoiserEnabled = scheduler->Content()->GetSettings()->IsDenoiserEnabled;
-        auto currentFrameIndex = scheduler->FrameNumber() % 2;
+        bool isDenoiserEnabled = scheduler->GetContent()->GetSettings()->IsDenoiserEnabled;
+        auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
 
         //auto defaultDimensions = scheduler->DefaultRenderSurfaceDesc().Dimensions();
         //Geometry::Dimensions luminancesTextureDimensions{ defaultDimensions.Width, defaultDimensions.Height, 4 }; // 4 lights
@@ -58,11 +58,11 @@ namespace PathFinder
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::DeferredLighting);
 
         bool isDenoiserEnabled = context->GetContent()->GetSettings()->IsDenoiserEnabled;
-        auto currentFrameIndex = context->FrameNumber() % 2;
+        auto currentFrameIndex = context->GetFrameNumber() % 2;
 
         const Scene* scene = context->GetContent()->GetScene();
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
-        const Memory::Texture* blueNoiseTexture = scene->BlueNoiseTexture();
+        const Memory::Texture* blueNoiseTexture = scene->GetBlueNoiseTexture();
 
         auto resourceProvider = context->GetResourceProvider();
 
@@ -79,7 +79,7 @@ namespace PathFinder
         cbContent.ShadowRayIntersectionPointsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingRayLightIntersectionPoints);
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
         cbContent.RngSeedsTexIdx = resourceProvider->GetSRTextureIndex(DeferredLightingRngSeedTexName(isDenoiserEnabled, currentFrameIndex));
-        cbContent.FrameNumber = context->FrameNumber();
+        cbContent.FrameNumber = context->GetFrameNumber();
 
         auto haltonSequence = Foundation::Halton::Sequence(0, 3);
 
@@ -89,7 +89,7 @@ namespace PathFinder
         }
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->SetRootConstants(sceneStorage->CompressedLightPartitionInfo(), 0, 0);
+        context->GetCommandRecorder()->SetRootConstants(sceneStorage->GetCompressedLightPartitionInfo(), 0, 0);
 
         const Memory::Buffer* bvh = sceneStorage->TopAccelerationStructure().AccelerationStructureBuffer();
         const Memory::Buffer* lights = sceneStorage->LightTable();

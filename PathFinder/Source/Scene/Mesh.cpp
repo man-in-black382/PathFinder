@@ -8,37 +8,37 @@
 namespace PathFinder
 {
 
-    const std::string& Mesh::Name() const
+    const std::string& Mesh::GetName() const
     {
         return mName;
     }
 
-    std::vector<Vertex1P1N1UV1T1BT>& Mesh::Vertices()
+    std::vector<Vertex1P1N1UV1T1BT>& Mesh::GetVertices()
     {
         return mVertices;
     }
 
-    const std::vector<Vertex1P1N1UV1T1BT>& Mesh::Vertices() const
+    const std::vector<Vertex1P1N1UV1T1BT>& Mesh::GetVertices() const
     {
         return mVertices;
     }
 
-    const std::vector<uint32_t>& Mesh::Indices() const
+    const std::vector<uint32_t>& Mesh::GetIndices() const
     {
         return mIndices;
     }
 
-    const Geometry::AABB& Mesh::BoundingBox() const
+    const Geometry::AABB& Mesh::GetBoundingBox() const
     {
         return mBoundingBox;
     }
 
-    const VertexStorageLocation& Mesh::LocationInVertexStorage() const
+    const VertexStorageLocation& Mesh::GetLocationInVertexStorage() const
     {
         return mVertexStorageLocation;
     }
 
-    float Mesh::SurfaceArea() const
+    float Mesh::GetSurfaceArea() const
     {
         return mArea;
     }

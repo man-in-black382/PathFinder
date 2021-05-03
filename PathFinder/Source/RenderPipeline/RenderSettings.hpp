@@ -1,6 +1,5 @@
 #pragma once
 
-#include <IO/Input.hpp>
 #include <glm/vec2.hpp>
 #include <Scene/Scene.hpp>
 
@@ -24,6 +23,12 @@ namespace PathFinder
 
         bool IsGIDebugEnabled = false;
         bool DoNotRotateGIProbeRays = false;
+        bool IsGIEnabled = true;
+        bool IsAOEnabled = true;
+
+        bool IsTAAEnabled = true;
+        bool IsTAAYCoCgSpaceEnabled = true;
+        uint32_t TAASampleCount = 16;
 
         IrradianceField GlobalIlluminationSettings;
         PipelineSettings RenderPipelineSettings;
@@ -32,21 +37,18 @@ namespace PathFinder
     class RenderSettingsController
     {
     public:
-        RenderSettingsController(Scene* scene);
-
         void SetEnabled(bool enabled);
-        void ApplyVolatileSettings();
+        void ApplyVolatileSettings(const Scene& scene);
         
         RenderSettings VolatileSettings;
 
     private:
         RenderSettings mAppliedSettings;
-        Scene* mScene;
 
         bool mIsEnabled = true;
 
     public:
-        inline const RenderSettings& AppliedSettings() const { return mAppliedSettings; }
+        inline const RenderSettings* GetAppliedSettings() const { return &mAppliedSettings; }
     };
 
 }

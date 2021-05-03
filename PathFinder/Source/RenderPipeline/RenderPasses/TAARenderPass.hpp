@@ -12,8 +12,10 @@ namespace PathFinder
 
     struct TAACBContent
     {
-        uint32_t VarianceSourceTexIdx;
-        uint32_t InputTexIdx;
+        glm::uvec2 DispatchGroupCount;
+        uint32_t PreviousFrameTexIdx;
+        uint32_t CurrentFrameTexIdx;
+        uint32_t MotionTexIdx;
         uint32_t OutputTexIdx;
     };
 

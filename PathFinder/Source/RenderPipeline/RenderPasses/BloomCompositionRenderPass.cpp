@@ -29,7 +29,7 @@ namespace PathFinder
         auto resourceProvider = context->GetResourceProvider();
         auto dimensions = context->GetDefaultRenderSurfaceDesc().Dimensions();
 
-        const BloomParameters& parameters = context->GetContent()->GetScene()->BloomParams();
+        const BloomParameters& parameters = context->GetContent()->GetScene()->GetBloomParams();
 
         BloomCompositionCBContent inputs{};
         inputs.InverseTextureDimensions = { 1.0f / dimensions.Width, 1.0f / dimensions.Height };

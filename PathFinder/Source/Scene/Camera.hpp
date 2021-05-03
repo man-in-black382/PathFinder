@@ -16,6 +16,12 @@ namespace PathFinder
     class Camera
     {
     public:
+        struct Jitter
+        {
+            glm::mat4 JitterMatrix;
+            glm::vec2 UVJitter;
+        };
+
         Camera();
 
         glm::mat4 GetViewProjection() const;
@@ -24,6 +30,7 @@ namespace PathFinder
         glm::mat4 GetInverseViewProjection() const;
         glm::mat4 GetInverseView() const;
         glm::mat4 GetInverseProjection() const;
+        Jitter GetJitter(uint64_t frameIndex, uint64_t maxJitterFrames, const glm::uvec2& frameResolution) const;
         EV GetExposureValue100() const;
 
         void MoveTo(const glm::vec3 &position);
@@ -44,6 +51,26 @@ namespace PathFinder
         std::array<glm::vec3, 8> GetFrustumCorners() const;
 
     private:
+        static constexpr std::array<glm::vec2, 16> JitterHaltonSamples =
+        {
+            glm::vec2{0.000000, -0.166667},
+            glm::vec2{-0.250000,  0.166667},
+            glm::vec2{0.250000, -0.388889},
+            glm::vec2{-0.375000, -0.055556},
+            glm::vec2{0.125000,  0.277778},
+            glm::vec2{-0.125000, -0.277778},
+            glm::vec2{0.375000,  0.055556},
+            glm::vec2{-0.437500,  0.388889},
+            glm::vec2{0.062500, -0.462963},
+            glm::vec2{-0.187500, -0.129630},
+            glm::vec2{0.312500,  0.203704},
+            glm::vec2{-0.312500, -0.351852},
+            glm::vec2{0.187500, -0.018519},
+            glm::vec2{-0.062500,  0.314815},
+            glm::vec2{0.437500, -0.240741},
+            glm::vec2{-0.468750,  0.092593},
+        };
+
         glm::vec3 mFront;
         glm::vec3 mRight;
         glm::vec3 mUp;

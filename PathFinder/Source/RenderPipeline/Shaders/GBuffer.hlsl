@@ -78,13 +78,10 @@ GBufferEmissive ZeroGBufferEmissive()
 
 GBufferPixelOut GetStandardGBufferPixelOutput(float3 albedo, float metalness, float roughness, float3 normal, float3 motion, uint materialIndex, float viewDepth)
 {
-    float motionMagnitude = length(motion);
-    float3 motionNorm = motion / motionMagnitude;
-
     GBufferPixelOut output;
     output.AlbedoMetalness = float4(albedo, metalness);
     output.NormalRoughness = float4(normal * 0.5 + 0.5, roughness);
-    output.Motion = uint2(OctEncodePack(motionNorm), asuint(motionMagnitude));
+    output.Motion = uint2(PackSnorm2x16(motion.x, motion.y, 1.0), asuint(motion.z)); // 3D motion vector;
     output.TypeAndMaterialIndex = (GBufferTypeStandard << 4) | (materialIndex & 0x0000000F);
     output.ViewDepth = viewDepth;
     return output;
@@ -92,13 +89,10 @@ GBufferPixelOut GetStandardGBufferPixelOutput(float3 albedo, float metalness, fl
 
 GBufferPixelOut GetEmissiveGBufferPixelOutput(uint lightIndex, float3 motion, float viewDepth)
 {
-    float motionMagnitude = length(motion);
-    float3 motionNorm = motion / motionMagnitude;
-
     GBufferPixelOut output;
     output.AlbedoMetalness = 0.0;
     output.NormalRoughness = 0.0;
-    output.Motion = uint2(OctEncodePack(motionNorm), asuint(motionMagnitude));
+    output.Motion = uint2(PackSnorm2x16(motion.x, motion.y, 1.0), asuint(motion.z)); // 3D motion vector
     output.TypeAndMaterialIndex = (GBufferTypeEmissive << 4) | (lightIndex & 0x0000000F);
     output.ViewDepth = viewDepth;
     return output;
@@ -117,8 +111,9 @@ uint LoadGBufferType(GBufferTexturePack textures, uint2 texelIndex)
 
 float3 LoadGBufferMotion(Texture2D<uint4> motion, uint2 texelIndex)
 {
+    // 3D motion
     uint2 motionEncoded = motion[texelIndex].rg;
-    return OctUnpackDecode(motionEncoded.x) * asfloat(motionEncoded.y);
+    return float3(UnpackSnorm2x16(motionEncoded.x, 1.0), asfloat(motionEncoded.y));
 }
 
 void LoadGBufferNormalAndRoughness(Texture2D normalRoughness, uint2 texelIndex, out float3 normal, out float roughness)

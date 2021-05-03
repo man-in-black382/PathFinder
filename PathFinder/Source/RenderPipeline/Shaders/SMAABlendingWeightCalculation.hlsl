@@ -66,7 +66,7 @@ PixelOut PSMain(VertexOut pin)
         search,
         0.0); // Just pass zero for SMAA 1x, see @SUBSAMPLE_INDICES.
 
-    if (!FrameDataCB.IsAntialiasingEnabled || !FrameDataCB.IsAntialiasingBlendingWeightCalculationEnabled)
+    if (!FrameDataCB.IsSMAAEnabled || !FrameDataCB.IsSMAABlendingWeightCalculationEnabled)
     {
         pixelOut.Weights = 0.0;
     }

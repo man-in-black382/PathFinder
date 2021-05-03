@@ -138,6 +138,11 @@ namespace PathFinder
             Foundation::Name resourceName, 
             std::optional<NewDepthStencilProperties> properties = std::nullopt); 
 
+        void NewDepthStencil(
+            Foundation::Name resourceName,
+            const MipSet& writtenMips,
+            std::optional<NewDepthStencilProperties> properties = std::nullopt);
+
         // Allocates new texture to be accessed as Unordered Access resource (Write)
         void NewTexture(
             Foundation::Name resourceName, 
@@ -253,9 +258,9 @@ namespace PathFinder
         const PipelineSettings* mPipelineSettings = nullptr;
 
     public:
-        inline const RenderSurfaceDescription& DefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }
-        inline auto FrameNumber() const { return mUtilityProvider->FrameNumber; }
-        inline const ContentMediator* Content() const { return mContent; }
+        inline const RenderSurfaceDescription& GetDefaultRenderSurfaceDesc() const { return mUtilityProvider->DefaultRenderSurfaceDescription; }
+        inline auto GetFrameNumber() const { return mUtilityProvider->FrameNumber; }
+        inline const ContentMediator* GetContent() const { return mContent; }
     };
 
 }

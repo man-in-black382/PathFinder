@@ -59,7 +59,7 @@ float ApplyBilinearCustomWeights(float4 v, float4 weights)
     // Weight
     v *= weights;
     // Sum
-    return dot(v, 1.0);
+    return v.x + v.y + v.z + v.w;
 }
 
 float4 GatherRedManually(Texture2D tex, Bilinear filter, float mipLevel, sampler s)
