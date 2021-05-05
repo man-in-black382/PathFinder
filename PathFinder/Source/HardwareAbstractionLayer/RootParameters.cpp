@@ -10,6 +10,9 @@ namespace HAL
     {
         mParameter.ParameterType = type;
         mParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+        //Full bindless
+        mParameter.Descriptor.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_VOLATILE;
     }
 
     RootParameter::~RootParameter() {}
@@ -36,7 +39,8 @@ namespace HAL
 
     RootDescriptorTableParameter& RootDescriptorTableParameter::operator=(const RootDescriptorTableParameter& that)
     {
-        if (this == &that) return *this;
+        if (this == &that)
+            return *this;
 
         mRanges = that.mRanges;
         mParameter.DescriptorTable.NumDescriptorRanges = (UINT)mRanges.size();
@@ -47,7 +51,8 @@ namespace HAL
 
     RootDescriptorTableParameter& RootDescriptorTableParameter::operator=(RootDescriptorTableParameter&& that)
     {
-        if (this == &that) return *this;
+        if (this == &that) 
+            return *this;
 
         mRanges = std::move(that.mRanges);
         mParameter.DescriptorTable.NumDescriptorRanges = (UINT)mRanges.size();

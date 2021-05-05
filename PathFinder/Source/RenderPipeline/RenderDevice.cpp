@@ -74,7 +74,7 @@ namespace PathFinder
     {
         mRTASBuildsCommandList = mCommandListAllocator->AllocateComputeCommandList();
         mRTASBuildsCommandList->Reset();
-        mPreRenderUploadsCommandList->SetDebugName("Ray Tracing BVH Build Cmd List");
+        mRTASBuildsCommandList->SetDebugName("Ray Tracing BVH Build Cmd List");
         mEventTracker.StartGPUEvent("Ray Tracing BVH Build", *mRTASBuildsCommandList);
     }
 

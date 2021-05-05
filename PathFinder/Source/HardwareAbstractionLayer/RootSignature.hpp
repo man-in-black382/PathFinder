@@ -45,7 +45,7 @@ namespace HAL
         std::vector<RootDescriptorParameter> mDescriptorParameters;
         std::vector<RootConstantsParameter> mConstantParameters;
         std::vector<D3D12_STATIC_SAMPLER_DESC> mD3DStaticSamplers;
-        std::vector<D3D12_ROOT_PARAMETER> mD3DParameters;
+        std::vector<D3D12_ROOT_PARAMETER1> mD3DParameters;
 
         std::unordered_map<
             RootParameter::LocationInSignature,
@@ -54,7 +54,7 @@ namespace HAL
             RootParameter::LocationEquality>
             mParameterIndices;
 
-        D3D12_ROOT_SIGNATURE_DESC mDesc{};
+        D3D12_VERSIONED_ROOT_SIGNATURE_DESC mDesc{};
         Microsoft::WRL::ComPtr<ID3D12RootSignature> mSignature;
         const Device* mDevice;
         std::string mDebugName;

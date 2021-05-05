@@ -1,12 +1,12 @@
-#ifndef _DenoiserHistoryFix__
-#define _DenoiserHistoryFix__
+#ifndef _TAA__
+#define _TAA__
 
 #include "GroupsharedMemoryHelpers.hlsl"
 #include "Random.hlsl"
-#include "ColorConversion.hlsl"
 #include "ThreadGroupTilingX.hlsl"
 #include "Geometry.hlsl"
 #include "GBuffer.hlsl"
+#include "TAACommon.hlsl"
 
 struct PassData
 {
@@ -21,119 +21,31 @@ struct PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 
-static const int GroupDimensionSize = 16;
-static const int SamplingRadius = 1;
-static const int GSArrayDimensionSize = GroupDimensionSize + 2 * SamplingRadius;
-static const float TAASampleCount = 16.0;
-
 groupshared min16float3 gCache[GSArrayDimensionSize][GSArrayDimensionSize];
-
-// Here the ray referenced goes from history to (filtered) center color
-float DistToAABB(float3 color, float3 history, float3 minimum, float3 maximum) 
-{
-    float3 center = 0.5 * (maximum + minimum);
-    float3 extents = 0.5 * (maximum - minimum);
-
-    float3 rayDir = color - history;
-    float3 rayPos = history - center;
-
-    float3 invDir = rcp(rayDir);
-    float3 t0 = (extents - rayPos) * invDir;
-    float3 t1 = -(extents + rayPos) * invDir;
-
-    float AABBIntersection = max(max(min(t0.x, t1.x), min(t0.y, t1.y)), min(t0.z, t1.z));
-    return saturate(AABBIntersection);
-}
-
-// From Playdead's TAA
-float3 DirectClipToAABB(float3 history, float3 minimum, float3 maximum)
-{
-    // note: only clips towards aabb center (but fast!)
-    float3 center = 0.5 * (maximum + minimum);
-    float3 extents = 0.5 * (maximum - minimum);
-
-    // This is actually `distance`, however the keyword is reserved
-    float3 offset = history - center;
-    float3 v_unit = offset.xyz / extents.xyz;
-    float3 absUnit = abs(v_unit);
-    float maxUnit = max(absUnit.x, max(absUnit.y, absUnit.z));
-
-    if (maxUnit > 1.0)
-        return center + (offset / maxUnit);
-    else
-        return history;
-}
-
-// ---------------------------------------------------
-// Blend factor calculation
-// ---------------------------------------------------
-
-float HistoryContrast(float historyLuma, float minNeighbourLuma, float maxNeighbourLuma)
-{
-    float lumaContrast = max(maxNeighbourLuma - minNeighbourLuma, 0) / historyLuma;
-    float blendFactor = 1.0 / TAASampleCount;
-    return saturate(blendFactor * rcp(1.0 + lumaContrast));
-}
-
-float GetBlendFactor(float colorLuma, float historyLuma, float minNeighbourLuma, float maxNeighbourLuma)
-{
-    return HistoryContrast(historyLuma, minNeighbourLuma, maxNeighbourLuma);
-}
-
-float GetLuminance(float3 color)
-{
-    return color.x;
-}
-
-float PerceptualWeight(float3 c)
-{
-    float luma = GetLuminance(c);
-    return rcp(luma + 1.0);
-}
-
-float PerceptualInvWeight(float3 c)
-{
-    float luma = GetLuminance(c);
-    return rcp(1.0 - luma);
-}
-
-float3 ConvertToWorkingSpace(float3 color)
-{
-    return RGBToYCoCg(color);
-}
-
-float3 ConvertToOutputSpace(float3 color)
-{
-    return YCoCgToRGB(color);
-}
 
 void LoadNeighbors(uint2 pixelIndex, int2 GTid, Texture2D image)
 {
     GSBoxLoadStoreCoords coords = GetGSBoxLoadStoreCoords(pixelIndex, GTid, GlobalDataCB.PipelineRTResolution, GroupDimensionSize, SamplingRadius);
 
     float3 centerColor = ConvertToWorkingSpace(image[coords.LoadCoord0].rgb);
-    centerColor *= PerceptualWeight(centerColor);
 
     gCache[coords.StoreCoord0.x][coords.StoreCoord0.y] = min16float3(centerColor);
 
     if (coords.IsLoadStore1Required)
     {
         float3 color = ConvertToWorkingSpace(image[coords.LoadCoord1].rgb);
-        color *= PerceptualWeight(color);
         gCache[coords.StoreCoord1.x][coords.StoreCoord1.y] = min16float3(color);
     }
 
     if (coords.IsLoadStore2Required)
     {
         float3 color = ConvertToWorkingSpace(image[coords.LoadCoord2].rgb);
-        color *= PerceptualWeight(color);
         gCache[coords.StoreCoord2.x][coords.StoreCoord2.y] = min16float3(color);
     }
 
     if (coords.IsLoadStore3Required)
     {
         float3 color = ConvertToWorkingSpace(image[coords.LoadCoord3].rgb);
-        color *= PerceptualWeight(color);
         gCache[coords.StoreCoord3.x][coords.StoreCoord3.y] = min16float3(color);
     }
 
@@ -144,7 +56,6 @@ float3 SampleHistory(Texture2D historyTex, float2 uv)
 {
     float3 history = historyTex.SampleLevel(LinearClampSampler(), uv, 0.0).rgb;
     history = ConvertToWorkingSpace(history);
-    history *= PerceptualWeight(history);
     return history;
 }
 
@@ -230,16 +141,14 @@ void CSMain(int3 GTid : SV_GroupThreadID, int3 Gid : SV_GroupID)
     AABB aabb = GetVarianceAABB(groupThreadIndex, center, stDevMultiplier); 
 
     // Clip history to AABB
-    float historyBlend = DistToAABB(center, history, aabb.Min, aabb.Max);
-    float3 clippedHistory = lerp(history, center, historyBlend);
+    float3 clippedHistory = ClipToAABB(center, history, aabb.Min, aabb.Max);
 
     // Compute blend factor for history
     float blendFactor = GetBlendFactor(colorLuma, historyLuma, aabb.Min.x, aabb.Max.x);
-    blendFactor = 0.1;// max(0.03, blendFactor);
+    blendFactor = max(0.03, blendFactor);
 
     // Blend history and current color
     float3 finalColor = lerp(clippedHistory, center, blendFactor);
-    finalColor *= PerceptualInvWeight(finalColor);
 
     outputTexture[pixelIndex].rgb = ConvertToOutputSpace(finalColor);
 }

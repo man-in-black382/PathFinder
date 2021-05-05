@@ -14,6 +14,12 @@ namespace HAL
         mRange.OffsetInDescriptorsFromTableStart = descriptorHeapIndex;
         mRange.BaseShaderRegister = baseRegister;
         mRange.RegisterSpace = registerSpace;
+
+        // Full bindless
+        mRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+        
+        if (rangeType != D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+            mRange.Flags |= D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
     }
 
     RootDescriprorTableRange::~RootDescriprorTableRange() {}

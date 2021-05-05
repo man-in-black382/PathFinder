@@ -9,7 +9,7 @@ namespace HAL
     Device::Device(const DisplayAdapter& adapter, bool aftermathEnabled)
         : mAftermathEnabled{ aftermathEnabled }
     {
-        D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_1;
+        D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_2;
         ThrowIfFailed(D3D12CreateDevice(adapter.D3DAdapter(), featureLevel, IID_PPV_ARGS(&mDevice)));
 
         mHeapAlignment = D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;

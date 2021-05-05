@@ -49,9 +49,10 @@ namespace HAL
         //
         uint32_t tableParameterIndex = 0;
 
-        for (D3D12_ROOT_PARAMETER& d3dParameter : mD3DParameters)
+        for (D3D12_ROOT_PARAMETER1& d3dParameter : mD3DParameters)
         {
-            if (d3dParameter.ParameterType != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) continue;
+            if (d3dParameter.ParameterType != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
+                continue;
 
             RootDescriptorTableParameter& table = mDescriptorTableParameters[tableParameterIndex];
 
@@ -61,18 +62,23 @@ namespace HAL
             tableParameterIndex++;
         }
 
-        mDesc.NumParameters = (UINT)mD3DParameters.size();
-        mDesc.pParameters = &mD3DParameters[0];
+        mDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
 
-        mDesc.NumStaticSamplers = (UINT)mD3DStaticSamplers.size();
-        mDesc.pStaticSamplers = mD3DStaticSamplers.data();
+        // Full bindless
+        mDesc.Desc_1_1.Flags =
+            D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
+            D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED;
+
+        mDesc.Desc_1_1.NumParameters = (UINT)mD3DParameters.size();
+        mDesc.Desc_1_1.pParameters = &mD3DParameters[0];
+
+        mDesc.Desc_1_1.NumStaticSamplers = (UINT)mD3DStaticSamplers.size();
+        mDesc.Desc_1_1.pStaticSamplers = mD3DStaticSamplers.data();
 
         Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> errors;
-        ThrowIfFailed(D3D12SerializeRootSignature(&mDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errors));
-
-        if (errors) OutputDebugStringA((char*)errors->GetBufferPointer());
-
+        D3D12SerializeVersionedRootSignature(&mDesc, &signatureBlob, &errors);
+        assert_format(!errors, (char*)errors->GetBufferPointer());
         ThrowIfFailed(mDevice->D3DDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&mSignature)));
     
         mSignature->SetName(StringToWString(mDebugName).c_str());

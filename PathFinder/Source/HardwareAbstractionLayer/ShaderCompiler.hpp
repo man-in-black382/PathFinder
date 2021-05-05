@@ -41,7 +41,7 @@ namespace HAL
     public:
         enum class Profile
         {
-            P6_3, P6_4, P6_5
+            P6_3, P6_4, P6_5, P6_6
         };
 
         struct ShaderCompilationResult

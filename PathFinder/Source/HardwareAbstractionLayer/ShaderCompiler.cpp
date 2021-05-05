@@ -81,7 +81,7 @@ namespace HAL
 
     ShaderCompiler::ShaderCompilationResult ShaderCompiler::CompileShader(const std::filesystem::path& path, Shader::Stage stage, const std::string& entryPoint, bool debugBuild, bool separatePDB)
     {
-        BlobCompilationResult blobCompilationResult = CompileBlob(path, ProfileString(stage, Profile::P6_5), entryPoint, debugBuild, separatePDB);
+        BlobCompilationResult blobCompilationResult = CompileBlob(path, ProfileString(stage, Profile::P6_6), entryPoint, debugBuild, separatePDB);
         ShaderCompilationResult shaderCompilationResult{ Shader{ blobCompilationResult.Blob, blobCompilationResult.PDBBlob, entryPoint, stage }, blobCompilationResult.CompiledFileRelativePaths };
         shaderCompilationResult.CompiledShader.SetDebugName(blobCompilationResult.DebugName);
         return shaderCompilationResult;
@@ -89,7 +89,7 @@ namespace HAL
 
     ShaderCompiler::LibraryCompilationResult ShaderCompiler::CompileLibrary(const std::filesystem::path& path, bool debugBuild, bool separatePDB)
     {
-        BlobCompilationResult blobCompilationResult = CompileBlob(path, LibProfileString(Profile::P6_5), "", debugBuild, separatePDB);
+        BlobCompilationResult blobCompilationResult = CompileBlob(path, LibProfileString(Profile::P6_6), "", debugBuild, separatePDB);
         LibraryCompilationResult libraryCompilationResult{ Library{ blobCompilationResult.Blob, blobCompilationResult.PDBBlob }, blobCompilationResult.CompiledFileRelativePaths };
         libraryCompilationResult.CompiledLibrary.SetDebugName(blobCompilationResult.DebugName);
         return libraryCompilationResult;
@@ -115,6 +115,7 @@ namespace HAL
         case Profile::P6_3: profileString += "6_3"; break;
         case Profile::P6_4: profileString += "6_4"; break;
         case Profile::P6_5: profileString += "6_5"; break;
+        case Profile::P6_6: profileString += "6_6"; break;
         default: break;
         }
 
@@ -128,7 +129,8 @@ namespace HAL
         case Profile::P6_3: return "lib_6_3";
         case Profile::P6_4: return "lib_6_4";
         case Profile::P6_5: return "lib_6_5";
-        default: return "lib_6_3";
+        case Profile::P6_6: return "lib_6_6";
+        default: return "lib_6_6";
         }
     }
 

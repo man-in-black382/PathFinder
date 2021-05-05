@@ -26,7 +26,7 @@ namespace HAL
         virtual ~RootParameter() = 0;
 
     protected:
-        D3D12_ROOT_PARAMETER mParameter;
+        D3D12_ROOT_PARAMETER1 mParameter;
 
         void AddSignatureLocation(const LocationInSignature& location);
 
@@ -34,7 +34,7 @@ namespace HAL
         std::vector<LocationInSignature> mSignatureLocations;
 
     public:
-        inline const D3D12_ROOT_PARAMETER& D3DParameter() const { return mParameter; }
+        inline const D3D12_ROOT_PARAMETER1& D3DParameter() const { return mParameter; }
         inline const std::vector<LocationInSignature>& SignatureLocations() const { return mSignatureLocations; }
     };
 
@@ -53,7 +53,7 @@ namespace HAL
         void AddDescriptorRange(const RootDescriprorTableRange& range);
 
     private:
-        std::vector<D3D12_DESCRIPTOR_RANGE> mRanges;
+        std::vector<D3D12_DESCRIPTOR_RANGE1> mRanges;
     };
 
 

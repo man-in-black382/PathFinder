@@ -21,11 +21,11 @@ namespace HAL
         virtual ~RootDescriprorTableRange() = 0;
 
     private:
-        D3D12_DESCRIPTOR_RANGE mRange;
+        D3D12_DESCRIPTOR_RANGE1 mRange;
         ShaderRegister mRegisterType;
 
     public:
-        inline const D3D12_DESCRIPTOR_RANGE& D3DRange() const { return mRange; }
+        inline const D3D12_DESCRIPTOR_RANGE1& D3DRange() const { return mRange; }
         inline ShaderRegister ShaderRegisterType() const { return mRegisterType; }
     };
 

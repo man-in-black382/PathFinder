@@ -3673,7 +3673,6 @@
     <None Include="Source\HardwareAbstractionLayer\CommandQueue.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="packages.config" />
     <None Include="Source\RenderPipeline\SubPassScheduler.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -3697,6 +3696,7 @@
     </None>
     <None Include="Libs\Assimp\assimp-vc142-mt.exp" />
     <None Include="Libs\Optick\OptickCore.pdb" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Source\RenderPipeline\Shaders\UniversalRootSignature.hlsl" />
@@ -3767,6 +3767,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\GIDebug.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredLighting.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DeferredShadows.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\TAACommon.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\Downloads\rtx_on.png">
