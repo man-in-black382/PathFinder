@@ -12,5 +12,11 @@ namespace PathFinder
     Foundation::Name DenoiserPostBlurStochasticShadowedInputTexName(bool isDenoiserEnabled, uint64_t frameIndex);
     Foundation::Name DenoiserPostBlurStochasticUnshadowedInputTexName(bool isDenoiserEnabled, uint64_t frameIndex);
     Foundation::Name DeferredLightingRngSeedTexName(bool isDenoiserEnabled, uint64_t frameIndex);
+    Foundation::Name DenoiserHistoryFixShadowedInputTexName(bool isDenoiserPreBlurEnabled, uint64_t frameIndex);
+    Foundation::Name DenoiserHistoryFixUnshadowedInputTexName(bool isDenoiserPreBlurEnabled);
+    Foundation::Name DenoiserGradientConstructionShadowedInputTexName(bool isDenoiserPreBlurEnabled, uint64_t frameIndex);
+    Foundation::Name DenoiserGradientConstructionUnshadowedInputTexName(bool isDenoiserPreBlurEnabled);
+    Foundation::Name DenoiserMipGenerationShadowedInputTexName(bool isDenoiserPreBlurEnabled, uint64_t frameIndex);
+    Foundation::Name DenoiserMipGenerationUnshadowedInputTexName(bool isDenoiserPreBlurEnabled);
 
 }

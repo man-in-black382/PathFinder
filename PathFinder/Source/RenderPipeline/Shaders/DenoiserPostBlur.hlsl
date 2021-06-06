@@ -79,7 +79,14 @@ float3 RetrieveGI(uint2 texelIndex, float2 uv)
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
     float3 irradiance = RetrieveGIIrradiance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, false);
 
-    return DiffuseBRDFForGI(viewDirection, gBuffer) * irradiance;
+    if (FrameDataCB.IsGIIrradianceDebugEnabled)
+    {
+        return irradiance;
+    }
+    else
+    {
+        return DiffuseBRDFForGI(viewDirection, gBuffer) * irradiance;
+    }
 }
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
@@ -110,26 +117,44 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float3 combinedShading = CombineShading(analyticUnshadowed, stochasticShadowed.rgb, stochasticUnshadowed.rgb); 
     float ao = stochasticShadowed.w;
 
-    //combinedShading = stochasticShadowed.rgb;
+    combinedShading = stochasticShadowed.rgb;
     //combinedShading = stochasticUnshadowed;
     //combinedShading = analyticUnshadowed;
 
     // Apply GI
-    combinedShading += RetrieveGI(pixelIndex, uv) * ao;
-
+ /*   if (FrameDataCB.IsGIEnabled)
+    {
+        if (FrameDataCB.IsGIIrradianceDebugEnabled)
+        {
+            combinedShading = RetrieveGI(pixelIndex, uv);
+        }
+        else
+        {
+            combinedShading += RetrieveGI(pixelIndex, uv) * ao;
+        }
+    }*/
+    
     //combinedShading = ao;
 
     if (any(isnan(combinedShading)) || any(isinf(combinedShading)))
-        combinedShading = float3(0, 100, 0);
+        combinedShading = float3(1, 100, 1);
 
     if (FrameDataCB.IsReprojectionHistoryDebugEnabled ||
         FrameDataCB.IsGradientDebugEnabled ||
         FrameDataCB.IsMotionDebugEnabled)
     {
         // Debug data is encoded in gradients texture
-        if (any(gradients < 0.99))
+        if (any(gradients > 0.0))
         {
-            combinedShading = float3(1.0 - gradients, 0.0) * 10;
+            combinedShading = float3(gradients, 0.0) * 10;
+        }
+    }
+
+    if (FrameDataCB.IsGradientDebugEnabled)
+    {
+        if (any(gradients > 0.0))
+        {
+            combinedShading = float3(gradients, 0.0) * 10;
         }
     }
 

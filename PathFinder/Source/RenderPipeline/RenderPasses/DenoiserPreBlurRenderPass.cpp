@@ -15,8 +15,14 @@ namespace PathFinder
 
     void DenoiserPreBlurRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     {
+        // Non depth aware pre-blur leaks light when blurring in main pass.
+        // Disable and come up with more robust solution.
+        return;
+
         if (!scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
             return;
+
+        auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
 
         NewTextureProperties outputProperties{};
         outputProperties.MipCount = 5;
@@ -25,7 +31,7 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingPreBlurred, MipSet::FirstMip(), outputProperties);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred, MipSet::FirstMip(), outputProperties);
 
-        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingOutput);
+        scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingOutput[currentFrameIndex]);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingOutput);
     }
      
@@ -33,7 +39,9 @@ namespace PathFinder
     {
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::SeparableBlur);
 
-        BlurTexture(context, ResourceNames::StochasticShadowedShadingOutput, ResourceNames:: StochasticShadowedShadingPreBlurred);
+        auto currentFrameIndex = context->GetFrameNumber() % 2;
+
+        BlurTexture(context, ResourceNames::StochasticShadowedShadingOutput[currentFrameIndex], ResourceNames:: StochasticShadowedShadingPreBlurred);
         BlurTexture(context, ResourceNames::StochasticUnshadowedShadingOutput, ResourceNames::StochasticUnshadowedShadingPreBlurred);
     }
 

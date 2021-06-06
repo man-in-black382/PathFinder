@@ -29,6 +29,25 @@ struct Payload
 
 #include "ShadingCommon.hlsl"
 
+float3 UnpackSunDirection(Light sun, float3x3 sunOrientation, uint packedIntersectionData, uint rayIndex)
+{
+    float2 randomNumbers = UnpackRaySunIntersectionRandomNumbers(packedIntersectionData);
+
+    float sunDiskRadius = sun.ModelMatrix[3][0];
+    float radius = randomNumbers.x * sunDiskRadius;
+    float radiusSqrt = sqrt(radius);
+
+    float angle = randomNumbers.y * TwoPi;
+    float angleSin, angleCos;
+    sincos(angle, angleSin, angleCos);
+
+    float2 pointOnDisk = float2(radiusSqrt * angleCos, radiusSqrt * angleSin);
+    float3 nonRotatedDirection = normalize(float3(pointOnDisk, 1.0));
+    float3 rotatedDirection = mul(sunOrientation, nonRotatedDirection);
+
+    return rotatedDirection;
+}
+
 void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float depth)
 {
     Texture2D rayPDFs = Textures2D[PassDataCB.ShadowRayPDFsTexIdx];
@@ -49,7 +68,7 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
     uint4 intersectionPoints = rayLightIntersectionPoints[pixelIndex];
     float4 shadowed = 0.0; // 4th component includes AO
     float3 unshadowed = 0.0;
-    float3 selfIntersectionOffset = gBuffer.Normal * 0.04;
+    float3 selfIntersectionOffset = gBuffer.Normal * 0.02;
 
     const uint ShadowRayFlags = 
         RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
@@ -58,6 +77,9 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
 
     // Shadows
 
+    // Sun goes first
+
+    // Then local lights
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
     {
@@ -67,10 +89,18 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
         uint lightIndex = i / raysPerLight;
         Light light = LightTable[lightIndex];
         float3 lightIntersectionPoint = 0.0;
-        float3x3 lightRotation = RotationMatrix3x3(light.Orientation.xyz);
+        float3x3 lightRotation = ReduceTo3x3(light.RotationMatrix);
 
         switch (light.LightType)
         {
+        case LightTypeSun: 
+        {
+            float3 sunRayDirection = UnpackSunDirection(light, lightRotation, intersectionPoints[i], i); 
+            float largeNumber = 1000; // Should ideally move the "sun" point out of content's bounding box
+            lightIntersectionPoint = surfacePosition + sunRayDirection * largeNumber;
+            break;
+        }
+            
         case LightTypeSphere: lightIntersectionPoint = UnpackRaySphericalLightIntersectionPoint(intersectionPoints[i], light); break;
         case LightTypeRectangle: lightIntersectionPoint = UnpackRayRectangularLightIntersectionPoint(intersectionPoints[i], light, lightRotation); break;
         case LightTypeEllipse: lightIntersectionPoint = UnpackRayDiskLightIntersectionPoint(intersectionPoints[i], light, lightRotation); break;
@@ -85,13 +115,13 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
         float3 wi = mul(worldToTangent, normalize(-lightToSurface));
         float3 wm = normalize(wo + wi);
 
-        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * light.Luminance * light.Color.rgb / pdfs[i] / raysPerLight;
+        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * 400/***/ /*light.Luminance * light.Color.rgb*//*40000 / pdfs[i]*/ / raysPerLight;
 
         RayDesc shadowRay;
-        shadowRay.Origin = lightIntersectionPoint;
-        shadowRay.Direction = lightToSurface / vectorLength + selfIntersectionOffset;
-        shadowRay.TMin = tmin;
-        shadowRay.TMax = tmax;
+        shadowRay.Origin = surfacePosition + selfIntersectionOffset;// lightIntersectionPoint;
+        shadowRay.Direction = UnpackSunDirection(light, lightRotation, intersectionPoints[i], i); ;// lightToSurface / vectorLength + selfIntersectionOffset;
+        shadowRay.TMin = 0.0;// tmin;
+        shadowRay.TMax = 100;// tmax;
 
         Payload payload = { 0.0 };
 
@@ -106,7 +136,7 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
             shadowRay, 
             payload);
 
-        shadowed.rgb += brdf * payload.Value;
+        shadowed.rgb += /*brdf * */payload.Value;
         unshadowed += brdf;
     }
 

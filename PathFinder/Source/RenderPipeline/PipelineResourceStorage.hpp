@@ -82,6 +82,9 @@ namespace PathFinder
 
         void IterateDebugBuffers(const DebugBufferIteratorFunc& func) const;
 
+        template <class Func>
+        void ForEachResource(const Func& func) const;
+
         void QueueResourceAllocationIfNeeded(
             PassName passName,
             ResourceName resourceName, 

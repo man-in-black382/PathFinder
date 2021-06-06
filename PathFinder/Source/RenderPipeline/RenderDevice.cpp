@@ -469,16 +469,22 @@ namespace PathFinder
 
             if (previousUsageExists)
             {
-                uint64_t dlIndex = 0;
+                uint64_t previousUsageDLIndex = 0;
                 
                 // Previous usage was either on a render pass OR on a rerouted transitions event
                 std::visit(Foundation::MakeVisitor(
-                    [&dlIndex](const RenderPassGraph::Node* previousUsageNode) { dlIndex = previousUsageNode->DependencyLevelIndex(); },
-                    [&dlIndex](SubresourcePreviousUsageInfo::DependencyLevelIndex previousUsageDLIndex) { dlIndex = previousUsageDLIndex; }),
+                    [&previousUsageDLIndex](const RenderPassGraph::Node* previousUsageNode) { previousUsageDLIndex = previousUsageNode->DependencyLevelIndex(); },
+                    [&previousUsageDLIndex](SubresourcePreviousUsageInfo::DependencyLevelIndex previousUsageDLIndex) { previousUsageDLIndex = previousUsageDLIndex; }),
                     previousUsageInfoIt->second.User);
 
-                if (!reroutingDependencyLevelIndex || dlIndex > (*reroutingDependencyLevelIndex))
-                    reroutingDependencyLevelIndex = dlIndex;
+                bool reroutingDLIndexNeedsUpdate = !reroutingDependencyLevelIndex || previousUsageDLIndex > (*reroutingDependencyLevelIndex);
+                // Happens when same resource is read by multiple queues in one dependency level
+                bool previousUsageIsInCurrentDL = previousUsageDLIndex == currentDL.LevelIndex();
+
+                if (reroutingDLIndexNeedsUpdate && !previousUsageIsInCurrentDL)
+                {
+                    reroutingDependencyLevelIndex = previousUsageDLIndex;
+                }
             }
 
             // We update index of dependency level the resource was last used in

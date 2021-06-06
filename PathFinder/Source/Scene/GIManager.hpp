@@ -22,12 +22,12 @@ namespace PathFinder
         inline static const uint64_t DepthProbeSize = 16;
 
         // Should be power of 2
-        glm::uvec3 mProbeGridSize = glm::uvec3{ 13, 12, 13 };
-        float mCellSize = 3.0f;
+        glm::uvec3 mProbeGridSize = glm::uvec3{ 16, 12, 16 };
+        float mCellSize = 2.5f;
         float mDebugProbeRadius = 0.3f;
         float mIrradianceHysteresisDecrease = 0.5f; // Quickly update probes at application startup
         float mDepthHysteresisDecrease = 0.5f;
-        uint64_t mRaysPerProbe = 144;
+        uint64_t mRaysPerProbe = 256;
         glm::mat4 mProbeRotation{ 1.0f };
         glm::vec3 mCornerPosition{ 0.0f };
         glm::ivec3 mSpawnedProbePlanesCount;

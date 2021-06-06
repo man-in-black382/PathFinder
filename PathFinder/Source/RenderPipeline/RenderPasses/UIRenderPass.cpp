@@ -12,7 +12,7 @@ namespace PathFinder
     {
         rootSignatureCreator->CreateRootSignature(RootSignatureNames::UI, [](RootSignatureProxy& signatureProxy)
         {
-            signatureProxy.AddRootConstantsParameter<UIRootConstants>(0, 0); // Vertex/Index offsets. 2 root constants
+            signatureProxy.AddRootConstantsParameter<UIRootConstants>(0, 0); 
             signatureProxy.AddShaderResourceBufferParameter(0, 0); // UI Vertex Buffer
             signatureProxy.AddShaderResourceBufferParameter(1, 0); // UI Index Buffer
         });
@@ -61,11 +61,31 @@ namespace PathFinder
 
         for (const UIGPUStorage::DrawCommand& drawCommand : context->GetContent()->GetUIGPUStorage()->DrawCommands())
         {
-            UIRootConstants offsets;
-            offsets.VertexBufferOffset = drawCommand.VertexBufferOffset;
-            offsets.IndexBufferOffset = drawCommand.IndexBufferOffset;
-
-            context->GetCommandRecorder()->SetRootConstants(offsets, 0, 0);
+            UIRootConstants constants;
+            constants.VertexBufferOffset = drawCommand.VertexBufferOffset;
+            constants.IndexBufferOffset = drawCommand.IndexBufferOffset;
+            
+            if (const UITextureData* textureData = drawCommand.TextureData)
+            {
+                constants.TextureIdx = textureData->Texture->GetSRDescriptor()->IndexInHeapRange();
+                switch (textureData->SamplerMode)
+                {
+                case UITextureData::SamplingMode::Linear: 
+                    constants.SamplerIdx = context->GetResourceProvider()->GetSamplerIndex(SamplerNames::LinearClamp);
+                    break;
+                case UITextureData::SamplingMode::Point:
+                default:
+                    constants.SamplerIdx = context->GetResourceProvider()->GetSamplerIndex(SamplerNames::PointClamp);
+                    break;
+                }
+            }
+            else
+            {
+                constants.TextureIdx = -1;
+                constants.SamplerIdx = 0;
+            }
+             
+            context->GetCommandRecorder()->SetRootConstants(constants, 0, 0);
             context->GetCommandRecorder()->SetScissor(drawCommand.ScissorRect);
             context->GetCommandRecorder()->Draw(drawCommand.IndexCount);
         }

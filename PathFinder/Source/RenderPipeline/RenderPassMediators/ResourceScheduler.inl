@@ -321,8 +321,8 @@ namespace PathFinder
     {
         // Ignore render pass queue preference if async is disabled
         mCurrentlySchedulingPassNode->ExecutionQueueIndex =
-            mPipelineSettings->IsAsyncComputeEnabled ? 
-            std::underlying_type_t<RenderPassExecutionQueue>(queue) : 
+            mPipelineSettings->IsAsyncComputeEnabled ?
+            std::underlying_type_t<RenderPassExecutionQueue>(queue) :
             std::underlying_type_t<RenderPassExecutionQueue>(RenderPassExecutionQueue::Graphics);
     }
 

@@ -69,6 +69,11 @@ namespace PathFinder
                 mGPUDataInspectorVC = CreateViewController<GPUDataInspectorViewController>();
             }
 
+            if (ImGui::MenuItem("Texture Viewer", nullptr, false, mTextureViewerVC == nullptr))
+            {
+                mTextureViewerVC = CreateViewController<TextureViewerViewController>();
+            }
+
             ImGui::EndMenu();
         }
     }

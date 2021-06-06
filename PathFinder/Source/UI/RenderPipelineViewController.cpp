@@ -31,7 +31,6 @@ namespace PathFinder
         ImGui::Checkbox("Enable Blending Weight Calculation", &VM->UserRenderSettings()->IsAntialiasingBlendingWeightCalculationEnabled);
         ImGui::Checkbox("Enable Neighborhood Blending", &VM->UserRenderSettings()->IsAntialiasingNeighborhoodBlendingEnabled);
         ImGui::Checkbox("Enable TAA", &VM->UserRenderSettings()->IsTAAEnabled);
-        ImGui::Checkbox("Enable YCoCg Space for TAA", &VM->UserRenderSettings()->IsTAAYCoCgSpaceEnabled);
 
         ImGui::Separator();
         ImGui::Text("Denoiser");
@@ -44,6 +43,9 @@ namespace PathFinder
 
         ImGui::Separator();
         ImGui::Text("Global Illumination");
+
+        ImGui::Checkbox("Enable GI", &VM->UserRenderSettings()->IsGIEnabled);
+        ImGui::Checkbox("Enable GI Multi Bounce", &VM->UserRenderSettings()->IsGIRecursionEnabled);
 
         bool giDebugEnabled = VM->IsGIDebugEnabled();
         if (ImGui::Checkbox("Draw GI Probes", &giDebugEnabled))

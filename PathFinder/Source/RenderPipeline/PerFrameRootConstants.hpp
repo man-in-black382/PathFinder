@@ -27,9 +27,9 @@ namespace PathFinder
         uint32_t IsSMAANeighborhoodBlendingEnabled;
         uint32_t IsTAAEnabled;
         // 16 Byte Boundary
-        uint32_t IsTAAYCoCgSpaceEnabled;
-        uint32_t Pad0__;
-        uint32_t Pad1__;
+        uint32_t IsGIEnabled;
+        uint32_t IsGIRecursionEnabled;
+        uint32_t IsGIIrradianceDebugEnabled;
         uint32_t Pad2__;
     };
 

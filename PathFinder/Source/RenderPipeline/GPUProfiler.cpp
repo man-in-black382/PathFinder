@@ -51,7 +51,9 @@ namespace PathFinder
     void GPUProfiler::ReadbackEvents(HAL::CommandList& cmdList)
     {
         uint64_t rangeStartIdx = GetHeapStartIndexForFrameIndex(mCurrentFrameIndex);
-        cmdList.ExtractQueryData(mQueryHeap, rangeStartIdx, HeapEventsPerFrameCount(), *mReadbackBuffer->HALBuffer());
+        uint64_t requestedQueryCount = mCurrentFrameEventID * 2;
+
+        cmdList.ExtractQueryData(mQueryHeap, rangeStartIdx, requestedQueryCount, *mReadbackBuffer->HALBuffer());
     }
 
     void GPUProfiler::BeginFrame(uint64_t frameNumber)

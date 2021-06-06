@@ -17,13 +17,10 @@ struct PassData
     uint PreviousViewDepthTexIdx;
     uint CurrentAccumulationCounterTexIdx;
     uint PreviousAccumulationCounterTexIdx;
-    uint ShadowedShadingTexIdx;
-    uint UnshadowedShadingTexIdx;
-    uint ShadowedShadingHistoryTexIdx;
-    uint UnshadowedShadingHistoryTexIdx;
+    uint ShadowedShadingDenoisedHistoryTexIdx;
+    uint UnshadowedShadingDenoisedHistoryTexIdx;
     uint ShadowedShadingReprojectionTargetTexIdx;
     uint UnshadowedShadingReprojectionTargetTexIdx;
-    uint ShadingGradientTexIdx;
 };
 
 #define PassDataType PassData
@@ -31,7 +28,6 @@ struct PassData
 #include "MandatoryEntryPointInclude.hlsl"
 
 static const int GroupDimensionSize = 8;
-static const float DisocclusionThreshold = 0.01;
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
@@ -48,15 +44,12 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     Texture2D prevViewDepthTexture = Textures2D[PassDataCB.PreviousViewDepthTexIdx];
     Texture2D depthStencilTexture = Textures2D[PassDataCB.DepthStencilTexIdx];
     Texture2D prevAccumulationCounterTexture = Textures2D[PassDataCB.PreviousAccumulationCounterTexIdx];
-    Texture2D shadowedShadingTexture = Textures2D[PassDataCB.ShadowedShadingTexIdx];
-    Texture2D unshadowedShadingTexture = Textures2D[PassDataCB.UnshadowedShadingTexIdx];
-    Texture2D shadowedShadingHistoryTexture = Textures2D[PassDataCB.ShadowedShadingHistoryTexIdx];
-    Texture2D unshadowedShadingHistoryTexture = Textures2D[PassDataCB.UnshadowedShadingHistoryTexIdx];
+    Texture2D shadowedShadingDenoisedHistoryTexture = Textures2D[PassDataCB.ShadowedShadingDenoisedHistoryTexIdx];
+    Texture2D unshadowedShadingDenoisedHistoryTexture = Textures2D[PassDataCB.UnshadowedShadingDenoisedHistoryTexIdx];
     
     RWTexture2D<float4> currentAccumulationCounterTexture = RW_Float4_Textures2D[PassDataCB.CurrentAccumulationCounterTexIdx];
     RWTexture2D<float4> shadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.ShadowedShadingReprojectionTargetTexIdx];
     RWTexture2D<float4> unshadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingReprojectionTargetTexIdx];
-    RWTexture2D<float4> shadingGradientTarget = RW_Float4_Textures2D[PassDataCB.ShadingGradientTexIdx];
 
     float roughness;
     float3 surfaceNormal;
@@ -83,15 +76,8 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         bilinearFilterAtPrevPos.TopLeftUV.y >= 0.0,
         bilinearFilterAtPrevPos.TopLeftUV.x + bilinearFilterAtPrevPos.TexelSize.x < 1.0);
 
-    // Absolute plane displacement along normal. 
-    float NoXprev = abs(dot(surfaceNormal, previousWorldPosition));
-
-    // Distance to plane for each sampled view depth
-    float NoVprev = NoXprev / previousViewPosition.z;
-    float4 planeDist = abs(NoVprev * viewDepthPrev - NoXprev);   
-
     // Relative distance determines occlusion
-    float4 occlusion = step(DisocclusionThreshold, planeDist / NoXprev);
+    float4 occlusion = ReprojectionOcclusion(surfaceNormal, previousWorldPosition, previousViewPosition, viewDepthPrev);
 
     // Disocclude off screen pixels
     occlusion = saturate(isInScreen - occlusion);
@@ -109,22 +95,23 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
     if (FrameDataCB.IsDenoiserEnabled)
     {
-        GatheredRGBA shadowedShadingGatherResult = GatherRGBAManually(shadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
-        GatheredRGBA unshadowedShadingGatherResult = GatherRGBAManually(unshadowedShadingHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
-    
-        float4 shadowedShadingReprojected = float4(
-            ApplyBilinearCustomWeights(shadowedShadingGatherResult.Red, weights),
-            ApplyBilinearCustomWeights(shadowedShadingGatherResult.Green, weights),
-            ApplyBilinearCustomWeights(shadowedShadingGatherResult.Blue, weights),
-            ApplyBilinearCustomWeights(shadowedShadingGatherResult.Alpha, weights));
+        GatheredRGBA shadowedShadingDenoisedGatherResult = GatherRGBAManually(shadowedShadingDenoisedHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
+        GatheredRGBA unshadowedShadingDenoisedGatherResult = GatherRGBAManually(unshadowedShadingDenoisedHistoryTexture, bilinearFilterAtPrevPos, 0.0, PointClampSampler());
 
-        float3 unshadowedShadingReprojected = float3(
-            ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Red, weights),
-            ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Green, weights),
-            ApplyBilinearCustomWeights(unshadowedShadingGatherResult.Blue, weights));
+        float4 shadowedShadingDenoisedReprojected = float4(
+            ApplyBilinearCustomWeights(shadowedShadingDenoisedGatherResult.Red, weights),
+            ApplyBilinearCustomWeights(shadowedShadingDenoisedGatherResult.Green, weights),
+            ApplyBilinearCustomWeights(shadowedShadingDenoisedGatherResult.Blue, weights),
+            ApplyBilinearCustomWeights(shadowedShadingDenoisedGatherResult.Alpha, weights));
 
-        shadowedShadingReprojectionTarget[pixelIndex] = shadowedShadingReprojected;
-        unshadowedShadingReprojectionTarget[pixelIndex].rgb = unshadowedShadingReprojected;
+        shadowedShadingReprojectionTarget[pixelIndex] = shadowedShadingDenoisedReprojected;
+
+        float3 unshadowedShadingDenoisedReprojected = float3(
+            ApplyBilinearCustomWeights(unshadowedShadingDenoisedGatherResult.Red, weights),
+            ApplyBilinearCustomWeights(unshadowedShadingDenoisedGatherResult.Green, weights),
+            ApplyBilinearCustomWeights(unshadowedShadingDenoisedGatherResult.Blue, weights));
+
+        unshadowedShadingReprojectionTarget[pixelIndex].rgb = unshadowedShadingDenoisedReprojected;
     }
 
     currentAccumulationCounterTexture[pixelIndex] = accumCountNew;

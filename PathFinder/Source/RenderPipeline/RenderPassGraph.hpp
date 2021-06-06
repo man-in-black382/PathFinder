@@ -22,7 +22,7 @@ namespace PathFinder
     {
     public:
         using SubresourceName = uint64_t;
-        using WriteDependencyRegistry = robin_hood::unordered_flat_set<SubresourceName>;
+        using WriteDependencyRegistry = robin_hood::unordered_flat_map<SubresourceName, Foundation::Name>;
 
         class Node
         {

@@ -29,6 +29,8 @@ namespace PathFinder
         {
             ProbeField.GenerateProbeRotation(glm::vec2{ 0.0 });
         }
+
+        ProbeField.SetDebugProbeRadius(ProbeField.GetCellSize() / 7.0);
     }
 
     void GIManager::UpdateGridCornerPosition()

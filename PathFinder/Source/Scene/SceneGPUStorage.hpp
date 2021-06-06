@@ -15,6 +15,7 @@
 #include "FlatLight.hpp"
 #include "SphericalLight.hpp"
 #include "VertexStorageLocation.hpp"
+#include "Sky.hpp"
 #include "SceneGPUTypes.hpp"
 
 #include <RenderPipeline/BottomRTAS.hpp>
@@ -74,6 +75,7 @@ namespace PathFinder
 
         GPULightTableEntry CreateLightGPUTableEntry(const FlatLight& light) const;
         GPULightTableEntry CreateLightGPUTableEntry(const SphericalLight& light) const;
+        GPULightTableEntry CreateSunGPUTableEntry(const Sky& sky) const;
 
         template <class Vertex>
         VertexStorageLocation WriteToTemporaryBuffers(const Vertex* vertices, uint32_t vertexCount, const uint32_t* indices = nullptr, uint32_t indexCount = 0);

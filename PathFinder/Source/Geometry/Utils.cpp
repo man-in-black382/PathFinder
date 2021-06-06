@@ -36,6 +36,18 @@ namespace Geometry
         return result;
     }
 
+    glm::mat3 OrientationMatrix(const glm::vec3& direction)
+    {
+        glm::vec3 up = glm::abs(glm::dot(direction, glm::vec3{ 0.0, 1.0, 0.0 })) < 0.99 ?
+            glm::vec3{ 0.0, 1.0, 0.0 } : glm::vec3{ 0.0, 0.0, 1.0 };
+
+        glm::vec3 f(normalize(direction));
+        glm::vec3 s(normalize(cross(up, f)));
+        glm::vec3 u(cross(f, s));
+
+        return glm::mat3{ s,u,f };
+    }
+
     AABB GetCircumscribedAABBForSphere(const Sphere& sphere)
     {
         AABB aabb{ sphere.Center - sphere.Radius, sphere.Center + sphere.Radius };

@@ -25,6 +25,9 @@ namespace PathFinder
         frameCountProperties.ShaderVisibleFormat = HAL::ColorFormat::R16_Float;
         frameCountProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
+        NewTextureProperties reprojectionTargetProperties{};
+        reprojectionTargetProperties.TextureToCopyPropertiesFrom = ResourceNames::StochasticShadowedShadingOutput[frameIndex];
+
         scheduler->NewTexture(ResourceNames::ReprojectedFramesCount[frameIndex], frameCountProperties);
         scheduler->NewTexture(ResourceNames::ReprojectedFramesCount[previousFrameIndex], MipSet::Empty(), frameCountProperties);
 
@@ -36,13 +39,12 @@ namespace PathFinder
 
         if (scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
         {
+            scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingOutput[previousFrameIndex]);
             scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
             scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
-            scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingPreBlurred);
-            scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingPreBlurred);
 
-            scheduler->NewTexture(ResourceNames::StochasticShadowedShadingReprojected);
-            scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
+            scheduler->NewTexture(ResourceNames::StochasticShadowedShadingReprojected, reprojectionTargetProperties);
+            scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingReprojected, reprojectionTargetProperties);
         }
     }
      
@@ -63,14 +65,11 @@ namespace PathFinder
         cbContent.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.PreviousAccumulationCounterTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ReprojectedFramesCount[previousFrameIndex]);
         cbContent.CurrentAccumulationCounterTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ReprojectedFramesCount[frameIndex]);
-        //cbContent.ShadingGradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadingGradient);
 
         if (context->GetContent()->GetSettings()->IsDenoiserEnabled)
         {
-            cbContent.ShadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
-            cbContent.UnshadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
-            cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingPreBlurred);
-            cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingPreBlurred);
+            cbContent.ShadowedShadingDenoisedHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingDenoised[previousFrameIndex]);
+            cbContent.UnshadowedShadingDenoisedHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
             cbContent.ShadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingReprojected);
             cbContent.UnshadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingReprojected);
         }

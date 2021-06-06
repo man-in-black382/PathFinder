@@ -5,6 +5,11 @@
 namespace PathFinder
 {
 
+    SphericalLight::SphericalLight()
+    {
+        ConstructModelMatrix();
+    }
+
     void SphericalLight::SetRadius(float radius)
     {
         mRadius = radius;

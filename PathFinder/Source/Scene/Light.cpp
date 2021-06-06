@@ -54,6 +54,7 @@ namespace PathFinder
         mArea = area;
         // Recalculate due to changes in the area
         SetLuminousPower(mLuminousPower);
+        ConstructModelMatrix();
     }
 
 }

@@ -171,7 +171,7 @@ bool RayBilinearPatchIntersection(BilinearPatch patch, Ray ray, out float3 inter
 float PointDistanceToPlane(float3 p, Plane plane)
 {
     float3 ray = p - plane.PointOnPlane;
-    float distToPlane = dot(plane.Normal, ray);
+    float distToPlane = abs(dot(plane.Normal, ray));
     return distToPlane;
 }
 

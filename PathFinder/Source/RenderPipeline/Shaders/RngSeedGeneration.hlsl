@@ -25,7 +25,7 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
         pixelIndex.x % PassDataCB.BlueNoiseTexSize,
         pixelIndex.y % PassDataCB.BlueNoiseTexSize,
         PassDataCB.FrameNumber % PassDataCB.BlueNoiseTexDepth,
-        0);
+        false);
 
     rngSeedTexture[pixelIndex] = rngSeed;
 }

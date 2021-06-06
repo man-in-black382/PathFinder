@@ -34,9 +34,9 @@ struct FrameData
     bool IsSMAANeighborhoodBlendingEnabled;
     bool IsTAAEnabled;
     // 16 Byte Boundary
-    bool IsTAAYCoCgSpaceEnabled;
-    uint Pad0__;
-    uint Pad1__;
+    bool IsGIEnabled;
+    bool IsGIRecursionEnabled;
+    bool IsGIIrradianceDebugEnabled;
     uint Pad2__;
 }; 
 

@@ -1,7 +1,5 @@
 #include "UIGPUStorage.hpp"
 
-
-
 #include <algorithm>
 #include <iterator>
 
@@ -25,22 +23,6 @@ namespace PathFinder
         UploadFont(ImGui::GetIO());
         ConstructMVP(*drawData);
     }
-
-    /*  void UIGPUStorage::ReadbackPassDebugBuffer(Foundation::Name passName, const HAL::Buffer<float>& buffer)
-      {
-          buffer.Read([this, passName](const float* data)
-          {
-              auto amountOfWrittenFloats = uint32_t(data[0]);
-
-              if (amountOfWrittenFloats == 0)
-              {
-                  return;
-              }
-
-              auto& debugFloats = mPerPassDebugData[passName];
-              debugFloats.assign(data + 1, data + amountOfWrittenFloats + 1);
-          });
-      }*/
 
     void UIGPUStorage::UploadVertices(const ImDrawData& drawData)
     {
@@ -86,6 +68,8 @@ namespace PathFinder
                     {imCommand->ClipRect.x - clipOffset.x, imCommand->ClipRect.y - clipOffset.y},
                     {imCommand->ClipRect.z - clipOffset.x, imCommand->ClipRect.w - clipOffset.y}
                 };
+
+                drawCommand.TextureData = (UITextureData*)imCommand->TextureId;
 
                 drawCommand.VertexBufferOffset = vertexOffset;
                 drawCommand.IndexBufferOffset = indexOffset;

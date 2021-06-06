@@ -3,7 +3,8 @@
 
 #include <algorithm>
 #include <iterator>
-
+#include <Foundation/Pi.hpp>
+#include <Geometry/Utils.hpp>
 #include <RenderPipeline/RenderSettings.hpp>
 #include <RenderPipeline/DrawablePrimitive.hpp>
 #include <RenderPipeline/RenderPasses/PipelineNames.hpp>
@@ -218,9 +219,16 @@ namespace PathFinder
 
         mLightTable->RequestWrite();
 
-        uint32_t index = 0;
+        // Sun goes first
+        mScene->GetSky().UpdateSolarIlluminance();
+
+        GPULightTableEntry sunEntry = CreateSunGPUTableEntry(mScene->GetSky());
+        mLightTable->Write(&sunEntry, 0, 1);
+
+        // Then local lights
+        uint32_t index = 1;
         mLightTablePartitionInfo = {};
-        mLightTablePartitionInfo.TotalLightsCount = 0;
+        mLightTablePartitionInfo.TotalLightsCount = 1;
         mLightTablePartitionInfo.SphericalLightsOffset = index;
 
         auto uploadLights = [this, &index](auto&& lights, uint32_t& tableOffset, uint32_t& lightCount, const VertexStorageLocation& vertexLocation)
@@ -366,7 +374,6 @@ namespace PathFinder
         }
 
         return{
-                glm::vec4(light.GetNormal(), 0.0f),
                 glm::vec4(light.GetPosition(), 1.0f),
                 glm::vec4(light.GetColor().R(), light.GetColor().G(), light.GetColor().B(), 0.0f),
                 light.GetLuminance(),
@@ -374,6 +381,7 @@ namespace PathFinder
                 light.GetHeight(),
                 std::underlying_type_t<GPULightTableEntry::LightType>(lightType),
                 light.GetModelMatrix(),
+                glm::mat4_cast(light.GetRotation()),
                 mUnitQuadVertexLocation.VertexBufferOffset,
                 mUnitQuadVertexLocation.IndexBufferOffset,
                 mUnitQuadVertexLocation.IndexCount
@@ -383,7 +391,6 @@ namespace PathFinder
     GPULightTableEntry SceneGPUStorage::CreateLightGPUTableEntry(const SphericalLight& light) const
     {
         return{
-                glm::vec4(0.0f), // No orientation required for spherical lights
                 glm::vec4(light.GetPosition(), 1.0f),
                 glm::vec4(light.GetColor().R(), light.GetColor().G(), light.GetColor().B(), 0.0f),
                 light.GetLuminance(),
@@ -391,9 +398,31 @@ namespace PathFinder
                 light.GetRadius(),
                 std::underlying_type_t<GPULightTableEntry::LightType>(GPULightTableEntry::LightType::Sphere),
                 light.GetModelMatrix(),
+                glm::mat4{1.0f},
                 mUnitSphereVertexLocation.VertexBufferOffset,
                 mUnitSphereVertexLocation.IndexBufferOffset,
                 mUnitSphereVertexLocation.IndexCount
+        };
+    }
+
+    GPULightTableEntry SceneGPUStorage::CreateSunGPUTableEntry(const Sky& sky) const
+    {
+        float sunDiskArea = Sky::SunDiskRadius * Sky::SunDiskRadius * M_PI;
+        float sunDiskRadiusSqrt = std::sqrt(Sky::SunDiskRadius);
+
+        return{
+                glm::vec4{0.0},
+                glm::vec4{0.0},
+                0.0f, 0.0f, 0.0f,
+                std::underlying_type_t<GPULightTableEntry::LightType>(GPULightTableEntry::LightType::Sun),
+                glm::mat4{
+                    glm::vec4{sky.GetSunDirection(), 0.0f},
+                    glm::vec4{sky.GetSolarIlluminance(), 0.0f},
+                    glm::vec4{sky.GetSolarLuminance(), 0.0f},
+                    glm::vec4{Sky::SunDiskRadius, Sky::SunSolidAngle, sunDiskArea, sunDiskRadiusSqrt}
+                },
+                glm::mat4{Geometry::OrientationMatrix(sky.GetSunDirection())},
+                0, 0, 0
         };
     }
 

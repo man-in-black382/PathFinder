@@ -24,6 +24,8 @@ namespace PathFinder
         bool IsGIDebugEnabled = false;
         bool DoNotRotateGIProbeRays = false;
         bool IsGIEnabled = true;
+        bool IsGIRecursionEnabled = true;
+        bool IsGIShowIrradianceOnly = false;
         bool IsAOEnabled = true;
 
         bool IsTAAEnabled = true;

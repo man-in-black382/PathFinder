@@ -72,4 +72,13 @@ namespace PathFinder
         passData->PassConstantBuffer->Write(data, passData->PassConstantBufferMemoryOffset, sizeof(Constants));
     }
 
+    template <class Func>
+    void PipelineResourceStorage::ForEachResource(const Func& func) const
+    {
+        for (const PipelineResourceStorageResource& resource : *mCurrentFrameResources)
+        {
+            func(resource);
+        }
+    }
+
 }

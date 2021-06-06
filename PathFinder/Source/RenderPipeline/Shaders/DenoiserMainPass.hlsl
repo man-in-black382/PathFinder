@@ -58,7 +58,7 @@ float MaxAllowedAccumulatedFrames(float gradient, float roughness)
 {
     // Tweak to find balance of lag and noise. 
     float Antilag = 5;    
-    float Power = lerp(1.0, 5.0, roughness);
+    float Power = lerp(1.0, 1.0, roughness); // Is this really needed? TODO: Revisit on specular surfaces
 
     return MaxAccumulatedFrames * (pow(1.0 - saturate(Antilag * gradient), Power));
 }
@@ -168,7 +168,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float accumulationSpeed = 1.0 / (1.0 + accumFramesCountAdjusted);
 
     // Define blur radius range. Allow much wider blur radii for rough surfaces.
-    float minBlurRadius = lerp(0.01, 0.1, roughness2);
+    float minBlurRadius = lerp(0.01, 0.01, roughness2);
     float maxBlurRadius = lerp(0.2, 0.4, roughness2);
     
     // Decrease blur radius as more frames are accumulated
@@ -197,7 +197,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
             // Generate sample in 2D
             float2 vdSample = VogelDiskSample(i, DenoiseSampleCount, vogelDiskRotation);
 
-            // Make sample 3D and z-alighned
+            // Make sample 3D and z-aligned
             float3 vd3DSample = float3(vdSample, 0.0);
 
             // Transform sample into its basis.
@@ -211,8 +211,8 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
             // Now that we know screen-space sample location, we need to obtain view-space 3d position of 
             // a surface that lives at that location. We basically need to cast a ray through sample UV into depth buffer.
             // Unprojection will do just what we need.
-            float neightborDepth = gBufferTextures.DepthStencil.SampleLevel(LinearClampSampler(), sampleUV, 0).r;
-            float3 neighborViewPos = NDCDepthToViewPosition(neightborDepth, sampleUV, FrameDataCB.CurrentFrameCamera);
+            float neighborDepth = gBufferTextures.DepthStencil.SampleLevel(LinearClampSampler(), sampleUV, 0).r;
+            float3 neighborViewPos = NDCDepthToViewPosition(neighborDepth, sampleUV, FrameDataCB.CurrentFrameCamera); 
 
             // Get neighbor properties
             float4 neighborNormalRoughness = gBufferTextures.NormalRoughness.SampleLevel(LinearClampSampler(), sampleUV, 0);
@@ -221,7 +221,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
             float neighborRoughness = neighborNormalRoughness.w;
 
             // Compute weights
-            float normalWeight = NormalWeight(worldNormal, neighborNormal, roughness, accumFramesCount);
+            float normalWeight = NormalWeight(worldNormal, neighborNormal, roughness, accumFramesCount); 
             float geometryWeight = GeometryWeight(viewPosition, viewNormal, neighborViewPos);
             float roughnessWeight = RoughnessWeight(roughness, neighborRoughness);
 
@@ -256,7 +256,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         secondaryGradientTexture[pixelIndex].rg = accumFramesCount / MaxAccumulatedFrames;
    
     if (FrameDataCB.IsGradientDebugEnabled)
-        secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToGradient / MaxAccumulatedFrames;
+        secondaryGradientTexture[pixelIndex].rg = gradients;
     
     if (FrameDataCB.IsMotionDebugEnabled) 
         secondaryGradientTexture[pixelIndex].rg = maxAccFramesDueToMovement / MaxAccumulatedFrames;

@@ -22,6 +22,7 @@ namespace PathFinder
 
     private:
         void DrawCameraControls();
+        void DrawSkyControls();
         void DrawImGuizmoControls();
 
         bool EditTransform(
@@ -30,7 +31,8 @@ namespace PathFinder
             float* matrix, 
             float* deltaMatrix, 
             bool editTransformDecomposition, 
-            bool allowRotations);
+            PickedEntityViewModel::GizmoType allowedGizmoTypes,
+            PickedEntityViewModel::GizmoSpace allowedGizmoSpaces);
 
         bool mIsInteracting = false;
         bool mDrawCube = false;

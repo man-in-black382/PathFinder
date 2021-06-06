@@ -24,6 +24,14 @@ namespace PathFinder
         ImGui::SliderFloat("Film Speed (ISO)", &CameraVM->FilmSpeed, 100.f, 2000.f);
         ImGui::SliderFloat("Shutter Speed", &CameraVM->ShutterTime, 30.f, 240.f);
         ImGui::Text("Position: %f %f %f", CameraVM->CameraPosition().x, CameraVM->CameraPosition().y, CameraVM->CameraPosition().z);
+        ImGui::Text("View Direction: %f %f %f", CameraVM->CameraDirection().x, CameraVM->CameraDirection().y, CameraVM->CameraDirection().z);
+    }
+
+    void SceneManipulatorViewController::DrawSkyControls()
+    {
+        ImGui::Separator();
+        if (ImGui::Button("Select Sky"))
+            EntityVM->SelectSky();
     }
 
     void SceneManipulatorViewController::DrawImGuizmoControls()
@@ -46,7 +54,8 @@ namespace PathFinder
                 glm::value_ptr(modelMatrix),
                 glm::value_ptr(deltaMatrix),
                 EntityVM->ShouldDisplay(),
-                EntityVM->AreRotationsAllowed());
+                EntityVM->GetAllowedGizmoTypes(),
+                EntityVM->GetAllowedGizmoSpaces());
 
             mIsInteracting = ImGuizmo::IsUsing();
 
@@ -69,42 +78,78 @@ namespace PathFinder
         float* matrix, 
         float* deltaMatrix, 
         bool editTransformDecomposition,
-        bool allowRotations)
+        PickedEntityViewModel::GizmoType allowedGizmoTypes,
+        PickedEntityViewModel::GizmoSpace allowedGizmoSpaces)
     {
         if (editTransformDecomposition)
         {
-            if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
-                mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-            ImGui::SameLine();
+            bool rotationAllowed = EnumMaskContains(allowedGizmoTypes, PickedEntityViewModel::GizmoType::Rotation);
+            bool translationAllowed = EnumMaskContains(allowedGizmoTypes, PickedEntityViewModel::GizmoType::Translation);
+            bool scaleAllowed = EnumMaskContains(allowedGizmoTypes, PickedEntityViewModel::GizmoType::Scale);
 
-            if (allowRotations)
+            if (translationAllowed)
+            {
+                if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
+                    mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+                ImGui::SameLine();
+            }
+            else
+            {
+                mCurrentGizmoOperation = ImGuizmo::ROTATE;
+            }
+
+            if (rotationAllowed)
             {
                 if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE))
                     mCurrentGizmoOperation = ImGuizmo::ROTATE;
+                ImGui::SameLine();
+            }
+            else
+            {
+                mCurrentGizmoOperation = ImGuizmo::SCALE;
             }
             
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
-                mCurrentGizmoOperation = ImGuizmo::SCALE;
+            if (scaleAllowed)
+            {
+                if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
+                    mCurrentGizmoOperation = ImGuizmo::SCALE;
+            }
+            
             float matrixTranslation[3], matrixRotation[3], matrixScale[3];
             ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
-            ImGui::InputFloat3("Tr", matrixTranslation, 3);
 
-            if (allowRotations)
+            if (translationAllowed)
+            {
+                ImGui::InputFloat3("Tr", matrixTranslation, 3);
+            }
+            
+            if (rotationAllowed)
             {
                 ImGui::InputFloat3("Rt", matrixRotation, 3);
             }
             
-            ImGui::InputFloat3("Sc", matrixScale, 3);
+            if (scaleAllowed)
+            {
+                ImGui::InputFloat3("Sc", matrixScale, 3);
+            }
+                
             ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
 
-            if (mCurrentGizmoOperation != ImGuizmo::SCALE)
+            if (EnumMaskEquals(allowedGizmoSpaces, PickedEntityViewModel::GizmoSpace::All) && mCurrentGizmoOperation != ImGuizmo::SCALE)
             {
                 if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL))
                     mCurrentGizmoMode = ImGuizmo::LOCAL;
                 ImGui::SameLine();
                 if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD))
                     mCurrentGizmoMode = ImGuizmo::WORLD;
+            }
+            else if (EnumMaskEquals(allowedGizmoSpaces, PickedEntityViewModel::GizmoSpace::Local))
+            {
+                mCurrentGizmoMode = ImGuizmo::LOCAL;
+            }
+            else if (EnumMaskEquals(allowedGizmoSpaces, PickedEntityViewModel::GizmoSpace::World))
+            {
+                mCurrentGizmoMode = ImGuizmo::WORLD;
             }
 
             ImGui::Checkbox("", &mUseSnap);
@@ -153,33 +198,47 @@ namespace PathFinder
             EntityVM->HandleClick();
         }
 
-        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::T))
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::T) &&
+            EnumMaskContains(EntityVM->GetAllowedGizmoTypes(), PickedEntityViewModel::GizmoType::Translation))
+        {
             mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+        }
 
-        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::R))
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::R) &&
+            EnumMaskContains(EntityVM->GetAllowedGizmoTypes(), PickedEntityViewModel::GizmoType::Rotation))
+        {
             mCurrentGizmoOperation = ImGuizmo::ROTATE;
+        }
 
-        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::S))
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::S) &&
+            EnumMaskContains(EntityVM->GetAllowedGizmoTypes(), PickedEntityViewModel::GizmoType::Scale))
+        {
             mCurrentGizmoOperation = ImGuizmo::SCALE;
+        }
 
-        if (mCurrentGizmoOperation == ImGuizmo::ROTATE && !EntityVM->AreRotationsAllowed())
-            mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-        
         if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::B))
+        {
             mBoundSizing = !mBoundSizing;
+        }
 
-        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::W) && mCurrentGizmoOperation != ImGuizmo::SCALE)
+        if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::W) && 
+            mCurrentGizmoOperation != ImGuizmo::SCALE)
+        {
             mCurrentGizmoMode = mCurrentGizmoMode == ImGuizmo::LOCAL ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
+        }
 
         if (GetInput()->WasKeyboardKeyUnpressed(KeyboardKey::Escape))
+        {
             EntityVM->HandleEsc();
-
+        }
+        
         CameraVM->Import();
         EntityVM->Import();
 
         ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
         DrawCameraControls();
+        DrawSkyControls();
         DrawImGuizmoControls();
 
         mIsInteracting = EntityVM->ShouldDisplay() || ImGuizmo::IsUsing();

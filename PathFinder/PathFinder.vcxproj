@@ -116,7 +116,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/;$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;PROJECT_DIR=R"($(ProjectDir))";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -183,7 +183,7 @@ xcopy "$(ProjectDir)Libs" "$(TargetDir)" /e /y /i /r</Command>
       <AdditionalIncludeDirectories>$(ProjectDir)/Source/;$(ProjectDir)/Source/ThirdParty/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4244;4267;4838;4305;</DisableSpecificWarnings>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_AMD64_;PROJECT_DIR=R"($(ProjectDir))";_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;GLM_FORCE_LEFT_HANDED;GLM_FORCE_DEPTH_ZERO_TO_ONE;NOMINMAX;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;PROJECT_DIR=R"($(ProjectDir))";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)\%(RelativeDir)\%(Filename).obj </ObjectFileName>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -212,6 +212,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Foundation\Name.cpp" />
     <ClCompile Include="Source\Foundation\NameHolder.cpp" />
     <ClCompile Include="Source\Foundation\NameRegistry.cpp" />
+    <ClCompile Include="Source\Foundation\Spectrum.cpp" />
     <ClCompile Include="Source\Foundation\Timer.cpp" />
     <ClCompile Include="Source\Geometry\AABB.cpp" />
     <ClCompile Include="Source\Geometry\BoundingVolume.cpp" />
@@ -302,7 +303,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.cpp" />
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserForwardProjectionRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientSamplesGenerationRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientFilteringRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPostBlurRenderPass.cpp" />
@@ -356,6 +357,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\Scene\MaterialLoader.cpp" />
     <ClCompile Include="Source\Scene\Mesh.cpp" />
     <ClCompile Include="Source\Scene\MeshInstance.cpp" />
+    <ClCompile Include="Source\Scene\Sky.cpp" />
     <ClCompile Include="Source\Scene\ThirdPartySceneLoader.cpp" />
     <ClCompile Include="Source\Scene\Scene.cpp" />
     <ClCompile Include="Source\Scene\ResourceLoader.cpp" />
@@ -368,6 +370,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\ThirdParty\choreograph\Cue.cpp" />
     <ClCompile Include="Source\ThirdParty\choreograph\Timeline.cpp" />
     <ClCompile Include="Source\ThirdParty\choreograph\TimelineItem.cpp" />
+    <ClCompile Include="Source\ThirdParty\hoseksky\ArHosekSkyModel.cc" />
+    <ClCompile Include="Source\ThirdParty\hoseksky\hosek.cc" />
     <ClCompile Include="Source\ThirdParty\imguizmo\ImCurveEdit.cpp" />
     <ClCompile Include="Source\ThirdParty\imguizmo\ImGradient.cpp" />
     <ClCompile Include="Source\ThirdParty\imguizmo\ImGuizmo.cpp" />
@@ -391,6 +395,8 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\UI\RenderPipelineViewModel.cpp" />
     <ClCompile Include="Source\UI\SceneManipulatorViewController.cpp" />
     <ClCompile Include="Source\UI\SequencerViewController.cpp" />
+    <ClCompile Include="Source\UI\TextureViewerViewController.cpp" />
+    <ClCompile Include="Source\UI\TextureViewerViewModel.cpp" />
     <ClCompile Include="Source\UI\UIEntryPoint.cpp" />
     <ClCompile Include="Source\UI\UIGPUStorage.cpp" />
     <ClCompile Include="Source\UI\UIManager.cpp" />
@@ -432,6 +438,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Foundation\NameHolder.hpp" />
     <ClInclude Include="Source\Foundation\NameRegistry.hpp" />
     <ClInclude Include="Source\Foundation\Pi.hpp" />
+    <ClInclude Include="Source\Foundation\Spectrum.hpp" />
     <ClInclude Include="Source\Foundation\STDHelpers.hpp" />
     <ClInclude Include="Source\Foundation\StringUtils.hpp" />
     <ClInclude Include="Source\Foundation\Timer.hpp" />
@@ -543,7 +550,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BloomCompositionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\BlurCBContent.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\CommonSetupRenderPass.hpp" />
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserForwardProjectionRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientSamplesGenerationRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientConstructionRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientFilteringRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPostBlurRenderPass.hpp" />
@@ -616,6 +623,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\Scene\Mesh.hpp" />
     <ClInclude Include="Source\Scene\MeshInstance.hpp" />
     <ClInclude Include="Source\Scene\SceneGPUTypes.hpp" />
+    <ClInclude Include="Source\Scene\Sky.hpp" />
     <ClInclude Include="Source\Scene\ThirdPartySceneLoader.hpp" />
     <ClInclude Include="Source\Scene\Scene.hpp" />
     <ClInclude Include="Source\Scene\ResourceLoader.hpp" />
@@ -1212,6 +1220,11 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\ThirdParty\glm\vec4.hpp" />
     <ClInclude Include="Source\ThirdParty\glm\vector_relational.hpp" />
     <ClInclude Include="Source\ThirdParty\halton.hpp" />
+    <ClInclude Include="Source\ThirdParty\hoseksky\ArHosekSkyModel.h" />
+    <ClInclude Include="Source\ThirdParty\hoseksky\ArHosekSkyModelData_CIEXYZ.h" />
+    <ClInclude Include="Source\ThirdParty\hoseksky\ArHosekSkyModelData_RGB.h" />
+    <ClInclude Include="Source\ThirdParty\hoseksky\ArHosekSkyModelData_Spectral.h" />
+    <ClInclude Include="Source\ThirdParty\hoseksky\hosek.h" />
     <ClInclude Include="Source\ThirdParty\icecream\icecream.hpp" />
     <ClInclude Include="Source\ThirdParty\imguizmo\ImCurveEdit.h" />
     <ClInclude Include="Source\ThirdParty\imguizmo\ImGradient.h" />
@@ -1232,6 +1245,18 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\ThirdParty\implot\implot_internal.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.config.h" />
     <ClInclude Include="Source\ThirdParty\optick\optick.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\bssrdf.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\bxdf.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\camera.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\film.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\filter.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\light.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\lightsampler.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\material.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\medium.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\sampler.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\shape.h" />
+    <ClInclude Include="Source\ThirdParty\pbrt\base\texture.h" />
     <ClInclude Include="Source\ThirdParty\robinhood\robin_hood.h" />
     <ClInclude Include="Source\UI\CameraViewModel.hpp" />
     <ClInclude Include="Source\UI\GPUDataInspectorViewController.hpp" />
@@ -1249,10 +1274,13 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\UI\RenderPipelineViewModel.hpp" />
     <ClInclude Include="Source\UI\SceneManipulatorViewController.hpp" />
     <ClInclude Include="Source\UI\SequencerViewController.hpp" />
+    <ClInclude Include="Source\UI\TextureViewerViewController.hpp" />
+    <ClInclude Include="Source\UI\TextureViewerViewModel.hpp" />
     <ClInclude Include="Source\UI\UIDependencies.hpp" />
     <ClInclude Include="Source\UI\UIEntryPoint.hpp" />
     <ClInclude Include="Source\UI\UIGPUStorage.hpp" />
     <ClInclude Include="Source\UI\UIManager.hpp" />
+    <ClInclude Include="Source\UI\UITextureData.hpp" />
     <ClInclude Include="Source\UI\ViewController.hpp" />
     <ClInclude Include="Source\UI\ViewModel.hpp" />
     <ClInclude Include="Source\Utility\AftermathCrashTracker.hpp" />
@@ -1494,7 +1522,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserForwardProjection.hlsl">
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientSamplesGeneration.hlsl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -2009,6 +2037,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GIDebug.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -2016,6 +2045,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeUpdate.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -2023,6 +2053,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeBorderUpdate.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -2030,6 +2061,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\GIProbeHelpers.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -2592,6 +2624,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\SMAA.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -2652,12 +2685,14 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <AllResourcesBound Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</AllResourcesBound>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\TAACommon.hlsl">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.5</ShaderModel>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-Qembed_debug %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\ThreadGroupTilingX.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>

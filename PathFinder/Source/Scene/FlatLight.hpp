@@ -3,6 +3,7 @@
 #include "Light.hpp"
 
 #include <glm/vec3.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace PathFinder 
 {
@@ -18,7 +19,7 @@ namespace PathFinder
         FlatLight(Type type);
         ~FlatLight() = default;
 
-        void SetNormal(const glm::vec3& normal);
+        void SetRotation(const glm::quat& rotation);
         void SetWidth(float width);
         void SetHeight(float height);
         void ConstructModelMatrix() override;
@@ -27,15 +28,15 @@ namespace PathFinder
         void UpdateArea();
 
         Type mType;
-        glm::vec3 mNormal;
-        float mWidth = 0.0f;
-        float mHeight = 0.0f;
+        glm::quat mRotation = glm::angleAxis(0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+        float mWidth = 1.0f;
+        float mHeight = 1.0f;
 
     public:
-        inline auto GetLightType() const { return mType; }
-        inline const auto& GetNormal() const { return mNormal; }
-        inline const auto& GetWidth() const { return mWidth; }
-        inline const auto& GetHeight() const { return mHeight; }
+        inline Type GetLightType() const { return mType; }
+        inline const glm::quat& GetRotation() const { return mRotation; }
+        inline float GetWidth() const { return mWidth; }
+        inline float GetHeight() const { return mHeight; }
     };
 
 }

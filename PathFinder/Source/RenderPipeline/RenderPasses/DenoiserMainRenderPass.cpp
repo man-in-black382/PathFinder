@@ -10,7 +10,7 @@ namespace PathFinder
 
     void DenoiserMainRenderPass::SetupPipelineStates(PipelineStateCreator* stateCreator)
     {
-        stateCreator->CreateComputeState(PSONames::SpecularDenoiser, [](ComputeStateProxy& state)
+        stateCreator->CreateComputeState(PSONames::DenoiserMainPass, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "DenoiserMainPass.hlsl";
         });
@@ -33,10 +33,11 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingReprojected);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingFixed);
         scheduler->ReadTexture(ResourceNames::StochasticUnshadowedShadingFixed);
-        scheduler->ReadTexture(ResourceNames::DenoiserPrimaryGradientFiltered);
+        scheduler->ReadTexture(ResourceNames::DenoiserGradientFiltered);
 
         NewTextureProperties outputProperties{};
         outputProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
+        outputProperties.TextureToCopyPropertiesFrom = ResourceNames::StochasticShadowedShadingOutput[currentFrameIndex]; // Same format for shadowed and unshadowed
 
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingDenoised[currentFrameIndex], outputProperties);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingDenoised[currentFrameIndex], outputProperties);
@@ -47,7 +48,7 @@ namespace PathFinder
      
     void DenoiserMainRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
     {
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::SpecularDenoiser);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::DenoiserMainPass);
 
         auto resourceProvider = context->GetResourceProvider();
         auto previousFrameIndex = (context->GetFrameNumber() - 1) % 2;
@@ -70,7 +71,7 @@ namespace PathFinder
         cbContent.UnshadowedShadingHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingReprojected);
         cbContent.ShadowedShadingDenoiseTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingDenoised[currentFrameIndex]);
         cbContent.UnshadowedShadingDenoiseTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[currentFrameIndex]);
-        cbContent.PrimaryGradientTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserPrimaryGradientFiltered);
+        cbContent.PrimaryGradientTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserGradientFiltered);
         cbContent.SecondaryGradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserSecondaryGradient);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);

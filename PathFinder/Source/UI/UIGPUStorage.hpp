@@ -1,5 +1,7 @@
 #pragma once
 
+#include "UITextureData.hpp"
+
 #include <Foundation/Name.hpp>
 #include <Memory/GPUResourceProducer.hpp>
 #include <Geometry/Rect2D.hpp>
@@ -24,6 +26,7 @@ namespace PathFinder
             uint64_t IndexBufferOffset;
             uint64_t IndexCount;
             Geometry::Rect2D ScissorRect;
+            const UITextureData* TextureData = nullptr;
         };
 
         UIGPUStorage(Memory::GPUResourceProducer* resourceProducer);

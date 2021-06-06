@@ -29,10 +29,12 @@ struct Offsets
 {
     uint VertexBufferOffset;
     uint IndexBufferOffset;
+    int TextureIdx;
+    int SamplerIdx;
 };
 
 // Must be set as root constants to version offsets between draw calls
-ConstantBuffer<Offsets> OffsetsCBuffer : register(b0);
+ConstantBuffer<Offsets> RootConstants : register(b0);
 
 StructuredBuffer<ImGuiVertex> UIVertexBuffer : register(t0);
 StructuredBuffer<ImGuiIndex> UIIndexBuffer : register(t1);
@@ -46,8 +48,8 @@ struct PS_INPUT
 
 PS_INPUT VSMain(uint indexId : SV_VertexID)
 {
-    uint index = UIIndexBuffer[indexId + OffsetsCBuffer.IndexBufferOffset].Index;
-    ImGuiVertex vertex = UIVertexBuffer[index + OffsetsCBuffer.VertexBufferOffset];
+    uint index = UIIndexBuffer[indexId + RootConstants.IndexBufferOffset].Index;
+    ImGuiVertex vertex = UIVertexBuffer[index + RootConstants.VertexBufferOffset];
 
     PS_INPUT output;
     output.pos = mul(PassDataCB.ProjectionMatrix, float4(vertex.Position, 0.f, 1.f));
@@ -58,8 +60,19 @@ PS_INPUT VSMain(uint indexId : SV_VertexID)
 
 float4 PSMain(PS_INPUT input) : SV_TARGET
 {
-    Texture2D uiTexture = Textures2D[PassDataCB.UITextureSRVIndex];
-    float4 color = uiTexture.Sample(AnisotropicClampSampler(), input.uv).aaaa * input.col;
+    float4 color = 0.0;
+
+    if (RootConstants.TextureIdx >= 0)
+    {
+        Texture2D uiTexture = Textures2D[RootConstants.TextureIdx];
+        color = uiTexture.Sample(Samplers[RootConstants.SamplerIdx], input.uv);
+        color.a = 1.0;
+    }
+    else
+    {
+        Texture2D uiTexture = Textures2D[PassDataCB.UITextureSRVIndex];
+        color = uiTexture.Sample(AnisotropicClampSampler(), input.uv).aaaa * input.col;
+    }
 
     return color;
 };

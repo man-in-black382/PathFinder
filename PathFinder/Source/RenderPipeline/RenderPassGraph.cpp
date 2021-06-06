@@ -608,11 +608,13 @@ namespace PathFinder
     {
         auto [resourceName, subresourceIndex] = DecodeSubresourceName(name);
 
-        assert_format(mWriteDependencyRegistry->find(name) == mWriteDependencyRegistry->end(),
-            "Resource ", resourceName.ToString(), ", subresource ", subresourceIndex, " already has a write dependency. ",
-            "Use Aliases to perform multiple writes into the same resource.");
+        auto it = mWriteDependencyRegistry->find(name);
 
-        mWriteDependencyRegistry->insert(name);
+        assert_format(it == mWriteDependencyRegistry->end(),
+            "Resource ", resourceName.ToString(), ", subresource ", subresourceIndex, " already has a write dependency in ", it->second.ToString(), ". ",
+            "Use Aliases to perform multiple writes into the same resource in ", mPassMetadata.Name.ToString(), " pass.");
+
+        mWriteDependencyRegistry->insert({ name, mPassMetadata.Name });
     }
 
     void RenderPassGraph::DependencyLevel::AddNode(Node* node)

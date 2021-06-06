@@ -1,4 +1,5 @@
 #include "DenoiserMipGenerationRenderPass.hpp"
+#include "ResourceNameResolving.hpp"
 
 #include <Foundation/Gaussian.hpp>
 
@@ -17,7 +18,7 @@ namespace PathFinder
         bool isDenoiserEnabled = scheduler->Content()->GetSettings()->IsDenoiserEnabled;
 
         std::array<std::vector<DownsamplingInvocationInputs>, 4> perResourceDownsamplingInvocationInputs;
-        
+
         if (isDenoiserEnabled)
         {
             perResourceDownsamplingInvocationInputs[0] = GenerateDownsamplingShaderInvocationInputs(
@@ -27,21 +28,21 @@ namespace PathFinder
                 DownsamplingStrategy::WriteAllLevels);
 
             perResourceDownsamplingInvocationInputs[1] = GenerateDownsamplingShaderInvocationInputs(
-                ResourceNames::StochasticShadowedShadingPreBlurred,
-                scheduler->GetTextureProperties(ResourceNames::StochasticShadowedShadingPreBlurred),
+                DenoiserMipGenerationShadowedInputTexName(false, frameIndex),
+                scheduler->GetTextureProperties(DenoiserMipGenerationShadowedInputTexName(false, frameIndex)),
                 DownsamplingCBContent::Filter::Average,
                 DownsamplingStrategy::WriteAllLevels);
 
             perResourceDownsamplingInvocationInputs[2] = GenerateDownsamplingShaderInvocationInputs(
-                ResourceNames::StochasticUnshadowedShadingPreBlurred,
-                scheduler->GetTextureProperties(ResourceNames::StochasticUnshadowedShadingPreBlurred),
+                DenoiserMipGenerationUnshadowedInputTexName(false),
+                scheduler->GetTextureProperties(DenoiserMipGenerationUnshadowedInputTexName(false)),
                 DownsamplingCBContent::Filter::Average,
                 DownsamplingStrategy::WriteAllLevels);
         };
 
         auto longestInvocationArrayIt = std::max_element(
             perResourceDownsamplingInvocationInputs.begin(),
-            perResourceDownsamplingInvocationInputs.end(), 
+            perResourceDownsamplingInvocationInputs.end(),
             [](auto& first, auto& second) -> bool { return first.size() < second.size(); });
 
         for (auto invocation = 0; invocation < longestInvocationArrayIt->size(); ++invocation)

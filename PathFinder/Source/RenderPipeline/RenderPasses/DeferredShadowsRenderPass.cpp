@@ -24,9 +24,14 @@ namespace PathFinder
     void DeferredShadowsRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
         auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
+        auto previousFrameIndex = (scheduler->GetFrameNumber() - 1) % 2;
 
-        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput);
-        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingOutput);
+        NewTextureProperties outputProperties{ HAL::ColorFormat::RGBA16_Float };
+        outputProperties.MipCount = 5;
+
+        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput[currentFrameIndex], MipSet::FirstMip(), outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput[previousFrameIndex], MipSet::Empty(), outputProperties);
+        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingOutput, MipSet::FirstMip(), outputProperties);
 
         scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
@@ -59,7 +64,7 @@ namespace PathFinder
         cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.ShadowRayPDFsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingRayPDFs);
         cbContent.ShadowRayIntersectionPointsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingRayLightIntersectionPoints);
-        cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingOutput);
+        cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingOutput[currentFrameIndex]);
         cbContent.StochasticUnshadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingOutput);
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.BlueNoiseTexSize = blueNoiseTexture->Properties().Dimensions.Width;

@@ -22,6 +22,8 @@ namespace PathFinder
     {
         uint32_t VertexBufferOffset;
         uint32_t IndexBufferOffset;
+        int32_t TextureIdx;
+        int32_t SamplerIdx;
     };
 
     class UIRenderPass : public RenderPass<RenderPassContentMediator>

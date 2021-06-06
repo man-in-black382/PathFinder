@@ -419,14 +419,14 @@ float LTCEvaluateRectangle(float3 N, float3 V, float3 P, float3x3 Minv, float3 p
 
     if (n == 0)
         return 0;
-        // project onto sphere
+    // project onto sphere
     L[0] = normalize(L[0]);
     L[1] = normalize(L[1]);
     L[2] = normalize(L[2]);
     L[3] = normalize(L[3]);
     L[4] = normalize(L[4]);
 
-        // integrate
+    // integrate
     sum += IntegrateEdge(L[0], L[1]);
     sum += IntegrateEdge(L[1], L[2]);
     sum += IntegrateEdge(L[2], L[3]);

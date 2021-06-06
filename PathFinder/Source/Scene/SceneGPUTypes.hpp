@@ -58,31 +58,26 @@ namespace PathFinder
     {
         enum class LightType : uint32_t
         {
-            Sphere = 0, Rectangle = 1, Disk = 2
+            Sphere = 0, Rectangle = 1, Disk = 2, Sun = 3
         };
-
-        glm::vec4 Orientation;
-        // 16 byte boundary
 
         glm::vec4 Position;
         // 16 byte boundary
-
         glm::vec4 Color;
         // 16 byte boundary
-
         float Luminance;
         float Width;
         float Height;
-
         std::underlying_type_t<LightType> LightTypeRaw;
         // 16 byte boundary
-
         glm::mat4 ModelMatrix;
         // 16 byte boundary
-
+        glm::mat4 RotationMatrix;
+        // 16 byte boundary
         uint32_t UnifiedVertexBufferOffset;
         uint32_t UnifiedIndexBufferOffset;
         uint32_t IndexCount;
+        uint32_t Pad0__;
     };
 
     struct GPULightTablePartitionInfo

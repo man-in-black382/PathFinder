@@ -102,9 +102,9 @@ namespace PathFinder
             light.UpdatePreviousFrameValues();
     }
 
-    void Scene::LoadThirdPartyScene(const std::filesystem::path& path)
+    void Scene::LoadThirdPartyScene(const std::filesystem::path& path, const ThirdPartySceneLoader::Settings& settings)
     {
-        std::vector<ThirdPartySceneLoader::LoadedMesh>& loadedMeshes = mThirdPartySceneLoader.Load(path);
+        std::vector<ThirdPartySceneLoader::LoadedMesh>& loadedMeshes = mThirdPartySceneLoader.Load(path, settings);
         std::vector<Material*> insertedMaterials;
 
         for (Material& material : mThirdPartySceneLoader.LoadedMaterials())

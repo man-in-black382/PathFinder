@@ -104,11 +104,16 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     ShadeWithRectangularLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
     ShadeWithEllipticalLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
 
-    Texture2D irradianceAtlas = Textures2D[PassDataCB.ProbeField.PreviousIrradianceProbeAtlasTexIdx];
-    Texture2D depthAtlas = Textures2D[PassDataCB.ProbeField.PreviousDepthProbeAtlasTexIdx];
-    float3 irradiance = RetrieveGIIrradiance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, true);
-
-    float3 shadowed = DiffuseBRDFForGI(viewDirection, gBuffer) * irradiance;
+    float3 shadowed = 0.0;
+    
+    if (FrameDataCB.IsGIRecursionEnabled)
+    {
+        Texture2D irradianceAtlas = Textures2D[PassDataCB.ProbeField.PreviousIrradianceProbeAtlasTexIdx];
+        Texture2D depthAtlas = Textures2D[PassDataCB.ProbeField.PreviousDepthProbeAtlasTexIdx];
+        float3 irradiance = RetrieveGIIrradiance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, true);
+       
+        shadowed = DiffuseBRDFForGI(viewDirection, gBuffer) * irradiance;
+    }
 
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
@@ -116,7 +121,7 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
         uint lightIndex = i / RaysPerLight(partitionInfo);
         Light light = LightTable[lightIndex];
         float3 lightIntersectionPoint = 0.0;
-        float3x3 lightRotation = RotationMatrix3x3(light.Orientation.xyz);
+        float3x3 lightRotation = ReduceTo3x3(light.RotationMatrix);
 
         switch (light.LightType)
         {

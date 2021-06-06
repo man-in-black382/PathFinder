@@ -435,7 +435,7 @@
     <ClCompile Include="Source\RenderPipeline\RenderPassMediators\SamplerCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserForwardProjectionRenderPass.cpp">
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserGradientSamplesGenerationRenderPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.cpp">
@@ -628,6 +628,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Geometry\OOBB.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\TextureViewerViewController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\TextureViewerViewModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ThirdParty\hoseksky\ArHosekSkyModel.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ThirdParty\hoseksky\hosek.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Sky.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Foundation\Spectrum.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -2597,7 +2615,7 @@
     <ClInclude Include="Source\RenderPipeline\RenderPassMediators\RenderPassUtilityProvider.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserForwardProjectionRenderPass.hpp">
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserGradientSamplesGenerationRenderPass.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\RngSeedGenerationRenderPass.hpp">
@@ -3179,6 +3197,72 @@
     <ClInclude Include="Source\Geometry\OOBB.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\UI\TextureViewerViewModel.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\TextureViewerViewController.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\UITextureData.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\hoseksky\ArHosekSkyModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\hoseksky\ArHosekSkyModelData_CIEXYZ.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\hoseksky\ArHosekSkyModelData_RGB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\hoseksky\ArHosekSkyModelData_Spectral.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\hoseksky\hosek.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Sky.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\bssrdf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\bxdf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\film.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\filter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\lightsampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\medium.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\sampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\shape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ThirdParty\pbrt\base\texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Foundation\Spectrum.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\ThirdParty\glm\detail\func_common.inl">
@@ -3744,7 +3828,7 @@
     <FxCompile Include="Source\RenderPipeline\Shaders\TAA.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\GroupsharedMemoryHelpers.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\SeparableBlur.hlsl" />
-    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserForwardProjection.hlsl" />
+    <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientSamplesGeneration.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\RngSeedGeneration.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\DenoiserGradientConstruction.hlsl" />
     <FxCompile Include="Source\RenderPipeline\Shaders\UAVClear.hlsl" />

@@ -23,7 +23,6 @@ StructuredBuffer<uint> UnifiedIndexBuffer : register(t2);
 struct VertexOut
 {
     float4 Position : SV_POSITION;
-    float3 LightOrientation : NORMAL;
     float ViewDepth : VIEW_DEPTH;
     float2 LocalSpacePosition : DIST_FROM_CENTER;
     float2 LightSize : LIGHT_SIZE;
@@ -46,7 +45,6 @@ VertexOut VSMain(uint vertexId : SV_VertexID)
 
     VertexOut vout;
     vout.Position = FrameDataCB.IsTAAEnabled ? jitteredClipPosition : ClipSPosition;
-    vout.LightOrientation = light.Orientation.xyz;
     vout.ViewDepth = CSPosition.z;
     vout.LocalSpacePosition = light.LightType != LightTypeRectangle ? localSpacePosition : 0.xx;
     vout.LightSize = float2(light.Width, light.Height);

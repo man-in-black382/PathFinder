@@ -14,6 +14,7 @@
 #include "SceneGPUStorage.hpp"
 #include "ThirdPartySceneLoader.hpp"
 #include "MaterialLoader.hpp"
+#include "Sky.hpp"
 
 #include <Memory/GPUResourceProducer.hpp>
 #include <RenderPipeline/PipelineResourceStorage.hpp>
@@ -54,7 +55,7 @@ namespace PathFinder
         void MapEntitiesToGPUIndices();
         void UpdatePreviousFrameValues();
 
-        void LoadThirdPartyScene(const std::filesystem::path& path);
+        void LoadThirdPartyScene(const std::filesystem::path& path, const ThirdPartySceneLoader::Settings& settings = {});
         void Serialize(const std::filesystem::path& destination);
         void Deserialize(const std::filesystem::path& source);
 
@@ -93,6 +94,7 @@ namespace PathFinder
         GTTonemappingParameterss mTonemappingParams;
         BloomParameters mBloomParameters;
         GIManager mGIManager;
+        Sky mSky;
 
         Memory::GPUResourceProducer::TexturePtr mBlueNoiseTexture;
         Memory::GPUResourceProducer::TexturePtr mSMAAAreaTexture;
@@ -118,6 +120,8 @@ namespace PathFinder
         inline const LuminanceMeter& GetLuminanceMeter() const { return mLuminanceMeter; }
         inline GIManager& GetGIManager() { return mGIManager; }
         inline const GIManager& GetGIManager() const { return mGIManager; }
+        inline Sky& GetSky() { return mSky; }
+        inline const Sky& GetSky() const { return mSky; }
         inline const auto& GetMeshes() const { return mMeshes; }
         inline const auto& GetMeshInstances() const { return mMeshInstances; }
         inline const auto& GetMaterials() const { return mMaterials; }
@@ -136,7 +140,7 @@ namespace PathFinder
         inline auto& GetTonemappingParams() { return mTonemappingParams; }
         inline auto& GetBloomParams() { return mBloomParameters; }
 
-        inline auto GetTotalLightCount() const { return mRectangularLights.size() + mDiskLights.size() + mSphericalLights.size(); }
+        inline auto GetTotalLightCount() const { return mRectangularLights.size() + mDiskLights.size() + mSphericalLights.size() + 1 /*Sun*/; }
 
         inline const auto GetBlueNoiseTexture() const { return mBlueNoiseTexture.get(); }
         inline const auto GetSMAASearchTexture() const { return mSMAASearchTexture.get(); }

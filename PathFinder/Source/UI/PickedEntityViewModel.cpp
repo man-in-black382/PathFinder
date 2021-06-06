@@ -1,8 +1,11 @@
 #include "PickedEntityViewModel.hpp"
 
 #include <Foundation/STDHelpers.hpp>
+#include <Geometry/Utils.hpp>
 #include <fplus/fplus.hpp>
 #include <RenderPipeline/RenderPasses/PipelineNames.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/transform.hpp>
 
 namespace PathFinder
 {
@@ -12,6 +15,7 @@ namespace PathFinder
         mMeshInstance = nullptr;
         mSphericalLight = nullptr;
         mFlatLight = nullptr;
+        mSky = nullptr;
 
         if (mPickedEntityInfo.GPUIndex != PickedGPUEntityInfo::NoEntity)
         {
@@ -45,7 +49,18 @@ namespace PathFinder
         mMeshInstance = nullptr;
         mSphericalLight = nullptr;
         mFlatLight = nullptr;
+        mSky = nullptr;
         Dependencies->ScenePtr->GetGIManager().PickedDebugProbeIndex = std::nullopt;
+    }
+
+    void PickedEntityViewModel::SelectSky()
+    {
+        mMeshInstance = nullptr;
+        mSphericalLight = nullptr;
+        mFlatLight = nullptr;
+        mSky = &Dependencies->ScenePtr->GetSky();
+        mModelMatrix = ConstructSunMatrix(*mSky);
+        mModifiedModelMatrix = mModelMatrix;
     }
 
     void PickedEntityViewModel::SetModifiedModelMatrix(const glm::mat4& mat, const glm::mat4& delta)
@@ -58,12 +73,32 @@ namespace PathFinder
     {
         mScene = Dependencies->ScenePtr;
 
-        mShouldDisplay = mMeshInstance != nullptr || mSphericalLight != nullptr || mFlatLight != nullptr;
-        mAreRotationsAllowed = mSphericalLight == nullptr;
-       
-        if (mMeshInstance) mModelMatrix = mMeshInstance->GetTransformation().GetMatrix();
-        else if (mSphericalLight) mModelMatrix = mSphericalLight->GetModelMatrix();
-        else if (mFlatLight) mModelMatrix = mFlatLight->GetModelMatrix();
+        mShouldDisplay = mMeshInstance != nullptr || mSphericalLight != nullptr || mFlatLight != nullptr || mSky != nullptr;
+        mAllowedGizmoTypes = GizmoType::All;
+        mAllowedGizmoSpaces = GizmoSpace::All;
+
+        if (mSphericalLight)
+        {
+            mAllowedGizmoTypes &= ~GizmoType::Rotation;
+            mAllowedGizmoSpaces = GizmoSpace::World;
+        }
+            
+        if (mSky)
+        {
+            mAllowedGizmoTypes = GizmoType::Rotation;
+            mAllowedGizmoSpaces = GizmoSpace::World;
+        }
+           
+        if (mMeshInstance)
+            mModelMatrix = mMeshInstance->GetTransformation().GetMatrix();
+        else if (mSphericalLight)
+            mModelMatrix = mSphericalLight->GetModelMatrix();
+        else if (mFlatLight)
+            mModelMatrix = mFlatLight->GetModelMatrix();
+        else if (mSky)
+            mModelMatrix = ConstructSunMatrix(*mSky);
+        else
+            mModelMatrix = glm::mat4{ 1.0f };
 
         mModifiedModelMatrix = mModelMatrix;
         mDeltaMatrix = glm::mat4{ 1.0f };
@@ -96,12 +131,30 @@ namespace PathFinder
         }
         else if (mFlatLight)
         {
-            glm::vec3 lightScale{ mModifiedModelMatrix[0][0], mModifiedModelMatrix[1][1], mModifiedModelMatrix[2][2] };
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            glm::vec3 scale;
+            glm::quat rotation;
+            glm::vec3 translation;
+            glm::decompose(mModifiedModelMatrix, scale, rotation, translation, skew, perspective);
 
-            /*    mFlatLight->SetWidth(lightScale.x);
-                mFlatLight->SetHeight(lightScale.y);*/
-            mFlatLight->SetPosition(mModifiedModelMatrix[3]);
-            //mFlatLight->SetNormal(glm::normalize(glm::vec3{ mModifiedModelMatrix[2] }));
+            mFlatLight->SetWidth(scale.x);
+            mFlatLight->SetHeight(scale.y);
+            mFlatLight->SetPosition(translation);
+            mFlatLight->SetRotation(rotation);
+        }
+        else if (mSky)
+        {
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            glm::vec3 scale;
+            glm::quat rotation;
+            glm::vec3 translation;
+            glm::decompose(mModifiedModelMatrix, scale, rotation, translation, skew, perspective);
+
+            glm::vec3 newSunDirection = glm::mat3_cast(rotation) * glm::vec3{ 0.0, 0.0, 1.0 };
+            newSunDirection.y = glm::clamp(newSunDirection.y, 0.001f, 1.0f);
+            mSky->SetSunDirection(glm::normalize(newSunDirection));
         }
     }
 
@@ -119,6 +172,18 @@ namespace PathFinder
                 }
             });
         }};
+    }
+
+    glm::mat4 PickedEntityViewModel::ConstructSunMatrix(const Sky& sky) const
+    {
+        const Camera& camera = mScene->GetMainCamera();
+
+        glm::vec3 position = camera.GetPosition() + camera.GetFront() * 1.5f - camera.GetRight() * 0.5f;
+        glm::mat3 rotation = Geometry::OrientationMatrix(sky.GetSunDirection());
+        glm::mat4 translation = glm::translate(position);
+        glm::mat4 gizmoTransform = translation * glm::mat4{ rotation };
+
+        return gizmoTransform;
     }
 
 }

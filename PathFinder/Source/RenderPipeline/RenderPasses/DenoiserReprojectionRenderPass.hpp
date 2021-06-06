@@ -17,15 +17,13 @@ namespace PathFinder
         uint32_t MotionTexIdx;
         uint32_t DepthStencilTexIdx;
         uint32_t PreviousViewDepthTexIdx;
+        uint32_t StochasticShadowedShadingPrevTexIdx;
         uint32_t CurrentAccumulationCounterTexIdx;
         uint32_t PreviousAccumulationCounterTexIdx;
-        uint32_t ShadowedShadingTexIdx;
-        uint32_t UnshadowedShadingTexIdx;
-        uint32_t ShadowedShadingHistoryTexIdx;
-        uint32_t UnshadowedShadingHistoryTexIdx;
+        uint32_t ShadowedShadingDenoisedHistoryTexIdx;
+        uint32_t UnshadowedShadingDenoisedHistoryTexIdx;
         uint32_t ShadowedShadingReprojectionTargetTexIdx;
         uint32_t UnshadowedShadingReprojectionTargetTexIdx;
-        uint32_t ShadingGradientTexIdx;       
     };
 
     class DenoiserReprojectionRenderPass : public RenderPass<RenderPassContentMediator>

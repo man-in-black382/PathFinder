@@ -9,11 +9,14 @@ namespace PathFinder
 {
 
     FlatLight::FlatLight(Type type)
-        : mType{ type } {}
-
-    void FlatLight::SetNormal(const glm::vec3& normal)
+        : mType{ type } 
     {
-        mNormal = glm::normalize(normal);
+        ConstructModelMatrix();
+    }
+
+    void FlatLight::SetRotation(const glm::quat& rotation)
+    {
+        mRotation = rotation;
     }
 
     void FlatLight::SetWidth(float width)
@@ -30,13 +33,8 @@ namespace PathFinder
 
     void FlatLight::ConstructModelMatrix()
     {
-        glm::vec3 UpY{ 0.0, 1.0, 0.0 };
-        glm::vec3 UpZ{ 0.0, 0.0, 1.0 };
-
-        glm::vec3 up = glm::abs(glm::dot(mNormal, UpY)) < 0.999 ? UpY : UpZ;
-
         glm::mat4 translationMat = glm::translate(mPosition);
-        glm::mat4 rotationMat = glm::lookAt(glm::zero<glm::vec3>(), mNormal, up);
+        glm::mat4 rotationMat = glm::mat4_cast(mRotation);
         glm::mat4 scaleMat = glm::scale(glm::vec3{ mWidth, mHeight, 1.0f });
 
         mModelMatrix = translationMat * rotationMat * scaleMat;
@@ -44,7 +42,12 @@ namespace PathFinder
 
     void FlatLight::UpdateArea()
     {
-        SetArea((mHeight / 2.0) * (mWidth / 2.0) * M_PI);
+        switch (mType)
+        {
+        case Type::Disk: SetArea(mHeight * 0.5 * mWidth * 0.5 * M_PI); break;
+        case Type::Rectangle: SetArea(mHeight * mWidth); break;
+        default: break;
+        }
     }
 
 }

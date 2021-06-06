@@ -1,8 +1,6 @@
 #include "ShaderManager.hpp"
 
 #include <Foundation/StringUtils.hpp>
-
-
 #include <fstream>
 
 namespace PathFinder

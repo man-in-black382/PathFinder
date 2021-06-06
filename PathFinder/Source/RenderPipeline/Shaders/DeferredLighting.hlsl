@@ -40,13 +40,14 @@ ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, 
     float3 surfacePosition = NDCDepthToWorldPosition(depth, uv, FrameDataCB.CurrentFrameCamera);
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
-    float3x3 surfaceTangentToWorld = RotationMatrix3x3(gBuffer.Normal);
+    float3x3 surfaceWorldToTangent = transpose(RotationMatrix3x3(gBuffer.Normal));
     LTCTerms ltcTerms = FetchLTCTerms(gBuffer, material, viewDirection);
     ShadingResult shadingResult = ZeroShadingResult();
 
-    ShadeWithSphericalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, surfaceTangentToWorld, shadingResult);
-    ShadeWithRectangularLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, surfaceTangentToWorld, shadingResult);
-    ShadeWithEllipticalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, surfaceTangentToWorld, shadingResult);
+    ShadeWithSun(gBuffer, partitionInfo, randomSequences, viewDirection, surfacePosition, surfaceWorldToTangent, shadingResult);
+    ShadeWithSphericalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
+    ShadeWithRectangularLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
+    ShadeWithEllipticalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
 
     return shadingResult;
 }

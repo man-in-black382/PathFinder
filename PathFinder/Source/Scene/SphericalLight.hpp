@@ -10,6 +10,7 @@ namespace PathFinder
     class SphericalLight : public Light
     {
     public:
+        SphericalLight();
         ~SphericalLight() = default;
 
         void SetRadius(float radius);

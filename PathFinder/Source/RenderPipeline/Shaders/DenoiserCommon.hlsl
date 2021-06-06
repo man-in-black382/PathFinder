@@ -8,6 +8,7 @@ static const float MaxAccumulatedFrames = 16;
 static const float MaxFrameCountWithHistoryFix = 4;
 static const float MaxAccumulatedFramesInv = 1.0 / MaxAccumulatedFrames;
 static const float MaxFrameCountWithHistoryFixInv = 1.0 / MaxFrameCountWithHistoryFix;
+static const float DisocclusionThreshold = 0.01;
 
 static const uint StrataPositionPackingMask = 7; // 0b111
 static const uint StrataPositionPackingShift = 3; // 3 bits
@@ -76,22 +77,57 @@ float RoughnessWeight(float roughness0, float roughness)
     return saturate(1.0 - weight);
 }
 
+// Version with 4 components for bilinear interpolation
+float4 ReprojectionOcclusion(float3 surfaceNormal, float3 previousWorldPosition, float3 previousViewPosition, float4 viewDepthPrev)
+{
+    // Absolute plane displacement along normal. 
+    float NoXprev = abs(dot(surfaceNormal, previousWorldPosition));
+
+    // Distance to plane for each sampled view depth
+    float NoVprev = NoXprev / previousViewPosition.z;
+    float4 planeDist = abs(NoVprev * viewDepthPrev - NoXprev);
+
+    // Relative distance determines occlusion
+    float4 occlusion = step(DisocclusionThreshold, planeDist / NoXprev);
+
+    return occlusion;
+}
+
+// Version with 1 component for 1 texel
+float ReprojectionOcclusion(float3 surfaceNormal, float3 previousWorldPosition, float3 previousViewPosition, float viewDepthPrev)
+{
+    // Absolute plane displacement along normal. 
+    float NoXprev = abs(dot(surfaceNormal, previousWorldPosition));
+
+    // Distance to plane for each sampled view depth
+    float NoVprev = NoXprev / previousViewPosition.z;
+    float planeDist = abs(NoVprev * viewDepthPrev - NoXprev);
+
+    // Relative distance determines occlusion
+    float occlusion = step(DisocclusionThreshold, planeDist / NoXprev);
+
+    return occlusion;
+}
+
 // Gradient for HF and SPEC channels is computed as the relative difference between
 // path tracer outputs on the current and previous frame, for a given gradient pixel. 
 float GetHFGradient(float currLuminance, float prevLuminance)
 {
-    const float Gamma = 1.0 / 5.0;
+    const float Gamma = 1.0 / 1.0;
     // Construct gradient in perceptual space with a "kind of" gamma curve
     float currPerceptLum = pow(currLuminance, Gamma);
     float prevPerceptLum = pow(prevLuminance, Gamma);
 
+    float maxLum = max(currPerceptLum, prevPerceptLum);
+    float minLum = min(currPerceptLum, prevPerceptLum);
+
     // Prev. lum. is negative when we left a hole during reprojection
-    if (currLuminance == 0 || prevLuminance < 0.0)
+    if (/*currLuminance == 0 || */prevLuminance < 0.0)
     {
         return 0.0;
     }
 
-    float gradient = abs(currPerceptLum - prevPerceptLum) * 2;
+    float gradient = (maxLum - minLum) / maxLum;
     return gradient;
 }
 

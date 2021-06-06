@@ -3,8 +3,9 @@
 namespace PathFinder
 {
 
-    std::vector<ThirdPartySceneLoader::LoadedMesh>& ThirdPartySceneLoader::Load(const std::filesystem::path& path)
+    std::vector<ThirdPartySceneLoader::LoadedMesh>& ThirdPartySceneLoader::Load(const std::filesystem::path& path, const Settings& settings)
     {
+        mLoadSettings = settings;
         mPath = path;
         mDirectory = path.parent_path();
 
@@ -132,9 +133,9 @@ namespace PathFinder
         {
             Vertex1P1N1UV1T1BT vertex{};
 
-            vertex.Position.x = assimpMesh->mVertices[i].x;
-            vertex.Position.y = assimpMesh->mVertices[i].y;
-            vertex.Position.z = assimpMesh->mVertices[i].z;
+            vertex.Position.x = assimpMesh->mVertices[i].x * mLoadSettings.InitialScale;
+            vertex.Position.y = assimpMesh->mVertices[i].y * mLoadSettings.InitialScale;
+            vertex.Position.z = assimpMesh->mVertices[i].z * mLoadSettings.InitialScale;
             vertex.Position.w = 1.0; 
 
             if (assimpMesh->HasTextureCoords(0))

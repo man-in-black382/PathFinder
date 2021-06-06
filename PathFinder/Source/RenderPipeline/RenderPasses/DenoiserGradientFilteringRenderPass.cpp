@@ -22,8 +22,8 @@ namespace PathFinder
         if (!scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
             return;
 
-        scheduler->AliasAndWriteTexture(ResourceNames::DenoiserPrimaryGradient, ResourceNames::DenoiserPrimaryGradientFilteredIntermediate);
-        scheduler->NewTexture(ResourceNames::DenoiserPrimaryGradientFiltered, NewTextureProperties{ ResourceNames::DenoiserPrimaryGradientInputs });
+        scheduler->AliasAndWriteTexture(ResourceNames::DenoiserGradient, ResourceNames::DenoiserGradientFilteredIntermediate);
+        scheduler->NewTexture(ResourceNames::DenoiserGradientFiltered, NewTextureProperties{ ResourceNames::DenoiserGradientSamples });
     }
      
     void DenoiserGradientFilteringRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -32,9 +32,9 @@ namespace PathFinder
 
         auto resourceProvider = context->GetResourceProvider();
 
-        const Geometry::Dimensions& outputDimensions = resourceProvider->GetTextureProperties(ResourceNames::DenoiserPrimaryGradientFiltered).Dimensions;
-        auto inputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserPrimaryGradientFilteredIntermediate);
-        auto outputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserPrimaryGradientFiltered);
+        const Geometry::Dimensions& outputDimensions = resourceProvider->GetTextureProperties(ResourceNames::DenoiserGradientFiltered).Dimensions;
+        auto inputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserGradientFilteredIntermediate);
+        auto outputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserGradientFiltered);
 
         DenoiserGradientFilteringCBContent cbContent{};
         cbContent.ImageSize = { outputDimensions.Width, outputDimensions.Height };

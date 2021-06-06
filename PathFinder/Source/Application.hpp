@@ -20,7 +20,7 @@
 #include "RenderPipeline/RenderPasses/DenoiserPreBlurRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserMipGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserReprojectionRenderPass.hpp"
-#include "RenderPipeline/RenderPasses/DenoiserForwardProjectionRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/DenoiserGradientSamplesGenerationRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserGradientConstructionRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserGradientFilteringRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/DenoiserHistoryFixRenderPass.hpp"
@@ -46,6 +46,7 @@
 
 #include <Scene/ThirdPartySceneLoader.hpp>
 #include <Scene/MaterialLoader.hpp>
+#include <choreograph/Choreograph.h>
 
 namespace PathFinder
 {
@@ -91,7 +92,7 @@ namespace PathFinder
         DenoiserReprojectionRenderPass mReprojectionPass;
         DenoiserGradientConstructionRenderPass mDenoiserGradientConstructionPass;
         DenoiserGradientFilteringRenderPass mDenoiserGradientFilteringPass;
-        DenoiserForwardProjectionRenderPass mDenoiserForwardProjectionPass;
+        DenoiserGradientSamplesGenerationRenderPass mDenoiserForwardProjectionPass;
         DenoiserHistoryFixRenderPass mDenoiserHistoryFixPass;
         TAARenderPass mTAARenderPass;
         DenoiserPostBlurRenderPass mDenoiserPostBlurPass;
@@ -114,6 +115,7 @@ namespace PathFinder
 
         // Temporary to load demo scene
         std::unique_ptr<MaterialLoader> mMaterialLoader;
+        choreograph::Timeline mAnimationTimeline;
     };
 
 }

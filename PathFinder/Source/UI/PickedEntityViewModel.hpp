@@ -4,6 +4,7 @@
 
 #include <Scene/MeshInstance.hpp>
 #include <Scene/Scene.hpp>
+#include <Foundation/BitwiseEnum.hpp>
 
 namespace PathFinder
 {
@@ -24,8 +25,24 @@ namespace PathFinder
     class PickedEntityViewModel : public ViewModel
     {
     public:
+        enum class GizmoType : uint32_t
+        {
+            Translation = 1 << 0,
+            Rotation = 1 << 1, 
+            Scale = 1 << 2,
+            All = Translation | Rotation | Scale
+        };
+
+        enum class GizmoSpace
+        {
+            Local = 1 << 0,
+            World = 1 << 1,
+            All = Local | World
+        };
+
         void HandleClick();
         void HandleEsc();
+        void SelectSky();
         void SetModifiedModelMatrix(const glm::mat4& mat, const glm::mat4& delta);
 
         void Import() override;
@@ -33,8 +50,11 @@ namespace PathFinder
         void OnCreated() override;
 
     private:
+        glm::mat4 ConstructSunMatrix(const Sky& sky) const;
+
         bool mShouldDisplay = false;
-        bool mAreRotationsAllowed = true;
+        GizmoType mAllowedGizmoTypes = GizmoType::All;
+        GizmoSpace mAllowedGizmoSpaces = GizmoSpace::All;
         bool mRotateProbeRaysEachFrame = true;
         glm::mat4 mModelMatrix;
         glm::mat4 mModifiedModelMatrix;
@@ -42,13 +62,19 @@ namespace PathFinder
         MeshInstance* mMeshInstance = nullptr;
         SphericalLight* mSphericalLight = nullptr;
         FlatLight* mFlatLight = nullptr;
+        Sky* mSky = nullptr;
         Scene* mScene = nullptr;
+        
         PickedGPUEntityInfo mPickedEntityInfo;
 
     public:
         inline const glm::mat4& ModelMatrix() const { return mModelMatrix; }
         inline bool ShouldDisplay() const { return mShouldDisplay; }
-        inline bool AreRotationsAllowed() const { return mAreRotationsAllowed; }
+        inline GizmoType GetAllowedGizmoTypes() const { return mAllowedGizmoTypes; }
+        inline GizmoSpace GetAllowedGizmoSpaces() const { return mAllowedGizmoSpaces; }
     };
 
 }
+
+ENABLE_BITMASK_OPERATORS(PathFinder::PickedEntityViewModel::GizmoType);
+ENABLE_BITMASK_OPERATORS(PathFinder::PickedEntityViewModel::GizmoSpace);

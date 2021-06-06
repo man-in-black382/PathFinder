@@ -12,20 +12,22 @@
 static const uint LightTypeSphere = 0;
 static const uint LightTypeRectangle = 1;
 static const uint LightTypeEllipse = 2;
+static const uint LightTypeSun = 3;
 
 struct Light
 {
-    float4 Orientation;
-    float4 Position;
-    float4 Color;
+    float4 Position; // Sun's direction is encoded here 
+    float4 Color; // Sun's illuminance is encoded here
     float Luminance;
     float Width;
     float Height;
     uint LightType;
     float4x4 ModelMatrix;
+    float4x4 RotationMatrix;
     uint UnifiedVertexBufferOffset;
     uint UnifiedIndexBufferOffset;
     uint IndexCount;
+    uint Pad0__;
 };
 
 struct LightTablePartitionInfo
@@ -85,7 +87,6 @@ struct LTCSample
 struct LightPoints
 {
     float3 Points[4];
-    float3x3 LightRotation;
 };
 
 // Data required to sample rectangular light using solid angle sampling
@@ -168,7 +169,7 @@ LTCAnalyticEvaluationResult ApplyMaterialAndLightingToLTCLobes(float specularLob
     float diffuseMagnitude = CIELuminance(diffuse);
 
     LTCAnalyticEvaluationResult evaluationResult;
-    evaluationResult.OutgoingLuminance = (diffuse + specular) * light.Color.rgb * light.Luminance;
+    evaluationResult.OutgoingLuminance = (diffuse + specular)* light.Color.rgb* light.Luminance;
     evaluationResult.DiffuseProbability = diffuseMagnitude / max(diffuseMagnitude + specularMagnitude, 1e-5);
     evaluationResult.BRDFProbability = lerp(specularLobe, diffuseLobe, evaluationResult.DiffuseProbability);
 
@@ -213,50 +214,54 @@ LTCAnalyticEvaluationResult EvaluateDirectRectangularLighting(
 {
     float specularLobe = LTCEvaluateRectangle(gBuffer.Normal, viewDirection, surfacePosition, ltcTerms.MInvSpecular, lightPoints.Points);
     float diffuseLobe = LTCEvaluateRectangle(gBuffer.Normal, viewDirection, surfacePosition, ltcTerms.MInvDiffuse, lightPoints.Points);
-
+     
     return ApplyMaterialAndLightingToLTCLobes(specularLobe, diffuseLobe, light, ltcTerms);
 }
 
 LightPoints ComputeLightPoints(Light light, float3 surfacePositionWS)
 {
     LightPoints points;
+    points.Points[3] = mul(light.ModelMatrix, float4(0.5, -0.5, 0.0, 1.0)).xyz;
+    points.Points[2] = mul(light.ModelMatrix, float4(0.5, 0.5, 0.0, 1.0)).xyz;
+    points.Points[1] = mul(light.ModelMatrix, float4(-0.5, 0.5, 0.0, 1.0)).xyz;
+    points.Points[0] = mul(light.ModelMatrix, float4(-0.5, -0.5, 0.0, 1.0)).xyz;
 
-    float halfWidth = light.Width * 0.5;
-    float halfHeight = light.Height * 0.5;
+    //float halfWidth = light.Width * 0.5;
+    //float halfHeight = light.Height * 0.5;
 
-    // Add a small value so that width and height is never truly equal.
-    // LTC disk evaluation code has nasty numerical errors (NaNs) in a corner case 
-    // when width and height are fully equal and disk is rotated
-    // strictly toward the surface point.
-    // A slightly more wide light is almost imperceptible, so I guess it will have to do.
-    //
-    halfWidth += light.LightType == LightTypeSphere ? 0.5 : 0.0;
+    //// Add a small value so that width and height is never truly equal.
+    //// LTC disk evaluation code has nasty numerical errors (NaNs) in a corner case 
+    //// when width and height are fully equal and disk is rotated
+    //// strictly toward the surface point.
+    //// A slightly more wide light is almost imperceptible, so I guess it will have to do.
+    ////
+    //halfWidth += light.LightType == LightTypeSphere ? 0.5 : 0.0;
 
-    // Get billboard points at the origin
-    float3 p0 = float3(halfWidth, -halfHeight, 0.0);
-    float3 p1 = float3(halfWidth, halfHeight, 0.0);
-    float3 p2 = float3(-halfWidth, halfHeight, 0.0);
-    float3 p3 = float3(-halfWidth, -halfHeight, 0.0);
+    //// Get billboard points at the origin
+    //float3 p0 = float3(halfWidth, -halfHeight, 0.0);
+    //float3 p1 = float3(halfWidth, halfHeight, 0.0);
+    //float3 p2 = float3(-halfWidth, halfHeight, 0.0);
+    //float3 p3 = float3(-halfWidth, -halfHeight, 0.0);
 
-    float3 lightOrientation = light.LightType == LightTypeSphere ?
-        normalize(surfacePositionWS.xyz - light.Position.xyz) : // Spherical light is a disk oriented towards the surface
-        light.Orientation.xyz;
+    //float3 lightOrientation = light.LightType == LightTypeSphere ?
+    //    normalize(surfacePositionWS.xyz - light.Position.xyz) : // Spherical light is a disk oriented towards the surface
+    //    light.Orientation.xyz;
 
-    float3x3 lightRotation = RotationMatrix3x3(lightOrientation);
-    points.LightRotation = lightRotation;
+    //float3x3 lightRotation = RotationMatrix3x3(lightOrientation);
+    //points.LightRotation = lightRotation;
 
-    // Rotate around origin
-    p0 = mul(lightRotation, p0);
-    p1 = mul(lightRotation, p1);
-    p2 = mul(lightRotation, p2);
-    p3 = mul(lightRotation, p3);
+    //// Rotate around origin
+    //p0 = mul(lightRotation, p0);
+    //p1 = mul(lightRotation, p1);
+    //p2 = mul(lightRotation, p2);
+    //p3 = mul(lightRotation, p3);
 
-    // Move points to light's location
-    // Clockwise to match LTC convention
-    points.Points[0] = p3.xyz + light.Position.xyz;
-    points.Points[1] = p2.xyz + light.Position.xyz;
-    points.Points[2] = p1.xyz + light.Position.xyz;
-    points.Points[3] = p0.xyz + light.Position.xyz;
+    //// Move points to light's location
+    //// Clockwise to match LTC convention
+    //points.Points[0] = p3.xyz + light.Position.xyz;
+    //points.Points[1] = p2.xyz + light.Position.xyz;
+    //points.Points[2] = p1.xyz + light.Position.xyz;
+    //points.Points[3] = p0.xyz + light.Position.xyz;
 
     return points;
 }
@@ -365,13 +370,14 @@ float3 RectangularLightSampleVector(RectLightSolidAngleSamplingInputs samplingIn
 
 bool IntersectRectangularLight(Light light, LightPoints lightPoints, RectLightSolidAngleSamplingInputs samplingInputs, float3 samplingVector, inout float3 intersectionPoint)
 {
+    float3 lightNormal = mul(light.RotationMatrix, float4(0.0, 0.0, 1.0, 0.0)).xyz;
     Ray ray = InitRay(samplingInputs.SurfacePoint, samplingVector);
-    Plane plane = InitPlane(light.Orientation.xyz, light.Position.xyz); 
+    Plane plane = InitPlane(lightNormal, light.Position.xyz);
 
     if (RayPlaneIntersection(plane, ray, intersectionPoint))
     {
         float3 localPoint = intersectionPoint - light.Position.xyz;
-        float3 zAlignedPoint = mul(transpose(lightPoints.LightRotation), localPoint);
+        float3 zAlignedPoint = mul(transpose(ReduceTo3x3(light.RotationMatrix)), localPoint);
 
         float hw = light.Width * 0.5;
         float hh = light.Height * 0.5;
@@ -445,13 +451,14 @@ bool IntersectSphericalLight(Light light, SphereLightSolidAngleSamplingInputs sa
 // Disk light is sampled as rect light with corresponding PDF of a rect light, but intersection test still should be made with an ellipse
 bool IntersectEllipticalLight(Light light, LightPoints lightPoints, RectLightSolidAngleSamplingInputs samplingInputs, float3 samplingVector, inout float3 intersectionPoint)
 {
+    float3 lightNormal = mul(light.RotationMatrix, float4(0.0, 0.0, 1.0, 0.0)).xyz;
     Ray ray = InitRay(samplingInputs.SurfacePoint, samplingVector);
-    Plane plane = InitPlane(light.Orientation.xyz, light.Position.xyz);
+    Plane plane = InitPlane(lightNormal, light.Position.xyz);
 
     if (RayPlaneIntersection(plane, ray, intersectionPoint))
     {
         float3 localPoint = intersectionPoint - light.Position.xyz;
-        float3 zAlignedPoint = mul(transpose(lightPoints.LightRotation), localPoint);
+        float3 zAlignedPoint = mul(transpose(ReduceTo3x3(light.RotationMatrix)), localPoint);
 
         return IsPointInsideEllipse(zAlignedPoint.xy, 0.xx, float2(light.Width, light.Height));
     }
