@@ -26,7 +26,6 @@ namespace PathFinder
         auto currentFrameIndex = scheduler->GetFrameNumber() % 2;
 
         scheduler->ReadTexture(DenoiserGradientConstructionShadowedInputTexName(false, currentFrameIndex));
-        scheduler->ReadTexture(DenoiserGradientConstructionUnshadowedInputTexName(false));
         scheduler->ReadTexture(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
         scheduler->ReadTexture(ResourceNames::DenoiserGradientSamples);
 
@@ -44,13 +43,12 @@ namespace PathFinder
         cbContent.GradientInputsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserGradientSamples);
         cbContent.SamplePositionsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
         cbContent.ShadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(DenoiserGradientConstructionShadowedInputTexName(false, currentFrameIndex));
-        cbContent.UnshadowedShadingTexIdx = resourceProvider->GetSRTextureIndex(DenoiserGradientConstructionUnshadowedInputTexName(false));
         cbContent.GradientTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoiserGradient);
 
         const Geometry::Dimensions& outputDimensions = resourceProvider->GetTextureProperties(ResourceNames::DenoiserGradient).Dimensions;
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(outputDimensions, { 16, 16 });
+        context->GetCommandRecorder()->Dispatch(outputDimensions, { 8, 8 });
     }
 
 }

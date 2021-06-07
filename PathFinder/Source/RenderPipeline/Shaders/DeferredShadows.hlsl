@@ -95,7 +95,7 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
         {
         case LightTypeSun: 
         {
-            float3 sunRayDirection = UnpackSunDirection(light, lightRotation, intersectionPoints[i], i); 
+            float3 sunRayDirection = UnpackSunDirection(light, lightRotation, intersectionPoints[i], i);
             float largeNumber = 1000; // Should ideally move the "sun" point out of content's bounding box
             lightIntersectionPoint = surfacePosition + sunRayDirection * largeNumber;
             break;

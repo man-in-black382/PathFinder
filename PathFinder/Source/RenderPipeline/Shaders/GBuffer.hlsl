@@ -123,13 +123,12 @@ void LoadGBufferNormalAndRoughness(Texture2D normalRoughness, uint2 texelIndex, 
     roughness = nr.w;
 }
 
-void LoadStandardGBuffer(inout GBufferStandard gBuffer, GBufferTexturePack textures, uint2 texelIndex)
+void LoadStandardGBufferNoMotion(inout GBufferStandard gBuffer, GBufferTexturePack textures, uint2 texelIndex)
 {
     uint3 loadIndex = uint3(texelIndex, 0);
 
     float4 albedoMetalness = textures.AlbedoMetalness.Load(loadIndex).xyzw;
     float4 normalRoughness = textures.NormalRoughness.Load(loadIndex).xyzw;
-    float3 motion = LoadGBufferMotion(textures.Motion, texelIndex);
     uint typeAndMaterialIndex = textures.TypeAndMaterialIndex.Load(loadIndex).x;
     uint materialIndex = typeAndMaterialIndex & 0x0000000F;
 
@@ -137,20 +136,31 @@ void LoadStandardGBuffer(inout GBufferStandard gBuffer, GBufferTexturePack textu
     gBuffer.Metalness = albedoMetalness.a;
     gBuffer.Roughness = normalRoughness.w;
     gBuffer.Normal = ExpandGBufferNormal(normalRoughness.xyz);
-    gBuffer.Motion = motion;
+    gBuffer.Motion = 0;
     gBuffer.MaterialIndex = materialIndex;
 }
 
-void LoadEmissiveGBuffer(inout GBufferEmissive gBuffer, GBufferTexturePack textures, uint2 texelIndex)
+void LoadStandardGBuffer(inout GBufferStandard gBuffer, GBufferTexturePack textures, uint2 texelIndex)
+{
+    LoadStandardGBufferNoMotion(gBuffer, textures, texelIndex);
+    gBuffer.Motion = LoadGBufferMotion(textures.Motion, texelIndex);;
+}
+
+void LoadEmissiveGBufferNoMotion(inout GBufferEmissive gBuffer, GBufferTexturePack textures, uint2 texelIndex)
 {
     uint3 loadIndex = uint3(texelIndex, 0);
 
     uint typeAndMaterialIndex = textures.TypeAndMaterialIndex.Load(loadIndex).x;
     uint lightIndex = typeAndMaterialIndex & 0x0000000F;
-    float3 motion = LoadGBufferMotion(textures.Motion, texelIndex);
 
     gBuffer.LightIndex = lightIndex;
-    gBuffer.Motion = motion;
+    gBuffer.Motion = 0;
+}
+
+void LoadEmissiveGBuffer(inout GBufferEmissive gBuffer, GBufferTexturePack textures, uint2 texelIndex)
+{
+    LoadEmissiveGBufferNoMotion(gBuffer, textures, texelIndex);
+    gBuffer.Motion = LoadGBufferMotion(textures.Motion, texelIndex);;
 }
 
 #endif

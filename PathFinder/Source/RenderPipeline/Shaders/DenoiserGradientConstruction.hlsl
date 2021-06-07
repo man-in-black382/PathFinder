@@ -6,7 +6,6 @@ struct PassCBData
     uint GradientInputsTexIdx;
     uint SamplePositionsTexIdx;
     uint ShadowedShadingTexIdx;
-    uint UnshadowedShadingTexIdx;
     uint GradientTexIdx;
 };
 
@@ -17,7 +16,7 @@ struct PassCBData
 #include "ColorConversion.hlsl"
 #include "Constants.hlsl"
 
-static const int GroupDimensionSize = 16;
+static const uint GroupDimensionSize = 8;
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)
@@ -27,7 +26,6 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     Texture2D gradientInputsTexture = Textures2D[PassDataCB.GradientInputsTexIdx];
     Texture2D shadowedShadingTexture = Textures2D[PassDataCB.ShadowedShadingTexIdx];
-    Texture2D unshadowedShadingTexture = Textures2D[PassDataCB.UnshadowedShadingTexIdx];
     Texture2D<uint4> gradientSamplePositionsTexture = UInt4_Textures2D[PassDataCB.SamplePositionsTexIdx];
 
     RWTexture2D<float4> gradientOutputTexture = RW_Float4_Textures2D[PassDataCB.GradientTexIdx];
@@ -35,14 +33,13 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
     uint2 stratumPosition = UnpackStratumPosition(gradientSamplePositionsTexture[downscaledPixelIdx].x);
     uint2 gradientSamplePixelIdx = fullPixelIndex + stratumPosition;
 
-    float2 lums = float2(
-        CIELuminance(shadowedShadingTexture[gradientSamplePixelIdx].rgb),
-        CIELuminance(unshadowedShadingTexture[gradientSamplePixelIdx].rgb));
+    float currentFrameLuminance = CIELuminance(shadowedShadingTexture[gradientSamplePixelIdx].rgb);
+    float previousFrameLuminance = gradientInputsTexture[downscaledPixelIdx].r;
 
-    float2 gradientInputs = gradientInputsTexture[downscaledPixelIdx].rg;
-    float2 gradients = float2(GetHFGradient(lums.x, gradientInputs.x), GetHFGradient(lums.y, gradientInputs.y));
+    float gradient = GetHFGradient(currentFrameLuminance, previousFrameLuminance);
 
-    gradientOutputTexture[downscaledPixelIdx].rg = gradients;
+    gradientOutputTexture[downscaledPixelIdx].r = gradient;
+
 }
 
 #endif

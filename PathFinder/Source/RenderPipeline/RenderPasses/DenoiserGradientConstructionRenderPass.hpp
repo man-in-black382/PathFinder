@@ -13,7 +13,6 @@ namespace PathFinder
          uint32_t GradientInputsTexIdx;
          uint32_t SamplePositionsTexIdx;
          uint32_t ShadowedShadingTexIdx;
-         uint32_t UnshadowedShadingTexIdx;
          uint32_t GradientTexIdx;
      };
 

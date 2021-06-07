@@ -29,7 +29,7 @@ ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, 
     Texture2D<uint4> rngSeeds = UInt4_Textures2D[PassDataCB.RngSeedsTexIdx];
 
     GBufferStandard gBuffer = ZeroGBufferStandard();
-    LoadStandardGBuffer(gBuffer, gBufferTextures, pixelIndex);
+    LoadStandardGBufferNoMotion(gBuffer, gBufferTextures, pixelIndex);
 
     Material material = MaterialTable[gBuffer.MaterialIndex];
 
@@ -55,7 +55,7 @@ ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, 
 ShadingResult HandleEmissiveGBufferLighting(GBufferTexturePack gBufferTextures, uint2 pixelIndex)
 {
     GBufferEmissive gBuffer = ZeroGBufferEmissive();
-    LoadEmissiveGBuffer(gBuffer, gBufferTextures, pixelIndex);
+    LoadEmissiveGBufferNoMotion(gBuffer, gBufferTextures, pixelIndex);
 
     Light light = LightTable[gBuffer.LightIndex];
 
@@ -78,7 +78,6 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_Gro
     GBufferTexturePack gBufferTextures;
     gBufferTextures.AlbedoMetalness = Textures2D[PassDataCB.GBufferIndices.AlbedoMetalnessTexIdx];
     gBufferTextures.NormalRoughness = Textures2D[PassDataCB.GBufferIndices.NormalRoughnessTexIdx];
-    gBufferTextures.Motion = UInt4_Textures2D[PassDataCB.GBufferIndices.MotionTexIdx];
     gBufferTextures.TypeAndMaterialIndex = UInt4_Textures2D[PassDataCB.GBufferIndices.TypeAndMaterialTexIdx];
     gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
     gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTexIdx];

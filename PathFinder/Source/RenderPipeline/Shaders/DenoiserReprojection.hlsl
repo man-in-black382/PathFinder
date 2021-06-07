@@ -21,6 +21,7 @@ struct PassData
     uint UnshadowedShadingDenoisedHistoryTexIdx;
     uint ShadowedShadingReprojectionTargetTexIdx;
     uint UnshadowedShadingReprojectionTargetTexIdx;
+    uint ReprojectedTexelIndicesTargetTexIdx;
 };
 
 #define PassDataType PassData
@@ -29,6 +30,8 @@ struct PassData
 
 static const int GroupDimensionSize = 8;
 
+//groupshared min16float3 gReprojectionInfo[GroupDimensionSize][GroupDimensionSize];
+
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 {
@@ -36,9 +39,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     // Ghosting free history reprojection //
     //------------------------------------//
 
-    uint2 pixelIndex = ThreadGroupTilingX(PassDataCB.DispatchGroupCount, GroupDimensionSize.xx, 8, groupThreadID.xy, groupID.xy);
-    float2 uv = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
-
+    // ========================================================================================================================== //
     Texture2D normalRoughnessTexture = Textures2D[PassDataCB.GBufferNormalRoughnessTexIdx];
     Texture2D<uint4> motionTexture = UInt4_Textures2D[PassDataCB.MotionTexIdx];
     Texture2D prevViewDepthTexture = Textures2D[PassDataCB.PreviousViewDepthTexIdx];
@@ -50,6 +51,11 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     RWTexture2D<float4> currentAccumulationCounterTexture = RW_Float4_Textures2D[PassDataCB.CurrentAccumulationCounterTexIdx];
     RWTexture2D<float4> shadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.ShadowedShadingReprojectionTargetTexIdx];
     RWTexture2D<float4> unshadowedShadingReprojectionTarget = RW_Float4_Textures2D[PassDataCB.UnshadowedShadingReprojectionTargetTexIdx];
+    RWTexture2D<float4> reprojectedTexelIndicesTarget = RW_Float4_Textures2D[PassDataCB.ReprojectedTexelIndicesTargetTexIdx];
+    // ========================================================================================================================== //
+
+    uint2 pixelIndex = ThreadGroupTilingX(PassDataCB.DispatchGroupCount, GroupDimensionSize.xx, 8, groupThreadID.xy, groupID.xy);
+    float2 uv = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
 
     float roughness;
     float3 surfaceNormal;
@@ -112,6 +118,9 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
             ApplyBilinearCustomWeights(unshadowedShadingDenoisedGatherResult.Blue, weights));
 
         unshadowedShadingReprojectionTarget[pixelIndex].rgb = unshadowedShadingDenoisedReprojected;
+
+        float2 reprojectedTexelIdx = occlusion.x > 0.0 ? UVToTexelIndex(reprojectedUV, GlobalDataCB.PipelineRTResolution) : -1.0;
+        reprojectedTexelIndicesTarget[pixelIndex].rg = reprojectedTexelIdx;
     }
 
     currentAccumulationCounterTexture[pixelIndex] = accumCountNew;

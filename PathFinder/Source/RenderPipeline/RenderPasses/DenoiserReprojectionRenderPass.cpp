@@ -28,8 +28,11 @@ namespace PathFinder
         NewTextureProperties reprojectionTargetProperties{};
         reprojectionTargetProperties.TextureToCopyPropertiesFrom = ResourceNames::StochasticShadowedShadingOutput[frameIndex];
 
+        NewTextureProperties reprojectedTexelIndicesProperties{ HAL::ColorFormat::RG16_Float };
+
         scheduler->NewTexture(ResourceNames::ReprojectedFramesCount[frameIndex], frameCountProperties);
         scheduler->NewTexture(ResourceNames::ReprojectedFramesCount[previousFrameIndex], MipSet::Empty(), frameCountProperties);
+        scheduler->NewTexture(ResourceNames::DenoisedReprojectedTexelIndices, reprojectedTexelIndicesProperties);
 
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
@@ -72,6 +75,7 @@ namespace PathFinder
             cbContent.UnshadowedShadingDenoisedHistoryTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticUnshadowedShadingDenoised[previousFrameIndex]);
             cbContent.ShadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingReprojected);
             cbContent.UnshadowedShadingReprojectionTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingReprojected);
+            cbContent.ReprojectedTexelIndicesTargetTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DenoisedReprojectedTexelIndices);
         }
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);

@@ -13,7 +13,7 @@ struct PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 
-static const int GroupDimensionSize = 16;
+static const int GroupDimensionSize = 8;
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV_GroupThreadID)

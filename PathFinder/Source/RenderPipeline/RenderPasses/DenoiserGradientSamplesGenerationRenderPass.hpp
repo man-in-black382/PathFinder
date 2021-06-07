@@ -12,10 +12,8 @@ namespace PathFinder
     {
         glm::uvec2 DispatchGroupCount;
         uint32_t DepthStencilTexIdx;
-        uint32_t MotionTexIdx;
-        uint32_t NormalRoughnessTexIdx;
-        uint32_t GBufferViewDepthPrevTexIdx;
-        uint32_t ShadowedShadingRawPrevTexIdx;
+        uint32_t ReprojectedTexelIndicesTexIdx;
+        uint32_t StochasticShadowedShadingPrevTexIdx;
         uint32_t StochasticRngSeedsPrevTexIdx;
         uint32_t GradientSamplePositionsPrevTexIdx;
         uint32_t StochasticRngSeedsOutputTexIdx;

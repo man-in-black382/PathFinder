@@ -36,10 +36,8 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::DenoiserGradientSamplePositions[previousFrameIndex], MipSet::Empty(), gradientSamplePositionsProps);
         scheduler->NewTexture(ResourceNames::DenoiserGradientSamples, gradientProps);
 
-        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[previousFrameIndex], TextureReadContext::NonPixelShader, MipSet::FirstMip());
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
-        scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
-        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
+        scheduler->ReadTexture(ResourceNames::DenoisedReprojectedTexelIndices);
         scheduler->ReadTexture(ResourceNames::StochasticShadowedShadingOutput[previousFrameIndex]);
         scheduler->ReadTexture(ResourceNames::RngSeeds[previousFrameIndex]);
         scheduler->ReadTexture(ResourceNames::DenoiserGradientSamplePositions[previousFrameIndex]);
@@ -64,11 +62,8 @@ namespace PathFinder
 
         DenoiserGradientSamplesGenerationCBContent cbContent{};
         cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
-        cbContent.ShadowedShadingRawPrevTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::StochasticShadowedShadingOutput[previousFrameIndex]);
         cbContent.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
-        cbContent.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
-        cbContent.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
-        cbContent.GBufferViewDepthPrevTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[previousFrameIndex]);
+        cbContent.ReprojectedTexelIndicesTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoisedReprojectedTexelIndices);
         cbContent.StochasticRngSeedsPrevTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::RngSeeds[previousFrameIndex]);
         cbContent.GradientSamplePositionsPrevTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserGradientSamplePositions[previousFrameIndex]);
         cbContent.StochasticRngSeedsOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::RngSeedsCorrelated);

@@ -47,7 +47,6 @@ namespace PathFinder
         
         scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
         scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
-        scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
         scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
         scheduler->ReadTexture(DeferredLightingRngSeedTexName(isDenoiserEnabled, currentFrameIndex));
@@ -70,7 +69,6 @@ namespace PathFinder
 
         cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalness);
         cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
-        cbContent.GBufferIndices.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
         cbContent.GBufferIndices.TypeAndMaterialTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferTypeAndMaterialIndex);
         cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();

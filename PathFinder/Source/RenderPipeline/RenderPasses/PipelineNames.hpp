@@ -58,6 +58,7 @@ namespace PathFinder
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
         inline NameArray<2> ReprojectedFramesCount{ "Resource_Reprojected_Frames_Count[0]", "Resource_Reprojected_Frames_Count[1]" };
         inline Foundation::Name DenoisedCombinedDirectShading{ "Resource_Denoised_Combined_Direct_Shading" };
+        inline Foundation::Name DenoisedReprojectedTexelIndices{ "Resource_Denoised_Reprojected_Texel_Indices" };
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
         inline Foundation::Name BloomCompositionOutput{ "Resource_Bloom_Composition_Output" };

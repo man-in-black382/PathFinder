@@ -24,6 +24,7 @@ namespace PathFinder
         uint32_t UnshadowedShadingDenoisedHistoryTexIdx;
         uint32_t ShadowedShadingReprojectionTargetTexIdx;
         uint32_t UnshadowedShadingReprojectionTargetTexIdx;
+        uint32_t ReprojectedTexelIndicesTargetTexIdx;
     };
 
     class DenoiserReprojectionRenderPass : public RenderPass<RenderPassContentMediator>

@@ -47,7 +47,7 @@ namespace PathFinder
         cbContent.BlueNoiseTexDepth = blueNoiseTexture->Properties().Dimensions.Depth;
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 8, 8 });
     }
 
 }
