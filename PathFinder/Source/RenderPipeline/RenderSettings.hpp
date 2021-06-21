@@ -25,14 +25,14 @@ namespace PathFinder
         bool DoNotRotateGIProbeRays = false;
         bool IsGIEnabled = true;
         bool IsGIRecursionEnabled = true;
-        bool IsGIShowIrradianceOnly = false;
+        bool IsGIShowIlluminanceOnly = false;
         bool IsAOEnabled = true;
 
         bool IsTAAEnabled = true;
         bool IsTAAYCoCgSpaceEnabled = true;
         uint32_t TAASampleCount = 16;
 
-        IrradianceField GlobalIlluminationSettings;
+        IlluminanceField GlobalIlluminationSettings;
         PipelineSettings RenderPipelineSettings;
     };
 

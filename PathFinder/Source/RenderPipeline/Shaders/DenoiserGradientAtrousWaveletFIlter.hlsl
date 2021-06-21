@@ -19,7 +19,7 @@ static const float WaveletKernel[2][2] = {
     { WaveletFactor, WaveletFactor * WaveletFactor }
 };
 
-static const int GroupDimensionSize = 16;
+static const int GroupDimensionSize = 8;
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupThreadID : SV_GroupThreadID)

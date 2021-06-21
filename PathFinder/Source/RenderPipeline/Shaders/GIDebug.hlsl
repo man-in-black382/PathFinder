@@ -7,7 +7,7 @@
 
 struct PassData
 {
-    IrradianceField ProbeField;
+    IlluminanceField ProbeField;
     int ExplicitProbeIndex;
 };
 
@@ -96,10 +96,10 @@ float4 ProbePSMain(ProbeVertexOut pin) : SV_Target0
     // Rotate to world space
     normal = mul(pin.NormalMatrix, normal);
 
-    float2 atlasUV = IrradianceProbeAtlasUV(pin.ProbeIndex, normal, PassDataCB.ProbeField);
-    Texture2D atlas = Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
+    float2 atlasUV = IlluminanceProbeAtlasUV(pin.ProbeIndex, normal, PassDataCB.ProbeField);
+    Texture2D atlas = Textures2D[PassDataCB.ProbeField.CurrentIlluminanceProbeAtlasTexIdx];
     float3 irradiance = atlas.SampleLevel(LinearClampSampler(), atlasUV, 0).rgb;
-    irradiance = DecodeProbeIrradiance(irradiance);
+    irradiance = DecodeProbeIlluminance(irradiance);
 
     return float4(irradiance, 1.0);
 

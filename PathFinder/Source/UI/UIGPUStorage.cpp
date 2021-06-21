@@ -93,7 +93,7 @@ namespace PathFinder
         if (!mFontTexture || mFontTexture->HALTexture()->Dimensions().Width != width || mFontTexture->HALTexture()->Dimensions().Height != height)
         {
             HAL::TextureProperties properties{
-                HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture2D,
+                HAL::ColorFormat::RGBA8_Unsigned_Norm, HAL::TextureKind::Texture2D,
                 Geometry::Dimensions{(uint64_t)width, (uint64_t)height}, HAL::ResourceState::AnyShaderAccess
             };
 

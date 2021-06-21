@@ -12,12 +12,12 @@ namespace PathFinder
     struct DeferredShadowsCBContent
     {
         GBufferTextureIndices GBufferIndices;
-        // 16 byte boundary
+        uint32_t ReprojectedTexelIndicesTexIdx;
+        uint32_t DenoiserGradientSamplePositionsTexIdx;
         uint32_t ShadowRayPDFsTexIdx;
         uint32_t ShadowRayIntersectionPointsTexIdx;
         uint32_t StochasticShadowedOutputTexIdx;
         uint32_t StochasticUnshadowedOutputTexIdx;
-        // 16 byte boundary
         uint32_t BlueNoiseTexSize;
         uint32_t BlueNoiseTexDepth;
         uint32_t BlueNoiseTexIdx;

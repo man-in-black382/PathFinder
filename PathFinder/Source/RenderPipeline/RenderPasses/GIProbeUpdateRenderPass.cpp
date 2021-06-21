@@ -15,10 +15,10 @@ namespace PathFinder
             state.ComputeShaderFileName = "GIProbeUpdate.hlsl";
         });
 
-        stateCreator->CreateComputeState(PSONames::GIIrradianceProbeCornerUpdate, [](ComputeStateProxy& state)
+        stateCreator->CreateComputeState(PSONames::GIIlluminanceProbeCornerUpdate, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "GIProbeBorderUpdate.hlsl";
-            state.EntryPoint = "IrradianceCornerUpdateCSMain";
+            state.EntryPoint = "IlluminanceCornerUpdateCSMain";
         });
 
         stateCreator->CreateComputeState(PSONames::GIDepthProbeCornerUpdate, [](ComputeStateProxy& state)
@@ -27,10 +27,10 @@ namespace PathFinder
             state.EntryPoint = "DepthCornerUpdateCSMain";
         });
 
-        stateCreator->CreateComputeState(PSONames::GIIrradianceProbeBorderUpdate, [](ComputeStateProxy& state)
+        stateCreator->CreateComputeState(PSONames::GIIlluminanceProbeBorderUpdate, [](ComputeStateProxy& state)
         {
             state.ComputeShaderFileName = "GIProbeBorderUpdate.hlsl";
-            state.EntryPoint = "IrradianceBorderUpdateCSMain";
+            state.EntryPoint = "IlluminanceBorderUpdateCSMain";
         });
 
         stateCreator->CreateComputeState(PSONames::GIDepthProbeBorderUpdate, [](ComputeStateProxy& state)
@@ -48,7 +48,7 @@ namespace PathFinder
         NewTextureProperties irradianceTextureProperties{
             HAL::ColorFormat::RGBA16_Float,
             HAL::TextureKind::Texture2D,
-            scheduler->GetContent()->GetSettings()->GlobalIlluminationSettings.GetIrradianceProbeAtlasSize()
+            scheduler->GetContent()->GetSettings()->GlobalIlluminationSettings.GetIlluminanceProbeAtlasSize()
         };
 
         NewTextureProperties depthTextureProperties{
@@ -60,15 +60,15 @@ namespace PathFinder
         irradianceTextureProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
         depthTextureProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
-        scheduler->NewTexture(ResourceNames::GIIrradianceProbeAtlas[currentFrameIdx], irradianceTextureProperties);
+        scheduler->NewTexture(ResourceNames::GIIlluminanceProbeAtlas[currentFrameIdx], irradianceTextureProperties);
         scheduler->NewTexture(ResourceNames::GIDepthProbeAtlas[currentFrameIdx], depthTextureProperties);
 
         // Indicate that these textures are created, but not written
-        scheduler->NewTexture(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx], MipSet::Empty(), irradianceTextureProperties);
+        scheduler->NewTexture(ResourceNames::GIIlluminanceProbeAtlas[previousFrameIdx], MipSet::Empty(), irradianceTextureProperties);
         scheduler->NewTexture(ResourceNames::GIDepthProbeAtlas[previousFrameIdx], MipSet::Empty(), depthTextureProperties);
 
         // Read previous frame atlases
-        scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
+        scheduler->ReadTexture(ResourceNames::GIIlluminanceProbeAtlas[previousFrameIdx]);
         scheduler->ReadTexture(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
 
         scheduler->ReadTexture(ResourceNames::GIRayHitInfo);
@@ -87,11 +87,11 @@ namespace PathFinder
         const SceneGPUStorage* sceneStorage = context->GetContent()->GetSceneGPUStorage();
 
         GIProbeUpdateCBContent cbContent{};
-        cbContent.ProbeField = sceneStorage->GetIrradianceFieldGPURepresentation();
+        cbContent.ProbeField = sceneStorage->GetIlluminanceFieldGPURepresentation();
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIRayHitInfo);
-        cbContent.ProbeField.PreviousIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
+        cbContent.ProbeField.PreviousIlluminanceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIlluminanceProbeAtlas[previousFrameIdx]);
         cbContent.ProbeField.PreviousDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
-        cbContent.ProbeField.CurrentIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIIrradianceProbeAtlas[currentFrameIdx]);
+        cbContent.ProbeField.CurrentIlluminanceProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIIlluminanceProbeAtlas[currentFrameIdx]);
         cbContent.ProbeField.CurrentDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIDepthProbeAtlas[currentFrameIdx]);
        
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
@@ -105,7 +105,7 @@ namespace PathFinder
 
         // Here X dimension represents probes and Y represents 4 corners.
         // One dispatched group handles corners for multiple probes.
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIIrradianceProbeCornerUpdate);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIIlluminanceProbeCornerUpdate);
         context->GetCommandRecorder()->Dispatch({ cbContent.ProbeField.TotalProbeCount, CornerCount }, { 16, CornerCount });
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIDepthProbeCornerUpdate);
@@ -113,7 +113,7 @@ namespace PathFinder
         
         // Propagate borders 
         // Here each group handles borders for exactly one probe, so we just dispatch ProbeCount groups
-        context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIIrradianceProbeBorderUpdate);
+        context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIIlluminanceProbeBorderUpdate);
         context->GetCommandRecorder()->Dispatch(cbContent.ProbeField.TotalProbeCount);
 
         context->GetCommandRecorder()->ApplyPipelineState(PSONames::GIDepthProbeBorderUpdate);

@@ -122,4 +122,22 @@ float3 YCoCgToRGB(float3 YCoCg)
     return rgb;
 }
 
+float3 XYZToRGB(float3 xyz)
+{
+    float3 rgb;
+    rgb.r = 3.240479f * xyz.x - 1.537150f * xyz.y - 0.498535f * xyz.z;
+    rgb.g = -0.969256f * xyz.x + 1.875991f * xyz.y + 0.041556f * xyz.z;
+    rgb.b = 0.055648f * xyz.x - 0.204043f * xyz.y + 1.057311f * xyz.z;
+    return rgb;
+}
+
+float3 RGBToXYZ(float3 rgb)
+{
+    float3 xyz;
+    xyz.x = 0.412453f * rgb.r + 0.357580f * rgb.g + 0.180423f * rgb.b;
+    xyz.y = 0.212671f * rgb.r + 0.715160f * rgb.g + 0.072169f * rgb.b;
+    xyz.z = 0.019334f * rgb.r + 0.119193f * rgb.g + 0.950227f * rgb.b;
+    return xyz;
+}
+
 #endif

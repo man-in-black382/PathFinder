@@ -92,7 +92,7 @@ namespace PathFinder
                 uint64_t endTick = ticks[eventEndIndexInHeap];
                 uint64_t startTick = ticks[eventStartIndexInHeap];
 
-                assert_format(endTick >= startTick, "Profiler ticks are messed up");
+                //assert_format(endTick >= startTick, "Profiler ticks are messed up");
 
                 event.DurationSeconds = float(endTick - startTick) / eventInfo.TickFrequency;
 

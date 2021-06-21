@@ -8,8 +8,9 @@ static const float MaxAccumulatedFrames = 16;
 static const float MaxFrameCountWithHistoryFix = 4;
 static const float MaxAccumulatedFramesInv = 1.0 / MaxAccumulatedFrames;
 static const float MaxFrameCountWithHistoryFixInv = 1.0 / MaxFrameCountWithHistoryFix;
-static const float DisocclusionThreshold = 0.01;
+static const float DisocclusionThreshold = 0.1;
 
+static const uint InvalidStrataPositionIndicator = 0xFF; // All 1s in 8 bits
 static const uint StrataPositionPackingMask = 7; // 0b111
 static const uint StrataPositionPackingShift = 3; // 3 bits
 static const uint GradientUpscaleCoefficient = 3;
@@ -32,6 +33,10 @@ uint2 UnpackStratumPosition(uint packed)
 
 float GeometryWeight(float3 p0, float3 n0, float3 p)
 {
+    // IMPORTANT: Absolute or relative distance is not accounted for
+    // and distance to plane may produce ghosting in certain scenarios 
+    // even if points are far apart in space
+
     // Weight based on distance from current sample "p"
     // and tangent plane to center sample "{p0, n0}"
 
@@ -109,11 +114,45 @@ float ReprojectionOcclusion(float3 surfaceNormal, float3 previousWorldPosition, 
     return occlusion;
 }
 
+// When pixel is a gradient sample, we *must* use previous frame data 
+// to reconstruct world position so that exactly the same world position
+// as in previous frame would be used for shading in the current one.
+float3 ReconstructWorldPositionForDenoiserGradient(
+    uint2 pixelIndex, 
+    uint2 rtResolution, 
+    float viewDepth,
+    Texture2D<uint4> gradientSamplePositions, 
+    Texture2D reprojectedTexelIndices,
+    Camera previousFrameCamera,
+    Camera currentFrameCamera)
+{
+    uint2 gradientDataPixelIndex = pixelIndex * GradientUpscaleCoefficientInv;
+    uint packedStratumPosition = gradientSamplePositions[gradientDataPixelIndex].r;
+    bool validStratumPosition = packedStratumPosition != InvalidStrataPositionIndicator;
+    uint2 stratumPosition = UnpackStratumPosition(packedStratumPosition);
+    bool currentPixelIsGradientSample = all((gradientDataPixelIndex * GradientUpscaleCoefficient + stratumPosition) == pixelIndex);
+
+    float3 surfacePosition = 0;
+
+    if (currentPixelIsGradientSample && validStratumPosition)
+    {
+        float2 reprojectedUV = TexelIndexToUV(reprojectedTexelIndices[pixelIndex].xy, rtResolution);
+        surfacePosition = ViewDepthToWorldPosition(viewDepth, reprojectedUV, previousFrameCamera);
+    }
+    else
+    {
+        float2 uv = TexelIndexToUV(pixelIndex, rtResolution);
+        surfacePosition = ViewDepthToWorldPosition(viewDepth, uv, currentFrameCamera);
+    }
+
+    return surfacePosition;
+}
+
 // Gradient for HF and SPEC channels is computed as the relative difference between
 // path tracer outputs on the current and previous frame, for a given gradient pixel. 
 float GetHFGradient(float currLuminance, float prevLuminance)
 {
-    const float Gamma = 1.0 / 1.0;
+    const float Gamma = 1.0 / 2.20;
     // Construct gradient in perceptual space with a "kind of" gamma curve
     float currPerceptLum = pow(currLuminance, Gamma);
     float prevPerceptLum = pow(prevLuminance, Gamma);
@@ -121,13 +160,8 @@ float GetHFGradient(float currLuminance, float prevLuminance)
     float maxLum = max(currPerceptLum, prevPerceptLum);
     float minLum = min(currPerceptLum, prevPerceptLum);
 
-    // Prev. lum. is negative when we left a hole during reprojection
-    if (/*currLuminance == 0 || */prevLuminance < 0.0)
-    {
-        return 0.0;
-    }
-
-    float gradient = (maxLum - minLum) / maxLum;
+    float gradient = abs(maxLum - minLum);// / maxLum;
+    //gradient *= gradient; // Kill small values
     return gradient;
 }
 
@@ -138,7 +172,7 @@ float3 CombineShading(float3 analytic, float3 stochasticShadowed, float3 stochas
     [unroll] 
     for (int i = 0; i < 3; ++i)
     {
-        shadow[i] = stochasticUnshadowed[i] < 1e-05 ? 1.0 : stochasticShadowed[i] / stochasticUnshadowed[i];
+        shadow[i] = stochasticUnshadowed[i] < 1e-06 ? 0.0 : stochasticShadowed[i] / stochasticUnshadowed[i];
     }
 
     return analytic * shadow;

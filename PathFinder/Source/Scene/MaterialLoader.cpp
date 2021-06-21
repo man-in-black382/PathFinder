@@ -73,11 +73,11 @@ namespace PathFinder
     void MaterialLoader::CreateDefaultTextures()
     {
         HAL::TextureProperties dummy2DTextureProperties{
-            HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture2D,
+            HAL::ColorFormat::RGBA8_Unsigned_Norm, HAL::TextureKind::Texture2D,
             Geometry::Dimensions{1, 1}, HAL::ResourceState::AnyShaderAccess };
 
         HAL::TextureProperties dummy3DTextureProperties{
-            HAL::ColorFormat::RGBA8_Usigned_Norm, HAL::TextureKind::Texture3D,
+            HAL::ColorFormat::RGBA8_Unsigned_Norm, HAL::TextureKind::Texture3D,
             Geometry::Dimensions{1, 1}, HAL::ResourceState::AnyShaderAccess };
 
         m1x1Black2DTexture = mResourceProducer->NewTexture(dummy2DTextureProperties);

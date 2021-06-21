@@ -8,24 +8,24 @@ namespace PathFinder
 {
     class Scene;
 
-    class IrradianceField
+    class IlluminanceField
     {
     public:
         void GenerateProbeRotation(const glm::vec2& random0to1);
         void SetCornerPosition(const glm::vec3& position);
         void SetDebugProbeRadius(float radius);
-        void SetIrradianceHysteresisDecrease(float decrease);
+        void SetIlluminanceHysteresisDecrease(float decrease);
         void SetDepthHysteresisDecrease(float decrease);
 
     private:
-        inline static const uint64_t IrradianceProbeSize = 8; // Should less or equal to depth probe size
+        inline static const uint64_t IlluminanceProbeSize = 8; // Should less or equal to depth probe size
         inline static const uint64_t DepthProbeSize = 16;
 
         // Should be power of 2
-        glm::uvec3 mProbeGridSize = glm::uvec3{ 16, 12, 16 };
-        float mCellSize = 2.5f;
+        glm::uvec3 mProbeGridSize = glm::uvec3{ 20, 14, 20 };
+        float mCellSize = 3.0f;
         float mDebugProbeRadius = 0.3f;
-        float mIrradianceHysteresisDecrease = 0.5f; // Quickly update probes at application startup
+        float mIlluminanceHysteresisDecrease = 0.5f; // Quickly update probes at application startup
         float mDepthHysteresisDecrease = 0.5f;
         uint64_t mRaysPerProbe = 256;
         glm::mat4 mProbeRotation{ 1.0f };
@@ -34,14 +34,14 @@ namespace PathFinder
 
     public:
         Geometry::Dimensions GetRayHitInfoTextureSize() const;
-        Geometry::Dimensions GetIrradianceProbeSize() const;
-        Geometry::Dimensions GetIrradianceProbeSizeWithBorder() const;
-        Geometry::Dimensions GetIrradianceProbeAtlasSize() const;
+        Geometry::Dimensions GetIlluminanceProbeSize() const;
+        Geometry::Dimensions GetIlluminanceProbeSizeWithBorder() const;
+        Geometry::Dimensions GetIlluminanceProbeAtlasSize() const;
         Geometry::Dimensions GetDepthProbeSize() const;
         Geometry::Dimensions GetDepthProbeSizeWithBorder() const;
         Geometry::Dimensions GetDepthProbeAtlasSize() const;
         glm::vec3 GetProbePosition(uint64_t probeIndex) const;
-        glm::uvec2 GetIrradianceProbeAtlasProbesPerDimension() const;
+        glm::uvec2 GetIlluminanceProbeAtlasProbesPerDimension() const;
         glm::uvec2 GetDepthProbeAtlasProbesPerDimension() const;
         uint64_t GetTotalRayCount() const;
         uint64_t GetTotalProbeCount() const;
@@ -52,7 +52,7 @@ namespace PathFinder
         const auto GetRaysPerProbe() const { return mRaysPerProbe; }
         const auto GetCellSize() const { return mCellSize; }
         const auto GetDebugProbeRadius() const { return mDebugProbeRadius; }
-        const auto GetIrradianceHysteresisDecrease() const { return mIrradianceHysteresisDecrease; }
+        const auto GetIlluminanceHysteresisDecrease() const { return mIlluminanceHysteresisDecrease; }
         const auto GetDepthHysteresisDecrease() const { return mDepthHysteresisDecrease; }
         const glm::mat4& GetProbeRotation() const { return mProbeRotation; }
     };
@@ -64,7 +64,7 @@ namespace PathFinder
 
         void Update();
 
-        IrradianceField ProbeField;
+        IlluminanceField ProbeField;
         std::optional<uint64_t> PickedDebugProbeIndex;
         bool GIDebugEnabled = false;
         bool DoNotRotateProbeRays = false;
@@ -74,7 +74,7 @@ namespace PathFinder
         void UpdateHysteresisDecrease();
 
         const Scene* mScene = nullptr;
-        uint64_t mIrradianceHysteresisDecreseFrameCount = 10; // Quickly update probes at application startup
+        uint64_t mIlluminanceHysteresisDecreseFrameCount = 10; // Quickly update probes at application startup
         uint64_t mDepthHysteresisDecreseFrameCount = 7; // Quickly update probes at application startup
     };
 

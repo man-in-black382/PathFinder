@@ -4,13 +4,16 @@
 #include "ColorConversion.hlsl"
 #include "Random.hlsl"
 #include "Utils.hlsl"
+#include "Matrix.hlsl" 
 #include "DenoiserCommon.hlsl"
 #include "ThreadGroupTilingX.hlsl"
 
 struct PassData
 {
     uint2 DispatchGroupCount;
-    uint DepthStencilTexIdx;
+    uint ViewDepthPrevTexIdx;
+    uint AlbedoMetalnessPrevTexIdx;
+    uint NormalRoughnessPrevTexIdx;
     uint ReprojectedTexelIndicesTexIdx;
     uint StochasticShadowedShadingPrevTexIdx;
     uint StochasticRngSeedsPrevTexIdx;
@@ -18,6 +21,9 @@ struct PassData
     uint StochasticRngSeedsOutputTexIdx;
     uint GradientSamplePositionsOutputTexIdx;
     uint GradientSamplesOutputTexIdx;
+    uint AlbedoMetalnessOutputTexIdx;
+    uint NormalRoughnessOutputTexIdx;
+    uint ViewDepthOutputTexIdx;
     uint FrameNumber;
 };
 
@@ -29,7 +35,7 @@ static const uint GroupDimensionSize = 8;
 
 // https://github.com/NVIDIA/Q2RTX/blob/master/src/refresh/vkpt/shader/asvgf_gradient_reproject.comp
 
-void Reproject(uint2 pixelIdx, inout float luminance, inout uint2 reprojectedTexelIdx)
+void Reproject(uint2 pixelIdx, inout float luminance, inout uint2 reprojectedTexelIdx, inout bool validSample)
 {
     float2 uv = TexelIndexToUV(pixelIdx, GlobalDataCB.PipelineRTResolution);
 
@@ -39,26 +45,27 @@ void Reproject(uint2 pixelIdx, inout float luminance, inout uint2 reprojectedTex
     Texture2D<uint4> gradientSamplePositionsPrevTexture = UInt4_Textures2D[PassDataCB.GradientSamplePositionsPrevTexIdx];
     // ========================================================================================================================== //
 
-    reprojectedTexelIdx = reprojectedTexelIndicesTexture[pixelIdx].xy;
+    validSample = true;
+    float2 reprojectedTexelIdxFloat = reprojectedTexelIndicesTexture[pixelIdx].xy;
+    reprojectedTexelIdx = reprojectedTexelIdxFloat;
 
-    bool occluded = any(reprojectedTexelIdx < 0.0);
+    bool occluded = any(reprojectedTexelIdxFloat < 0.0);
 
     if (occluded)
     {
-        luminance = 0.0; 
-        return;
+        validSample = false;
     }
 
     uint2 reprojectedDownscaledTexelIdx = reprojectedTexelIdx * GradientUpscaleCoefficientInv;
-    uint2 prevStrataPos = UnpackStratumPosition(gradientSamplePositionsPrevTexture[reprojectedDownscaledTexelIdx].x);
+    uint packedStrataPosition = gradientSamplePositionsPrevTexture[reprojectedDownscaledTexelIdx].x;
+    uint2 prevStrataPos = packedStrataPosition == InvalidStrataPositionIndicator ? 0 : UnpackStratumPosition(packedStrataPosition);
 
     // If this pixel was a gradient on the previous frame, don't use it. 
     // Carrying forward the same random number sequence over multiple frames introduces bias.
     bool wasUsedAsGradientSampleInPrevFrame = all((reprojectedDownscaledTexelIdx * GradientUpscaleCoefficient + prevStrataPos) == reprojectedTexelIdx);
     if (wasUsedAsGradientSampleInPrevFrame)
     {
-        luminance = 0.0;
-        return;
+        validSample = false;
     }
 
     float3 shadowedLuminance = shadowedShadingPrevTexture[reprojectedTexelIdx].rgb;
@@ -66,17 +73,22 @@ void Reproject(uint2 pixelIdx, inout float luminance, inout uint2 reprojectedTex
 }
 
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
-void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
+void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 {
     uint2 downscaledPixelIdx = ThreadGroupTilingX(PassDataCB.DispatchGroupCount, GroupDimensionSize.xx, 8, groupThreadID.xy, groupID.xy);
 
     // ========================================================================================================================== //
     Texture2D<uint4> rngSeedsPrevTexture = UInt4_Textures2D[PassDataCB.StochasticRngSeedsPrevTexIdx];
-    Texture2D depthStencilTexture = Textures2D[PassDataCB.DepthStencilTexIdx];
+    Texture2D previousViewDepthTexture = Textures2D[PassDataCB.ViewDepthPrevTexIdx];
+    Texture2D previousAlbedoMetalnessTexture = Textures2D[PassDataCB.AlbedoMetalnessPrevTexIdx];
+    Texture2D previousNormalRoughnessTexture = Textures2D[PassDataCB.NormalRoughnessPrevTexIdx];
 
     RWTexture2D<uint4> rngSeedsOutputTexture = RW_UInt4_Textures2D[PassDataCB.StochasticRngSeedsOutputTexIdx];
     RWTexture2D<uint> gradientSamplePositionsOutputTexture = RW_UInt_Textures2D[PassDataCB.GradientSamplePositionsOutputTexIdx];
     RWTexture2D<float4> gradientOutputTexture = RW_Float4_Textures2D[PassDataCB.GradientSamplesOutputTexIdx];
+    RWTexture2D<float4> albedoMetalnessOutputTexture = RW_Float4_Textures2D[PassDataCB.AlbedoMetalnessOutputTexIdx];
+    RWTexture2D<float4> normalRoughnessOutputTexture = RW_Float4_Textures2D[PassDataCB.NormalRoughnessOutputTexIdx];
+    RWTexture2D<float4> viewDepthOutputTexture = RW_Float4_Textures2D[PassDataCB.ViewDepthOutputTexIdx];
     // ========================================================================================================================== //
 
     // Find the brightest pixel in the stratum, but _not_ the same one as we used on the previous frame.
@@ -92,7 +104,13 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     uint2 maxLuminanceStrataPosition = 0; 
     uint2 maxLuminanceReprojectedTexelIdx = 0;
     float maxLuminance = 0;
+    uint2 maxLuminanceStrataPositionFallback = 0;
+    uint2 maxLuminanceReprojectedTexelIdxFallback = 0;
+    float maxLuminanceFallback = 0;
     bool found = false;
+    bool noValidSamples = true;
+
+    SetDataInspectorWriteCondition(all(FrameDataCB.MousePosition / 3 == downscaledPixelIdx));
 
     // Go over values from the previous frame to find the brightest pixel.
     [unroll]
@@ -106,29 +124,56 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
             float luminance;
             uint2 reprojectedTexelIdx;
-            Reproject(pixelIdx, luminance, reprojectedTexelIdx);
+            bool validSample;
+            Reproject(pixelIdx, luminance, reprojectedTexelIdx, validSample);
 
-            if (luminance > maxLuminance)
+            if (luminance > maxLuminance && validSample)
             {
+                // We have a good non-zero sample that is not occluded 
+                // and wasn't a gradient sample in previous frame
                 maxLuminance = luminance;
                 maxLuminanceStrataPosition = strataPosition;
                 maxLuminanceReprojectedTexelIdx = reprojectedTexelIdx;
                 found = true;
+                noValidSamples = false;
+            }
+            else if (validSample)
+            {
+                // Black sample, but still valid, will serve as a fallback in a case when all valid samples are black
+                maxLuminanceFallback = luminance;
+                maxLuminanceStrataPositionFallback = strataPosition;
+                maxLuminanceReprojectedTexelIdxFallback = reprojectedTexelIdx;
+                noValidSamples = false;
             }
         }
     }
-   
+
     if (!found)
     {
-        gradientSamplePositionsOutputTexture[downscaledPixelIdx].r = 0;
+        maxLuminance = maxLuminanceFallback;
+        maxLuminanceStrataPosition = maxLuminanceStrataPositionFallback;
+        maxLuminanceReprojectedTexelIdx = maxLuminanceReprojectedTexelIdxFallback;
+    }
+
+    if (noValidSamples)
+    {
+        gradientSamplePositionsOutputTexture[downscaledPixelIdx].r = InvalidStrataPositionIndicator;
         return;
     }
 
     // Index of pixel that we want to patch with data from previous frame
-    uint2 patchPixelIdx = downscaledPixelIdx * GradientUpscaleCoefficient + maxLuminanceStrataPosition;
+    uint2 patchPixelIdx = downscaledPixelIdx * GradientUpscaleCoefficient + maxLuminanceStrataPosition; 
 
     // Reuse rng seeds from previous frame for gradient pixels
     rngSeedsOutputTexture[patchPixelIdx] = float4(rngSeedsPrevTexture[maxLuminanceReprojectedTexelIdx].xyz, true);
+
+    // Reuse depth values from previous frame so that subsequent render passes could reconstruct exact world position from previous frame
+    // Depth buffer patching is important to avoid false positives when camera movement and/or TAA jitter is involved
+    viewDepthOutputTexture[patchPixelIdx] = previousViewDepthTexture[maxLuminanceReprojectedTexelIdx];
+
+    // Same for other gbuffer textures
+    normalRoughnessOutputTexture[patchPixelIdx] = previousNormalRoughnessTexture[maxLuminanceReprojectedTexelIdx];
+    albedoMetalnessOutputTexture[patchPixelIdx] = previousAlbedoMetalnessTexture[maxLuminanceReprojectedTexelIdx];
 
     // Output gradient sample
     gradientOutputTexture[downscaledPixelIdx].r = maxLuminance;

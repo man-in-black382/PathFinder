@@ -10,10 +10,11 @@ namespace PathFinder
 
     struct GIRayTracingCBContent
     {
-        GPUIrradianceField ProbeField;
+        GPUIlluminanceField ProbeField;
         glm::vec4 Halton;
         glm::uvec2 BlueNoiseTexSize;
         uint32_t BlueNoiseTexIdx;
+        uint32_t SkyTexIdx;
     };
 
     class GIRayTracingRenderPass : public RenderPass<RenderPassContentMediator>

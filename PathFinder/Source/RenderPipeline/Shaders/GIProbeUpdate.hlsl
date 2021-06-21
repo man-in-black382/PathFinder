@@ -7,16 +7,16 @@
 
 struct PassData
 {
-    IrradianceField ProbeField;
+    IlluminanceField ProbeField;
 };
 
 #define PassDataType PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 
-// Following constants *must* match values in IrradianceField
-static const uint IrradianceProbeSize = 8;
-static const uint IrradianceProbeTexelCount = IrradianceProbeSize * IrradianceProbeSize;
+// Following constants *must* match values in IlluminanceField
+static const uint IlluminanceProbeSize = 8;
+static const uint IlluminanceProbeTexelCount = IlluminanceProbeSize * IlluminanceProbeSize;
 static const uint DepthProbeSize = 16;
 static const uint DepthProbeTexelCount = DepthProbeSize * DepthProbeSize;
 static const uint RaysPerProbe = 256; // *Must* match values in ProbeField struct
@@ -61,11 +61,11 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
 
     const float Epsilon = 0.0001;
 
-    float3 irradianceTexelDirection = OctDecode(NormalizedIrradianceProbeOctCoord(probeLocal2DTexelIndex, PassDataCB.ProbeField));
+    float3 irradianceTexelDirection = OctDecode(NormalizedIlluminanceProbeOctCoord(probeLocal2DTexelIndex, PassDataCB.ProbeField));
     float3 depthTexelDirection = OctDecode(NormalizedDepthProbeOctCoord(probeLocal2DTexelIndex, PassDataCB.ProbeField));
 
     // Switch to disable probes inside of geometry
-    float backfaceWeight = 1.0;
+    float insideWallWeight = 1.0;
     float maxRayLength = length(PassDataCB.ProbeField.CellSize.xxx);
 
     // For each ray
@@ -84,11 +84,11 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
         // If at least one of the rays has hit a geometry backface,
         // we consider this probe problematic and disable it completely via backface weight.
         if (rayHitInfo.w == ProbeRayBackfaceIndicator)
-            backfaceWeight = 0.0;
+            insideWallWeight = 0.0;
 
         // Since irradiance probe is smaller than depth one, not all SIMD warps in the group will hit this branch, 
         // but all thread in a warp will always agree as long as irradiance probe size is a multiple of the depth one
-        if (all(probeLocal2DTexelIndex < IrradianceProbeSize))
+        if (all(probeLocal2DTexelIndex < IlluminanceProbeSize))
         {
             // Using depth probe texel index 
             float irradianceWeight = max(0.0, dot(irradianceTexelDirection, rayDirection));
@@ -101,20 +101,20 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
         depthResult += float4(rayProbeDistance * depthWeight, Square(rayProbeDistance) * depthWeight, 0.0, depthWeight);
     }
 
-    if (all(probeLocal2DTexelIndex < IrradianceProbeSize))
+    if (all(probeLocal2DTexelIndex < IlluminanceProbeSize))
     {
         if (irradianceResult.w > Epsilon)
         {
             irradianceResult.rgb *= FourPi / RaysPerProbe; // PDF is 1 / (4 * Pi)
-            irradianceResult.rgb = EncodeProbeIrradiance(irradianceResult.rgb);
+            irradianceResult.rgb = EncodeProbeIlluminance(irradianceResult.rgb);
 
-            Texture2D previousAtlas = Textures2D[PassDataCB.ProbeField.PreviousIrradianceProbeAtlasTexIdx];
-            RWTexture2D<float4> currentAtlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
+            Texture2D previousAtlas = Textures2D[PassDataCB.ProbeField.PreviousIlluminanceProbeAtlasTexIdx];
+            RWTexture2D<float4> currentAtlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentIlluminanceProbeAtlasTexIdx];
 
-            uint2 texelIndex = IrradianceProbeAtlasTexelIndex(probeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
+            uint2 texelIndex = IlluminanceProbeAtlasTexelIndex(probeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
             uint2 previousTexelIndex = texelIndex;
 
-            float hysteresis = 0.985 - PassDataCB.ProbeField.IrradianceHysteresisDecrease;
+            float hysteresis = 0.985 - PassDataCB.ProbeField.IlluminanceHysteresisDecrease;
 
             if (isNewlySpawnedProbe)
             {
@@ -122,14 +122,14 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
             } 
             else
             {
-                previousTexelIndex = IrradianceProbeAtlasTexelIndex(previousProbeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
+                previousTexelIndex = IlluminanceProbeAtlasTexelIndex(previousProbeIndex, probeLocal2DTexelIndex, PassDataCB.ProbeField);
             }
 
-            float4 previousIrradianceAndBackfaceWeight = previousAtlas[previousTexelIndex];
-            float3 previousIrradiance = previousIrradianceAndBackfaceWeight.rgb;
-            float previousBackfaceWeight = previousIrradianceAndBackfaceWeight.w;
+            float4 previousIlluminanceAndBackfaceWeight = previousAtlas[previousTexelIndex];
+            float3 previousIlluminance = previousIlluminanceAndBackfaceWeight.rgb;
+            float previousInsideWallWeight = previousIlluminanceAndBackfaceWeight.w;
 
-            float changeMagnitude = Max(abs(previousIrradiance.rgb - irradianceResult.rgb));
+            float changeMagnitude = Max(abs(previousIlluminance.rgb - irradianceResult.rgb));
 
             // Lower the hysteresis when a large change is detected
  /*           if (changeMagnitude > SignificantChangeThreshold)
@@ -143,10 +143,10 @@ void CSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
                 hysteresis = 0.0;
             }
 
-            float newBackfaceWeight = lerp(backfaceWeight, previousBackfaceWeight, hysteresis);
-            float3 newIrradiance = lerp(irradianceResult.rgb, previousIrradiance, hysteresis);
+            float newInsideWallWeight = lerp(insideWallWeight, previousInsideWallWeight, hysteresis);
+            float3 newIlluminance = lerp(irradianceResult.rgb, previousIlluminance, hysteresis);
 
-            currentAtlas[texelIndex] = float4(newIrradiance, newBackfaceWeight);
+            currentAtlas[texelIndex] = float4(newIlluminance, newInsideWallWeight);
         }
     }
 

@@ -34,10 +34,10 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::ReprojectedFramesCount[previousFrameIndex], MipSet::Empty(), frameCountProperties);
         scheduler->NewTexture(ResourceNames::DenoisedReprojectedTexelIndices, reprojectedTexelIndicesProperties);
 
-        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
+        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness[frameIndex]);
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferViewDepth[previousFrameIndex], TextureReadContext::NonPixelShader, MipSet::FirstMip());
-        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil, TextureReadContext::NonPixelShader, MipSet::FirstMip());
+        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil, TextureReadContext::NonPixelShader);
         scheduler->ReadTexture(ResourceNames::ReprojectedFramesCount[previousFrameIndex]);
 
         if (scheduler->GetContent()->GetSettings()->IsDenoiserEnabled)
@@ -62,7 +62,7 @@ namespace PathFinder
 
         DenoiserReprojectionCBContent cbContent{};
         cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
-        cbContent.GBufferNormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
+        cbContent.GBufferNormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness[frameIndex]);
         cbContent.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
         cbContent.PreviousViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[previousFrameIndex]);
         cbContent.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);

@@ -35,7 +35,7 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, int groupIndex : SV_Gr
     float totalWeight = PassDataCB.SmallBloomWeight + PassDataCB.MediumBloomWeight + PassDataCB.LargeBloomWeight;
     float3 weights = float3(PassDataCB.SmallBloomWeight, PassDataCB.MediumBloomWeight, PassDataCB.LargeBloomWeight) / totalWeight;
     float3 bloom = color1 * weights.x + color2 * weights.y + color3 * weights.z;
-    float bloomScale = 0.05; // Need to figure out a function that'll yield scale based on luminance
+    float bloomScale = 0.02; // Need to figure out a function that'll yield scale based on luminance
     float3 compositedColor = color0 + bloom * bloomScale;
 
     compositionOutput[dispatchThreadID.xy] = float4(compositedColor, 1.0);

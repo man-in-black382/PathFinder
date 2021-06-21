@@ -24,17 +24,20 @@ namespace PathFinder
 
         auto frameIndex = scheduler->GetFrameNumber() % 2;
 
-        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
-        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[frameIndex]);
+        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughnessPatched);
+        scheduler->ReadTexture(ResourceNames::GBufferViewDepthPatched);
         scheduler->ReadTexture(ResourceNames::ReprojectedFramesCount[frameIndex]);
         
-        // Write to mip 0
-        scheduler->AliasAndWriteTexture(DenoiserHistoryFixShadowedInputTexName(false, frameIndex), ResourceNames::StochasticShadowedShadingFixed, MipSet::FirstMip());
-        scheduler->AliasAndWriteTexture(DenoiserHistoryFixUnshadowedInputTexName(false), ResourceNames::StochasticUnshadowedShadingFixed, MipSet::FirstMip());
+        scheduler->ReadTexture(DenoiserHistoryFixShadowedInputTexName(false, frameIndex), TextureReadContext::NonPixelShader, MipSet::AllMips());
+        scheduler->ReadTexture(DenoiserHistoryFixUnshadowedInputTexName(false), TextureReadContext::NonPixelShader, MipSet::AllMips());
 
-        // Read tail mips
-        scheduler->ReadTexture(DenoiserHistoryFixShadowedInputTexName(false, frameIndex), TextureReadContext::NonPixelShader, MipSet::Range(1, std::nullopt));
-        scheduler->ReadTexture(DenoiserHistoryFixUnshadowedInputTexName(false), TextureReadContext::NonPixelShader, MipSet::Range(1, std::nullopt));
+        NewTextureProperties shadowedShadingFixedProperties{};
+        shadowedShadingFixedProperties.TextureToCopyPropertiesFrom = DenoiserHistoryFixShadowedInputTexName(false, frameIndex);
+        scheduler->NewTexture(ResourceNames::StochasticShadowedShadingFixed, shadowedShadingFixedProperties);
+
+        NewTextureProperties unshadowedShadingFixedProperties{};
+        unshadowedShadingFixedProperties.TextureToCopyPropertiesFrom = DenoiserHistoryFixUnshadowedInputTexName(false);
+        scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingFixed, unshadowedShadingFixedProperties);
     }
      
     void DenoiserHistoryFixRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -47,16 +50,16 @@ namespace PathFinder
         auto frameIndex = context->GetFrameNumber() % 2;
 
         DenoiserHistoryFixCBContent cbContent{};
-        cbContent.GBufferNormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
-        cbContent.ViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[frameIndex]);
+        cbContent.GBufferNormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughnessPatched);
+        cbContent.ViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepthPatched);
         cbContent.AccumulationCounterTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ReprojectedFramesCount[frameIndex]);
-        cbContent.ShadowedShadingPreBlurredTexIdx = resourceProvider->GetSRTextureIndex(DenoiserHistoryFixShadowedInputTexName(false, frameIndex), 1);
-        cbContent.UnshadowedShadingPreBlurredTexIdx = resourceProvider->GetSRTextureIndex(DenoiserHistoryFixUnshadowedInputTexName(false), 1);
-        cbContent.ShadowedShadingFixedTexIdx = resourceProvider->GetUATextureIndex(DenoiserHistoryFixShadowedInputTexName(false, frameIndex));
-        cbContent.UnshadowedShadingFixedTexIdx = resourceProvider->GetUATextureIndex(DenoiserHistoryFixUnshadowedInputTexName(false));
+        cbContent.ShadowedShadingPreBlurredTexIdx = resourceProvider->GetSRTextureIndex(DenoiserHistoryFixShadowedInputTexName(false, frameIndex));
+        cbContent.UnshadowedShadingPreBlurredTexIdx = resourceProvider->GetSRTextureIndex(DenoiserHistoryFixUnshadowedInputTexName(false));
+        cbContent.ShadowedShadingFixedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingFixed);
+        cbContent.UnshadowedShadingFixedTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticUnshadowedShadingFixed);
 
         context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 16, 16 });
+        context->GetCommandRecorder()->Dispatch(context->GetDefaultRenderSurfaceDesc().Dimensions(), { 8, 8 });
     }
 
 }

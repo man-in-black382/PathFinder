@@ -309,6 +309,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPostBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.cpp" />
+    <ClCompile Include="Source\RenderPipeline\RenderPasses\SkyGenerationRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\TAARenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.cpp" />
     <ClCompile Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.cpp" />
@@ -556,6 +557,7 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPostBlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserHistoryFixRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserMipGenerationRenderPass.hpp" />
+    <ClInclude Include="Source\RenderPipeline\RenderPasses\SkyGenerationRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\TAARenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserPreBlurRenderPass.hpp" />
     <ClInclude Include="Source\RenderPipeline\RenderPasses\DenoiserReprojectionRenderPass.hpp" />
@@ -1582,6 +1584,10 @@ RD /S /Q "$(TargetDir)CompiledShaders\" </Command>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <EnableUnboundedDescriptorTables Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableUnboundedDescriptorTables>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Vd /Qembed_debug %(AdditionalOptions)</AdditionalOptions>
+    </FxCompile>
+    <FxCompile Include="Source\RenderPipeline\Shaders\HosekSky.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/Qembed_debug %(AdditionalOptions)</AdditionalOptions>
     </FxCompile>
     <FxCompile Include="Source\RenderPipeline\Shaders\TAA.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

@@ -1,7 +1,7 @@
 #include "Sky.hpp"
 
 #include <Foundation/Pi.hpp>
-#include <hoseksky/ArHosekSkyModel.h>
+#include <Scene/Light.hpp>
 #include <cmath>
 
 namespace PathFinder
@@ -13,19 +13,21 @@ namespace PathFinder
     {
         mSkySpectrum.Init();
         mGroundAlbedoSpectrum.Init();
-        mGroundAlbedoSpectrum.FromRGB(glm::vec3{ 0.1 });
+        mGroundAlbedoSpectrum.FromRGB(mGroundAlbedo);
     }
 
-    void Sky::UpdateSolarIlluminance()
+    void Sky::UpdateSkyState()
     {
-        float thetaS = std::acos(1.0 - mSunDirection.y);
-        float elevation = glm::clamp(M_PI_2 - thetaS, 0.001, 0.999);
+        // Different sky model states seem to require elevation angles 
+        // in different frames of reference, which is really confusing.
+        float elevationPiOver2AtHorizon = std::acos(mSunDirection.y);
+        float elevationPiOver2AtZenith = M_PI_2 - elevationPiOver2AtHorizon;
         float turbidity = 1.7f;
 
         uint32_t totalSampleCount = mSkySpectrum.GetSamples().size();
 
         // Vertical sample angle. For one ray it's just equal to elevation.
-        float theta = elevation;
+        float theta = elevationPiOver2AtHorizon;
 
         // Angle between the sun direction and sample direction.
         // Since we have only one sample for simplicity, the angle is 0.
@@ -35,20 +37,45 @@ namespace PathFinder
         // For simplicity, we ignore limb darkening.
         for (uint64_t i = 0; i < totalSampleCount; ++i)
         {
-            ArHosekSkyModelState* skyState = arhosekskymodelstate_alloc_init(elevation, turbidity, mGroundAlbedoSpectrum[i]);
+            ArHosekSkyModelState* skyState = arhosekskymodelstate_alloc_init(elevationPiOver2AtHorizon, turbidity, mGroundAlbedoSpectrum[i]);
             float wavelength = glm::mix(mSkySpectrum.LowestWavelength(), mSkySpectrum.HighestWavelength(), i / float(totalSampleCount));
             mSkySpectrum[i] = float(arhosekskymodel_solar_radiance(skyState, theta, gamma, wavelength));
             arhosekskymodelstate_free(skyState);
         }
 
+        if (mSkyModelStateR)
+            arhosekskymodelstate_free(mSkyModelStateR);
+
+        if (mSkyModelStateG)
+            arhosekskymodelstate_free(mSkyModelStateG);
+
+        if (mSkyModelStateB)
+            arhosekskymodelstate_free(mSkyModelStateB);
+
         glm::vec3 sunLuminance = mSkySpectrum.ToRGB();
         glm::vec3 sunIlluminance = sunLuminance * SunSolidAngle; // Dividing by 1 / PDF
 
-        //IC(sunIlluminance.r, sunIlluminance.g, sunIlluminance.b);
+        // Found it on internet, without it the illuminance is too small.
+        // Account for luminous efficacy, coordinate system scaling (100, wtf???)
+        float multiplier = 100 * StandardLuminousEfficacy; 
+        mSolarIlluminance = sunIlluminance * multiplier;
+        mSolarLuminance = sunLuminance * multiplier;
 
-        // Why multiply by 100? Found it on internet, without it the illuminance is too small for some reason.
-        mSolarIlluminance = sunIlluminance * 100.f; 
-        mSolarLuminance = sunLuminance * 100.f;
+        mSkyModelStateR = arhosek_rgb_skymodelstate_alloc_init(turbidity, mGroundAlbedo.r, elevationPiOver2AtZenith);
+        mSkyModelStateG = arhosek_rgb_skymodelstate_alloc_init(turbidity, mGroundAlbedo.g, elevationPiOver2AtZenith);
+        mSkyModelStateB = arhosek_rgb_skymodelstate_alloc_init(turbidity, mGroundAlbedo.b, elevationPiOver2AtZenith);
+    }
+
+    void Sky::UpdatePreviousFrameValues()
+    {
+        mPreviousSunDirection = mSunDirection;
+    }
+
+    void Sky::SetSunDirection(const glm::vec3& direction)
+    {
+        mSunDirection = direction;
+        mSunDirection.y = glm::clamp(direction.y, 0.06f, 0.99f);
+        mSunDirection = glm::normalize(mSunDirection);
     }
 
 }

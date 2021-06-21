@@ -17,7 +17,6 @@ namespace PathFinder
         uint32_t MotionTexIdx;
         uint32_t DepthStencilTexIdx;
         uint32_t PreviousViewDepthTexIdx;
-        uint32_t StochasticShadowedShadingPrevTexIdx;
         uint32_t CurrentAccumulationCounterTexIdx;
         uint32_t PreviousAccumulationCounterTexIdx;
         uint32_t ShadowedShadingDenoisedHistoryTexIdx;

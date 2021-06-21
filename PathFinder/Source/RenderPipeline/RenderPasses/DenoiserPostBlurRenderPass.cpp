@@ -37,14 +37,14 @@ namespace PathFinder
         scheduler->ReadTexture(ResourceNames::ShadingAnalyticOutput);
         scheduler->ReadTexture(DenoiserPostBlurStochasticShadowedInputTexName(isDenoiserEnabled, currentFrameIndex));
         scheduler->ReadTexture(DenoiserPostBlurStochasticUnshadowedInputTexName(isDenoiserEnabled, currentFrameIndex));
-        scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas[currentFrameIndex]);
+        scheduler->ReadTexture(ResourceNames::GIIlluminanceProbeAtlas[currentFrameIndex]);
         scheduler->ReadTexture(ResourceNames::GIDepthProbeAtlas[currentFrameIndex]);
         
-        scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
-        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
+        scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalnessPatched);
+        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughnessPatched);
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
-        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
+        scheduler->ReadTexture(ResourceNames::GBufferViewDepth[currentFrameIndex]);
 
         if (isDenoiserEnabled)
         {
@@ -70,15 +70,15 @@ namespace PathFinder
 
         DenoiserPostBlurCBContent cbContent{};
 
-        cbContent.ProbeField = sceneStorage->GetIrradianceFieldGPURepresentation();
-        cbContent.ProbeField.CurrentIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[frameIndex]);
+        cbContent.ProbeField = sceneStorage->GetIlluminanceFieldGPURepresentation();
+        cbContent.ProbeField.CurrentIlluminanceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIlluminanceProbeAtlas[frameIndex]);
         cbContent.ProbeField.CurrentDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[frameIndex]);
 
-        cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalness);
-        cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
+        cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalnessPatched);
+        cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughnessPatched);
         cbContent.GBufferIndices.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
         cbContent.GBufferIndices.TypeAndMaterialTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferTypeAndMaterialIndex);
-        cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.GBufferIndices.ViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepth[frameIndex]);
 
         cbContent.DispatchGroupCount = { groupCount.Width, groupCount.Height };
         cbContent.AnalyticShadingTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::ShadingAnalyticOutput);

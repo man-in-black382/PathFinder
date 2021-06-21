@@ -2,6 +2,7 @@
 
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
+#include <array>
 
 namespace PathFinder
 {
@@ -20,6 +21,7 @@ namespace PathFinder
         uint32_t IndexCount;
         // 16 byte boundary
         uint32_t HasTangentSpace;
+        uint32_t IsDoubleSided;
     };
 
     struct GPUMaterialTableEntry
@@ -115,13 +117,14 @@ namespace PathFinder
         float FoVVTan = 0.0f;
         float AspectRatio = 0;
         // 16 byte boundary
+        glm::vec4 Front;
         // 16 byte boundary
         glm::vec2 UVJitter;
         uint32_t Pad0__;
         uint32_t Pad1__;
     };
 
-    struct GPUIrradianceField
+    struct GPUIlluminanceField
     {
         glm::uvec3 GridSize;
         float CellSize;
@@ -135,23 +138,23 @@ namespace PathFinder
         // 16 byte boundary
         glm::mat4 ProbeRotation;
         // 16 byte boundary
-        glm::uvec2 IrradianceProbeAtlasSize;
+        glm::uvec2 IlluminanceProbeAtlasSize;
         glm::uvec2 DepthProbeAtlasSize;
         // 16 byte boundary
-        glm::uvec2 IrradianceProbeAtlasProbesPerDimension;
+        glm::uvec2 IlluminanceProbeAtlasProbesPerDimension;
         glm::uvec2 DepthProbeAtlasProbesPerDimension;
         // 16 byte boundary
-        uint32_t IrradianceProbeSize;
+        uint32_t IlluminanceProbeSize;
         uint32_t DepthProbeSize;
-        uint32_t CurrentIrradianceProbeAtlasTexIdx;
+        uint32_t CurrentIlluminanceProbeAtlasTexIdx;
         uint32_t CurrentDepthProbeAtlasTexIdx;
         // 16 byte boundary
         glm::ivec3 SpawnedProbePlanesCount; // How many probe planes were spawned this frame on each axis
         float DebugProbeRadius;
         // 16 byte boundary
-        uint32_t PreviousIrradianceProbeAtlasTexIdx;
+        uint32_t PreviousIlluminanceProbeAtlasTexIdx;
         uint32_t PreviousDepthProbeAtlasTexIdx;
-        float IrradianceHysteresisDecrease;
+        float IlluminanceHysteresisDecrease;
         float DepthHysteresisDecrease;
     };
 
@@ -167,6 +170,12 @@ namespace PathFinder
         Mesh = 1 << 0,
         Light = 1 << 1,
         DebugGIProbe = 1 << 2
+    };
+
+    struct ArHosekSkyModelStateGPU
+    {
+        std::array<std::array<float, 12>, 3> Configs;
+        glm::vec4 Radiances;
     };
 
 }

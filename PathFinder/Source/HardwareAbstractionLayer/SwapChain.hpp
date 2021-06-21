@@ -22,7 +22,7 @@ namespace HAL
     class SwapChain
     {
     public:
-        inline static const ColorFormat SDRBackBufferFormat = ColorFormat::RGBA8_Usigned_Norm;
+        inline static const ColorFormat SDRBackBufferFormat = ColorFormat::RGBA8_Unsigned_Norm;
         inline static const ColorFormat HDRBackBufferFormat = ColorFormat::RGB10A2_Unorm;
 
         SwapChain(

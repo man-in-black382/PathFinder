@@ -13,10 +13,11 @@ struct ProbeRayPayload
 
 struct PassData
 {
-    IrradianceField ProbeField;
+    IlluminanceField ProbeField;
     float4 Halton;
     uint2 BlueNoiseTexSize;
     uint BlueNoiseTexIdx;
+    uint SkyTexIdx;
 };
 
 #define PassDataType PassData
@@ -99,7 +100,8 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
     float3 wo = mul(surfaceWorldToTangent, viewDirection);
     ShadingResult shadingResult = ZeroShadingResult();
-
+    
+    ShadeWithSun(gBuffer, partitionInfo, randomSequences, viewDirection, surfacePosition, surfaceWorldToTangent, shadingResult);
     ShadeWithSphericalLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
     ShadeWithRectangularLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
     ShadeWithEllipticalLights(gBuffer, partitionInfo, randomSequences, wo, surfacePosition, surfaceTangentToWorld, surfaceWorldToTangent, shadingResult);
@@ -108,9 +110,9 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     
     if (FrameDataCB.IsGIRecursionEnabled)
     {
-        Texture2D irradianceAtlas = Textures2D[PassDataCB.ProbeField.PreviousIrradianceProbeAtlasTexIdx];
+        Texture2D irradianceAtlas = Textures2D[PassDataCB.ProbeField.PreviousIlluminanceProbeAtlasTexIdx];
         Texture2D depthAtlas = Textures2D[PassDataCB.ProbeField.PreviousDepthProbeAtlasTexIdx];
-        float3 irradiance = RetrieveGIIrradiance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, true);
+        float3 irradiance = RetrieveGIIlluminance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, true);
        
         shadowed = DiffuseBRDFForGI(viewDirection, gBuffer) * irradiance;
     }
@@ -122,26 +124,36 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
         Light light = LightTable[lightIndex];
         float3 lightIntersectionPoint = 0.0;
         float3x3 lightRotation = ReduceTo3x3(light.RotationMatrix);
+        float3 lightLuminance = light.Luminance * light.Color.rgb;
 
         switch (light.LightType)
         {
+        case LightTypeSun:
+        {
+            float3 sunRayDirection = UnpackSunDirection(light, lightRotation, shadingResult.RayLightIntersectionData[i], i);
+            float largeNumber = 1000; // Should ideally move the "sun" point out of content's bounding box
+            lightIntersectionPoint = surfacePosition + sunRayDirection * largeNumber;
+            lightLuminance = GetColumn(light.ModelMatrix, 2).rgb;
+            break;
+        }
+
         case LightTypeSphere: lightIntersectionPoint = UnpackRaySphericalLightIntersectionPoint(shadingResult.RayLightIntersectionData[i], light); break;
         case LightTypeRectangle: lightIntersectionPoint = UnpackRayRectangularLightIntersectionPoint(shadingResult.RayLightIntersectionData[i], light, lightRotation); break;
         case LightTypeEllipse: lightIntersectionPoint = UnpackRayDiskLightIntersectionPoint(shadingResult.RayLightIntersectionData[i], light, lightRotation); break;
         }
-        
         // Skipped missed or otherwise problematic rays
         if (all(shadingResult.StochasticUnshadowedOutgoingLuminance[i]) <= 0.0)
             continue;
 
-        float3 lightToSurface = surfacePosition - lightIntersectionPoint;
-        float vectorLength = length(lightToSurface);
-        float tmax = vectorLength - 1e-03;
-        float tmin = 1e-03;
+        float3 surfaceToLight = lightIntersectionPoint - surfacePosition;
+        float vectorLength = length(surfaceToLight);
+        float3 surfaceToLightNorm = surfaceToLight / vectorLength;
+        float tmax = vectorLength;
+        float tmin = 0.0;
 
         RayDesc dxrRay;
-        dxrRay.Origin = lightIntersectionPoint;
-        dxrRay.Direction = lightToSurface / vectorLength;
+        dxrRay.Origin = surfacePosition;
+        dxrRay.Direction = surfaceToLightNorm;
         dxrRay.TMin = tmin;
         dxrRay.TMax = tmax;
 
@@ -169,7 +181,9 @@ void MeshRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersectio
     RWTexture2D<float4> rayHitInfoOutputTexture = RW_Float4_Textures2D[PassDataCB.ProbeField.RayHitInfoTextureIdx];
     uint2 outputTexelIdx = RayHitTexelIndex(rayIndex, probeIndex, PassDataCB.ProbeField);
 
-    bool hitBackFace = dot(gBuffer.Normal, WorldRayDirection()) >= 0.0;
+    // Back faced only possible on one-sided objects
+    bool hitBackFace = !instanceData.IsDoubleSided && dot(gBuffer.Normal, WorldRayDirection()) >= 0.0;
+
     rayHitInfoOutputTexture[outputTexelIdx] = float4(shadowed, hitBackFace ? ProbeRayBackfaceIndicator : RayTCurrent());
 }
 
@@ -184,8 +198,12 @@ void LightRayClosestHit(inout ProbeRayPayload payload, BuiltInTriangleIntersecti
 [shader("miss")]
 void ProbeRayMiss(inout ProbeRayPayload payload)
 {
+    Texture2D skyLuminanceTexture = Textures2D[PassDataCB.SkyTexIdx];
+    float3 worldDirection = WorldRayDirection();
+    float2 skyUV = (OctEncode(worldDirection) + 1.0) * 0.5;
+    float3 skyLuminance = skyLuminanceTexture.SampleLevel(LinearClampSampler(), skyUV, 0.0).rgb;
     float maxRayLength = length(PassDataCB.ProbeField.CellSize.xxx);
-    OutputResult(float4(0.0, 0.0, 0.0, FloatMax));
+    OutputResult(float4(skyLuminance, FloatMax));
 }
 
 [shader("miss")]

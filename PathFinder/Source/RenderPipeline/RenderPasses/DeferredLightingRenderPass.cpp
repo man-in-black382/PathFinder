@@ -45,11 +45,12 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::DeferredLightingRayLightIntersectionPoints, NewTextureProperties{ HAL::ColorFormat::RGBA32_Unsigned });
         //scheduler->NewTexture(ResourceNames::DeferredLightingRayLuminances, NewTextureProperties{ HAL::ColorFormat::R11G11B10_Float, HAL::TextureKind::Texture3D, luminancesTextureDimensions });
         
-        scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
-        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
+        scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalnessPatched);
+        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughnessPatched);
         scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
-        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
+        scheduler->ReadTexture(ResourceNames::GBufferViewDepthPatched);
         scheduler->ReadTexture(DeferredLightingRngSeedTexName(isDenoiserEnabled, currentFrameIndex));
+        scheduler->ReadTexture(ResourceNames::SkyLuminance);
     } 
 
     void DeferredLightingRenderPass::Render(RenderContext<RenderPassContentMediator>* context)
@@ -67,16 +68,17 @@ namespace PathFinder
 
         ShadingCBContent cbContent{};
 
-        cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalness);
-        cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
+        cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalnessPatched);
+        cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughnessPatched);
         cbContent.GBufferIndices.TypeAndMaterialTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferTypeAndMaterialIndex);
-        cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.GBufferIndices.ViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepthPatched);
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.AnalyticOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::ShadingAnalyticOutput);
         cbContent.ShadowRayPDFsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingRayPDFs);
         cbContent.ShadowRayIntersectionPointsTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::DeferredLightingRayLightIntersectionPoints);
         cbContent.BlueNoiseTextureSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
         cbContent.RngSeedsTexIdx = resourceProvider->GetSRTextureIndex(DeferredLightingRngSeedTexName(isDenoiserEnabled, currentFrameIndex));
+        cbContent.SkyTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::SkyLuminance);
         cbContent.FrameNumber = context->GetFrameNumber();
 
         auto haltonSequence = Foundation::Halton::Sequence(0, 3);

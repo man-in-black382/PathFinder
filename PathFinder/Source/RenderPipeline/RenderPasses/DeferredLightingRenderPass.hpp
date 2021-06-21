@@ -24,6 +24,8 @@ namespace PathFinder
         glm::uvec2 BlueNoiseTextureSize;
         uint32_t RngSeedsTexIdx;
         uint32_t FrameNumber;
+        // 16 byte boundary
+        uint32_t SkyTexIdx;
     };
 
     class DeferredLightingRenderPass : public RenderPass<RenderPassContentMediator>

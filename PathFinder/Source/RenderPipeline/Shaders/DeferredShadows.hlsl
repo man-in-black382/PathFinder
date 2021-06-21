@@ -4,16 +4,18 @@
 #include "Mesh.hlsl"
 #include "GBuffer.hlsl"
 #include "BRDF.hlsl"
+#include "DenoiserCommon.hlsl"
+#include "Exposure.hlsl"
 
 struct PassData
 {
     GBufferTextureIndices GBufferIndices;
-    // 16 byte boundary
+    uint ReprojectedTexelIndicesTexIdx;
+    uint DenoiserGradientSamplePositionsTexIdx;
     uint ShadowRayPDFsTexIdx;
     uint ShadowRayIntersectionPointsTexIdx;
     uint StochasticShadowedOutputTexIdx;
     uint StochasticUnshadowedOutputTexIdx;
-    // 16 byte boundary
     uint BlueNoiseTexSize;
     uint BlueNoiseTexDepth;
     uint BlueNoiseTexIdx;
@@ -29,36 +31,23 @@ struct Payload
 
 #include "ShadingCommon.hlsl"
 
-float3 UnpackSunDirection(Light sun, float3x3 sunOrientation, uint packedIntersectionData, uint rayIndex)
-{
-    float2 randomNumbers = UnpackRaySunIntersectionRandomNumbers(packedIntersectionData);
-
-    float sunDiskRadius = sun.ModelMatrix[3][0];
-    float radius = randomNumbers.x * sunDiskRadius;
-    float radiusSqrt = sqrt(radius);
-
-    float angle = randomNumbers.y * TwoPi;
-    float angleSin, angleCos;
-    sincos(angle, angleSin, angleCos);
-
-    float2 pointOnDisk = float2(radiusSqrt * angleCos, radiusSqrt * angleSin);
-    float3 nonRotatedDirection = normalize(float3(pointOnDisk, 1.0));
-    float3 rotatedDirection = mul(sunOrientation, nonRotatedDirection);
-
-    return rotatedDirection;
-}
-
-void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float depth)
+void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float viewDepth)
 {
     Texture2D rayPDFs = Textures2D[PassDataCB.ShadowRayPDFsTexIdx];
     Texture2D<uint4> rayLightIntersectionPoints = UInt4_Textures2D[PassDataCB.ShadowRayIntersectionPointsTexIdx];
+    Texture2D<uint4> denoiserGradientSamplePositions = UInt4_Textures2D[PassDataCB.DenoiserGradientSamplePositionsTexIdx];
+    Texture2D reprojectedTexelIndices = Textures2D[PassDataCB.ReprojectedTexelIndicesTexIdx];
 
     GBufferStandard gBuffer = ZeroGBufferStandard();
     LoadStandardGBuffer(gBuffer, gBufferTextures, pixelIndex);
 
     Material material = MaterialTable[gBuffer.MaterialIndex];
 
-    float3 surfacePosition = NDCDepthToWorldPosition(depth, uv, FrameDataCB.CurrentFrameCamera);
+    float3 surfacePosition = ReconstructWorldPositionForDenoiserGradient(
+        pixelIndex, GlobalDataCB.PipelineRTResolution, viewDepth, denoiserGradientSamplePositions, reprojectedTexelIndices,
+        FrameDataCB.PreviousFrameCamera, FrameDataCB.CurrentFrameCamera
+    );
+
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
     float3x3 worldToTangent = transpose(RotationMatrix3x3(gBuffer.Normal));
@@ -68,7 +57,7 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
     uint4 intersectionPoints = rayLightIntersectionPoints[pixelIndex];
     float4 shadowed = 0.0; // 4th component includes AO
     float3 unshadowed = 0.0;
-    float3 selfIntersectionOffset = gBuffer.Normal * 0.02;
+    float3 selfIntersectionOffset = gBuffer.Normal * 0.03;
 
     const uint ShadowRayFlags = 
         RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH |
@@ -76,28 +65,26 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
         RAY_FLAG_SKIP_CLOSEST_HIT_SHADER; // Skip closest hit shaders,
 
     // Shadows
-
-    // Sun goes first
-
-    // Then local lights
     [unroll]
     for (uint i = 0; i < TotalMaxRayCount; ++i)
     {
-        if (intersectionPoints[i] == 0 || pdfs[i] < 0.0001)
+        if (pdfs[i] < 0.0001)
             continue;
 
         uint lightIndex = i / raysPerLight;
         Light light = LightTable[lightIndex];
         float3 lightIntersectionPoint = 0.0;
         float3x3 lightRotation = ReduceTo3x3(light.RotationMatrix);
+        float3 lightLuminance = light.Luminance * light.Color.rgb;
 
         switch (light.LightType)
         {
         case LightTypeSun: 
         {
-            float3 sunRayDirection = UnpackSunDirection(light, lightRotation, intersectionPoints[i], i);
+            float3 sunRayDirection = UnpackSunDirection(light, lightRotation, intersectionPoints[i], i); 
             float largeNumber = 1000; // Should ideally move the "sun" point out of content's bounding box
             lightIntersectionPoint = surfacePosition + sunRayDirection * largeNumber;
+            lightLuminance = GetColumn(light.ModelMatrix, 2).rgb;
             break;
         }
             
@@ -106,22 +93,23 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
         case LightTypeEllipse: lightIntersectionPoint = UnpackRayDiskLightIntersectionPoint(intersectionPoints[i], light, lightRotation); break;
         }
 
-        float3 lightToSurface = surfacePosition - lightIntersectionPoint;
-        float vectorLength = length(lightToSurface);
-        float tmax = vectorLength; // Should be more smart, scene-dependent
+        float3 surfaceToLight = lightIntersectionPoint - surfacePosition;
+        float vectorLength = length(surfaceToLight);
+        float3 surfaceToLightNorm = surfaceToLight / vectorLength;
+        float tmax = vectorLength; 
         float tmin = 1e-03;
 
         float3 wo = mul(worldToTangent, viewDirection);
-        float3 wi = mul(worldToTangent, normalize(-lightToSurface));
+        float3 wi = mul(worldToTangent, surfaceToLightNorm);
         float3 wm = normalize(wo + wi);
 
-        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * 400/***/ /*light.Luminance * light.Color.rgb*//*40000 / pdfs[i]*/ / raysPerLight;
+        float3 brdf = CookTorranceBRDF(wo, wi, wm, gBuffer) * lightLuminance / pdfs[i] / raysPerLight;
 
         RayDesc shadowRay;
-        shadowRay.Origin = surfacePosition + selfIntersectionOffset;// lightIntersectionPoint;
-        shadowRay.Direction = UnpackSunDirection(light, lightRotation, intersectionPoints[i], i); ;// lightToSurface / vectorLength + selfIntersectionOffset;
-        shadowRay.TMin = 0.0;// tmin;
-        shadowRay.TMax = 100;// tmax;
+        shadowRay.Origin = surfacePosition + selfIntersectionOffset;
+        shadowRay.Direction = surfaceToLightNorm;
+        shadowRay.TMin = tmin;
+        shadowRay.TMax = tmax;
 
         Payload payload = { 0.0 };
 
@@ -136,7 +124,7 @@ void TraceForStandardGBuffer(GBufferTexturePack gBufferTextures, float2 uv, uint
             shadowRay, 
             payload);
 
-        shadowed.rgb += /*brdf * */payload.Value;
+        shadowed.rgb += brdf * payload.Value; 
         unshadowed += brdf;
     }
 
@@ -200,20 +188,21 @@ void OutputDefaults(uint2 pixelIndex)
 [shader("raygeneration")]
 void RayGeneration()
 {
+    // ========================================================================================================================== //
     GBufferTexturePack gBufferTextures;
     gBufferTextures.AlbedoMetalness = Textures2D[PassDataCB.GBufferIndices.AlbedoMetalnessTexIdx];
     gBufferTextures.NormalRoughness = Textures2D[PassDataCB.GBufferIndices.NormalRoughnessTexIdx];
     gBufferTextures.Motion = UInt4_Textures2D[PassDataCB.GBufferIndices.MotionTexIdx];
     gBufferTextures.TypeAndMaterialIndex = UInt4_Textures2D[PassDataCB.GBufferIndices.TypeAndMaterialTexIdx];
-    gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
     gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTexIdx];
+    // ========================================================================================================================== //
 
     uint2 pixelIndex = DispatchRaysIndex().xy;
     float2 pixelCenterUV = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
-    float depth = gBufferTextures.DepthStencil.Load(uint3(pixelIndex, 0)).r;
+    float viewDepth = gBufferTextures.ViewDepth.mips[0][pixelIndex].r;
 
     // Skip empty and emissive areas
-    if (depth >= 1.0)
+    if (viewDepth >= FrameDataCB.CurrentFrameCamera.FarPlane)
     {
         OutputDefaults(pixelIndex);
         return;
@@ -227,7 +216,7 @@ void RayGeneration()
         return;
     }
     
-    TraceForStandardGBuffer(gBufferTextures, pixelCenterUV, pixelIndex, depth);
+    TraceForStandardGBuffer(gBufferTextures, pixelCenterUV, pixelIndex, viewDepth);
 }
 
 #endif

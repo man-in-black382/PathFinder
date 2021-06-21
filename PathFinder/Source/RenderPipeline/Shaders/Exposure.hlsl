@@ -60,10 +60,15 @@ float ConvertEV100ToMaxHsbsLuminance(float EV100)
     return maxLuminance;
 }
 
-float3 ExposeLuminance(float3 luminance, Camera camera)
+float GetExposureFactor(Camera camera)
 {
     float maxLuminance = ConvertEV100ToMaxHsbsLuminance(camera.ExposureValue100);
-    return luminance / maxLuminance;
+    return 1.0 / maxLuminance;
+}
+
+float3 ExposeLuminance(float3 luminance, Camera camera)
+{
+    return luminance * GetExposureFactor(camera);
 }
 
 #endif

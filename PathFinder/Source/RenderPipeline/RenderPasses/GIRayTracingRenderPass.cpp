@@ -45,8 +45,9 @@ namespace PathFinder
 
         scheduler->NewTexture(ResourceNames::GIRayHitInfo, rayHitInfoTextureProperties);
 
-        scheduler->ReadTexture(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
+        scheduler->ReadTexture(ResourceNames::GIIlluminanceProbeAtlas[previousFrameIdx]);
         scheduler->ReadTexture(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
+        scheduler->ReadTexture(ResourceNames::SkyLuminance);
 
         scheduler->UseRayTracing();
         scheduler->ExecuteOnQueue(RenderPassExecutionQueue::AsyncCompute);
@@ -65,12 +66,13 @@ namespace PathFinder
         auto resourceProvider = context->GetResourceProvider();
 
         GIRayTracingCBContent cbContent{};
-        cbContent.ProbeField = sceneStorage->GetIrradianceFieldGPURepresentation();
-        cbContent.ProbeField.PreviousIrradianceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIrradianceProbeAtlas[previousFrameIdx]);
+        cbContent.ProbeField = sceneStorage->GetIlluminanceFieldGPURepresentation();
+        cbContent.ProbeField.PreviousIlluminanceProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIIlluminanceProbeAtlas[previousFrameIdx]);
         cbContent.ProbeField.PreviousDepthProbeAtlasTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::GIDepthProbeAtlas[previousFrameIdx]);
         cbContent.ProbeField.RayHitInfoTextureIdx = context->GetResourceProvider()->GetUATextureIndex(ResourceNames::GIRayHitInfo);
         cbContent.BlueNoiseTexIdx = blueNoiseTexture->GetSRDescriptor()->IndexInHeapRange();
         cbContent.BlueNoiseTexSize = { blueNoiseTexture->Properties().Dimensions.Width, blueNoiseTexture->Properties().Dimensions.Height };
+        cbContent.SkyTexIdx = context->GetResourceProvider()->GetSRTextureIndex(ResourceNames::SkyLuminance);
 
         auto start = context->GetFrameNumber() * 3;
         auto end = start + 3;

@@ -36,8 +36,8 @@ namespace PathFinder
             state.RootSignatureName = RootSignatureNames::GBufferMeshes;
             state.DepthStencilState.SetDepthTestEnabled(true);
             state.RenderTargetFormats = {
-                HAL::ColorFormat::RGBA8_Usigned_Norm,
-                HAL::ColorFormat::RGBA8_Usigned_Norm,
+                HAL::ColorFormat::RGBA8_Unsigned_Norm,
+                HAL::ColorFormat::RGBA8_Unsigned_Norm,
                 HAL::ColorFormat::RG32_Unsigned,
                 HAL::ColorFormat::R8_Unsigned,
                 HAL::ColorFormat::R32_Float
@@ -52,8 +52,8 @@ namespace PathFinder
             state.RootSignatureName = RootSignatureNames::GBufferLights;
             state.DepthStencilState.SetDepthTestEnabled(true);
             state.RenderTargetFormats = {
-                HAL::ColorFormat::RGBA8_Usigned_Norm,
-                HAL::ColorFormat::RGBA8_Usigned_Norm,
+                HAL::ColorFormat::RGBA8_Unsigned_Norm,
+                HAL::ColorFormat::RGBA16_Unsigned_Norm,
                 HAL::ColorFormat::RG32_Unsigned,
                 HAL::ColorFormat::R8_Unsigned,
                 HAL::ColorFormat::R32_Float
@@ -63,10 +63,15 @@ namespace PathFinder
       
     void GBufferRenderPass::ScheduleResources(ResourceScheduler<RenderPassContentMediator>* scheduler)
     { 
-        NewTextureProperties albedoMetalnessProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm };
-        NewTextureProperties normalRoughnessProperties{ HAL::ColorFormat::RGBA8_Usigned_Norm };
+        NewTextureProperties albedoMetalnessProperties{ HAL::ColorFormat::RGBA8_Unsigned_Norm };
+        // 8 bit normals introduce serious banding that's really visible in HDR, 16 is the way to go
+        // TODO: Use RG16 packing for normals and move roughness somewhere else?
+        NewTextureProperties normalRoughnessProperties{ HAL::ColorFormat::RGBA16_Unsigned_Norm }; 
         NewTextureProperties motionVectorProperties{ HAL::ColorFormat::RG32_Unsigned };
         NewTextureProperties typeAndMaterialIndexProperties{ HAL::ColorFormat::R8_Unsigned };
+
+        albedoMetalnessProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
+        normalRoughnessProperties.Flags = ResourceSchedulingFlags::CrossFrameRead;
 
         NewTextureProperties viewDepthProperties{};
         viewDepthProperties.ShaderVisibleFormat = HAL::ColorFormat::R32_Float;
@@ -77,8 +82,10 @@ namespace PathFinder
         auto previousFrameIndex = (scheduler->GetFrameNumber() - 1) % 2;
         auto frameIndex = scheduler->GetFrameNumber() % 2;
 
-        scheduler->NewRenderTarget(ResourceNames::GBufferAlbedoMetalness, albedoMetalnessProperties);
-        scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness, normalRoughnessProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferAlbedoMetalness[frameIndex], albedoMetalnessProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferAlbedoMetalness[previousFrameIndex], MipSet::Empty(), albedoMetalnessProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness[frameIndex], normalRoughnessProperties);
+        scheduler->NewRenderTarget(ResourceNames::GBufferNormalRoughness[previousFrameIndex], MipSet::Empty(), normalRoughnessProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferMotionVector, motionVectorProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferTypeAndMaterialIndex, typeAndMaterialIndexProperties);
         scheduler->NewRenderTarget(ResourceNames::GBufferViewDepth[frameIndex], MipSet::FirstMip(), viewDepthProperties);
@@ -92,16 +99,16 @@ namespace PathFinder
 
         context->GetCommandRecorder()->SetRenderTargets(
             std::array{
-                ResourceNames::GBufferAlbedoMetalness,
-                ResourceNames::GBufferNormalRoughness,
+                ResourceNames::GBufferAlbedoMetalness[currentFrameIndex],
+                ResourceNames::GBufferNormalRoughness[currentFrameIndex],
                 ResourceNames::GBufferMotionVector,
                 ResourceNames::GBufferTypeAndMaterialIndex,
                 ResourceNames::GBufferViewDepth[currentFrameIndex]
             },
             ResourceNames::GBufferDepthStencil);
 
-        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferAlbedoMetalness);
-        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferNormalRoughness);
+        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferAlbedoMetalness[currentFrameIndex]);
+        context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferNormalRoughness[currentFrameIndex]);
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferMotionVector);
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferTypeAndMaterialIndex);
         context->GetCommandRecorder()->ClearRenderTarget(ResourceNames::GBufferViewDepth[currentFrameIndex]);

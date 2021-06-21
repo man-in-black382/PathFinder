@@ -33,11 +33,13 @@ namespace PathFinder
         scheduler->NewTexture(ResourceNames::StochasticShadowedShadingOutput[previousFrameIndex], MipSet::Empty(), outputProperties);
         scheduler->NewTexture(ResourceNames::StochasticUnshadowedShadingOutput, MipSet::FirstMip(), outputProperties);
 
-        scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalness);
-        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughness);
+        scheduler->ReadTexture(ResourceNames::DenoisedReprojectedTexelIndices);
+        scheduler->ReadTexture(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
+        scheduler->ReadTexture(ResourceNames::GBufferAlbedoMetalnessPatched);
+        scheduler->ReadTexture(ResourceNames::GBufferNormalRoughnessPatched);
         scheduler->ReadTexture(ResourceNames::GBufferMotionVector);
         scheduler->ReadTexture(ResourceNames::GBufferTypeAndMaterialIndex);
-        scheduler->ReadTexture(ResourceNames::GBufferDepthStencil);
+        scheduler->ReadTexture(ResourceNames::GBufferViewDepthPatched);
         scheduler->ReadTexture(ResourceNames::DeferredLightingRayPDFs);
         scheduler->ReadTexture(ResourceNames::DeferredLightingRayLightIntersectionPoints);
 
@@ -57,11 +59,13 @@ namespace PathFinder
 
         DeferredShadowsCBContent cbContent{};
 
-        cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalness);
-        cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughness);
+        cbContent.ReprojectedTexelIndicesTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoisedReprojectedTexelIndices);
+        cbContent.DenoiserGradientSamplePositionsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DenoiserGradientSamplePositions[currentFrameIndex]);
+        cbContent.GBufferIndices.AlbedoMetalnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferAlbedoMetalnessPatched);
+        cbContent.GBufferIndices.NormalRoughnessTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferNormalRoughnessPatched);
         cbContent.GBufferIndices.MotionTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferMotionVector);
         cbContent.GBufferIndices.TypeAndMaterialTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferTypeAndMaterialIndex);
-        cbContent.GBufferIndices.DepthStencilTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferDepthStencil);
+        cbContent.GBufferIndices.ViewDepthTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::GBufferViewDepthPatched);
         cbContent.ShadowRayPDFsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingRayPDFs);
         cbContent.ShadowRayIntersectionPointsTexIdx = resourceProvider->GetSRTextureIndex(ResourceNames::DeferredLightingRayLightIntersectionPoints);
         cbContent.StochasticShadowedOutputTexIdx = resourceProvider->GetUATextureIndex(ResourceNames::StochasticShadowedShadingOutput[currentFrameIndex]);

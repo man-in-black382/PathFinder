@@ -10,7 +10,7 @@ namespace PathFinder
 
     struct GIProbeUpdateCBContent
     {
-        GPUIrradianceField ProbeField;
+        GPUIlluminanceField ProbeField;
     };
 
     class GIProbeUpdateRenderPass : public RenderPass<RenderPassContentMediator>

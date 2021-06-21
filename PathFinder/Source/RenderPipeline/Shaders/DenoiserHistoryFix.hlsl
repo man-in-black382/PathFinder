@@ -22,23 +22,18 @@ struct PassData
 
 #include "MandatoryEntryPointInclude.hlsl"
 
-static const int GroupDimensionSize = 16;
+static const int GroupDimensionSize = 8;
 static const int HistoryFixMipCount = MaxFrameCountWithHistoryFix + 1;
-static const float BilateralFilterViewZSensitivity = 0.25;
+static const float BilateralFilterViewZSensitivity = 0.1;
 
 void Fix(Texture2D inputTexture, RWTexture2D<float4> outputTexture, Texture2D viewDepthTexture, float roughness, float historyWeight, float baseViewDepth, uint2 pixelIndex, float2 uv)
 {
-    // Enough frames are accumulated to stop history reconstruction
-    if (historyWeight >= 1.0)
-    {
-        return;
-    }
-
-    uint mipLevel = (HistoryFixMipCount - 1) * (1.0 - historyWeight) * roughness;
+    uint mipLevel = (HistoryFixMipCount - 1) * saturate(1.0 - historyWeight) * roughness;
 
     // Sampling mip 0 and then writing to mip 0 is useless work
     if (mipLevel == 0)
     {
+        outputTexture[pixelIndex] = inputTexture.mips[0][pixelIndex];
         return;
     }
 
@@ -46,8 +41,6 @@ void Fix(Texture2D inputTexture, RWTexture2D<float4> outputTexture, Texture2D vi
     Bilinear bilinearFilter = GetBilinearFilter(uv, 1.0 / mipSize, mipSize);
 
     float4 mipViewDepths = GatherRedManually(viewDepthTexture, bilinearFilter, mipLevel, PointClampSampler());
-
-    float4 depthsRelativeDistance = abs(baseViewDepth / mipViewDepths - 1.0);
     float4 weights = GetBilinearCustomWeights(bilinearFilter, 1.0);
 
     // Some thoughts on depth-aware bilateral upsampling
@@ -58,7 +51,10 @@ void Fix(Texture2D inputTexture, RWTexture2D<float4> outputTexture, Texture2D vi
     //
     float4 depthDifferences = abs(baseViewDepth - mipViewDepths);
 
-    if (any(depthsRelativeDistance > BilateralFilterViewZSensitivity))
+    // If any close enough depth exists, pick it,
+    // otherwise accept noise and don't do the upsampling,
+    // because the produced ghosting is visually worse than the noise itself
+    if (any(depthDifferences < BilateralFilterViewZSensitivity))
     {
         int closestSampleIdx = 0;
         float diff = depthDifferences[0];
@@ -75,6 +71,11 @@ void Fix(Texture2D inputTexture, RWTexture2D<float4> outputTexture, Texture2D vi
 
         weights = 0.0;
         weights[closestSampleIdx] = 1.0;
+    }
+    else
+    {
+        outputTexture[pixelIndex] = inputTexture.mips[0][pixelIndex];
+        return;
     }
 
     GatheredRGBA gatherResult = GatherRGBAManually(inputTexture, bilinearFilter, mipLevel, PointClampSampler());

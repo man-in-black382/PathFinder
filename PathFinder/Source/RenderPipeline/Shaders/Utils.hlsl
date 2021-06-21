@@ -40,7 +40,7 @@ int FindMSB(int x)
     if (x < 0) 
         x = ~x;
     for (i = 0; i < 32; i++) {
-        mask = 0x80000000 >> i;
+        mask = 0x80000000U >> i;
         if (x & mask) {
             res = 31 - i;
             break;

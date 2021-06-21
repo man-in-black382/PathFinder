@@ -47,6 +47,7 @@ namespace PathFinder
         std::vector<std::weak_ptr<ViewController>> mViewControllers;
         robin_hood::unordered_flat_map<ViewModelTypeIndex, std::unique_ptr<ViewModel>> mViewModels;
 
+        bool mIsUIEnabled = true;
         bool mIsInteracting = false;
         bool mIsMouseOverUI = false;
         UIGPUStorage mGPUStorage;

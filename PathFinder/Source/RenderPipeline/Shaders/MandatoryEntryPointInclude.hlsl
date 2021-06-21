@@ -36,7 +36,7 @@ struct FrameData
     // 16 Byte Boundary
     bool IsGIEnabled;
     bool IsGIRecursionEnabled;
-    bool IsGIIrradianceDebugEnabled;
+    bool IsGIIlluminanceDebugEnabled;
     uint Pad2__;
 }; 
 
@@ -50,5 +50,10 @@ sampler LinearClampSampler() { return Samplers[GlobalDataCB.LinearClampSamplerId
 sampler PointClampSampler() { return Samplers[GlobalDataCB.PointClampSamplerIdx]; }
 sampler MinSampler() { return Samplers[GlobalDataCB.MinSamplerIdx]; }
 sampler MaxSampler() { return Samplers[GlobalDataCB.MaxSamplerIdx]; }
+
+void SetDataInspectorMousePositionMatchCondition(uint2 value)
+{
+    SetDataInspectorWriteCondition(all(FrameDataCB.MousePosition == value));
+}
 
 #endif

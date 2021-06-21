@@ -44,11 +44,13 @@ namespace PathFinder
         Material* mMaterial = nullptr;
         bool mIsSelected = false;
         bool mIsHighlighted = false;
+        bool mIsDoubleSided = false;
         Geometry::Transformation mTransformation;
         Geometry::Transformation mPreviousTransformation;
         uint32_t mIndexInGPUTable = 0;
 
     public:
+        inline bool IsDoubleSided() const { return mIsDoubleSided; }
         inline bool IsSelected() const { return mIsSelected; }
         inline bool IsHighlighted() const { return mIsHighlighted; }
         inline const Geometry::Transformation& GetTransformation() const { return mTransformation; }
@@ -60,10 +62,12 @@ namespace PathFinder
         inline Material* GetAssociatedMaterial() { return mMaterial; }
         inline auto GetIndexInGPUTable () const { return mIndexInGPUTable; }
 
+        inline void SetIsDoubleSided(bool doubleSided) { mIsDoubleSided = doubleSided; }
         inline void SetIsSelected(bool selected) { mIsSelected = selected; }
         inline void SetIsHighlighted(bool highlighted) { mIsHighlighted = highlighted; }
         inline void SetTransformation(const Geometry::Transformation& transform) { mTransformation = transform; }
         inline void SetIndexInGPUTable(uint32_t index) { mIndexInGPUTable = index; }
+        inline void SetMaterial(Material* material) { mMaterial = material; }
     };
 
 }

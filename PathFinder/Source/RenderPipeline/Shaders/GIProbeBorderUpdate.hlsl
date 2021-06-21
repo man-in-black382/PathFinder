@@ -5,7 +5,7 @@
 
 struct PassData
 {
-    IrradianceField ProbeField;
+    IlluminanceField ProbeField;
 };
 
 #define PassDataType PassData
@@ -26,7 +26,7 @@ void GetLocalTexelIndexForCorner(uint cornerIndex, uint probeSize, inout int2 lo
 }
 
 [numthreads(CornerUpdateGroupSizeX, CornerUpdateGroupSizeY, 1)]
-void IrradianceCornerUpdateCSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
+void IlluminanceCornerUpdateCSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_DispatchThreadID)
 {
     uint probeIndex = dtID.x;
     uint cornerIndex = dtID.y;
@@ -35,10 +35,10 @@ void IrradianceCornerUpdateCSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV
         return;
 
     int2 localTexelIndex, cornerOffset;
-    GetLocalTexelIndexForCorner(cornerIndex, PassDataCB.ProbeField.IrradianceProbeSize, localTexelIndex, cornerOffset);
+    GetLocalTexelIndexForCorner(cornerIndex, PassDataCB.ProbeField.IlluminanceProbeSize, localTexelIndex, cornerOffset);
 
-    uint2 atlasTexelIndex = IrradianceProbeAtlasTexelIndex(probeIndex, localTexelIndex, PassDataCB.ProbeField);
-    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
+    uint2 atlasTexelIndex = IlluminanceProbeAtlasTexelIndex(probeIndex, localTexelIndex, PassDataCB.ProbeField);
+    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentIlluminanceProbeAtlasTexIdx];
 
     atlas[atlasTexelIndex + cornerOffset] = atlas[atlasTexelIndex];
 }
@@ -61,7 +61,7 @@ void DepthCornerUpdateCSMain(uint3 gtID : SV_GroupThreadID, uint3 dtID : SV_Disp
     atlas[atlasTexelIndex + cornerOffset] = atlas[atlasTexelIndex];
 }
 
-static const uint IrradianceBorderUpdateGroupSizeX = 8; // *Must* match irradiance probe dimension size
+static const uint IlluminanceBorderUpdateGroupSizeX = 8; // *Must* match irradiance probe dimension size
 static const uint DepthBorderUpdateGroupSizeX = 16; // *Must* match depth probe dimension size
 static const uint BorderUpdateGroupSizeY = 4; // 4 borders in each case
 
@@ -101,19 +101,19 @@ void GetLocalTexelIndexForBorder(uint borderIndex, int borderTexelIndex, uint pr
     }
 }
 
-[numthreads(IrradianceBorderUpdateGroupSizeX, BorderUpdateGroupSizeY, 1)]
-void IrradianceBorderUpdateCSMain(int3 gtID : SV_GroupThreadID, int3 dtID : SV_DispatchThreadID)
+[numthreads(IlluminanceBorderUpdateGroupSizeX, BorderUpdateGroupSizeY, 1)]
+void IlluminanceBorderUpdateCSMain(int3 gtID : SV_GroupThreadID, int3 dtID : SV_DispatchThreadID)
 {
-    int probeIndex = dtID.x / IrradianceBorderUpdateGroupSizeX;
+    int probeIndex = dtID.x / IlluminanceBorderUpdateGroupSizeX;
 
     if (probeIndex >= PassDataCB.ProbeField.TotalProbeCount)
         return;
 
     int2 localTexelIndex = 0, texelOffsetToBorder = 0;
-    GetLocalTexelIndexForBorder(dtID.y, gtID.x, PassDataCB.ProbeField.IrradianceProbeSize, localTexelIndex, texelOffsetToBorder);
+    GetLocalTexelIndexForBorder(dtID.y, gtID.x, PassDataCB.ProbeField.IlluminanceProbeSize, localTexelIndex, texelOffsetToBorder);
 
-    int2 atlasTexelIndex = IrradianceProbeAtlasTexelIndex(probeIndex, localTexelIndex, PassDataCB.ProbeField);
-    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
+    int2 atlasTexelIndex = IlluminanceProbeAtlasTexelIndex(probeIndex, localTexelIndex, PassDataCB.ProbeField);
+    RWTexture2D<float4> atlas = RW_Float4_Textures2D[PassDataCB.ProbeField.CurrentIlluminanceProbeAtlasTexIdx];
 
     atlas[atlasTexelIndex + texelOffsetToBorder] = atlas[atlasTexelIndex];
 }

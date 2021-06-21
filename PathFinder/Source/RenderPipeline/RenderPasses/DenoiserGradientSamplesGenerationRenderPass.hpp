@@ -11,7 +11,9 @@ namespace PathFinder
     struct DenoiserGradientSamplesGenerationCBContent
     {
         glm::uvec2 DispatchGroupCount;
-        uint32_t DepthStencilTexIdx;
+        uint32_t ViewDepthPrevTexIdx;
+        uint32_t AlbedoMetalnessPrevTexIdx;
+        uint32_t NormalRoughnessPrevTexIdx;
         uint32_t ReprojectedTexelIndicesTexIdx;
         uint32_t StochasticShadowedShadingPrevTexIdx;
         uint32_t StochasticRngSeedsPrevTexIdx;
@@ -19,6 +21,9 @@ namespace PathFinder
         uint32_t StochasticRngSeedsOutputTexIdx;
         uint32_t GradientSamplePositionsOutputTexIdx;
         uint32_t GradientSamplesOutputTexIdx;
+        uint32_t AlbedoMetalnessOutputTexIdx;
+        uint32_t NormalRoughnessOutputTexIdx;
+        uint32_t ViewDepthOutputTexIdx;
         uint32_t FrameNumber;
     };
 

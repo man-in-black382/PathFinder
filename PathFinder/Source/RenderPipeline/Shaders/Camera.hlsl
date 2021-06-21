@@ -24,6 +24,8 @@ struct Camera
     float FoVVTan;
     float AspectRatio; // W/H
     // 16 byte boundary
+    float4 Front;
+    // 16 byte boundary
     float2 UVJitter;
     uint32_t Pad0__;
     uint32_t Pad1__;
@@ -83,6 +85,18 @@ void NDCDepthToViewAndWorldPositions(float hyperbolicDepth, float2 ssuv, Camera 
 
     viewPosition = viewSpacePosition.xyz;
     worldPosition = worldSpacePosition.xyz;
+}
+
+float3 ViewDepthToWorldPosition(float viewDepth, float2 ssuv, Camera camera)
+{
+    float hyperbolicDepth = HyperbolizeDepth(viewDepth, camera);
+    return NDCDepthToWorldPosition(hyperbolicDepth, ssuv, camera);
+}
+
+void ViewDepthToViewAndWorldPositions(float viewDepth, float2 ssuv, Camera camera, out float3 viewPosition, out float3 worldPosition)
+{
+    float hyperbolicDepth = HyperbolizeDepth(viewDepth, camera);
+    NDCDepthToViewAndWorldPositions(hyperbolicDepth, ssuv, camera, viewPosition, worldPosition);
 }
 
 float3 WorldCameraRay(float2 centerUV, Camera camera)

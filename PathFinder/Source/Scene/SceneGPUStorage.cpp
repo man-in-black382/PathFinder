@@ -195,7 +195,8 @@ namespace PathFinder
                 instance.GetAssociatedMesh()->GetLocationInVertexStorage().VertexBufferOffset,
                 instance.GetAssociatedMesh()->GetLocationInVertexStorage().IndexBufferOffset,
                 instance.GetAssociatedMesh()->GetLocationInVertexStorage().IndexCount,
-                instance.GetAssociatedMesh()->HasTangentSpace()
+                instance.GetAssociatedMesh()->HasTangentSpace(),
+                instance.IsDoubleSided()
             };
 
             uploadInstance(instanceEntry, instance.GetAssociatedMesh()->GetLocationInVertexStorage(), instance);
@@ -220,8 +221,6 @@ namespace PathFinder
         mLightTable->RequestWrite();
 
         // Sun goes first
-        mScene->GetSky().UpdateSolarIlluminance();
-
         GPULightTableEntry sunEntry = CreateSunGPUTableEntry(mScene->GetSky());
         mLightTable->Write(&sunEntry, 0, 1);
 
@@ -271,7 +270,7 @@ namespace PathFinder
             return;
 
         // We upload probe spheres for debug probe mouse picking 
-        const IrradianceField& L = mScene->GetGIManager().ProbeField;
+        const IlluminanceField& L = mScene->GetGIManager().ProbeField;
 
         for (uint32_t probeIdx = 0; probeIdx < L.GetTotalProbeCount(); ++probeIdx)
         {
@@ -320,17 +319,45 @@ namespace PathFinder
         gpuCamera.FoVHTan = tan(gpuCamera.FoVH);
         gpuCamera.FoVVTan = tan(gpuCamera.FoVV);
         gpuCamera.AspectRatio = camera.GetAspectRatio();
+        gpuCamera.Front = glm::vec4{ camera.GetFront(), 0.0 };
 
         ++mCameraJitterFrameIndex;
 
         return gpuCamera;
     }
 
-    GPUIrradianceField SceneGPUStorage::GetIrradianceFieldGPURepresentation() const
+    std::array<ArHosekSkyModelStateGPU, 3> SceneGPUStorage::GetSkyGPURepresentation() const
     {
-        const IrradianceField& L = mScene->GetGIManager().ProbeField;
+        const ArHosekSkyModelState* skyStateR = mScene->GetSky().GetSkyModelStateR();
+        const ArHosekSkyModelState* skyStateG = mScene->GetSky().GetSkyModelStateG();
+        const ArHosekSkyModelState* skyStateB = mScene->GetSky().GetSkyModelStateB();
+        std::array<ArHosekSkyModelStateGPU, 3> gpuStates{};
 
-        GPUIrradianceField field{};
+        auto copyState = [](ArHosekSkyModelStateGPU& gpuState, const ArHosekSkyModelState* cpuState)
+        {
+            for (auto i = 0; i < 3; ++i)
+            {
+                for (auto configIdx = 0; configIdx < 9; ++configIdx)
+                {
+                    gpuState.Configs[i][configIdx] = cpuState->configs[i][configIdx];
+                }
+
+                gpuState.Radiances[i] = cpuState->radiances[i];
+            }
+        };
+
+        copyState(gpuStates[0], skyStateR);
+        copyState(gpuStates[1], skyStateG);
+        copyState(gpuStates[2], skyStateB);
+
+        return gpuStates;
+    }
+
+    GPUIlluminanceField SceneGPUStorage::GetIlluminanceFieldGPURepresentation() const
+    {
+        const IlluminanceField& L = mScene->GetGIManager().ProbeField;
+
+        GPUIlluminanceField field{};
         field.GridSize = L.GetGridSize();
         field.CellSize = L.GetCellSize();
         field.GridCornerPosition = L.GetCornerPosition();
@@ -339,17 +366,17 @@ namespace PathFinder
         field.RayHitInfoTextureSize = { L.GetRayHitInfoTextureSize().Width, L.GetRayHitInfoTextureSize().Height };
         field.RayHitInfoTextureIdx = 0; // Determined in render pass
         field.ProbeRotation = L.GetProbeRotation();
-        field.IrradianceProbeAtlasSize = { L.GetIrradianceProbeAtlasSize().Width, L.GetIrradianceProbeAtlasSize().Height };
+        field.IlluminanceProbeAtlasSize = { L.GetIlluminanceProbeAtlasSize().Width, L.GetIlluminanceProbeAtlasSize().Height };
         field.DepthProbeAtlasSize = { L.GetDepthProbeAtlasSize().Width, L.GetDepthProbeAtlasSize().Height };
-        field.IrradianceProbeAtlasProbesPerDimension = L.GetIrradianceProbeAtlasProbesPerDimension();
+        field.IlluminanceProbeAtlasProbesPerDimension = L.GetIlluminanceProbeAtlasProbesPerDimension();
         field.DepthProbeAtlasProbesPerDimension = L.GetDepthProbeAtlasProbesPerDimension();
-        field.IrradianceProbeSize = L.GetIrradianceProbeSize().Width;
+        field.IlluminanceProbeSize = L.GetIlluminanceProbeSize().Width;
         field.DepthProbeSize = L.GetDepthProbeSize().Width;
-        field.CurrentIrradianceProbeAtlasTexIdx = 0; // Determined in render pass
+        field.CurrentIlluminanceProbeAtlasTexIdx = 0; // Determined in render pass
         field.CurrentDepthProbeAtlasTexIdx = 0; // Determined in render pass
         field.DebugProbeRadius = L.GetDebugProbeRadius();
         field.SpawnedProbePlanesCount = L.GetSpawnedProbePlanesCount();
-        field.IrradianceHysteresisDecrease = L.GetIrradianceHysteresisDecrease();
+        field.IlluminanceHysteresisDecrease = L.GetIlluminanceHysteresisDecrease();
         field.DepthHysteresisDecrease = L.GetDepthHysteresisDecrease();
         return field;
     }

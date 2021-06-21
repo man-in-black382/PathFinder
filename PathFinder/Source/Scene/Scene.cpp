@@ -100,6 +100,8 @@ namespace PathFinder
 
         for (SphericalLight& light : mSphericalLights)
             light.UpdatePreviousFrameValues();
+
+        mSky.UpdatePreviousFrameValues();
     }
 
     void Scene::LoadThirdPartyScene(const std::filesystem::path& path, const ThirdPartySceneLoader::Settings& settings)

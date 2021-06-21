@@ -29,7 +29,7 @@ namespace PathFinder
         // 16 Byte Boundary
         uint32_t IsGIEnabled;
         uint32_t IsGIRecursionEnabled;
-        uint32_t IsGIIrradianceDebugEnabled;
+        uint32_t IsGIIlluminanceDebugEnabled;
         uint32_t Pad2__;
     };
 

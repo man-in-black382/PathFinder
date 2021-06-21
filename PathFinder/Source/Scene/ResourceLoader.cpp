@@ -136,7 +136,7 @@ namespace PathFinder
         {
             // Supported color formats
         case DDSKTX_FORMAT_R8:          return HAL::ColorFormat::R8_Unsigned_Norm;
-        case DDSKTX_FORMAT_RGBA8:       return HAL::ColorFormat::RGBA8_Usigned_Norm;
+        case DDSKTX_FORMAT_RGBA8:       return HAL::ColorFormat::RGBA8_Unsigned_Norm;
         case DDSKTX_FORMAT_RGBA8S:      return HAL::ColorFormat::RGBA8_Signed;
         case DDSKTX_FORMAT_RG16:        return HAL::ColorFormat::RG16_Unsigned;
         case DDSKTX_FORMAT_RGB8:        return HAL::ColorFormat::RGBA8_Unsigned;

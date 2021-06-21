@@ -40,6 +40,7 @@
 #include "RenderPipeline/RenderPasses/GIRayTracingRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/GIProbeUpdateRenderPass.hpp"
 #include "RenderPipeline/RenderPasses/GIDebugRenderPass.hpp"
+#include "RenderPipeline/RenderPasses/SkyGenerationRenderPass.hpp"
 #include "RenderPipeline/GlobalRootConstants.hpp"
 #include "RenderPipeline/PerFrameRootConstants.hpp"
 #include "RenderPipeline/RenderPassContentMediator.hpp"
@@ -64,7 +65,8 @@ namespace PathFinder
         void InjectRenderPasses();
         void PerformPreRenderActions();
         void PerformPostRenderActions();
-        void LoadDemoScene();
+        void LoadSpheres();
+        void LoadSponza();
 
         HWND mWindowHandle;
         WNDCLASSEX mWindowClass;
@@ -109,6 +111,7 @@ namespace PathFinder
         GIRayTracingRenderPass mGIRayTracingPass;
         GIProbeUpdateRenderPass mGIProbeUpdatePass;
         GIDebugRenderPass mGIDebugPass;
+        SkyGenerationRenderPass mSkyGenerationPass;
 
         GlobalRootConstants mGlobalConstants;
         PerFrameRootConstants mPerFrameConstants;

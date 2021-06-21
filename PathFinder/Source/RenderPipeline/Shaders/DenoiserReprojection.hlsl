@@ -30,8 +30,6 @@ struct PassData
 
 static const int GroupDimensionSize = 8;
 
-//groupshared min16float3 gReprojectionInfo[GroupDimensionSize][GroupDimensionSize];
-
 [numthreads(GroupDimensionSize, GroupDimensionSize, 1)]
 void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 {
@@ -67,6 +65,9 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float depthInPrevFrame = depth - motionVector.z;
     float3 previousViewPosition; 
     float3 previousWorldPosition;
+
+    SetDataInspectorMousePositionMatchCondition(pixelIndex);
+    OutputDataInspectorValue(motionVector);
 
     NDCDepthToViewAndWorldPositions(depthInPrevFrame, reprojectedUV, FrameDataCB.PreviousFrameCamera, previousViewPosition, previousWorldPosition);
 
@@ -119,7 +120,9 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
 
         unshadowedShadingReprojectionTarget[pixelIndex].rgb = unshadowedShadingDenoisedReprojected;
 
-        float2 reprojectedTexelIdx = occlusion.x > 0.0 ? UVToTexelIndex(reprojectedUV, GlobalDataCB.PipelineRTResolution) : -1.0;
+        // Make sure we provide gradient with reprojected texel index *only* when all of the 4 samples are not occluded,
+        // otherwise we run into ghosting that's very hard to debug.
+        float2 reprojectedTexelIdx = all(occlusion > 0.0) ? UVToTexelIndex(reprojectedUV, GlobalDataCB.PipelineRTResolution) : -1.0;
         reprojectedTexelIndicesTarget[pixelIndex].rg = reprojectedTexelIdx;
     }
 

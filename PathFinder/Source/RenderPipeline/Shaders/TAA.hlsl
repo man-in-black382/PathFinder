@@ -136,7 +136,7 @@ void CSMain(int3 GTid : SV_GroupThreadID, int3 Gid : SV_GroupID)
     float localizedAntiFlicker = lerp(MinFactorScale, MaxFactorScale, saturate(1.0f - 2.0f * (motionVectorLen * screenDiag)));
 
     // Extend AABB if temporal contrast is high
-    stDevMultiplier += lerp(0.0, localizedAntiFlicker, smoothstep(0.05, 0.55, temporalContrast));
+    stDevMultiplier += lerp(0.0, localizedAntiFlicker, smoothstep(0.05, 0.95, temporalContrast));
 
     AABB aabb = GetVarianceAABB(groupThreadIndex, center, stDevMultiplier); 
 

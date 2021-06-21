@@ -12,7 +12,7 @@ namespace PathFinder
 
     struct DenoiserPostBlurCBContent
     {
-        GPUIrradianceField ProbeField;
+        GPUIlluminanceField ProbeField;
         GBufferTextureIndices GBufferIndices;
         glm::uvec2 DispatchGroupCount;
         uint32_t AccumulatedFramesCountTexIdx;

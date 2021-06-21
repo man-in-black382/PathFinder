@@ -82,17 +82,26 @@ namespace PathFinder
 
     void GIManager::UpdateHysteresisDecrease()
     {
+        // Very rough heuristic. Ideally should be made per probe.
         float irradianceHysteresisDecrease = 0.0f;
         float depthHysteresisDecrease = 0.0f;
 
         auto perceptuallyEncodeLuminance = [](float luminance) -> float
         {
-            return std::pow(luminance, 1.0 / 5.0);
+            return std::pow(luminance, 1.0 / 2.0);
         };
 
         float maxHysteresisDecrease = 0.5f;
         float geometricChangeSensitivity = 3.0f;
 
+        // Sun
+        float angleCos = glm::clamp(glm::dot(mScene->GetSky().GetSunDirection(), mScene->GetSky().GetPreviousSunDirection()), 0.0f, 1.0f);
+        float sunDirectionAngleDiff = glm::acos(angleCos);
+        float sunDirectionLerpFactor = glm::clamp(sunDirectionAngleDiff / (float)(M_PI * 0.05f), 0.0f, 1.0f);
+        float hysteresisDecreaseDueToSun = glm::mix(0.0f, maxHysteresisDecrease, sunDirectionLerpFactor);
+        irradianceHysteresisDecrease = hysteresisDecreaseDueToSun;
+
+        // Local lights
         auto computeHysteresisDecreaseForLights = [&](auto&& lights)
         {
             for (auto& light : lights)
@@ -107,17 +116,17 @@ namespace PathFinder
                 // Computing heuristics relative to probe cell sizes
                 // Light area, luminance or movement change means lighting condition change, so we need to drop history
                 float areaLerpFactor = glm::clamp(areaChange / ProbeField.GetCellSize() * geometricChangeSensitivity, 0.0f, 1.0f);
-                float hysteresisDecreaseDueToAreaChange = glm::lerp(0.0f, maxHysteresisDecrease, areaLerpFactor);
+                float hysteresisDecreaseDueToAreaChange = glm::mix(0.0f, maxHysteresisDecrease, areaLerpFactor);
 
                 float luminanceLerpFactor = glm::clamp(
                     std::max(perceptualPreviousLumianance, perceptualLumianance) / std::min(perceptualPreviousLumianance, perceptualLumianance), 
                     0.0f, 1.0f);
-                float hysteresisDecreaseDueToLuminanceChange = glm::lerp(0.0f, maxHysteresisDecrease, luminanceLerpFactor);
+                float hysteresisDecreaseDueToLuminanceChange = glm::mix(0.0f, maxHysteresisDecrease, luminanceLerpFactor);
 
                 float movementLerpFactor = glm::clamp(distanceTravelled / ProbeField.GetCellSize() * geometricChangeSensitivity, 0.0f, 1.0f);
-                float hysteresisDecreaseDueToMovement = glm::lerp(0.0f, maxHysteresisDecrease, movementLerpFactor);
+                float hysteresisDecreaseDueToMovement = glm::mix(0.0f, maxHysteresisDecrease, movementLerpFactor);
 
-                float lightHysteresisDecrease = std::max(hysteresisDecreaseDueToAreaChange, std::max(hysteresisDecreaseDueToAreaChange, hysteresisDecreaseDueToMovement));
+                float lightHysteresisDecrease = std::max(hysteresisDecreaseDueToAreaChange, std::max(hysteresisDecreaseDueToLuminanceChange, hysteresisDecreaseDueToMovement));
 
                 irradianceHysteresisDecrease = std::max(irradianceHysteresisDecrease, lightHysteresisDecrease);
             }
@@ -127,6 +136,7 @@ namespace PathFinder
         computeHysteresisDecreaseForLights(mScene->GetRectangularLights());
         computeHysteresisDecreaseForLights(mScene->GetDiskLights());
 
+        // Mesh instances
         for (const MeshInstance& instance : mScene->GetMeshInstances())
         {
             const Geometry::AABB& aabb = instance.GetAssociatedMesh()->GetBoundingBox();
@@ -137,14 +147,14 @@ namespace PathFinder
             float distanceTravelled = glm::distance(instance.GetPreviousTransformation().GetTranslation(), instance.GetTransformation().GetTranslation());
 
             // The bigger the mesh, the more impact it has on indirect lighting
-            float importance = currentAABB.Diagonal() / ProbeField.GetCellSize() * 0.5f;
+            float importance = currentAABB.Diagonal() / ProbeField.GetCellSize();
 
             float diagonalLerpFactor = glm::clamp(diagonalChange / ProbeField.GetCellSize(), 0.0f, 1.0f);
             // Movement weight depends on how large the object is in relation to probe grid
             float movementLerpFactor = glm::clamp(distanceTravelled / ProbeField.GetCellSize() * importance, 0.0f, 1.0f);
 
-            float hysteresisDecreaseDueSizeChange = glm::lerp(0.0f, maxHysteresisDecrease, diagonalLerpFactor);
-            float hysteresisDecreaseDueToMovement = glm::lerp(0.0f, maxHysteresisDecrease, movementLerpFactor);
+            float hysteresisDecreaseDueSizeChange = glm::mix(0.0f, maxHysteresisDecrease, diagonalLerpFactor);
+            float hysteresisDecreaseDueToMovement = glm::mix(0.0f, maxHysteresisDecrease, movementLerpFactor);
 
             float hysteresisDecrease = std::max(hysteresisDecreaseDueSizeChange, hysteresisDecreaseDueToMovement);
 
@@ -153,36 +163,34 @@ namespace PathFinder
         }
 
         // The larger the hysteresis decrease, the larger the frame count that we must keep it
-        float irradianceDecreaseFrameDuration = glm::lerp(0.0f, 10.0f, irradianceHysteresisDecrease / maxHysteresisDecrease);
-        float depthDecreaseFrameDuration = glm::lerp(0.0f, 7.0f, depthHysteresisDecrease / maxHysteresisDecrease);
+        float irradianceDecreaseFrameDuration = glm::mix(0.0f, 10.0f, irradianceHysteresisDecrease / maxHysteresisDecrease);
+        float depthDecreaseFrameDuration = glm::mix(0.0f, 7.0f, depthHysteresisDecrease / maxHysteresisDecrease);
 
-        mIrradianceHysteresisDecreseFrameCount = std::max(mIrradianceHysteresisDecreseFrameCount, uint64_t(irradianceDecreaseFrameDuration));
-        irradianceHysteresisDecrease = std::max(irradianceHysteresisDecrease, ProbeField.GetIrradianceHysteresisDecrease());
+        mIlluminanceHysteresisDecreseFrameCount = std::max(mIlluminanceHysteresisDecreseFrameCount, uint64_t(irradianceDecreaseFrameDuration));
+        irradianceHysteresisDecrease = std::max(irradianceHysteresisDecrease, ProbeField.GetIlluminanceHysteresisDecrease());
 
         mDepthHysteresisDecreseFrameCount = std::max(mDepthHysteresisDecreseFrameCount, uint64_t(depthDecreaseFrameDuration));
         depthHysteresisDecrease = std::max(depthHysteresisDecrease, ProbeField.GetDepthHysteresisDecrease());
 
-        //IC(depthHysteresisDecrease);
-
         // We stop decreasing hysteresis if there is no decrease this frame and we have no frames left
-        if (mIrradianceHysteresisDecreseFrameCount == 0)
+        if (mIlluminanceHysteresisDecreseFrameCount == 0)
             irradianceHysteresisDecrease = 0;    
 
         if (mDepthHysteresisDecreseFrameCount == 0)
             depthHysteresisDecrease = 0;
 
         // Decrease frame count
-        if (mIrradianceHysteresisDecreseFrameCount > 0)
-            mIrradianceHysteresisDecreseFrameCount -= 1;
+        if (mIlluminanceHysteresisDecreseFrameCount > 0)
+            mIlluminanceHysteresisDecreseFrameCount -= 1;
 
         if (mDepthHysteresisDecreseFrameCount > 0)
             mDepthHysteresisDecreseFrameCount -= 1;
 
-        ProbeField.SetIrradianceHysteresisDecrease(irradianceHysteresisDecrease);
+        ProbeField.SetIlluminanceHysteresisDecrease(irradianceHysteresisDecrease);
         ProbeField.SetDepthHysteresisDecrease(depthHysteresisDecrease);
     }
 
-    void IrradianceField::GenerateProbeRotation(const glm::vec2& random0to1)
+    void IlluminanceField::GenerateProbeRotation(const glm::vec2& random0to1)
     {
         float phi = random0to1.x * 2.0 * M_PI;
         float cosTheta = 1.0 - random0to1.y;
@@ -194,64 +202,64 @@ namespace PathFinder
         mProbeRotation = glm::lookAt(glm::zero<glm::vec3>(), viewDir, up);
     }
 
-    void IrradianceField::SetCornerPosition(const glm::vec3& position)
+    void IlluminanceField::SetCornerPosition(const glm::vec3& position)
     {
         glm::vec3 distanceTravelled = position - mCornerPosition;
         mSpawnedProbePlanesCount = distanceTravelled / mCellSize;
         mCornerPosition = position;
     }
 
-    void IrradianceField::SetDebugProbeRadius(float radius)
+    void IlluminanceField::SetDebugProbeRadius(float radius)
     {
         mDebugProbeRadius = radius;
     }
 
-    void IrradianceField::SetIrradianceHysteresisDecrease(float decrease)
+    void IlluminanceField::SetIlluminanceHysteresisDecrease(float decrease)
     {
-        mIrradianceHysteresisDecrease = decrease;
+        mIlluminanceHysteresisDecrease = decrease;
     }
 
-    void IrradianceField::SetDepthHysteresisDecrease(float decrease)
+    void IlluminanceField::SetDepthHysteresisDecrease(float decrease)
     {
         mDepthHysteresisDecrease = decrease;
     }
 
-    Geometry::Dimensions IrradianceField::GetRayHitInfoTextureSize() const
+    Geometry::Dimensions IlluminanceField::GetRayHitInfoTextureSize() const
     {
         return { GetTotalProbeCount(), mRaysPerProbe };
     }
 
-    Geometry::Dimensions IrradianceField::GetIrradianceProbeSize() const
+    Geometry::Dimensions IlluminanceField::GetIlluminanceProbeSize() const
     {
-        return { IrradianceProbeSize, IrradianceProbeSize };
+        return { IlluminanceProbeSize, IlluminanceProbeSize };
     }
 
-    Geometry::Dimensions IrradianceField::GetIrradianceProbeSizeWithBorder() const
+    Geometry::Dimensions IlluminanceField::GetIlluminanceProbeSizeWithBorder() const
     {
-        return { IrradianceProbeSize + 2, IrradianceProbeSize + 2 };
+        return { IlluminanceProbeSize + 2, IlluminanceProbeSize + 2 };
     }
 
-    Geometry::Dimensions IrradianceField::GetIrradianceProbeAtlasSize() const
+    Geometry::Dimensions IlluminanceField::GetIlluminanceProbeAtlasSize() const
     {
         auto probeCount = GetTotalProbeCount();
         auto probesPerRow = ceil(sqrt(float(probeCount)));
         auto rowCount = ceil(float(probeCount) / probesPerRow);
-        auto probeSize = GetIrradianceProbeSizeWithBorder();
+        auto probeSize = GetIlluminanceProbeSizeWithBorder();
 
         return { uint64_t(probeSize.Width * probesPerRow), uint64_t(probeSize.Height * rowCount) };
     }
 
-    Geometry::Dimensions IrradianceField::GetDepthProbeSize() const
+    Geometry::Dimensions IlluminanceField::GetDepthProbeSize() const
     {
         return { DepthProbeSize, DepthProbeSize };
     }
 
-    Geometry::Dimensions IrradianceField::GetDepthProbeSizeWithBorder() const
+    Geometry::Dimensions IlluminanceField::GetDepthProbeSizeWithBorder() const
     {
         return { DepthProbeSize + 2, DepthProbeSize + 2 };
     }
 
-    glm::uvec2 IrradianceField::GetDepthProbeAtlasProbesPerDimension() const
+    glm::uvec2 IlluminanceField::GetDepthProbeAtlasProbesPerDimension() const
     {
         auto atlasDimensions = GetDepthProbeAtlasSize();
         auto probeSize = GetDepthProbeSizeWithBorder();
@@ -259,7 +267,7 @@ namespace PathFinder
         return { atlasDimensions.Width / probeSize.Width, atlasDimensions.Height / probeSize.Height };
     }
 
-    Geometry::Dimensions IrradianceField::GetDepthProbeAtlasSize() const
+    Geometry::Dimensions IlluminanceField::GetDepthProbeAtlasSize() const
     {
         auto probeCount = GetTotalProbeCount();
         auto probesPerRow = ceil(sqrt(float(probeCount)));
@@ -269,7 +277,7 @@ namespace PathFinder
         return { uint64_t(probeSize.Width * probesPerRow), uint64_t(probeSize.Height * rowCount) };
     }
 
-    glm::vec3 IrradianceField::GetProbePosition(uint64_t probeIndex) const
+    glm::vec3 IlluminanceField::GetProbePosition(uint64_t probeIndex) const
     {
         auto x = probeIndex % mProbeGridSize.x;
         auto y = (probeIndex % (mProbeGridSize.x * mProbeGridSize.y)) / mProbeGridSize.x;
@@ -278,20 +286,20 @@ namespace PathFinder
         return glm::vec3{ float(x * mCellSize), float(y * mCellSize), float(z * mCellSize) } + mCornerPosition;
     }
 
-    glm::uvec2 IrradianceField::GetIrradianceProbeAtlasProbesPerDimension() const
+    glm::uvec2 IlluminanceField::GetIlluminanceProbeAtlasProbesPerDimension() const
     {
-        auto atlasDimensions = GetIrradianceProbeAtlasSize();
-        auto probeSize = GetIrradianceProbeSizeWithBorder();
+        auto atlasDimensions = GetIlluminanceProbeAtlasSize();
+        auto probeSize = GetIlluminanceProbeSizeWithBorder();
 
         return { atlasDimensions.Width / probeSize.Width, atlasDimensions.Height / probeSize.Height };
     }
 
-    uint64_t IrradianceField::GetTotalRayCount() const
+    uint64_t IlluminanceField::GetTotalRayCount() const
     {
         return GetTotalProbeCount() * mRaysPerProbe;
     }
 
-    uint64_t IrradianceField::GetTotalProbeCount() const
+    uint64_t IlluminanceField::GetTotalProbeCount() const
     {
         return mProbeGridSize.x * mProbeGridSize.y * mProbeGridSize.z;
     }

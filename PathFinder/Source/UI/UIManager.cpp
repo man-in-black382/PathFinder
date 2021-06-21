@@ -100,30 +100,32 @@ namespace PathFinder
         mIsMouseOverUI = ImGui::IsAnyWindowHovered();
 
         UpdateCursor();
-
         mGPUStorage.StartNewFrame();
 
-        std::vector<uint32_t> deallocatedVCIndices;
-
-        for (auto vcIdx = 0u; vcIdx < mViewControllers.size(); ++vcIdx)
+        if (mIsUIEnabled)
         {
-            std::weak_ptr<ViewController>& vc = mViewControllers[vcIdx];
+            std::vector<uint32_t> deallocatedVCIndices;
 
-            if (auto strongPtr = vc.lock())
+            for (auto vcIdx = 0u; vcIdx < mViewControllers.size(); ++vcIdx)
             {
-                strongPtr->Draw();
-                mIsInteracting = mIsInteracting || strongPtr->IsInteracting();
-            }
-            else
-            {
-                deallocatedVCIndices.push_back(vcIdx);
-            }
-        }
+                std::weak_ptr<ViewController>& vc = mViewControllers[vcIdx];
 
-        // Remove deallocated controllers
-        for (auto it = deallocatedVCIndices.rbegin(); it != deallocatedVCIndices.rend(); ++it)
-        {
-            mViewControllers.erase(mViewControllers.begin() + *it);
+                if (auto strongPtr = vc.lock())
+                {
+                    strongPtr->Draw();
+                    mIsInteracting = mIsInteracting || strongPtr->IsInteracting();
+                }
+                else
+                {
+                    deallocatedVCIndices.push_back(vcIdx);
+                }
+            }
+
+            // Remove deallocated controllers
+            for (auto it = deallocatedVCIndices.rbegin(); it != deallocatedVCIndices.rend(); ++it)
+            {
+                mViewControllers.erase(mViewControllers.begin() + *it);
+            }
         }
 
         mGPUStorage.UploadUI();
@@ -153,6 +155,11 @@ namespace PathFinder
     void UIManager::HandleKeyUp(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input)
     {
         ImGui::GetIO().KeysDown[info.VirtualKey] = false;
+
+        if (key == KeyboardKey::I && input->IsKeyboardKeyPressed(KeyboardKey::Alt))
+        {
+            mIsUIEnabled = !mIsUIEnabled;
+        }
     }
 
     void UIManager::HandleKeyDown(KeyboardKey key, const KeyboardKeyInfo& info, const Input* input)

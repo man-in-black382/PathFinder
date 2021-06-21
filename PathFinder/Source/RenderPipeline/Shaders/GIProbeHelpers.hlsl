@@ -6,10 +6,10 @@
 #include "Packing.hlsl"
 #include "Geometry.hlsl"
 
-static const float ProbeIrradianceGamma = 5.0;
+static const float ProbeIlluminanceGamma = 5.0;
 static const float ProbeRayBackfaceIndicator = -1.0;
 
-struct IrradianceField
+struct IlluminanceField
 {
     uint3 GridSize;
     float CellSize;
@@ -23,15 +23,15 @@ struct IrradianceField
     // 16 byte boundary
     float4x4 ProbeRotation;
     // 16 byte boundary
-    uint2 IrradianceProbeAtlasSize;
+    uint2 IlluminanceProbeAtlasSize;
     uint2 DepthProbeAtlasSize;
     // 16 byte boundary
-    uint2 IrradianceProbeAtlasProbesPerDimension;
+    uint2 IlluminanceProbeAtlasProbesPerDimension;
     uint2 DepthProbeAtlasProbesPerDimension;
     // 16 byte boundary
-    uint IrradianceProbeSize;
+    uint IlluminanceProbeSize;
     uint DepthProbeSize;
-    uint CurrentIrradianceProbeAtlasTexIdx;
+    uint CurrentIlluminanceProbeAtlasTexIdx;
     uint CurrentDepthProbeAtlasTexIdx;
     // 16 byte boundary
     // How many probe planes were spawned this frame on each axis.
@@ -39,13 +39,13 @@ struct IrradianceField
     int3 SpawnedProbePlanesCount; 
     float DebugProbeRadius;
     // 16 byte boundary
-    uint PreviousIrradianceProbeAtlasTexIdx;
+    uint PreviousIlluminanceProbeAtlasTexIdx;
     uint PreviousDepthProbeAtlasTexIdx;
-    float IrradianceHysteresisDecrease;
+    float IlluminanceHysteresisDecrease;
     float DepthHysteresisDecrease;
 };
 
-uint3 Probe3DIndexFrom1D(uint index, IrradianceField field)
+uint3 Probe3DIndexFrom1D(uint index, IlluminanceField field)
 {
     uint3 index3d;
 
@@ -65,33 +65,33 @@ uint3 Probe3DIndexFrom1D(uint index, IrradianceField field)
     return index3d;
 }
 
-uint Probe1DIndexFrom3D(uint3 index, IrradianceField field)
+uint Probe1DIndexFrom3D(uint3 index, IlluminanceField field)
 {
     return index.x + index.y * field.GridSize.x + index.z * field.GridSize.x * field.GridSize.y;
 }
 
-uint Probe1DIndexFromRayIndex(uint rayIndex, IrradianceField field)
+uint Probe1DIndexFromRayIndex(uint rayIndex, IlluminanceField field)
 {
     return rayIndex / field.RaysPerProbe;
 }
 
-float3 ProbePositionFrom3DIndex(uint3 index, IrradianceField field)
+float3 ProbePositionFrom3DIndex(uint3 index, IlluminanceField field)
 {
     return field.CellSize * index + field.GridCornerPosition;
 }
 
-uint2 RayHitTexelIndex(uint rayIndex, uint probeIndex, IrradianceField field)
+uint2 RayHitTexelIndex(uint rayIndex, uint probeIndex, IlluminanceField field)
 {
     return uint2(probeIndex, rayIndex % field.RaysPerProbe);
 }
 
-float3 ProbeSamplingVector(uint rayIndex, IrradianceField field)
+float3 ProbeSamplingVector(uint rayIndex, IlluminanceField field)
 {
     float3 v = SphericalFibonacci(rayIndex % field.RaysPerProbe, field.RaysPerProbe);
     return mul(field.ProbeRotation, float4(v, 0.0)).xyz;
 }
 
-float3 ProbePositionFromRayIndex(uint rayIndex, IrradianceField field)
+float3 ProbePositionFromRayIndex(uint rayIndex, IlluminanceField field)
 {
     uint probeIndex = Probe1DIndexFromRayIndex(rayIndex, field);
     uint3 probe3DIndex = Probe3DIndexFrom1D(probeIndex, field);
@@ -110,12 +110,12 @@ uint2 ProbeAtlasTexelIndex(uint probeIndex, uint2 probeLocalTexelIndex, uint pro
     return actualTexel;
 }
 
-uint2 IrradianceProbeAtlasTexelIndex(uint probeIndex, uint2 probeLocalTexelIndex, IrradianceField field)
+uint2 IlluminanceProbeAtlasTexelIndex(uint probeIndex, uint2 probeLocalTexelIndex, IlluminanceField field)
 {
-    return ProbeAtlasTexelIndex(probeIndex, probeLocalTexelIndex, field.IrradianceProbeSize, field.IrradianceProbeAtlasProbesPerDimension);
+    return ProbeAtlasTexelIndex(probeIndex, probeLocalTexelIndex, field.IlluminanceProbeSize, field.IlluminanceProbeAtlasProbesPerDimension);
 }
 
-uint2 DepthProbeAtlasTexelIndex(uint probeIndex, uint2 probeLocalTexelIndex, IrradianceField field)
+uint2 DepthProbeAtlasTexelIndex(uint probeIndex, uint2 probeLocalTexelIndex, IlluminanceField field)
 {
     return ProbeAtlasTexelIndex(probeIndex, probeLocalTexelIndex, field.DepthProbeSize, field.DepthProbeAtlasProbesPerDimension);
 }
@@ -132,12 +132,12 @@ float2 ProbeAtlasUV(uint probeIndex, float3 samplingDir, uint probeSize, uint2 p
     return probeStartUVInAtlas + localUV * probeUVSizeInAtlasNoBorders;
 }
 
-float2 IrradianceProbeAtlasUV(uint probeIndex, float3 samplingDir, IrradianceField field)
+float2 IlluminanceProbeAtlasUV(uint probeIndex, float3 samplingDir, IlluminanceField field)
 {
-    return ProbeAtlasUV(probeIndex, samplingDir, field.IrradianceProbeSize, field.IrradianceProbeAtlasProbesPerDimension, field.IrradianceProbeAtlasSize);
+    return ProbeAtlasUV(probeIndex, samplingDir, field.IlluminanceProbeSize, field.IlluminanceProbeAtlasProbesPerDimension, field.IlluminanceProbeAtlasSize);
 }
 
-float2 DepthProbeAtlasUV(uint probeIndex, float3 samplingDir, IrradianceField field)
+float2 DepthProbeAtlasUV(uint probeIndex, float3 samplingDir, IlluminanceField field)
 {
     return ProbeAtlasUV(probeIndex, samplingDir, field.DepthProbeSize, field.DepthProbeAtlasProbesPerDimension, field.DepthProbeAtlasSize);
 }
@@ -149,34 +149,34 @@ float2 NormalizedOctCoordFromTexelIndex(uint2 probeTexelIndex, uint probeSize)
     return (float2(probeTexelIndex) + 0.5) * (2.0 / float(probeSize)) - 1.0;
 }
 
-float2 NormalizedIrradianceProbeOctCoord(uint2 probeTexelIndex, IrradianceField field)
+float2 NormalizedIlluminanceProbeOctCoord(uint2 probeTexelIndex, IlluminanceField field)
 {
-    return NormalizedOctCoordFromTexelIndex(probeTexelIndex, field.IrradianceProbeSize);
+    return NormalizedOctCoordFromTexelIndex(probeTexelIndex, field.IlluminanceProbeSize);
 }
 
-float2 NormalizedDepthProbeOctCoord(uint2 probeTexelIndex, IrradianceField field)
+float2 NormalizedDepthProbeOctCoord(uint2 probeTexelIndex, IlluminanceField field)
 {
     return NormalizedOctCoordFromTexelIndex(probeTexelIndex, field.DepthProbeSize);
 }
 
-float3 EncodeProbeIrradiance(float3 irradiance)
+float3 EncodeProbeIlluminance(float3 irradiance)
 {
-    return pow(irradiance, 1.0 / ProbeIrradianceGamma);
+    return pow(irradiance, 1.0 / ProbeIlluminanceGamma);
 }
 
-float3 DecodeProbeIrradiance(float3 encoded)
+float3 DecodeProbeIlluminance(float3 encoded)
 {
-    return pow(encoded, ProbeIrradianceGamma);
+    return pow(encoded, ProbeIlluminanceGamma);
 }
 
-float3 RetrieveGIIrradiance(
+float3 RetrieveGIIlluminance(
     float3 surfacePosition,
     float3 surfaceNormal, 
     float3 viewDirection,
     Texture2D irradianceProbeAtlas,
     Texture2D depthProbeAtlas,
     SamplerState sampler,
-    IrradianceField field,
+    IlluminanceField field,
     bool samplingLastFrame)
 {
     const float D = field.CellSize;
@@ -240,7 +240,6 @@ float3 RetrieveGIIrradiance(
             // The small offset at the end reduces the "going to zero" impact
             // where this is really close to exactly opposite
             float backfaceWeight = Square(max(0.0001, (dot(trueDirectionToProbe, surfaceNormal) + 1.0) * 0.5)) + 0.2;
-
             weight *= backfaceWeight;
         }
         
@@ -267,19 +266,19 @@ float3 RetrieveGIIrradiance(
             // crush tiny weights but keep the curve continuous. This must be done
             // before the trilinear weights, because those should be preserved.
             const float CrushThreshold = 0.2;
-            if (weight < CrushThreshold) 
+            if (weight < CrushThreshold)
                 weight *= Square(weight) / Square(CrushThreshold);
         }
 
-        float2 irradianceAtlasUV = IrradianceProbeAtlasUV(probeIndex, surfaceNormal, field);
-        float4 probeIrradianceAndBackfaceWeight = irradianceProbeAtlas.SampleLevel(sampler, irradianceAtlasUV, 0);
-        float3 probeIrradiance = probeIrradianceAndBackfaceWeight.rgb;
-        float backfaceWeight = probeIrradianceAndBackfaceWeight.w;
+        float2 irradianceAtlasUV = IlluminanceProbeAtlasUV(probeIndex, surfaceNormal, field);
+        float4 probeIlluminanceAndInsideWallWeight = irradianceProbeAtlas.SampleLevel(sampler, irradianceAtlasUV, 0);
+        float3 probeIlluminance = probeIlluminanceAndInsideWallWeight.rgb;
+        float insideWallWeight = probeIlluminanceAndInsideWallWeight.w;
 
         {
             // If probe rays were hitting geometry back faces, this weight will 
             // bring weight of those probes down completely disabling probes that are inside walls.
-            weight *= backfaceWeight;
+            weight *= insideWallWeight;
         }
 
         {
@@ -293,9 +292,9 @@ float3 RetrieveGIIrradiance(
 
         // Decode the tone curve, but leave a gamma = 2 curve
         // to approximate sRGB blending for the trilinear
-        probeIrradiance = pow(probeIrradiance, ProbeIrradianceGamma * 0.5);
+        probeIlluminance = pow(probeIlluminance, ProbeIlluminanceGamma * 0.5);
 
-        irradiance += probeIrradiance * weight;
+        irradiance += probeIlluminance * weight;
         totalWeight += weight;
     }
 

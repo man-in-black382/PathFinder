@@ -10,7 +10,7 @@ namespace PathFinder
 
     struct GIDebugCBContent
     {
-        GPUIrradianceField ProbeField;
+        GPUIlluminanceField ProbeField;
         int32_t ExplicitProbeIndex = -1;
     };
 

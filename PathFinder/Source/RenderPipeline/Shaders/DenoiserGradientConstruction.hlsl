@@ -30,7 +30,15 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     RWTexture2D<float4> gradientOutputTexture = RW_Float4_Textures2D[PassDataCB.GradientTexIdx];
 
-    uint2 stratumPosition = UnpackStratumPosition(gradientSamplePositionsTexture[downscaledPixelIdx].x);
+    uint packedStratumPosition = gradientSamplePositionsTexture[downscaledPixelIdx].x;
+    SetDataInspectorWriteCondition(all(FrameDataCB.MousePosition / 3 == downscaledPixelIdx));
+    if (packedStratumPosition == InvalidStrataPositionIndicator)
+    {
+        gradientOutputTexture[downscaledPixelIdx].r = 0.0;
+        return;
+    }
+
+    uint2 stratumPosition = UnpackStratumPosition(packedStratumPosition);
     uint2 gradientSamplePixelIdx = fullPixelIndex + stratumPosition;
 
     float currentFrameLuminance = CIELuminance(shadowedShadingTexture[gradientSamplePixelIdx].rgb);
@@ -40,6 +48,13 @@ void CSMain(int3 dispatchThreadID : SV_DispatchThreadID, int3 groupThreadID : SV
 
     gradientOutputTexture[downscaledPixelIdx].r = gradient;
 
+    
+    OutputDataInspectorValue(float2(currentFrameLuminance, previousFrameLuminance));
+    OutputDataInspectorValue(currentFrameLuminance - previousFrameLuminance);
+    OutputDataInspectorValue(fullPixelIndex);
+    OutputDataInspectorValue(gradientSamplePixelIdx);
+    /*  OutputDataInspectorValue(downscaledPixelIdx);
+      OutputDataInspectorValue(stratumPosition);*/
 }
 
 #endif

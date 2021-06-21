@@ -13,7 +13,7 @@
 
 struct PassData
 {
-    IrradianceField ProbeField;
+    IlluminanceField ProbeField;
     GBufferTextureIndices GBufferIndices;
     uint2 DispatchGroupCount;
     uint AccumulatedFramesCountTexIdx;
@@ -61,7 +61,7 @@ float4 Blur(Texture2D image, float2 uv, uint2 pixelIdx, float2 texelSize, float 
 
 float3 RetrieveGI(uint2 texelIndex, float2 uv)
 {
-    Texture2D irradianceAtlas = Textures2D[PassDataCB.ProbeField.CurrentIrradianceProbeAtlasTexIdx];
+    Texture2D irradianceAtlas = Textures2D[PassDataCB.ProbeField.CurrentIlluminanceProbeAtlasTexIdx];
     Texture2D depthAtlas = Textures2D[PassDataCB.ProbeField.CurrentDepthProbeAtlasTexIdx];
 
     GBufferTexturePack gBufferTextures;
@@ -69,17 +69,17 @@ float3 RetrieveGI(uint2 texelIndex, float2 uv)
     gBufferTextures.NormalRoughness = Textures2D[PassDataCB.GBufferIndices.NormalRoughnessTexIdx];
     gBufferTextures.Motion = UInt4_Textures2D[PassDataCB.GBufferIndices.MotionTexIdx];
     gBufferTextures.TypeAndMaterialIndex = UInt4_Textures2D[PassDataCB.GBufferIndices.TypeAndMaterialTexIdx];
-    gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
+    gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTexIdx];
 
     GBufferStandard gBuffer = ZeroGBufferStandard();
     LoadStandardGBuffer(gBuffer, gBufferTextures, texelIndex);
 
-    float depth = gBufferTextures.DepthStencil[texelIndex].r;
-    float3 surfacePosition = NDCDepthToWorldPosition(depth, uv, FrameDataCB.CurrentFrameCamera);
+    float viewDepth = gBufferTextures.ViewDepth[texelIndex].r;
+    float3 surfacePosition = ViewDepthToWorldPosition(viewDepth, uv, FrameDataCB.CurrentFrameCamera);
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
-    float3 irradiance = RetrieveGIIrradiance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, false);
+    float3 irradiance = RetrieveGIIlluminance(surfacePosition, gBuffer.Normal, viewDirection, irradianceAtlas, depthAtlas, LinearClampSampler(), PassDataCB.ProbeField, false);
 
-    if (FrameDataCB.IsGIIrradianceDebugEnabled)
+    if (FrameDataCB.IsGIIlluminanceDebugEnabled)
     {
         return irradiance;
     }
@@ -117,14 +117,14 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
     float3 combinedShading = CombineShading(analyticUnshadowed, stochasticShadowed.rgb, stochasticUnshadowed.rgb); 
     float ao = stochasticShadowed.w;
 
-    combinedShading = stochasticShadowed.rgb;
-    //combinedShading = stochasticUnshadowed;
+ /*   combinedShading = stochasticShadowed.rgb;
+    combinedShading = stochasticUnshadowed;*/
     //combinedShading = analyticUnshadowed;
 
     // Apply GI
- /*   if (FrameDataCB.IsGIEnabled)
+    if (FrameDataCB.IsGIEnabled)
     {
-        if (FrameDataCB.IsGIIrradianceDebugEnabled)
+        if (FrameDataCB.IsGIIlluminanceDebugEnabled)
         {
             combinedShading = RetrieveGI(pixelIndex, uv);
         }
@@ -132,7 +132,7 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         {
             combinedShading += RetrieveGI(pixelIndex, uv) * ao;
         }
-    }*/
+    }
     
     //combinedShading = ao;
 
@@ -140,21 +140,20 @@ void CSMain(uint3 groupThreadID : SV_GroupThreadID, uint3 groupID : SV_GroupID)
         combinedShading = float3(1, 100, 1);
 
     if (FrameDataCB.IsReprojectionHistoryDebugEnabled ||
-        FrameDataCB.IsGradientDebugEnabled ||
         FrameDataCB.IsMotionDebugEnabled)
     {
         // Debug data is encoded in gradients texture
-        if (any(gradients > 0.0))
+        if (any(gradients < 0.2))
         {
-            combinedShading = float3(gradients, 0.0) * 10;
+            combinedShading = float3(1.0 - gradients.x, 0.0, 0.0) * 1000;
         }
     }
 
     if (FrameDataCB.IsGradientDebugEnabled)
     {
-        if (any(gradients > 0.0))
+        if (gradients.x > 0.0)
         {
-            combinedShading = float3(gradients, 0.0) * 10;
+            combinedShading = float3(0, gradients.x, 0) * 100;
         }
     }
 

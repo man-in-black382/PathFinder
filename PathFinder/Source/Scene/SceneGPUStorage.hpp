@@ -47,7 +47,8 @@ namespace PathFinder
         void UploadInstances();
 
         GPUCamera GetCameraGPURepresentation();
-        GPUIrradianceField GetIrradianceFieldGPURepresentation() const;
+        std::array<ArHosekSkyModelStateGPU, 3> GetSkyGPURepresentation() const;
+        GPUIlluminanceField GetIlluminanceFieldGPURepresentation() const;
         uint32_t GetCompressedLightPartitionInfo() const;
 
     private:

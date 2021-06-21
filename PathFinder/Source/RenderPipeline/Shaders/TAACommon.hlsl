@@ -74,12 +74,13 @@ float GetBlendFactor(float colorLuma, float historyLuma, float minNeighbourLuma,
 
 float GetLuminance(float3 ycocg)
 {
+    //return CIELuminance(ycocg);
     return ycocg.x;
 }
 
 float PerceptualWeight(float3 ycocg)
 {
-    float luma = GetLuminance(ycocg);
+    float luma = GetLuminance(ycocg); 
     return rcp(luma + 1.0);
 }
 
@@ -92,13 +93,13 @@ float PerceptualInvWeight(float3 ycocg)
 float3 ConvertToWorkingSpace(float3 rgb)
 {
     float3 ycocg = RGBToYCoCg(rgb);
-    ycocg *= PerceptualWeight(ycocg);
+    //ycocg *= PerceptualWeight(ycocg);
     return ycocg;
 }
 
 float3 ConvertToOutputSpace(float3 ycocg)
 {
-    ycocg *= PerceptualInvWeight(ycocg);
+    //ycocg *= PerceptualInvWeight(ycocg);
     float3 rgb = YCoCgToRGB(ycocg);
     return rgb;
 }

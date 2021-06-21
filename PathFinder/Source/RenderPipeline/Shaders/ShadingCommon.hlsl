@@ -108,6 +108,25 @@ float2 UnpackRaySunIntersectionRandomNumbers(uint packed)
     return UnpackUnorm2x16(packed, 1.0);
 }
 
+float3 UnpackSunDirection(Light sun, float3x3 sunOrientation, uint packedIntersectionData, uint rayIndex)
+{
+    float2 randomNumbers = UnpackRaySunIntersectionRandomNumbers(packedIntersectionData);
+
+    float sunDiskRadius = GetColumn(sun.ModelMatrix, 3)[0];
+    float radius = randomNumbers.x * sunDiskRadius;
+    float radiusSqrt = sqrt(radius);
+
+    float angle = randomNumbers.y * TwoPi;
+    float angleSin, angleCos;
+    sincos(angle, angleSin, angleCos);
+
+    float2 pointOnDisk = float2(radiusSqrt * angleCos, radiusSqrt * angleSin);
+    float3 nonRotatedDirection = normalize(float3(pointOnDisk, 1.0));
+    float3 rotatedDirection = mul(sunOrientation, nonRotatedDirection);
+
+    return rotatedDirection;
+}
+
 LightTablePartitionInfo DecompressLightPartitionInfo()
 {
     // Lights are expected to be placed in order: spherical -> rectangular -> disk
@@ -147,6 +166,8 @@ ShadingResult ZeroShadingResult()
 // Distributes rays between lights depending on their total amount
 uint RaysPerLight(LightTablePartitionInfo lightTableInfo)
 {
+    return 1;
+
     uint raysPerLight = TotalMaxRayCount / lightTableInfo.TotalLightsCount;
     return raysPerLight;
 }
@@ -302,9 +323,10 @@ void ShadeWithSun(
 {
     Light sun = LightTable[0];
 
-    float3 sunDirection = sun.ModelMatrix[0].xyz;
-    float3 sunIlluminance = sun.ModelMatrix[1].rgb;
-    float sunDiskArea = sun.ModelMatrix[3][2];
+    float3 sunDirection = GetColumn(sun.ModelMatrix, 0).xyz;
+    float3 sunIlluminance = GetColumn(sun.ModelMatrix, 1).rgb;
+    float3 sunLuminance = GetColumn(sun.ModelMatrix, 2).rgb;
+    float sunDiskArea = GetColumn(sun.ModelMatrix, 3).y;
     float3 wi = mul(surfaceWorldToTangent, sunDirection);
     float3 wo = mul(surfaceWorldToTangent, viewDirection);
     float3 wm = normalize(wo + wi);
@@ -314,13 +336,15 @@ void ShadeWithSun(
     shadingResult.AnalyticUnshadowedOutgoingLuminance += sunIlluminance * brdf;
 
     uint raysPerLight = RaysPerLight(lightPartitionInfo);
+    float oneOverPDFOverRayCount = 1.0 / pdf / raysPerLight;
 
     [unroll]
     for (uint rayIdx = 0; rayIdx < raysPerLight; ++rayIdx)
     {
         float4 randomNumbers = RandomNumbersForLight(randomSequences, rayIdx);
-        shadingResult.RayLightIntersectionData[rayIdx] = PackRaySunIntersectionRandomNumbers(randomNumbers.xy);
+        shadingResult.RayLightIntersectionData[rayIdx] = PackRaySunIntersectionRandomNumbers(randomNumbers[rayIdx]);
         shadingResult.RayPDFs[rayIdx] = pdf;
+        shadingResult.StochasticUnshadowedOutgoingLuminance[rayIdx] = brdf * sunLuminance * oneOverPDFOverRayCount;
     }
 }
 

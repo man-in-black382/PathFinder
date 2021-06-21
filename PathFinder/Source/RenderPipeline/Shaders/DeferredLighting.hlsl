@@ -3,6 +3,8 @@
 
 #include "Mesh.hlsl"
 #include "GBuffer.hlsl"
+#include "Packing.hlsl"
+#include "Exposure.hlsl"
 
 struct PassData
 {
@@ -17,13 +19,15 @@ struct PassData
     uint2 BlueNoiseTextureSize;
     uint RngSeedsTexIdx;
     uint FrameNumber;
+    // 16 byte boundary
+    uint SkyTexIdx;
 };
 
 #define PassDataType PassData
 
 #include "ShadingCommon.hlsl"
 
-ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float depth)
+ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, float2 uv, uint2 pixelIndex, float viewDepth)
 {
     Texture3D blueNoiseTexture = Textures3D[PassDataCB.BlueNoiseTexIdx];
     Texture2D<uint4> rngSeeds = UInt4_Textures2D[PassDataCB.RngSeedsTexIdx];
@@ -37,7 +41,7 @@ ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, 
     randomSequences.BlueNoise = blueNoiseTexture[rngSeeds[pixelIndex].xyz];
     randomSequences.Halton = PassDataCB.Halton;
 
-    float3 surfacePosition = NDCDepthToWorldPosition(depth, uv, FrameDataCB.CurrentFrameCamera);
+    float3 surfacePosition = ViewDepthToWorldPosition(viewDepth, uv, FrameDataCB.CurrentFrameCamera);
     LightTablePartitionInfo partitionInfo = DecompressLightPartitionInfo();
     float3 viewDirection = normalize(FrameDataCB.CurrentFrameCamera.Position.xyz - surfacePosition);
     float3x3 surfaceWorldToTangent = transpose(RotationMatrix3x3(gBuffer.Normal));
@@ -48,6 +52,8 @@ ShadingResult HandleStandardGBufferLighting(GBufferTexturePack gBufferTextures, 
     ShadeWithSphericalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
     ShadeWithRectangularLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
     ShadeWithEllipticalLights(gBuffer, ltcTerms, partitionInfo, randomSequences, viewDirection, surfacePosition, shadingResult);
+
+    //shadingResult.AnalyticUnshadowedOutgoingLuminance = gBuffer.Normal * 100;
 
     return shadingResult;
 }
@@ -65,6 +71,19 @@ ShadingResult HandleEmissiveGBufferLighting(GBufferTexturePack gBufferTextures, 
     return shadingResult;
 }
 
+ShadingResult GetSkyShadingResult(float2 pixelUV)
+{
+    Texture2D skyLuminanceTexture = Textures2D[PassDataCB.SkyTexIdx];
+    float3 pointInfronOfCamera = NDCDepthToWorldPosition(1.0, pixelUV, FrameDataCB.CurrentFrameCamera);
+    float3 worldViewDirection = normalize(pointInfronOfCamera - FrameDataCB.CurrentFrameCamera.Position.xyz);
+    float2 skyUV = (OctEncode(worldViewDirection) + 1.0) * 0.5;
+    float3 luminance = skyLuminanceTexture.SampleLevel(LinearClampSampler(), skyUV, 0.0).rgb;
+
+    ShadingResult result = ZeroShadingResult();
+    result.AnalyticUnshadowedOutgoingLuminance = luminance;
+    return result;
+}
+
 void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
 {
     RW_Float4_Textures2D[PassDataCB.AnalyticOutputTexIdx][pixelIndex].rgb = shadingResult.AnalyticUnshadowedOutgoingLuminance;
@@ -75,21 +94,22 @@ void OutputShadingResult(ShadingResult shadingResult, uint2 pixelIndex)
 [numthreads(8, 8, 1)]
 void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_GroupID)
 {
+    // ========================================================================================================================== //
     GBufferTexturePack gBufferTextures;
     gBufferTextures.AlbedoMetalness = Textures2D[PassDataCB.GBufferIndices.AlbedoMetalnessTexIdx];
     gBufferTextures.NormalRoughness = Textures2D[PassDataCB.GBufferIndices.NormalRoughnessTexIdx];
     gBufferTextures.TypeAndMaterialIndex = UInt4_Textures2D[PassDataCB.GBufferIndices.TypeAndMaterialTexIdx];
-    gBufferTextures.DepthStencil = Textures2D[PassDataCB.GBufferIndices.DepthStencilTexIdx];
     gBufferTextures.ViewDepth = Textures2D[PassDataCB.GBufferIndices.ViewDepthTexIdx];
+    // ========================================================================================================================== //
 
     uint2 pixelIndex = dispatchThreadID.xy;
     float2 pixelCenterUV = TexelIndexToUV(pixelIndex, GlobalDataCB.PipelineRTResolution);
-    float depth = gBufferTextures.DepthStencil.Load(uint3(pixelIndex, 0)).r;
+    float viewDepth = gBufferTextures.ViewDepth.mips[0][pixelIndex].r;
 
     // Skip empty areas
-    if (depth >= 1.0)
+    if (viewDepth >= FrameDataCB.CurrentFrameCamera.FarPlane)
     {
-        OutputShadingResult(ZeroShadingResult(), pixelIndex);
+        OutputShadingResult(GetSkyShadingResult(pixelCenterUV), pixelIndex);
         return;
     }
 
@@ -97,7 +117,7 @@ void CSMain(uint3 dispatchThreadID : SV_DispatchThreadID, uint3 groupID : SV_Gro
 
     switch (gBufferType)
     {
-    case GBufferTypeStandard: OutputShadingResult(HandleStandardGBufferLighting(gBufferTextures, pixelCenterUV, pixelIndex, depth), pixelIndex); break;
+    case GBufferTypeStandard: OutputShadingResult(HandleStandardGBufferLighting(gBufferTextures, pixelCenterUV, pixelIndex, viewDepth), pixelIndex); break;
     case GBufferTypeEmissive: OutputShadingResult(HandleEmissiveGBufferLighting(gBufferTextures, pixelIndex), pixelIndex); break;
     }
 }

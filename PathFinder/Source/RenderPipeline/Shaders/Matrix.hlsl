@@ -19,6 +19,11 @@ static const float4x4 Matrix4x4Identity =
     float4(0, 0, 0, 1)
 };
 
+float4 GetColumn(float4x4 m, uint i)
+{
+    return float4(m[0][i], m[1][i], m[2][i], m[3][i]);
+}
+
 float3 GetUpVectorForOrientaion(float3 orientation)
 {
     return abs(dot(orientation, UpY)) < 0.999 ? UpY : UpZ; 

@@ -46,7 +46,7 @@ namespace PathFinder
             cbContent.OutputTexIdx = outputTexIdx;
 
             context->GetConstantsUpdater()->UpdateRootConstantBuffer(cbContent);
-            context->GetCommandRecorder()->Dispatch(outputDimensions, { 16, 16 });
+            context->GetCommandRecorder()->Dispatch(outputDimensions, { 8, 8 });
 
             std::swap(inputTexIdx, outputTexIdx);
         }

@@ -9,22 +9,6 @@
 namespace PathFinder
 {
 
-    static choreograph::Output<float> intensity1;
-    static choreograph::Output<float> intensity2;
-    static choreograph::Output<float> intensity3;
-    static choreograph::Output<glm::vec3> cameraPosition;
-    static choreograph::Output<glm::vec3> lightPosition;
-
-    static choreograph::PhraseRef<float> intensity1Phrase = choreograph::makeRamp(0.0f, 400000.f, 2.f);
-    static choreograph::PhraseRef<float> intensity2Phrase = choreograph::makeRamp(0.0f, 400000.0f, 2.f);
-    static choreograph::PhraseRef<float> intensity3Phrase = choreograph::makeRamp(0.0f, 25000.0f, 1.0f);
-    static choreograph::PhraseRef<glm::vec3> cameraPositionPhrase = choreograph::makeRamp(glm::vec3{ -18.77, -0.63, 0.095 }, glm::vec3{ 9.18, -7.48, -0.04 }, 1200.f);
-    static choreograph::PhraseRef<glm::vec3> lightPositionPhrase = choreograph::makeRamp(glm::vec3{ 7.660, 8.417, 0.060 }, glm::vec3{ 7.660, - 12.7, 0.060 }, 4.f);
-
-    static Light* gLight1 = nullptr;
-    static Light* gLight2 = nullptr;
-    static Light* gLight3 = nullptr;
-
     Application::Application(int argc, char** argv)
     {
         CreateEngineWindow();
@@ -70,14 +54,12 @@ namespace PathFinder
 
         // Temporary to load demo Scene until proper UI is implemented
         //mThirdPartySceneLoader = std::make_unique<ThirdPartySceneLoader>(mCmdLineParser->ExecutableFolderPath() / "MediaResources/Models/");
-        //mMaterialLoader = std::make_unique<MaterialLoader>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->ResourceProducer());
+        mMaterialLoader = std::make_unique<MaterialLoader>(mCmdLineParser->ExecutableFolderPath(), mRenderEngine->ResourceProducer());
        
-        LoadDemoScene();
+        LoadSpheres();
         //mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "SanMiguel" / "san-miguel-low-poly.obj");
         //mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "MediaResources" / "sibenik" / "sibenik.obj");
-        ThirdPartySceneLoader::Settings loadSettings{};
-        loadSettings.InitialScale = 0.02;
-        mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "MediaResources" / "sponza" / "sponza.obj", loadSettings);
+        LoadSponza();
         //mScene->Deserialize(mCmdLineParser->ExecutableFolderPath() / "DebugSceneSerialization" / "Scene.pfscene");
 
         Foundation::Color light0Color{ 255.0 / 255, 241.0 / 255, 224.1 / 255 };
@@ -131,46 +113,14 @@ namespace PathFinder
         camera.SetFarPlane(5000);
         camera.SetNearPlane(1);
         camera.MoveTo({ 4.7, 11.0, -0.12 });
-        camera.LookAt({ 0.0, 11.0, .0 });
+        camera.LookAt({ 0.0, 4.0, .0 });
         camera.SetViewportAspectRatio(16.0f / 9.0f);
-        camera.SetAperture(1.2);
-        camera.SetFilmSpeed(800);
+        camera.SetAperture(1.6);
+        camera.SetFilmSpeed(100);
         camera.SetShutterTime(1.0 / 125.0);
         camera.SetFieldOfView(90);
 
         //mScene->Serialize(mCmdLineParser->ExecutableFolderPath() / "DebugSceneSerialization" / "Scene.pfscene");
-
-        /*gLight1 = &(*light0);
-        gLight2 = &(*light1);
-        gLight3 = &(*light2);*/
-
-        /*  mAnimationTimeline.apply(&intensity1, intensity1Phrase).setStartTime(25.0f).finishFn(
-              [&m = *intensity1.inputPtr(), &light0]
-              {
-                  if (m.getPlaybackSpeed() > 0.0)
-                  {
-                      m.setPlaybackSpeed(m.getPlaybackSpeed() * -1);
-                      m.resetTime();
-                  }
-
-              }
-          );
-
-          mAnimationTimeline.apply(&intensity2, intensity2Phrase).setStartTime(3.0f + 25).finishFn(
-              [&m = *intensity2.inputPtr(), &light1]
-              {
-                     if (m.getPlaybackSpeed() > 0.0)
-                  {
-                      m.setPlaybackSpeed(m.getPlaybackSpeed() * -1);
-                      m.resetTime();
-                  }
-              }
-          );
-
-          mAnimationTimeline.apply(&intensity3, intensity3Phrase).setStartTime(6.0f + 25);
-          mAnimationTimeline.apply(&lightPosition, lightPositionPhrase).setStartTime(6.0f + 25);
-
-          mAnimationTimeline.apply(&cameraPosition, cameraPositionPhrase);*/
     }
 
     void Application::RunMessageLoop()
@@ -191,15 +141,6 @@ namespace PathFinder
                 mWindowsInputHandler->HandleMessage(msg);
                 mDisplaySettingsController->HandleMessage(msg);
             }
-
-            //mAnimationTimeline.step(1.0f / 60.0);
-
-        /*    gLight1->SetLuminousPower(intensity1.value());
-            gLight2->SetLuminousPower(intensity2.value());
-            gLight3->SetLuminousPower(intensity3.value());
-            gLight3->SetPosition(lightPosition.value());
-            mScene->GetMainCamera().MoveTo(cameraPosition.value());
-            mScene->GetMainCamera().LookAt(glm::vec3{ 9.18, -7.48, -0.04 });*/
 
             mInput->FinalizeInput();
             mSettingsController->ApplyVolatileSettings(*mScene); // Settings must be applied at the very beginning so that render passes stay coherent
@@ -279,6 +220,7 @@ namespace PathFinder
         mRenderEngine->AddRenderPass(&mGIRayTracingPass);
         mRenderEngine->AddRenderPass(&mGIProbeUpdatePass);
         mRenderEngine->AddRenderPass(&mGIDebugPass);
+        mRenderEngine->AddRenderPass(&mSkyGenerationPass);
     }
 
     void Application::PerformPreRenderActions()
@@ -312,7 +254,9 @@ namespace PathFinder
 
             IsInitialSceneUploaded = true;
         }
+
         mScene->GetGIManager().Update();
+        mScene->GetSky().UpdateSkyState();
         mScene->GetGPUStorage().UploadInstances();
 
         mRenderEngine->AddTopRayTracingAccelerationStructure(&mScene->GetGPUStorage().TopAccelerationStructure());
@@ -349,7 +293,7 @@ namespace PathFinder
         mPerFrameConstants.IsTAAEnabled = settings.IsTAAEnabled;
         mPerFrameConstants.IsGIEnabled = settings.IsGIEnabled;
         mPerFrameConstants.IsGIRecursionEnabled = settings.IsGIRecursionEnabled;
-        mPerFrameConstants.IsGIIrradianceDebugEnabled = settings.IsGIShowIrradianceOnly;
+        mPerFrameConstants.IsGIIlluminanceDebugEnabled = settings.IsGIShowIlluminanceOnly;
 
         mRenderEngine->SetGlobalRootConstants(mGlobalConstants);
         mRenderEngine->SetFrameRootConstants(mPerFrameConstants);
@@ -359,54 +303,48 @@ namespace PathFinder
     {
     }
 
-    void Application::LoadDemoScene()
+    void Application::LoadSpheres()
     {
-        /* mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "MediaResources" / "Models" / "sphere3.obj");
+        ThirdPartySceneLoader::Settings loadSettings{};
+        loadSettings.InitialScale = 0.15;
+        mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "MediaResources" / "Models" / "sphere3.obj", loadSettings);
 
-         MeshInstance& sphereInstance = mScene->GetMeshInstances().back();
-         Mesh* sphereMesh = sphereInstance.GetAssociatedMesh();
-         Material* sphereMaterial = sphereInstance.GetAssociatedMaterial();
+        Material noTextureRedMaterial{};
+        Material noTextureBlueMaterial{};
 
-         Geometry::Transformation t;
-         glm::vec3 translation{ -12.5, -6.0, 0.0 };
-         t.SetTranslation(translation);
-         t.SetScale(glm::vec3{ 0.05f });
+        mMaterialLoader->LoadMaterial(noTextureRedMaterial);
+        mMaterialLoader->LoadMaterial(noTextureBlueMaterial);
 
-         sphereInstance.SetTransformation(t);
+        Material* redSphereMaterial = &mScene->AddMaterial(std::move(noTextureRedMaterial));
+        Material* blueSphereMaterial = &mScene->AddMaterial(std::move(noTextureBlueMaterial));
+        MeshInstance& sphere1Instance = mScene->GetMeshInstances().back();
+        MeshInstance& sphere2Instance = mScene->AddMeshInstance(MeshInstance{sphere1Instance.GetAssociatedMesh(), blueSphereMaterial});
 
-         sphereMaterial->DiffuseAlbedoOverride = glm::vec3{ 1.0f };
-         sphereMaterial->MetalnessOverride = 0.0f;
-         sphereMaterial->RoughnessOverride = 0.1f;
+        sphere1Instance.SetMaterial(redSphereMaterial);
 
-         float roughness = 0.1;
+        redSphereMaterial->DiffuseAlbedoOverride = { 1.0f, 0.0f, 0.0f };
+        blueSphereMaterial->DiffuseAlbedoOverride = { 0.0f, 0.0f, 1.0f };
+        redSphereMaterial->RoughnessOverride = 0.8;
+        blueSphereMaterial->RoughnessOverride = 0.8;
+    }
 
-         for (auto i = 0; i < 9; ++i)
-         {
-             roughness += 0.1;
+    void Application::LoadSponza()
+    {
+        ThirdPartySceneLoader::Settings loadSettings{};
+        loadSettings.InitialScale = 0.02;
+        mScene->LoadThirdPartyScene(mCmdLineParser->ExecutableFolderPath() / "MediaResources" / "sponza" / "sponza.obj", loadSettings);
 
-             Material& nextMaterial = mScene->GetMaterials().emplace_back();
-             nextMaterial.DiffuseAlbedoOverride = glm::vec3{ 0.0f, 1.0f, 0.0f };
-             nextMaterial.MetalnessOverride = 0.0f;
-             nextMaterial.RoughnessOverride = roughness;
-             nextMaterial.DiffuseAlbedoMap.Texture = Memory::GPUResourceProducer::TexturePtr{ sphereMaterial->DiffuseAlbedoMap.Texture.get(), [](auto* a) {} };
-             nextMaterial.NormalMap.Texture = Memory::GPUResourceProducer::TexturePtr{ sphereMaterial->NormalMap.Texture.get(), [](auto* a) {} };
-             nextMaterial.RoughnessMap.Texture = Memory::GPUResourceProducer::TexturePtr{ sphereMaterial->RoughnessMap.Texture.get(), [](auto* a) {} };
-             nextMaterial.MetalnessMap.Texture = Memory::GPUResourceProducer::TexturePtr{ sphereMaterial->MetalnessMap.Texture.get(), [](auto* a) {} };
-             nextMaterial.DisplacementMap.Texture = Memory::GPUResourceProducer::TexturePtr{ sphereMaterial->DisplacementMap.Texture.get(), [](auto* a) {} };
-             nextMaterial.DistanceField.Texture = Memory::GPUResourceProducer::TexturePtr{ sphereMaterial->DistanceField.Texture.get(), [](auto* a) {} };
-             nextMaterial.LTC_LUT_MatrixInverse_Specular = sphereMaterial->LTC_LUT_MatrixInverse_Specular;
-             nextMaterial.LTC_LUT_Matrix_Specular = sphereMaterial->LTC_LUT_Matrix_Specular;
-             nextMaterial.LTC_LUT_Terms_Specular = sphereMaterial->LTC_LUT_Terms_Specular;
-             nextMaterial.LTC_LUT_MatrixInverse_Diffuse = sphereMaterial->LTC_LUT_MatrixInverse_Diffuse;
-             nextMaterial.LTC_LUT_Matrix_Diffuse = sphereMaterial->LTC_LUT_Matrix_Diffuse;
-             nextMaterial.LTC_LUT_Terms_Diffuse = sphereMaterial->LTC_LUT_Terms_Diffuse;
-
-             MeshInstance& nextInstance = mScene->GetMeshInstances().emplace_back(sphereMesh, &nextMaterial);
-             translation.x += 2.5;
-             t.SetTranslation(translation);
-
-             nextInstance.SetTransformation(t);
-         }*/
+        // For GI to work correctly we need to set double-sided flags for curtains and such
+        for (MeshInstance& instance : mScene->GetMeshInstances())
+        {
+            if (instance.GetAssociatedMaterial()->Name.find("leaf") != std::string::npos ||
+                instance.GetAssociatedMaterial()->Name.find("fabric") != std::string::npos ||
+                instance.GetAssociatedMaterial()->Name.find("chain") != std::string::npos ||
+                instance.GetAssociatedMaterial()->Name.find("vase") != std::string::npos)
+            {
+                instance.SetIsDoubleSided(true);
+            }
+        }
     }
 
 }

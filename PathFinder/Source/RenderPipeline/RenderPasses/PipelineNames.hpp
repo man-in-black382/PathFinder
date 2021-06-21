@@ -18,12 +18,18 @@ namespace PathFinder
         inline Foundation::Name JumpFloodingCones1{ "Resource_JumpFloodingConesBuffer1" };
         inline Foundation::Name UAVCounterBuffer{ "Resource_UAVCounterBuffer" };
 
-        inline Foundation::Name GBufferAlbedoMetalness{ "Resource_GBuffer_Albedo_Metalness" };
-        inline Foundation::Name GBufferNormalRoughness{ "Resource_GBuffer_Normal_Roughness" };
+        // Normal GBuffer Textures
+        inline NameArray<2> GBufferAlbedoMetalness{ "Resource_GBuffer_Albedo_Metalness[0]", "Resource_GBuffer_Albedo_Metalness[1]" };
+        inline NameArray<2> GBufferNormalRoughness{ "Resource_GBuffer_Normal_Roughness[0]", "Resource_GBuffer_Normal_Roughness[1]" };
         inline Foundation::Name GBufferMotionVector{ "Resource_GBuffer_Motion_Vector" };
         inline Foundation::Name GBufferTypeAndMaterialIndex{ "Resource_GBuffer_Type_And_Material_Index" };
         inline Foundation::Name GBufferDepthStencil{ "Resource_GBuffer_Depth_Stencil" };
         inline NameArray<2> GBufferViewDepth{ "Resource_GBuffer_View_Depth[0]", "Resource_GBuffer_View_Depth[1]" };
+
+        // Patched for denoiser gradient detection
+        inline Foundation::Name GBufferAlbedoMetalnessPatched{ "Resource_GBuffer_Albedo_Metalness_Patched" };
+        inline Foundation::Name GBufferNormalRoughnessPatched{ "Resource_GBuffer_Normal_Roughness_Patched" };
+        inline Foundation::Name GBufferViewDepthPatched{ "Resource_GBuffer_View_Depth_Patched" };
 
         inline Foundation::Name ShadingAnalyticOutput{ "Resource_Shading_Analytic_Output" };
 
@@ -46,29 +52,32 @@ namespace PathFinder
         inline Foundation::Name StochasticShadowedShadingPostBlurred{ "Resource_Shading_Stochastic_Shadowed_Post_Blurred" };
         inline Foundation::Name CombinedShading{ "Resource_Shading_Combined" };
         inline Foundation::Name CombinedShadingOversaturated{ "Resource_Shading_Combined_Oversaturated" };
-        inline Foundation::Name DenoiserGradientSamples{ "Denoiser_Gradient_Samples" };
-        inline Foundation::Name DenoiserGradient{ "Denoiser_Gradient" };
-        inline Foundation::Name DenoiserSecondaryGradient{ "Denoiser_Secondary_Gradient" };
-        inline Foundation::Name DenoiserGradientFiltered{ "Denoiser_Gradient_Filtered" };
-        inline Foundation::Name DenoiserGradientFilteredIntermediate{ "Denoiser_Gradient_Filtered_Intermediate" };
+        inline Foundation::Name DenoiserGradientSamples{ "Resource_Denoiser_Gradient_Samples" };
+        inline Foundation::Name DenoiserGradient{ "Resource_Denoiser_Gradient" };
+        inline Foundation::Name DenoiserSecondaryGradient{ "Resource_Denoiser_Secondary_Gradient" };
+        inline Foundation::Name DenoiserGradientFiltered{ "Resource_Denoiser_Gradient_Filtered" };
+        inline Foundation::Name DenoiserGradientFilteredIntermediate{ "Resource_Denoiser_Gradient_Filtered_Intermediate" };
         inline NameArray<2> RngSeeds{ "Resource_Stochastic_Rng_Seeds[0]", "Resource_Stochastic_Rng_Seeds[1]" };
         inline Foundation::Name RngSeedsCorrelated{ "Resource_Stochastic_Rng_Seeds_Correlated" };
         inline Foundation::Name DenoiserGradientSampleCandidates{ "Resource_Denoised_Gradient_Sample_Candidates" };
         inline NameArray<2> DenoiserGradientSamplePositions{ "Resource_Denoiser_Gradient_Sample_Positions[0]", "Resource_Denoiser_Gradient_Sample_Positions[1]" };
         inline Foundation::Name DenoisedPreBlurIntermediate{ "Resource_Denoised_Pre_Blur_Intermediate" };
         inline NameArray<2> ReprojectedFramesCount{ "Resource_Reprojected_Frames_Count[0]", "Resource_Reprojected_Frames_Count[1]" };
+        // Patched during denoising if denoiser decides that additional history dropping conditions were met
+        inline Foundation::Name ReprojectedFramesCountPatched{ "Resource_Reprojected_Frames_Count_Patched" };
         inline Foundation::Name DenoisedCombinedDirectShading{ "Resource_Denoised_Combined_Direct_Shading" };
         inline Foundation::Name DenoisedReprojectedTexelIndices{ "Resource_Denoised_Reprojected_Texel_Indices" };
         inline Foundation::Name BloomBlurIntermediate{ "Resource_Bloom_Blur_Intermediate" };
         inline Foundation::Name BloomBlurOutput{ "Resource_Bloom_Blur_Output" };
         inline Foundation::Name BloomCompositionOutput{ "Resource_Bloom_Composition_Output" };
+        inline Foundation::Name SkyLuminance{ "Resource_Sky_Luminance" };
         inline Foundation::Name LuminanceHistogram{ "Resource_Luminance_Histogram" };
         inline Foundation::Name ToneMappingOutput{ "Resource_ToneMapping_Output" };
         inline Foundation::Name UIOutput{ "Resource_UI_Output" };
         inline NameArray<2> TAAOutput{ "Resource_TAA_Output[0]", "Resource_TAA_Output[1]" };
 
         inline Foundation::Name GIRayHitInfo{ "Resource_GI_Ray_Hit_Info" };
-        inline NameArray<2> GIIrradianceProbeAtlas{ "Resource_GI_Irradiance_Probe_Atlas[0]", "Resource_GI_Irradiance_Probe_Atlas[1]" };
+        inline NameArray<2> GIIlluminanceProbeAtlas{ "Resource_GI_Illuminance_Probe_Atlas[0]", "Resource_GI_Illuminance_Probe_Atlas[1]" };
         inline NameArray<2> GIDepthProbeAtlas{ "Resource_GI_Depth_Probe_Atlas[0]", "Resource_GI_Depth_Probe_Atlas[1]" };
         inline Foundation::Name GIDebugDepthStencil{ "Resource_GI_Debug_Depth_Stencil" };
         inline Foundation::Name GIDebugOutput{ "Resource_GI_Debug_Output" };
@@ -86,6 +95,7 @@ namespace PathFinder
         inline Foundation::Name DistanceMapHelperCompression{ "PSO_DistanceMapHelperCompression" };
         inline Foundation::Name DistanceMapGeneration{ "PSO_DistanceMapGeneration" };
         inline Foundation::Name Downsampling{ "PSO_AveragingDownsampling" };
+        inline Foundation::Name SkyGeneration{ "PSO_SkyGeneration" };
         inline Foundation::Name DepthOnly{ "PSO_DepthOnly" };
         inline Foundation::Name GBufferMeshes{ "PSO_GBufferMeshes" };
         inline Foundation::Name GBufferLights{ "PSO_GBufferLights" };
@@ -94,9 +104,9 @@ namespace PathFinder
         inline Foundation::Name GIRayTracing{ "PSO_GI_Ray_Tracing" };
         inline Foundation::Name GIProbeUpdate{ "PSO_GI_Probe_Update" };
         inline Foundation::Name GIProbeIndirectionTableUpdate{ "PSO_GI_Probe_Indirection_Table_Update" };
-        inline Foundation::Name GIIrradianceProbeCornerUpdate{ "PSO_GI_Irradiance_Probe_Corner_Update" };
+        inline Foundation::Name GIIlluminanceProbeCornerUpdate{ "PSO_GI_Illuminance_Probe_Corner_Update" };
         inline Foundation::Name GIDepthProbeCornerUpdate{ "PSO_GI_Depth_Probe_Corner_Update" };
-        inline Foundation::Name GIIrradianceProbeBorderUpdate{ "PSO_GI_Irradiance_Probe_Border_Update" };
+        inline Foundation::Name GIIlluminanceProbeBorderUpdate{ "PSO_GI_Illuminance_Probe_Border_Update" };
         inline Foundation::Name GIDepthProbeBorderUpdate{ "PSO_GI_Depth_Probe_Border_Update" };
         inline Foundation::Name GIProbeDebug{ "PSO_GI_Probe_Debug" };
         inline Foundation::Name GIRaysDebug{ "PSO_GI_Rays_Debug" };
