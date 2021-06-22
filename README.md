@@ -15,7 +15,10 @@ Render pass system enables automatic behind-the-scenes resource state tracking a
 * Bloom via camera's Saturation-based ISO Sensitivity
 * Ray-traced shadows
 * Spatiotemporal Denoising
+* Temporal Antialiasing
+* Diffuse GI via Ray-Traced Irradiance Fields
 
 # Showcase
 [![PathFinder](https://imgur.com/iWwM3OB.png)](https://youtu.be/vrCa5Fn-EMg)
+[![PathFinder](https://imgur.com/D0hvXEI.png)](https://youtu.be/1oZw7PCOC2E)
 
